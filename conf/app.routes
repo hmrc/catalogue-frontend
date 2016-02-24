@@ -1,0 +1,3 @@
+# microservice specific routes
+
+GET        /             uk.gov.hmrc.cataloguefrontend.controllers.MicroserviceHelloWorld.hello
