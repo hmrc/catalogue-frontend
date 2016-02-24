@@ -1,0 +1,86 @@
+@*
+* Copyright 2016 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+
+@import layouts.govuk_template
+@import uk.gov.hmrc.play.views.html.layouts
+@import uk.gov.hmrc.play.views.html.{helpers => uiHelpers}
+
+@(title: String,
+    sidebarLinks: Option[Html] = None,
+    sidebarClasses: Option[String] = None,
+    userLoggedIn: Boolean = false,
+    serviceInfoContent: Option[Html] = None,
+    contentHeader: Option[Html] = None,
+    gaCalls: Option[(String,String) => Html] = None,
+    showTitleHeaderNav: Boolean = true,
+    showBetaBanner: Boolean = true,
+    pageScripts: Option[Html] = None,
+    articleClasses: Option[String] = None,
+    analyticsAdditionalJs: Option[Html] = None)(mainContent: Html)(implicit request : Request[_])
+
+
+@linkElement = {
+}
+
+@links = { 
+}
+
+
+@head = {
+}
+
+@insideHeader = {
+}
+
+@afterHeader = {
+}
+
+@actingAttorneyBanner = {
+}
+
+@betaBanner = {
+}
+
+@serviceInfoHtml = {
+}
+
+@getHelpForm = {
+}
+
+@sidebar = {
+}
+
+@article = {
+    The Article
+}
+
+@mainContentHeader = {
+   
+   Main header
+}
+
+@content = {
+    The Content
+}
+
+@footerTop = {
+}
+
+@bodyEnd = {
+
+}
+
+@govuk_template(Some(title), None)(head, bodyEnd, insideHeader, afterHeader, footerTop, Some(uk.gov.hmrc.play.views.html.layouts.footer_links()), true)(content)

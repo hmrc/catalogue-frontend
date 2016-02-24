@@ -16,16 +16,23 @@
 
 package uk.gov.hmrc.cataloguefrontend.controllers
 
-import uk.gov.hmrc.play.microservice.controller.BaseController
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import play.api.libs.json.Json
 import play.api.mvc._
-import scala.concurrent.Future
+import uk.gov.hmrc.cataloguefrontend.connector.CatalogueConnector
+import uk.gov.hmrc.play.frontend.controller.FrontendController
+import views.html.catalogMain
 
-object MicroserviceHelloWorld extends MicroserviceHelloWorld
+object CatalogueController extends CatalogueController{
+	override def catalogueConnector: CatalogueConnector = CatalogueConnector
+}
 
-trait MicroserviceHelloWorld extends BaseController {
+trait CatalogueController extends FrontendController {
 
-	def hello() = Action.async { implicit request =>
-		Future.successful(Ok("Hello world"))
+	def catalogueConnector:CatalogueConnector
+
+	def allTeams() = Action.async { implicit request =>
+		catalogueConnector.allTeams.map { s =>
+      Ok(catalogMain(content = s.mkString(", ")))
+    }
 	}
 }

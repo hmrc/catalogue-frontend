@@ -1,0 +1,9 @@
+@(pageTitle: String, heading: String, message: String)(implicit request: Request[_])
+
+@contentHeader = {
+    <h1>@heading</h1>
+}
+
+@mainContent = {
+    <p>@message</p>
+}
