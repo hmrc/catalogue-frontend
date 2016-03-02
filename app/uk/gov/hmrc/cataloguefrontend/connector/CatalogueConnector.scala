@@ -48,5 +48,5 @@ trait CatalogueConnector extends ServicesConfig {
 
 object CatalogueConnector extends CatalogueConnector {
   override val http = WSHttp
-  override lazy val catalogUrl: String = baseUrl("catalog")
+  override lazy val catalogUrl: String = baseUrl("catalogue")
 }

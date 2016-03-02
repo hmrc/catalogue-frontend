@@ -27,7 +27,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
-      "microservice.services.catalog.port" -> endpointPort
+      "microservice.services.catalogue.port" -> endpointPort
     ))
 
   "landing page" should {

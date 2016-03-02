@@ -27,7 +27,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
-      "microservice.services.catalog.port" -> endpointPort
+      "microservice.services.catalogue.port" -> endpointPort
   ))
 
   "landing page" should {
