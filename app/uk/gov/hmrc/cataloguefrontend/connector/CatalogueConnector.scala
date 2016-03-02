@@ -40,7 +40,8 @@ trait CatalogueConnector extends ServicesConfig {
   val catalogUrl: String
 
   def allTeams(implicit hc: HeaderCarrier): Future[List[Team]] = {
-    http.GET[List[Team]](catalogUrl + s"/catalogue/teams")
+    println(s"catalogUrl $catalogUrl/catalogue/api/teams")
+    http.GET[List[Team]](catalogUrl + s"/catalogue/api/teams")
   }
 }
 

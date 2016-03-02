@@ -32,7 +32,7 @@ trait CatalogueController extends FrontendController {
 
 	def allTeams() = Action.async { implicit request =>
 		catalogueConnector.allTeams.map { s =>
-      Ok(catalogMain(content = s.mkString(", ")))
+      Ok(catalogMain(teams = s.map(_.teamName).sortBy(_.toUpperCase)))
     }
 	}
 }

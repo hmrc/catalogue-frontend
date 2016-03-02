@@ -15,7 +15,7 @@
 *@
 
 @(
-content: String
+teams: List[String]
 )
 
 <html>
@@ -25,7 +25,10 @@ content: String
 </head>
 <body>
 <h1>Teams</h1>
-@content
-
+<ul>
+@for(team <- teams) {
+    <li>@team</li>
+}
+</ul>
 </body>
 </html>

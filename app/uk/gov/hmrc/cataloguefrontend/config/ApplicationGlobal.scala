@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
 import uk.gov.hmrc.play.frontend.bootstrap.DefaultFrontendGlobal
 import uk.gov.hmrc.play.http.logging.filters.FrontendLoggingFilter
 
-object ApplicationGlobal extends CatalogFrontendGlobal with RunMode {
+object ApplicationGlobal extends CatalogFrontendGlobal {
 
   override val loggingFilter = CatLoggingFilter
 
@@ -49,15 +49,4 @@ object ControllerConfiguration extends ControllerConfig {
 
 object CatLoggingFilter extends FrontendLoggingFilter {
   override def controllerNeedsLogging(controllerName: String) = ControllerConfiguration.paramsForController(controllerName).needsLogging
-}
-
-object CatalogFrontendAuditFilter extends FrontendAuditFilter with RunMode with AppName {
-
-  override lazy val maskedFormFields = Seq.empty
-
-  override lazy val applicationPort = None
-
-  override def controllerNeedsAuditing(controllerName: String) = false
-
-  override def auditConnector: AuditConnector = ???
 }

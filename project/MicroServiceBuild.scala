@@ -29,7 +29,9 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "play-health" % "1.1.0",
     "uk.gov.hmrc" %% "govuk-template" % "4.0.0",
     "uk.gov.hmrc" %% "play-ui" % "4.2.0",
-    "uk.gov.hmrc" %% "url-builder" % "1.0.0"
+    "uk.gov.hmrc" %% "url-builder" % "1.0.0",
+    "org.apache.httpcomponents" % "httpcore" % "4.3.2",
+    "org.apache.httpcomponents" % "httpclient" % "4.3.5"
   )
 
   trait TestDependencies {
@@ -42,8 +44,10 @@ private object AppDependencies {
       override lazy val test = Seq(
         "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
         "org.scalatest" %% "scalatest" % "2.2.2" % scope,
+        "org.scalatestplus" %% "play" % "1.2.0" % scope,
         "org.pegdown" % "pegdown" % "1.4.2" % scope,        
-        "com.typesafe.play" %% "play-test" % PlayVersion.current % scope
+        "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
+        "com.github.tomakehurst" % "wiremock" % "1.52" % "test"
       )
     }.test
   }
