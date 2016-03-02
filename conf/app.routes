@@ -1,3 +1,4 @@
 # microservice specific routes
 
 GET        /teams             uk.gov.hmrc.cataloguefrontend.controllers.CatalogueController.allTeams
+GET        /:teamName/services    uk.gov.hmrc.cataloguefrontend.controllers.CatalogueController.teamServices(teamName)

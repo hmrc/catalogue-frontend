@@ -19,8 +19,10 @@ package uk.gov.hmrc.cataloguefrontend
 import java.net.ServerSocket
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.{ResponseDefinitionBuilder, MappingBuilder, WireMock}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
+import com.github.tomakehurst.wiremock.http.RequestMethod
 import org.scalatest.{Suite, BeforeAndAfterEach, BeforeAndAfterAll}
 
 import scala.util.Try
@@ -57,6 +59,28 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
     endpointMock.allStubMappings().getMappings.toList.foreach { s =>
       println(s)
     }
+  }
+
+
+  def catalogEndpoint(
+                       method:RequestMethod,
+                       url:String,
+                       extraHeaders:Map[String,String] = Map(),
+                       willRespondWith: (Int, Option[String])): Unit = {
+
+    val builder = new MappingBuilder(method, urlEqualTo(url))
+    //.withHeader("Content-Type", equalTo("application/json"))
+
+    val response: ResponseDefinitionBuilder = new ResponseDefinitionBuilder()
+      .withStatus(willRespondWith._1)
+
+    val resp = willRespondWith._2.map { b =>
+      response.withBody(b)
+    }.getOrElse(response)
+
+    builder.willReturn(resp)
+
+    endpointMock.register(builder)
   }
 
 }

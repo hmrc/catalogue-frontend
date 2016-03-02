@@ -23,12 +23,12 @@ import play.api.libs.ws.WS
 import play.api.test.FakeApplication
 import uk.gov.hmrc.play.test.UnitSpec
 
-class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints{
+class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints{
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
       "microservice.services.catalog.port" -> endpointPort
-    ))
+  ))
 
   "landing page" should {
     "show a list of teams" in  {
@@ -42,7 +42,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
           |    "isMicroservice": true
           |   },
           |   {
-          |    "name": "contacts-manager",
+          |    "name": "contacts-manager-acceptance-tests",
           |    "url": "http://example.com/DDCN/contacts-manager-acceptance-tests",
           |    "isMicroservice": false
           |   }
@@ -50,10 +50,11 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
           |}]""".stripMargin
       )))
 
-      val response = await(WS.url(s"http://localhost:$port/catalogue/teams").get)
+      val response = await(WS.url(s"http://localhost:$port/catalogue/GMP/services").get)
 
       response.status shouldBe 200
-      response.body should include("<li><a href=\"/catalogue/GMP/services\">GMP</a></li>")
+      response.body should include("<li>attachments-example</li>")
+      response.body should not include "<li>contacts-manager-acceptance-tests</li>"
     }
   }
 }

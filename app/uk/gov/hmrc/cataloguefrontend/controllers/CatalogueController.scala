@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.controllers
 
-import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.CatalogueConnector
 import uk.gov.hmrc.play.frontend.controller.FrontendController
-import views.html.catalogMain
+import views.html.{catalogue_main, team_services}
 
 object CatalogueController extends CatalogueController{
 	override def catalogueConnector: CatalogueConnector = CatalogueConnector
@@ -32,7 +31,18 @@ trait CatalogueController extends FrontendController {
 
 	def allTeams() = Action.async { implicit request =>
 		catalogueConnector.allTeams.map { s =>
-      Ok(catalogMain(teams = s.map(_.teamName).sortBy(_.toUpperCase)))
+      Ok(catalogue_main(teams = s.map(_.teamName).sortBy(_.toUpperCase)))
+    }
+	}
+
+	def teamServices(team:String) = Action.async { implicit request =>
+		catalogueConnector.allTeams.map { s =>
+      s.find(_.teamName == team).map { team =>
+        Ok(team_services(
+          teamName = team.teamName,
+          services = team.repositories.filter(_.isMicroservice).map(_.name)))
+      }.getOrElse(NotFound)
+
     }
 	}
 }
