@@ -21,28 +21,25 @@ import uk.gov.hmrc.cataloguefrontend.connector.CatalogueConnector
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html.{catalogue_main, team_services}
 
-object CatalogueController extends CatalogueController{
-	override def catalogueConnector: CatalogueConnector = CatalogueConnector
+object CatalogueController extends CatalogueController {
+  override def catalogueConnector: CatalogueConnector = CatalogueConnector
 }
 
 trait CatalogueController extends FrontendController {
 
-	def catalogueConnector:CatalogueConnector
+  def catalogueConnector: CatalogueConnector
 
-	def allTeams() = Action.async { implicit request =>
-		catalogueConnector.allTeams.map { s =>
+  def allTeams() = Action.async { implicit request =>
+    catalogueConnector.allTeams.map { s =>
       Ok(catalogue_main(teams = s.map(_.teamName).sortBy(_.toUpperCase)))
     }
-	}
+  }
 
-	def teamServices(team:String) = Action.async { implicit request =>
-		catalogueConnector.allTeams.map { s =>
-      s.find(_.teamName == team).map { team =>
-        Ok(team_services(
-          teamName = team.teamName,
-          services = team.repositories.filter(_.isMicroservice).map(_.name)))
-      }.getOrElse(NotFound)
+  def teamServices(team: String) = Action.async { implicit request =>
+    catalogueConnector.teamServices(team).map { services =>
+
+      Ok(team_services(teamName = team, services = services))
 
     }
-	}
+  }
 }

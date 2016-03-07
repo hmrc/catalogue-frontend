@@ -25,7 +25,26 @@ import scala.concurrent.Future
 
 case class Team(teamName: String, repositories: List[Repository])
 
-case class Repository(name: String, url: String, isMicroservice:Boolean)
+case class Repository(name: String, url: String, isMicroservice: Boolean)
+
+case class Link(name: String, url: String)
+
+
+case class Service(
+                    name: String,
+                    githubUrl: Link,
+                    ci: List[Link])
+
+
+object Link {
+  implicit val formats = Json.format[Link]
+}
+
+object Service {
+
+  implicit val formats = Json.format[Service]
+}
+
 
 object Repository {
   implicit val formats = Json.format[Repository]
@@ -42,8 +61,12 @@ trait CatalogueConnector extends ServicesConfig {
   def allTeams(implicit hc: HeaderCarrier): Future[List[Team]] = {
     http.GET[List[Team]](catalogUrl + s"/catalogue/api/teams")
   }
-}
 
+  def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[List[Service]] = {
+    http.GET[List[Service]](catalogUrl + s"/catalogue/api/$teamName/services")
+  }
+
+}
 
 
 object CatalogueConnector extends CatalogueConnector {

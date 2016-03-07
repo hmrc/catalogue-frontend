@@ -16,7 +16,7 @@
 
 @(
 teamName:String,
-services: List[String]
+services: List[uk.gov.hmrc.cataloguefrontend.connector.Service]
 )
 
 <html>
@@ -28,7 +28,18 @@ services: List[String]
 <h1>@{teamName}'s Services</h1>
 <ul>
 @for(service <- services) {
-    <li>@service</li>
+    <li>
+        @service.name
+        <ul>
+            <li><a href="@{service.githubUrl.url}" target="_blank">@service.githubUrl.name</a> </li>
+            @for(ciLink <- service.ci) {
+            <li><a href="@{ciLink.url}" target="_blank">@ciLink.name</a></li>
+            }
+        </ul>
+    </li>
+
+
+
 }
 </ul>
 </body>

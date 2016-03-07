@@ -34,7 +34,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
     "show a list of teams" in  {
       catalogEndpoint(GET, "/catalogue/api/teams", willRespondWith = (200, Some(
         """[{
-          | "teamName": "GMP",
+          | "teamName": "teamA",
           | "repositories": [
           |   {
           |    "name": "attachments-example",
@@ -53,7 +53,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
       val response = await(WS.url(s"http://localhost:$port/catalogue/teams").get)
 
       response.status shouldBe 200
-      response.body should include("<li><a href=\"/catalogue/GMP/services\">GMP</a></li>")
+      response.body should include("<li><a href=\"/catalogue/teamA/services\">teamA</a></li>")
     }
   }
 }
