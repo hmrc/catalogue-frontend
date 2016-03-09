@@ -72,15 +72,17 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
           |	]""".stripMargin
       )))
 
-      val response = await(WS.url(s"http://localhost:$port/catalogue/teamA/services").get)
+      val response = await(WS.url(s"http://localhost:$port/catalogue/teams/teamA").get)
 
       response.status shouldBe 200
       response.body should include("teamA-serv")
+      response.body should include("""id="teamA-serv"""")
       response.body should include("https://github.com/hmrc/teamA-serv")
       response.body should include("http://open1/teamA-serv")
       response.body should include("http://open2/teamA-serv")
 
       response.body should include("teamA-frontend")
+      response.body should include("""id="teamA-frontend"""")
       response.body should include("https://github.com/hmrc/teamA-frontend")
       response.body should include("http://open1/teamA-frontend")
       response.body should include("http://open2/teamA-frontend")

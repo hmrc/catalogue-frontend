@@ -53,7 +53,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
       val response = await(WS.url(s"http://localhost:$port/catalogue/teams").get)
 
       response.status shouldBe 200
-      response.body should include("<li><a href=\"/catalogue/teamA/services\">teamA</a></li>")
+      response.body should include("""<li><a href="teams/teamA">teamA</a></li>""")
     }
   }
 }

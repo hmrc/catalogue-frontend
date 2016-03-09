@@ -21,15 +21,13 @@ services: List[uk.gov.hmrc.cataloguefrontend.connector.Service]
 
 <html>
 
-<head>
-
-</head>
+<head><title>@{teamName}</title></head>
 <body>
 <h1>@{teamName}'s Services</h1>
 <ul>
 @for(service <- services) {
-    <li>
-        @service.name
+    <li id="@{service.name}">
+        <a href="#@{service.name}">@service.name</a>
         <ul>
             <li><a href="@{service.githubUrl.url}" target="_blank">@service.githubUrl.name</a> </li>
             @for(ciLink <- service.ci) {
