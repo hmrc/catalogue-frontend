@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
+import java.net.URLEncoder
+
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
@@ -63,7 +65,7 @@ trait CatalogueConnector extends ServicesConfig {
   }
 
   def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[List[Service]] = {
-    http.GET[List[Service]](catalogUrl + s"/catalogue/api/$teamName/services")
+    http.GET[List[Service]](catalogUrl + s"/catalogue/api/${URLEncoder.encode(teamName,"UTF-8")}/services")
   }
 
 }
