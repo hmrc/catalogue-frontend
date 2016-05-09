@@ -23,7 +23,7 @@ import play.api.libs.ws.WS
 import play.api.test.FakeApplication
 import uk.gov.hmrc.play.test.UnitSpec
 
-class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints{
+class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(

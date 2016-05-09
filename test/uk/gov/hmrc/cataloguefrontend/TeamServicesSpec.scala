@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
 import play.api.libs.ws.WS
