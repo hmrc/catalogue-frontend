@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector
+package uk.gov.hmrc.cataloguefrontend
 
 import java.net.URLEncoder
 
@@ -31,22 +31,15 @@ case class Repository(name: String, url: String, isMicroservice: Boolean)
 
 case class Link(name: String, url: String)
 
-
-case class Service(
-                    name: String,
-                    githubUrl: Link,
-                    ci: List[Link])
-
+case class Service(name: String, githubUrl: Link, ci: List[Link])
 
 object Link {
   implicit val formats = Json.format[Link]
 }
 
 object Service {
-
   implicit val formats = Json.format[Service]
 }
-
 
 object Repository {
   implicit val formats = Json.format[Repository]
@@ -60,16 +53,14 @@ trait CatalogueConnector extends ServicesConfig {
   val http: HttpGet
   val catalogUrl: String
 
-  def allTeams(implicit hc: HeaderCarrier): Future[List[Team]] = {
-    http.GET[List[Team]](catalogUrl + s"/catalogue/api/teams")
+  def allTeams(implicit hc: HeaderCarrier): Future[CachedList[Team]] = {
+    http.GET[CachedList[Team]](catalogUrl + s"/catalogue/api/teams")
   }
 
-  def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[List[Service]] = {
-    http.GET[List[Service]](catalogUrl + s"/catalogue/api/${URLEncoder.encode(teamName,"UTF-8")}/services")
+  def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[CachedList[Service]] = {
+    http.GET[CachedList[Service]](catalogUrl + s"/catalogue/api/${URLEncoder.encode(teamName,"UTF-8")}/services")
   }
-
 }
-
 
 object CatalogueConnector extends CatalogueConnector {
   override val http = WSHttp

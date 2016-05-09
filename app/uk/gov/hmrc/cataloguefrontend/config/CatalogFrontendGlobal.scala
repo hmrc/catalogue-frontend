@@ -23,7 +23,6 @@ import uk.gov.hmrc.play.frontend.bootstrap.ShowErrorPage
 import uk.gov.hmrc.play.graphite.GraphiteConfig
 
 
-
 abstract class CatalogFrontendGlobal
   extends GlobalSettings
   with FrontendFilters

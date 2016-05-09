@@ -14,31 +14,32 @@
 * limitations under the License.
 *@
 
+@import org.joda.time.DateTime
+@import uk.gov.hmrc.cataloguefrontend.Service
 @(
-teamName:String,
-services: List[uk.gov.hmrc.cataloguefrontend.connector.Service]
+    cacheTimestampFormatted: String,
+    teamName:String,
+    services: Seq[Service]
 )
 
 <html>
 
 <head><title>@{teamName}</title></head>
 <body>
-<h1>@{teamName}'s Services</h1>
-<ul>
-@for(service <- services) {
-    <li id="@{service.name}">
-        <a href="#@{service.name}">@service.name</a>
-        <ul>
-            <li><a href="@{service.githubUrl.url}" target="_blank">@service.githubUrl.name</a> </li>
-            @for(ciLink <- service.ci) {
-            <li><a href="@{ciLink.url}" target="_blank">@ciLink.name</a></li>
-            }
-        </ul>
-    </li>
-
-
-
-}
-</ul>
+    <h1>@{teamName}'s Services</h1>
+    <time>Last updated at: @cacheTimestampFormatted</time>
+    <ul>
+    @for(service <- services) {
+        <li id="@{service.name}">
+            <a href="#@{service.name}">@service.name</a>
+            <ul>
+                <li><a href="@{service.githubUrl.url}" target="_blank">@service.githubUrl.name</a> </li>
+                @for(ciLink <- service.ci) {
+                <li><a href="@{ciLink.url}" target="_blank">@ciLink.name</a></li>
+                }
+            </ul>
+        </li>
+    }
+    </ul>
 </body>
 </html>

@@ -15,7 +15,8 @@
 *@
 
 @(
-teams: List[String]
+    cacheTimestampFormatted: String,
+    teams: Seq[String]
 )
 
 <html>
@@ -24,11 +25,12 @@ teams: List[String]
 
 </head>
 <body>
-<h1>Teams</h1>
-<ul>
-@for(team <- teams) {
-    <li><a href="/catalogue/teams/@team">@team</a></li>
-}
-</ul>
+    <h1>Teams</h1>
+    <time>Last updated at: @cacheTimestampFormatted</time>
+    <ul>
+    @for(team <- teams) {
+        <li><a href="/catalogue/teams/@team">@team</a></li>
+    }
+    </ul>
 </body>
 </html>

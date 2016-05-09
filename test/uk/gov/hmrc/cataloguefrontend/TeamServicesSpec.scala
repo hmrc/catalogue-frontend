@@ -33,48 +33,52 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
   "landing page" should {
     "show a list of services" in {
       catalogEndpoint(GET, "/catalogue/api/teamA/services", willRespondWith = (200, Some(
-        """
-          |[
-          |		{
-          |			"name": "teamA-serv",
-          |			"githubUrl": {
-          |				"name": "github",
-          |				"url": "https://github.com/hmrc/teamA-serv"
-          |			},
-          |			"ci": [
-          |				{
-          |					"name": "open1",
-          |					"url": "http://open1/teamA-serv"
-          |				},
-          |				{
-          |					"name": "open2",
-          |					"url": "http://open2/teamA-serv"
-          |				}
-          |			]
-          |		},
-          |		{
-          |			"name": "teamA-frontend",
-          |			"githubUrl": {
-          |				"name": "github",
-          |				"url": "https://github.com/hmrc/teamA-frontend"
-          |			},
-          |			"ci": [
-          |				{
-          |					"name": "open1",
-          |					"url": "http://open1/teamA-frontend"
-          |				},
-          |				{
-          |					"name": "open2",
-          |					"url": "http://open2/teamA-frontend"
-          |				}
-          |			]
-          |		}
-          |	]""".stripMargin
+        """{
+          |  "cacheTimestamp": 1459857420000,
+          |  "data": [
+          |    {
+          |	     "name": "teamA-serv",
+          |	     "githubUrl": {
+          |		     "name": "github",
+          |		     "url": "https://github.com/hmrc/teamA-serv"
+          |	     },
+          |	     "ci": [
+          |		     {
+          |		       "name": "open1",
+          |		       "url": "http://open1/teamA-serv"
+          |		     },
+          |		     {
+          |		       "name": "open2",
+          |		       "url": "http://open2/teamA-serv"
+          |		     }
+          |	     ]
+          |    },
+          |    {
+          |	     "name": "teamA-frontend",
+          |	     "githubUrl": {
+          |	       "name": "github",
+          |	       "url": "https://github.com/hmrc/teamA-frontend"
+          |	     },
+          |	     "ci": [
+          |	 	     {
+          |	         "name": "open1",
+          |		       "url": "http://open1/teamA-frontend"
+          |		     },
+          |		     {
+          |		       "name": "open2",
+          |		       "url": "http://open2/teamA-frontend"
+          |		     }
+          |	     ]
+          |	   }
+          |  ]
+          |}""".stripMargin
       )))
 
       val response = await(WS.url(s"http://localhost:$port/catalogue/teams/teamA").get)
 
       response.status shouldBe 200
+      response.body should include("Last updated at: 12:57 05/04/2016")
+
       response.body should include("teamA-serv")
       response.body should include("""id="teamA-serv"""")
       response.body should include("https://github.com/hmrc/teamA-serv")

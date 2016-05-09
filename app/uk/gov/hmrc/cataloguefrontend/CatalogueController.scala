@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.controllers
+package uk.gov.hmrc.cataloguefrontend
 
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import play.api.mvc._
-import uk.gov.hmrc.cataloguefrontend.connector.CatalogueConnector
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html.{catalogue_main, team}
 
@@ -29,17 +29,17 @@ trait CatalogueController extends FrontendController {
 
   def catalogueConnector: CatalogueConnector
 
+  val dateformat = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy")
+
   def allTeams() = Action.async { implicit request =>
     catalogueConnector.allTeams.map { s =>
-      Ok(catalogue_main(teams = s.map(_.teamName).sortBy(_.toUpperCase)))
+      Ok(catalogue_main(dateformat.print(s.time), teams = s.data.map(_.teamName).sortBy(_.toUpperCase)))
     }
   }
 
   def teamServices(teamName: String) = Action.async { implicit request =>
     catalogueConnector.teamServices(teamName).map { services =>
-
-      Ok(team(teamName = teamName, services = services))
-
+      Ok(team(dateformat.print(services.time), teamName = teamName, services = services.data))
     }
   }
 }

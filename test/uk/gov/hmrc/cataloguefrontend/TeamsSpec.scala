@@ -33,26 +33,29 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
   "landing page" should {
     "show a list of teams" in  {
       catalogEndpoint(GET, "/catalogue/api/teams", willRespondWith = (200, Some(
-        """[{
-          | "teamName": "teamA",
-          | "repositories": [
-          |   {
-          |    "name": "attachments-example",
-          |    "url": "http://example.com/DDCN/attachments-example",
-          |    "isMicroservice": true
-          |   },
-          |   {
-          |    "name": "contacts-manager",
-          |    "url": "http://example.com/DDCN/contacts-manager-acceptance-tests",
-          |    "isMicroservice": false
-          |   }
-          | ]
-          |}]""".stripMargin
+        """{ "cacheTimestamp": 1459857420000,
+          |  "data": [{
+          |    "teamName": "teamA",
+          |    "repositories": [
+          |      {
+          |        "name": "attachments-example",
+          |        "url": "http://example.com/DDCN/attachments-example",
+          |        "isMicroservice": true
+          |      },
+          |      {
+          |        "name": "contacts-manager",
+          |        "url": "http://example.com/DDCN/contacts-manager-acceptance-tests",
+          |        "isMicroservice": false
+          |      }
+          |    ]
+          |  }]
+          |}""".stripMargin
       )))
 
       val response = await(WS.url(s"http://localhost:$port/catalogue/teams").get)
 
       response.status shouldBe 200
+      response.body should include("Last updated at: 12:57 05/04/2016")
       response.body should include("""<li><a href="/catalogue/teams/teamA">teamA</a></li>""")
     }
   }
