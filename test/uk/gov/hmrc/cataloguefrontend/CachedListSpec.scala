@@ -9,7 +9,7 @@ class CachedListSpec extends WordSpec with Matchers {
 
   "When deserialising from json, the cached list" should {
 
-    "Correctly interpret the cache timestamp" in {
+    "correctly interpret the cache timestamp" in {
 
       val timeStamp = new DateTime(2016, 4, 5, 12, 57).getMillis
       val expected = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy").print(timeStamp)

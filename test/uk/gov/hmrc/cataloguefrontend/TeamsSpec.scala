@@ -17,6 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
 import play.api.libs.ws.WS
@@ -32,8 +34,12 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
 
   "landing page" should {
     "show a list of teams" in  {
+
+      val timeStamp = new DateTime(2016, 4, 5, 12, 57).getMillis
+      val formatted = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy").print(timeStamp)
+
       catalogEndpoint(GET, "/api/teams", willRespondWith = (200, Some(
-        """{ "cacheTimestamp": 1459857420000,
+        s"""{ "cacheTimestamp": $timeStamp,
           |  "data": [{
           |    "teamName": "teamA",
           |    "repositories": [
@@ -55,7 +61,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
       val response = await(WS.url(s"http://localhost:$port/teams").get)
 
       response.status shouldBe 200
-      response.body should include("Last updated at: 12:57 05/04/2016")
+      response.body should include(s"Last updated at: $formatted")
       response.body should include("""<li><a href="/teams/teamA">teamA</a></li>""")
     }
   }
