@@ -49,20 +49,20 @@ object Team {
   implicit val formats = Json.format[Team]
 }
 
-trait CatalogueConnector extends ServicesConfig {
+trait TeamsAndServicesConnector extends ServicesConfig {
   val http: HttpGet
-  val catalogUrl: String
+  val teamsAndServicesBaseUrl: String
 
   def allTeams(implicit hc: HeaderCarrier): Future[CachedList[Team]] = {
-    http.GET[CachedList[Team]](catalogUrl + s"/api/teams")
+    http.GET[CachedList[Team]](teamsAndServicesBaseUrl + s"/api/teams")
   }
 
   def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[CachedList[Service]] = {
-    http.GET[CachedList[Service]](catalogUrl + s"/api/${URLEncoder.encode(teamName,"UTF-8")}/services")
+    http.GET[CachedList[Service]](teamsAndServicesBaseUrl + s"/api/${URLEncoder.encode(teamName,"UTF-8")}/services")
   }
 }
 
-object CatalogueConnector extends CatalogueConnector {
+object TeamsAndServicesConnector extends TeamsAndServicesConnector {
   override val http = WSHttp
-  override lazy val catalogUrl: String = baseUrl("catalogue")
+  override lazy val teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
 }

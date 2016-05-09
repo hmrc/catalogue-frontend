@@ -22,23 +22,23 @@ import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html.{catalogue_main, team}
 
 object CatalogueController extends CatalogueController {
-  override def catalogueConnector: CatalogueConnector = CatalogueConnector
+  override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
 }
 
 trait CatalogueController extends FrontendController {
 
-  def catalogueConnector: CatalogueConnector
+  def teamsAndServicesConnector: TeamsAndServicesConnector
 
   val dateformat = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy")
 
   def allTeams() = Action.async { implicit request =>
-    catalogueConnector.allTeams.map { s =>
+    teamsAndServicesConnector.allTeams.map { s =>
       Ok(catalogue_main(dateformat.print(s.time), teams = s.data.map(_.teamName).sortBy(_.toUpperCase)))
     }
   }
 
   def teamServices(teamName: String) = Action.async { implicit request =>
-    catalogueConnector.teamServices(teamName).map { services =>
+    teamsAndServicesConnector.teamServices(teamName).map { services =>
       Ok(team(dateformat.print(services.time), teamName = teamName, services = services.data))
     }
   }

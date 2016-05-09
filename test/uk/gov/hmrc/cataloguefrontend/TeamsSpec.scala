@@ -29,7 +29,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
-      "microservice.services.catalogue.port" -> endpointPort
+      "microservice.services.teams-and-services.port" -> endpointPort
     ))
 
   "landing page" should {
@@ -38,7 +38,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
       val timeStamp = new DateTime(2016, 4, 5, 12, 57).getMillis
       val formatted = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy").print(timeStamp)
 
-      catalogEndpoint(GET, "/api/teams", willRespondWith = (200, Some(
+      teamsAndServicesEndpoint(GET, "/api/teams", willRespondWith = (200, Some(
         s"""{ "cacheTimestamp": $timeStamp,
           |  "data": [{
           |    "teamName": "teamA",
