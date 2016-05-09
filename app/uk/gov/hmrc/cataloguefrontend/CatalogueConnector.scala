@@ -54,11 +54,11 @@ trait CatalogueConnector extends ServicesConfig {
   val catalogUrl: String
 
   def allTeams(implicit hc: HeaderCarrier): Future[CachedList[Team]] = {
-    http.GET[CachedList[Team]](catalogUrl + s"/catalogue/api/teams")
+    http.GET[CachedList[Team]](catalogUrl + s"/api/teams")
   }
 
   def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[CachedList[Service]] = {
-    http.GET[CachedList[Service]](catalogUrl + s"/catalogue/api/${URLEncoder.encode(teamName,"UTF-8")}/services")
+    http.GET[CachedList[Service]](catalogUrl + s"/api/${URLEncoder.encode(teamName,"UTF-8")}/services")
   }
 }
 
