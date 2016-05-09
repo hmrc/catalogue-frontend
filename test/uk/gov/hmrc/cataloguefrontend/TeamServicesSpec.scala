@@ -32,7 +32,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
   "landing page" should {
     "show a list of services" in {
-      catalogEndpoint(GET, "/catalogue/api/teamA/services", willRespondWith = (200, Some(
+      catalogEndpoint(GET, "/api/teamA/services", willRespondWith = (200, Some(
         """{
           |  "cacheTimestamp": 1459857420000,
           |  "data": [
@@ -74,7 +74,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
           |}""".stripMargin
       )))
 
-      val response = await(WS.url(s"http://localhost:$port/catalogue/teams/teamA").get)
+      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
       response.body should include("Last updated at: 12:57 05/04/2016")

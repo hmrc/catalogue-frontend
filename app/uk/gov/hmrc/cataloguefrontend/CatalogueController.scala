@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import org.joda.time.format.DateTimeFormat
 import play.api.mvc._
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html.{catalogue_main, team}
