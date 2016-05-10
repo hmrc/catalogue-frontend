@@ -23,6 +23,7 @@ import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
 import play.api.libs.ws.WS
 import play.api.test.FakeApplication
+import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.play.test.UnitSpec
 
 class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
@@ -35,7 +36,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
   val timeStamp = new DateTime(2016, 4, 5, 12, 57).getMillis
   val formatted = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy").print(timeStamp)
 
-  "landing page" should {
+  "Team services page" should {
+
     "show a list of services" in {
       teamsAndServicesEndpoint(GET, "/api/teamA/services", willRespondWith = (200, Some(
         s"""{
@@ -95,6 +97,22 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.body should include("https://github.com/hmrc/teamA-frontend")
       response.body should include("http://open1/teamA-frontend")
       response.body should include("http://open2/teamA-frontend")
+    }
+
+    "show a message if no services are found" in {
+
+      teamsAndServicesEndpoint(GET, "/api/teamA/services", willRespondWith = (200, Some(
+        s"""{
+            |  "cacheTimestamp": $timeStamp,
+            |  "data": []
+            |}""".stripMargin
+      )))
+
+      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+
+      response.status shouldBe 200
+      response.body should include(s"Last updated at: $formatted")
+      response.body should include(s"${HtmlFormat.escape(ViewMessages.noServices)}")
     }
   }
 }
