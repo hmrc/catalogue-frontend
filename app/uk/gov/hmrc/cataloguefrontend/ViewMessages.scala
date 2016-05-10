@@ -17,5 +17,5 @@
 package uk.gov.hmrc.cataloguefrontend
 
 object ViewMessages {
-  val noServices = "This team doesn't have any service repositories, or our service repository detection strategy needs improving. In case of the later, let us know in #team-platops on Slack."
+  val noServices = "This team doesn't have any service repositories, or our service repository detection strategy needs improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" target=\"_blank\">#team-platops</a> on Slack."
 }

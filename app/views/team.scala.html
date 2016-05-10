@@ -30,7 +30,7 @@
     <time>Last updated at: @cacheTimestampFormatted</time>
     <hr />
     @if(services.isEmpty) {
-        <p>@ViewMessages.noServices</p>
+        <p>@Html(ViewMessages.noServices)</p>
     } else {
         <ul>
         @for(service <- services) {

@@ -112,7 +112,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: $formatted")
-      response.body should include(s"${HtmlFormat.escape(ViewMessages.noServices)}")
+      response.body should include(s"${ViewMessages.noServices}")
     }
   }
 }

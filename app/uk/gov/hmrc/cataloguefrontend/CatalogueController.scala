@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import org.joda.time.format.DateTimeFormat
 import play.api.mvc._
 import uk.gov.hmrc.play.frontend.controller.FrontendController
-import views.html.{catalogue_main, team}
+import views.html.{teams_list, landing_page, team}
 
 object CatalogueController extends CatalogueController {
   override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
@@ -31,9 +31,13 @@ trait CatalogueController extends FrontendController {
 
   val dateformat = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy")
 
+  def landingPage() = Action { request =>
+    Ok(landing_page())
+  }
+
   def allTeams() = Action.async { implicit request =>
     teamsAndServicesConnector.allTeams.map { s =>
-      Ok(catalogue_main(dateformat.print(s.time), teams = s.data.map(_.teamName).sortBy(_.toUpperCase)))
+      Ok(teams_list(dateformat.print(s.time), teams = s.data.map(_.teamName).sortBy(_.toUpperCase)))
     }
   }
 

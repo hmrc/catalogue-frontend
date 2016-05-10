@@ -2,3 +2,4 @@
 
 GET        /teams                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allTeams
 GET        /teams/:teamName        uk.gov.hmrc.cataloguefrontend.CatalogueController.teamServices(teamName)
+GET        /                       uk.gov.hmrc.cataloguefrontend.CatalogueController.landingPage
