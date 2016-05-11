@@ -23,7 +23,6 @@ import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
 import play.api.libs.ws.WS
 import play.api.test.FakeApplication
-import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.play.test.UnitSpec
 
 class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
@@ -39,7 +38,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
   "Team services page" should {
 
     "show a list of services" in {
-      teamsAndServicesEndpoint(GET, "/api/teamA/services", willRespondWith = (200, Some(
+      teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
         s"""{
           |  "cacheTimestamp": $timeStamp,
           |  "data": [
@@ -101,7 +100,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
     "show a message if no services are found" in {
 
-      teamsAndServicesEndpoint(GET, "/api/teamA/services", willRespondWith = (200, Some(
+      teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
         s"""{
             |  "cacheTimestamp": $timeStamp,
             |  "data": []

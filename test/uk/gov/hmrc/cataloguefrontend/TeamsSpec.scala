@@ -45,13 +45,11 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
           |    "repositories": [
           |      {
           |        "name": "attachments-example",
-          |        "url": "http://example.com/DDCN/attachments-example",
-          |        "isMicroservice": true
+          |        "url": "http://example.com/DDCN/attachments-example"
           |      },
           |      {
           |        "name": "contacts-manager",
-          |        "url": "http://example.com/DDCN/contacts-manager-acceptance-tests",
-          |        "isMicroservice": false
+          |        "url": "http://example.com/DDCN/contacts-manager-acceptance-tests"
           |      }
           |    ]
           |  }]

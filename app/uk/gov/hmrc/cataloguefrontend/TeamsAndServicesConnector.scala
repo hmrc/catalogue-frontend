@@ -27,7 +27,7 @@ import scala.concurrent.Future
 
 case class Team(teamName: String, repositories: List[Repository])
 
-case class Repository(name: String, url: String, isMicroservice: Boolean)
+case class Repository(name: String, url: String)
 
 case class Link(name: String, url: String)
 
@@ -58,7 +58,7 @@ trait TeamsAndServicesConnector extends ServicesConfig {
   }
 
   def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[CachedList[Service]] = {
-    http.GET[CachedList[Service]](teamsAndServicesBaseUrl + s"/api/${URLEncoder.encode(teamName,"UTF-8")}/services")
+    http.GET[CachedList[Service]](teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName,"UTF-8")}/services")
   }
 }
 
