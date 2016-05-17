@@ -26,9 +26,11 @@
 
 <head><title>@{teamName}</title></head>
 <body>
-    <h1>@{teamName}'s Services</h1>
-    <time>Last updated at: @cacheTimestampFormatted</time>
-    <hr />
+    <header>
+        <h1>@{teamName}'s Services</h1>
+        <time>Last updated at: @cacheTimestampFormatted</time>
+        <hr />
+    </header>
     @if(services.isEmpty) {
         <p>@Html(ViewMessages.noServices)</p>
     } else {
@@ -37,11 +39,23 @@
             <li id="@{service.name}">
                 <a href="#@{service.name}">@service.name</a>
                 <ul>
-                    <li><a href="@{service.githubUrl.url}" target="_blank">@service.githubUrl.name</a> </li>
-                    @for(ciLink <- service.ci) {
+                @for(githubUrl <- service.githubUrls) {
+                    <li><a href="@{githubUrl.url}" target="_blank">@githubUrl.name</a></li>
+                }
+                @for(ciLink <- service.ci) {
                     <li><a href="@{ciLink.url}" target="_blank">@ciLink.name</a></li>
-                    }
+                }
                 </ul>
+                @if(service.teamNames.exists(_ != teamName)) {
+                    <br/>
+                    <span>@Html(ViewMessages.otherTeamsAre)</span>
+                    <ul>
+                    @for(otherTeamName <- service.teamNames.filter(_ != teamName)) {
+                        <li><a href="/teams/@otherTeamName#@service.name">@otherTeamName</a></li>
+                    }
+                    </ul>
+                }
+                <br/>
             </li>
         }
         </ul>

@@ -26,12 +26,21 @@
 
 </head>
 <body>
-    <h1>Teams</h1>
+    <h1>Services</h1>
     <time>Last updated at: @cacheTimestampFormatted</time>
     <hr />
     <ul>
     @for(service <- services) {
-        <li><a href="/teams/@service.teamName#@service.name">@service.name</a> - @service.teamName</li>
+        <li>
+            <span>@service.name</span>
+            <ul>
+                @for(teamName <- service.teamNames) {
+                    <li>
+                        <a href="/teams/@teamName#@service.name">@teamName</a>
+                    </li>
+                }
+            </ul>
+        </li>
     }
     </ul>
 </body>

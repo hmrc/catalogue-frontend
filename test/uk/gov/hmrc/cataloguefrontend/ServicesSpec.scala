@@ -45,11 +45,11 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
             |  "data": [
             |    {
             |	     "name": "teamA-serv",
-            |      "teamName": "teamA",
-            |	     "githubUrl": {
+            |      "teamNames": ["teamA"],
+            |	     "githubUrls": [{
             |		     "name": "github",
             |		     "url": "https://github.com/hmrc/teamA-serv"
-            |	     },
+            |	     }],
             |	     "ci": [
             |		     {
             |		       "name": "open1",
@@ -63,11 +63,11 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
             |    },
             |    {
             |	     "name": "teamB-frontend",
-            |      "teamName": "teamB",
-            |	     "githubUrl": {
+            |      "teamNames": ["teamB"],
+            |	     "githubUrls": [{
             |	       "name": "github",
             |	       "url": "https://github.com/hmrc/teamB-frontend"
-            |	     },
+            |	     }],
             |	     "ci": [
             |	 	     {
             |	         "name": "open1",
@@ -87,8 +87,51 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: $formatted")
-      response.body should include("""<li><a href="/teams/teamA#teamA-serv">teamA-serv</a> - teamA</li>""")
-      response.body should include("""<li><a href="/teams/teamB#teamB-frontend">teamB-frontend</a> - teamB</li>""")
+
+      response.body should include("""<span>teamA-serv</span>""")
+      response.body should include("""<a href="/teams/teamA#teamA-serv">teamA</a>""")
+
+      response.body should include("""<span>teamB-frontend</span>""")
+      response.body should include("""<a href="/teams/teamB#teamB-frontend">teamB</a>""")
+    }
+
+    "show multiple team links when a service is owned by more than one team" in  {
+
+      val timeStamp = new DateTime(2016, 4, 5, 12, 57).getMillis
+      val formatted = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy").print(timeStamp)
+
+      teamsAndServicesEndpoint(GET, "/api/services", willRespondWith = (200, Some(
+        s"""{
+            |  "cacheTimestamp": $timeStamp,
+            |  "data": [
+            |    {
+            |	     "name": "generic-serv",
+            |      "teamNames": ["teamA", "teamB"],
+            |	     "githubUrls": [{
+            |		     "name": "github",
+            |		     "url": "https://github.com/hmrc/teamA-serv"
+            |	     }],
+            |	     "ci": [
+            |		     {
+            |		       "name": "open1",
+            |		       "url": "http://open1/teamA-serv"
+            |		     },
+            |		     {
+            |		       "name": "open2",
+            |		       "url": "http://open2/teamA-serv"
+            |		     }
+            |	     ]
+            |    }
+            |  ]
+            |}""".stripMargin
+      )))
+
+      val response = await(WS.url(s"http://localhost:$port/services").get)
+
+      response.status shouldBe 200
+      response.body should include(s"Last updated at: $formatted")
+      response.body should include("""<a href="/teams/teamA#generic-serv">teamA</a>""")
+      response.body should include("""<a href="/teams/teamB#generic-serv">teamB</a>""")
     }
   }
 }

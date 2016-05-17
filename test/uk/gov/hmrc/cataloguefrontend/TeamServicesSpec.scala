@@ -44,11 +44,11 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
           |  "data": [
           |    {
           |	     "name": "teamA-serv",
-          |      "teamName": "teamA",
-          |	     "githubUrl": {
+          |      "teamNames": ["teamA"],
+          |	     "githubUrls": [{
           |		     "name": "github",
           |		     "url": "https://github.com/hmrc/teamA-serv"
-          |	     },
+          |	     }],
           |	     "ci": [
           |		     {
           |		       "name": "open1",
@@ -62,11 +62,11 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
           |    },
           |    {
           |	     "name": "teamA-frontend",
-          |      "teamName": "teamA",
-          |	     "githubUrl": {
+          |      "teamNames": ["teamA"],
+          |	     "githubUrls": [{
           |	       "name": "github",
           |	       "url": "https://github.com/hmrc/teamA-frontend"
-          |	     },
+          |	     }],
           |	     "ci": [
           |	 	     {
           |	         "name": "open1",
@@ -98,6 +98,82 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.body should include("https://github.com/hmrc/teamA-frontend")
       response.body should include("http://open1/teamA-frontend")
       response.body should include("http://open2/teamA-frontend")
+    }
+
+    "show other teams that a service belongs to" in {
+      teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
+        s"""{
+            |  "cacheTimestamp": $timeStamp,
+            |  "data": [
+            |    {
+            |	     "name": "teamA-serv",
+            |      "teamNames": ["teamA", "teamAnother"],
+            |	     "githubUrls": [{
+            |		     "name": "github",
+            |		     "url": "https://github.com/hmrc/teamA-serv"
+            |	     }],
+            |	     "ci": [
+            |		     {
+            |		       "name": "open1",
+            |		       "url": "http://open1/teamA-serv"
+            |		     },
+            |		     {
+            |		       "name": "open2",
+            |		       "url": "http://open2/teamA-serv"
+            |		     }
+            |	     ]
+            |    }
+            |  ]
+            |}""".stripMargin
+      )))
+
+      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+
+      response.status shouldBe 200
+
+      response.body should include(ViewMessages.otherTeamsAre)
+      response.body should include("<li><a href=\"/teams/teamAnother#teamA-serv\">teamAnother</a></li>")
+      response.body shouldNot include("<li><a href=\"/teams/teamA#teamA-serv")
+    }
+
+    "show multiple github links if they are present" in {
+      teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
+        s"""{
+            |  "cacheTimestamp": $timeStamp,
+            |  "data": [
+            |    {
+            |	     "name": "teamA-serv",
+            |      "teamNames": ["teamA", "teamAnother"],
+            |	     "githubUrls": [
+            |        {
+            |		       "name": "github",
+            |		       "url": "https://notopen.com/hmrc/teamA-serv"
+            |	       },
+            |        {
+            |		       "name": "github-open",
+            |		       "url": "https://github.com/hmrc/teamA-serv"
+            |	       }
+            |      ],
+            |	     "ci": [
+            |		     {
+            |		       "name": "open1",
+            |		       "url": "http://open1/teamA-serv"
+            |		     },
+            |		     {
+            |		       "name": "open2",
+            |		       "url": "http://open2/teamA-serv"
+            |		     }
+            |	     ]
+            |    }
+            |  ]
+            |}""".stripMargin
+      )))
+
+      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+      response.status shouldBe 200
+
+      response.body should include("<li><a href=\"https://notopen.com/hmrc/teamA-serv\" target=\"_blank\">github</a></li>")
+      response.body should include("<li><a href=\"https://github.com/hmrc/teamA-serv\" target=\"_blank\">github-open</a></li>")
     }
 
     "show a message if no services are found" in {

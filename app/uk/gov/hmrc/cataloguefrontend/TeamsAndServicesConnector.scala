@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 
 import scala.concurrent.Future
 
-case class Service(name: String, teamName: String, githubUrl: Link, ci: List[Link])
+case class Service(name: String, teamNames: Seq[String], githubUrls: Seq[Link], ci: List[Link])
 case class Link(name: String, url: String)
 
 trait TeamsAndServicesConnector extends ServicesConfig {
