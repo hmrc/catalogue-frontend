@@ -25,40 +25,26 @@ import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 
 import scala.concurrent.Future
 
-case class Team(teamName: String, repositories: List[Repository])
-
-case class Repository(name: String, url: String)
-
+case class Service(name: String, teamName: String, githubUrl: Link, ci: List[Link])
 case class Link(name: String, url: String)
-
-case class Service(name: String, githubUrl: Link, ci: List[Link])
-
-object Link {
-  implicit val formats = Json.format[Link]
-}
-
-object Service {
-  implicit val formats = Json.format[Service]
-}
-
-object Repository {
-  implicit val formats = Json.format[Repository]
-}
-
-object Team {
-  implicit val formats = Json.format[Team]
-}
 
 trait TeamsAndServicesConnector extends ServicesConfig {
   val http: HttpGet
   val teamsAndServicesBaseUrl: String
 
-  def allTeams(implicit hc: HeaderCarrier): Future[CachedList[Team]] = {
-    http.GET[CachedList[Team]](teamsAndServicesBaseUrl + s"/api/teams")
+  implicit val linkFormats = Json.format[Link]
+  implicit val serviceFormats = Json.format[Service]
+
+  def allTeams(implicit hc: HeaderCarrier): Future[CachedList[String]] = {
+    http.GET[CachedList[String]](teamsAndServicesBaseUrl + s"/api/teams")
   }
 
   def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[CachedList[Service]] = {
     http.GET[CachedList[Service]](teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName,"UTF-8")}/services")
+  }
+
+  def allServices(implicit hc: HeaderCarrier) : Future[CachedList[Service]] = {
+    http.GET[CachedList[Service]](teamsAndServicesBaseUrl + s"/api/services")
   }
 }
 

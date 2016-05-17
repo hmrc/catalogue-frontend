@@ -32,7 +32,8 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
       "microservice.services.teams-and-services.port" -> endpointPort
     ))
 
-  "landing page" should {
+  "Teams list" should {
+
     "show a list of teams" in  {
 
       val timeStamp = new DateTime(2016, 4, 5, 12, 57).getMillis
@@ -40,20 +41,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
 
       teamsAndServicesEndpoint(GET, "/api/teams", willRespondWith = (200, Some(
         s"""{ "cacheTimestamp": $timeStamp,
-          |  "data": [{
-          |    "teamName": "teamA",
-          |    "repositories": [
-          |      {
-          |        "name": "attachments-example",
-          |        "url": "http://example.com/DDCN/attachments-example"
-          |      },
-          |      {
-          |        "name": "contacts-manager",
-          |        "url": "http://example.com/DDCN/contacts-manager-acceptance-tests"
-          |      }
-          |    ]
-          |  }]
-          |}""".stripMargin
+            |  "data": ["teamA", "teamB", "TeamC"]}""".stripMargin
       )))
 
       val response = await(WS.url(s"http://localhost:$port/teams").get)

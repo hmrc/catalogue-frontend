@@ -44,6 +44,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
           |  "data": [
           |    {
           |	     "name": "teamA-serv",
+          |      "teamName": "teamA",
           |	     "githubUrl": {
           |		     "name": "github",
           |		     "url": "https://github.com/hmrc/teamA-serv"
@@ -61,6 +62,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
           |    },
           |    {
           |	     "name": "teamA-frontend",
+          |      "teamName": "teamA",
           |	     "githubUrl": {
           |	       "name": "github",
           |	       "url": "https://github.com/hmrc/teamA-frontend"
