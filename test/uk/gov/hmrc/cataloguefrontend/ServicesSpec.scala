@@ -88,10 +88,10 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
       response.status shouldBe 200
       response.body should include(s"Last updated at: $formatted")
 
-      response.body should include("""<span>teamA-serv</span>""")
+      response.body should include("""<a href="#teamA-serv">teamA-serv</a>""")
       response.body should include("""<a href="/teams/teamA#teamA-serv">teamA</a>""")
 
-      response.body should include("""<span>teamB-frontend</span>""")
+      response.body should include("""<a href="#teamB-frontend">teamB-frontend</a>""")
       response.body should include("""<a href="/teams/teamB#teamB-frontend">teamB</a>""")
     }
 

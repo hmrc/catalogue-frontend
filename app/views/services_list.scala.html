@@ -31,8 +31,8 @@
     <hr />
     <ul>
     @for(service <- services) {
-        <li>
-            <span>@service.name</span>
+        <li id="@{service.name}">
+            <a href="#@service.name">@service.name</a>
             <ul>
                 @for(teamName <- service.teamNames) {
                     <li>
