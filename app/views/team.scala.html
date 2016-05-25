@@ -16,21 +16,14 @@
 
 @import uk.gov.hmrc.cataloguefrontend.Service
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@(
-    cacheTimestampFormatted: String,
-    teamName:String,
-    services: Seq[Service]
-)
+@(cacheTimestampFormatted: String, teamName:String, services: Seq[Service])
 
-<html>
-
-<head><title>@{teamName}</title></head>
-<body>
+@standard_layout(teamName) {
     <header>
         <h1>@{teamName}'s Services</h1>
         <time>Last updated at: @cacheTimestampFormatted</time>
-        <hr />
     </header>
+
     @if(services.isEmpty) {
         <p>@Html(ViewMessages.noServices)</p>
     } else {
@@ -60,5 +53,4 @@
         }
         </ul>
     }
-</body>
-</html>
+}

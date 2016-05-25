@@ -13,25 +13,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
+@(cacheTimestampFormatted: String, teams: Seq[String])
 
-@(
-    cacheTimestampFormatted: String,
-    teams: Seq[String]
-)
-
-<html>
-
-<head>
-
-</head>
-<body>
-    <h1>Teams</h1>
-    <time>Last updated at: @cacheTimestampFormatted</time>
-    <hr />
+@standard_layout("Teams list","teams") {
+    <header>
+        <h1>Teams</h1>
+        <time>Last updated at: @cacheTimestampFormatted</time>
+    </header>
     <ul>
     @for(team <- teams) {
         <li><a href="/teams/@team">@team</a></li>
     }
     </ul>
-</body>
-</html>
+}

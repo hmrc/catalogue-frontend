@@ -1,0 +1,6 @@
+{
+  "name": "catalogue-frontend",
+  "dependencies": {
+    "bootstrap-sass": "^3.3.6"
+  }
+}

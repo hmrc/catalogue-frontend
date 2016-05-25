@@ -15,33 +15,28 @@
 *@
 
 @import uk.gov.hmrc.cataloguefrontend.Service
-@(
-    cacheTimestampFormatted: String,
-    services: Seq[Service]
-)
+@(cacheTimestampFormatted: String, services: Seq[Service])
 
-<html>
+@standard_layout("List of Services","services") {
+    <header>
+        <h1>Services</h1>
+        <time>Last updated at: @cacheTimestampFormatted</time>
+    </header>
 
-<head>
-
-</head>
-<body>
-    <h1>Services</h1>
-    <time>Last updated at: @cacheTimestampFormatted</time>
-    <hr />
     <ul>
     @for(service <- services) {
-        <li id="@{service.name}">
+        <li id="@{
+            service.name
+        }">
             <a href="#@service.name">@service.name</a>
             <ul>
-                @for(teamName <- service.teamNames) {
-                    <li>
-                        <a href="/teams/@teamName#@service.name">@teamName</a>
-                    </li>
-                }
+            @for(teamName <- service.teamNames) {
+                <li>
+                    <a href="/teams/@teamName#@service.name">@teamName</a>
+                </li>
+            }
             </ul>
         </li>
     }
     </ul>
-</body>
-</html>
+}
