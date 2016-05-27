@@ -40,8 +40,7 @@
                 }
                 </ul>
                 @if(service.teamNames.exists(_ != teamName)) {
-                    <br/>
-                    <span>@Html(ViewMessages.otherTeamsAre)</span>
+                    <span class="other-teams-message">@Html(ViewMessages.otherTeamsAre)</span>
                     <ul>
                     @for(otherTeamName <- service.teamNames.filter(_ != teamName)) {
                         <li><a href="/teams/@otherTeamName#@service.name">@otherTeamName</a></li>

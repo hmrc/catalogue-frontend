@@ -5854,5 +5854,8 @@ section header time {
   margin-top: -40px;
   margin-bottom: 40px;
   display: block; }
+section span.other-teams-message {
+  display: block;
+  margin-top: 10px; }
 
 /*# sourceMappingURL=catalogue-frontend.css.map */
