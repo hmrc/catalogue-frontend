@@ -5810,7 +5810,8 @@ button.close {
   .hidden-print {
     display: none !important; } }
 body {
-  font-size: 16px; }
+  font-size: 16px;
+  overflow: hidden; }
 
 h1 {
   margin-bottom: 50px;
@@ -5832,8 +5833,6 @@ h1, h2, h3, h4 {
   color: #a94442; }
 
 .navbar {
-  position: fixed;
-  width: 100%;
   border: none;
   font-weight: 700; }
   .navbar .navbar-header {
@@ -5851,7 +5850,8 @@ h1, h2, h3, h4 {
     border-bottom: 6px solid #005ea5; }
 
 section {
-  padding-top: 70px; }
+  overflow: scroll;
+  height: 100%; }
   section header time {
     margin-top: -40px;
     margin-bottom: 40px;
