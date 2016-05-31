@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
 import play.api.libs.ws.WS
@@ -32,16 +33,11 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       "microservice.services.teams-and-services.port" -> endpointPort
     ))
 
-  val timeStamp = new DateTime(2016, 4, 5, 12, 57).getMillis
-  val formatted = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy").print(timeStamp)
-
   "Team services page" should {
 
     "show a list of services" in {
       teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
-        s"""{
-          |  "cacheTimestamp": $timeStamp,
-          |  "data": [
+        s"""[
           |    {
           |	     "name": "teamA-serv",
           |      "teamNames": ["teamA"],
@@ -78,14 +74,13 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
           |		     }
           |	     ]
           |	   }
-          |  ]
-          |}""".stripMargin
-      )))
+          |]""".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: $formatted")
+      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
 
       response.body should include("teamA-serv")
       response.body should include("""id="teamA-serv"""")
@@ -102,9 +97,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
     "show other teams that a service belongs to" in {
       teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
-        s"""{
-            |  "cacheTimestamp": $timeStamp,
-            |  "data": [
+        s"""[
             |    {
             |	     "name": "teamA-serv",
             |      "teamNames": ["teamA", "teamAnother"],
@@ -123,8 +116,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
             |		     }
             |	     ]
             |    }
-            |  ]
-            |}""".stripMargin
+            ]""".stripMargin
       )))
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
@@ -138,9 +130,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
     "show multiple github links if they are present" in {
       teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
-        s"""{
-            |  "cacheTimestamp": $timeStamp,
-            |  "data": [
+        s"""[
             |    {
             |	     "name": "teamA-serv",
             |      "teamNames": ["teamA", "teamAnother"],
@@ -165,8 +155,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
             |		     }
             |	     ]
             |    }
-            |  ]
-            |}""".stripMargin
+            |]""".stripMargin
       )))
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
@@ -179,16 +168,13 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
     "show a message if no services are found" in {
 
       teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
-        s"""{
-            |  "cacheTimestamp": $timeStamp,
-            |  "data": []
-            |}""".stripMargin
-      )))
+        "[]".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: $formatted")
+      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
       response.body should include(s"${ViewMessages.noServices}")
     }
   }
