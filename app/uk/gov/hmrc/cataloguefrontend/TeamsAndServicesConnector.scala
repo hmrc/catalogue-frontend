@@ -21,7 +21,8 @@ import java.net.URLEncoder
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpReads, HttpResponse}
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
 
@@ -35,16 +36,28 @@ trait TeamsAndServicesConnector extends ServicesConfig {
   implicit val linkFormats = Json.format[Link]
   implicit val serviceFormats = Json.format[Service]
 
+  val CacheTimestampHeaderName = "X-Cache-Timestamp"
+  implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
+    override def read(method: String, url: String, response: HttpResponse) = response
+  }
+
   def allTeams(implicit hc: HeaderCarrier): Future[CachedList[String]] = {
-    http.GET[CachedList[String]](teamsAndServicesBaseUrl + s"/api/teams")
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map { toCachedList[String] }
   }
 
   def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[CachedList[Service]] = {
-    http.GET[CachedList[Service]](teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName,"UTF-8")}/services")
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName,"UTF-8")}/services")
+      .map { toCachedList[Service] }
   }
 
   def allServices(implicit hc: HeaderCarrier) : Future[CachedList[Service]] = {
-    http.GET[CachedList[Service]](teamsAndServicesBaseUrl + s"/api/services")
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services").map { toCachedList[Service] }
+  }
+
+  def toCachedList[T](r:HttpResponse)(implicit fjs : play.api.libs.json.Reads[T]):CachedList[T]={
+    new CachedList(
+      r.json.as[Seq[T]],
+      r.header(CacheTimestampHeaderName).getOrElse("(None)"))
   }
 }
 

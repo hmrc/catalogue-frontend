@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
 import play.api.libs.ws.WS
@@ -36,13 +37,8 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
 
     "show a list of services and link to the team services page" in  {
 
-      val timeStamp = new DateTime(2016, 4, 5, 12, 57).getMillis
-      val formatted = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy").print(timeStamp)
-
-      teamsAndServicesEndpoint(GET, "/api/services", willRespondWith = (200, Some(
-        s"""{
-            |  "cacheTimestamp": $timeStamp,
-            |  "data": [
+      teamsAndServicesEndpoint(GET, "/api/services",willRespondWith = (200, Some(
+        s"""[
             |    {
             |	     "name": "teamA-serv",
             |      "teamNames": ["teamA"],
@@ -79,14 +75,13 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
             |		     }
             |	     ]
             |	   }
-            |  ]
-            |}""".stripMargin
-      )))
+            |  ]""".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       val response = await(WS.url(s"http://localhost:$port/services").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: $formatted")
+      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
 
       response.body should include("""<a href="#teamA-serv">teamA-serv</a>""")
       response.body should include("""<a href="/teams/teamA#teamA-serv">teamA</a>""")
@@ -97,13 +92,8 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
 
     "show multiple team links when a service is owned by more than one team" in  {
 
-      val timeStamp = new DateTime(2016, 4, 5, 12, 57).getMillis
-      val formatted = DateTimeFormat.forPattern("HH:mm dd/MM/yyyy").print(timeStamp)
-
       teamsAndServicesEndpoint(GET, "/api/services", willRespondWith = (200, Some(
-        s"""{
-            |  "cacheTimestamp": $timeStamp,
-            |  "data": [
+        s"""[
             |    {
             |	     "name": "generic-serv",
             |      "teamNames": ["teamA", "teamB"],
@@ -122,14 +112,13 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
             |		     }
             |	     ]
             |    }
-            |  ]
-            |}""".stripMargin
-      )))
+            |]""".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       val response = await(WS.url(s"http://localhost:$port/services").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: $formatted")
+      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
       response.body should include("""<a href="/teams/teamA#generic-serv">teamA</a>""")
       response.body should include("""<a href="/teams/teamB#generic-serv">teamB</a>""")
     }

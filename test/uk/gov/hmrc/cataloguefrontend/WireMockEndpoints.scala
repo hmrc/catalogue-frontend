@@ -78,6 +78,10 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
       response.withBody(b)
     }.getOrElse(response)
 
+    extraHeaders.foreach { case(n, v) =>
+      resp.withHeader(n, v)
+    }
+
     builder.willReturn(resp)
 
     endpointMock.register(builder)
