@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
@@ -36,9 +33,6 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
   "Teams list" should {
 
     "show a list of teams" in  {
-
-      val timeStamp = LocalDateTime.of(2016, 4, 5, 12, 57)
-      val formatted = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy").format(timeStamp)
 
       teamsAndServicesEndpoint(GET, "/api/teams", willRespondWith = (200, Some(
         """["teamA", "teamB", "TeamC"]"""

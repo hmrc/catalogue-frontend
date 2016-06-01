@@ -42,27 +42,22 @@ trait TeamsAndServicesConnector extends ServicesConfig {
   }
 
   def allTeams(implicit hc: HeaderCarrier): Future[CachedList[String]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map { r =>
-      new CachedList(
-        r.json.as[Seq[String]],
-        r.header(CacheTimestampHeaderName).getOrElse("None"))
-    }
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map { toCachedList }
   }
 
   def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[CachedList[Service]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName,"UTF-8")}/services").map { r =>
-      new CachedList(
-        r.json.as[Seq[Service]],
-        r.header(CacheTimestampHeaderName).getOrElse("None"))
-    }
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName,"UTF-8")}/services")
+      .map { toCachedList }
   }
 
   def allServices(implicit hc: HeaderCarrier) : Future[CachedList[Service]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services").map { r =>
-      new CachedList(
-        r.json.as[Seq[Service]],
-        r.header(CacheTimestampHeaderName).getOrElse("None"))
-    }
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services").map { toCachedList }
+  }
+
+  def toCachedList(r:HttpResponse):CachedList[Service]={
+    new CachedList(
+      r.json.as[Seq[Service]],
+      r.header(CacheTimestampHeaderName).getOrElse("(None)"))
   }
 }
 

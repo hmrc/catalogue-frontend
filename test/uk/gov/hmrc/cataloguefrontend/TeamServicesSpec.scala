@@ -165,6 +165,19 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.body should include("<li><a href=\"https://github.com/hmrc/teamA-serv\" target=\"_blank\">github-open</a></li>")
     }
 
+    "show '(None)' if no timestamp is found" in {
+
+      teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
+        "[]".stripMargin
+      )))
+
+      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+
+      response.status shouldBe 200
+      response.body should include(s"Last updated at: (None)")
+      response.body should include(s"${ViewMessages.noServices}")
+    }
+
     "show a message if no services are found" in {
 
       teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
