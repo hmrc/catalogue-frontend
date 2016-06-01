@@ -42,21 +42,21 @@ trait TeamsAndServicesConnector extends ServicesConfig {
   }
 
   def allTeams(implicit hc: HeaderCarrier): Future[CachedList[String]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map { toCachedList }
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map { toCachedList[String] }
   }
 
   def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[CachedList[Service]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName,"UTF-8")}/services")
-      .map { toCachedList }
+      .map { toCachedList[Service] }
   }
 
   def allServices(implicit hc: HeaderCarrier) : Future[CachedList[Service]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services").map { toCachedList }
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services").map { toCachedList[Service] }
   }
 
-  def toCachedList(r:HttpResponse):CachedList[Service]={
+  def toCachedList[T](r:HttpResponse)(implicit fjs : play.api.libs.json.Reads[T]):CachedList[T]={
     new CachedList(
-      r.json.as[Seq[Service]],
+      r.json.as[Seq[T]],
       r.header(CacheTimestampHeaderName).getOrElse("(None)"))
   }
 }
