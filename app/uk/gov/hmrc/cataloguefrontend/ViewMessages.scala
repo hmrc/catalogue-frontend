@@ -16,10 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import play.api.Play
+
 object ViewMessages {
-  val noServices = "This team doesn't have any service repositories, or our service repository detection strategy needs " +
+  val noServices = "This team doesn't have any service repositories, or our <a href=\"/#maintenance\">service repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
     "target=\"_blank\">#team-platops</a> on Slack."
 
   val otherTeamsAre = "Other teams that also have a stake in this service are:"
+
+  val appConfigBaseUrl = Play.current.configuration.getString(s"urlTemplates.app-config-base").getOrElse("")
 }
