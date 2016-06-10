@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 
 import scala.concurrent.Future
 
-case class Service(name: String, teamNames: Seq[String], githubUrls: Seq[Link], ci: List[Link])
+case class Service(name: String, teamNames: Seq[String], githubUrls: Seq[Link], ci: Seq[Link])
 case class Link(name: String, url: String)
 
 trait TeamsAndServicesConnector extends ServicesConfig {
@@ -52,6 +52,19 @@ trait TeamsAndServicesConnector extends ServicesConfig {
 
   def allServices(implicit hc: HeaderCarrier) : Future[CachedList[Service]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services").map { toCachedList[Service] }
+  }
+
+  def service(name:String)(implicit hc: HeaderCarrier) : Future[Option[CachedItem[Service]]] = {
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/service/$name").map { toCachedItem[Service] }
+  }
+
+  def toCachedItem[T](r:HttpResponse)(implicit fjs : play.api.libs.json.Reads[T]):Option[CachedItem[T]]={
+    r.status match {
+      case 404 => None
+      case 200 => println(r.body);Some(new CachedItem(
+        r.json.as[T],
+        r.header(CacheTimestampHeaderName).getOrElse("(None)")))
+    }
   }
 
   def toCachedList[T](r:HttpResponse)(implicit fjs : play.api.libs.json.Reads[T]):CachedList[T]={

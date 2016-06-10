@@ -1,0 +1,63 @@
+@*
+* Copyright 2016 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+
+@import uk.gov.hmrc.cataloguefrontend.Service
+@(cacheTimestampFormatted: String, service: Service)
+
+@standard_layout(service.name,"service") {
+<header>
+    <h1>@service.name</h1>
+    <time>Last updated at: @cacheTimestampFormatted</time>
+</header>
+
+<span id="@{
+        service.name
+    }">
+    <ul>
+
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Owning Team(s)</h3>
+      </div>
+      <div class="panel-body">
+          <ul class="list-group">
+            @for(teamName <- service.teamNames) {
+                <li class="list-group-item">
+                    <a href="/teams/@teamName">@teamName</a>
+                </li>
+            }
+          </ul>
+      </div>
+    </div>
+
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Tools</h3>
+      </div>
+      <div class="panel-body">
+        <ul class="list-group">
+            @for(githubUrl <- service.githubUrls) {
+                <li class="list-group-item"><a href="@{githubUrl.url}" target="_blank">@githubUrl.name</a></li>
+            }
+            @for(ciLink <- service.ci) {
+                <li class="list-group-item"><a href="@{ciLink.url}" target="_blank">@ciLink.name</a></li>
+            }
+        </ul>
+      </div>
+    </div>
+}

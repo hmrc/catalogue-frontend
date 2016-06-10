@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import play.api.mvc._
 import uk.gov.hmrc.play.frontend.controller.FrontendController
-import views.html.{landing_page, services_list, team, teams_list}
+import views.html._
 
 object CatalogueController extends CatalogueController {
   override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
@@ -43,6 +43,13 @@ trait CatalogueController extends FrontendController {
   def teamServices(teamName: String) = Action.async { implicit request =>
     teamsAndServicesConnector.teamServices(teamName).map { services =>
       Ok(team(services.time, teamName, services = services.data))
+    }
+  }
+
+  def service(name:String) = Action.async { implicit request =>
+    teamsAndServicesConnector.service(name).map {
+      case Some(service) => Ok(service_info(service.time, service.data))
+      case None => NotFound
     }
   }
 

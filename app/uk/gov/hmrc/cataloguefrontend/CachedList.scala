@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+case class CachedItem[T](data: T, time: String)
+
 class CachedList[T](val data: Seq[T], val time: String) extends Seq[T] {
   override def length: Int = data.length
   override def apply(idx: Int): T = data.apply(idx)
