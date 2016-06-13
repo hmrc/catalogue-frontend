@@ -26,14 +26,16 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 
 import scala.concurrent.Future
 
-case class Service(name: String, teamNames: Seq[String], githubUrls: Seq[Link], ci: Seq[Link])
 case class Link(name: String, url: String)
+case class Environment(name:String, services:Seq[Link])
+case class Service(name: String, teamNames: Seq[String], githubUrls: Seq[Link], ci: Seq[Link], environments:Option[Seq[Environment]])
 
 trait TeamsAndServicesConnector extends ServicesConfig {
   val http: HttpGet
   val teamsAndServicesBaseUrl: String
 
   implicit val linkFormats = Json.format[Link]
+  implicit val environmentsFormats = Json.format[Environment]
   implicit val serviceFormats = Json.format[Service]
 
   val CacheTimestampHeaderName = "X-Cache-Timestamp"
@@ -61,7 +63,7 @@ trait TeamsAndServicesConnector extends ServicesConfig {
   def toCachedItem[T](r:HttpResponse)(implicit fjs : play.api.libs.json.Reads[T]):Option[CachedItem[T]]={
     r.status match {
       case 404 => None
-      case 200 => println(r.body);Some(new CachedItem(
+      case 200 => Some(new CachedItem(
         r.json.as[T],
         r.header(CacheTimestampHeaderName).getOrElse("(None)")))
     }

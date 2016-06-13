@@ -40,7 +40,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       response.status shouldBe 404
     }
 
-    "show the teams owning the service with github and ci links" in {
+    "show the teams owning the service with github, ci and environment links" in {
       teamsAndServicesEndpoint(GET, "/api/service/serv",willRespondWith = (200, Some(
         """
           |    {
@@ -59,8 +59,27 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
           |		       "name": "open2",
           |		       "url": "http://open2/serv"
           |		     }
-          |	     ]
-          |    }
+          |	     ],
+          |      "environments" : [{
+          |        "name" : "env1",
+          |        "services" : [{
+          |          "name": "ser1",
+          |          "url": "http://ser1/serv"
+          |        }, {
+          |          "name": "ser2",
+          |          "url": "http://ser2/serv"
+          |        }]
+          |      },{
+          |        "name" : "env2",
+          |        "services" : [{
+          |          "name": "ser1",
+          |          "url": "http://ser1/serv"
+          |        }, {
+          |          "name": "ser2",
+          |          "url": "http://ser2/serv"
+          |        }]
+          |       }]
+          |     }
         """.stripMargin)))
 
       val response = await(WS.url(s"http://localhost:$port/service/serv").get)
@@ -71,6 +90,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       response.body should include(s"open2")
       response.body should include(s"http://open1/serv")
       response.body should include(s"http://open2/serv")
+      response.body should include(s"http://ser1/serv")
+      response.body should include(s"http://ser2/serv")
 
     }
   }
