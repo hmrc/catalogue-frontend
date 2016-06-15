@@ -57,7 +57,7 @@ trait TeamsAndServicesConnector extends ServicesConfig {
   }
 
   def service(name:String)(implicit hc: HeaderCarrier) : Future[Option[CachedItem[Service]]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/service/$name").map { toCachedItem[Service] }
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services/$name").map { toCachedItem[Service] }
   }
 
   def toCachedItem[T](r:HttpResponse)(implicit fjs : play.api.libs.json.Reads[T]):Option[CachedItem[T]]={
