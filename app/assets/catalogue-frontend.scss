@@ -1,18 +1,66 @@
-@import 'vars';
+@import '_vars';
 @import '../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap';
 
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+html,
 body {
-  font-size: 16px;
+  height: 100%;
+}
+
+html {
+  box-sizing: border-box;
+  font-size: 100%;
+  line-height: 1.6;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-size: 1em;
+  color: $cod-grey;
+}
+
+ul {
+  list-style: none;
+  margin-bottom: 1em;
+  padding: 0;
 }
 
 h1 {
-  margin-bottom: 50px;
+  margin-bottom: 1.4em;
+  padding-bottom: .2em;
   border-bottom: 3px solid $brand-primary;
 }
 
 h1,h2,h3,h4 {
   color: $brand-primary;
   font-weight: 700;
+}
+
+h1 {
+  font-size: 2.4em;
+}
+
+h2 {
+  font-size: 2em;
+}
+
+h3 {
+  font-size: 1.2em;
+}
+
+a {
+  &:hover,
+  &:visited,
+  &:active {
+    color: $brand-primary;
+  }
 }
 
 @font-face {
@@ -43,12 +91,10 @@ h1,h2,h3,h4 {
   }
 
   .navbar-brand {
-    background: rgba(0, 0, 0, 0) url("/assets/govuk-crown-white.png") no-repeat scroll 0 -1px / 35px 31px;
     font-size: 30px;
     height: 30px;
     line-height: 30px;
     padding-top: 0px;
-    padding-left: 50px;
   }
 
   .active {
@@ -68,4 +114,61 @@ section {
     display: block;
     margin-top: 10px;
   }
+}
+
+.section-wrapper {
+  margin: 2em 0;
+}
+
+.list {
+  padding-left: 1.2em;
+  list-style: disc;
+  color: $grey-1;
+  margin-bottom: .4em;
+}
+
+.list-item {
+  margin-bottom: .6em;
+}
+
+.list--minimal {
+  list-style: none;
+}
+
+.last-updated {
+  color: $grey-1;
+}
+
+.sub-text {
+  color: $grey-1;
+
+  &:hover,
+  &:visited,
+  &:active {
+    color: $grey-1;
+  }
+}
+
+.board {
+  margin-bottom: 1em;
+  border: 1px solid $dark-grey;
+}
+
+.board__heading {
+  margin: 0;
+  padding: .8em;
+  background-color: $light-grey;
+  border-bottom: 1px solid $dark-grey;
+  color: $cod-grey;
+}
+
+.board__body {
+  padding: 1em 0 .2em;
+}
+
+.gov-crown {
+  width: 38px;
+  margin-right: .2em;
+  margin-top: -4px;
+  display: inline-block !important; // overriding bootstrap!
 }
