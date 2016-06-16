@@ -42,7 +42,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: anything")
-      response.body should include("""<li><a href="/teams/teamA">teamA</a></li>""")
+      response.body should include("""<li><a class="sub-text" href="/teams/teamA"><h3>teamA</h3></a></li>""")
     }
   }
 }
