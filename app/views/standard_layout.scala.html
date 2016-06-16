@@ -10,15 +10,16 @@
             <div class="container">
                 <header class="navbar-header">
                     <a href="/" class="navbar-brand">
+                        <img src="/assets/govuk-crown-white.png" alt="GOVUK crown" class="gov-crown">
                         Tax Platform Catalogue
                     </a>
                 </header>
                 <ul class="nav navbar-nav">
                     <li>
-                        <a href="/teams" @if(active=="teams") { class="active" }>Teams</a>
+                        <a href="/teams" class="@if(active=="teams") {active}">Teams</a>
                     </li>
                     <li>
-                        <a href="/services" @if(active=="services") { class="active" }>Services</a>
+                        <a href="/services" class="@if(active=="services") {active}">Services</a>
                     </li>
                 </ul>
             </div>

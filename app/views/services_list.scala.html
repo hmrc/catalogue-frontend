@@ -20,7 +20,7 @@
 @standard_layout("List of Services","services") {
     <header>
         <h1>Services</h1>
-        <time>Last updated at: @cacheTimestampFormatted</time>
+        <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
     </header>
 
     <ul>
@@ -28,11 +28,11 @@
         <li id="@{
             service.name
         }">
-            <a href="#@service.name">@service.name</a>
-            <ul>
+            <a href="#@service.name"><h3>@service.name</h3></a>
+            <ul class="list">
             @for(teamName <- service.teamNames) {
                 <li>
-                    <a href="/teams/@teamName#@service.name">@teamName</a>
+                    <a class="sub-text" href="/teams/@teamName#@service.name">@teamName</a>
                 </li>
             }
             </ul>

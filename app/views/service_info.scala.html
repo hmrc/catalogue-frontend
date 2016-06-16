@@ -20,72 +20,63 @@
 @standard_layout(service.name,"services") {
 <header>
     <h1>Service: @service.name</h1>
-    <time>Last updated at: @cacheTimestampFormatted</time>
+    <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
 </header>
 
-<span id="@{
-        service.name
-    }">
-
-
-<div class="alert alert-success" role="alert">
+<div class="alert alert-success" role="alert" id="@service.name">
+    <p>
     This Service Page contains generated links to other platform tools for this service.
-    If a link points to a page that doesn't exist, create the missing page in the platform tool.
+    If a link points to a page that doesn't exist, please create the missing page in the platform tool.
+    </p>
 </div>
+<section class="section-wrapper">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="board">
+            <h3 class="board__heading">Owning Team(s)</h3>
+              <div class="board__body">
+                  <ul class="list list--minimal">
+                    @for(teamName <- service.teamNames) {
+                        <li class="list-item">
+                            <a href="/teams/@teamName">@teamName</a>
+                        </li>
+                    }
+                  </ul>
+              </div>
+            </div>
+        </div>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Owning Team(s)</h3>
-          </div>
-          <div class="panel-body">
-              <ul class="list-group">
-                @for(teamName <- service.teamNames) {
-                    <li class="list-group-item">
-                        <a href="/teams/@teamName">@teamName</a>
-                    </li>
-                }
-              </ul>
-          </div>
+        <div class="col-md-6">
+            <div class="board">
+                <h3 class="board__heading">Code and Build</h3>
+                <div class="board__body">
+                    <ul class="list list--minimal">
+                        @for(githubUrl <- service.githubUrls) {
+                            <li class="list-item"><a href="@{githubUrl.url}" target="_blank">@githubUrl.name</a></li>
+                        }
+                        @for(ciLink <- service.ci) {
+                            <li class="list-item"><a href="@{ciLink.url}" target="_blank">@ciLink.name</a></li>
+                        }
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="col-md-6">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Code and Build</h3>
-          </div>
-          <div class="panel-body">
-            <ul class="list-group">
-                @for(githubUrl <- service.githubUrls) {
-                    <li class="list-group-item"><a href="@{githubUrl.url}" target="_blank">@githubUrl.name</a></li>
-                }
-                @for(ciLink <- service.ci) {
-                    <li class="list-group-item"><a href="@{ciLink.url}" target="_blank">@ciLink.name</a></li>
-                }
-            </ul>
-          </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    @for(environment <- service.environments.get){
+    <div class="row">
+        @for(environment <- service.environments.get){
         <div class="col-md-3">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">@environment.name</h3>
-          </div>
-          <div class="panel-body">
-            <ul class="list-group">
-                @for(tool <- environment.services){
-                    <li class="list-group-item"><a href="@{tool.url}" target="_blank">@tool.name</a></li>
-                }
-            </ul>
-          </div>
+            <div class="board">
+                <h3 class="board__heading">@environment.name</h3>
+                <div class="board__body">
+                    <ul class="list list--minimal">
+                        @for(tool <- environment.services){
+                            <li class="list-item"><a href="@{tool.url}" target="_blank">@tool.name</a></li>
+                        }
+                    </ul>
+                </div>
+            </div>
         </div>
+        }
     </div>
-    }
-</div>
+</section>
 }

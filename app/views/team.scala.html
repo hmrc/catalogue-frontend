@@ -21,7 +21,7 @@
 @standard_layout(teamName) {
     <header>
         <h1>@{teamName}'s Services</h1>
-        <time>Last updated at: @cacheTimestampFormatted</time>
+        <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
     </header>
 
     @if(services.isEmpty) {
@@ -30,8 +30,8 @@
         <ul>
         @for(service <- services) {
             <li id="@{service.name}">
-                <a href="#@{service.name}">@service.name</a>
-                <ul>
+                <h3><a href="#@{service.name}">@service.name</a></h3>
+                <ul class="list">
                 @for(githubUrl <- service.githubUrls) {
                     <li><a href="@{githubUrl.url}" target="_blank">@githubUrl.name</a></li>
                 }
@@ -40,7 +40,7 @@
                 }
                 </ul>
                 @if(service.teamNames.exists(_ != teamName)) {
-                    <span class="other-teams-message">@Html(ViewMessages.otherTeamsAre)</span>
+                    <h3>@Html(ViewMessages.otherTeamsAre)</h3>
                     <ul>
                     @for(otherTeamName <- service.teamNames.filter(_ != teamName)) {
                         <li><a href="/teams/@otherTeamName#@service.name">@otherTeamName</a></li>
