@@ -2,7 +2,7 @@
 
 GET        /teams                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allTeams
 GET        /teams/:teamName        uk.gov.hmrc.cataloguefrontend.CatalogueController.teamServices(teamName)
-GET        /services               uk.gov.hmrc.cataloguefrontend.CatalogueController.allServices
+GET        /services               uk.gov.hmrc.cataloguefrontend.CatalogueController.allServiceNames
 GET        /services/:name          uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
 GET        /assets/*file           controllers.Assets.at(path="/public", file)
 GET        /                       uk.gov.hmrc.cataloguefrontend.CatalogueController.landingPage

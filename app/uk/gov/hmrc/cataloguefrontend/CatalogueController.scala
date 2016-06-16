@@ -53,8 +53,8 @@ trait CatalogueController extends FrontendController {
     }
   }
 
-  def allServices() = Action.async { implicit request =>
-    teamsAndServicesConnector.allServices.map { services =>
+  def allServiceNames() = Action.async { implicit request =>
+    teamsAndServicesConnector.allServiceNames.map { services =>
       Ok(services_list(services.time, services = services.data))
     }
   }

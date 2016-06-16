@@ -15,7 +15,7 @@
 *@
 
 @import uk.gov.hmrc.cataloguefrontend.Service
-@(cacheTimestampFormatted: String, services: Seq[Service])
+@(cacheTimestampFormatted: String, services: Seq[String])
 
 @standard_layout("List of Services","services") {
     <header>
@@ -25,17 +25,8 @@
 
     <ul>
     @for(service <- services) {
-        <li id="@{
-            service.name
-        }">
-            <a href="#@service.name"><h3>@service.name</h3></a>
-            <ul class="list">
-            @for(teamName <- service.teamNames) {
-                <li>
-                    <a class="sub-text" href="/teams/@teamName#@service.name">@teamName</a>
-                </li>
-            }
-            </ul>
+        <li id="@{service}">
+            <a href="/services/@service">@service</a>
         </li>
     }
     </ul>
