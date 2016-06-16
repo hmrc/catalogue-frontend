@@ -18,11 +18,11 @@
 @standard_layout("Teams list","teams") {
     <header>
         <h1>Teams</h1>
-        <time>Last updated at: @cacheTimestampFormatted</time>
+        <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
     </header>
     <ul>
     @for(team <- teams) {
-        <li><a href="/teams/@team">@team</a></li>
+        <li><a class="sub-text" href="/teams/@team"><h3>@team</h3></a></li>
     }
     </ul>
 }

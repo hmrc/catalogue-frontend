@@ -1,22 +1,26 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @standard_layout() {
-    <h1>About the catalogue</h1>
-    <p>The catalogue is a resource you can use to find information about teams working on the Tax Platform and the
-        services they own.</p>
-    <p>Currently you can browse a list of teams or a list of services (which you can search using your browser) and drill down to access links to Jenkins, Travis
-        &amp; Github for each service belonging to that team.</p>
-    <p>This service is currently in an early alpha phase, and needs your feedback in order to improve. If you have
-        anything to offer, or find something wrong, you can contact us in the
-        <a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops</a>
-        room in Slack.</p>
-    <h2 id="maintenance">How is the catalogue maintained?</h2>
-    <p>We use team and repository information from Github open and Github Enterprise in order to programatically build
-        the catalogue. If you notice something is not quite right, you can usually fix it by updating Github directly.<p>
-    <p>Currently we only show data for repositories that contain services. We consider a repository as a service if we
-        find either an <em>app</em> folder, or a <em>Procfile</em> in it's root directory.</p>
-    <p>Some teams and repositories are hidden, for example microservice templates that have the structure of play apps
-        but are not services themselves. This list is maintained in
-        <a href="@Html(ViewMessages.appConfigBaseUrl)">app-config-base</a>. If you want a repository or team hidden,
-        you can send us a pull request.</p>
-    <p>We reload the catalogue once every hour, so you may need to wait a little while until your changes take effect.</p>
+    <section class="section-wrapper">
+        <h1>About the catalogue</h1>
+        <p>The catalogue is a resource you can use to find information about teams working on the Tax Platform and the
+            services they own.</p>
+        <p>Currently you can browse a list of teams or a list of services (which you can search using your browser) and drill down to access links to Jenkins, Travis
+            &amp; Github for each service belonging to that team.</p>
+        <p>This service is currently in an early alpha phase, and needs your feedback in order to improve. If you have
+            anything to offer, or find something wrong, you can contact us in the
+            <a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops</a>
+            room in Slack.</p>
+    </section>
+    <section class="section-wrapper">
+        <h2 id="maintenance">How is the catalogue maintained?</h2>
+        <p>We use team and repository information from Github open and Github Enterprise in order to programatically build
+            the catalogue. If you notice something is not quite right, you can usually fix it by updating Github directly.<p>
+        <p>Currently we only show data for repositories that contain services. We consider a repository as a service if we
+            find either an <em>app</em> folder, or a <em>Procfile</em> in it's root directory.</p>
+        <p>Some teams and repositories are hidden, for example microservice templates that have the structure of play apps
+            but are not services themselves. This list is maintained in
+            <a href="@Html(ViewMessages.appConfigBaseUrl)">app-config-base</a>. If you want a repository or team hidden,
+            you can send us a pull request.</p>
+        <p>We reload the catalogue once every hour, so you may need to wait a little while until your changes take effect.</p>
+    </section>
 }
