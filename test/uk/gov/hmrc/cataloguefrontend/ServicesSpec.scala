@@ -83,11 +83,11 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
       response.status shouldBe 200
       response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
 
-      response.body should include("""<a href="#teamA-serv">teamA-serv</a>""")
-      response.body should include("""<a href="/teams/teamA#teamA-serv">teamA</a>""")
+      response.body should include("""<a href="#teamA-serv"><h3>teamA-serv</h3></a>""")
+      response.body should include("""<a class="sub-text" href="/teams/teamA#teamA-serv">teamA</a>""")
 
-      response.body should include("""<a href="#teamB-frontend">teamB-frontend</a>""")
-      response.body should include("""<a href="/teams/teamB#teamB-frontend">teamB</a>""")
+      response.body should include("""<a href="#teamB-frontend"><h3>teamB-frontend</h3></a>""")
+      response.body should include("""<a class="sub-text" href="/teams/teamB#teamB-frontend">teamB</a>""")
     }
 
     "show multiple team links when a service is owned by more than one team" in  {
@@ -119,8 +119,8 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
-      response.body should include("""<a href="/teams/teamA#generic-serv">teamA</a>""")
-      response.body should include("""<a href="/teams/teamB#generic-serv">teamB</a>""")
+      response.body should include("""<a class="sub-text" href="/teams/teamA#generic-serv">teamA</a>""")
+      response.body should include("""<a class="sub-text" href="/teams/teamB#generic-serv">teamB</a>""")
     }
   }
 }
