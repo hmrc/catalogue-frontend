@@ -3,6 +3,11 @@
 
 [![Build Status](https://travis-ci.org/hmrc/catalogue-frontend.svg?branch=master)](https://travis-ci.org/hmrc/catalogue-frontend) [ ![Download](https://api.bintray.com/packages/hmrc/releases/catalogue-frontend/images/download.svg) ](https://bintray.com/hmrc/releases/catalogue-frontend/_latestVersion)
 
+* [Setup](#setup)
+* [Frontend Development](#frontend-development)
+* [Tests](#tests)
+* [License](#license)
+
 ### Setup
 
 You need to have:
@@ -46,6 +51,10 @@ To generate the css with sourcemaps run:
 
 To generate and minfiy the css with run:
 `$ npm run css`
+
+### Tests
+Please run tests with any work changes
+`$ sbt test`
 
 ### License
 
