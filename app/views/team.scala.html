@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @(cacheTimestampFormatted: String, teamName:String, services: Seq[String])
 
-@standard_layout(teamName) {
+@standard_layout(teamName,"teams") {
     <header>
         <h1>@{teamName}'s Services</h1>
         <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>

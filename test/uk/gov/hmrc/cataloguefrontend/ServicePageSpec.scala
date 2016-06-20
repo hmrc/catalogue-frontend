@@ -32,7 +32,6 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
   "A service page" should {
 
-
     "return a 404 when teams and services returns a 404" in {
       teamsAndServicesEndpoint(GET, "/api/services/serv", willRespondWith = (404, None))
 
@@ -40,7 +39,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       response.status shouldBe 404
     }
 
-    "show the teams owning the service with github, ci and environment links" in {
+    "show the teams owning the service with github, ci and environment links and info box" in {
       teamsAndServicesEndpoint(GET, "/api/services/serv",willRespondWith = (200, Some(
         """
           |    {
@@ -84,6 +83,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
       val response = await(WS.url(s"http://localhost:$port/services/serv").get)
       response.status shouldBe 200
+      response.body should include(s"links on this page are automatically generated")
       response.body should include(s"teamA")
       response.body should include(s"teamB")
       response.body should include(s"open1")
