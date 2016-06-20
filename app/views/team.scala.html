@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.Service
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@(cacheTimestampFormatted: String, teamName:String, services: Seq[Service])
+@(cacheTimestampFormatted: String, teamName:String, services: Seq[String])
 
 @standard_layout(teamName) {
     <header>
@@ -29,25 +29,8 @@
     } else {
         <ul>
         @for(service <- services) {
-            <li id="@{service.name}">
-                <h3><a href="#@{service.name}">@service.name</a></h3>
-                <ul class="list">
-                @for(githubUrl <- service.githubUrls) {
-                    <li><a href="@{githubUrl.url}" target="_blank">@githubUrl.name</a></li>
-                }
-                @for(ciLink <- service.ci) {
-                    <li><a href="@{ciLink.url}" target="_blank">@ciLink.name</a></li>
-                }
-                </ul>
-                @if(service.teamNames.exists(_ != teamName)) {
-                    <h3>@Html(ViewMessages.otherTeamsAre)</h3>
-                    <ul>
-                    @for(otherTeamName <- service.teamNames.filter(_ != teamName)) {
-                        <li><a href="/teams/@otherTeamName#@service.name">@otherTeamName</a></li>
-                    }
-                    </ul>
-                }
-                <br/>
+            <li id="@{service}">
+                <a href="/services/@{service}">@service</a>
             </li>
         }
         </ul>

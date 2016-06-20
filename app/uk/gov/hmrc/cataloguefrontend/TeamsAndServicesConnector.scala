@@ -47,9 +47,9 @@ trait TeamsAndServicesConnector extends ServicesConfig {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map { toCachedList[String] }
   }
 
-  def teamServices(teamName : String)(implicit hc: HeaderCarrier): Future[CachedList[Service]] = {
+  def teamServiceNames(teamName : String)(implicit hc: HeaderCarrier): Future[CachedList[String]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName,"UTF-8")}/services")
-      .map { toCachedList[Service] }
+      .map { toCachedList[String] }
   }
 
   def allServiceNames(implicit hc: HeaderCarrier) : Future[CachedList[String]] = {

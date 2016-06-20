@@ -37,44 +37,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
     "show a list of services" in {
       teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
-        s"""[
-          |    {
-          |	     "name": "teamA-serv",
-          |      "teamNames": ["teamA"],
-          |	     "githubUrls": [{
-          |		     "name": "github",
-          |		     "url": "https://github.com/hmrc/teamA-serv"
-          |	     }],
-          |	     "ci": [
-          |		     {
-          |		       "name": "open1",
-          |		       "url": "http://open1/teamA-serv"
-          |		     },
-          |		     {
-          |		       "name": "open2",
-          |		       "url": "http://open2/teamA-serv"
-          |		     }
-          |	     ]
-          |    },
-          |    {
-          |	     "name": "teamA-frontend",
-          |      "teamNames": ["teamA"],
-          |	     "githubUrls": [{
-          |	       "name": "github",
-          |	       "url": "https://github.com/hmrc/teamA-frontend"
-          |	     }],
-          |	     "ci": [
-          |	 	     {
-          |	         "name": "open1",
-          |		       "url": "http://open1/teamA-frontend"
-          |		     },
-          |		     {
-          |		       "name": "open2",
-          |		       "url": "http://open2/teamA-frontend"
-          |		     }
-          |	     ]
-          |	   }
-          |]""".stripMargin
+        s"""[ "teamA-serv", "teamA-frontend" ]""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
@@ -82,87 +45,9 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.status shouldBe 200
       response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
 
-      response.body should include("teamA-serv")
-      response.body should include("""id="teamA-serv"""")
-      response.body should include("https://github.com/hmrc/teamA-serv")
-      response.body should include("http://open1/teamA-serv")
-      response.body should include("http://open2/teamA-serv")
+      response.body should include("""<a href="/services/teamA-serv">teamA-serv</a>""")
+      response.body should include("""<a href="/services/teamA-frontend">teamA-frontend</a>""")
 
-      response.body should include("teamA-frontend")
-      response.body should include("""id="teamA-frontend"""")
-      response.body should include("https://github.com/hmrc/teamA-frontend")
-      response.body should include("http://open1/teamA-frontend")
-      response.body should include("http://open2/teamA-frontend")
-    }
-
-    "show other teams that a service belongs to" in {
-      teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
-        s"""[
-            |    {
-            |	     "name": "teamA-serv",
-            |      "teamNames": ["teamA", "teamAnother"],
-            |	     "githubUrls": [{
-            |		     "name": "github",
-            |		     "url": "https://github.com/hmrc/teamA-serv"
-            |	     }],
-            |	     "ci": [
-            |		     {
-            |		       "name": "open1",
-            |		       "url": "http://open1/teamA-serv"
-            |		     },
-            |		     {
-            |		       "name": "open2",
-            |		       "url": "http://open2/teamA-serv"
-            |		     }
-            |	     ]
-            |    }
-            ]""".stripMargin
-      )))
-
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
-
-      response.status shouldBe 200
-
-      response.body should include(ViewMessages.otherTeamsAre)
-      response.body should include("<li><a href=\"/teams/teamAnother#teamA-serv\">teamAnother</a></li>")
-      response.body shouldNot include("<li><a href=\"/teams/teamA#teamA-serv")
-    }
-
-    "show multiple github links if they are present" in {
-      teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
-        s"""[
-            |    {
-            |	     "name": "teamA-serv",
-            |      "teamNames": ["teamA", "teamAnother"],
-            |	     "githubUrls": [
-            |        {
-            |		       "name": "github",
-            |		       "url": "https://notopen.com/hmrc/teamA-serv"
-            |	       },
-            |        {
-            |		       "name": "github-open",
-            |		       "url": "https://github.com/hmrc/teamA-serv"
-            |	       }
-            |      ],
-            |	     "ci": [
-            |		     {
-            |		       "name": "open1",
-            |		       "url": "http://open1/teamA-serv"
-            |		     },
-            |		     {
-            |		       "name": "open2",
-            |		       "url": "http://open2/teamA-serv"
-            |		     }
-            |	     ]
-            |    }
-            |]""".stripMargin
-      )))
-
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
-      response.status shouldBe 200
-
-      response.body should include("<li><a href=\"https://notopen.com/hmrc/teamA-serv\" target=\"_blank\">github</a></li>")
-      response.body should include("<li><a href=\"https://github.com/hmrc/teamA-serv\" target=\"_blank\">github-open</a></li>")
     }
 
     "show '(None)' if no timestamp is found" in {
