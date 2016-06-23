@@ -47,15 +47,18 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
           |      "teamNames": ["teamA", "teamB"],
           |	     "githubUrls": [{
           |		     "name": "github",
+          |        "displayName": "github.com",
           |		     "url": "https://github.com/hmrc/serv"
           |	     }],
           |	     "ci": [
           |		     {
           |		       "name": "open1",
+          |		       "displayName": "open 1",
           |		       "url": "http://open1/serv"
           |		     },
           |		     {
           |		       "name": "open2",
+          |		       "displayName": "open 2",
           |		       "url": "http://open2/serv"
           |		     }
           |	     ],
@@ -63,18 +66,22 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
           |        "name" : "env1",
           |        "services" : [{
           |          "name": "ser1",
+          |		       "displayName": "service1",
           |          "url": "http://ser1/serv"
           |        }, {
           |          "name": "ser2",
+          |		       "displayName": "service2",
           |          "url": "http://ser2/serv"
           |        }]
           |      },{
           |        "name" : "env2",
           |        "services" : [{
           |          "name": "ser1",
+          |		       "displayName": "service1",
           |          "url": "http://ser1/serv"
           |        }, {
           |          "name": "ser2",
+          |		       "displayName": "service2",
           |          "url": "http://ser2/serv"
           |        }]
           |       }]
@@ -86,8 +93,11 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       response.body should include(s"links on this page are automatically generated")
       response.body should include(s"teamA")
       response.body should include(s"teamB")
-      response.body should include(s"open1")
-      response.body should include(s"open2")
+      response.body should include(s"open 1")
+      response.body should include(s"open 2")
+      response.body should include(s"service1")
+      response.body should include(s"service1")
+      response.body should include(s"github.com")
       response.body should include(s"http://open1/serv")
       response.body should include(s"http://open2/serv")
       response.body should include(s"http://ser1/serv")

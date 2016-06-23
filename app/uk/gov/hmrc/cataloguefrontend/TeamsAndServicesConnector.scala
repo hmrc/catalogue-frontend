@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 
 import scala.concurrent.Future
 
-case class Link(name: String, url: String)
+case class Link(name: String, displayName:String, url: String)
 case class Environment(name:String, services:Seq[Link])
 case class Service(name: String, teamNames: Seq[String], githubUrls: Seq[Link], ci: Seq[Link], environments:Option[Seq[Environment]])
 

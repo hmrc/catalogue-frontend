@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.Service
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 
 @(cacheTimestampFormatted: String, service: Service)
 
@@ -53,10 +54,10 @@
                 <div class="board__body">
                     <ul class="list list--minimal">
                         @for(githubUrl <- service.githubUrls) {
-                            <li class="list-item"><a href="@{githubUrl.url}" target="_blank">@githubUrl.name</a></li>
+                            <li class="list-item"><a href="@{githubUrl.url}" target="_blank">@{githubUrl.displayName}</a></li>
                         }
                         @for(ciLink <- service.ci) {
-                            <li class="list-item"><a href="@{ciLink.url}" target="_blank">@ciLink.name</a></li>
+                            <li class="list-item"><a href="@{ciLink.url}" target="_blank">@{ciLink.displayName}</a></li>
                         }
                     </ul>
                 </div>
@@ -71,7 +72,7 @@
                 <div class="board__body">
                     <ul class="list list--minimal">
                         @for(tool <- environment.services){
-                            <li class="list-item"><a href="@{tool.url}" target="_blank">@tool.name</a></li>
+                            <li class="list-item"><a href="@{tool.url}" target="_blank">@{tool.displayName}</a></li>
                         }
                     </ul>
                 </div>
