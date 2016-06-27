@@ -23,11 +23,18 @@
         <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
     </header>
 
-    <ul>
-    @for(service <- services) {
-        <li id="@{service}">
-            <a href="/services/@service">@service</a>
-        </li>
-    }
-    </ul>
+    <div id="service-list">
+        <div>
+        <input class="search" />
+        <span class="sort" data-sort="service-name">Filter</span>
+        </div>
+
+        <ul class="list" style='padding-top: 20px;'>
+        @for(service <- services) {
+            <li id="@{service}">
+                <a class="service-name" href="/services/@service">@service</a>
+            </li>
+        }
+        </ul>
+    </div>
 }

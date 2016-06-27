@@ -45,8 +45,8 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
-      response.body should include("""<a href="/services/teamA-serv">teamA-serv</a>""")
-      response.body should include("""<a href="/services/teamB-frontend">teamB-frontend</a>""")
+      response.body should include("""href="/services/teamA-serv"""")
+      response.body should include("""href="/services/teamB-frontend"""")
     }
   }
 }
