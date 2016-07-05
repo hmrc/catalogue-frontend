@@ -30,7 +30,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
-      "microservice.services.teams-and-services.port" -> endpointPort
+      "microservice.services.teams-and-services.port" -> endpointPort,
+      "usermanagement.portal.url" -> "http://usermanagement/link"
     ))
 
   "Team services page" should {
@@ -47,6 +48,20 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
       response.body should include("""<a href="/services/teamA-serv">teamA-serv</a>""")
       response.body should include("""<a href="/services/teamA-frontend">teamA-frontend</a>""")
+
+    }
+
+    "show user management portal link" in {
+      teamsAndServicesEndpoint(GET, "/api/teams/teamA/services", willRespondWith = (200, Some(
+        s"""[ "teamA-serv", "teamA-frontend" ]""".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+
+      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+
+      response.status shouldBe 200
+      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
+
+      response.body.toString should include("""<a href=http://usermanagement/link/team-teama target="_blank">team members</a>""")
 
     }
 

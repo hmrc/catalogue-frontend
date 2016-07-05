@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 
+import play.api.{Play, Configuration}
 import play.api.mvc._
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
@@ -42,11 +43,11 @@ trait CatalogueController extends FrontendController {
 
   def teamServiceNames(teamName: String) = Action.async { implicit request =>
     teamsAndServicesConnector.teamServiceNames(teamName).map { services =>
-      Ok(team(services.time, teamName, services = services.data))
+      Ok(team(services.time, teamName, services = services.data, teamMembersLink = UserManagementPortalLink(teamName, Play.current.configuration)))
     }
   }
 
-  def service(name:String) = Action.async { implicit request =>
+  def service(name: String) = Action.async { implicit request =>
     teamsAndServicesConnector.service(name).map {
       case Some(service) => Ok(service_info(service.time, service.data))
       case None => NotFound
@@ -58,4 +59,14 @@ trait CatalogueController extends FrontendController {
       Ok(services_list(services.time, services = services.data))
     }
   }
+}
+
+object UserManagementPortalLink {
+
+  def apply(teamName: String, config: Configuration): String = {
+
+    s"${config.getString("usermanagement.portal.url").fold("#")(x => s"$x/team-${teamName.toLowerCase.replace(" ", "-")}")}"
+
+  }
+
 }

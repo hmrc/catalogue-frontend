@@ -16,23 +16,43 @@
 
 @import uk.gov.hmrc.cataloguefrontend.Service
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@(cacheTimestampFormatted: String, teamName:String, services: Seq[String])
+@(cacheTimestampFormatted: String, teamName:String, services: Seq[String], teamMembersLink: String)
 
 @standard_layout(teamName,"teams") {
-    <header>
-        <h1>@{teamName}'s Services</h1>
-        <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
-    </header>
+<header>
+    <h1>@teamName</h1>
+    <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
+</header>
+<section class="section-wrapper">
 
-    @if(services.isEmpty) {
-        <p>@Html(ViewMessages.noServices)</p>
-    } else {
-        <ul>
-        @for(service <- services) {
-            <li id="@{service}">
-                <a href="/services/@{service}">@service</a>
-            </li>
-        }
-        </ul>
-    }
+    <div class="row">
+        <div class="col-md-6">
+            <div class="board">
+                <h3 class="board__heading">Team Members</h3>
+
+                <div class="board__body">
+                    find @teamName <a href=@teamMembersLink target="_blank">team members</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="board">
+                <h3 class="board__heading">Team Services</h3>
+
+                <div class="board__body">
+                    @if(services.isEmpty) {
+                    @Html(ViewMessages.noServices)
+                    } else {
+                    <ul class="list list--minimal">
+                        @for(service <- services) {
+                        <li class="list-item" id="@{service}"><a href="/services/@{service}">@service</a></li>
+                        }
+                    </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
 }
