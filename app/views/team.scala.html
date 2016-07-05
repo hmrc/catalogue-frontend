@@ -28,10 +28,10 @@
     <div class="row">
         <div class="col-md-6">
             <div class="board">
-                <h3 class="board__heading">Team Members</h3>
+                <h3 class="board__heading">Useful Links</h3>
 
                 <div class="board__body">
-                    find @teamName <a href=@teamMembersLink target="_blank">team members</a>
+                    <p class="list list--minimal">find @teamName <a href=@teamMembersLink target="_blank">team members</a></p>
                 </div>
             </div>
         </div>
@@ -41,7 +41,7 @@
 
                 <div class="board__body">
                     @if(services.isEmpty) {
-                    @Html(ViewMessages.noServices)
+                    <p class="list list--minimal">@Html(ViewMessages.noServices)</p>
                     } else {
                     <ul class="list list--minimal">
                         @for(service <- services) {
