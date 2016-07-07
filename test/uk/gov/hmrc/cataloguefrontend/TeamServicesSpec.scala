@@ -61,7 +61,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.status shouldBe 200
       response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
 
-      response.body.toString should include("""<a href=http://usermanagement/link/team-teama target="_blank">team members</a>""")
+      response.body.toString should include("""<a href=http://usermanagement/link/team-teama target="_blank">Team Members</a>""")
 
     }
 
