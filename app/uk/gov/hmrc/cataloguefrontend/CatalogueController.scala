@@ -65,7 +65,7 @@ object UserManagementPortalLink {
 
   def apply(teamName: String, config: Configuration): String = {
 
-    s"${config.getString("usermanagement.portal.url").fold("#")(x => s"$x/team-${teamName.toLowerCase.replace(" ", "-")}")}"
+    s"${config.getString("usermanagement.portal.url").fold("#")(x => s"$x/$teamName")}"
 
   }
 

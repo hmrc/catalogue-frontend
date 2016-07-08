@@ -28,17 +28,7 @@ class UserManagementPortalLinkSpec extends WordSpec with Matchers with MockitoSu
 
       val config: Configuration = mock[Configuration]
       when(config.getString("usermanagement.portal.url")).thenReturn(Some("http://url"))
-      UserManagementPortalLink(teamName = "MyTeam", config) shouldBe "http://url/team-myteam"
-
-
-    }
-
-
-    "should transform team name to lowercase and space with - for user management portal link for a team" in {
-
-      val config: Configuration = mock[Configuration]
-      when(config.getString("usermanagement.portal.url")).thenReturn(Some("http://url"))
-      UserManagementPortalLink(teamName = "My Team name", config) shouldBe "http://url/team-my-team-name"
+      UserManagementPortalLink(teamName = "My Team", config) shouldBe "http://url/My Team"
 
 
     }
