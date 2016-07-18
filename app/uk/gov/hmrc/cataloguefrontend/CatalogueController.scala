@@ -24,12 +24,13 @@ import views.html._
 
 object CatalogueController extends CatalogueController {
   override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
+  override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
 }
 
 trait CatalogueController extends FrontendController {
 
   def teamsAndServicesConnector: TeamsAndServicesConnector
-
+  def indicatorsConnector: IndicatorsConnector
 
   def landingPage() = Action { request =>
     Ok(landing_page())
@@ -48,8 +49,11 @@ trait CatalogueController extends FrontendController {
   }
 
   def service(name: String) = Action.async { implicit request =>
-    teamsAndServicesConnector.service(name).map {
-      case Some(service) => Ok(service_info(service.time, service.data))
+    for {
+      indicators <- indicatorsConnector.fprForService(name)
+      service <- teamsAndServicesConnector.service(name)
+    } yield service match {
+      case Some(s) => Ok(service_info(s.time, s.data, indicators.map(_.toJSString)))
       case None => NotFound
     }
   }

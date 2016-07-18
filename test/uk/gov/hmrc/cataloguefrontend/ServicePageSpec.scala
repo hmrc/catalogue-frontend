@@ -27,7 +27,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
-      "microservice.services.teams-and-services.port" -> endpointPort
+      "microservice.services.teams-and-services.port" -> endpointPort,
+      "microservice.services.indicators.port" -> endpointPort
     ))
 
   "A service page" should {
@@ -40,53 +41,9 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "show the teams owning the service with github, ci and environment links and info box" in {
-      teamsAndServicesEndpoint(GET, "/api/services/serv",willRespondWith = (200, Some(
-        """
-          |    {
-          |	     "name": "serv",
-          |      "teamNames": ["teamA", "teamB"],
-          |	     "githubUrls": [{
-          |		     "name": "github",
-          |        "displayName": "github.com",
-          |		     "url": "https://github.com/hmrc/serv"
-          |	     }],
-          |	     "ci": [
-          |		     {
-          |		       "name": "open1",
-          |		       "displayName": "open 1",
-          |		       "url": "http://open1/serv"
-          |		     },
-          |		     {
-          |		       "name": "open2",
-          |		       "displayName": "open 2",
-          |		       "url": "http://open2/serv"
-          |		     }
-          |	     ],
-          |      "environments" : [{
-          |        "name" : "env1",
-          |        "services" : [{
-          |          "name": "ser1",
-          |		       "displayName": "service1",
-          |          "url": "http://ser1/serv"
-          |        }, {
-          |          "name": "ser2",
-          |		       "displayName": "service2",
-          |          "url": "http://ser2/serv"
-          |        }]
-          |      },{
-          |        "name" : "env2",
-          |        "services" : [{
-          |          "name": "ser1",
-          |		       "displayName": "service1",
-          |          "url": "http://ser1/serv"
-          |        }, {
-          |          "name": "ser2",
-          |		       "displayName": "service2",
-          |          "url": "http://ser2/serv"
-          |        }]
-          |       }]
-          |     }
-        """.stripMargin)))
+
+      teamsAndServicesEndpoint(GET, "/api/services/serv",willRespondWith = (200, Some(serviceData)))
+      teamsAndServicesEndpoint(GET, "/api/indicators/service/serv/fpr",willRespondWith = (200, Some(indicatorData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/serv").get)
       response.status shouldBe 200
@@ -104,5 +61,99 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       response.body should include(s"http://ser2/serv")
 
     }
+
+    "Render the frequent production indicators graph" in {
+      teamsAndServicesEndpoint(GET, "/api/services/service-name",willRespondWith = (200, Some(serviceData)))
+      teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (200, Some(indicatorData)))
+
+      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
+      response.status shouldBe 200
+      response.body should include regex s"""var dataPoints = \\[\\s+\\["Period", "Lead time", "Interval"\\],"""
+      response.body should include(s"""["2015-11", 6, 1],["2015-12", 6, 5],["2016-01", 6, 6]""")
+
+      response.body should include(s"""var data = google.visualization.arrayToDataTable(dataPoints);""")
+      response.body should include(s"""chart.draw(data, options);""")
+    }
   }
+
+  val serviceData =
+    """
+      |    {
+      |	     "name": "serv",
+      |      "teamNames": ["teamA", "teamB"],
+      |	     "githubUrls": [{
+      |		     "name": "github",
+      |        "displayName": "github.com",
+      |		     "url": "https://github.com/hmrc/serv"
+      |	     }],
+      |	     "ci": [
+      |		     {
+      |		       "name": "open1",
+      |		       "displayName": "open 1",
+      |		       "url": "http://open1/serv"
+      |		     },
+      |		     {
+      |		       "name": "open2",
+      |		       "displayName": "open 2",
+      |		       "url": "http://open2/serv"
+      |		     }
+      |	     ],
+      |      "environments" : [{
+      |        "name" : "env1",
+      |        "services" : [{
+      |          "name": "ser1",
+      |		       "displayName": "service1",
+      |          "url": "http://ser1/serv"
+      |        }, {
+      |          "name": "ser2",
+      |		       "displayName": "service2",
+      |          "url": "http://ser2/serv"
+      |        }]
+      |      },{
+      |        "name" : "env2",
+      |        "services" : [{
+      |          "name": "ser1",
+      |		       "displayName": "service1",
+      |          "url": "http://ser1/serv"
+      |        }, {
+      |          "name": "ser2",
+      |		       "displayName": "service2",
+      |          "url": "http://ser2/serv"
+      |        }]
+      |       }]
+      |     }
+    """.stripMargin
+
+  val indicatorData =
+    """
+      |[
+      |  {
+      |    "period":"2015-11",
+      |    "leadTime":{
+      |      "median":6
+      |    },
+      |    "interval":{
+      |      "median":1
+      |    }
+      |  },
+      |  {
+      |    "period":"2015-12",
+      |    "leadTime":{
+      |      "median":6
+      |    },
+      |    "interval":{
+      |      "median":5
+      |    }
+      |  },
+      |  {
+      |    "period":"2016-01",
+      |    "leadTime":{
+      |      "median":6
+      |    },
+      |    "interval":{
+      |      "median":6
+      |    }
+      |  }
+      |]
+    """.stripMargin
 }

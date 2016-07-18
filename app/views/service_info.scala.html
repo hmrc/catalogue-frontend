@@ -18,12 +18,14 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 
-@(cacheTimestampFormatted: String, service: Service)
+@(cacheTimestampFormatted: String, service: Service, chartSetupJS: Seq[String])
 
 @standard_layout(service.name,"services") {
 <header>
     <h1>Service: @service.name</h1>
     <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 </header>
 
 <div class="alert alert-success" role="alert" id="@service.name">
@@ -80,5 +82,37 @@
         </div>
         }
     </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="board">
+                <h3 class="board__heading">Indicators</h3>
+                <div class="board__body">
+                    <div id="chart_div"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 }
+
+<script type="text/javascript">
+    google.charts.load('current', {packages: ['corechart', 'line']});
+    google.charts.setOnLoadCallback(function () {
+        var options = {
+            title: "Frequent Production Releases",
+            height: 350,
+            hAxis: { title: 'Period' },
+            vAxis: { title: 'Days' }
+        };
+
+        var dataPoints = [
+            ["Period", "Lead time", "Interval"],
+            @{Html(chartSetupJS.mkString(","))}
+        ];
+
+        var data = google.visualization.arrayToDataTable(dataPoints);
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+    });
+
+</script>
