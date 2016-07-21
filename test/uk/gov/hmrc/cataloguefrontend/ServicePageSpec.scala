@@ -68,10 +68,25 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
-      response.body should include regex s"""var dataPoints = \\[\\s+\\["Period", "Lead time", "Interval"\\],"""
-      response.body should include(s"""["2015-11", 6, 1],["2015-12", 6, 5],["2016-01", 6, 6]""")
+      response.body should include(s"""data.addColumn('string','Period');""")
+      response.body should include(s"""data.addColumn('number','Lead time');""")
+      response.body should include(s"""data.addColumn('number','Interval');""")
+      response.body should include(s"""data.addRows([["2015-11", 6, 1],["2015-12", 6, 5],["2016-01", 6, 6]]);""")
 
-      response.body should include(s"""var data = google.visualization.arrayToDataTable(dataPoints);""")
+      response.body should include(s"""chart.draw(data, options);""")
+    }
+
+    "Render an empty graph if the indicators service returns 404" in {
+      teamsAndServicesEndpoint(GET, "/api/services/service-name",willRespondWith = (200, Some(serviceData)))
+      teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (404, None))
+
+      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
+      response.status shouldBe 200
+      response.body should include(s"""data.addColumn('string','Period');""")
+      response.body should include(s"""data.addColumn('number','Lead time');""")
+      response.body should include(s"""data.addColumn('number','Interval');""")
+      response.body should include(s"""data.addRows([]);""")
+
       response.body should include(s"""chart.draw(data, options);""")
     }
   }

@@ -29,7 +29,6 @@ body {
 ul {
   list-style: none;
   margin-bottom: 1em;
-  padding: 20px 0 0;
 }
 
 h1 {
@@ -164,6 +163,19 @@ section {
 
 .board__body {
   padding: 1em 0 .2em;
+
+  p {
+    margin-left: 3.0em;
+    margin-top: 1.6em;
+    color: $darker-grey;
+  }
+}
+
+.indicator__title {
+  margin-left: 1.6em;
+  margin-bottom: 0;
+  color: $black;
+  font-weight: normal;
 }
 
 .gov-crown {

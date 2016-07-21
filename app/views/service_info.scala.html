@@ -87,6 +87,10 @@
             <div class="board">
                 <h3 class="board__heading">Indicators</h3>
                 <div class="board__body">
+                    <h4 class="indicator__title">Frequent Production Releases</h4>
+                    <p>
+                        @Html(ViewMessages.fprExplanationTest)
+                    </p>
                     <div id="chart_div"></div>
                 </div>
             </div>
@@ -99,18 +103,17 @@
     google.charts.load('current', {packages: ['corechart', 'line']});
     google.charts.setOnLoadCallback(function () {
         var options = {
-            title: "Frequent Production Releases",
             height: 350,
             hAxis: { title: 'Period' },
             vAxis: { title: 'Days' }
         };
 
-        var dataPoints = [
-            ["Period", "Lead time", "Interval"],
-            @{Html(chartSetupJS.mkString(","))}
-        ];
+        var data = new google.visualization.DataTable();
+        data.addColumn('string','Period');
+        data.addColumn('number','Lead time');
+        data.addColumn('number','Interval');
+        data.addRows([@{Html(chartSetupJS.mkString(","))}]);
 
-        var data = google.visualization.arrayToDataTable(dataPoints);
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
         chart.draw(data, options);
     });

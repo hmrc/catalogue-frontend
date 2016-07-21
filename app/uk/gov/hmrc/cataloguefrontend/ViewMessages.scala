@@ -19,6 +19,9 @@ package uk.gov.hmrc.cataloguefrontend
 import play.api.Play
 
 object ViewMessages {
+  val fprExplanationTest: String = "Lead time shows the duration in days between a release being created and that release being deployed to production<br/>" +
+    "Interval shows the duration in days between releases"
+
   val noServices = "This team doesn't have any service repositories, or our <a href=\"/#maintenance\">service repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
     "target=\"_blank\">#team-platops</a> on Slack."
