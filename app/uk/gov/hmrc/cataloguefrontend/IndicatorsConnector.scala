@@ -56,7 +56,9 @@ trait IndicatorsConnector extends ServicesConfig {
   implicit val fprFormats = Json.format[FprDataPoint]
 
   def fprForService(name:String)(implicit hc: HeaderCarrier) : Future[Seq[FprDataPoint]] = {
-    http.GET[Seq[FprDataPoint]](indicatorsBaseUrl + s"/service/$name/fpr")
+    http.GET[Seq[FprDataPoint]](indicatorsBaseUrl + s"/service/$name/fpr").recover {
+      case ex: Throwable => Seq()
+    }
   }
 }
 

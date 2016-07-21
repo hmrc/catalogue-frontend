@@ -50,8 +50,8 @@ trait CatalogueController extends FrontendController {
 
   def service(name: String) = Action.async { implicit request =>
     for {
-      indicators <- indicatorsConnector.fprForService(name)
       service <- teamsAndServicesConnector.service(name)
+      indicators <- indicatorsConnector.fprForService(name)
     } yield service match {
       case Some(s) => Ok(service_info(s.time, s.data, indicators.map(_.toJSString)))
       case None => NotFound
