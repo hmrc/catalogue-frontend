@@ -34,6 +34,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.net.URLEncoder
 
+import play.api.Logger
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
@@ -59,12 +60,17 @@ trait IndicatorsConnector extends ServicesConfig {
   }
 
   def fprForService(name:String)(implicit hc: HeaderCarrier) : Future[Option[Seq[FprDataPoint]]] = {
-    http.GET[HttpResponse](indicatorsBaseUrl + s"/service/$name/fpr").map { r =>
+    val url = indicatorsBaseUrl + s"/service/$name/fpr"
+    http.GET[HttpResponse](url).map { r =>
       r.status match {
         case 404 => Some(Seq())
         case 200 => Some(r.json.as[Seq[FprDataPoint]])
       }
-    }.recover { case ex => None }
+    }.recover {
+      case ex =>
+        Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+        None
+    }
   }
 }
 
