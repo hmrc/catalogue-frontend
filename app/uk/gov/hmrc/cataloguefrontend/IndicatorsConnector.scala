@@ -54,11 +54,17 @@ trait IndicatorsConnector extends ServicesConfig {
 
   implicit val medianFormats = Json.format[MedianDataPoint]
   implicit val fprFormats = Json.format[FprDataPoint]
+  implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
+    override def read(method: String, url: String, response: HttpResponse) = response
+  }
 
-  def fprForService(name:String)(implicit hc: HeaderCarrier) : Future[Seq[FprDataPoint]] = {
-    http.GET[Seq[FprDataPoint]](indicatorsBaseUrl + s"/service/$name/fpr").recover {
-      case ex: Throwable => Seq()
-    }
+  def fprForService(name:String)(implicit hc: HeaderCarrier) : Future[Option[Seq[FprDataPoint]]] = {
+    http.GET[HttpResponse](indicatorsBaseUrl + s"/service/$name/fpr").map { r =>
+      r.status match {
+        case 404 => Some(Seq())
+        case 200 => Some(r.json.as[Seq[FprDataPoint]])
+      }
+    }.recover { case ex => None }
   }
 }
 

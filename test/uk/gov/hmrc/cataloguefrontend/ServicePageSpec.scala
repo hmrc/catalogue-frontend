@@ -62,32 +62,56 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     }
 
-    "Render the frequent production indicators graph" in {
+    "Not render the frequent production indicators graph if indicators query param is not set" in {
       teamsAndServicesEndpoint(GET, "/api/services/service-name",willRespondWith = (200, Some(serviceData)))
       teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (200, Some(indicatorData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
-      response.body should include(s"""data.addColumn('string','Period');""")
-      response.body should include(s"""data.addColumn('number','Lead time');""")
-      response.body should include(s"""data.addColumn('number','Interval');""")
+      response.body shouldNot include(s"""data.addColumn('string', 'Period');""")
+      response.body shouldNot include(s"""data.addColumn('number', 'Lead time');""")
+      response.body shouldNot include(s"""data.addColumn('number', 'Interval');""")
+      response.body shouldNot include(s"""data.addRows([["2015-11", 6, 1],["2015-12", 6, 5],["2016-01", 6, 6]]);""")
+
+      response.body shouldNot include(s"""chart.draw(data, options);""")
+    }
+
+    "Render the frequent production indicators graph" in {
+      teamsAndServicesEndpoint(GET, "/api/services/service-name",willRespondWith = (200, Some(serviceData)))
+      teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (200, Some(indicatorData)))
+
+      val response = await(WS.url(s"http://localhost:$port/services/service-name?indicators=true").get)
+      response.status shouldBe 200
+      response.body should include(s"""data.addColumn('string', 'Period');""")
+      response.body should include(s"""data.addColumn('number', 'Lead time');""")
+      response.body should include(s"""data.addColumn('number', 'Interval');""")
       response.body should include(s"""data.addRows([["2015-11", 6, 1],["2015-12", 6, 5],["2016-01", 6, 6]]);""")
 
       response.body should include(s"""chart.draw(data, options);""")
     }
 
-    "Render an empty graph if the indicators service returns 404" in {
-      teamsAndServicesEndpoint(GET, "/api/services/service-name",willRespondWith = (200, Some(serviceData)))
+    "Render a message if the indicators service returns 404" in {
+      teamsAndServicesEndpoint(GET, "/api/services/service-name", willRespondWith = (200, Some(serviceData)))
       teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (404, None))
 
-      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
+      val response = await(WS.url(s"http://localhost:$port/services/service-name?indicators=true").get)
       response.status shouldBe 200
-      response.body should include(s"""data.addColumn('string','Period');""")
-      response.body should include(s"""data.addColumn('number','Lead time');""")
-      response.body should include(s"""data.addColumn('number','Interval');""")
-      response.body should include(s"""data.addRows([]);""")
+      response.body should include(s"""No data to show""")
+      response.body should include(ViewMessages.noIndicatorsData)
 
-      response.body should include(s"""chart.draw(data, options);""")
+      response.body shouldNot include(s"""chart.draw(data, options);""")
+    }
+
+    "Render a message if the indicators service encounters and error" in {
+      teamsAndServicesEndpoint(GET, "/api/services/service-name",willRespondWith = (200, Some(serviceData)))
+      teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr", willRespondWith = (500, None))
+
+      val response = await(WS.url(s"http://localhost:$port/services/service-name?indicators=true").get)
+      response.status shouldBe 200
+      response.body should include(s"""The catalogue encountered an error""")
+      response.body should include(ViewMessages.indicatorsServiceError)
+
+      response.body shouldNot include(s"""chart.draw(data, options);""")
     }
   }
 

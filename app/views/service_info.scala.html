@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 
-@(cacheTimestampFormatted: String, service: Service, chartSetupJS: Seq[String])
+@(cacheTimestampFormatted: String, service: Service, chartSetupJS: Option[Seq[String]], showIndicators: Boolean = false)
 
 @standard_layout(service.name,"services") {
 <header>
@@ -82,40 +82,56 @@
         </div>
         }
     </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="board">
-                <h3 class="board__heading">Indicators</h3>
-                <div class="board__body">
-                    <h4 class="indicator__title">Frequent Production Releases</h4>
-                    <p>
-                        @Html(ViewMessages.fprExplanationTest)
-                    </p>
-                    <div id="chart_div"></div>
+    @if(showIndicators) {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="board">
+                    <h3 class="board__heading">Indicators</h3>
+                    <div class="board__body">
+                        <h4 class="indicator__title">Frequent Production Releases</h4>
+                        @if(chartSetupJS.isDefined && chartSetupJS.get.nonEmpty) {
+                            @Html(ViewMessages.fprExplanationTest)
+                        }
+                        <div id="chart_div">
+                        @if(chartSetupJS.isEmpty) {
+                            <h2 class="chart-message text-center">The catalogue encountered an error</h2>
+                            <p>@Html(ViewMessages.indicatorsServiceError)</p>
+                        } else {
+                            @if(chartSetupJS.get.isEmpty) {
+                                <h2 class="chart-message text-center">No data to show</h2>
+                                <p>@Html(ViewMessages.noIndicatorsData)</p>
+                            }
+                        }
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    }
 </section>
 }
 
 <script type="text/javascript">
-    google.charts.load('current', {packages: ['corechart', 'line']});
-    google.charts.setOnLoadCallback(function () {
-        var options = {
-            height: 350,
-            hAxis: { title: 'Period' },
-            vAxis: { title: 'Days' }
-        };
 
-        var data = new google.visualization.DataTable();
-        data.addColumn('string','Period');
-        data.addColumn('number','Lead time');
-        data.addColumn('number','Interval');
-        data.addRows([@{Html(chartSetupJS.mkString(","))}]);
+    @if(showIndicators && chartSetupJS.isDefined && chartSetupJS.get.nonEmpty) {
+        google.charts.load('current', {packages: ['corechart', 'line']});
+        google.charts.setOnLoadCallback(function () {
 
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        chart.draw(data, options);
-    });
+            var options = {
+                height: 350,
+                hAxis: {title: 'Period'},
+                vAxis: {title: 'Days'}
+            };
+
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Period');
+            data.addColumn('number', 'Lead time');
+            data.addColumn('number', 'Interval');
+            data.addRows([@{Html( chartSetupJS.get.mkString(","))}]);
+
+            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        });
+    }
 
 </script>

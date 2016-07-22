@@ -49,11 +49,13 @@ trait CatalogueController extends FrontendController {
   }
 
   def service(name: String) = Action.async { implicit request =>
+    val showIndicators = request.getQueryString("indicators").isDefined
+
     for {
       service <- teamsAndServicesConnector.service(name)
       indicators <- indicatorsConnector.fprForService(name)
     } yield service match {
-      case Some(s) => Ok(service_info(s.time, s.data, indicators.map(_.toJSString)))
+      case Some(s) => Ok(service_info(s.time, s.data, indicators.map(_.map(_.toJSString)), showIndicators))
       case None => NotFound
     }
   }
