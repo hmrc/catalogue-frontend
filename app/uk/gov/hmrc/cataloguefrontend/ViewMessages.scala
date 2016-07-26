@@ -23,12 +23,12 @@ object ViewMessages {
     "to see your data. If you think you're seeing this message in error or have any other feedback, please let us know in " +
     "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\">#team-platops</a>"
 
-  val indicatorsServiceError = "Sorry about that, there was a problem talking to the indicators service. This will " +
+  val indicatorsServiceError = "Sorry about that, there was a problem fetching the indicator data. This will " +
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
     "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\">#team-platops</a>"
 
-  val fprExplanationTest = "<p>Lead time shows the duration in days between a release being created and that release being deployed to production<br />" +
-    "Interval shows the duration in days between releases</p><p>In both cases, trending towards lower numbers indicates improvement.</p>"
+  val fprExplanationTest = "<p><strong>Lead time</strong> shows the average number of days between a release being created and that release being deployed to production.<br />" +
+    "<strong>Interval</strong> shows the average number of days between production deployments.</p><p>In both cases, values represent a 3 month rolling median. Trending towards lower numbers indicates improvement.</p>"
 
   val noServices = "This team doesn't have any service repositories, or our <a href=\"/#maintenance\">service repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
