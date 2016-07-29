@@ -1,16 +1,8 @@
 import sbt._
-import uk.gov.hmrc.SbtAutoBuildPlugin
-import uk.gov.hmrc.versioning.SbtGitVersioning
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 
 object MicroServiceBuild extends Build with MicroService {
-
   override val appName = "catalogue-frontend"
-
-  override lazy val plugins: Seq[Plugins] = Seq(
-    SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin
-  )
-
+  override lazy val plugins: Seq[Plugins] = Seq()
   override lazy val appDependencies: Seq[ModuleID] = AppDependencies()
 }
 
@@ -18,10 +10,7 @@ private object AppDependencies {
   import play.PlayImport._
   import play.core.PlayVersion
 
-  private val hmrcTestVersion = "1.4.0"
-
   val compile = Seq(
-
     ws,
     "uk.gov.hmrc" %% "frontend-bootstrap" % "6.4.0",
     "uk.gov.hmrc" %% "play-config" % "2.0.1",
@@ -42,7 +31,7 @@ private object AppDependencies {
   object Test {
     def apply() = new TestDependencies {
       override lazy val test = Seq(
-        "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
+        "uk.gov.hmrc" %% "hmrctest" % "1.4.0" % scope,
         "org.scalatest" %% "scalatest" % "2.2.2" % scope,
         "org.scalatestplus" %% "play" % "1.2.0" % scope,
         "org.pegdown" % "pegdown" % "1.4.2" % scope,        
@@ -51,7 +40,6 @@ private object AppDependencies {
       )
     }.test
   }
-
 
   def apply() = compile ++ Test()
 }
