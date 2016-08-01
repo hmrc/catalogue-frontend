@@ -27,8 +27,10 @@ object ViewMessages {
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
     "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\">#team-platops</a>"
 
-  val fprExplanationTest = "<p><strong>Lead time</strong> shows the average number of days between a release being created and that release being deployed to production.<br />" +
-    "<strong>Interval</strong> shows the average number of days between production deployments.</p><p>In both cases, values represent a 3 month rolling median. Trending towards lower numbers indicates improvement.</p>"
+  val fprExplanationTest = "<p>This indicator shows your progress towards frequent delivery of business value. It is composed of two metrics:</p>" +
+    "<ul><li><strong>Lead Time</strong> - the number of days between creating a release and deploying it to production</li>" +
+    "<li><strong>Interval</strong> - the number of days between production deployments</li></ul>" +
+    "<p>For both metrics, each monthly measurement is a 3 month rolling median of production deployments. Trending towards lower numbers suggests an improvement, and an absence of numbers suggests inactivity.</p>"
 
   val noServices = "This team doesn't have any service repositories, or our <a href=\"/#maintenance\">service repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
