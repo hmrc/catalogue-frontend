@@ -45,8 +45,24 @@ class ServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest wi
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
+      response.body should include("<h1>Services</h1>")
       response.body should include("""href="/services/teamA-serv"""")
       response.body should include("""href="/services/teamB-frontend"""")
+    }
+
+    "show a list of libraries and link to the team library page" in  {
+
+      teamsAndServicesEndpoint(GET, "/api/libraries",willRespondWith = (200, Some(
+        """[ "teamA-library", "teamB-library" ]"""
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+
+      val response = await(WS.url(s"http://localhost:$port/libraries").get)
+
+      response.status shouldBe 200
+      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
+      response.body should include("<h1>Libraries</h1>")
+      response.body should include("""href="/libraries/teamA-library"""")
+      response.body should include("""href="/libraries/teamB-library"""")
     }
   }
 }

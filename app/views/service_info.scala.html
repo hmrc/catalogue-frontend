@@ -14,11 +14,11 @@
 * limitations under the License.
 *@
 
-@import uk.gov.hmrc.cataloguefrontend.Service
+@import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 
-@(cacheTimestampFormatted: String, service: Service, chartSetupJS: Option[Seq[String]])
+@(cacheTimestampFormatted: String, service: RepositoryDetails, chartSetupJS: Option[Seq[String]])
 
 @standard_layout(service.name,"services") {
 <header>
@@ -35,36 +35,8 @@
 </div>
 <section class="section-wrapper">
     <div class="row">
-        <div class="col-md-6">
-            <div class="board">
-            <h3 class="board__heading">Owning Team(s)</h3>
-              <div class="board__body">
-                  <ul class="list list--minimal">
-                    @for(teamName <- service.teamNames) {
-                        <li class="list-item">
-                            <a href="/teams/@teamName">@teamName</a>
-                        </li>
-                    }
-                  </ul>
-              </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="board">
-                <h3 class="board__heading">Code and Build</h3>
-                <div class="board__body">
-                    <ul class="list list--minimal">
-                        @for(githubUrl <- service.githubUrls) {
-                            <li class="list-item"><a href="@{githubUrl.url}" target="_blank">@{githubUrl.displayName}</a></li>
-                        }
-                        @for(ciLink <- service.ci) {
-                            <li class="list-item"><a href="@{ciLink.url}" target="_blank">@{ciLink.displayName}</a></li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </div>
+        @partials.repo_owning_teams(service)
+        @partials.code_and_builds(service)
     </div>
     <div class="row">
         @for(environment <- service.environments.get){

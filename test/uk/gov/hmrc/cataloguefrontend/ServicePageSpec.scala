@@ -42,7 +42,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     "show the teams owning the service with github, ci and environment links and info box" in {
 
-      teamsAndServicesEndpoint(GET, "/api/services/serv",willRespondWith = (200, Some(serviceData)))
+      teamsAndServicesEndpoint(GET, "/api/repositories/serv",willRespondWith = (200, Some(serviceData)))
       teamsAndServicesEndpoint(GET, "/api/indicators/service/serv/fpr",willRespondWith = (200, Some(indicatorData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/serv").get)
@@ -63,7 +63,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "Render the frequent production indicators graph" in {
-      teamsAndServicesEndpoint(GET, "/api/services/service-name",willRespondWith = (200, Some(serviceData)))
+      teamsAndServicesEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
       teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (200, Some(indicatorData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
@@ -77,7 +77,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "Render a message if the indicators service returns 404" in {
-      teamsAndServicesEndpoint(GET, "/api/services/service-name", willRespondWith = (200, Some(serviceData)))
+      teamsAndServicesEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceData)))
       teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (404, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
@@ -89,7 +89,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "Render a message if the indicators service encounters and error" in {
-      teamsAndServicesEndpoint(GET, "/api/services/service-name",willRespondWith = (200, Some(serviceData)))
+      teamsAndServicesEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
       teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr", willRespondWith = (500, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)

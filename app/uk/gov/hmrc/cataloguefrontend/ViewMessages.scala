@@ -32,7 +32,7 @@ object ViewMessages {
     "<li><strong>Interval</strong> - the number of days between production deployments</li></ul>" +
     "<p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>"
 
-  val noServices = "This team doesn't have any service repositories, or our <a href=\"/#maintenance\">service repository detection strategy</a> needs " +
+  def noRepoOfType(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
     "target=\"_blank\">#team-platops</a> on Slack."
 

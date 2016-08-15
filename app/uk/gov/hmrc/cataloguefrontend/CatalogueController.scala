@@ -42,15 +42,18 @@ trait CatalogueController extends FrontendController {
     }
   }
 
-  def teamServiceNames(teamName: String) = Action.async { implicit request =>
-    teamsAndServicesConnector.teamServiceNames(teamName).map { services =>
-      Ok(team(services.time, teamName, services = services.data, teamMembersLink = UserManagementPortalLink(teamName, Play.current.configuration)))
-    }
+  def team(teamName: String) = Action.async { implicit request =>
+      for {
+        typeRepos <- teamsAndServicesConnector.teamInfo(teamName)
+      } yield typeRepos match {
+        case Some(s) => Ok(team_info(s.time, teamName, repos = s.data, teamMembersLink = UserManagementPortalLink(teamName, Play.current.configuration)))
+        case None => NotFound
+      }
   }
 
   def service(name: String) = Action.async { implicit request =>
     for {
-      service <- teamsAndServicesConnector.service(name)
+      service <- teamsAndServicesConnector.repositoryDetails(name)
       indicators <- indicatorsConnector.fprForService(name)
     } yield service match {
       case Some(s) => Ok(service_info(s.time, s.data, indicators.map(_.map(_.toJSString))))
@@ -58,9 +61,24 @@ trait CatalogueController extends FrontendController {
     }
   }
 
+  def library(name: String) = Action.async { implicit request =>
+    for {
+      library <- teamsAndServicesConnector.repositoryDetails(name)
+    } yield library match {
+      case Some(s) => Ok(library_info(s.time, s.data))
+      case None => NotFound
+    }
+  }
+
   def allServiceNames() = Action.async { implicit request =>
     teamsAndServicesConnector.allServiceNames.map { services =>
-      Ok(services_list(services.time, services = services.data))
+      Ok(services_list(services.time, repositories = services.data))
+    }
+  }
+
+  def allLibraryNames() = Action.async { implicit request =>
+    teamsAndServicesConnector.allLibraryNames.map { libraries =>
+      Ok(library_list(libraries.time, repositories = libraries.data))
     }
   }
 }
