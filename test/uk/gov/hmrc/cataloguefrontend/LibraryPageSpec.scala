@@ -23,7 +23,7 @@ import play.api.libs.ws.WS
 import play.api.test.FakeApplication
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
+class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
@@ -31,81 +31,42 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       "microservice.services.indicators.port" -> endpointPort
     ))
 
-  "A service page" should {
+  "A library page" should {
 
     "return a 404 when teams and services returns a 404" in {
-      teamsAndServicesEndpoint(GET, "/api/services/serv", willRespondWith = (404, None))
-
-      val response = await(WS.url(s"http://localhost:$port/repositories/serv").get)
-      response.status shouldBe 404
-    }
-
-    "return a 404 when a Library is viewed as a service" in {
-      teamsAndServicesEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryData)))
+      teamsAndServicesEndpoint(GET, "/api/repositories/serv", willRespondWith = (404, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/serv").get)
       response.status shouldBe 404
     }
 
-    "show the teams owning the service with github, ci and environment links and info box" in {
+    "return a 404 when a Service is viewed as a Library" in {
+      teamsAndServicesEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(serviceData)))
 
-      teamsAndServicesEndpoint(GET, "/api/repositories/serv",willRespondWith = (200, Some(serviceData)))
-      teamsAndServicesEndpoint(GET, "/api/indicators/service/serv/fpr",willRespondWith = (200, Some(indicatorData)))
+      val response = await(WS.url(s"http://localhost:$port/libraries/serv").get)
+      response.status shouldBe 404
+    }
 
-      val response = await(WS.url(s"http://localhost:$port/services/serv").get)
+    "show the teams owning the service with github and ci links and info box" in {
+
+      teamsAndServicesEndpoint(GET, "/api/repositories/lib", willRespondWith = (200, Some(libraryData)))
+
+      val response = await(WS.url(s"http://localhost:$port/libraries/lib").get)
       response.status shouldBe 200
       response.body should include(s"links on this page are automatically generated")
       response.body should include(s"teamA")
       response.body should include(s"teamB")
-      response.body should include(s"open 1")
-      response.body should include(s"open 2")
-      response.body should include(s"service1")
-      response.body should include(s"service1")
+      response.body should include(s"ci open 1")
+      response.body should include(s"ci open 2")
       response.body should include(s"github.com")
-      response.body should include(s"http://open1/serv")
-      response.body should include(s"http://open2/serv")
-      response.body should include(s"http://ser1/serv")
-      response.body should include(s"http://ser2/serv")
-
+      response.body should include(s"http://ci.open1/lib")
+      response.body should include(s"http://ci.open2/lib")
+      response.body should not include "service1"
+      response.body should not include "service1"
+      response.body should not include "http://ser1/serv"
+      response.body should not include "http://ser2/serv"
     }
 
-    "Render the frequent production indicators graph" in {
-      teamsAndServicesEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
-      teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (200, Some(indicatorData)))
-
-      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
-      response.status shouldBe 200
-      response.body should include(s"""data.addColumn('string', 'Period');""")
-      response.body should include(s"""data.addColumn('number', 'Lead time');""")
-      response.body should include(s"""data.addColumn('number', 'Interval');""")
-      response.body should include(s"""data.addRows([["2015-11", 6, 1],["2015-12", 6, 5],["2016-01", 6, 6]]);""")
-
-      response.body should include(s"""chart.draw(data, options);""")
-    }
-
-    "Render a message if the indicators service returns 404" in {
-      teamsAndServicesEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceData)))
-      teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (404, None))
-
-      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
-      response.status shouldBe 200
-      response.body should include(s"""No data to show""")
-      response.body should include(ViewMessages.noIndicatorsData)
-
-      response.body shouldNot include(s"""chart.draw(data, options);""")
-    }
-
-    "Render a message if the indicators service encounters and error" in {
-      teamsAndServicesEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
-      teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr", willRespondWith = (500, None))
-
-      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
-      response.status shouldBe 200
-      response.body should include(s"""The catalogue encountered an error""")
-      response.body should include(ViewMessages.indicatorsServiceError)
-
-      response.body shouldNot include(s"""chart.draw(data, options);""")
-    }
   }
 
   val serviceData =
@@ -160,24 +121,24 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
   val libraryData =
     """
       |    {
-      |	     "name": "serv",
+      |	     "name": "lib",
       |      "repoType": "Library",
       |      "teamNames": ["teamA", "teamB"],
       |	     "githubUrls": [{
       |		     "name": "github",
       |        "displayName": "github.com",
-      |		     "url": "https://github.com/hmrc/serv"
+      |		     "url": "https://github.com/hmrc/lib"
       |	     }],
       |	     "ci": [
       |		     {
       |		       "name": "open1",
-      |		       "displayName": "open 1",
-      |		       "url": "http://open1/serv"
+      |		       "displayName": "ci open 1",
+      |		       "url": "http://ci.open1/lib"
       |		     },
       |		     {
       |		       "name": "open2",
-      |		       "displayName": "open 2",
-      |		       "url": "http://open2/serv"
+      |		       "displayName": "ci open 2",
+      |		       "url": "http://ci.open2/lib"
       |		     }
       |	     ]
       |     }

@@ -56,8 +56,8 @@ trait CatalogueController extends FrontendController {
       service <- teamsAndServicesConnector.repositoryDetails(name)
       indicators <- indicatorsConnector.fprForService(name)
     } yield service match {
-      case Some(s) => Ok(service_info(s.time, s.data, indicators.map(_.map(_.toJSString))))
-      case None => NotFound
+      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(service_info(s.time, s.data, indicators.map(_.map(_.toJSString))))
+      case _ => NotFound
     }
   }
 
@@ -65,8 +65,8 @@ trait CatalogueController extends FrontendController {
     for {
       library <- teamsAndServicesConnector.repositoryDetails(name)
     } yield library match {
-      case Some(s) => Ok(library_info(s.time, s.data))
-      case None => NotFound
+      case Some(s) if s.data.repoType == RepoType.Library => Ok(library_info(s.time, s.data))
+      case _ => NotFound
     }
   }
 
