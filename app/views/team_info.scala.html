@@ -27,7 +27,7 @@
 
     <div class="row">
 
-         <div class="col-md-3">
+         <div class="col-md-4">
             <div class="board">
                 <h3 class="board__heading">Details</h3>
 
@@ -40,41 +40,41 @@
         </div>
 
         @repos.get("Deployable").map{services =>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="board">
                 <h3 class="board__heading">Services</h3>
 
                 <div class="board__body">
-                    <ul class="list list--minimal">
                         @if(services.isEmpty) {
-                        <li class="list list--minimal">@Html(ViewMessages.noRepoOfType("service"))</li>
+                        <p>@Html(ViewMessages.noRepoOfType("service"))</p>
                         } else {
-                        @for(service <- services) {
-                        <li class="list-item" id="@{service}"><a href="/services/@{service}">@service</a></li>
+                        <ul class="list list--minimal">
+                            @for(service <- services) {
+                            <li class="list-item" id="@{service}"><a href="/services/@{service}">@service</a></li>
+                            }
+                        </ul>
                         }
-                        }
-                    </ul>
                 </div>
             </div>
         </div>
         }
 
         @repos.get("Library").map{libraries =>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="board">
                     <h3 class="board__heading">Libraries</h3>
 
                     <div class="board__body">
-                        <ul class="list list--minimal">
                             @if(libraries.isEmpty) {
-                               <li class="list list--minimal">@Html(ViewMessages.noRepoOfType("library"))</li>
+                               <p>@Html(ViewMessages.noRepoOfType("library"))</p>
 
                             } else {
-                                @for(library <- libraries) {
-                                    <li class="list-item" id="@{library}"><a href="/libraries/@{library}">@library</a></li>
-                                }
+                                <ul class="list list--minimal">
+                                        @for(library <- libraries) {
+                                            <li class="list-item" id="@{library}"><a href="/libraries/@{library}">@library</a></li>
+                                        }
+                                </ul>
                             }
-                        </ul>
                     </div>
                 </div>
             </div>
