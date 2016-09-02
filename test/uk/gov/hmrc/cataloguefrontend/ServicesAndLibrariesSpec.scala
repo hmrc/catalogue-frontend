@@ -37,7 +37,7 @@ class ServicesAndLibrariesSpec extends UnitSpec with BeforeAndAfter with OneServ
 
     "show a list of services and link to the team services page" in  {
 
-      teamsAndServicesEndpoint(GET, "/api/services",willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/services",willRespondWith = (200, Some(
         """[ "teamA-serv", "teamB-frontend" ]"""
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
@@ -52,7 +52,7 @@ class ServicesAndLibrariesSpec extends UnitSpec with BeforeAndAfter with OneServ
 
     "show a list of libraries and link to the team library page" in  {
 
-      teamsAndServicesEndpoint(GET, "/api/libraries",willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/libraries",willRespondWith = (200, Some(
         """[ "teamA-library", "teamB-library" ]"""
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 

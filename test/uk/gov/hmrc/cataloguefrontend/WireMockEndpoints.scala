@@ -62,7 +62,7 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
   }
 
 
-  def teamsAndServicesEndpoint(
+  def serviceEndpoint(
                        method:RequestMethod,
                        url:String,
                        extraHeaders:Map[String,String] = Map(),

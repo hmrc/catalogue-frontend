@@ -17,20 +17,30 @@
 package uk.gov.hmrc.cataloguefrontend
 
 
+import java.time.{LocalDate, LocalDateTime}
+import java.util.Date
+
+import play.api.data.Forms._
+import play.api.data.Form
 import play.api.{Play, Configuration}
 import play.api.mvc._
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
 
+import scala.concurrent.Future
+
 object CatalogueController extends CatalogueController {
   override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
+
   override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
 }
 
 trait CatalogueController extends FrontendController {
 
   def teamsAndServicesConnector: TeamsAndServicesConnector
+
   def indicatorsConnector: IndicatorsConnector
+
 
   def landingPage() = Action { request =>
     Ok(landing_page())
@@ -43,12 +53,12 @@ trait CatalogueController extends FrontendController {
   }
 
   def team(teamName: String) = Action.async { implicit request =>
-      for {
-        typeRepos <- teamsAndServicesConnector.teamInfo(teamName)
-      } yield typeRepos match {
-        case Some(s) => Ok(team_info(s.time, teamName, repos = s.data, teamMembersLink = UserManagementPortalLink(teamName, Play.current.configuration)))
-        case None => NotFound
-      }
+    for {
+      typeRepos <- teamsAndServicesConnector.teamInfo(teamName)
+    } yield typeRepos match {
+      case Some(s) => Ok(team_info(s.time, teamName, repos = s.data, teamMembersLink = UserManagementPortalLink(teamName, Play.current.configuration)))
+      case None => NotFound
+    }
   }
 
   def service(name: String) = Action.async { implicit request =>
@@ -81,6 +91,25 @@ trait CatalogueController extends FrontendController {
       Ok(library_list(libraries.time, repositories = libraries.data))
     }
   }
+
+  def releases() = Action.async { implicit request =>
+
+    Future.successful(Ok(ReleasesFilter.form.bindFromRequest().value.toString))
+  }
+}
+
+case class ReleasesFilter(serviceName: Option[String], from: Option[Date], to: Option[Date])
+
+object ReleasesFilter {
+
+  val form = Form(
+    mapping(
+      "serviceName" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
+      "from" -> optional(date("dd-MM-yyyy")),
+      "to" -> optional(date("dd-MM-yyyy"))
+    )(ReleasesFilter.apply)(ReleasesFilter.unapply)
+  )
+
 }
 
 object UserManagementPortalLink {

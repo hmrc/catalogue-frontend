@@ -34,14 +34,14 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
   "A library page" should {
 
     "return a 404 when teams and services returns a 404" in {
-      teamsAndServicesEndpoint(GET, "/api/repositories/serv", willRespondWith = (404, None))
+      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (404, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/serv").get)
       response.status shouldBe 404
     }
 
     "return a 404 when a Service is viewed as a Library" in {
-      teamsAndServicesEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(serviceData)))
+      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(serviceData)))
 
       val response = await(WS.url(s"http://localhost:$port/libraries/serv").get)
       response.status shouldBe 404
@@ -49,7 +49,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     "show the teams owning the service with github and ci links and info box" in {
 
-      teamsAndServicesEndpoint(GET, "/api/repositories/lib", willRespondWith = (200, Some(libraryData)))
+      serviceEndpoint(GET, "/api/repositories/lib", willRespondWith = (200, Some(libraryData)))
 
       val response = await(WS.url(s"http://localhost:$port/libraries/lib").get)
       response.status shouldBe 200

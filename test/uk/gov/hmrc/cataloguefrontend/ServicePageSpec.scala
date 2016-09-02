@@ -34,14 +34,14 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
   "A service page" should {
 
     "return a 404 when teams and services returns a 404" in {
-      teamsAndServicesEndpoint(GET, "/api/services/serv", willRespondWith = (404, None))
+      serviceEndpoint(GET, "/api/services/serv", willRespondWith = (404, None))
 
       val response = await(WS.url(s"http://localhost:$port/repositories/serv").get)
       response.status shouldBe 404
     }
 
     "return a 404 when a Library is viewed as a service" in {
-      teamsAndServicesEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryData)))
+      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/serv").get)
       response.status shouldBe 404
@@ -49,8 +49,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     "show the teams owning the service with github, ci and environment links and info box" in {
 
-      teamsAndServicesEndpoint(GET, "/api/repositories/serv",willRespondWith = (200, Some(serviceData)))
-      teamsAndServicesEndpoint(GET, "/api/indicators/service/serv/fpr",willRespondWith = (200, Some(indicatorData)))
+      serviceEndpoint(GET, "/api/repositories/serv",willRespondWith = (200, Some(serviceData)))
+      serviceEndpoint(GET, "/api/indicators/service/serv/fpr",willRespondWith = (200, Some(indicatorData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/serv").get)
       response.status shouldBe 200
@@ -70,8 +70,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "Render the frequent production indicators graph" in {
-      teamsAndServicesEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
-      teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (200, Some(indicatorData)))
+      serviceEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (200, Some(indicatorData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
@@ -84,8 +84,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "Render a message if the indicators service returns 404" in {
-      teamsAndServicesEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceData)))
-      teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (404, None))
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (404, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
@@ -96,8 +96,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "Render a message if the indicators service encounters and error" in {
-      teamsAndServicesEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
-      teamsAndServicesEndpoint(GET, "/api/indicators/service/service-name/fpr", willRespondWith = (500, None))
+      serviceEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/fpr", willRespondWith = (500, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200

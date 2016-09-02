@@ -34,7 +34,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with 
 
     "show a list of teams" in  {
 
-      teamsAndServicesEndpoint(GET, "/api/teams", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams", willRespondWith = (200, Some(
         """["teamA", "teamB", "TeamC"]"""
       )), extraHeaders = Map("X-Cache-Timestamp" -> "anything"))
 

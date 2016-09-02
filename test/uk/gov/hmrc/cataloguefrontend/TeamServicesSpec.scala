@@ -34,7 +34,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
   "Team services page" should {
 
     "show a list of libraries and services" in {
-      teamsAndServicesEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
         """{"Library":["teamA-lib"], "Deployable": [ "teamA-serv", "teamA-frontend" ]  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
@@ -50,7 +50,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
     }
 
     "show user management portal link" in {
-      teamsAndServicesEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
         """{"Library":[], "Service": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
@@ -65,7 +65,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
     "show '(None)' if no timestamp is found" in {
 
-      teamsAndServicesEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
         """{"Library":[], "Service": []  }""".stripMargin
       )))
 
@@ -78,7 +78,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
     "show a message if no services are found" in {
 
-      teamsAndServicesEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
         """{"Library":[], "Deployable": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
