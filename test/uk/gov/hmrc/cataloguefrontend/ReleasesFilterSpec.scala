@@ -16,27 +16,29 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.text.DateFormat
 import java.time.format.DateTimeFormatter
-import java.util.Date
+import java.time.{LocalDate, LocalDateTime}
 
 import org.scalatest.{Matchers, WordSpec}
 
 class ReleasesFilterSpec extends WordSpec with Matchers {
-  val format = new java.text.SimpleDateFormat("dd-MM-yyyy")
+
+  implicit def toDateTime(s : String) : LocalDateTime = LocalDate.parse(s, DateTimeFormatter.ofPattern("dd-MM-yyyy")).atStartOfDay()
 
   "form" should {
     "bind the form correctly" in {
 
+
+
       val formData: Map[String, String] = Map("serviceName" -> "aService", "from" -> "23-04-2016", "to" -> "25-05-2016")
 
-      ReleasesFilter.form.bind(formData).value shouldBe Some(ReleasesFilter(Some("aService"), Some(format.parse("23-04-2016")), Some(format.parse("25-05-2016"))))
+      ReleasesFilter.form.bind(formData).value shouldBe Some(ReleasesFilter(Some("aService"), Some("23-04-2016"), Some("25-05-2016")))
 
-      ReleasesFilter.form.bind(formData - "to").value shouldBe Some(ReleasesFilter(Some("aService"), Some(format.parse("23-04-2016")), None))
+      ReleasesFilter.form.bind(formData - "to").value shouldBe Some(ReleasesFilter(Some("aService"), Some("23-04-2016"), None))
       ReleasesFilter.form.bind(formData - "to" - "from").value shouldBe Some(ReleasesFilter(Some("aService"), None, None))
       ReleasesFilter.form.bind(formData - "serviceName" - "to" - "from").value shouldBe Some(ReleasesFilter(None, None, None))
-      ReleasesFilter.form.bind(formData + ("serviceName" -> "" )).value shouldBe Some(ReleasesFilter(None, Some(format.parse("23-04-2016")), Some(format.parse("25-05-2016"))))
-      ReleasesFilter.form.bind(formData + ("serviceName" -> " " )).value shouldBe Some(ReleasesFilter(None, Some(format.parse("23-04-2016")), Some(format.parse("25-05-2016"))))
+      ReleasesFilter.form.bind(formData + ("serviceName" -> "" )).value shouldBe Some(ReleasesFilter(None, Some("23-04-2016"), Some("25-05-2016")))
+      ReleasesFilter.form.bind(formData + ("serviceName" -> " " )).value shouldBe Some(ReleasesFilter(None, Some("23-04-2016"), Some("25-05-2016")))
 
     }
 

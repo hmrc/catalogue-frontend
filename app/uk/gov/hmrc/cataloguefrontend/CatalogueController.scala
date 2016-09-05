@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{ZoneOffset, LocalDate, LocalDateTime}
 import java.util.Date
 
 import play.api.data.Forms._
@@ -25,7 +25,9 @@ import play.api.data.Form
 import play.api.{Play, Configuration}
 import play.api.mvc._
 import uk.gov.hmrc.play.frontend.controller.FrontendController
+import uk.gov.hmrc.play.http.HeaderCarrier
 import views.html._
+import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
 import scala.concurrent.Future
 
@@ -33,6 +35,8 @@ object CatalogueController extends CatalogueController {
   override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
 
   override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
+
+  override def serviceReleases: ServiceReleasesConnector = ServiceReleasesConnector
 }
 
 trait CatalogueController extends FrontendController {
@@ -40,6 +44,8 @@ trait CatalogueController extends FrontendController {
   def teamsAndServicesConnector: TeamsAndServicesConnector
 
   def indicatorsConnector: IndicatorsConnector
+
+  def serviceReleases: ServiceReleasesConnector
 
 
   def landingPage() = Action { request =>
@@ -93,20 +99,34 @@ trait CatalogueController extends FrontendController {
   }
 
   def releases() = Action.async { implicit request =>
+    
+    import ReleaseFiltering._
 
-    Future.successful(Ok(ReleasesFilter.form.bindFromRequest().value.toString))
+    serviceReleases.getReleases().map { rs =>
+
+      val form: Form[ReleasesFilter] = ReleasesFilter.form.bindFromRequest()
+      form.fold(
+      {
+        errors => Ok(releases_list(rs, errors))
+      }, {
+        query => Ok(releases_list(rs.filter(query), form))
+      })
+
+    }
+
   }
+
 }
 
-case class ReleasesFilter(serviceName: Option[String], from: Option[Date], to: Option[Date])
+case class ReleasesFilter(serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None)
 
 object ReleasesFilter {
 
   val form = Form(
     mapping(
       "serviceName" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
-      "from" -> optional(date("dd-MM-yyyy")),
-      "to" -> optional(date("dd-MM-yyyy"))
+      "from" -> optional(date("dd-MM-yyyy")).transform[Option[LocalDateTime]](_.map(_.toLocalDate), _.map(_.toDate)),
+      "to" -> optional(date("dd-MM-yyyy")).transform[Option[LocalDateTime]](_.map(_.toLocalDate), _.map(_.toDate))
     )(ReleasesFilter.apply)(ReleasesFilter.unapply)
   )
 

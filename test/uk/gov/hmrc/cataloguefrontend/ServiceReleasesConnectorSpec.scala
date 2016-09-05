@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{ZoneOffset, LocalDateTime}
+import java.time.{LocalDateTime, ZoneOffset}
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
-import play.api.libs.ws.WS
-import play.api.test.{FakeHeaders, FakeApplication}
+import play.api.test.{FakeApplication, FakeHeaders}
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
 
@@ -61,8 +59,8 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
       val response = await(ServiceReleasesConnector.getReleases()(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
-      response(0) shouldBe Release("serviceA", "8.96.0", Some(toLocalDateTime(1452701233)), toLocalDateTime(1453731429), Some(7), Some(12))
-      response(1) shouldBe Release("serviceB", "2.38.0", None, toLocalDateTime(1453713911), Some(5), None)
+      response(0) shouldBe Release("serviceA", "8.96.0", toLocalDateTime(1453731429), Some(toLocalDateTime(1452701233)), Some(7), Some(12))
+      response(1) shouldBe Release("serviceB", "2.38.0", toLocalDateTime(1453713911), None, Some(5), None)
 
 
     }
@@ -93,8 +91,8 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
       val response = await(ServiceReleasesConnector.getReleases(Some("serviceNameA"))(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
-      response(0) shouldBe Release("serviceA", "8.96.0", Some(toLocalDateTime(1452701233)), toLocalDateTime(1453731429), Some(7), Some(12))
-      response(1) shouldBe Release("serviceA", "2.38.0", None, toLocalDateTime(1453713911), Some(5), None)
+      response(0) shouldBe Release("serviceA", "8.96.0", toLocalDateTime(1453731429), Some(toLocalDateTime(1452701233)), Some(7), Some(12))
+      response(1) shouldBe Release("serviceA", "2.38.0", toLocalDateTime(1453713911), None, Some(5), None)
 
     }
 

@@ -45,7 +45,8 @@ import scala.concurrent.Future
 
 
 case class Release(name: String, version: String,
-                   creationDate: Option[LocalDateTime], productionDate: LocalDateTime,
+                   productionDate: LocalDateTime,
+                   creationDate: Option[LocalDateTime] = None,
                    interval: Option[Long] = None, leadTime: Option[Long] = None)
 
 

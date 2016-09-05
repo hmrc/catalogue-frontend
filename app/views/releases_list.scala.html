@@ -1,0 +1,61 @@
+@*
+* Copyright 2016 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+
+@(releases: Seq[uk.gov.hmrc.cataloguefrontend.Release], form: Form[_])
+
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+
+@standard_layout("Releases", "releases") {
+<header>
+    <h1>Releases</h1>
+</header>
+
+@if(form.hasErrors) {
+    <div class="alert alert-danger" role="alert">
+        <p>
+            error text
+        </p>
+    </div>
+}
+        <form action="/releases" method="get">
+         service : <input type="text" name="serviceName" value=@{form("serviceName").value}>
+         from : <input type="text" name="from" value='@{form("from").value}' placeholder="dd-MM-yyyy" pattern="[0-9]{2}[\/-][0-9]{2}[\/-][0-9]{4}">
+         to : <input type="text" name="to" value='@{form("to").value}' placeholder="dd-MM-yyyy" pattern="[0-9]{2}[\/-][0-9]{2}[\/-][0-9]{4}">
+          <input type="submit" value="Filter">
+        </form>
+
+        <table class="table table-striped">
+            <tr>
+                <th>Service Name</th>
+                <th>Version</th>
+                <th>Created Date</th>
+                <th>Deployment Date</th>
+                <th>Lead Time</th>
+                <th>Interval</th>
+            </tr>
+            @for(release <- releases) {
+                <tr>
+                    <td>@{release.name}</td>
+                    <td>@{release.version}</td>
+                    <td>@{release.creationDate.fold("--")(_.formated)}</td>
+                    <td>@{release.productionDate.formated}</td>
+                    <td>@{release.leadTime.getOrElse("--")}</td>
+                    <td>@{release.interval.getOrElse("--")}</td>
+                </tr>
+            }
+        </table>
+
+}

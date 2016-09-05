@@ -16,20 +16,22 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time._
+import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
-import _root_.play.api.libs.json._
+object ReleaseFiltering {
 
+  implicit class ReleasesResult(releases: Seq[Release]) {
 
-object JavaDateTimeJsonFormatter {
+    def filter(query: ReleasesFilter): Seq[Release] = {
+      
+      releases.toStream
+        .filter(x => !query.serviceName.isDefined || query.serviceName.get == x.name)
+        .filter(x => !query.from.isDefined || x.productionDate.epochSeconds >= query.from.get.epochSeconds)
+        .filter(x => !query.to.isDefined || x.productionDate.epochSeconds < query.to.get.plusDays(1).epochSeconds)
 
-  implicit val localDateTimeReads = new Reads[LocalDateTime] {
-    override def reads(json: JsValue): JsResult[LocalDateTime] = json match {
-      case JsNumber(v) => JsSuccess(
-        LocalDateTime.ofEpochSecond(v.toLongExact, 0, ZoneOffset.UTC)
-      )
-      case v => JsError(s"invalid value for epoch second '$v'")
     }
+
+
   }
 
 }

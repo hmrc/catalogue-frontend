@@ -16,20 +16,24 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time._
+import java.time.format.DateTimeFormatter
+import java.time.{LocalDateTime, ZoneId, ZoneOffset}
+import java.util.Date
 
-import _root_.play.api.libs.json._
+object DateHelper {
 
-
-object JavaDateTimeJsonFormatter {
-
-  implicit val localDateTimeReads = new Reads[LocalDateTime] {
-    override def reads(json: JsValue): JsResult[LocalDateTime] = json match {
-      case JsNumber(v) => JsSuccess(
-        LocalDateTime.ofEpochSecond(v.toLongExact, 0, ZoneOffset.UTC)
-      )
-      case v => JsError(s"invalid value for epoch second '$v'")
-    }
+  implicit class JavaDateToLocalDateTime(d: Date) {
+    def toLocalDate = LocalDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault())
   }
+
+  implicit class LocalDateTimeImplicits(d: LocalDateTime) {
+    def toDate: Date = Date.from(d.atZone(ZoneId.systemDefault()).toInstant)
+
+    def epochSeconds = d.toEpochSecond(ZoneOffset.UTC)
+
+    def formated = d.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
+
+  }
+
 
 }
