@@ -23,7 +23,7 @@ import org.scalatest.{Matchers, WordSpec}
 
 import ReleaseFiltering._
 
-class ReleasesFilteringSpec extends WordSpec with Matchers {
+class ReleaseFilteringSpec extends WordSpec with Matchers {
 
   implicit def localDateToDate(d: LocalDateTime): Date = Date.from(d.atZone(ZoneId.systemDefault()).toInstant)
 
@@ -43,6 +43,44 @@ class ReleasesFilteringSpec extends WordSpec with Matchers {
 
     }
 
+    "get all releases (no filter)" in {
+
+      val now: LocalDateTime = LocalDateTime.now()
+
+      val releases = Seq(
+        Release("serv1", "1.0", now),
+        Release("serv2", "2.0", now),
+        Release("serv1", "3.0", now),
+        Release("serv3", "4.0", now)
+      )
+      releases.filter(ReleasesFilter()) shouldBe releases
+
+    }
+
+    "limit releases to last months' if no filter was provided" in {
+
+      val now: LocalDateTime = LocalDateTime.now()
+      val lastMonth: LocalDateTime = now.minusMonths(1).minusDays(1)
+
+
+      val releases = Seq.tabulate(10)(i => Release(s"serv$i", s"$i.0", now)) ++
+        Seq.tabulate(5)(i => Release(s"lastMonthServ$i", s"$i.0", lastMonth))
+
+      releases.filter(ReleasesFilter()).size should ===(10)
+    }
+
+    "not limit releases if filter was provided" in {
+
+      val now: LocalDateTime = LocalDateTime.now()
+      val lastMonth: LocalDateTime = now.minusMonths(1).minusDays(1)
+
+
+      val releases = Seq.tabulate(10)(i => Release(s"serv$i", s"$i.0", now)) ++
+        Seq.tabulate(5)(i => Release(s"lastMonthServ$i", s"$i.0", lastMonth))
+
+      releases.filter(ReleasesFilter(to = Some(now))).size should ===(15)
+    }
+
     "get releases filtered only by from date" in {
 
       val now: LocalDateTime = LocalDateTime.now()
@@ -53,6 +91,7 @@ class ReleasesFilteringSpec extends WordSpec with Matchers {
         Release("serv2", "2.0", now.minusDays(10)),
         Release("serv1", "1.0", now.minusDays(20))
       )
+
       releases.filter(ReleasesFilter(from = Some(now.minusDays(4)))) shouldBe Seq(
         Release("serv3", "4.0", now.minusDays(3)),
         Release("serv1", "3.0", now.minusDays(4))
@@ -91,20 +130,20 @@ class ReleasesFilteringSpec extends WordSpec with Matchers {
     }
 
 
-        "get releases filtered by name and between from and to date" in {
+    "get releases filtered by name and between from and to date" in {
 
-          val now: LocalDateTime = LocalDateTime.now()
+      val now: LocalDateTime = LocalDateTime.now()
 
-          val releases = Seq(
-            Release("serv3", "4.0", now.minusDays(3)),
-            Release("serv1", "3.0", now.minusDays(4)),
-            Release("serv2", "2.0", now.minusDays(10)),
-            Release("serv1", "1.0", now.minusDays(20))
-          )
+      val releases = Seq(
+        Release("serv3", "4.0", now.minusDays(3)),
+        Release("serv1", "3.0", now.minusDays(4)),
+        Release("serv2", "2.0", now.minusDays(10)),
+        Release("serv1", "1.0", now.minusDays(20))
+      )
 
-          releases.filter(ReleasesFilter(serviceName = Some("serv2") ,from = Some(now.minusDays(10)), to = Some(now.minusDays(4)))) shouldBe Seq(Release("serv2", "2.0", now.minusDays(10)))
+      releases.filter(ReleasesFilter(serviceName = Some("serv2"), from = Some(now.minusDays(10)), to = Some(now.minusDays(4)))) shouldBe Seq(Release("serv2", "2.0", now.minusDays(10)))
 
-        }
+    }
 
   }
 

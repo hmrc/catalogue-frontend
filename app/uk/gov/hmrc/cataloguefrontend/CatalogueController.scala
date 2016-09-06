@@ -17,21 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend
 
 
-import java.time.format.DateTimeFormatter
-import java.time.{ZoneOffset, LocalDate, LocalDateTime}
-import java.util.Date
+import java.time.LocalDateTime
 
 import play.api.data.Forms._
-import play.api.data.{Mapping, Form}
-import play.api.{Play, Configuration}
+import play.api.data.{Form, Mapping}
 import play.api.mvc._
+import play.api.{Configuration, Play}
 import uk.gov.hmrc.play.frontend.controller.FrontendController
-import uk.gov.hmrc.play.http.HeaderCarrier
 import views.html._
-import uk.gov.hmrc.cataloguefrontend.DateHelper._
-
-import scala.concurrent.Future
-import scala.util.Try
 
 object CatalogueController extends CatalogueController {
   override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
@@ -108,11 +101,9 @@ trait CatalogueController extends FrontendController {
 
       val form: Form[ReleasesFilter] = ReleasesFilter.form.bindFromRequest()
       form.fold(
-      {
-        errors => Ok(release_list(rs, errors))
-      }, {
+        errors => Ok(release_list(Nil, errors)),
         query => Ok(release_list(rs.filter(query), form))
-      })
+      )
 
     }
 
@@ -120,7 +111,9 @@ trait CatalogueController extends FrontendController {
 
 }
 
-case class ReleasesFilter(serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None)
+case class ReleasesFilter(serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
+  def isEmpty: Boolean = serviceName.isEmpty && from.isEmpty && to.isEmpty
+}
 
 object ReleasesFilter {
 

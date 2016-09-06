@@ -16,18 +16,24 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.time.LocalDateTime
+
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
 object ReleaseFiltering {
 
   implicit class ReleasesResult(releases: Seq[Release]) {
 
+
+
     def filter(query: ReleasesFilter): Seq[Release] = {
-      
+
+      val q = if (query.isEmpty) ReleasesFilter(from = Some(LocalDateTime.now().minusMonths(1))) else query
+
       releases.toStream
-        .filter(x => !query.serviceName.isDefined || query.serviceName.get == x.name)
-        .filter(x => !query.from.isDefined || x.productionDate.epochSeconds >= query.from.get.epochSeconds)
-        .filter(x => !query.to.isDefined || x.productionDate.epochSeconds < query.to.get.plusDays(1).epochSeconds)
+        .filter(x => q.serviceName.isEmpty || q.serviceName.get == x.name)
+        .filter(x => q.from.isEmpty || x.productionDate.epochSeconds >= q.from.get.epochSeconds)
+        .filter(x => q.to.isEmpty || x.productionDate.epochSeconds < q.to.get.plusDays(1).epochSeconds)
 
     }
 
