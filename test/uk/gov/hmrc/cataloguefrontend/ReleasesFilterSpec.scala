@@ -19,36 +19,38 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime}
 
+import org.scalactic.TypeCheckedTripleEquals
+import org.scalatest.OptionValues._
 import org.scalatest.{Matchers, WordSpec}
 
-class ReleasesFilterSpec extends WordSpec with Matchers {
+class ReleasesFilterSpec extends WordSpec with Matchers with TypeCheckedTripleEquals {
 
-  implicit def toDateTime(s : String) : LocalDateTime = LocalDate.parse(s, DateTimeFormatter.ofPattern("dd-MM-yyyy")).atStartOfDay()
+  implicit def toDateTime(s: String): LocalDateTime = LocalDate.parse(s, DateTimeFormatter.ofPattern("dd-MM-yyyy")).atStartOfDay()
+
+  val formData: Map[String, String] = Map("serviceName" -> "aService", "from" -> "23-04-2016", "to" -> "25-05-2016")
 
   "form" should {
     "bind the form correctly" in {
-
-
-
-      val formData: Map[String, String] = Map("serviceName" -> "aService", "from" -> "23-04-2016", "to" -> "25-05-2016")
 
       ReleasesFilter.form.bind(formData).value shouldBe Some(ReleasesFilter(Some("aService"), Some("23-04-2016"), Some("25-05-2016")))
 
       ReleasesFilter.form.bind(formData - "to").value shouldBe Some(ReleasesFilter(Some("aService"), Some("23-04-2016"), None))
       ReleasesFilter.form.bind(formData - "to" - "from").value shouldBe Some(ReleasesFilter(Some("aService"), None, None))
       ReleasesFilter.form.bind(formData - "serviceName" - "to" - "from").value shouldBe Some(ReleasesFilter(None, None, None))
-      ReleasesFilter.form.bind(formData + ("serviceName" -> "" )).value shouldBe Some(ReleasesFilter(None, Some("23-04-2016"), Some("25-05-2016")))
-      ReleasesFilter.form.bind(formData + ("serviceName" -> " " )).value shouldBe Some(ReleasesFilter(None, Some("23-04-2016"), Some("25-05-2016")))
+      ReleasesFilter.form.bind(formData + ("serviceName" -> "")).value shouldBe Some(ReleasesFilter(None, Some("23-04-2016"), Some("25-05-2016")))
+      ReleasesFilter.form.bind(formData + ("serviceName" -> " ")).value shouldBe Some(ReleasesFilter(None, Some("23-04-2016"), Some("25-05-2016")))
 
     }
 
-    "validate data is of correct format" in {
+    "validate date is of correct format (dd-MM-yyyy)" in {
 
-      val formData: Map[String, String] = Map("serviceName" -> "aService", "from" -> "23-04-2016", "to" -> "25-05-2016")
+      ReleasesFilter.form.bind(formData + ("from" -> "23/04/2016")).error("from").value.message should ===("from.error.date")
+      ReleasesFilter.form.bind(formData + ("from" -> "23/54/2016")).error("from").value.message should ===("from.error.date")
+      ReleasesFilter.form.bind(formData + ("to" -> "23/04/2016")).error("to").value.message should ===("to.error.date")
+      ReleasesFilter.form.bind(formData + ("to" -> "23/54/2016")).error("to").value.message should ===("to.error.date")
 
-      ReleasesFilter.form.bind(formData).hasErrors shouldBe false
-      
     }
+
 
   }
 

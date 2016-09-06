@@ -17,11 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend
 
 
+import java.time.format.DateTimeFormatter
 import java.time.{ZoneOffset, LocalDate, LocalDateTime}
 import java.util.Date
 
 import play.api.data.Forms._
-import play.api.data.Form
+import play.api.data.{Mapping, Form}
 import play.api.{Play, Configuration}
 import play.api.mvc._
 import uk.gov.hmrc.play.frontend.controller.FrontendController
@@ -30,6 +31,7 @@ import views.html._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
 import scala.concurrent.Future
+import scala.util.Try
 
 object CatalogueController extends CatalogueController {
   override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
@@ -99,7 +101,7 @@ trait CatalogueController extends FrontendController {
   }
 
   def releases() = Action.async { implicit request =>
-    
+
     import ReleaseFiltering._
 
     serviceReleases.getReleases().map { rs =>
@@ -122,14 +124,33 @@ case class ReleasesFilter(serviceName: Option[String] = None, from: Option[Local
 
 object ReleasesFilter {
 
-  val form = Form(
+  val pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+  lazy val form = Form(
     mapping(
       "serviceName" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
-      "from" -> optional(date("dd-MM-yyyy")).transform[Option[LocalDateTime]](_.map(_.toLocalDate), _.map(_.toDate)),
-      "to" -> optional(date("dd-MM-yyyy")).transform[Option[LocalDateTime]](_.map(_.toLocalDate), _.map(_.toDate))
+      "from" -> optionalLocalDateTimeMapping2("from.error.date"),
+      "to" -> optionalLocalDateTimeMapping2("to.error.date")
     )(ReleasesFilter.apply)(ReleasesFilter.unapply)
   )
 
+  def optionalLocalDateTimeMapping2(errorCode: String): Mapping[Option[LocalDateTime]] = {
+    optional(text.verifying(errorCode, x => stringToDate(x).isDefined))
+      .transform[Option[LocalDateTime]](_.flatMap(stringToDate), _.map(_.format(pattern)))
+  }
+
+  def stringToDate(ds: String) = {
+    Try{
+      LocalDate.parse(ds, pattern).atStartOfDay()
+    }.toOption
+
+  }
+
+  def optionalLocalDateTimeMapping: Mapping[Option[LocalDateTime]] = {
+    optional(date("dd-MM-yyyy"))
+      .transform[Option[LocalDateTime]](_.map(_.toLocalDate), _.map(_.toDate))
+
+
+  }
 }
 
 object UserManagementPortalLink {

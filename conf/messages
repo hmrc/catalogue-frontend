@@ -1,0 +1,2 @@
+from.error.date=from date should be of format dd-mm-yyyy
+to.error.date=to date should be of format dd-mm-yyyy
