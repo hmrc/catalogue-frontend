@@ -1,2 +1,2 @@
-from.error.date=from date should be of format dd-mm-yyyy
-to.error.date=to date should be of format dd-mm-yyyy
+from.error.date=Production date from should be of format dd-mm-yyyy
+to.error.date=Production date to should be of format dd-mm-yyyy

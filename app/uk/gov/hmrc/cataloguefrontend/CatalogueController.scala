@@ -109,9 +109,9 @@ trait CatalogueController extends FrontendController {
       val form: Form[ReleasesFilter] = ReleasesFilter.form.bindFromRequest()
       form.fold(
       {
-        errors => Ok(releases_list(rs, errors))
+        errors => Ok(release_list(rs, errors))
       }, {
-        query => Ok(releases_list(rs.filter(query), form))
+        query => Ok(release_list(rs.filter(query), form))
       })
 
     }
@@ -124,32 +124,19 @@ case class ReleasesFilter(serviceName: Option[String] = None, from: Option[Local
 
 object ReleasesFilter {
 
-  val pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+  import DateHelper._
+
   lazy val form = Form(
     mapping(
       "serviceName" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
-      "from" -> optionalLocalDateTimeMapping2("from.error.date"),
-      "to" -> optionalLocalDateTimeMapping2("to.error.date")
+      "from" -> optionalLocalDateTimeMapping("from.error.date"),
+      "to" -> optionalLocalDateTimeMapping("to.error.date")
     )(ReleasesFilter.apply)(ReleasesFilter.unapply)
   )
 
-  def optionalLocalDateTimeMapping2(errorCode: String): Mapping[Option[LocalDateTime]] = {
-    optional(text.verifying(errorCode, x => stringToDate(x).isDefined))
-      .transform[Option[LocalDateTime]](_.flatMap(stringToDate), _.map(_.format(pattern)))
-  }
-
-  def stringToDate(ds: String) = {
-    Try{
-      LocalDate.parse(ds, pattern).atStartOfDay()
-    }.toOption
-
-  }
-
-  def optionalLocalDateTimeMapping: Mapping[Option[LocalDateTime]] = {
-    optional(date("dd-MM-yyyy"))
-      .transform[Option[LocalDateTime]](_.map(_.toLocalDate), _.map(_.toDate))
-
-
+  def optionalLocalDateTimeMapping(errorCode: String): Mapping[Option[LocalDateTime]] = {
+    optional(text.verifying(errorCode, x => stringToLocalDateTimeOpt(x).isDefined))
+      .transform[Option[LocalDateTime]](_.flatMap(stringToLocalDateTimeOpt), _.map(_.format(`dd-MM-yyyy`)))
   }
 }
 
