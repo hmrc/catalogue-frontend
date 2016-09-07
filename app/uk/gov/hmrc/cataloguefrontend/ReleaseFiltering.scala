@@ -24,8 +24,6 @@ object ReleaseFiltering {
 
   implicit class ReleasesResult(releases: Seq[Release]) {
 
-
-
     def filter(query: ReleasesFilter): Seq[Release] = {
 
       val q = if (query.isEmpty) ReleasesFilter(from = Some(LocalDateTime.now().minusMonths(1))) else query

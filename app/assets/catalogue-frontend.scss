@@ -75,6 +75,10 @@ a {
   font-weight: bold;
 }
 
+.monospaced {
+    font-family: "Lucida Console","Lucida Sans Typewriter",monaco,"Bitstream Vera Sans Mono",monospace;
+}
+
 .error {
   text-align: center;
   color: #a94442;
@@ -182,4 +186,16 @@ section {
   margin-right: .2em;
   margin-top: -4px;
   display: inline-block !important; // overriding bootstrap!
+}
+
+.table-key {
+    border: 1px solid $grey-2;
+    border-radius: 4px;
+    padding: 8px;
+    width: 50%;
+}
+
+.info-icon {
+    width: 20px;
+    height: 20px;
 }

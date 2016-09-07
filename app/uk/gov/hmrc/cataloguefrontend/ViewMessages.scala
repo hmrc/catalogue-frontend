@@ -17,6 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import play.api.Play
+import play.api.i18n.Messages
+
 
 object ViewMessages {
   val noIndicatorsData = "There's nothing here - this probably means you haven't released anything yet! Get shipping " +
@@ -27,9 +29,9 @@ object ViewMessages {
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
     "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\">#team-platops</a>"
 
-  val fprExplanationTest = "<p>This indicator shows your progress towards frequent delivery of value-add. It is composed of two metrics:</p>" +
-    "<ul><li><strong>Lead Time</strong> - the number of days between creating a release and deploying it to production</li>" +
-    "<li><strong>Interval</strong> - the number of days between production deployments</li></ul>" +
+  val fprExplanationText = "<p>This indicator shows your progress towards frequent delivery of value-add. It is composed of two metrics:</p>" +
+    s"<ul><li><strong>Lead Time</strong> - ${Messages("leadtime.explanation.text")}</li>" +
+    s"<li><strong>Interval</strong> - ${Messages("interval.explanation.text")}</li></ul>" +
     "<p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>"
 
   def noRepoOfType(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +

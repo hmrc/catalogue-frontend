@@ -52,8 +52,8 @@ class ReleaseListSpec extends WordSpec with Matchers {
       document.select("#row0_version").text() shouldBe "1.0"
       document.select("#row0_production").text() shouldBe now.asString
       document.select("#row0_creation").text() shouldBe now.plusDays(2).asString
-      document.select("#row0_leadtime").text() shouldBe "10"
-      document.select("#row0_interval").text() shouldBe "2"
+      document.select("#row0_leadtime").text() shouldBe "10 days"
+      document.select("#row0_interval").text() shouldBe "2 days"
 
     }
   }
