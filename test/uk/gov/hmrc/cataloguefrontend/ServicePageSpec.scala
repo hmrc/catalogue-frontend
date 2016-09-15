@@ -50,7 +50,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     "show the teams owning the service with github, ci and environment links and info box" in {
 
       serviceEndpoint(GET, "/api/repositories/serv",willRespondWith = (200, Some(serviceData)))
-      serviceEndpoint(GET, "/api/indicators/service/serv/fpr",willRespondWith = (200, Some(indicatorData)))
+      serviceEndpoint(GET, "/api/indicators/service/serv/releases",willRespondWith = (200, Some(indicatorData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/serv").get)
       response.status shouldBe 200
@@ -71,7 +71,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     "Render the frequent production indicators graph" in {
       serviceEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (200, Some(indicatorData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/releases",willRespondWith = (200, Some(indicatorData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
@@ -88,7 +88,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     "Render a message if the indicators service returns 404" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/fpr",willRespondWith = (404, None))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/releases",willRespondWith = (404, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
@@ -100,7 +100,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     "Render a message if the indicators service encounters and error" in {
       serviceEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/fpr", willRespondWith = (500, None))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/releases", willRespondWith = (500, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
