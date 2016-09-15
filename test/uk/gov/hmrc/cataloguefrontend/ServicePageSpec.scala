@@ -78,7 +78,10 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       response.body should include(s"""data.addColumn('string', 'Period');""")
       response.body should include(s"""data.addColumn('number', 'Lead time');""")
       response.body should include(s"""data.addColumn('number', 'Interval');""")
-      response.body should include(s"""data.addRows([["2015-11", 6, 1],["2015-12", 6, 5],["2016-01", 6, 6]]);""")
+
+      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
+      response.body should include(s"""data.addColumn('number', 'Interval');""")
+      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
 
       response.body should include(s"""chart.draw(data, options);""")
     }
@@ -188,6 +191,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       |[
       |  {
       |    "period":"2015-11",
+      |    "from": "2015-12-01",
+      |    "to": "2016-02-29",
       |    "leadTime":{
       |      "median":6
       |    },
@@ -197,6 +202,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       |  },
       |  {
       |    "period":"2015-12",
+      |    "from": "2015-12-01",
+      |    "to": "2016-02-29",
       |    "leadTime":{
       |      "median":6
       |    },
@@ -206,6 +213,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       |  },
       |  {
       |    "period":"2016-01",
+      |    "from": "2015-12-01",
+      |    "to": "2016-02-29",
       |    "leadTime":{
       |      "median":6
       |    },

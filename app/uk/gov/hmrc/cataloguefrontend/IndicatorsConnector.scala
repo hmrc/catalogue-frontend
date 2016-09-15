@@ -32,34 +32,37 @@ package uk.gov.hmrc.cataloguefrontend
  * limitations under the License.
  */
 
-import java.net.URLEncoder
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 import play.api.Logger
 import play.api.libs.json.Json
+import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpReads, HttpResponse}
 
 import scala.concurrent.Future
+import scala.xml.Elem
 
 case class MedianDataPoint(median: Int)
-case class FprDataPoint(period: String, leadTime: Option[MedianDataPoint], interval: Option[MedianDataPoint]) {
-  def unwrapMedian(container: Option[MedianDataPoint]) = container.map(l => s"""${l.median}""").getOrElse("null")
-  def toJSString = s"""["$period", ${unwrapMedian(leadTime)}, ${unwrapMedian(interval)}]"""
-}
+
+case class FprDataPoint(period: String, from: LocalDate, to: LocalDate, leadTime: Option[MedianDataPoint], interval: Option[MedianDataPoint])
 
 trait IndicatorsConnector extends ServicesConfig {
   val http: HttpGet
   val indicatorsBaseUrl: String
 
-  implicit val medianFormats = Json.format[MedianDataPoint]
-  implicit val fprFormats = Json.format[FprDataPoint]
+  import JavaDateTimeJsonFormatter._
+
+  implicit val medianFormats = Json.reads[MedianDataPoint]
+  implicit val fprFormats = Json.reads[FprDataPoint]
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
-  def fprForService(name:String)(implicit hc: HeaderCarrier) : Future[Option[Seq[FprDataPoint]]] = {
+  def fprForService(name: String)(implicit hc: HeaderCarrier): Future[Option[Seq[FprDataPoint]]] = {
     val url = indicatorsBaseUrl + s"/service/$name/fpr"
     http.GET[HttpResponse](url).map { r =>
       r.status match {
@@ -75,6 +78,6 @@ trait IndicatorsConnector extends ServicesConfig {
 }
 
 object IndicatorsConnector extends IndicatorsConnector {
-  override val http = WSHttp
   override lazy val indicatorsBaseUrl: String = baseUrl("indicators") + "/api/indicators"
+  override val http = WSHttp
 }

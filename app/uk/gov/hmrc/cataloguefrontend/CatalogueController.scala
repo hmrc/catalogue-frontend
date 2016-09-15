@@ -26,7 +26,7 @@ import play.api.{Configuration, Play}
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
 
-object CatalogueController extends CatalogueController {
+object  CatalogueController extends CatalogueController {
   override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
 
   override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
@@ -65,9 +65,10 @@ trait CatalogueController extends FrontendController {
   def service(name: String) = Action.async { implicit request =>
     for {
       service <- teamsAndServicesConnector.repositoryDetails(name)
-      indicators <- indicatorsConnector.fprForService(name)
+      maybeDataPoints <- indicatorsConnector.fprForService(name)
     } yield service match {
-      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(service_info(s.time, s.data, indicators.map(_.map(_.toJSString))))
+//      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(service_info(s.time, s.data, indicators.map(_.map(_.toJSString))))
+      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(service_info(s.time, s.data, ChartData(name, maybeDataPoints)))
       case _ => NotFound
     }
   }

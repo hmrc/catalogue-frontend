@@ -17,8 +17,11 @@
 @import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
+@import play.twirl.api.Html
+@import uk.gov.hmrc.cataloguefrontend.FprDataPoint
 
-@(cacheTimestampFormatted: String, service: RepositoryDetails, chartSetupJS: Option[Seq[String]])
+@import uk.gov.hmrc.cataloguefrontend.ChartData
+@(cacheTimestampFormatted: String, service: RepositoryDetails, chartData: Option[ChartData])
 
 @standard_layout(service.name,"services") {
 <header>
@@ -60,15 +63,15 @@
                 <h3 class="board__heading">Indicators</h3>
                 <div class="board__body">
                     <h4 class="indicator__title">Frequent Production Releases</h4>
-                    @if(chartSetupJS.isDefined && chartSetupJS.get.nonEmpty) {
+                    @if(chartData.isDefined && !chartData.get.isEmpty) {
                         @Html(ViewMessages.fprExplanationText)
                     }
                     <div id="chart_div">
-                    @if(chartSetupJS.isEmpty) {
+                    @if(chartData.isEmpty) {
                         <h2 class="chart-message text-center">The catalogue encountered an error</h2>
                         <p>@Html(ViewMessages.indicatorsServiceError)</p>
                     } else {
-                        @if(chartSetupJS.get.isEmpty) {
+                        @if(chartData.get.isEmpty) {
                             <h2 class="chart-message text-center">No data to show</h2>
                             <p>@Html(ViewMessages.noIndicatorsData)</p>
                         }
@@ -83,23 +86,29 @@
 
 <script type="text/javascript">
 
-    @if(chartSetupJS.isDefined && chartSetupJS.get.nonEmpty) {
+
+    @if(chartData.isDefined && !chartData.get.isEmpty) {
         google.charts.load('current', {packages: ['corechart', 'line']});
         google.charts.setOnLoadCallback(function () {
-
             var options = {
                 height: 350,
                 hAxis: {title: 'Period'},
                 vAxis: {title: 'Days'},
                 lineWidth: 4,
-                pointSize: 7
+                pointSize: 7,
+                tooltip: { isHtml: true, trigger: 'selection' }
             };
 
             var data = new google.visualization.DataTable();
             data.addColumn('string', 'Period');
             data.addColumn('number', 'Lead time');
+            data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});
             data.addColumn('number', 'Interval');
-            data.addRows([@{Html( chartSetupJS.get.mkString(","))}]);
+            data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});
+
+            @chartData.get.rows.map{row =>
+                data.addRow(@row);
+            }
 
             var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
             chart.draw(data, options);
