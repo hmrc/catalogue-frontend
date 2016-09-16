@@ -62,7 +62,7 @@ object ChartData {
 
     val element: Elem =
       <div>
-        <table class="table-condensed">
+        <table>
           <tr>
             <td nowrap="true">
               <label>Period:</label> {period}
