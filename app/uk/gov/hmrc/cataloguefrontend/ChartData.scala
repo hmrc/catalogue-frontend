@@ -48,7 +48,7 @@ object ChartData {
     }
   }
 
-  private def getRealeaseUrlAnchor(serviceName: String, dp: FprDataPoint) = <a href={releasesUrl(serviceName, dateToString(dp.from), dateToString(dp.to))} target="_blank">See releases</a>
+  private def getRealeaseUrlAnchor(serviceName: String, dp: FprDataPoint) = <a href={releasesUrl(serviceName, dateToString(dp.from), dateToString(dp.to))} >View releases</a>
 
   private def releasesUrl(serviceName: String, from: String, to: String) = s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.releases().url}?serviceName=${serviceName}&from=${from}&to=${to}"
 
