@@ -63,7 +63,7 @@ trait IndicatorsConnector extends ServicesConfig {
   }
 
   def fprForService(name: String)(implicit hc: HeaderCarrier): Future[Option[Seq[FprDataPoint]]] = {
-    val url = indicatorsBaseUrl + s"/service/$name/releases"
+    val url = indicatorsBaseUrl + s"/service/$name/throughput"
     http.GET[HttpResponse](url).map { r =>
       r.status match {
         case 404 => Some(Seq())
