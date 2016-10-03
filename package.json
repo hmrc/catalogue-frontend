@@ -6,13 +6,10 @@
   },
   "scripts": {
     "css:watch": "node-sass --source-map true -w ${npm_package_config_assets} -o ${npm_package_config_public}",
-    "css:minify": "cssnano ${npm_package_config_public}/catalogue-frontend.css ${npm_package_config_public}/catalogue-frontend.css",
-    "css:build": "node-sass ./app/assets/ -o ./public/",
-    "css": "npm run css:build && npm run css:minify"
+    "css": "node-sass --style compressed ./app/assets/ -o ./public/",
   },
   "dependencies": {
     "bootstrap-sass": "^3.3.6",
-    "cssnano-cli": "^1.0.4",
     "node-sass": "^3.7.0"
   }
 }
