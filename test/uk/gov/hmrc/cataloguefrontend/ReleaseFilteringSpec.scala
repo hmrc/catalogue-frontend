@@ -34,12 +34,14 @@ class ReleaseFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val releases = Seq(
-        Release("serv1", "1.0", now),
-        Release("serv2", "2.0", now),
-        Release("serv1", "3.0", now),
-        Release("serv3", "4.0", now)
-      )
-      releases.filter(ReleasesFilter(Some("serv1"))) shouldBe Seq(Release("serv1", "1.0", now), Release("serv1", "3.0", now))
+        Release("serv1", "teamA", productionDate = now, version = "1.0"),
+        Release("serv2", "teamB", productionDate = now, version = "2.0"),
+        Release("serv1", "teamC", productionDate = now, version = "3.0"),
+        Release("serv3", "teamD", productionDate = now, version = "4.0"))
+
+      releases.filter(ReleasesFilter(serviceName = Some("serv1"))) shouldBe Seq(
+        Release("serv1", "teamA", productionDate = now, version = "1.0"),
+        Release("serv1", "teamC", productionDate = now, version = "3.0"))
 
     }
 
@@ -48,11 +50,11 @@ class ReleaseFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val releases = Seq(
-        Release("serv1", "1.0", now),
-        Release("serv2", "2.0", now),
-        Release("serv1", "3.0", now),
-        Release("serv3", "4.0", now)
-      )
+        Release("serv1", "teamA", productionDate = now, version = "1.0"),
+        Release("serv2", "teamB", productionDate = now, version = "2.0"),
+        Release("serv1", "teamC", productionDate = now, version = "3.0"),
+        Release("serv3", "teamD", productionDate = now, version = "4.0"))
+
       releases.filter(ReleasesFilter()) shouldBe releases
 
     }
@@ -62,11 +64,11 @@ class ReleaseFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
       val lastMonth: LocalDateTime = now.minusMonths(1).minusDays(1)
 
-
-      val releases = Seq.tabulate(10)(i => Release(s"serv$i", s"$i.0", now)) ++
-        Seq.tabulate(5)(i => Release(s"lastMonthServ$i", s"$i.0", lastMonth))
+      val releases = Seq.tabulate(10)(i => Release(s"serv$i", "teamA", productionDate = now, version = s"$i.0")) ++
+        Seq.tabulate(5)(i => Release(s"lastMonthServ$i", "teamB", productionDate = lastMonth, version = s"$i.0"))
 
       releases.filter(ReleasesFilter()).size should ===(10)
+
     }
 
     "not limit releases if filter was provided" in {
@@ -75,10 +77,11 @@ class ReleaseFilteringSpec extends WordSpec with Matchers {
       val lastMonth: LocalDateTime = now.minusMonths(1).minusDays(1)
 
 
-      val releases = Seq.tabulate(10)(i => Release(s"serv$i", s"$i.0", now)) ++
-        Seq.tabulate(5)(i => Release(s"lastMonthServ$i", s"$i.0", lastMonth))
+      val releases = Seq.tabulate(10)(i => Release(s"serv$i", "teamA", productionDate = now, version = s"$i.0")) ++
+        Seq.tabulate(5)(i => Release(s"lastMonthServ$i", "teamA", productionDate = lastMonth, version = s"$i.0"))
 
       releases.filter(ReleasesFilter(to = Some(now))).size should ===(15)
+
     }
 
     "get releases filtered only by from date" in {
@@ -86,16 +89,15 @@ class ReleaseFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val releases = Seq(
-        Release("serv3", "4.0", now.minusDays(3)),
-        Release("serv1", "3.0", now.minusDays(4)),
-        Release("serv2", "2.0", now.minusDays(10)),
-        Release("serv1", "1.0", now.minusDays(20))
+        Release("serv3", "teamA", productionDate = now.minusDays(3), version = "4.0"),
+        Release("serv1", "teamB", productionDate = now.minusDays(4), version = "3.0"),
+        Release("serv2", "teamC", productionDate = now.minusDays(10), version = "2.0"),
+        Release("serv1", "teamD", productionDate = now.minusDays(20), version = "1.0")
       )
 
       releases.filter(ReleasesFilter(from = Some(now.minusDays(4)))) shouldBe Seq(
-        Release("serv3", "4.0", now.minusDays(3)),
-        Release("serv1", "3.0", now.minusDays(4))
-      )
+        Release("serv3", "teamA", productionDate = now.minusDays(3), version = "4.0"),
+        Release("serv1", "teamB", productionDate = now.minusDays(4), version = "3.0"))
 
     }
 
@@ -104,13 +106,14 @@ class ReleaseFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val releases = Seq(
-        Release("serv3", "4.0", now.minusDays(3)),
-        Release("serv1", "3.0", now.minusDays(4)),
-        Release("serv2", "2.0", now.minusDays(10)),
-        Release("serv1", "1.0", now.minusDays(20))
-      )
+        Release("serv3", "teamA", productionDate = now.minusDays(3), version = "4.0"),
+        Release("serv1", "teamB", productionDate = now.minusDays(4), version = "3.0"),
+        Release("serv2", "teamC", productionDate = now.minusDays(10), version = "2.0"),
+        Release("serv1", "teamD", productionDate = now.minusDays(20), version = "1.0"))
 
-      releases.filter(ReleasesFilter(to = Some(now.minusDays(10)))) shouldBe Seq(Release("serv2", "2.0", now.minusDays(10)), Release("serv1", "1.0", now.minusDays(20)))
+      releases.filter(ReleasesFilter(to = Some(now.minusDays(10)))) shouldBe Seq(
+        Release("serv2", "teamC", productionDate = now.minusDays(10), version = "2.0"),
+        Release("serv1", "teamD", productionDate = now.minusDays(20), version = "1.0"))
 
     }
 
@@ -119,33 +122,49 @@ class ReleaseFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val releases = Seq(
-        Release("serv3", "4.0", now.minusDays(3)),
-        Release("serv1", "3.0", now.minusDays(4)),
-        Release("serv2", "2.0", now.minusDays(10)),
-        Release("serv1", "1.0", now.minusDays(20))
-      )
+        Release("serv3", "teamA", productionDate = now.minusDays(3), version = "4.0"),
+        Release("serv1", "teamB", productionDate = now.minusDays(4), version = "3.0"),
+        Release("serv2", "teamC", productionDate = now.minusDays(10), version = "2.0"),
+        Release("serv1", "teamD", productionDate = now.minusDays(20), version = "1.0"))
 
-      releases.filter(ReleasesFilter(from = Some(now.minusDays(10)), to = Some(now.minusDays(4)))) shouldBe Seq(Release("serv1", "3.0", now.minusDays(4)), Release("serv2", "2.0", now.minusDays(10)))
+      releases.filter(ReleasesFilter(from = Some(now.minusDays(10)), to = Some(now.minusDays(4)))) shouldBe Seq(
+        Release("serv1", "teamB", productionDate = now.minusDays(4), version = "3.0"),
+        Release("serv2", "teamC", productionDate = now.minusDays(10), version = "2.0"))
 
     }
-
 
     "get releases filtered by name and between from and to date" in {
 
       val now: LocalDateTime = LocalDateTime.now()
 
       val releases = Seq(
-        Release("serv3", "4.0", now.minusDays(3)),
-        Release("serv1", "3.0", now.minusDays(4)),
-        Release("serv2", "2.0", now.minusDays(10)),
-        Release("serv1", "1.0", now.minusDays(20))
+        Release("serv3", "teamA", productionDate = now.minusDays(3), version = "4.0"),
+        Release("serv1", "teamB", productionDate = now.minusDays(4), version = "3.0"),
+        Release("serv2", "teamC", productionDate = now.minusDays(10), version = "2.0"),
+        Release("serv1", "teamD", productionDate = now.minusDays(20), version = "1.0")
       )
 
-      releases.filter(ReleasesFilter(serviceName = Some("serv2"), from = Some(now.minusDays(10)), to = Some(now.minusDays(4)))) shouldBe Seq(Release("serv2", "2.0", now.minusDays(10)))
+      releases.filter(ReleasesFilter(serviceName = Some("serv2"), from = Some(now.minusDays(10)), to = Some(now.minusDays(4)))) shouldBe Seq(
+        Release("serv2", "teamC", productionDate = now.minusDays(10), version = "2.0"))
+
+    }
+
+    "get releases filtered by only team name" in {
+
+      val now: LocalDateTime = LocalDateTime.now()
+
+      val releases = Seq(
+        Release("serv1", "teamA", productionDate = now, version = "1.0"),
+        Release("serv2", "teamA", productionDate = now, version = "2.0"),
+        Release("serv1", "teamB", productionDate = now, version = "3.0"),
+        Release("serv3", "teamB", productionDate = now, version = "4.0"))
+
+      releases.filter(ReleasesFilter(team = Some("teamA"))) shouldBe Seq(
+        Release("serv1", "teamA", productionDate = now, version = "1.0"),
+        Release("serv2", "teamA", productionDate = now, version = "2.0"))
 
     }
 
   }
-
 
 }

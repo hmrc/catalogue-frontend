@@ -46,9 +46,10 @@ class ReleaseListSpec extends WordSpec with Matchers {
     "display data" in {
       val now = LocalDateTime.now()
 
-      val document = asDocument(views.html.release_list.render(Seq(Release("serv1", "1.0", now, Some(now.plusDays(2)), Some(2), Some(10))), ReleasesFilter.form))
+      val document = asDocument(views.html.release_list.render(Seq(Release("serv1", "teamA", productionDate = now, creationDate = Some(now.plusDays(2)), interval = Some(2), leadTime = Some(10), version = "1.0")), ReleasesFilter.form))
 
       document.select("#row0_name").text() shouldBe "serv1"
+      document.select("#row0_team").text() shouldBe "teamA"
       document.select("#row0_version").text() shouldBe "1.0"
       document.select("#row0_production").text() shouldBe now.asString
       document.select("#row0_creation").text() shouldBe now.plusDays(2).asString

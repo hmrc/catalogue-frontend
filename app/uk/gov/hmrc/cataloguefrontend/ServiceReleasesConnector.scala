@@ -44,10 +44,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 import scala.concurrent.Future
 
 
-case class Release(name: String, version: String,
-                   productionDate: LocalDateTime,
-                   creationDate: Option[LocalDateTime] = None,
-                   interval: Option[Long] = None, leadTime: Option[Long] = None)
+case class Release(name: String, team: String, productionDate: _root_.java.time.LocalDateTime, creationDate: _root_.scala.Option[_root_.java.time.LocalDateTime] = None, interval: _root_.scala.Option[Long] = None, leadTime: _root_.scala.Option[Long] = None, version: _root_.scala.Predef.String)
 
 
 trait ServiceReleasesConnector extends ServicesConfig {
