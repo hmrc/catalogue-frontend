@@ -166,8 +166,8 @@ trait CatalogueController extends FrontendController {
 
 }
 
-case class ReleasesFilter(serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
-  def isEmpty: Boolean = serviceName.isEmpty && from.isEmpty && to.isEmpty
+case class ReleasesFilter(team: Option[String] = None, serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
+  def isEmpty: Boolean = team.isEmpty && serviceName.isEmpty && from.isEmpty && to.isEmpty
 }
 
 object ReleasesFilter {
@@ -176,6 +176,7 @@ object ReleasesFilter {
 
   lazy val form = Form(
     mapping(
+      "team" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
       "serviceName" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
       "from" -> optionalLocalDateTimeMapping("from.error.date"),
       "to" -> optionalLocalDateTimeMapping("to.error.date")

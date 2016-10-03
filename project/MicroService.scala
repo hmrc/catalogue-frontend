@@ -4,6 +4,7 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import uk.gov.hmrc.versioning.SbtGitVersioning
 import uk.gov.hmrc.SbtAutoBuildPlugin
+import uk.gov.hmrc.SbtAutoBuildPlugin._
 
 trait MicroService {
   val appName: String
@@ -16,5 +17,6 @@ trait MicroService {
     .settings(publishingSettings: _*)
     .settings(
       libraryDependencies ++= appDependencies,
-      retrieveManaged := true)
+      retrieveManaged := true,
+      forceSourceHeader := true)
 }

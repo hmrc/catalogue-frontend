@@ -27,18 +27,18 @@ class ReleasesFilterSpec extends WordSpec with Matchers with TypeCheckedTripleEq
 
   implicit def toDateTime(s: String): LocalDateTime = LocalDate.parse(s, DateTimeFormatter.ofPattern("dd-MM-yyyy")).atStartOfDay()
 
-  val formData: Map[String, String] = Map("serviceName" -> "aService", "from" -> "23-04-2016", "to" -> "25-05-2016")
+  val formData: Map[String, String] = Map("team" -> "teamA", "serviceName" -> "aService", "from" -> "23-04-2016", "to" -> "25-05-2016")
 
   "form" should {
     "bind the form correctly" in {
 
-      ReleasesFilter.form.bind(formData).value shouldBe Some(ReleasesFilter(Some("aService"), Some("23-04-2016"), Some("25-05-2016")))
+      ReleasesFilter.form.bind(formData).value shouldBe Some(ReleasesFilter(Some("teamA"), Some("aService"), Some("23-04-2016"), Some("25-05-2016")))
 
-      ReleasesFilter.form.bind(formData - "to").value shouldBe Some(ReleasesFilter(Some("aService"), Some("23-04-2016"), None))
-      ReleasesFilter.form.bind(formData - "to" - "from").value shouldBe Some(ReleasesFilter(Some("aService"), None, None))
-      ReleasesFilter.form.bind(formData - "serviceName" - "to" - "from").value shouldBe Some(ReleasesFilter(None, None, None))
-      ReleasesFilter.form.bind(formData + ("serviceName" -> "")).value shouldBe Some(ReleasesFilter(None, Some("23-04-2016"), Some("25-05-2016")))
-      ReleasesFilter.form.bind(formData + ("serviceName" -> " ")).value shouldBe Some(ReleasesFilter(None, Some("23-04-2016"), Some("25-05-2016")))
+      ReleasesFilter.form.bind(formData - "to").value shouldBe Some(ReleasesFilter(Some("teamA"), Some("aService"), Some("23-04-2016"), None))
+      ReleasesFilter.form.bind(formData - "to" - "from").value shouldBe Some(ReleasesFilter(Some("teamA"), Some("aService"), None, None))
+      ReleasesFilter.form.bind(formData - "team" - "serviceName" - "to" - "from").value shouldBe Some(ReleasesFilter(None, None, None, None))
+      ReleasesFilter.form.bind(formData + ("team" -> "") + ("serviceName" -> "")).value shouldBe Some(ReleasesFilter(None, None, Some("23-04-2016"), Some("25-05-2016")))
+      ReleasesFilter.form.bind(formData + ("team" -> " ") + ("serviceName" -> " ")).value shouldBe Some(ReleasesFilter(None, None, Some("23-04-2016"), Some("25-05-2016")))
 
     }
 

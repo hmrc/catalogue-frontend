@@ -42,6 +42,7 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
           |[
           |	{
           |		"name": "serviceA",
+          |   "team": "teamA",
           |		"version": "8.96.0",
           |		"creationDate": 1452701233,
           |		"productionDate": 1453731429,
@@ -50,6 +51,7 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
           |	},
           |	{
           |		"name": "serviceB",
+          |   "team": "teamB",
           |		"version": "2.38.0",
           |		"productionDate": 1453713911,
           |		"interval": 5
@@ -60,8 +62,8 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
       val response = await(ServiceReleasesConnector.getReleases()(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
-      response(0) shouldBe Release("serviceA", "8.96.0", toLocalDateTime(1453731429), Some(toLocalDateTime(1452701233)), Some(7), Some(12))
-      response(1) shouldBe Release("serviceB", "2.38.0", toLocalDateTime(1453713911), None, Some(5), None)
+      response(0) shouldBe Release("serviceA", "teamA", productionDate = toLocalDateTime(1453731429), creationDate = Some(toLocalDateTime(1452701233)), interval = Some(7), leadTime = Some(12), version = "8.96.0")
+      response(1) shouldBe Release("serviceB", "teamB", productionDate = toLocalDateTime(1453713911), creationDate = None, interval = Some(5), leadTime = None, version = "2.38.0")
 
 
     }
@@ -74,6 +76,7 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
           |[
           |	{
           |		"name": "serviceA",
+          |   "team": "teamA",
           |		"version": "8.96.0",
           |		"creationDate": 1452701233,
           |		"productionDate": 1453731429,
@@ -82,6 +85,7 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
           |	},
           |	{
           |		"name": "serviceA",
+          |   "team": "teamA",
           |		"version": "2.38.0",
           |		"productionDate": 1453713911,
           |		"interval": 5
@@ -92,8 +96,8 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
       val response = await(ServiceReleasesConnector.getReleases(Some("serviceNameA"))(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
-      response(0) shouldBe Release("serviceA", "8.96.0", toLocalDateTime(1453731429), Some(toLocalDateTime(1452701233)), Some(7), Some(12))
-      response(1) shouldBe Release("serviceA", "2.38.0", toLocalDateTime(1453713911), None, Some(5), None)
+      response(0) shouldBe Release("serviceA", "teamA", productionDate = toLocalDateTime(1453731429), creationDate = Some(toLocalDateTime(1452701233)), interval = Some(7), leadTime = Some(12), version = "8.96.0")
+      response(1) shouldBe Release("serviceA", "teamA", productionDate = toLocalDateTime(1453713911), creationDate = None, interval = Some(5), leadTime = None, version = "2.38.0")
 
     }
 
