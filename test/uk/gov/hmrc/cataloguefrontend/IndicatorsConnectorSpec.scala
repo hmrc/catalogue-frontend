@@ -36,7 +36,7 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneSer
 
   describe("IndicatorsConnector") {
     it("should convert the DeploymentsMetricResult to DeploymentIndicators") {
-      serviceEndpoint(GET, "/api/indicators/service/serv/deployment", willRespondWith = (200, Some(deploymentThroughputData)))
+      serviceEndpoint(GET, "/api/indicators/service/serv/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
 
        val deploymentIndicatorsForService: Future[Option[DeploymentIndicators]] =
          IndicatorsConnector.deploymentIndicatorsForService("serv")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))

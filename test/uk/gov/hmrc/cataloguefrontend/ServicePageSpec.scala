@@ -72,7 +72,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     "Render the frequent production indicators graph" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/deployment", willRespondWith = (200, Some(deploymentThroughputData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
@@ -101,7 +101,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     "Render a message if the indicators service encounters and error" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/deployment", willRespondWith = (500, None))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (500, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
