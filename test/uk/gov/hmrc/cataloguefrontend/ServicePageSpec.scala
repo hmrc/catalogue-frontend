@@ -21,6 +21,7 @@ import org.scalatest.{TestData, _}
 import org.scalatestplus.play.OneServerPerTest
 import play.api.libs.ws.WS
 import play.api.test.FakeApplication
+import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
 
 class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
@@ -41,7 +42,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "return a 404 when a Library is viewed as a service" in {
-      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryData)))
+      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/serv").get)
       response.status shouldBe 404
@@ -49,8 +50,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     "show the teams owning the service with github, ci and environment links and info box" in {
 
-      serviceEndpoint(GET, "/api/repositories/serv",willRespondWith = (200, Some(serviceData)))
-      serviceEndpoint(GET, "/api/indicators/service/serv/throughput",willRespondWith = (200, Some(indicatorData)))
+      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/api/indicators/service/serv/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/serv").get)
       response.status shouldBe 200
@@ -70,8 +71,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "Render the frequent production indicators graph" in {
-      serviceEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/throughput",willRespondWith = (200, Some(indicatorData)))
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/deployment", willRespondWith = (200, Some(deploymentThroughputData)))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
@@ -87,8 +88,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "Render a message if the indicators service returns 404" in {
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/throughput",willRespondWith = (404, None))
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/throughput", willRespondWith = (404, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
@@ -99,8 +100,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
 
     "Render a message if the indicators service encounters and error" in {
-      serviceEndpoint(GET, "/api/repositories/service-name",willRespondWith = (200, Some(serviceData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/throughput", willRespondWith = (500, None))
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/deployment", willRespondWith = (500, None))
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
@@ -111,117 +112,5 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
     }
   }
 
-  val serviceData =
-    """
-      |    {
-      |	     "name": "serv",
-      |      "repoType": "Deployable",
-      |      "teamNames": ["teamA", "teamB"],
-      |	     "githubUrls": [{
-      |		     "name": "github",
-      |        "displayName": "github.com",
-      |		     "url": "https://github.com/hmrc/serv"
-      |	     }],
-      |	     "ci": [
-      |		     {
-      |		       "name": "open1",
-      |		       "displayName": "open 1",
-      |		       "url": "http://open1/serv"
-      |		     },
-      |		     {
-      |		       "name": "open2",
-      |		       "displayName": "open 2",
-      |		       "url": "http://open2/serv"
-      |		     }
-      |	     ],
-      |      "environments" : [{
-      |        "name" : "env1",
-      |        "services" : [{
-      |          "name": "ser1",
-      |		       "displayName": "service1",
-      |          "url": "http://ser1/serv"
-      |        }, {
-      |          "name": "ser2",
-      |		       "displayName": "service2",
-      |          "url": "http://ser2/serv"
-      |        }]
-      |      },{
-      |        "name" : "env2",
-      |        "services" : [{
-      |          "name": "ser1",
-      |		       "displayName": "service1",
-      |          "url": "http://ser1/serv"
-      |        }, {
-      |          "name": "ser2",
-      |		       "displayName": "service2",
-      |          "url": "http://ser2/serv"
-      |        }]
-      |       }]
-      |     }
-    """.stripMargin
 
-  val libraryData =
-    """
-      |    {
-      |	     "name": "serv",
-      |      "repoType": "Library",
-      |      "teamNames": ["teamA", "teamB"],
-      |	     "githubUrls": [{
-      |		     "name": "github",
-      |        "displayName": "github.com",
-      |		     "url": "https://github.com/hmrc/serv"
-      |	     }],
-      |	     "ci": [
-      |		     {
-      |		       "name": "open1",
-      |		       "displayName": "open 1",
-      |		       "url": "http://open1/serv"
-      |		     },
-      |		     {
-      |		       "name": "open2",
-      |		       "displayName": "open 2",
-      |		       "url": "http://open2/serv"
-      |		     }
-      |	     ]
-      |     }
-    """.stripMargin
-
-  val indicatorData =
-    """
-      |[
-      |  {
-      |    "period":"2015-11",
-      |    "from": "2015-12-01",
-      |    "to": "2016-02-29",
-      |    "leadTime":{
-      |      "median":6
-      |    },
-      |    "interval":{
-      |      "median":1
-      |    }
-      |  },
-      |  {
-      |    "period":"2015-12",
-      |    "from": "2015-12-01",
-      |    "to": "2016-02-29",
-      |    "leadTime":{
-      |      "median":6
-      |    },
-      |    "interval":{
-      |      "median":5
-      |    }
-      |  },
-      |  {
-      |    "period":"2016-01",
-      |    "from": "2015-12-01",
-      |    "to": "2016-02-29",
-      |    "leadTime":{
-      |      "median":6
-      |    },
-      |    "interval":{
-      |      "median":6
-      |    }
-      |  }
-      |]
-    """.stripMargin
 }

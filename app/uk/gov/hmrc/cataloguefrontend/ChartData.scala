@@ -29,7 +29,7 @@ case class ChartData(rows: Seq[Html]) {
 
 object ChartData {
 
-  def apply(serviceName: String, dataPoints: Option[Seq[FprDataPoint]]): Option[ChartData] = {
+  def apply(serviceName: String, dataPoints: Option[Seq[DeploymentThroughputDataPoint]]): Option[ChartData] = {
 
     dataPoints.map { points =>
       ChartData(chartRows(serviceName, points))
@@ -37,9 +37,10 @@ object ChartData {
   }
 
 
-  private def chartRows(serviceName: String, points: Seq[FprDataPoint]): Seq[Html] = {
+  private def chartRows(serviceName: String, points: Seq[DeploymentThroughputDataPoint]): Seq[Html] = {
     for {
       dp <- points
+
     } yield {
       val leadTimeToolTip = toolTip(dp.period, "Lead Time", dp.leadTime, Some(getRealeaseUrlAnchor(serviceName, dp)))
       val intervalToolTip = toolTip(dp.period, "Interval", dp.interval, Some(getRealeaseUrlAnchor(serviceName, dp)))
@@ -48,7 +49,7 @@ object ChartData {
     }
   }
 
-  private def getRealeaseUrlAnchor(serviceName: String, dp: FprDataPoint) = <a href={releasesUrl(serviceName, dateToString(dp.from), dateToString(dp.to))} >View releases</a>
+  private def getRealeaseUrlAnchor(serviceName: String, dp: DeploymentThroughputDataPoint) = <a href={releasesUrl(serviceName, dateToString(dp.from), dateToString(dp.to))} >View releases</a>
 
   private def releasesUrl(serviceName: String, from: String, to: String) = s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.releases().url}?serviceName=${serviceName}&from=${from}&to=${to}"
 

@@ -44,10 +44,10 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
       val sixMonthsBeforeEndDate = endDate.minusMonths(6)
       val nineMonthsBeforeEndDate = endDate.minusMonths(9)
 
-      val points: Seq[FprDataPoint] = Seq(
-        FprDataPoint("2016-12", threeMonthsBeforeEndDate, endDate, Some(MedianDataPoint(100)), Some(MedianDataPoint(500))),
-        FprDataPoint("2016-09", sixMonthsBeforeEndDate, threeMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(1000)), Some(MedianDataPoint(5000))),
-        FprDataPoint("2016-06", nineMonthsBeforeEndDate, sixMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(10000)), Some(MedianDataPoint(50000)))
+      val points: Seq[DeploymentThroughputDataPoint] = Seq(
+        DeploymentThroughputDataPoint("2016-12", threeMonthsBeforeEndDate, endDate, Some(MedianDataPoint(100)), Some(MedianDataPoint(500))),
+        DeploymentThroughputDataPoint("2016-09", sixMonthsBeforeEndDate, threeMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(1000)), Some(MedianDataPoint(5000))),
+        DeploymentThroughputDataPoint("2016-06", nineMonthsBeforeEndDate, sixMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(10000)), Some(MedianDataPoint(50000)))
       )
 
       val data: Option[ChartData] = ChartData("my_test_service", Some(points))

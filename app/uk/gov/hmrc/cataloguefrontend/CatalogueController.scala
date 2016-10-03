@@ -65,10 +65,10 @@ trait CatalogueController extends FrontendController {
   def service(name: String) = Action.async { implicit request =>
     for {
       service <- teamsAndServicesConnector.repositoryDetails(name)
-      maybeDataPoints <- indicatorsConnector.fprForService(name)
+      maybeDataPoints: Option[DeploymentIndicators] <- indicatorsConnector.deploymentIndicatorsForService(name)
     } yield service match {
 //      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(service_info(s.time, s.data, indicators.map(_.map(_.toJSString))))
-      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(service_info(s.time, s.data, ChartData(name, maybeDataPoints)))
+      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(service_info(s.time, s.data, ChartData(name, maybeDataPoints.map(_.throughput))))
       case _ => NotFound
     }
   }

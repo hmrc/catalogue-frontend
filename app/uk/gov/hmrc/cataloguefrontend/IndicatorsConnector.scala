@@ -33,22 +33,37 @@ package uk.gov.hmrc.cataloguefrontend
  */
 
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-
 import play.api.Logger
 import play.api.libs.json.Json
-import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpReads, HttpResponse}
 
 import scala.concurrent.Future
-import scala.xml.Elem
+
 
 case class MedianDataPoint(median: Int)
 
-case class FprDataPoint(period: String, from: LocalDate, to: LocalDate, leadTime: Option[MedianDataPoint], interval: Option[MedianDataPoint])
+case class DeploymentThroughputDataPoint(period: String, from: LocalDate, to: LocalDate, leadTime: Option[MedianDataPoint], interval: Option[MedianDataPoint])
+
+case class DeploymentStabilityDataPoint(period: String, from: LocalDate, to: LocalDate, hotfixRate: Option[Int], hotfixLeadTime: Option[MedianDataPoint])
+
+case class DeploymentIndicators(throughput: Seq[DeploymentThroughputDataPoint], stability: Seq[DeploymentStabilityDataPoint])
+
+case class DeploymentsMetricResult(period: String,
+                                   from: LocalDate,
+                                   to: LocalDate,
+                                   throughput: Option[Throughput],
+                                   stability: Option[Stability])
+
+
+case class Throughput(leadTime: Option[MeasureResult], interval: Option[MeasureResult])
+
+case class Stability(hotfixRate: Option[Int], hotfixLeadTime: Option[MeasureResult])
+
+case class MeasureResult(median: Int)
+
 
 trait IndicatorsConnector extends ServicesConfig {
   val http: HttpGet
@@ -56,18 +71,39 @@ trait IndicatorsConnector extends ServicesConfig {
 
   import JavaDateTimeJsonFormatter._
 
-  implicit val medianFormats = Json.reads[MedianDataPoint]
-  implicit val fprFormats = Json.reads[FprDataPoint]
+  implicit val mesureResultFormats = Json.reads[MeasureResult]
+  implicit val throughputFormats = Json.reads[Throughput]
+  implicit val stabilityFormats = Json.reads[Stability]
+  implicit val deploymentsMetricResultFormats = Json.reads[DeploymentsMetricResult]
+
+
+
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
-  def fprForService(name: String)(implicit hc: HeaderCarrier): Future[Option[Seq[FprDataPoint]]] = {
-    val url = indicatorsBaseUrl + s"/service/$name/throughput"
+  def deploymentIndicatorsForService(name: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] = {
+    val url = indicatorsBaseUrl + s"/service/$name/deployment"
     http.GET[HttpResponse](url).map { r =>
       r.status match {
-        case 404 => Some(Seq())
-        case 200 => Some(r.json.as[Seq[FprDataPoint]])
+        case 404 => Some(DeploymentIndicators(Nil, Nil))
+        case 200 =>
+
+          val deploymentsMetricResults: Seq[DeploymentsMetricResult] = r.json.as[Seq[DeploymentsMetricResult]]
+          val (deploymentThroughputs, deploymentStabilities) =
+            deploymentsMetricResults.map { dmr =>
+
+              val leadTime = dmr.throughput.flatMap(x => x.leadTime.map(y => MedianDataPoint.apply(y.median)))
+              val interval = dmr.throughput.flatMap(x => x.interval.map(y => MedianDataPoint.apply(y.median)))
+              val hotfixRate = dmr.stability.flatMap(_.hotfixRate)
+              val hotfixLeadTime = dmr.stability.flatMap(x => x.hotfixLeadTime.map(y => MedianDataPoint.apply(y.median)))
+
+              (DeploymentThroughputDataPoint(dmr.period, dmr.from, dmr.to, leadTime, interval),
+                DeploymentStabilityDataPoint(dmr.period, dmr.from, dmr.to, hotfixRate, hotfixLeadTime))
+
+            }.unzip
+
+          Some(DeploymentIndicators(deploymentThroughputs, deploymentStabilities))
       }
     }.recover {
       case ex =>
