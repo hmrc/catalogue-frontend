@@ -5,7 +5,7 @@
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
 *
-*     http://www.apache.org/licenses/LICENSE-2.0
+* http://www.apache.org/licenses/LICENSE-2.0
 *
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
-
 @import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
@@ -21,98 +20,89 @@
 @import uk.gov.hmrc.cataloguefrontend.DeploymentThroughputDataPoint
 
 @import uk.gov.hmrc.cataloguefrontend.ChartData
-@(cacheTimestampFormatted: String, service: RepositoryDetails, chartData: Option[ChartData])
+@(cacheTimestampFormatted: String, service: RepositoryDetails, throughputChartData: Option[ChartData], stabilityChartData: Option[ChartData], displayStabilityGraph: Boolean)
 
-@standard_layout(service.name,"services") {
-<header>
-    <h1>Service: @service.name</h1>
-    <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
+@standard_layout(service.name, "services") {
+    <header>
+        <h1>Service: @service.name</h1>
+        <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
 
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-</header>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    </header>
 
-<div class="alert alert-success" role="alert" id="@service.name">
-    <p>
+    <div class="alert alert-success" role="alert" id="@service.name">
+        <p>
         @Html(ViewMessages.informationalText)
-    </p>
-</div>
-<section class="section-wrapper">
-    <div class="row">
-        @partials.repo_owning_teams(service)
-        @partials.code_and_builds(service)
+        </p>
     </div>
-    <div class="row">
-        @for(environment <- service.environments.get){
-        <div class="col-md-3">
-            <div class="board">
-                <h3 class="board__heading">@environment.name</h3>
-                <div class="board__body">
-                    <ul class="list list--minimal">
-                        @for(tool <- environment.services){
-                            <li class="list-item"><a href="@{tool.url}" target="_blank">@{tool.displayName}</a></li>
+    <section class="section-wrapper">
+        <div class="row">
+            @partials.repo_owning_teams(service)
+            @partials.code_and_builds(service)
+        </div>
+        <div class="row">
+        @for(environment <- service.environments.get) {
+            <div class="col-md-3">
+                <div class="board">
+                    <h3 class="board__heading">@environment.name</h3>
+                    <div class="board__body">
+                        <ul class="list list--minimal">
+                        @for(tool <- environment.services) {
+                            <li class="list-item"><a href="@{
+                                tool.url
+                            }" target="_blank">@{
+                                tool.displayName
+                            }</a>
+                            </li>
                         }
-                    </ul>
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </div>
         }
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="board">
-                <h3 class="board__heading">Indicators</h3>
-                <div class="board__body">
-                    <h4 class="indicator__title">Frequent Production Releases</h4>
-                    @if(chartData.isDefined && !chartData.get.isEmpty) {
-                        @Html(ViewMessages.fprExplanationText)
-                    }
-                    <div id="chart_div">
-                    @if(chartData.isEmpty) {
-                        <h2 class="chart-message text-center">The catalogue encountered an error</h2>
-                        <p>@Html(ViewMessages.indicatorsServiceError)</p>
-                    } else {
-                        @if(chartData.get.isEmpty) {
-                            <h2 class="chart-message text-center">No data to show</h2>
-                            <p>@Html(ViewMessages.noIndicatorsData)</p>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="board">
+                    <h3 class="board__heading">Indicators</h3>
+                    <div class="board__body">
+                        <h4 class="indicator__title">Frequent Production Releases</h4>
+                        @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
+
+                            @if(displayStabilityGraph) {
+                                @Html(ViewMessages.fprExplanationText)
+                            } else {
+                                @Html(ViewMessages.fprExplanationTextWithoutStability)
+                            }
                         }
-                    }
+                        <div id="chart_div">
+                        @if(throughputChartData.isEmpty) {
+                            <h2 class="chart-message text-center">The catalogue encountered an error</h2>
+                            <p>@Html(ViewMessages.indicatorsServiceError)</p>
+                        } else {
+                            @if(throughputChartData.get.isEmpty) {
+                                <h2 class="chart-message text-center">No data to show</h2>
+                                <p>@Html(ViewMessages.noIndicatorsData)</p>
+                            }
+                        }
+                        </div>
+                        <div id="chart_div_2"></div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 }
 
 <script type="text/javascript">
 
 
-    @if(chartData.isDefined && !chartData.get.isEmpty) {
-        google.charts.load('current', {packages: ['corechart', 'line']});
-        google.charts.setOnLoadCallback(function () {
-            var options = {
-                height: 350,
-                hAxis: {title: 'Period'},
-                vAxis: {title: 'Days'},
-                lineWidth: 4,
-                pointSize: 7,
-                tooltip: { isHtml: true, trigger: 'selection' }
-            };
+    @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
+        @views.html.throughputchart_script(throughputChartData)
+    }
 
-            var data = new google.visualization.DataTable();
-            data.addColumn('string', 'Period');
-            data.addColumn('number', 'Lead time');
-            data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});
-            data.addColumn('number', 'Interval');
-            data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});
-
-            @chartData.get.rows.map{row =>
-                data.addRow(@row);
-            }
-
-            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-            chart.draw(data, options);
-        });
+    @if(displayStabilityGraph && stabilityChartData.isDefined && !stabilityChartData.get.isEmpty) {
+        @views.html.stabilitychart_script(stabilityChartData)
     }
 
 </script>

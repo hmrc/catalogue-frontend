@@ -2,3 +2,4 @@ from.error.date=Production date from should be of format dd-mm-yyyy
 to.error.date=Production date to should be of format dd-mm-yyyy
 leadtime.explanation.text=the number of days between creating a release and deploying it to production
 interval.explanation.text=the number of days between production deployments
+hotfixrate.explanation.text=number of production deployments that were hotfix versions / total number of prod deployments

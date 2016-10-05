@@ -33,12 +33,12 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
   def getRowColumns(row: Html): Seq[String] = {
-    row.toString().replaceAll("\\[", "").split(",").toSeq.map(_.trim)
+    row.toString().replaceAll("\\[", "").replaceAll("\\]", "").split(",").toSeq.map(_.trim)
   }
 
   "ChartData" should {
 
-    "return correct html rows for given data points" in {
+    "return correct html rows for deployment throughput data points" in {
       val endDate: LocalDate = LocalDate.of(2016, 12, 31)
       val threeMonthsBeforeEndDate = endDate.minusMonths(3)
       val sixMonthsBeforeEndDate = endDate.minusMonths(6)
@@ -50,7 +50,7 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
         DeploymentThroughputDataPoint("2016-06", nineMonthsBeforeEndDate, sixMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(10000)), Some(MedianDataPoint(50000)))
       )
 
-      val data: Option[ChartData] = ChartData("my_test_service", Some(points))
+      val data: Option[ChartData] = ChartData.deploymentThroughput("my_test_service", Some(points))
 
       val chartData: ChartData = data.value
       val rows: Seq[Html] = chartData.rows
@@ -84,10 +84,49 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
 
       intervalToolTipTableData.get(2).select("a").attr("href") shouldBe "/releases?serviceName=my_test_service&from=30-09-2016&to=31-12-2016"
       intervalToolTipTableData.get(2).select("a").text() shouldBe "View releases"
+    }
 
+    "return correct html rows for deployment stability data points" in {
+      val endDate: LocalDate = LocalDate.of(2016, 12, 31)
+      val threeMonthsBeforeEndDate = endDate.minusMonths(3)
+      val sixMonthsBeforeEndDate = endDate.minusMonths(6)
+      val nineMonthsBeforeEndDate = endDate.minusMonths(9)
 
+      val points: Seq[DeploymentStabilityDataPoint] = Seq(
+        DeploymentStabilityDataPoint("2016-12", threeMonthsBeforeEndDate, endDate, Some(0.35), Some(MedianDataPoint(5))),
+        DeploymentStabilityDataPoint("2016-09", sixMonthsBeforeEndDate, threeMonthsBeforeEndDate.minusDays(1), Some(.25), Some(MedianDataPoint(3))),
+        DeploymentStabilityDataPoint("2016-06", nineMonthsBeforeEndDate, sixMonthsBeforeEndDate.minusDays(1), Some(.1), Some(MedianDataPoint(4)))
+      )
+
+      val data: Option[ChartData] = ChartData.deploymentStability("my_test_service", Some(points))
+
+      val chartData: ChartData = data.value
+      val rows: Seq[Html] = chartData.rows
+
+      rows.size should ===(3)
+
+      rows(0).toString().startsWith("[") shouldBe true
+      rows(0).toString().endsWith("]") shouldBe true
+      getRowColumns(rows(0))(0) should === (""""2016-12"""")
+      getRowColumns(rows(0))(1) should === ("""0.35""")
+      getRowColumns(rows(1))(0) should === (""""2016-09"""")
+      getRowColumns(rows(1))(1) should === ("""0.25""")
+      getRowColumns(rows(2))(0) should === (""""2016-06"""")
+      getRowColumns(rows(2))(1) should === ("""0.1""")
+
+      val rateToolTip = asDocument(getRowColumns(rows(0))(2))
+
+      val rateToolTipTableData: Elements = rateToolTip.select("tr td")
+      rateToolTipTableData.get(0).text() should include("Period:")
+      rateToolTipTableData.get(0).text() should include("2016-12")
+      rateToolTipTableData.get(1).text() should include("Hotfix Rate:")
+      rateToolTipTableData.get(1).text() should include("35%")
+
+      rateToolTipTableData.get(2).select("a").attr("href") shouldBe "/releases?serviceName=my_test_service&from=30-09-2016&to=31-12-2016"
+      rateToolTipTableData.get(2).select("a").text() shouldBe "View releases"
 
     }
+
   }
 
 

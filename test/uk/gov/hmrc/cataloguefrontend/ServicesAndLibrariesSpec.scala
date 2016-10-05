@@ -30,7 +30,8 @@ class ServicesAndLibrariesSpec extends UnitSpec with BeforeAndAfter with OneServ
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
-      "microservice.services.teams-and-services.port" -> endpointPort
+      "microservice.services.teams-and-services.port" -> endpointPort,
+      "microservice.services.teams-and-services.host" -> host
     ))
 
   "Services list" should {

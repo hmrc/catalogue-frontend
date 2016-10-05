@@ -29,7 +29,9 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
       "microservice.services.teams-and-services.port" -> endpointPort,
-      "microservice.services.indicators.port" -> endpointPort
+      "microservice.services.teams-and-services.host" -> host,
+      "microservice.services.indicators.port" -> endpointPort,
+      "microservice.services.indicators.host" -> host
     ))
 
   "A service page" should {
@@ -70,11 +72,11 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
 
     }
 
-    "Render the frequent production indicators graph" in {
+    "Render the frequent production indicators graph with throughput and stability" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
 
-      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
+      val response = await(WS.url(s"http://localhost:$port/services/service-name?stability").get)
       response.status shouldBe 200
       response.body should include(s"""data.addColumn('string', 'Period');""")
       response.body should include(s"""data.addColumn('number', 'Lead time');""")
@@ -85,6 +87,22 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
 
       response.body should include(s"""chart.draw(data, options);""")
+
+      response.body should include(s"""data.addColumn('string', 'Period');""")
+      response.body should include(s"""data.addColumn('number', "Hotfix rate");""")
+      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
+    }
+
+    "Render the frequent production indicators graph with throughput only when stability feature toggle is not present" in {
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
+
+      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
+      response.status shouldBe 200
+      response.body should include(s"""new google.visualization.LineChart(document.getElementById('chart_div'));""")
+      response.body should not include(ViewMessages.fprExplanationText)
+      response.body should not include (s"""new google.visualization.LineChart(document.getElementById('chart_div_2'));""")
+      response.body should include(ViewMessages.fprExplanationTextWithoutStability)
     }
 
     "Render a message if the indicators service returns 404" in {

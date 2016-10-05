@@ -31,6 +31,13 @@ object ViewMessages {
 
   val fprExplanationText = "<p>This indicator shows your progress towards frequent delivery of value-add. It is composed of two metrics:</p>" +
     s"<ul><li><strong>Lead Time</strong> - ${Messages("leadtime.explanation.text")}</li>" +
+    s"<li><strong>Interval</strong> - ${Messages("interval.explanation.text")}</li>" +
+    s"<li><strong>Hotfix rate</strong> - ${Messages("hotfixrate.explanation.text")}</li></ul>" +
+    "<p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>" +
+    "<p><label>N.B.</label> You can click on each data point on the graph to see the releases</p>"
+
+  val fprExplanationTextWithoutStability = "<p>This indicator shows your progress towards frequent delivery of value-add. It is composed of two metrics:</p>" +
+    s"<ul><li><strong>Lead Time</strong> - ${Messages("leadtime.explanation.text")}</li>" +
     s"<li><strong>Interval</strong> - ${Messages("interval.explanation.text")}</li></ul>" +
     "<p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>" +
     "<p><label>N.B.</label> You can click on each data point on the graph to see the releases</p>"

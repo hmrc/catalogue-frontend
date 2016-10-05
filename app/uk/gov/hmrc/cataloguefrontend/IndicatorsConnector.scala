@@ -47,7 +47,7 @@ case class MedianDataPoint(median: Int)
 
 case class DeploymentThroughputDataPoint(period: String, from: LocalDate, to: LocalDate, leadTime: Option[MedianDataPoint], interval: Option[MedianDataPoint])
 
-case class DeploymentStabilityDataPoint(period: String, from: LocalDate, to: LocalDate, hotfixRate: Option[Int], hotfixLeadTime: Option[MedianDataPoint])
+case class DeploymentStabilityDataPoint(period: String, from: LocalDate, to: LocalDate, hotfixRate: Option[Double], hotfixLeadTime: Option[MedianDataPoint])
 
 case class DeploymentIndicators(throughput: Seq[DeploymentThroughputDataPoint], stability: Seq[DeploymentStabilityDataPoint])
 
@@ -60,7 +60,7 @@ case class DeploymentsMetricResult(period: String,
 
 case class Throughput(leadTime: Option[MeasureResult], interval: Option[MeasureResult])
 
-case class Stability(hotfixRate: Option[Int], hotfixLeadTime: Option[MeasureResult])
+case class Stability(hotfixRate: Option[Double], hotfixLeadTime: Option[MeasureResult])
 
 case class MeasureResult(median: Int)
 

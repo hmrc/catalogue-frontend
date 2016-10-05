@@ -1,0 +1,46 @@
+@import uk.gov.hmrc.cataloguefrontend.ChartData
+
+@(stabilityChartData: Option[ChartData])
+
+google.charts.load('current', {packages: ['corechart', 'line']});
+google.charts.setOnLoadCallback(function () {
+
+    var classicOptions = {
+        title: 'Deployment stability indicator',
+        height: 350,
+        // Gives each series an axis that matches the vAxes number below.
+        series: {
+            0: {targetAxisIndex: 0}
+//              1: {targetAxisIndex: 1}
+        },
+        vAxes: {
+            // Adds titles to each axis.
+            0: {format:"#%", viewWindow:{
+                max:1,
+                min:0
+            }}
+//              1: {title: 'Days'}
+        },
+        lineWidth: 3,
+        pointSize : 4,
+        legend: {textStyle : {fontSize : 10}, position : 'top'},
+        hAxis: {title: 'Period', textStyle : {fontSize : 10}},
+        vAxis: { textStyle : {fontSize : 10}},
+        colors: ["orange", "green"],
+        tooltip: { isHtml: true, trigger: 'selection' }
+    };
+
+
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Period');
+    data.addColumn('number', "Hotfix rate");
+    data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});
+//             data.addColumn('number', "Hotfix lead time");
+    @stabilityChartData.get.rows.map{row =>
+        data.addRow(@row);
+    }
+
+    var chart = new google.visualization.LineChart(document.getElementById('chart_div_2'));
+    chart.draw(data, classicOptions);
+
+});

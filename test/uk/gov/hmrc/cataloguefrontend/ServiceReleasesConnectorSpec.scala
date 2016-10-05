@@ -29,7 +29,8 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
-      "microservice.services.service-releases.port" -> endpointPort
+      "microservice.services.service-releases.port" -> endpointPort,
+      "microservice.services.service-releases.host" -> host
     ))
 
 
