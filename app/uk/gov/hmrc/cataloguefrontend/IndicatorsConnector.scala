@@ -47,7 +47,7 @@ case class MedianDataPoint(median: Int)
 
 case class DeploymentThroughputDataPoint(period: String, from: LocalDate, to: LocalDate, leadTime: Option[MedianDataPoint], interval: Option[MedianDataPoint])
 
-case class DeploymentStabilityDataPoint(period: String, from: LocalDate, to: LocalDate, hotfixRate: Option[Double], hotfixLeadTime: Option[MedianDataPoint])
+case class DeploymentStabilityDataPoint(period: String, from: LocalDate, to: LocalDate, hotfixRate: Option[Double], hotfixInterval: Option[MedianDataPoint])
 
 case class DeploymentIndicators(throughput: Seq[DeploymentThroughputDataPoint], stability: Seq[DeploymentStabilityDataPoint])
 
@@ -60,7 +60,7 @@ case class DeploymentsMetricResult(period: String,
 
 case class Throughput(leadTime: Option[MeasureResult], interval: Option[MeasureResult])
 
-case class Stability(hotfixRate: Option[Double], hotfixLeadTime: Option[MeasureResult])
+case class Stability(hotfixRate: Option[Double], hotfixInterval: Option[MeasureResult])
 
 case class MeasureResult(median: Int)
 
@@ -96,7 +96,7 @@ trait IndicatorsConnector extends ServicesConfig {
               val leadTime = dmr.throughput.flatMap(x => x.leadTime.map(y => MedianDataPoint.apply(y.median)))
               val interval = dmr.throughput.flatMap(x => x.interval.map(y => MedianDataPoint.apply(y.median)))
               val hotfixRate = dmr.stability.flatMap(_.hotfixRate)
-              val hotfixLeadTime = dmr.stability.flatMap(x => x.hotfixLeadTime.map(y => MedianDataPoint.apply(y.median)))
+              val hotfixLeadTime = dmr.stability.flatMap(x => x.hotfixInterval.map(y => MedianDataPoint.apply(y.median)))
 
               (DeploymentThroughputDataPoint(dmr.period, dmr.from, dmr.to, leadTime, interval),
                 DeploymentStabilityDataPoint(dmr.period, dmr.from, dmr.to, hotfixRate, hotfixLeadTime))

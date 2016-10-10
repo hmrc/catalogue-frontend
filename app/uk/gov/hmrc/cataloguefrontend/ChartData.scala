@@ -50,8 +50,9 @@ object ChartData {
 
     } yield {
       val relasePageAnchor: Elem = getReleaseUrlAnchor(serviceName, dp.from, dp.to)
-      val leadTimeToolTip = toolTip(dp.period, "Lead Time", dp.leadTime.map(_.median.toString), Some(relasePageAnchor))
-      val intervalToolTip = toolTip(dp.period, "Interval", dp.interval.map(_.median.toString), Some(relasePageAnchor))
+      val tip = toolTip(dp.period, Some(relasePageAnchor)) _
+      val leadTimeToolTip = tip("Lead Time", dp.leadTime.map(_.median.toString))
+      val intervalToolTip = tip("Interval", dp.interval.map(_.median.toString))
 
       Html(s"""["${dp.period}", ${unwrapMedian(dp.leadTime)}, "$leadTimeToolTip", ${unwrapMedian(dp.interval)}, "$intervalToolTip"]""")
     }
@@ -62,8 +63,11 @@ object ChartData {
       dp <- points
 
     } yield {
-      val hotfixRateToolTip = toolTip(dp.period, "Hotfix Rate", dp.hotfixRate.map(r => s"${toPercent(r)}%"), Some(getReleaseUrlAnchor(serviceName, dp.from, dp.to)))
-      Html(s"""["${dp.period}", ${unwrap(dp.hotfixRate)}, "$hotfixRateToolTip"]""")
+      val tip = toolTip(dp.period, Some(getReleaseUrlAnchor(serviceName, dp.from, dp.to))) _
+
+      val hotfixRateToolTip = tip("Hotfix Rate", dp.hotfixRate.map(r => s"${toPercent(r)}%"))
+      val hotfixIntervalTip = tip("Hotfix Interval", dp.hotfixInterval.map(_.median.toString))
+      Html(s"""["${dp.period}", ${unwrap(dp.hotfixRate)}, "$hotfixRateToolTip", ${unwrapMedian(dp.hotfixInterval)}, "$hotfixIntervalTip"]""")
     }
   }
 
@@ -83,7 +87,7 @@ object ChartData {
   private def unwrap(container: Option[_]) = container.map(l => s"""$l""").getOrElse("null")
 
 
-  private def toolTip(period: String, dataPointLabel: String, dataPointValue: Option[String], additionalContent: Option[NodeSeq]) = {
+  private def toolTip(period: String, additionalContent: Option[NodeSeq])(dataPointLabel: String, dataPointValue: Option[String]) = {
 
     val element: Elem =
       <div>
@@ -97,7 +101,7 @@ object ChartData {
           <tr>
             <td nowrap="true">
               <label>
-                {dataPointLabel}: </label> {dataPointValue.fold("")(identity)}
+                {dataPointLabel}: </label>{dataPointValue.fold("")(identity)}
             </td>
 
           </tr>
