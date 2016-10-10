@@ -63,7 +63,7 @@
         </div>
         <div class="row">
             <div class="col-md-12">
-                <div class="board">
+                <div class="board row">
                     <h3 class="board__heading">Indicators</h3>
                     <div class="board__body">
                         <h4 class="indicator__title">Frequent Production Releases</h4>
@@ -75,19 +75,19 @@
                                 @Html(ViewMessages.fprExplanationTextWithoutStability)
                             }
                         }
-                        <div id="chart_div">
-                        @if(throughputChartData.isEmpty) {
-                            <h2 class="chart-message text-center">The catalogue encountered an error</h2>
-                            <p>@Html(ViewMessages.indicatorsServiceError)</p>
-                        } else {
-                            @if(throughputChartData.get.isEmpty) {
-                                <h2 class="chart-message text-center">No data to show</h2>
-                                <p>@Html(ViewMessages.noIndicatorsData)</p>
-                            }
-                        }
-                        </div>
-                        <div id="chart_div_2"></div>
                     </div>
+                    <div id="chart_div" class="col-md-6">
+                    @if(throughputChartData.isEmpty) {
+                        <h2 class="chart-message text-center">The catalogue encountered an error</h2>
+                        <p>@Html(ViewMessages.indicatorsServiceError)</p>
+                    } else {
+                        @if(throughputChartData.get.isEmpty) {
+                            <h2 class="chart-message text-center">No data to show</h2>
+                            <p>@Html(ViewMessages.noIndicatorsData)</p>
+                        }
+                    }
+                    </div>
+                    <div id="chart_div_2" class="col-md-6"></div>
                 </div>
             </div>
         </div>

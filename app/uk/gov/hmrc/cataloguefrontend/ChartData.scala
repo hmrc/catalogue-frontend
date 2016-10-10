@@ -71,9 +71,7 @@ object ChartData {
     }
   }
 
-  def toPercent(r: Double): Int = {
-    (r * 100).toInt
-  }
+  def toPercent(r: Double): Int = (r * 100).toInt
 
   private def getReleaseUrlAnchor(serviceName: String, from: LocalDate, to: LocalDate) = <a href={releasesUrl(serviceName, dateToString(from), dateToString(to))}>View releases</a>
 
