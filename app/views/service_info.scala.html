@@ -76,7 +76,7 @@
                             }
                         }
                     </div>
-                    <div id="chart_div" class="col-md-6">
+                    <div id="chart_div" class = "@{ if(displayStabilityGraph) "col-md-6" else ""}">
                     @if(throughputChartData.isEmpty) {
                         <h2 class="chart-message text-center">The catalogue encountered an error</h2>
                         <p>@Html(ViewMessages.indicatorsServiceError)</p>
@@ -87,7 +87,9 @@
                         }
                     }
                     </div>
+                    @if(displayStabilityGraph) {
                     <div id="chart_div_2" class="col-md-6"></div>
+                    }
                 </div>
             </div>
         </div>
