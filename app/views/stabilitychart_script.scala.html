@@ -34,9 +34,9 @@ chartArea: { width: "85%" },
 
     var data = new google.visualization.DataTable();
     data.addColumn('string', 'Period');
-    data.addColumn('number', "Hotfix rate");
+    data.addColumn('number', "Hotfix Rate");
     data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});
-    data.addColumn('number', "Hotfix interval");
+    data.addColumn('number', "Hotfix Interval");
     data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});
 
     @stabilityChartData.get.rows.map{row =>

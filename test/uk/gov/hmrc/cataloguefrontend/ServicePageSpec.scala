@@ -89,7 +89,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       response.body should include(s"""chart.draw(data, options);""")
 
       response.body should include(s"""data.addColumn('string', 'Period');""")
-      response.body should include(s"""data.addColumn('number', "Hotfix rate");""")
+      response.body should include(s"""data.addColumn('number', "Hotfix Rate");""")
       response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
     }
 
