@@ -68,59 +68,89 @@
                     <div class="board__body">
                         @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
 
-                            <p>These indicators show the frequency and stability of your production deployments</p>
-                            <p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>
-                            <p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>
+                            @renderGraphText
+                            @renderThroughputGraph
+                            @if(displayStabilityGraph) {
+                                @renderStabilityGraph
+                            }
+
                         }
+                     @{
+                         if(throughputChartData.isEmpty) {
+                             {errorMessage}
+                         }else if(throughputChartData.get.isEmpty) {
+                             {noDataToShow}
+                         }
+
+                     }
+
                     </div>
-                    <div  class = "@{ if(displayStabilityGraph) "col-md-6" else ""}">
-                        <div id="chart_div"></div>
-                        <div>
-                            <small>
-                                <ul>
-                                    <li><strong>Lead Time</strong> - @{Messages("leadtime.explanation.text")}</li>
-                                    <li><strong>Interval</strong> - @{Messages("interval.explanation.text")}</li>
-                                </ul>
-                            </small>
-                        </div>
-                    @if(throughputChartData.isEmpty) {
-                        <h2 class="chart-message text-center">The catalogue encountered an error</h2>
-                        <p>@Html(ViewMessages.indicatorsServiceError)</p>
-                    } else {
-                        @if(throughputChartData.get.isEmpty) {
-                            <h2 class="chart-message text-center">No data to show</h2>
-                            <p>@Html(ViewMessages.noIndicatorsData)</p>
-                        }
-                    }
-                    </div>
-                    @if(displayStabilityGraph) {
-                    <div class="col-md-6">
-                        <div id="chart_div_2"></div>
-                        <div>
-                            <small>
-                                <ul>
-                                    <li><strong>Hotfix Rate</strong> - @{Messages("hotfixrate.explanation.text")}</li>
-                                    <li><strong>Hotfix Interval</strong> - @{ Messages("hotfixinterval.explanation.text")}</li>
-                                </ul>
-                            </small>
-                        </div>
-                    </div>
-                    }
                 </div>
             </div>
         </div>
     </section>
+
+    <script type="text/javascript">
+
+
+        @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
+            @views.html.throughputchart_script(throughputChartData)
+        }
+
+        @if(displayStabilityGraph && stabilityChartData.isDefined && !stabilityChartData.get.isEmpty) {
+            @views.html.stabilitychart_script(stabilityChartData)
+        }
+
+    </script>
+
 }
 
-<script type="text/javascript">
+@renderThroughputGraph = {
+    <div class="@{if(displayStabilityGraph) "col-md-6" else ""}" >
+        <div id="chart_div"></div>
+        <div>
+            <small>
+                <ul>
+                    <li><strong>Lead Time</strong> - @{Messages("leadtime.explanation.text")}</li>
+                    <li><strong>Interval</strong> - @{Messages("interval.explanation.text")}</li>
+                </ul>
+            </small>
+        </div>
+    </div>
+
+}
 
 
-    @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-        @views.html.throughputchart_script(throughputChartData)
-    }
+@noDataToShow = {
+    <h2 class="chart-message text-center">No data to show</h2>
+@{Html(ViewMessages.noIndicatorsData)}
+}
 
-    @if(displayStabilityGraph && stabilityChartData.isDefined && !stabilityChartData.get.isEmpty) {
-        @views.html.stabilitychart_script(stabilityChartData)
-    }
+@errorMessage = {
+    <h2 class="chart-message text-center">The catalogue encountered an error</h2>
+    <p>@{Html(ViewMessages.indicatorsServiceError)}</p>
+}
+@renderGraphText = {
+    <h4 class="indicator__title">Production Deployments</h4>
 
-</script>
+        <p>These indicators show the frequency and stability of your production deployments</p>
+        <p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>
+        <p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>
+}
+
+@renderStabilityGraph ={
+    <div class="col-md-6">
+        <div id="chart_div_2"></div>
+        <div>
+            <small>
+                <ul>
+                    <li><strong>Hotfix Rate</strong> - @{Messages("hotfixrate.explanation.text")}</li>
+                    <li><strong>Hotfix Interval</strong> - @{ Messages("hotfixinterval.explanation.text")}</li>
+                </ul>
+            </small>
+        </div>
+    </div>
+}
+
+
+

@@ -21,9 +21,9 @@ import play.api.i18n.Messages
 
 
 object ViewMessages {
-  val noIndicatorsData = "There's nothing here - this probably means you haven't released anything yet! Get shipping " +
+  val noIndicatorsData = "<p>There's nothing here - this probably means you haven't released anything yet! Get shipping " +
     "to see your data. If you think you're seeing this message in error or have any other feedback, please let us know in " +
-    "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\">#team-platops</a>"
+    """<a href="https://hmrcdigital.slack.com/messages/team-platops/">#team-platops</a></p>"""
 
   val indicatorsServiceError = "Sorry about that, there was a problem fetching the indicator data. This will " +
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
