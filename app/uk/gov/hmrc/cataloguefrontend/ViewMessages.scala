@@ -29,7 +29,7 @@ object ViewMessages {
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
     "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\">#team-platops</a>"
 
-  val fprExplanationText = "<p>This indicator shows your progress towards frequent delivery of value-add. It is composed of two metrics:</p>" +
+  val fprExplanationText = "<p>This indicator shows the frequency and stability of your production deployments. It is composed of four metrics:</p>" +
     s"<ul><li><strong>Lead Time</strong> - ${Messages("leadtime.explanation.text")}</li>" +
     s"<li><strong>Interval</strong> - ${Messages("interval.explanation.text")}</li>" +
     s"<li><strong>Hotfix Rate</strong> - ${Messages("hotfixrate.explanation.text")}</li>" +

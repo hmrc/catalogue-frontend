@@ -79,7 +79,7 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       val response = await(WS.url(s"http://localhost:$port/services/service-name?stability").get)
       response.status shouldBe 200
       response.body should include(s"""data.addColumn('string', 'Period');""")
-      response.body should include(s"""data.addColumn('number', 'Lead time');""")
+      response.body should include(s"""data.addColumn('number', 'Lead Time');""")
       response.body should include(s"""data.addColumn('number', 'Interval');""")
 
       response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
