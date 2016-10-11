@@ -1,6 +1,6 @@
 from.error.date=Production date from should be of format dd-mm-yyyy
 to.error.date=Production date to should be of format dd-mm-yyyy
-leadtime.explanation.text=the number of days between creating a release and deploying it to production
-interval.explanation.text=the number of days between production deployments
-hotfixrate.explanation.text=number of production deployments that were hotfix versions / total number of prod deployments
-hotfixinterval.explanation.text=time from hotfixed production deployment to hotfix production deployment
+leadtime.explanation.text=number of days between release creation and production deployment
+interval.explanation.text=number of days between production deployments
+hotfixrate.explanation.text=percentage of production deployments that were hotfix versions
+hotfixinterval.explanation.text=number of days between hotfixed production deployment to hotfix production deployment

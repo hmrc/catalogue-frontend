@@ -64,14 +64,13 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="board row">
-                    <h3 class="board__heading">Indicators</h3>
+                    <h3 class="board__heading">Delivery Indicators</h3>
                     <div class="board__body">
-                        <h4 class="indicator__title">Production Deployments</h4>
                         @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
 
-                            <p>This indicator shows the frequency and stability of your production deployments. It is composed of four metrics:</p>
+                            <p>These indicators show the frequency and stability of your production deployments</p>
                             <p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>
-                            <p><label>N.B.</label> You can click on each data point on the graph to see the releases</p>
+                            <p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>
                         }
                     </div>
                     <div  class = "@{ if(displayStabilityGraph) "col-md-6" else ""}">
