@@ -69,14 +69,21 @@
                         <h4 class="indicator__title">Production Deployments</h4>
                         @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
 
-                            @if(displayStabilityGraph) {
-                                @Html(ViewMessages.fprExplanationText)
-                            } else {
-                                @Html(ViewMessages.fprExplanationTextWithoutStability)
-                            }
+                            <p>This indicator shows the frequency and stability of your production deployments. It is composed of four metrics:</p>
+                            <p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>
+                            <p><label>N.B.</label> You can click on each data point on the graph to see the releases</p>
                         }
                     </div>
-                    <div id="chart_div" class = "@{ if(displayStabilityGraph) "col-md-6" else ""}">
+                    <div  class = "@{ if(displayStabilityGraph) "col-md-6" else ""}">
+                        <div id="chart_div"></div>
+                        <div>
+                            <small>
+                                <ul>
+                                    <li><strong>Lead Time</strong> - @{Messages("leadtime.explanation.text")}</li>
+                                    <li><strong>Interval</strong> - @{Messages("interval.explanation.text")}</li>
+                                </ul>
+                            </small>
+                        </div>
                     @if(throughputChartData.isEmpty) {
                         <h2 class="chart-message text-center">The catalogue encountered an error</h2>
                         <p>@Html(ViewMessages.indicatorsServiceError)</p>
@@ -88,7 +95,17 @@
                     }
                     </div>
                     @if(displayStabilityGraph) {
-                    <div id="chart_div_2" class="col-md-6"></div>
+                    <div class="col-md-6">
+                        <div id="chart_div_2"></div>
+                        <div>
+                            <small>
+                                <ul>
+                                    <li><strong>Hotfix Rate</strong> - @{Messages("hotfixrate.explanation.text")}</li>
+                                    <li><strong>Hotfix Interval</strong> - @{ Messages("hotfixinterval.explanation.text")}</li>
+                                </ul>
+                            </small>
+                        </div>
+                    </div>
                     }
                 </div>
             </div>

@@ -6,7 +6,7 @@
   },
   "scripts": {
     "css:watch": "node-sass --source-map true -w ${npm_package_config_assets} -o ${npm_package_config_public}",
-    "css": "node-sass --style compressed ./app/assets/ -o ./public/",
+    "css": "node-sass --style compressed ./app/assets/ -o ./public/"
   },
   "dependencies": {
     "bootstrap-sass": "^3.3.6",

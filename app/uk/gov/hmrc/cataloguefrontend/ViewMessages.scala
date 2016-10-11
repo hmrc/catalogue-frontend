@@ -29,19 +29,6 @@ object ViewMessages {
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
     "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\">#team-platops</a>"
 
-  val fprExplanationText = "<p>This indicator shows the frequency and stability of your production deployments. It is composed of four metrics:</p>" +
-    s"<ul><li><strong>Lead Time</strong> - ${Messages("leadtime.explanation.text")}</li>" +
-    s"<li><strong>Interval</strong> - ${Messages("interval.explanation.text")}</li>" +
-    s"<li><strong>Hotfix Rate</strong> - ${Messages("hotfixrate.explanation.text")}</li>" +
-    s"<li><strong>Hotfix Interval</strong> - ${Messages("hotfixinterval.explanation.text")}</li></ul>" +
-    "<p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>" +
-    "<p><label>N.B.</label> You can click on each data point on the graph to see the releases</p>"
-
-  val fprExplanationTextWithoutStability = "<p>This indicator shows your progress towards frequent delivery of value-add. It is composed of two metrics:</p>" +
-    s"<ul><li><strong>Lead Time</strong> - ${Messages("leadtime.explanation.text")}</li>" +
-    s"<li><strong>Interval</strong> - ${Messages("interval.explanation.text")}</li></ul>" +
-    "<p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>" +
-    "<p><label>N.B.</label> You can click on each data point on the graph to see the releases</p>"
 
   def noRepoOfType(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +

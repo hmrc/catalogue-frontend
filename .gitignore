@@ -18,5 +18,5 @@ dist
 /.settings
 *.iws
 .sass-cache
-/node_modules
 npm-debug.log
+/node_modules/

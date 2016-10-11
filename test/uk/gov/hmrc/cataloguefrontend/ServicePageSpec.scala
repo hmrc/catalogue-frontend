@@ -100,9 +100,8 @@ class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
       response.body should include(s"""new google.visualization.LineChart(document.getElementById('chart_div'));""")
-      response.body should not include(ViewMessages.fprExplanationText)
       response.body should not include (s"""new google.visualization.LineChart(document.getElementById('chart_div_2'));""")
-      response.body should include(ViewMessages.fprExplanationTextWithoutStability)
+
     }
 
     "Render a message if the indicators service returns 404" in {
