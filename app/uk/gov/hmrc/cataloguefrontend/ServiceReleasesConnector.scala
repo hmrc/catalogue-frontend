@@ -32,32 +32,48 @@ package uk.gov.hmrc.cataloguefrontend
  * limitations under the License.
  */
 
-import java.time.LocalDateTime
-
 import play.api.Logger
+import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
-import play.api.libs.json.Json
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpResponse}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 
 import scala.concurrent.Future
 
-
-case class Release(name: String, team: String, productionDate: _root_.java.time.LocalDateTime, creationDate: _root_.scala.Option[_root_.java.time.LocalDateTime] = None, interval: _root_.scala.Option[Long] = None, leadTime: _root_.scala.Option[Long] = None, version: _root_.scala.Predef.String)
-
+case class Release(
+                    name: String,
+                    productionDate: java.time.LocalDateTime,
+                    creationDate: Option[java.time.LocalDateTime] = None,
+                    interval: Option[Long] = None,
+                    leadTime: Option[Long] = None,
+                    version: String)
 
 trait ServiceReleasesConnector extends ServicesConfig {
-  val http: HttpGet
+  val http: HttpGet with HttpPost
   def servicesReleasesBaseUrl: String
 
   import uk.gov.hmrc.play.http.HttpReads._
-  import uk.gov.hmrc.cataloguefrontend.JavaDateTimeJsonFormatter._
+  import JavaDateTimeJsonFormatter._
 
   implicit val releasesFormat = Json.reads[Release]
 
-  def getReleases(serviceName: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[Release]] = {
+  def getReleases(serviceNames: Iterable[String])(implicit hc: HeaderCarrier) = {
+    val url =  s"$servicesReleasesBaseUrl"
 
+    http.POST[Seq[String],HttpResponse](url, serviceNames.toSeq).map { r =>
+      r.status match {
+        case 200 => r.json.as[Seq[Release]]
+        case 404 => Seq()
+      }
+    }.recover {
+      case ex =>
+        Logger.error(s"An error occurred when connecting to $servicesReleasesBaseUrl: ${ex.getMessage}", ex)
+        Seq.empty
+    }
+  }
+
+  def getReleases(serviceName: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[Release]] = {
     val url = serviceName.fold(servicesReleasesBaseUrl)(name => s"$servicesReleasesBaseUrl/$name")
 
     http.GET[HttpResponse](url).map { r =>

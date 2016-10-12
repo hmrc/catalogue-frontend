@@ -14,7 +14,7 @@
 * limitations under the License.
 *@
 
-@(releases: Seq[uk.gov.hmrc.cataloguefrontend.Release], form: Form[_])
+@(releases: Seq[uk.gov.hmrc.cataloguefrontend.TeamRelease], form: Form[_])
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
@@ -60,7 +60,7 @@
 
 <table class="table table-striped">
     <tr>
-        <th><span>Team</span></th>
+        <th><span>Teams</span></th>
         <th><span>Service</span></th>
         <th><span>Version</span></th>
         <th><span>Production deployment</span></th>
@@ -73,8 +73,10 @@
         <td id="row@{i}_name"><a
                 href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(release.name).url}">@{release.name}</a>
         </td>
-        <td id="row@{i}_team"><a
-                href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(release.team).url}">@{release.team}</a>
+        <td id="row@{i}_team">
+            @for(team <- release.teams) {
+                <a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team}</a>
+            }
         </td>
         <td class="monospaced" id="row@{i}_version">@{release.version}</td>
         <td class="monospaced" id="row@{i}_production">@{release.productionDate.asString}</td>

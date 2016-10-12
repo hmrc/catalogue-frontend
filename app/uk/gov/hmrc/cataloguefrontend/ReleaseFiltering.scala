@@ -22,14 +22,14 @@ import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
 object ReleaseFiltering {
 
-  implicit class ReleasesResult(releases: Seq[Release]) {
+  implicit class ReleasesResult(releases: Seq[TeamRelease]) {
 
-    def filter(query: ReleasesFilter): Seq[Release] = {
+    def filter(query: ReleasesFilter): Seq[TeamRelease] = {
 
       val q = if (query.isEmpty) ReleasesFilter(from = Some(LocalDateTime.now().minusMonths(1))) else query
 
       releases.toStream
-        .filter(x => q.team.isEmpty || q.team.get == x.team)
+        .filter(x => q.team.isEmpty || x.teams.contains(q.team.get))
         .filter(x => q.serviceName.isEmpty || q.serviceName.get == x.name)
         .filter(x => q.from.isEmpty || x.productionDate.epochSeconds >= q.from.get.epochSeconds)
         .filter(x => q.to.isEmpty || x.productionDate.epochSeconds < q.to.get.plusDays(1).epochSeconds)
