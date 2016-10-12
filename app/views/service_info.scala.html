@@ -131,10 +131,9 @@
     <p>@{Html(ViewMessages.indicatorsServiceError)}</p>
 }
 @renderGraphText = {
-        <h4 class="indicator__title">Production Deployments</h4>
 
         <p>These indicators show the frequency and stability of your production deployments</p>
-        <p>Each monthly measurement is a 3 month rolling median. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>
+        <p>Each monthly measurement has a 3 month sample size. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>
         <p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>
 }
 
