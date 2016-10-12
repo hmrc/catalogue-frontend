@@ -20,7 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.DeploymentThroughputDataPoint
 
 @import uk.gov.hmrc.cataloguefrontend.ChartData
-@(cacheTimestampFormatted: String, service: RepositoryDetails, throughputChartData: Option[ChartData], stabilityChartData: Option[ChartData], displayStabilityGraph: Boolean)
+@(cacheTimestampFormatted: String, service: RepositoryDetails, throughputChartData: Option[ChartData], stabilityChartData: Option[ChartData])
 
 @standard_layout(service.name, "services") {
     <header>
@@ -70,9 +70,7 @@
 
                             @renderGraphText
                             @renderThroughputGraph
-                            @if(displayStabilityGraph) {
-                                @renderStabilityGraph
-                            }
+                            @renderStabilityGraph
 
                         }
                      @{
@@ -97,7 +95,7 @@
             @views.html.throughputchart_script(throughputChartData)
         }
 
-        @if(displayStabilityGraph && stabilityChartData.isDefined && !stabilityChartData.get.isEmpty) {
+        @if(stabilityChartData.isDefined && !stabilityChartData.get.isEmpty) {
             @views.html.stabilitychart_script(stabilityChartData)
         }
 
@@ -106,7 +104,7 @@
 }
 
 @renderThroughputGraph = {
-    <div class="@{if(displayStabilityGraph) "col-md-6" else ""}" >
+    <div class="col-md-6">
         <div id="chart_div"></div>
         <div>
             <small>
