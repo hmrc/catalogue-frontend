@@ -21,9 +21,9 @@ import java.net.URLEncoder
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpReads, HttpResponse}
+import uk.gov.hmrc.play.http._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object RepoType extends Enumeration {
@@ -49,7 +49,10 @@ case class Environment(name: String, services: Seq[Link])
 case class RepositoryDetails(name: String, teamNames: Seq[String], githubUrls: Seq[Link], ci: Seq[Link], environments: Option[Seq[Environment]], repoType: RepoType.RepoType)
 
 trait TeamsAndServicesConnector extends ServicesConfig {
-  val http: HttpGet
+  type ServiceName = String
+  type TeamName = String
+
+  val http: HttpGet with HttpPost
   def teamsAndServicesBaseUrl: String
 
   implicit val linkFormats = Json.format[Link]
@@ -67,10 +70,10 @@ trait TeamsAndServicesConnector extends ServicesConfig {
     }
   }
 
-  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[Map[String, List[String]]]]] = {
+  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[Map[String, Seq[String]]]]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName, "UTF-8")}")
       .map {
-      toCachedItem[Map[String, List[String]]]
+        toCachedItemOption[Map[String, Seq[String]]]
     }
   }
 
@@ -86,27 +89,40 @@ trait TeamsAndServicesConnector extends ServicesConfig {
     }
   }
 
-
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[RepositoryDetails]]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories/$name").map {
-      toCachedItem[RepositoryDetails]
+      toCachedItemOption[RepositoryDetails]
     }
   }
 
-  def toCachedItem[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): Option[CachedItem[T]] = {
+  def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier) : Future[CachedItem[Map[ServiceName, Seq[TeamName]]]] = {
+    http.POST[Seq[String], HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true", serviceNames).map {
+      toCachedItem[Map[ServiceName, Seq[TeamName]]]
+    }
+  }
+
+  def allTeamsByService()(implicit hc: HeaderCarrier) : Future[CachedItem[Map[ServiceName, Seq[TeamName]]]] = {
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true").map {
+      toCachedItem[Map[ServiceName, Seq[TeamName]]]
+    }
+  }
+
+  def toCachedItem[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): CachedItem[T] =
+    new CachedItem(
+      r.json.as[T],
+      r.header(CacheTimestampHeaderName).getOrElse("(None)"))
+
+  def toCachedItemOption[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): Option[CachedItem[T]] =
     r.status match {
       case 404 => None
       case 200 => Some(new CachedItem(
         r.json.as[T],
-        r.header(CacheTimestampHeaderName).getOrElse("(None)")))
-    }
-  }
+        r.header(CacheTimestampHeaderName).getOrElse("(None)"))) }
 
-  def toCachedList[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): CachedList[T] = {
+  def toCachedList[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): CachedList[T] =
     new CachedList(
       r.json.as[Seq[T]],
       r.header(CacheTimestampHeaderName).getOrElse("(None)"))
-  }
 }
 
 object TeamsAndServicesConnector extends TeamsAndServicesConnector {

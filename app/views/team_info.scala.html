@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
-@(cacheTimestampFormatted: String, teamName:String, repos: Map[String, List[String]], teamMembers: Seq[DisplayableTeamMember])
+@(cacheTimestampFormatted: String, teamName:String, repos: Map[String, Seq[String]], teamMembers: Seq[DisplayableTeamMember])
 
 @standard_layout(teamName,"teams") {
 <header>
@@ -65,9 +65,9 @@
                         <p>@Html(ViewMessages.noRepoOfType("service"))</p>
                         } else {
                         <ul class="list list--minimal">
-                            @for(service <- services) {
+                        @for(service <- services) {
                             <li class="list-item" id="@{service}"><a href="/services/@{service}">@service</a></li>
-                            }
+                        }
                         </ul>
                         }
                 </div>
