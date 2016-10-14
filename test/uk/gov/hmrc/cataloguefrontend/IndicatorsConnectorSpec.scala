@@ -31,6 +31,7 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneSer
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
+      "microservice.services.indicators.host" -> host,
       "microservice.services.indicators.port" -> endpointPort
     ))
 

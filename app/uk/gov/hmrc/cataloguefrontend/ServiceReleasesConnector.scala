@@ -52,7 +52,7 @@ case class Release(name: String, version: String,
 
 trait ServiceReleasesConnector extends ServicesConfig {
   val http: HttpGet
-  val servicesReleasesBaseUrl: String
+  def servicesReleasesBaseUrl: String
 
   import uk.gov.hmrc.play.http.HttpReads._
   import uk.gov.hmrc.cataloguefrontend.JavaDateTimeJsonFormatter._
@@ -79,5 +79,5 @@ trait ServiceReleasesConnector extends ServicesConfig {
 
 object ServiceReleasesConnector extends ServiceReleasesConnector {
   override val http = WSHttp
-  override lazy val servicesReleasesBaseUrl: String = baseUrl("service-releases") + "/api/releases"
+  override def servicesReleasesBaseUrl: String = baseUrl("service-releases") + "/api/releases"
 }

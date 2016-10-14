@@ -50,7 +50,7 @@ case class RepositoryDetails(name: String, teamNames: Seq[String], githubUrls: S
 
 trait TeamsAndServicesConnector extends ServicesConfig {
   val http: HttpGet
-  val teamsAndServicesBaseUrl: String
+  def teamsAndServicesBaseUrl: String
 
   implicit val linkFormats = Json.format[Link]
   implicit val environmentsFormats = Json.format[Environment]
@@ -111,5 +111,5 @@ trait TeamsAndServicesConnector extends ServicesConfig {
 
 object TeamsAndServicesConnector extends TeamsAndServicesConnector {
   override val http = WSHttp
-  override lazy val teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
+  override def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
 }

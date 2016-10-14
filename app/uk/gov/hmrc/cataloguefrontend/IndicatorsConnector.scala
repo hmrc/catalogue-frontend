@@ -67,7 +67,7 @@ case class MeasureResult(median: Int)
 
 trait IndicatorsConnector extends ServicesConfig {
   val http: HttpGet
-  val indicatorsBaseUrl: String
+  def indicatorsBaseUrl: String
 
   import JavaDateTimeJsonFormatter._
 
@@ -114,6 +114,6 @@ trait IndicatorsConnector extends ServicesConfig {
 }
 
 object IndicatorsConnector extends IndicatorsConnector {
-  override lazy val indicatorsBaseUrl: String = baseUrl("indicators") + "/api/indicators"
+  override def indicatorsBaseUrl: String = baseUrl("indicators") + "/api/indicators"
   override val http = WSHttp
 }

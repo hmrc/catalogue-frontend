@@ -27,6 +27,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
+      "microservice.services.teams-and-services.host" -> host,
       "microservice.services.teams-and-services.port" -> endpointPort,
       "usermanagement.portal.url" -> "http://usermanagement/link"
     ))
