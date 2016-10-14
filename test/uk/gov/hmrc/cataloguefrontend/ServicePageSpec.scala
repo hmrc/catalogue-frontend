@@ -24,7 +24,7 @@ import play.api.test.FakeApplication
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
+class ServicePageSpec extends UnitSpec with OneServerPerTest with WireMockEndpoints {
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
