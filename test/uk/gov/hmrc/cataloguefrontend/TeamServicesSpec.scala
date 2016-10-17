@@ -29,6 +29,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
     additionalConfiguration = Map(
       "microservice.services.teams-and-services.host" -> host,
       "microservice.services.teams-and-services.port" -> endpointPort,
+      "microservice.services.user-management.port" -> endpointPort,
+      "microservice.services.user-management.host" -> host,
       "usermanagement.portal.url" -> "http://usermanagement/link"
     ))
 
@@ -37,6 +39,20 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
     "show a list of libraries and services" in {
       serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
         """{"Library":["teamA-lib"], "Deployable": [ "teamA-serv", "teamA-frontend" ]  }""".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+
+      serviceEndpoint(GET, "/v1/organisations/mdtp/teams/teamA/members", willRespondWith = (200, Some(
+        """{
+          |    "members": [
+          |        {
+          |            "displayName": "Asad Ali",
+          |            "familyName": "Ali",
+          |            "givenName": "Asad",
+          |            "primaryEmail": "asad.ali@digital.hmrc.gov.uk",
+          |            "username": "asad.ali"
+          |        }
+          |    ]
+          |}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
