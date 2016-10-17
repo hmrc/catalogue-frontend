@@ -199,11 +199,21 @@ object DisplayableTeamMembers {
 
 object UserManagementPortalLink {
 
-  def apply(teamName: String, config: Configuration): String = {
+  val baseUrl = "whatevr"
 
-    s"${config.getString("usermanagement.portal.url").fold("#")(x => s"$x/$teamName")}"
-
+  def apply(teamName: String, teamMembers: Seq[TeamMember]): Seq[DisplayableTeamMember] = {
+    teamMembers.map(tm =>
+      DisplayableTeamMember(
+        displayName = tm.displayName.getOrElse("DISPLAY NAME NOT PROVIDED"),
+        isServiceOwner = tm.serviceOwnerFor.exists(_.contains(teamName)),
+        umpLink = tm.username.map(_ + baseUrl).getOrElse("USERNAME NOT PROVIDED")
+      )
+    )
   }
+
+  case class DisplayableTeamMember(displayName: String,
+                                   isServiceOwner: Boolean = false,
+                                   umpLink: String)
 
 }
 

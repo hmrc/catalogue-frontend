@@ -55,6 +55,20 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
         """{"Library":["teamA-lib"], "Deployable": [ "teamA-serv", "teamA-frontend" ]  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
+      serviceEndpoint(GET, "/v1/organisations/mdtp/teams/teamA/members", willRespondWith = (200, Some(
+        """{
+          |    "members": [
+          |        {
+          |            "displayName": "Asad Ali",
+          |            "familyName": "Ali",
+          |            "givenName": "Asad",
+          |            "primaryEmail": "asad.ali@digital.hmrc.gov.uk",
+          |            "username": "asad.ali"
+          |        }
+          |    ]
+          |}""".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+
       mockTeamMembersApiCall("/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
