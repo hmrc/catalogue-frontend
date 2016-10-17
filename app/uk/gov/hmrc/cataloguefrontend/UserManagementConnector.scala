@@ -38,7 +38,7 @@ import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpResponse}
+import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
@@ -52,6 +52,10 @@ trait UserManagementConnector extends ServicesConfig {
   import UserManagementConnector._
 
   implicit val teamMemberReads = Json.reads[TeamMember]
+
+  implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
+    override def read(method: String, url: String, response: HttpResponse) = response
+  }
 
   def getTeamMembers(team: String)(implicit hc: HeaderCarrier): Future[Either[ConnectorError, Seq[TeamMember]]] = {
 
@@ -69,7 +73,7 @@ trait UserManagementConnector extends ServicesConfig {
     }
   }
 
-  def extractMembers(response: HttpResponse): Either[ConnectorError, Seq[TeamMember]] = {
+  private def extractMembers(response: HttpResponse): Either[ConnectorError, Seq[TeamMember]] = {
     (response.json \\ "members")
       .headOption
       .map(js => Right(js.as[Seq[TeamMember]]))

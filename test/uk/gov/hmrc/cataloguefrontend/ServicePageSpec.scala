@@ -96,7 +96,9 @@ class ServicePageSpec extends UnitSpec with OneServerPerTest with WireMockEndpoi
 
     "Render a message if the indicators service returns 404" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/throughput", willRespondWith = (404, None))
+//      serviceEndpoint(GET, "/api/indicators/service/service-name/throughput", willRespondWith = (404, None))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (404, None))
+
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200

@@ -84,7 +84,8 @@ trait IndicatorsConnector extends ServicesConfig {
 
   def deploymentIndicatorsForService(name: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] = {
     val url = indicatorsBaseUrl + s"/service/$name/deployments"
-    http.GET[HttpResponse](url).map { r =>
+    val eventualResponse: Future[HttpResponse] = http.GET[HttpResponse](url)
+    eventualResponse.map { r =>
       r.status match {
         case 404 => Some(DeploymentIndicators(Nil, Nil))
         case 200 =>
