@@ -47,7 +47,7 @@ import scala.concurrent.Future
 
 trait UserManagementConnector extends ServicesConfig {
   val http: HttpGet
-  val userManagementBaseUrl: String
+  def userManagementBaseUrl: String
 
   import UserManagementConnector._
 
@@ -84,7 +84,7 @@ trait UserManagementConnector extends ServicesConfig {
 
 object UserManagementConnector extends UserManagementConnector {
   override val http = WSHttp
-  override lazy val userManagementBaseUrl: String = baseUrl("user-management")
+  override def userManagementBaseUrl: String = baseUrl("user-management")
 
   sealed trait ConnectorError
   case object NoMembersField extends ConnectorError

@@ -23,10 +23,14 @@ import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
 import play.api.mvc._
 import play.api.{Configuration, Play}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamMember}
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
 
-object  CatalogueController extends CatalogueController {
+object CatalogueController extends CatalogueController {
+
+  override def userManagementConnector: UserManagementConnector = UserManagementConnector
+
   override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
 
   override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
@@ -35,6 +39,8 @@ object  CatalogueController extends CatalogueController {
 }
 
 trait CatalogueController extends FrontendController {
+
+  def userManagementConnector: UserManagementConnector
 
   def teamsAndServicesConnector: TeamsAndServicesConnector
 
@@ -55,10 +61,13 @@ trait CatalogueController extends FrontendController {
 
   def team(teamName: String) = Action.async { implicit request =>
     for {
-      typeRepos <- teamsAndServicesConnector.teamInfo(teamName)
-    } yield typeRepos match {
-      case Some(s) => Ok(team_info(s.time, teamName, repos = s.data, teamMembersLink = UserManagementPortalLink(teamName, Play.current.configuration)))
-      case None => NotFound
+      typeRepos: Option[CachedItem[Map[String, List[String]]]] <- teamsAndServicesConnector.teamInfo(teamName)
+      teamMembers: Either[ConnectorError, Seq[TeamMember]] <- userManagementConnector.getTeamMembers(teamName)
+    } yield (typeRepos, teamMembers) match {
+      case (Some(s), Right(tm)) => Ok(team_info(s.time, teamName, repos = s.data, teamMembers = DisplayableTeamMembers(teamName, tm)))
+
+        //TODO: add extra error cases
+      case (None, _) => NotFound
     }
   }
 
@@ -139,12 +148,22 @@ object ReleasesFilter {
   }
 }
 
-object UserManagementPortalLink {
+object DisplayableTeamMembers {
 
-  def apply(teamName: String, config: Configuration): String = {
+  val baseUrl = "whatevr"
 
-    s"${config.getString("usermanagement.portal.url").fold("#")(x => s"$x/$teamName")}"
-
+  def apply(teamName: String, teamMembers: Seq[TeamMember]): Seq[DisplayableTeamMember] = {
+    teamMembers.map(tm =>
+      DisplayableTeamMember(
+        displayName = tm.displayName.getOrElse("DISPLAY NAME NOT PROVIDED"),
+        isServiceOwner = tm.serviceOwnerFor.exists(_.contains(teamName)),
+        umpLink = tm.username.map(_ + baseUrl).getOrElse("USERNAME NOT PROVIDED")
+      )
+    )
   }
+
+  case class DisplayableTeamMember(displayName: String,
+                                   isServiceOwner: Boolean = false,
+                                   umpLink: String)
 
 }

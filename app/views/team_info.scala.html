@@ -16,7 +16,9 @@
 
 @import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@(cacheTimestampFormatted: String, teamName:String, repos: Map[String, List[String]], teamMembersLink: String)
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+@import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
+@(cacheTimestampFormatted: String, teamName:String, repos: Map[String, List[String]], teamMembers: Seq[DisplayableTeamMember])
 
 @standard_layout(teamName,"teams") {
 <header>
@@ -29,11 +31,11 @@
 
          <div class="col-md-4">
             <div class="board">
-                <h3 class="board__heading">Details</h3>
+                <h3 class="board__heading">Team Members</h3>
 
                 <div class="board__body">
                     <ul class="list list--minimal">
-                        <li class="list-item" id="team-members"><a href="@teamMembersLink" target="_blank">Team Members</a></li>
+                        <li class="list-item" id="team-members"><a href="teamMembersLink" target="_blank"></a></li>
                     </ul>
                 </div>
             </div>
