@@ -55,19 +55,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
         """{"Library":["teamA-lib"], "Deployable": [ "teamA-serv", "teamA-frontend" ]  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
-      serviceEndpoint(GET, "/v1/organisations/mdtp/teams/teamA/members", willRespondWith = (200, Some(
-        """{
-          |    "members": [
-          |        {
-          |            "displayName": "Asad Ali",
-          |            "familyName": "Ali",
-          |            "givenName": "Asad",
-          |            "primaryEmail": "asad.ali@digital.hmrc.gov.uk",
-          |            "username": "asad.ali"
-          |        }
-          |    ]
-          |}""".stripMargin
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      mockTeamMembersApiCall
 
       mockTeamMembersApiCall("/user-management-response.json")
 
@@ -94,7 +82,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.status shouldBe 200
       response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
 
-      response.body.toString should include("""<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
+    response.body.toString should include("""<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
 
     }
 
