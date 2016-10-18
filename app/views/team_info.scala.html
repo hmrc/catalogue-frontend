@@ -35,7 +35,10 @@
 
                 <div class="board__body">
                     <ul class="list list--minimal">
-                        <li class="list-item" id="team-members"><a href="teamMembersLink" target="_blank"></a></li>
+                        @for(teamMember <- teamMembers) {
+                            <li>@teamMember.displayName</li>
+                        }
+                        @*<li class="list-item" id="team-members"><a href="teamMembersLink" target="_blank"></a></li>*@
                     </ul>
                 </div>
             </div>

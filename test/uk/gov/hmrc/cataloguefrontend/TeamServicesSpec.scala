@@ -17,13 +17,19 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
 import play.api.libs.ws.WS
 import play.api.test.FakeApplication
 import uk.gov.hmrc.play.test.UnitSpec
 
+import scala.io.Source
+
 class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
+
+  def asDocument(html: String): Document = Jsoup.parse(html)
 
   override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
     additionalConfiguration = Map(
@@ -100,22 +106,31 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.body should include(ViewMessages.noRepoOfType("service"))
       response.body should include(ViewMessages.noRepoOfType("library"))
     }
+
+    "show team members correctly" in {
+
+      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+        """{"Library":[], "Deployable": []  }""".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+
+      mockTeamMembersApiCall
+
+      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+
+      response.status shouldBe 200
+      val document = asDocument(response.body)
+
+
+    }
   }
 
   def mockTeamMembersApiCall: Unit = {
-    serviceEndpoint(GET, "/v1/organisations/mdtp/teams/teamA/members", willRespondWith = (200, Some(
-      """{
-        |    "members": [
-        |        {
-        |            "displayName": "Asad Ali",
-        |            "familyName": "Ali",
-        |            "givenName": "Asad",
-        |            "primaryEmail": "asad.ali@digital.hmrc.gov.uk",
-        |            "username": "asad.ali"
-        |        }
-        |    ]
-        |}""".stripMargin
-    )), extraHeaders = Map("X-Cache-Timestamp" ->
-      "Tue, 14 Oct 1066 10:03:23 GMT"))
+    val json = Source.fromURL(getClass.getResource("/user-management-response.json")).getLines().mkString("\n")
+
+    serviceEndpoint(
+      method = GET,
+      url = "/v1/organisations/mdtp/teams/teamA/members",
+      willRespondWith = (200, Some(json)),
+      extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
   }
 }
