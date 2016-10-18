@@ -150,16 +150,20 @@ object ReleasesFilter {
 
 object DisplayableTeamMembers {
 
-  val baseUrl = "whatevr"
+  val baseUrl = "http://example.com/profile/"
 
   def apply(teamName: String, teamMembers: Seq[TeamMember]): Seq[DisplayableTeamMember] = {
-    teamMembers.map(tm =>
+
+    val displayableTeamMembers = teamMembers.map(tm =>
       DisplayableTeamMember(
         displayName = tm.displayName.getOrElse("DISPLAY NAME NOT PROVIDED"),
         isServiceOwner = tm.serviceOwnerFor.exists(_.contains(teamName)),
-        umpLink = tm.username.map(_ + baseUrl).getOrElse("USERNAME NOT PROVIDED")
+        umpLink = tm.username.map(baseUrl + _).getOrElse("USERNAME NOT PROVIDED")
       )
     )
+
+    val (serviceOwners, others) = displayableTeamMembers.partition(_.isServiceOwner)
+    serviceOwners.sortBy(_.displayName) ++ others.sortBy(_.displayName)
   }
 
   case class DisplayableTeamMember(displayName: String,
