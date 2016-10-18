@@ -58,10 +58,15 @@ trait UserManagementConnector extends ServicesConfig {
   }
 
   def getTeamMembers(team: String)(implicit hc: HeaderCarrier): Future[Either[ConnectorError, Seq[TeamMember]]] = {
+    val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
 
     val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team/members"
 
-    http.GET[HttpResponse](url).map { response =>
+
+    println("-" * 51)
+    println(url)
+    println("-" * 50)
+    http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
       response.status match {
         case 200 => extractMembers(response)
         case httpCode => Left(HTTPError(httpCode))
@@ -84,7 +89,11 @@ trait UserManagementConnector extends ServicesConfig {
 
 object UserManagementConnector extends UserManagementConnector {
   override val http = WSHttp
-  override def userManagementBaseUrl: String = baseUrl("user-management")
+//  override def userManagementBaseUrl: String = baseUrl("user-management")
+  val serviceName = "user-management"
+
+  override def userManagementBaseUrl: String =
+    getConfString(s"$serviceName.url", throw new RuntimeException(s"Could not find config $serviceName.url"))
 
   sealed trait ConnectorError
   case object NoMembersField extends ConnectorError
