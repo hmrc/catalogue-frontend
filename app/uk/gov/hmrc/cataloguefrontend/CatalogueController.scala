@@ -21,13 +21,40 @@ import java.time.LocalDateTime
 
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
+import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.{Configuration, Play}
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamMember}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, NoMembersField, TeamMember}
+import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.frontend.controller.FrontendController
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 import views.html._
 
+import scala.concurrent.Future
+import scala.io.Source
+
+
 object CatalogueController extends CatalogueController {
+
+//  //TODO!@ REMOVE ALL THIS (CANNED RESPONSE) WHEN DDCOPS END POINT STARTS WORKING
+//  override def userManagementConnector: UserManagementConnector = new UserManagementConnector {
+//    override val http: HttpGet = WSHttp
+//
+//    override def userManagementBaseUrl: String = "nothing to see here"
+//
+//    override def getTeamMembers(team: String)(implicit hc: HeaderCarrier): Future[Either[ConnectorError, Seq[TeamMember]]] = {
+//      val jsonString = Source.fromURL(getClass.getResource("/chicken.json")).getLines().mkString("\n")
+//      Future.successful(extractMembers(jsonString))
+//    }
+//
+//    def extractMembers(jsonString: String): Either[ConnectorError, Seq[TeamMember]] = {
+//      (Json.parse(jsonString) \\ "members")
+//        .headOption
+//        .map(js => Right(js.as[Seq[TeamMember]]))
+//        .getOrElse(Left(NoMembersField))
+//    }
+//
+//  }
 
   override def userManagementConnector: UserManagementConnector = UserManagementConnector
 
