@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.util
+
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
+import org.jsoup.nodes.{Document, Element}
+import org.jsoup.select.Elements
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -55,7 +58,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
         """{"Library":["teamA-lib"], "Deployable": [ "teamA-serv", "teamA-frontend" ]  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
-      mockTeamMembersApiCall
+      mockTeamMembersApiCall("/user-management-response.json")
 
       mockTeamMembersApiCall("/user-management-response.json")
 
@@ -131,6 +134,14 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
       response.status shouldBe 200
       val document = asDocument(response.body)
+
+      import scala.collection.JavaConversions._
+
+      val teamMembersLiElements = document.select("#team_members li").iterator().toSeq
+
+      teamMembersLiElements.length shouldBe 14
+
+      val jsonString: String = readFile(mockDataFileName)
 
 
       verifyTeamMemberElementsText(document)
