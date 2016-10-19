@@ -87,15 +87,28 @@ trait CatalogueController extends FrontendController {
   }
 
   def team(teamName: String) = Action.async { implicit request =>
-    for {
-      typeRepos: Option[CachedItem[Map[String, List[String]]]] <- teamsAndServicesConnector.teamInfo(teamName)
-      teamMembers: Either[ConnectorError, Seq[TeamMember]] <- userManagementConnector.getTeamMembers(teamName)
-    } yield (typeRepos, teamMembers) match {
-      case (Some(s), Right(tm)) => Ok(team_info(s.time, teamName, repos = s.data, teamMembers = DisplayableTeamMembers(teamName, tm)))
+    val teamMembersToggle: Option[String] = request.getQueryString("teamMembers")
+
+    if(teamMembersToggle.isDefined) {
+
+      for {
+        typeRepos: Option[CachedItem[Map[String, List[String]]]] <- teamsAndServicesConnector.teamInfo(teamName)
+        teamMembers: Either[ConnectorError, Seq[TeamMember]] <- userManagementConnector.getTeamMembers(teamName)
+      } yield (typeRepos, teamMembers) match {
+        case (Some(s), Right(tm)) => Ok(team_info(s.time, teamName, repos = s.data, teamMembers = DisplayableTeamMembers(teamName, tm)))
 
         //TODO: add extra error cases
-      case (None, _) => NotFound
+        case (None, _) => NotFound
+      }
+    } else {
+      for {
+        typeRepos <- teamsAndServicesConnector.teamInfo(teamName)
+      } yield typeRepos match {
+        case Some(s) => Ok(team_info_without_members(s.time, teamName, repos = s.data, teamMembersLink = UserManagementPortalLink(teamName, Play.current.configuration)))
+        case None => NotFound
+      }
     }
+
   }
 
   def service(name: String) = Action.async { implicit request =>
@@ -196,5 +209,15 @@ object DisplayableTeamMembers {
   case class DisplayableTeamMember(displayName: String,
                                    isServiceOwner: Boolean = false,
                                    umpLink: String)
+
+}
+
+object UserManagementPortalLink {
+
+  def apply(teamName: String, config: Configuration): String = {
+
+    s"${config.getString("usermanagement.portal.url").fold("#")(x => s"$x/$teamName")}"
+
+  }
 
 }
