@@ -63,9 +63,6 @@ trait UserManagementConnector extends ServicesConfig {
     val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team/members"
 
 
-    println("-" * 51)
-    println(url)
-    println("-" * 50)
     http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
       response.status match {
         case 200 => extractMembers(response)

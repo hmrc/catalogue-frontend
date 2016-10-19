@@ -34,9 +34,20 @@
                 <h3 class="board__heading">Team Members</h3>
 
                 <div class="board__body">
-                    <ul class="list list--minimal">
+                    <ul class="list list--minimal" id="team_members">
                         @for(teamMember <- teamMembers) {
-                            <li>@teamMember.displayName</li>
+                            <li class="list-item row">
+                                <div class="col-md-7"  >
+                                    <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
+                                </div>
+                                <div class="col-md-4">
+                                @if(teamMember.isServiceOwner) {
+                                    @*<div class="btn btn-success btn-xs">*@
+                                    @*</div>*@
+                                    <span class="label label-success">Service Owner</span>
+                                }
+                                </div>
+                            </li>
                         }
                         @*<li class="list-item" id="team-members"><a href="teamMembersLink" target="_blank"></a></li>*@
                     </ul>
