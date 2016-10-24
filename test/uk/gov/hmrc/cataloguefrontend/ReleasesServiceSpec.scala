@@ -57,6 +57,23 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
       releases should contain(TeamRelease("b-service", teams = Seq("c-team"), productionDate = productionDate, version = "0.2.0"))
     }
 
+    "Cope with releases for services that are not known to the catalogue" in {
+      val releasesConnector = mock[ServiceReleasesConnector]
+      val teamsAndServicesConnector = mock[TeamsAndServicesConnector]
+
+      val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
+      when(releasesConnector.getReleases()).thenReturn(Future.successful(Seq(
+        Release("a-service", productionDate = productionDate, version = "0.1.0"))))
+
+      when(teamsAndServicesConnector.allTeamsByService()).thenReturn(Future.successful(
+        new CachedItem[Map[ServiceName, Seq[TeamName]]](Map(), "time")))
+
+      val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
+      val releases = service.getReleases().futureValue
+
+      releases should contain(TeamRelease("a-service", teams = Seq(), productionDate = productionDate, version = "0.1.0"))
+    }
+
     "Filter results given a team name" in {
       val releasesConnector = mock[ServiceReleasesConnector]
       val teamsAndServicesConnector = mock[TeamsAndServicesConnector]

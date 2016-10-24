@@ -49,7 +49,7 @@ class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServi
     } yield releases map teamRelease(query)
 
   private def teamRelease(rq: ReleaseFilter)(r: Release) =
-    TeamRelease(r.name, rq.serviceTeams(r.name), productionDate = r.productionDate,
+    TeamRelease(r.name, rq.serviceTeams.getOrElse(r.name, Seq()), productionDate = r.productionDate,
       creationDate = r.creationDate, interval = r.interval, leadTime = r.leadTime, version = r.version)
 
   private def buildFilter(teamName: Option[TeamName], serviceName: Option[ServiceName])(implicit hc: HeaderCarrier) : Future[ReleaseFilter] =
