@@ -91,7 +91,7 @@ trait CatalogueController extends FrontendController {
     if(teamMembersToggle.isDefined) {
 
       for {
-        typeRepos: Option[CachedItem[Map[String, List[String]]]] <- teamsAndServicesConnector.teamInfo(teamName)
+        typeRepos: Option[CachedItem[Map[String, Seq[String]]]] <- teamsAndServicesConnector.teamInfo(teamName)
         teamMembers: Either[ConnectorError, Seq[TeamMember]] <- userManagementConnector.getTeamMembers(teamName)
       } yield (typeRepos, teamMembers) match {
         case (Some(s), Right(tm)) => Ok(team_info(s.time, teamName, repos = s.data, teamMembers = DisplayableTeamMembers(teamName, tm)))
