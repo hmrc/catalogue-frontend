@@ -74,9 +74,11 @@
                 href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(release.name).url}">@{release.name}</a>
         </td>
         <td id="row@{i}_team">
+            <ul>
             @for(team <- release.teams) {
-                <a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team}</a>
+                <li><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team}</a></li>
             }
+            </ul>
         </td>
         <td class="monospaced" id="row@{i}_version">@{release.version}</td>
         <td class="monospaced" id="row@{i}_production">@{release.productionDate.asString}</td>
