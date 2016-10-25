@@ -20,7 +20,10 @@
 @import uk.gov.hmrc.cataloguefrontend.DeploymentThroughputDataPoint
 
 @import uk.gov.hmrc.cataloguefrontend.ChartData
-@(cacheTimestampFormatted: String, service: RepositoryDetails, throughputChartData: Option[ChartData], stabilityChartData: Option[ChartData])
+@(cacheTimestampFormatted: String,
+  service: RepositoryDetails,
+  throughputChartData: Option[ChartData],
+  stabilityChartData: Option[ChartData])(implicit messages: Messages)
 
 @standard_layout(service.name, "services") {
     <header>

@@ -16,16 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.util
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.jsoup.nodes.{Document, Element}
-import org.jsoup.select.Elements
+import org.jsoup.nodes.Document
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
-import play.api.test.FakeApplication
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -35,15 +32,13 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
-  override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
-    additionalConfiguration = Map(
-      "microservice.services.teams-and-services.host" -> host,
-      "microservice.services.teams-and-services.port" -> endpointPort,
-      "microservice.services.user-management.url" -> endpointMockUrl,
-      "usermanagement.portal.url" -> "http://usermanagement/link"  ,
-      "play.ws.ssl.loose.acceptAnyCertificate"->true
 
-    ))
+  override def newAppForTest(testData: TestData) = new GuiceApplicationBuilder().configure(
+    "microservice.services.teams-and-services.host" -> host,
+    "microservice.services.teams-and-services.port" -> endpointPort,
+    "microservice.services.user-management.url" -> endpointMockUrl,
+    "usermanagement.portal.url" -> "http://usermanagement/link",
+    "play.ws.ssl.loose.acceptAnyCertificate" -> true).build()
 
   "Team services page" should {
 
@@ -77,7 +72,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.status shouldBe 200
       response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
 
-    response.body.toString should include("""<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
+      response.body.toString should include("""<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
 
     }
 
@@ -142,9 +137,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
     // remove this once the issue with the DDCOPS connectivity (SNI) is resolved
     "Try to reproduce the issue of HTTPS redirecting !@" ignore {
 
-      import play.api.Play.current
       import play.api.libs.ws._
-      import play.api.libs.ws.ning.NingAsyncHttpClientConfigBuilder
+
       import scala.concurrent.Future
 
 
@@ -158,13 +152,13 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
         "Content-Type" -> "application/json"
       )
 
-//      val url = "http://example.com/v1/organisations/mdtp/teams/CATO/members"
-//      val url = "http://example.com"
+      //      val url = "http://example.com/v1/organisations/mdtp/teams/CATO/members"
+      //      val url = "http://example.com"
       val url = "http://example.com"
 
-      val holder: WSRequestHolder = WS.url(url)
+      val holder = WS.url(url)
 
-      val complexHolder: WSRequestHolder =
+      val complexHolder =
         holder.withHeaders("Token" -> "None",
           "requester" -> "None",
           "Content-Type" -> "application/json")
@@ -172,9 +166,9 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       val futureResponse: Future[WSResponse] = complexHolder.get()
       println("await(futureResponse).status:" + await(futureResponse).status)
 
-//      val eventualResponse = UserManagementConnector.http.GET(url)(httpReads, carrier)
-////      val eventualResponse = UserManagementConnector.http.GET("https://www.google.co.uk/")(httpReads, carrier)
-//      println(await(eventualResponse).status)
+      //      val eventualResponse = UserManagementConnector.http.GET(url)(httpReads, carrier)
+      ////      val eventualResponse = UserManagementConnector.http.GET("https://www.google.co.uk/")(httpReads, carrier)
+      //      println(await(eventualResponse).status)
 
     }
   }
