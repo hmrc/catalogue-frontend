@@ -21,12 +21,17 @@ import java.time.LocalDateTime
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.play.OneAppPerTest
+import play.api.Environment
 import play.api.data.Form
+import play.api.i18n.{DefaultLangs, DefaultMessagesApi}
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.{TeamRelease, ReleasesFilter}
+import uk.gov.hmrc.cataloguefrontend.{ReleasesFilter, TeamRelease}
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
+//import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
 
-class ReleaseListSpec extends WordSpec with Matchers {
+class ReleaseListSpec extends WordSpec with Matchers with OneAppPerTest {
 
 
   def asDocument(html: Html): Document = Jsoup.parse(html.toString())
@@ -36,17 +41,21 @@ class ReleaseListSpec extends WordSpec with Matchers {
 
       val formWithErrors: Form[ReleasesFilter] = ReleasesFilter.form.bind(Map("from" -> "23?01/2016", "to" -> "23?01/2016"))
 
-      val document = asDocument(views.html.release_list.render(Seq.empty, formWithErrors))
+      val form: Html = views.html.release_list(Seq.empty, formWithErrors)(applicationMessages)
+      val document = asDocument(form)
 
-      document.select("li.alert-danger").get(0).text() shouldBe "from.error.date"
-      document.select("li.alert-danger").get(1).text() shouldBe "to.error.date"
+      document.select("li.alert-danger").get(0).text() shouldBe "Production date from should be of format dd-mm-yyyy"
+      document.select("li.alert-danger").get(1).text() shouldBe "Production date to should be of format dd-mm-yyyy"
 
     }
 
     "display data" in {
       val now = LocalDateTime.now()
 
-      val document = asDocument(views.html.release_list.render(Seq(TeamRelease("serv1", Seq("teamA", "teamB"), productionDate = now, creationDate = Some(now.plusDays(2)), interval = Some(2), leadTime = Some(10), version = "1.0")), ReleasesFilter.form))
+      val document = asDocument(views.html.release_list(
+        Seq(
+          TeamRelease("serv1", Seq("teamA", "teamB"), productionDate = now, creationDate = Some(now.plusDays(2)), interval = Some(2), leadTime = Some(10), version = "1.0")
+        ), ReleasesFilter.form)(applicationMessages))
 
       document.select("#row0_team").text() shouldBe "teamA teamB"
       document.select("#row0_name").text() shouldBe "serv1"

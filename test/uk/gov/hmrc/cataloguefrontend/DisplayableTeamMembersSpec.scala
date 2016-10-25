@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FunSpec, Matchers}
-import org.specs2.matcher.ValueCheck.valueIsTypedValueCheck
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 

@@ -20,20 +20,21 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FunSpec, Matchers, TestData}
-import org.scalatestplus.play.OneServerPerTest
+import org.scalatestplus.play.{OneAppPerTest, OneServerPerTest}
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{FakeApplication, FakeHeaders}
 import uk.gov.hmrc.cataloguefrontend.JsonData.deploymentThroughputData
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 
 import scala.concurrent.Future
 
-class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneServerPerTest with Matchers with TypeCheckedTripleEquals with ScalaFutures {
+class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneAppPerTest with Matchers with TypeCheckedTripleEquals with ScalaFutures {
 
-  override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
-    additionalConfiguration = Map(
+
+  override def newAppForTest(testData: TestData) = new GuiceApplicationBuilder().configure(
       "microservice.services.indicators.port" -> endpointPort,
       "microservice.services.indicators.host" -> host
-    ))
+  ).build()
 
   describe("IndicatorsConnector") {
     it("should convert the DeploymentsMetricResult to DeploymentIndicators") {
