@@ -23,4 +23,5 @@ trait MicroService {
       retrieveManaged := true,
       forceSourceHeader := true,
       routesGenerator := StaticRoutesGenerator)
+    .settings(resolvers ++= Seq(Resolver.bintrayRepo("hmrc", "releases"), Resolver.jcenterRepo))
 }
