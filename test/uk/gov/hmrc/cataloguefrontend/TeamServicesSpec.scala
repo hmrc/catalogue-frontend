@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.util
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.jsoup.nodes.{Document, Element}
-import org.jsoup.select.Elements
+import org.jsoup.nodes.Document
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -85,7 +82,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.status shouldBe 200
       response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
 
-    response.body.toString should include("""<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
+      response.body.toString should include("""<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
 
     }
 
