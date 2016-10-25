@@ -33,7 +33,8 @@ import views.html._
 
 import scala.concurrent.Future
 import scala.io.Source
-
+import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
 
 object CatalogueController extends CatalogueController {
 
