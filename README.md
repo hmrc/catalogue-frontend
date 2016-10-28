@@ -1,4 +1,3 @@
-
 # catalogue-frontend
 
 [![Build Status](https://travis-ci.org/hmrc/catalogue-frontend.svg?branch=master)](https://travis-ci.org/hmrc/catalogue-frontend) [ ![Download](https://api.bintray.com/packages/hmrc/releases/catalogue-frontend/images/download.svg) ](https://bintray.com/hmrc/releases/catalogue-frontend/_latestVersion)
