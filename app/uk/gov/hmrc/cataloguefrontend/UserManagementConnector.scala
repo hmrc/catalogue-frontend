@@ -38,6 +38,7 @@ import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import play.api.libs.json.Json
+import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
 import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
@@ -62,40 +63,49 @@ trait UserManagementConnector extends ServicesConfig {
 
     val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team/members"
 
-
-    http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
-      response.status match {
-        case 200 => extractMembers(response)
-        case httpCode => Left(HTTPError(httpCode))
+    withTimerAndCounter("ump") {
+      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
+        response.status match {
+          case 200 => extractMembers(team, response)
+          case httpCode => Left(HTTPError(httpCode))
+        }
+      }.recover {
+        case ex =>
+          Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
+          Left(ConnectionError(ex))
       }
-    }.recover {
-      case ex =>
-        Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
-        Left(ConnectionError(ex))
     }
   }
 
-  private def extractMembers(response: HttpResponse): Either[ConnectorError, Seq[TeamMember]] = {
-    (response.json \\ "members")
+  private def extractMembers(team: String, response: HttpResponse): Either[ConnectorError, Seq[TeamMember]] = {
+    val umpFrontPageUrl = getConfString(s"$serviceName.frontPageUrl", "#") + s"/$team"
+
+    val left: Left[NoMembersField, Nothing] = Left(NoMembersField(umpFrontPageUrl))
+
+    val errorOrTeamMembers: Either[NoMembersField, Seq[TeamMember]] with Product with Serializable = (response.json \\ "members")
       .headOption
       .map(js => Right(js.as[Seq[TeamMember]]))
-      .getOrElse(Left(NoMembersField))
+      .getOrElse(left)
+
+    if(errorOrTeamMembers.isRight && errorOrTeamMembers.right.get.isEmpty) left else errorOrTeamMembers
   }
 
 }
 
 object UserManagementConnector extends UserManagementConnector {
   override val http = WSHttp
-//  override def userManagementBaseUrl: String = baseUrl("user-management")
+
   val serviceName = "user-management"
 
   override def userManagementBaseUrl: String =
     getConfString(s"$serviceName.url", throw new RuntimeException(s"Could not find config $serviceName.url"))
 
   sealed trait ConnectorError
-  case object NoMembersField extends ConnectorError
+  case class NoMembersField(linkToRectify:String) extends ConnectorError
   case class HTTPError(code: Int) extends ConnectorError
-  case class ConnectionError(exception: Throwable) extends ConnectorError
+  case class ConnectionError(exception: Throwable) extends ConnectorError {
+    override def toString: String = exception.getMessage
+  }
 
   case class TeamMember(displayName: Option[String],
                          familyName: Option[String],

@@ -18,7 +18,10 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
-@(cacheTimestampFormatted: String, teamName:String, repos: Map[String, Seq[String]], teamMembers: Seq[DisplayableTeamMember])
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.ConnectorError
+
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.NoMembersField
+@(cacheTimestampFormatted: String, teamName:String, repos: Map[String, Seq[String]], errorOrTeamMembers: Either[ConnectorError, Seq[DisplayableTeamMember]])
 
 @standard_layout(teamName,"teams") {
 <header>
@@ -33,25 +36,37 @@
             <div class="board">
                 <h3 class="board__heading">Team Members</h3>
 
-                <div class="board__body">
-                    <ul class="list list--minimal" id="team_members">
-                        @for(teamMember <- teamMembers) {
-                            <li class="list-item row">
-                                <div class="col-md-7"  >
-                                    <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
-                                </div>
-                                <div class="col-md-4">
-                                @if(teamMember.isServiceOwner) {
-                                    @*<div class="btn btn-success btn-xs">*@
-                                    @*</div>*@
-                                    <span class="label label-success">Service Owner</span>
-                                }
-                                </div>
-                            </li>
-                        }
-                        @*<li class="list-item" id="team-members"><a href="teamMembersLink" target="_blank"></a></li>*@
+                @if(errorOrTeamMembers.isRight) {
+                    <div class="board__body">
+                        <ul class="list list--minimal" id="team_members">
+
+                            @for(teamMember <- errorOrTeamMembers.right.get) {
+                                <li class="list-item row">
+                                    <div class="col-md-7"  >
+                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
+                                    </div>
+                                    <div class="col-md-4">
+                                    @if(teamMember.isServiceOwner) {
+                                        <span class="label label-success">Service Owner</span>
+                                    }
+                                    </div>
+                                </li>
+                            }
+
                     </ul>
+
                 </div>
+                } else {
+                    @errorOrTeamMembers.left.get match {
+                        case NoMembersField(linkToRectify) => {
+                            <div id="linkToRectify" class="list list--minimal">
+                                Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
+                            </div>
+                        }
+                        case _ => {<div class="list list--minimal alert alert-danger">Sorry, the User Management Portal is not available </div>}
+                    }
+
+                }
             </div>
         </div>
 

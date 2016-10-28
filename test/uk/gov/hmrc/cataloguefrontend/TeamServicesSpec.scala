@@ -22,9 +22,12 @@ import org.jsoup.nodes.Document
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerTest
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WS
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
+import scala.collection.JavaConversions._
 
 import scala.io.Source
 
@@ -33,12 +36,17 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
   def asDocument(html: String): Document = Jsoup.parse(html)
 
 
-  override def newAppForTest(testData: TestData) = new GuiceApplicationBuilder().configure(
-    "microservice.services.teams-and-services.host" -> host,
-    "microservice.services.teams-and-services.port" -> endpointPort,
-    "microservice.services.user-management.url" -> endpointMockUrl,
-    "usermanagement.portal.url" -> "http://usermanagement/link",
-    "play.ws.ssl.loose.acceptAnyCertificate" -> true).build()
+  val frontPageUrl = "http://some.ump.com"
+
+  override def newAppForTest(testData: TestData) = {
+    new GuiceApplicationBuilder().configure(
+      "microservice.services.teams-and-services.host" -> host,
+      "microservice.services.teams-and-services.port" -> endpointPort,
+      "microservice.services.user-management.url" -> endpointMockUrl,
+      "usermanagement.portal.url" -> "http://usermanagement/link",
+      "microservice.services.user-management.frontPageUrl" -> frontPageUrl,
+      "play.ws.ssl.loose.acceptAnyCertificate" -> true).build()
+  }
 
   "Team services page" should {
 
@@ -107,79 +115,111 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.body should include(ViewMessages.noRepoOfType("library"))
     }
 
-    //TODO: TO be continued (when DDCOPS SNI is resolved)
-    "show team members correctly" ignore {
+    "show team members correctly" in {
+      val teamName = "CATO"
 
-      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams/" + teamName, willRespondWith = (200, Some(
         """{"Library":[], "Deployable": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
-      val mockDataFileName: String = "/user-management-response.json"
-      mockTeamMembersApiCall(mockDataFileName)
+      mockTeamMembersApiCall("/large-user-management-response.json", teamName)
 
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+      //TODO!@ remove the feature toggle
+      val response = await(WS.url(s"http://localhost:$port/teams/$teamName?teamMembers").get)
 
       response.status shouldBe 200
       val document = asDocument(response.body)
 
-      import scala.collection.JavaConversions._
 
-      val teamMembersLiElements = document.select("#team_members li").iterator().toSeq
+      verifyTeamMemberElementsText(document)
 
-      teamMembersLiElements.length shouldBe 14
+      verifyTeamMemberHrefLinks(document)
 
-      val jsonString: String = readFile(mockDataFileName)
-
-
+      verifyTeamOwnerIndicatorLabel(document)
     }
 
-    //TODO: Only used to test the connectivity to DDCOPS service.
-    // remove this once the issue with the DDCOPS connectivity (SNI) is resolved
-    "Try to reproduce the issue of HTTPS redirecting !@" ignore {
+    "show link to UMP's front page when no members node returned" in {
 
-      import play.api.libs.ws._
+      def verifyForFile(fileName : String): Unit = {
 
-      import scala.concurrent.Future
+        val teamName = "CATO"
 
+        serviceEndpoint(GET, "/api/teams/" + teamName, willRespondWith = (200, Some(
+          """{"Library":[], "Deployable": []  }""".stripMargin
+        )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
-      implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
-        override def read(method: String, url: String, response: HttpResponse) = response
+        mockTeamMembersApiCall(fileName, teamName)
+
+        //TODO!@ remove the feature toggle
+        val response = await(WS.url(s"http://localhost:$port/teams/$teamName?teamMembers").get)
+
+        response.status shouldBe 200
+        response.body should include(frontPageUrl)
+
+        val document = asDocument(response.body)
+
+        document.select("#linkToRectify").text() shouldBe s"Team $teamName is not defined in the User Management Portal, please add it here"
+
       }
 
-      val carrier = HeaderCarrier().withExtraHeaders(
-        "Token" -> "None",
-        "requester" -> "None",
-        "Content-Type" -> "application/json"
-      )
-
-      //      val url = "http://example.com/v1/organisations/mdtp/teams/CATO/members"
-      //      val url = "http://example.com"
-      val url = "http://example.com"
-
-      val holder = WS.url(url)
-
-      val complexHolder =
-        holder.withHeaders("Token" -> "None",
-          "requester" -> "None",
-          "Content-Type" -> "application/json")
-
-      val futureResponse: Future[WSResponse] = complexHolder.get()
-      println("await(futureResponse).status:" + await(futureResponse).status)
-
-      //      val eventualResponse = UserManagementConnector.http.GET(url)(httpReads, carrier)
-      ////      val eventualResponse = UserManagementConnector.http.GET("https://www.google.co.uk/")(httpReads, carrier)
-      //      println(await(eventualResponse).status)
+      verifyForFile("/user-management-empty-members.json")
+      verifyForFile("/user-management-no-members.json")
 
     }
+
+    "show error message if UMP is not available" in {
+      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+        """{"Library":[], "Deployable": []  }""".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+
+      mockTeamMembersApiCall("/user-management-response.json", httpReturnCode = 404)
+
+      val response = await(WS.url(s"http://localhost:$port/teams/teamA?teamMembers").get)
+
+      response.status shouldBe 200
+
+      response.body should include("Sorry, the User Management Portal is not available")
+    }
+
   }
 
-  def mockTeamMembersApiCall(jsonFilePath: String): String = {
+  def verifyTeamOwnerIndicatorLabel(document: Document): Unit = {
+    val serviceOwnersLiLabels = document.select("#team_members li .label-success")
+    serviceOwnersLiLabels.size() shouldBe 2
+    serviceOwnersLiLabels.iterator().toSeq.map(_.text()) shouldBe Seq("Service Owner", "Service Owner")
+  }
+
+  def verifyTeamMemberHrefLinks(document: Document): Boolean = {
+    val hrefs = document.select("#team_members [href]").iterator().toList
+
+    hrefs.size shouldBe 5
+    hrefs(0).attributes().get("href") == "http://example.com/profile/muhammad.qureshi"
+    hrefs(1).attributes().get("href") == "http://example.com/profile/sean.mundy"
+    hrefs(2).attributes().get("href") == "http://example.com/profile/kaye.sweeney"
+    hrefs(3).attributes().get("href") == "http://example.com/profile/mario.paniccia"
+    hrefs(4).attributes().get("href") == "http://example.com/profile/michael.burnett"
+  }
+
+  def verifyTeamMemberElementsText(document: Document): Unit = {
+    val teamMembersLiElements = document.select("#team_members li").iterator().toList
+
+    teamMembersLiElements.length shouldBe 5
+
+    teamMembersLiElements(0).text() should include("Muhammad Qureshi Service Owner")
+    teamMembersLiElements(1).text() should include("Sean Mundy Service Owner")
+    teamMembersLiElements(2).text() should include("Kaye Sweeney")
+    teamMembersLiElements(3).text() should include("Mario Paniccia")
+    teamMembersLiElements(4).text() should include("Michael Burnett")
+  }
+
+  def mockTeamMembersApiCall(jsonFilePath: String, teamName: String = "teamA", httpReturnCode: Int = 200): String = {
     val json = readFile(jsonFilePath)
 
+    val url = s"/v1/organisations/mdtp/teams/$teamName/members"
     serviceEndpoint(
       method = GET,
-      url = "/v1/organisations/mdtp/teams/teamA/members",
-      willRespondWith = (200, Some(json)),
+      url = url,
+      willRespondWith = (httpReturnCode, Some(json)),
       extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
     json
@@ -188,4 +228,12 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
   def readFile(jsonFilePath: String): String = {
     Source.fromURL(getClass.getResource(jsonFilePath)).getLines().mkString("\n")
   }
+
+  def extractMembers(jsonString: String):  Seq[TeamMember] = {
+    (Json.parse(jsonString) \\ "members")
+      .headOption
+      .map(js => js.as[Seq[TeamMember]]).getOrElse(throw new RuntimeException(s"not able to extract team members from json: $jsonString"))
+
+  }
+
 }

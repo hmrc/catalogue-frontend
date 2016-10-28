@@ -19,43 +19,18 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.time.LocalDateTime
 
+import play.api.Play.current
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
-import play.api.libs.json.Json
+import play.api.i18n.Messages.Implicits._
 import play.api.mvc._
 import play.api.{Configuration, Play}
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, NoMembersField, TeamMember}
-import uk.gov.hmrc.cataloguefrontend.config.WSHttp
+import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamMember}
 import uk.gov.hmrc.play.frontend.controller.FrontendController
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 import views.html._
 
-import scala.concurrent.Future
-import scala.io.Source
-import play.api.Play.current
-import play.api.i18n.Messages.Implicits._
-
 object CatalogueController extends CatalogueController {
-
-//  //TODO!@ REMOVE ALL THIS (CANNED RESPONSE) WHEN DDCOPS END POINT STARTS WORKING
-//  override def userManagementConnector: UserManagementConnector = new UserManagementConnector {
-//    override val http: HttpGet = WSHttp
-//
-//    override def userManagementBaseUrl: String = "nothing to see here"
-//
-//    override def getTeamMembers(team: String)(implicit hc: HeaderCarrier): Future[Either[ConnectorError, Seq[TeamMember]]] = {
-//      val jsonString = Source.fromURL(getClass.getResource("/chicken.json")).getLines().mkString("\n")
-//      Future.successful(extractMembers(jsonString))
-//    }
-//
-//    def extractMembers(jsonString: String): Either[ConnectorError, Seq[TeamMember]] = {
-//      (Json.parse(jsonString) \\ "members")
-//        .headOption
-//        .map(js => Right(js.as[Seq[TeamMember]]))
-//        .getOrElse(Left(NoMembersField))
-//    }
-//
-//  }
 
   override def userManagementConnector: UserManagementConnector = UserManagementConnector
 
@@ -95,9 +70,9 @@ trait CatalogueController extends FrontendController {
         typeRepos: Option[CachedItem[Map[String, Seq[String]]]] <- teamsAndServicesConnector.teamInfo(teamName)
         teamMembers: Either[ConnectorError, Seq[TeamMember]] <- userManagementConnector.getTeamMembers(teamName)
       } yield (typeRepos, teamMembers) match {
-        case (Some(s), Right(tm)) => Ok(team_info(s.time, teamName, repos = s.data, teamMembers = DisplayableTeamMembers(teamName, tm)))
+        case (Some(s), _) => Ok(team_info(s.time, teamName, repos = s.data, errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers)))
 
-        //TODO: add extra error cases
+        //TODO: add extra error cases (or change the return type to be OK(team-info(?,Either[_, _] like above?)
         case (None, _) => NotFound
       }
     } else {
@@ -164,6 +139,14 @@ trait CatalogueController extends FrontendController {
 
   }
 
+  private def convertToDisplayableTeamMembers(teamName: String, errorOrTeamMembers: Either[ConnectorError, Seq[TeamMember]]) : Either[ConnectorError, Seq[DisplayableTeamMember]] =
+    errorOrTeamMembers match {
+      case Left(err) => Left(err)
+      case Right(tms) => Right(DisplayableTeamMembers(teamName, tms))
+    }
+
+
+
 }
 
 case class ReleasesFilter(team: Option[String] = None, serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
@@ -191,15 +174,16 @@ object ReleasesFilter {
 
 object DisplayableTeamMembers {
 
-  val baseUrl = "http://example.com/profile/"
+  //!@ TODO read from config?
+  val umpProfileBaseUrl = "http://example.com/profile/"
 
   def apply(teamName: String, teamMembers: Seq[TeamMember]): Seq[DisplayableTeamMember] = {
 
     val displayableTeamMembers = teamMembers.map(tm =>
       DisplayableTeamMember(
         displayName = tm.displayName.getOrElse("DISPLAY NAME NOT PROVIDED"),
-        isServiceOwner = tm.serviceOwnerFor.exists(_.contains(teamName)),
-        umpLink = tm.username.map(baseUrl + _).getOrElse("USERNAME NOT PROVIDED")
+        isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.toLowerCase)),
+        umpLink = tm.username.map(umpProfileBaseUrl + _).getOrElse("USERNAME NOT PROVIDED")
       )
     )
 
@@ -222,3 +206,4 @@ object UserManagementPortalLink {
   }
 
 }
+

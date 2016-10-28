@@ -111,6 +111,25 @@ class DisplayableTeamMembersSpec extends FunSpec with Matchers with TypeCheckedT
 
     }
 
+
+    it("finds service owners based on service name (non-casesensetive)") {
+      val differentCasedOwnerTeamMembers = Seq(
+        TeamMember(
+          displayName =  Some("E Federer"),
+          familyName =  Some("Federer"),
+          givenName =  Some("E"),
+          primaryEmail =  Some("e.federer@digital.hmrc.gov.uk"),
+          username =  Some("e.federer"),
+          serviceOwnerFor = Some(Seq("TEAMa"))
+        )
+      )
+      val displatableServiceOwners = DisplayableTeamMembers(teamName, differentCasedOwnerTeamMembers)
+
+      displatableServiceOwners.size shouldBe 1
+      displatableServiceOwners(0).isServiceOwner shouldBe true
+
+    }
+
     it("displays service owners and then non service owners") {
       val (serviceOwners, others) = DisplayableTeamMembers(teamName, teamMembers).splitAt(2)
 
