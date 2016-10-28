@@ -28,35 +28,9 @@ import play.api.{Configuration, Play}
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamMember}
 import uk.gov.hmrc.play.frontend.controller.FrontendController
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 import views.html._
 
-import scala.concurrent.Future
-import scala.io.Source
-import play.api.Play.current
-import play.api.i18n.Messages.Implicits._
-
 object CatalogueController extends CatalogueController {
-
-//  //TODO!@ REMOVE ALL THIS (CANNED RESPONSE) WHEN DDCOPS END POINT STARTS WORKING
-//  override def userManagementConnector: UserManagementConnector = new UserManagementConnector {
-//    override val http: HttpGet = WSHttp
-//
-//    override def userManagementBaseUrl: String = "nothing to see here"
-//
-//    override def getTeamMembers(team: String)(implicit hc: HeaderCarrier): Future[Either[ConnectorError, Seq[TeamMember]]] = {
-//      val jsonString = Source.fromURL(getClass.getResource("/chicken.json")).getLines().mkString("\n")
-//      Future.successful(extractMembers(jsonString))
-//    }
-//
-//    def extractMembers(jsonString: String): Either[ConnectorError, Seq[TeamMember]] = {
-//      (Json.parse(jsonString) \\ "members")
-//        .headOption
-//        .map(js => Right(js.as[Seq[TeamMember]]))
-//        .getOrElse(Left(NoMembersField))
-//    }
-//
-//  }
 
   override def userManagementConnector: UserManagementConnector = UserManagementConnector
 
@@ -232,8 +206,8 @@ object UserManagementPortalLink {
     val displayableTeamMembers = teamMembers.map(tm =>
       DisplayableTeamMember(
         displayName = tm.displayName.getOrElse("DISPLAY NAME NOT PROVIDED"),
-        isServiceOwner = tm.serviceOwnerFor.exists(_.contains(teamName)),
-        umpLink = tm.username.map(baseUrl + _).getOrElse("USERNAME NOT PROVIDED")
+        isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.toLowerCase)),
+        umpLink = tm.username.map(umpProfileBaseUrl + _).getOrElse("USERNAME NOT PROVIDED")
       )
     )
 

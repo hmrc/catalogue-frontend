@@ -132,14 +132,15 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
       response.status shouldBe 200
       val document = asDocument(response.body)
 
-      import scala.collection.JavaConversions._
 
-      val teamMembersLiElements = document.select("#team_members li").iterator().toSeq
+      verifyTeamMemberElementsText(document)
 
-      teamMembersLiElements.length shouldBe 14
+      verifyTeamMemberHrefLinks(document)
 
-      val jsonString: String = readFile(mockDataFileName)
+      verifyTeamOwnerIndicatorLabel(document)
+    }
 
+    "show link to UMP's front page when no members node returned" in {
 
       verifyTeamMemberElementsText(document)
 
