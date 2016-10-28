@@ -9,3 +9,4 @@ GET        /libraries/:name        uk.gov.hmrc.cataloguefrontend.CatalogueContro
 GET        /releases               uk.gov.hmrc.cataloguefrontend.CatalogueController.releases()
 GET        /assets/*file           controllers.Assets.at(path="/public", file)
 GET        /                       uk.gov.hmrc.cataloguefrontend.CatalogueController.landingPage
+GET        /admin/metrics          @com.kenshoo.play.metrics.MetricsController.metrics

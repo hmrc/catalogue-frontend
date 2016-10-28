@@ -25,7 +25,7 @@ import uk.gov.hmrc.crypto.ApplicationCrypto
 import uk.gov.hmrc.play.audit.filters.FrontendAuditFilter
 import uk.gov.hmrc.play.audit.http.config.LoadAuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode, ServicesConfig}
+import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
 import uk.gov.hmrc.play.filters.MicroserviceFilterSupport
 import uk.gov.hmrc.play.frontend.bootstrap.DefaultFrontendGlobal
 import uk.gov.hmrc.play.http.logging.filters.FrontendLoggingFilter
@@ -34,6 +34,10 @@ object ApplicationGlobal extends DefaultFrontendGlobal {
   override val auditConnector = FrontendAuditConnector
   override val frontendAuditFilter = AuditFilter
   override val loggingFilter = CatLoggingFilter
+
+  //TODO!@ this is already done in the parent (DefaultFrontendGlobal)
+  //!@override val metricsFilter = Play.current.injector.instanceOf[MetricsFilter]
+
 
   override def onStart(app: Application) {
     Logger.info(s"Starting frontend : $appName : in mode : ${app.mode}")
@@ -46,6 +50,8 @@ object ApplicationGlobal extends DefaultFrontendGlobal {
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: Request[_]): Html =
     views.html.error_template(pageTitle, heading, message)
 
+  //TODO verify with Pete Smith which one is correct?
+  // override def microserviceMetricsConfig(implicit app: Application): Option[Configuration] = app.configuration.getConfig(s"$env.microservice.metrics")
   override def microserviceMetricsConfig(implicit app: Application): Option[Configuration] = app.configuration.getConfig("microservice.metrics")
 
 }
