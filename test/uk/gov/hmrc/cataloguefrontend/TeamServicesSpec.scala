@@ -57,6 +57,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
       mockTeamMembersApiCall("/user-management-response.json")
 
+      mockTeamMembersApiCall("/user-management-response.json")
+
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200

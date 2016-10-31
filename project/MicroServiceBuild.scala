@@ -7,8 +7,6 @@ object MicroServiceBuild extends Build with MicroService {
 }
 
 private object AppDependencies {
-//  import play.PlayImport._
-//  import play.core.PlayVersion
 
   import play.core.PlayVersion
   import play.sbt.PlayImport._
