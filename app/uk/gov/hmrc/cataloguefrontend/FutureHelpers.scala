@@ -29,7 +29,7 @@ object FutureHelpers {
   lazy val metrics: Metrics = Play.current.injector.instanceOf[MetricsImpl]
   lazy val defaultRegistry = metrics.defaultRegistry
 
-  def withTimerAndCounter[T](name: String)(f: Future[T])(mayBeAuxFailurePredicate:Option[T => Boolean] = None) = {
+  def withTimerAndCounter[T](name: String)(f: Future[T], mayBeAuxFailurePredicate:Option[T => Boolean] = None) = {
     val t = defaultRegistry.timer(s"$name.timer").time()
 
     def logFailure: Unit = {
