@@ -193,11 +193,11 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
     val hrefs = document.select("#team_members [href]").iterator().toList
 
     hrefs.size shouldBe 5
-    hrefs(0).attributes().get("href") == "http://example.com/profile/muhammad.qureshi"
-    hrefs(1).attributes().get("href") == "http://example.com/profile/sean.mundy"
-    hrefs(2).attributes().get("href") == "http://example.com/profile/kaye.sweeney"
-    hrefs(3).attributes().get("href") == "http://example.com/profile/mario.paniccia"
-    hrefs(4).attributes().get("href") == "http://example.com/profile/michael.burnett"
+    hrefs(0).attributes().get("href") == "http://example.com/profile/m.q"
+    hrefs(1).attributes().get("href") == "http://example.com/profile/s.m"
+    hrefs(2).attributes().get("href") == "http://example.com/profile/k.s"
+    hrefs(3).attributes().get("href") == "http://example.com/profile/mx.p"
+    hrefs(4).attributes().get("href") == "http://example.com/profile/ma.b"
   }
 
   def verifyTeamMemberElementsText(document: Document): Unit = {
@@ -205,11 +205,11 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
     teamMembersLiElements.length shouldBe 5
 
-    teamMembersLiElements(0).text() should include("Muhammad Qureshi Service Owner")
-    teamMembersLiElements(1).text() should include("Sean Mundy Service Owner")
-    teamMembersLiElements(2).text() should include("Kaye Sweeney")
-    teamMembersLiElements(3).text() should include("Mario Paniccia")
-    teamMembersLiElements(4).text() should include("Michael Burnett")
+    teamMembersLiElements(0).text() should include("M Q Service Owner")
+    teamMembersLiElements(1).text() should include("S M Service Owner")
+    teamMembersLiElements(2).text() should include("K S")
+    teamMembersLiElements(3).text() should include("Ma B")
+    teamMembersLiElements(4).text() should include("Mx P")
   }
 
   def mockTeamMembersApiCall(jsonFilePath: String, teamName: String = "teamA", httpReturnCode: Int = 200): String = {
