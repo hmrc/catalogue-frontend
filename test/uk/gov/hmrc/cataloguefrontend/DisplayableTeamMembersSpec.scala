@@ -100,6 +100,7 @@ class DisplayableTeamMembersSpec extends FunSpec with Matchers with TypeCheckedT
       )
     )
 
+
     val (expectedServiceOwners, expectedOthers)  = expectedDisplayTeamMembers.partition(_.isServiceOwner)
 
     it("transforms TeamMembers into DisplayableTeamMembers correctly") {

@@ -20,7 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.ConnectorError
 
-@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.NoMembersField
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.NoData
 @(cacheTimestampFormatted: String, teamName:String, repos: Map[String, Seq[String]], errorOrTeamMembers: Either[ConnectorError, Seq[DisplayableTeamMember]])
 
 @standard_layout(teamName,"teams") {
@@ -58,7 +58,7 @@
                 </div>
                 } else {
                     @errorOrTeamMembers.left.get match {
-                        case NoMembersField(linkToRectify) => {
+                        case NoData(linkToRectify) => {
                             <div id="linkToRectify" class="list list--minimal">
                                 Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
                             </div>
