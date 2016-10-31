@@ -63,17 +63,25 @@ trait UserManagementConnector extends ServicesConfig {
 
     val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team/members"
 
+    def isHttpCodeFailure: Option[(Either[ConnectorError, _]) => Boolean] =
+      Some { errorOrMembers: Either[ConnectorError, _] =>
+      errorOrMembers match {
+        case Left(HTTPError(code)) if code != 200 => true
+        case _ => false
+      }
+    }
+
     withTimerAndCounter("ump") {
       http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
         response.status match {
           case 200 => extractMembers(team, response)
           case httpCode => Left(HTTPError(httpCode))
         }
-      }.recover {
-        case ex =>
-          Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
-          Left(ConnectionError(ex))
       }
+    }(isHttpCodeFailure).recover {
+      case ex =>
+        Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
+        Left(ConnectionError(ex))
     }
   }
 

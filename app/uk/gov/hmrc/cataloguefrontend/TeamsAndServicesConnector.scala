@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.net.URLEncoder
 
+import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
@@ -71,9 +72,15 @@ trait TeamsAndServicesConnector extends ServicesConfig {
   }
 
   def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[Map[String, Seq[String]]]]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName, "UTF-8")}")
+    val url = teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName, "UTF-8")}"
+
+    http.GET[HttpResponse](url)
       .map {
         toCachedItemOption[Map[String, Seq[String]]]
+      }.recover {
+      case ex =>
+        Logger.error(s"An error occurred getting teamInfo when connecting to $url: ${ex.getMessage}", ex)
+        None
     }
   }
 
