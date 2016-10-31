@@ -32,27 +32,26 @@ package uk.gov.hmrc.cataloguefrontend
  * limitations under the License.
  */
 
-import java.time.LocalDateTime
-
 import play.api.Logger
+import play.api.libs.json.{JsValue, Json, Reads}
+import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
-import play.api.libs.json.Json
-import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
 import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
 
 
-
 trait UserManagementConnector extends ServicesConfig {
   val http: HttpGet
+
   def userManagementBaseUrl: String
 
   import UserManagementConnector._
 
   implicit val teamMemberReads = Json.reads[TeamMember]
+  implicit val teamDetailsReads = Json.reads[TeamDetails]
 
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse) = response
@@ -77,18 +76,50 @@ trait UserManagementConnector extends ServicesConfig {
     }
   }
 
+
+  def getTeamDetails(team: String)(implicit hc: HeaderCarrier): Future[Either[ConnectorError, TeamDetails]] = {
+    val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
+    val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team"
+    withTimerAndCounter("ump-teamdetails") {
+      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
+        response.status match {
+          case 200 => extractData[TeamDetails](team, response) {
+            json =>
+              (json \\ "organisations").lastOption.flatMap(x => (x \ "data").toOption)
+          }
+          case httpCode => Left(HTTPError(httpCode))
+        }
+      }.recover {
+        case ex =>
+          Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
+          Left(ConnectionError(ex))
+      }
+    }
+
+  }
+
+
+  def extractData[T](team: String, response: HttpResponse)(extractor: JsValue => Option[JsValue])(implicit rd: Reads[T]): Either[ConnectorError, T] = {
+
+    extractor(response.json)
+      .headOption
+      .map(js => Right(js.as[T]))
+      .getOrElse(Left(NoData(umpFrontPageUrl(team))))
+  }
+
   private def extractMembers(team: String, response: HttpResponse): Either[ConnectorError, Seq[TeamMember]] = {
-    val umpFrontPageUrl = getConfString(s"$serviceName.frontPageUrl", "#") + s"/$team"
 
-    val left: Left[NoMembersField, Nothing] = Left(NoMembersField(umpFrontPageUrl))
+    val left = Left(NoData(umpFrontPageUrl(team)))
 
-    val errorOrTeamMembers: Either[NoMembersField, Seq[TeamMember]] with Product with Serializable = (response.json \\ "members")
+    val errorOrTeamMembers = (response.json \\ "members")
       .headOption
       .map(js => Right(js.as[Seq[TeamMember]]))
       .getOrElse(left)
 
-    if(errorOrTeamMembers.isRight && errorOrTeamMembers.right.get.isEmpty) left else errorOrTeamMembers
+    if (errorOrTeamMembers.isRight && errorOrTeamMembers.right.get.isEmpty) left else errorOrTeamMembers
   }
+
+  private def umpFrontPageUrl(team: String) = getConfString(s"$serviceName.frontPageUrl", "#") + s"/$team"
 
 }
 
@@ -101,21 +132,31 @@ object UserManagementConnector extends UserManagementConnector {
     getConfString(s"$serviceName.url", throw new RuntimeException(s"Could not find config $serviceName.url"))
 
   sealed trait ConnectorError
-  case class NoMembersField(linkToRectify:String) extends ConnectorError
+
+  case class NoData(linkToRectify: String) extends ConnectorError
+
   case class HTTPError(code: Int) extends ConnectorError
+
   case class ConnectionError(exception: Throwable) extends ConnectorError {
     override def toString: String = exception.getMessage
   }
 
   case class TeamMember(displayName: Option[String],
-                         familyName: Option[String],
-                         givenName: Option[String],
-                         primaryEmail: Option[String],
-                         serviceOwnerFor: Option[Seq[String]],
-                         username: Option[String])
-}
+                        familyName: Option[String],
+                        givenName: Option[String],
+                        primaryEmail: Option[String],
+                        serviceOwnerFor: Option[Seq[String]],
+                        username: Option[String])
 
 //GET : http://example.com//v1/organisations/mdtp/teams/DDCOps/members
 //Headers :
 //Token : None
 //requester: None
+  case class TeamDetails(description: String,
+                         location: String,
+                         organisation: String,
+                         documentation: Option[String],
+                         slack: Option[String],
+                         team: String)
+
+}

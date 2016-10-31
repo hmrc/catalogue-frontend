@@ -142,15 +142,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTes
 
     "show link to UMP's front page when no members node returned" in {
 
-      verifyTeamMemberElementsText(document)
-
-      verifyTeamMemberHrefLinks(document)
-
-      verifyTeamOwnerIndicatorLabel(document)
-    }
-
-    "show link to UMP's front page when no members node returned" in {
-
       def verifyForFile(fileName : String): Unit = {
 
         val teamName = "CATO"

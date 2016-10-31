@@ -100,7 +100,6 @@ class DisplayableTeamMembersSpec extends FunSpec with Matchers with TypeCheckedT
       )
     )
 
-    val (expectedServiceOwners, expectedOthers)  = expectedDisplayTeamMembers.partition(_.isServiceOwner)
 
     val (expectedServiceOwners, expectedOthers)  = expectedDisplayTeamMembers.partition(_.isServiceOwner)
 
