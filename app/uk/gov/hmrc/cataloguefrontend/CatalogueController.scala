@@ -27,6 +27,7 @@ import play.api.mvc._
 import play.api.{Configuration, Play}
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamMember}
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
 
@@ -41,7 +42,9 @@ object CatalogueController extends CatalogueController {
   override def releasesService: ReleasesService = new ReleasesService(ServiceReleasesConnector, TeamsAndServicesConnector)
 }
 
-trait CatalogueController extends FrontendController {
+trait CatalogueController extends FrontendController with ServicesConfig {
+
+  val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
 
   def userManagementConnector: UserManagementConnector
 
@@ -140,9 +143,11 @@ trait CatalogueController extends FrontendController {
   }
 
   private def convertToDisplayableTeamMembers(teamName: String, errorOrTeamMembers: Either[ConnectorError, Seq[TeamMember]]) : Either[ConnectorError, Seq[DisplayableTeamMember]] =
+
     errorOrTeamMembers match {
       case Left(err) => Left(err)
-      case Right(tms) => Right(DisplayableTeamMembers(teamName, tms))
+      case Right(tms) =>
+        Right(DisplayableTeamMembers(teamName, getConfString(profileBaseUrlConfigKey, "#"), tms))
     }
 
 
@@ -174,10 +179,8 @@ object ReleasesFilter {
 
 object DisplayableTeamMembers {
 
-  //!@ TODO read from config?
-  val umpProfileBaseUrl = "http://example.com/profile/"
 
-  def apply(teamName: String, teamMembers: Seq[TeamMember]): Seq[DisplayableTeamMember] = {
+  def apply(teamName: String, umpProfileBaseUrl: String, teamMembers: Seq[TeamMember]): Seq[DisplayableTeamMember] = {
 
     val displayableTeamMembers = teamMembers.map(tm =>
       DisplayableTeamMember(
