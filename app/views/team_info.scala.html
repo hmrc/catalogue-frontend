@@ -78,15 +78,7 @@
 
                     </div>
                 } else {
-                    @errorOrTeamDetails.left.get match {
-                        case NoData(linkToRectify) => {
-                            <div id="linkToRectify" class="list list--minimal">
-                                Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
-                            </div>
-                        }
-                        case _ => {<div class="list list--minimal alert alert-danger">Sorry, the User Management Portal is not available </div>}
-                    }
-
+                    @showError(errorOrTeamDetails.left.get)
                 }
             </div>
         </div>
@@ -120,18 +112,13 @@
 
                 </div>
                 } else {
-                    @errorOrTeamMembers.left.get match {
-                        case NoData(linkToRectify) => {
-                            <div id="linkToRectify" class="list list--minimal">
-                                Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
-                            </div>
-                        }
-                        case _ => {<div class="list list--minimal alert alert-danger">Sorry, the User Management Portal is not available </div>}
-                    }
 
+                    @showError(errorOrTeamMembers.left.get)
                 }
             </div>
         </div>
+
+
 
         @repos.get("Deployable").map{services =>
         <div class="col-md-4">
@@ -177,4 +164,16 @@
     </div>
 
 </section>
+}
+
+@showError(error : ConnectorError)= {
+
+@error match {
+    case NoData(linkToRectify) => {
+        <div id="linkToRectify" class="list list--minimal">
+                                Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
+                            </div>
+    }
+    case _ => {<div class="list list--minimal alert alert-danger">Sorry, the User Management Portal is not available </div>}
+}
 }

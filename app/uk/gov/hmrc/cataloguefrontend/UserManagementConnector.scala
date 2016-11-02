@@ -157,15 +157,12 @@ object UserManagementConnector extends UserManagementConnector {
                         serviceOwnerFor: Option[Seq[String]],
                         username: Option[String])
 
-//GET : http://example.com//v1/organisations/mdtp/teams/DDCOps/members
-//Headers :
-//Token : None
-//requester: None
   case class TeamDetails(description: String,
                          location: String,
                          organisation: String,
                          documentation: Option[String],
                          slack: Option[String],
                          team: String)
+
 
 }

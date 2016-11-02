@@ -87,8 +87,6 @@ trait CatalogueController extends FrontendController with ServicesConfig {
             errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
             teamDetails)
           )
-
-        //TODO: add extra error cases (or change the return type to be OK(team-info(?,Either[_, _] like above?)
         case (None, _, _) => NotFound
       }
     } else {
@@ -198,7 +196,7 @@ object DisplayableTeamMembers {
       DisplayableTeamMember(
         displayName = tm.displayName.getOrElse("DISPLAY NAME NOT PROVIDED"),
         isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.toLowerCase)),
-        umpLink = tm.username.map(umpProfileBaseUrl + _).getOrElse("USERNAME NOT PROVIDED")
+        umpLink = tm.username.map(x => s"$umpProfileBaseUrl/$x").getOrElse("USERNAME NOT PROVIDED")
       )
     )
 
