@@ -18,18 +18,22 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
-import org.scalatestplus.play.OneServerPerTest
+import org.scalatestplus.play.OneServerPerSuite
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
-import play.api.test.FakeApplication
 import uk.gov.hmrc.play.test.UnitSpec
 
-class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
+class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
 
-  override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
-    additionalConfiguration = Map(
-      "microservice.services.teams-and-services.port" -> endpointPort,
-      "microservice.services.teams-and-services.host" -> host
-    ))
+
+  implicit override lazy val app = new GuiceApplicationBuilder().configure (
+    Map(
+    "microservice.services.teams-and-services.port" -> endpointPort,
+    "microservice.services.teams-and-services.host" -> host,
+      "play.ws.ssl.loose.acceptAnyCertificate" -> true,
+      "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
+  )).build()
+
 
   "Teams list" should {
 

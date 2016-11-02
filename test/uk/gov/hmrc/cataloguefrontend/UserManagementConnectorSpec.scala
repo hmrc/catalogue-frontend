@@ -24,7 +24,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneServerPerTest
+import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, ConnectorError, HTTPError, NoData, TeamMember}
@@ -34,15 +34,15 @@ import scala.concurrent.Future
 import scala.io.Source
 
 class UserManagementConnectorSpec extends FunSpec with Matchers with TypeCheckedTripleEquals with BeforeAndAfter
-  with OneServerPerTest with WireMockEndpoints with ScalaFutures with EitherValues with MockitoSugar {
+  with OneServerPerSuite with WireMockEndpoints with ScalaFutures with EitherValues with MockitoSugar {
 
 
-  override def newAppForTest(testData: TestData) = {
-    new GuiceApplicationBuilder().configure(
-      "microservice.services.user-management.url" -> endpointMockUrl,
-      "microservice.services.user-management.frontPageUrl" -> "http://some.ump.com"
-    ).build()
-  }
+  implicit override lazy val app = new GuiceApplicationBuilder().configure (
+    "microservice.services.user-management.url" -> endpointMockUrl,
+    "microservice.services.user-management.frontPageUrl" -> "http://some.ump.com",
+    "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
+  ).build()
+
 
   describe("User management connector") {
     it("should get the team members from the user-management service") {

@@ -17,22 +17,21 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.scalatest.TestData
-import org.scalatestplus.play.OneServerPerTest
+import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ServicePageSpec extends UnitSpec with OneServerPerTest with WireMockEndpoints {
+class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpoints {
 
 
-  override def newAppForTest(testData: TestData) = new GuiceApplicationBuilder().configure (
+  implicit override lazy val app = new GuiceApplicationBuilder().configure (
     "microservice.services.teams-and-services.port" -> endpointPort,
     "microservice.services.teams-and-services.host" -> host,
     "microservice.services.indicators.port" -> endpointPort,
-    "microservice.services.indicators.host" -> host        ).build()
-
+    "microservice.services.indicators.host" -> host,
+    "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
 
 
   "A service page" should {
