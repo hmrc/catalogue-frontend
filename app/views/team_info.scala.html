@@ -52,23 +52,22 @@
                             <li class="col-xs-6">
                                 <label>Documentation: </label>
                                 @teamDetails.documentation.map { d =>
-                                    <a href="@d" target="_blank">Confluence space</a>
+                                    <a href="@d" target="_blank">Go to Confluence space</a>
                                 }
-                            </li>
-                            <li class="col-xs-6">
-                                <label>Location: </label>
-                                @teamDetails.location
                             </li>
                             <li class="col-xs-6">
                                 <label>Organisation: </label>
                                 @teamDetails.organisation
                             </li>
-
                             <li class="col-xs-6">
                                 <label>Slack: </label>
                                 @teamDetails.slack.map { d =>
-                                    <a href="@d" target="_blank">Slack</a>
+                                    <a href="@d" target="_blank">Go to team channel</a>
                                 }
+                            </li>
+                            <li class="col-xs-6">
+                                <label>Location: </label>
+                                @teamDetails.location
                             </li>
 
                         }
@@ -174,6 +173,6 @@
                                 Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
                             </div>
     }
-    case _ => {<div class="list list--minimal alert alert-danger">Sorry, the User Management Portal is not available </div>}
+    case _ => {<div class="list list--minimal alert">Sorry, the User Management Portal is not available </div>}
 }
 }
