@@ -26,7 +26,7 @@ import play.api.i18n.Messages.Implicits._
 import play.api.mvc._
 import play.api.{Configuration, Play}
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamMember}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamDetails, TeamMember}
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
@@ -65,22 +65,35 @@ trait CatalogueController extends FrontendController with ServicesConfig {
   }
 
   def team(teamName: String) = Action.async { implicit request =>
+
     val teamMembersToggle: Option[String] = request.getQueryString("teamMembers")
 
-    if(teamMembersToggle.isDefined) {
+    val eventualTeamInfo = teamsAndServicesConnector.teamInfo(teamName)
+    if (teamMembersToggle.isDefined) {
+
+      val eventualErrorOrMembers = userManagementConnector.getTeamMembers(teamName)
+      val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
 
       for {
-        typeRepos: Option[CachedItem[Map[String, Seq[String]]]] <- teamsAndServicesConnector.teamInfo(teamName)
-        teamMembers: Either[ConnectorError, Seq[TeamMember]] <- userManagementConnector.getTeamMembers(teamName)
-      } yield (typeRepos, teamMembers) match {
-        case (Some(s), _) => Ok(team_info(s.time, teamName, repos = s.data, errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers)))
+        typeRepos: Option[CachedItem[Map[String, Seq[String]]]] <- eventualTeamInfo
+        teamMembers: Either[ConnectorError, Seq[TeamMember]] <- eventualErrorOrMembers
+        teamDetails: Either[ConnectorError, TeamDetails] <- eventualErrorOrTeamDetails
+      } yield (typeRepos, teamMembers, teamDetails) match {
+        case (Some(s), _, _) =>
+          Ok(team_info(
+            s.time,
+            teamName,
+            repos = s.data,
+            errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
+            teamDetails)
+          )
 
         //TODO: add extra error cases (or change the return type to be OK(team-info(?,Either[_, _] like above?)
-        case (None, _) => NotFound
+        case (None, _, _) => NotFound
       }
     } else {
       for {
-        typeRepos <- teamsAndServicesConnector.teamInfo(teamName)
+        typeRepos <- eventualTeamInfo
       } yield typeRepos match {
         case Some(s) => Ok(team_info_without_members(s.time, teamName, repos = s.data, teamMembersLink = UserManagementPortalLink(teamName, Play.current.configuration)))
         case None => NotFound
@@ -94,12 +107,12 @@ trait CatalogueController extends FrontendController with ServicesConfig {
       service <- teamsAndServicesConnector.repositoryDetails(name)
       maybeDataPoints <- indicatorsConnector.deploymentIndicatorsForService(name)
     } yield service match {
-//      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(service_info(s.time, s.data, indicators.map(_.map(_.toJSString))))
+      //      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(service_info(s.time, s.data, indicators.map(_.map(_.toJSString))))
       case Some(s) if s.data.repoType == RepoType.Deployable => Ok(
         service_info(
-        s.time, s.data,
-        ChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
-        ChartData.deploymentStability(name, maybeDataPoints.map(_.stability)))
+          s.time, s.data,
+          ChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
+          ChartData.deploymentStability(name, maybeDataPoints.map(_.stability)))
       )
       case _ => NotFound
     }
@@ -142,14 +155,13 @@ trait CatalogueController extends FrontendController with ServicesConfig {
 
   }
 
-  private def convertToDisplayableTeamMembers(teamName: String, errorOrTeamMembers: Either[ConnectorError, Seq[TeamMember]]) : Either[ConnectorError, Seq[DisplayableTeamMember]] =
+  private def convertToDisplayableTeamMembers(teamName: String, errorOrTeamMembers: Either[ConnectorError, Seq[TeamMember]]): Either[ConnectorError, Seq[DisplayableTeamMember]] =
 
     errorOrTeamMembers match {
       case Left(err) => Left(err)
       case Right(tms) =>
         Right(DisplayableTeamMembers(teamName, getConfString(profileBaseUrlConfigKey, "#"), tms))
     }
-
 
 
 }

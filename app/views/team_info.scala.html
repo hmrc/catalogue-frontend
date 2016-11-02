@@ -14,14 +14,19 @@
 * limitations under the License.
 *@
 
-@import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.ConnectorError
 
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.NoData
-@(cacheTimestampFormatted: String, teamName:String, repos: Map[String, Seq[String]], errorOrTeamMembers: Either[ConnectorError, Seq[DisplayableTeamMember]])
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamDetails
+@(
+        cacheTimestampFormatted: String,
+        teamName:String,
+        repos: Map[String, Seq[String]],
+        errorOrTeamMembers: Either[ConnectorError, Seq[DisplayableTeamMember]],
+        errorOrTeamDetails: Either[ConnectorError, TeamDetails]
+)
 
 @standard_layout(teamName,"teams") {
 <header>
@@ -29,6 +34,64 @@
     <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
 </header>
 <section class="section-wrapper">
+
+    <div class="row">
+
+        <div class="col-md-12">
+            <div class="board">
+                <h3 class="board__heading">Details</h3>
+
+                @if(errorOrTeamDetails.isRight) {
+                    <div class="board__body">
+                        <ul class="list list--minimal list-group row" id="team_details">
+                        @for(teamDetails <- errorOrTeamDetails.right.toOption){
+                            <li class="col-xs-6">
+                                <label>Description: </label>
+                                @teamDetails.description
+                            </li>
+                            <li class="col-xs-6">
+                                <label>Documentation: </label>
+                                @teamDetails.documentation.map { d =>
+                                    <a href="@d" target="_blank">Documentation</a>
+                                }
+                            </li>
+                            <li class="col-xs-6">
+                                <label>Location: </label>
+                                @teamDetails.location
+                            </li>
+                            <li class="col-xs-6">
+                                <label>Organisation: </label>
+                                @teamDetails.organisation
+                            </li>
+
+                            <li class="col-xs-6">
+                                <label>Slack: </label>
+                                @teamDetails.slack.map { d =>
+                                    <a href="@d" target="_blank">Slack</a>
+                                }
+                            </li>
+
+                        }
+
+
+                        </ul>
+
+                    </div>
+                } else {
+                    @errorOrTeamDetails.left.get match {
+                        case NoData(linkToRectify) => {
+                            <div id="linkToRectify" class="list list--minimal">
+                                Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
+                            </div>
+                        }
+                        case _ => {<div class="list list--minimal alert alert-danger">Sorry, the User Management Portal is not available </div>}
+                    }
+
+                }
+            </div>
+        </div>
+    </div>
+
 
     <div class="row">
 
