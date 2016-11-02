@@ -15,6 +15,7 @@ private object AppDependencies {
   private val frontendBootstrapVersion = "7.5.0"
   private val playConfigVersion = "3.0.0"
   private val logbackJsonLoggerVersion = "3.0.0"
+  private val playJsonLoggerVersion = "3.0.0"
   private val playHealthVersion = "2.0.0"
   private val govTemplateVersion = "5.0.0"
   private val playUIVersion = "5.0.0"
@@ -27,7 +28,7 @@ private object AppDependencies {
 //    ws,
     "uk.gov.hmrc" %% "frontend-bootstrap" % frontendBootstrapVersion,
     "uk.gov.hmrc" %% "play-config" % playConfigVersion,
-    "uk.gov.hmrc" %% "logback-json-logger" % logbackJsonLoggerVersion,
+    "uk.gov.hmrc" %% "play-json-logger" % playJsonLoggerVersion,
     "uk.gov.hmrc" %% "play-health" % playHealthVersion,
     "uk.gov.hmrc" %% "govuk-template" % govTemplateVersion,
     "uk.gov.hmrc" %% "play-ui" % playUIVersion,
