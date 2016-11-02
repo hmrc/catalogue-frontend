@@ -20,33 +20,32 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest._
-import org.scalatestplus.play.OneServerPerTest
+import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.libs.ws.WS
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
-import scala.collection.JavaConversions._
 
+import scala.collection.JavaConversions._
 import scala.io.Source
 
-class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
+class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
 
-  val frontPageUrl = "http://some.ump.com"
+  val frontPageUrl = "http://some.ump.fontpage.com"
 
-  override def newAppForTest(testData: TestData) = {
-    new GuiceApplicationBuilder().configure(
-      "microservice.services.teams-and-services.host" -> host,
-      "microservice.services.teams-and-services.port" -> endpointPort,
-      "microservice.services.user-management.url" -> endpointMockUrl,
-      "usermanagement.portal.url" -> "http://usermanagement/link",
-      "microservice.services.user-management.frontPageUrl" -> frontPageUrl,
-      "play.ws.ssl.loose.acceptAnyCertificate" -> true).build()
-  }
+  implicit override lazy val app = new GuiceApplicationBuilder().configure (
+    "microservice.services.teams-and-services.host" -> host,
+    "microservice.services.teams-and-services.port" -> endpointPort,
+    "microservice.services.user-management.url" -> endpointMockUrl,
+    "usermanagement.portal.url" -> "http://usermanagement/link",
+    "microservice.services.user-management.frontPageUrl" -> frontPageUrl,
+    "play.ws.ssl.loose.acceptAnyCertificate" -> true,
+    "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
+
 
   "Team services page" should {
 

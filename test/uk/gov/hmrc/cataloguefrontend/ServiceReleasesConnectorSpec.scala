@@ -20,18 +20,20 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
-import org.scalatestplus.play.OneServerPerTest
-import play.api.test.{FakeApplication, FakeHeaders}
+import org.scalatestplus.play.OneServerPerSuite
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.FakeHeaders
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerTest with WireMockEndpoints {
+class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
 
-  override def newAppForTest(testData: TestData): FakeApplication = new FakeApplication(
-    additionalConfiguration = Map(
-      "microservice.services.service-releases.port" -> endpointPort,
-      "microservice.services.service-releases.host" -> host
-    ))
+  implicit override lazy val app = new GuiceApplicationBuilder().configure (
+    Map(
+    "microservice.services.service-releases.port" -> endpointPort,
+    "microservice.services.service-releases.host" -> host,
+     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
+  )).build()
 
 
   "getReleases" should {

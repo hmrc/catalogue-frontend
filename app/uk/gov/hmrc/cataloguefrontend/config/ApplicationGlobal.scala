@@ -35,9 +35,6 @@ object ApplicationGlobal extends DefaultFrontendGlobal {
   override val frontendAuditFilter = AuditFilter
   override val loggingFilter = CatLoggingFilter
 
-  //TODO!@ this is already done in the parent (DefaultFrontendGlobal)
-  //!@override val metricsFilter = Play.current.injector.instanceOf[MetricsFilter]
-
 
   override def onStart(app: Application) {
     Logger.info(s"Starting frontend : $appName : in mode : ${app.mode}")
@@ -46,12 +43,10 @@ object ApplicationGlobal extends DefaultFrontendGlobal {
   }
 
 
-
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: Request[_]): Html =
     views.html.error_template(pageTitle, heading, message)
 
-  //TODO verify with Pete Smith which one is correct?
-  // override def microserviceMetricsConfig(implicit app: Application): Option[Configuration] = app.configuration.getConfig(s"$env.microservice.metrics")
+
   override def microserviceMetricsConfig(implicit app: Application): Option[Configuration] = app.configuration.getConfig("microservice.metrics")
 
 }
