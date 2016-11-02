@@ -110,10 +110,10 @@ trait UserManagementConnector extends ServicesConfig {
 
   def extractData[T](team: String, response: HttpResponse)(extractor: JsValue => Option[JsValue])(implicit rd: Reads[T]): Either[ConnectorError, T] = {
 
-    extractor(response.json)
-      .headOption
-      .map(js => Right(js.as[T]))
-      .getOrElse(Left(NoData(umpFrontPageUrl(team))))
+   extractor(response.json).flatMap{ js => js.asOpt[T] } match {
+     case Some(x) => Right(x)
+     case _ => Left(NoData(umpFrontPageUrl(team)))
+   }
   }
 
   private def extractMembers(team: String, response: HttpResponse): Either[ConnectorError, Seq[TeamMember]] = {

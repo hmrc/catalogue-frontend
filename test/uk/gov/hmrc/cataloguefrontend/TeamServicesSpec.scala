@@ -34,7 +34,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
-
   val frontPageUrl = "http://some.ump.fontpage.com"
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
@@ -47,6 +46,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
 
 
+  val teamName = "teamA"
+
   "Team services page" should {
 
     "show a list of libraries and services" in {
@@ -54,9 +55,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         """{"Library":["teamA-lib"], "Deployable": [ "teamA-serv", "teamA-frontend" ]  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
-      mockTeamMembersApiCall("/user-management-response.json")
-
-      mockTeamMembersApiCall("/user-management-response.json")
+      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -74,7 +73,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         """{"Library":[], "Service": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
-      mockTeamMembersApiCall("/user-management-response.json")
+      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -91,7 +90,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         """{"Library":[], "Service": []  }""".stripMargin
       )))
 
-      mockTeamMembersApiCall("/user-management-response.json")
+      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -106,7 +105,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         """{"Library":[], "Deployable": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
-      mockTeamMembersApiCall("/user-management-response.json")
+      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -123,7 +122,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         """{"Library":[], "Deployable": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
-      mockTeamMembersApiCall("/large-user-management-response.json", teamName)
+      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/large-user-management-response.json")
 
       //TODO!@ remove the feature toggle
       val response = await(WS.url(s"http://localhost:$port/teams/$teamName?teamMembers").get)
@@ -149,7 +148,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
           """{"Library":[], "Deployable": []  }""".stripMargin
         )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
-        mockTeamMembersApiCall(fileName, teamName)
+        mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", fileName)
 
         //TODO!@ remove the feature toggle
         val response = await(WS.url(s"http://localhost:$port/teams/$teamName?teamMembers").get)
@@ -173,13 +172,42 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         """{"Library":[], "Deployable": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
-      mockTeamMembersApiCall("/user-management-response.json", httpReturnCode = 404)
+      mockHttpApiCall(url = s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json", httpCodeToBeReturned = 404)
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA?teamMembers").get)
 
       response.status shouldBe 200
 
       response.body should include("Sorry, the User Management Portal is not available")
+    }
+
+    "show team details correctly" in {
+      val teamName = "CATO"
+
+      serviceEndpoint(GET, "/api/teams/" + teamName, willRespondWith = (200, Some(
+        """{"Library":[], "Deployable": []  }""".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+
+      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName", "/user-management-team-details-response.json")
+
+      //TODO!@ remove the feature toggle
+      val response = await(WS.url(s"http://localhost:$port/teams/$teamName?teamMembers").get)
+
+      response.status shouldBe 200
+      val document = asDocument(response.body)
+
+      val teamDetailsElements = document.select("#team_details li")
+      teamDetailsElements.size() shouldBe 5
+
+      teamDetailsElements(0).text() shouldBe "Description: TEAM-A is a great team"
+      teamDetailsElements(1).text() shouldBe "Documentation: Documentation"
+      teamDetailsElements(1).toString() should include("""<a href="https://some.documentation.url" target="_blank">Documentation</a>""")
+
+      teamDetailsElements(2).text() shouldBe "Location: STLPD"
+      teamDetailsElements(3).text() shouldBe "Organisation: ORGA"
+
+      teamDetailsElements(4).text() shouldBe "Slack: Slack"
+      teamDetailsElements(4).toString() should include("""<a href="https://slack.host/messages/team-A" target="_blank">Slack</a>""")
     }
 
   }
@@ -213,14 +241,14 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     teamMembersLiElements(4).text() should include("Mx P")
   }
 
-  def mockTeamMembersApiCall(jsonFilePath: String, teamName: String = "teamA", httpReturnCode: Int = 200): String = {
-    val json = readFile(jsonFilePath)
+  def mockHttpApiCall(url: String, jsonResponseFile: String, httpCodeToBeReturned: Int = 200): String = {
 
-    val url = s"/v1/organisations/mdtp/teams/$teamName/members"
+    val json = readFile(jsonResponseFile)
+
     serviceEndpoint(
       method = GET,
       url = url,
-      willRespondWith = (httpReturnCode, Some(json)),
+      willRespondWith = (httpCodeToBeReturned, Some(json)),
       extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
     json
