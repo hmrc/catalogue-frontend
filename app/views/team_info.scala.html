@@ -25,7 +25,8 @@
         teamName:String,
         repos: Map[String, Seq[String]],
         errorOrTeamMembers: Either[ConnectorError, Seq[DisplayableTeamMember]],
-        errorOrTeamDetails: Either[ConnectorError, TeamDetails]
+        errorOrTeamDetails: Either[ConnectorError, TeamDetails],
+        umpFrontPageUrl:String
 )
 
 @standard_layout(teamName,"teams") {
@@ -72,8 +73,9 @@
 
                         }
 
-
                         </ul>
+
+                        @umpUpdateLink
 
                     </div>
                 } else {
@@ -108,7 +110,7 @@
                             }
 
                     </ul>
-
+                        @umpUpdateLink
                 </div>
                 } else {
 
@@ -163,6 +165,12 @@
     </div>
 
 </section>
+}
+
+@umpUpdateLink = {
+<div id="ump-correct-data-link" class="list list--minimal">
+    To update any data above please click <a href="@umpFrontPageUrl">here</a>
+</div>
 }
 
 @showError(error : ConnectorError)= {

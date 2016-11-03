@@ -43,10 +43,8 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 import scala.concurrent.Future
 
 
-trait UserManagementConnector extends ServicesConfig {
+trait UserManagementConnector extends UserManagementPortalLink {
   val http: HttpGet
-
-  def userManagementBaseUrl: String
 
   import UserManagementConnector._
 
@@ -128,17 +126,11 @@ trait UserManagementConnector extends ServicesConfig {
     if (errorOrTeamMembers.isRight && errorOrTeamMembers.right.get.isEmpty) left else errorOrTeamMembers
   }
 
-  private def umpFrontPageUrl(team: String) = getConfString(s"$serviceName.frontPageUrl", "#") + s"/$team"
 
 }
 
 object UserManagementConnector extends UserManagementConnector {
   override val http = WSHttp
-
-  val serviceName = "user-management"
-
-  override def userManagementBaseUrl: String =
-    getConfString(s"$serviceName.url", throw new RuntimeException(s"Could not find config $serviceName.url"))
 
   sealed trait ConnectorError
 

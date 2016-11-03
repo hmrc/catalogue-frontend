@@ -124,8 +124,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/large-user-management-response.json")
 
-      //TODO!@ remove the feature toggle
-      val response = await(WS.url(s"http://localhost:$port/teams/$teamName?teamMembers").get)
+      val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
 
       response.status shouldBe 200
       val document = asDocument(response.body)
@@ -150,8 +149,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
         mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", fileName)
 
-        //TODO!@ remove the feature toggle
-        val response = await(WS.url(s"http://localhost:$port/teams/$teamName?teamMembers").get)
+
+        val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
 
         response.status shouldBe 200
         response.body should include(frontPageUrl)
@@ -174,7 +173,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       mockHttpApiCall(url = s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json", httpCodeToBeReturned = 404)
 
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA?teamMembers").get)
+      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
 
@@ -191,7 +190,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName", "/user-management-team-details-response.json")
 
       //TODO!@ remove the feature toggle
-      val response = await(WS.url(s"http://localhost:$port/teams/$teamName?teamMembers").get)
+      val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
 
       response.status shouldBe 200
       val document = asDocument(response.body)

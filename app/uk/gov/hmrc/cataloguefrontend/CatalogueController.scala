@@ -42,7 +42,7 @@ object CatalogueController extends CatalogueController {
   override def releasesService: ReleasesService = new ReleasesService(ServiceReleasesConnector, TeamsAndServicesConnector)
 }
 
-trait CatalogueController extends FrontendController with ServicesConfig {
+trait CatalogueController extends FrontendController with UserManagementPortalLink {
 
   val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
 
@@ -66,11 +66,7 @@ trait CatalogueController extends FrontendController with ServicesConfig {
 
   def team(teamName: String) = Action.async { implicit request =>
 
-    val teamMembersToggle: Option[String] = request.getQueryString("teamMembers")
-
-    val eventualTeamInfo = teamsAndServicesConnector.teamInfo(teamName)
-    if (teamMembersToggle.isDefined) {
-
+      val eventualTeamInfo = teamsAndServicesConnector.teamInfo(teamName)
       val eventualErrorOrMembers = userManagementConnector.getTeamMembers(teamName)
       val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
 
@@ -85,18 +81,13 @@ trait CatalogueController extends FrontendController with ServicesConfig {
             teamName,
             repos = s.data,
             errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
-            teamDetails)
+            teamDetails,
+            umpFrontPageUrl(teamName)
+          )
           )
         case (None, _, _) => NotFound
       }
-    } else {
-      for {
-        typeRepos <- eventualTeamInfo
-      } yield typeRepos match {
-        case Some(s) => Ok(team_info_without_members(s.time, teamName, repos = s.data, teamMembersLink = UserManagementPortalLink(teamName, Play.current.configuration)))
-        case None => NotFound
-      }
-    }
+
 
   }
 
@@ -210,13 +201,5 @@ object DisplayableTeamMembers {
 
 }
 
-object UserManagementPortalLink {
 
-  def apply(teamName: String, config: Configuration): String = {
-
-    s"${config.getString("usermanagement.portal.url").fold("#")(x => s"$x/$teamName")}"
-
-  }
-
-}
 
