@@ -78,6 +78,9 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       |	     "name": "serv",
       |      "repoType": "Deployable",
       |      "teamNames": ["teamA", "teamB"],
+      |      "description": "some description",
+      |      "createdAt": 1456326530000,
+      |      "lastActive": 1478602555000,
       |	     "githubUrls": [{
       |		     "name": "github",
       |        "displayName": "github.com",
@@ -125,6 +128,9 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
     """
       |    {
       |	     "name": "lib",
+      |      "description": "some description",
+      |      "createdAt": 1456326530000,
+      |      "lastActive": 1478602555000,
       |      "repoType": "Library",
       |      "teamNames": ["teamA", "teamB"],
       |	     "githubUrls": [{

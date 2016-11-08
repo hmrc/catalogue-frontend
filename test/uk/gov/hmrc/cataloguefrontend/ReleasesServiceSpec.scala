@@ -32,6 +32,9 @@ import scala.concurrent.Future
 
 class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with ScalaFutures {
 
+  val now = LocalDateTime.now()
+
+
   "Releases service" should {
 
     implicit val hc = HeaderCarrier.fromHeadersAndSession(FakeHeaders())
@@ -108,7 +111,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
         Future.successful(Some(new CachedItem[RepositoryDetails](
-          RepositoryDetails("a-service", Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), "time"))))
+          RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), "time"))))
 
       val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
       val releases = service.getReleases(serviceName = Some("a-service")).futureValue
@@ -126,7 +129,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
         Future.successful(Some(new CachedItem[RepositoryDetails](
-          RepositoryDetails("a-service", Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), "time"))))
+          RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), "time"))))
 
       val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
       val releases = service.getReleases(serviceName = Some("a-service"), teamName = Some("non-matching-team")).futureValue

@@ -1,0 +1,44 @@
+@*
+* Copyright 2016 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+@import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
+@import java.time.format.DateTimeFormatter
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+
+@(repo: RepositoryDetails)
+
+<div>
+    <div class="board" class="col-md-12">
+        <h3 class="board__heading">Details</h3>
+        <div class="board__body">
+
+            <ul class="list list--minimal list-group row">
+                <li class="col-xs-6">
+                    <label>Description: </label>
+                    @repo.description
+                    </li>
+                <li class="col-xs-6">
+                    <label>Created at: </label>
+                    @repo.createdAt.asRFC1123
+                </li>
+                <li class="col-xs-6"> </li>
+                <li class="col-xs-6">
+                    <label>Last active at: </label>
+                    @repo.lastActive.asRFC1123
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

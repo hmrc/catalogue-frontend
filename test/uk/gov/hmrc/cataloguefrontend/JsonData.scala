@@ -25,6 +25,9 @@ object JsonData {
     """
       |    {
       |	     "name": "serv",
+      |      "description": "some description",
+      |      "createdAt": 1456326530000,
+      |      "lastActive": 1478602555000,
       |      "repoType": "Deployable",
       |      "teamNames": ["teamA", "teamB"],
       |	     "githubUrls": [{
@@ -74,6 +77,9 @@ object JsonData {
     """
       |    {
       |	     "name": "serv",
+      |      "description": "some description",
+      |      "createdAt": 1456326530000,
+      |      "lastActive": 1478602555000,
       |      "repoType": "Library",
       |      "teamNames": ["teamA", "teamB"],
       |	     "githubUrls": [{

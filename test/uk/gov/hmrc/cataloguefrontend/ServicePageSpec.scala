@@ -16,12 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.util.Date
+
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
+import DateHelper._
+
 
 class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpoints {
 
@@ -51,7 +55,6 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     }
 
     "show the teams owning the service with github, ci and environment links and info box" in {
-
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/serv/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
 
@@ -69,6 +72,10 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       response.body should include(s"http://open2/serv")
       response.body should include(s"http://ser1/serv")
       response.body should include(s"http://ser2/serv")
+      response.body should include("some description")
+
+      response.body should include(new Date(1456326530000L).toLocalDate.asRFC1123)
+      response.body should include(new Date(1478602555000L).toLocalDate.asRFC1123)
 
     }
 
