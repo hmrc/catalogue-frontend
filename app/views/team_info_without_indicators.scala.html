@@ -20,22 +20,19 @@
 
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.NoData
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamDetails
-@import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @(
         cacheTimestampFormatted: String,
         teamName:String,
         repos: Map[String, Seq[String]],
         errorOrTeamMembers: Either[ConnectorError, Seq[DisplayableTeamMember]],
         errorOrTeamDetails: Either[ConnectorError, TeamDetails],
-        throughputChartData: Option[ChartDataRows],
         umpFrontPageUrl:String
-)(implicit messages: Messages)
+)
 
 @standard_layout(teamName,"teams") {
 <header>
     <h1>@teamName</h1>
     <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 </header>
 <section class="section-wrapper">
 
@@ -164,55 +161,10 @@
                 </div>
             </div>
         }
-        <div class="row">
-            <div class="col-md-12">
-                <div class="board row">
-                    <h3 class="board__heading">Delivery Indicators</h3>
-                    <div class="board__body">
-                        @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-                            @{Html(ViewMessages.deploymentThroughputGraphText)}
-                            @renderThroughputGraph
-                        }
-                        @{
-                            if(throughputChartData.isEmpty) {
-                                {ViewMessages.errorMessage}
-                            }else if(throughputChartData.get.isEmpty) {
-                                {ViewMessages.noDataToShow}
-                            }
 
-                        }
-
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
 </section>
-
-<script type="text/javascript">
-
-    @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-        @views.html.throughputchart_script(throughputChartData)
-    }
-
-</script>
-
-}
-
-@renderThroughputGraph = {
-<div class="col-md-12">
-    <div id="chart_div"></div>
-    <div>
-        <small>
-            <ul>
-                <li><strong>Lead Time</strong> - @{Messages("leadtime.explanation.text")}</li>
-                <li><strong>Interval</strong> - @{Messages("interval.explanation.text")}</li>
-            </ul>
-        </small>
-    </div>
-</div>
-
 }
 
 @umpUpdateLink = {
@@ -223,12 +175,12 @@
 
 @showError(error : ConnectorError)= {
 
-    @error match {
-        case NoData(linkToRectify) => {
-            <div id="linkToRectify" class="list list--minimal">
-                Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
-            </div>
-        }
-        case _ => {<div class="list list--minimal alert">Sorry, the User Management Portal is not available </div>}
+@error match {
+    case NoData(linkToRectify) => {
+        <div id="linkToRectify" class="list list--minimal">
+                                Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
+                            </div>
     }
+    case _ => {<div class="list list--minimal alert">Sorry, the User Management Portal is not available </div>}
+}
 }

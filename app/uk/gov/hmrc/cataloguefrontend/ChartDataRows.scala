@@ -23,26 +23,27 @@ import play.twirl.api.Html
 
 import scala.xml.{Elem, NodeSeq}
 
-case class ChartData(rows: Seq[Html]) {
+case class ChartDataRows(rows: Seq[Html]) {
   def isEmpty = rows.isEmpty
 }
 
-object ChartData {
+trait ChartData {
 
-  def deploymentThroughput(serviceName: String, dataPoints: Option[Seq[DeploymentThroughputDataPoint]]): Option[ChartData] = {
+  def deploymentThroughput(serviceName: String, dataPoints: Option[Seq[DeploymentThroughputDataPoint]]): Option[ChartDataRows] = {
 
     dataPoints.map { points =>
-      ChartData(chartRowsThroughput(serviceName, points))
+      ChartDataRows(chartRowsThroughput(serviceName, points))
     }
   }
 
-  def deploymentStability(serviceName: String, dataPoints: Option[Seq[DeploymentStabilityDataPoint]]): Option[ChartData] = {
+  def deploymentStability(serviceName: String, dataPoints: Option[Seq[DeploymentStabilityDataPoint]]): Option[ChartDataRows] = {
 
     dataPoints.map { points =>
-      ChartData(chartRowsStability(serviceName, points))
+      ChartDataRows(chartRowsStability(serviceName, points))
     }
   }
 
+  protected def releasesSerachParameters(name: String, from: String, to: String) : Map[String,String]
 
   private def chartRowsThroughput(serviceName: String, points: Seq[DeploymentThroughputDataPoint]): Seq[Html] = {
     for {
@@ -71,11 +72,14 @@ object ChartData {
     }
   }
 
-  def toPercent(r: Double): Int = (r * 100).toInt
+  private def toPercent(r: Double): Int = (r * 100).toInt
 
   private def getReleaseUrlAnchor(serviceName: String, from: LocalDate, to: LocalDate) = <a href={releasesUrl(serviceName, dateToString(from), dateToString(to))}>View releases</a>
 
-  private def releasesUrl(serviceName: String, from: String, to: String) = s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.releases().url}?serviceName=${serviceName}&from=${from}&to=${to}"
+  private def releasesUrl(serviceName: String, from: String, to: String) = {
+    val paramString: String = releasesSerachParameters(serviceName, from, to).toList.map(x => s"${x._1}=${x._2}").mkString("&")
+    s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.releases().url}?$paramString"
+  }
 
   private def dateToString(date: LocalDate) = date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
 
@@ -113,4 +117,20 @@ object ChartData {
     Html(element.mkString.replaceAll("\"", "'").replaceAll("\n", ""))
   }
 
+}
+
+object ServiceChartData extends ChartData {
+  override protected def releasesSerachParameters(name: String, from: String, to: String): Map[String, String] = Map(
+    "serviceName" -> name,
+    "from" -> from,
+    "to" -> to
+  )
+}
+
+object TeamChartData extends ChartData {
+  override protected def releasesSerachParameters(name: String, from: String, to: String): Map[String, String] = Map(
+    "team" -> name,
+    "from" -> from,
+    "to" -> to
+  )
 }

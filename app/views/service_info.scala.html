@@ -19,11 +19,11 @@
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.DeploymentThroughputDataPoint
 
-@import uk.gov.hmrc.cataloguefrontend.ChartData
+@import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @(cacheTimestampFormatted: String,
-        service: RepositoryDetails,
-        throughputChartData: Option[ChartData],
-        stabilityChartData: Option[ChartData])(implicit messages: Messages)
+  service: RepositoryDetails,
+  throughputChartData: Option[ChartDataRows],
+  stabilityChartData: Option[ChartDataRows])(implicit messages: Messages)
 
 @standard_layout(service.name, "services") {
     <header>
@@ -74,22 +74,16 @@
                     <h3 class="board__heading">Delivery Indicators</h3>
                     <div class="board__body">
                         @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-
                             @renderGraphText
                             @renderThroughputGraph
                             @renderStabilityGraph
-
                         }
-                        @{
-                            if(throughputChartData.isEmpty) {
-                                {
-                                    errorMessage
-                                }
-                            } else if(throughputChartData.get.isEmpty) {
-                                {
-                                    noDataToShow
-                                }
-                            }
+                     @{
+                         if(throughputChartData.isEmpty) {
+                             {ViewMessages.errorMessage}
+                         }else if(throughputChartData.get.isEmpty) {
+                             {ViewMessages.noDataToShow}
+                         }
 
                         }
 
@@ -134,24 +128,9 @@
 }
 
 
-@noDataToShow = {
-    <h2 class="chart-message text-center">No data to show</h2>
-@{
-    Html(ViewMessages.noIndicatorsData)
-}
-}
 
-@errorMessage = {
-    <h2 class="chart-message text-center">The catalogue encountered an error</h2>
-    <p>@{
-        Html(ViewMessages.indicatorsServiceError)
-    }</p>
-}
 @renderGraphText = {
-
-    <p>These indicators show the frequency and stability of your production deployments</p>
-    <p>Each monthly measurement has a 3 month sample size. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>
-    <p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>
+    @{Html(ViewMessages.deploymentThroughputAndStabilityGraphText)}
 }
 
 @renderStabilityGraph = {

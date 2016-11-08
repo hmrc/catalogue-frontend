@@ -159,8 +159,6 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
       val error: ConnectorError = userManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
       error should ===(ConnectionError(expectedException))
     }
-
-
   }
 
 

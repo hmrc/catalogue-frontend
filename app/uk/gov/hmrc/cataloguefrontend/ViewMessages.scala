@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import play.api.Play
 import play.api.i18n.Messages
+import play.twirl.api.Html
 
 
 object ViewMessages {
@@ -29,6 +30,16 @@ object ViewMessages {
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
     "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\">#team-platops</a>"
 
+  val mesurementSampleSizeText =
+    "<p>Each monthly measurement has a 3 month sample size. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>" +
+      "<p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>"
+
+  val deploymentThroughputAndStabilityGraphText =
+    "<p>These indicators show the frequency and stability of your production deployments</p>" ++ mesurementSampleSizeText
+
+  val deploymentThroughputGraphText =
+    "<p>These indicators show the frequency of your production deployments</p>" + mesurementSampleSizeText
+
 
   def noRepoOfType(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
@@ -39,4 +50,13 @@ object ViewMessages {
   val appConfigBaseUrl = Play.current.configuration.getString(s"urlTemplates.app-config-base").getOrElse(throw new IllegalArgumentException("didn't app config base URL configuration"))
 
   val informationalText = Play.current.configuration.getString(s"info-panel-text").getOrElse(throw new IllegalArgumentException("didn't find info panel configuration"))
+
+  def noDataToShow = {
+    Html("""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
+
+  }
+
+  def errorMessage = {
+    Html("""<h2 class="chart-message text-center">The catalogue encountered an error</h2>""" + s"<p>${ViewMessages.indicatorsServiceError}</p>")
+  }
 }

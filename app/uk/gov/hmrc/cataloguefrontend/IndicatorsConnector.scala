@@ -82,8 +82,11 @@ trait IndicatorsConnector extends ServicesConfig {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
-  def deploymentIndicatorsForService(name: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] = {
-    val url = indicatorsBaseUrl + s"/service/$name/deployments"
+  def deploymentIndicatorsForTeam(teamName :String)(implicit hc: HeaderCarrier) = deploymentIndicators(s"/team/$teamName/deployments")
+  def deploymentIndicatorsForService(serviceName :String)(implicit hc: HeaderCarrier) = deploymentIndicators(s"/service/$serviceName/deployments")
+
+  private def deploymentIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] = {
+    val url = indicatorsBaseUrl + path
     val eventualResponse: Future[HttpResponse] = http.GET[HttpResponse](url)
     eventualResponse.map { r =>
       r.status match {
