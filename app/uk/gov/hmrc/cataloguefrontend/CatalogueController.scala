@@ -24,12 +24,12 @@ import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
 import play.api.i18n.Messages.Implicits._
 import play.api.mvc._
-import play.api.{Configuration, Play}
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamDetails, TeamMember}
-import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
+
+import scala.concurrent.Future
 
 object CatalogueController extends CatalogueController {
 
@@ -66,17 +66,41 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def team(teamName: String) = Action.async { implicit request =>
 
-      val eventualTeamInfo = teamsAndServicesConnector.teamInfo(teamName)
-      val eventualErrorOrMembers = userManagementConnector.getTeamMembers(teamName)
-      val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
+    val showIndicators = request.getQueryString("showIndicators").isDefined
 
+    val eventualTeamInfo = teamsAndServicesConnector.teamInfo(teamName)
+    val eventualErrorOrMembers = userManagementConnector.getTeamMembers(teamName)
+    val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
+
+    if(showIndicators) {
+      val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
+      for {
+        typeRepos <- eventualTeamInfo
+        teamMembers <- eventualErrorOrMembers
+        teamDetails <- eventualErrorOrTeamDetails
+        teamIndicators <- eventualMaybeDeploymentIndicators
+      } yield (typeRepos, teamMembers, teamDetails, teamIndicators) match {
+        case (Some(s), _, _, _) =>
+          Ok(team_info(
+            s.time,
+            teamName,
+            repos = s.data,
+            errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
+            teamDetails,
+            TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),
+            umpFrontPageUrl(teamName)
+          )
+          )
+        case _ => NotFound
+      }
+    } else
       for {
         typeRepos: Option[CachedItem[Map[String, Seq[String]]]] <- eventualTeamInfo
         teamMembers: Either[ConnectorError, Seq[TeamMember]] <- eventualErrorOrMembers
         teamDetails: Either[ConnectorError, TeamDetails] <- eventualErrorOrTeamDetails
       } yield (typeRepos, teamMembers, teamDetails) match {
         case (Some(s), _, _) =>
-          Ok(team_info(
+          Ok(team_info_without_indicators(
             s.time,
             teamName,
             repos = s.data,
@@ -96,12 +120,12 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       service <- teamsAndServicesConnector.repositoryDetails(name)
       maybeDataPoints <- indicatorsConnector.deploymentIndicatorsForService(name)
     } yield service match {
-      //      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(service_info(s.time, s.data, indicators.map(_.map(_.toJSString))))
       case Some(s) if s.data.repoType == RepoType.Deployable => Ok(
         service_info(
-          s.time, s.data,
-          ChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
-          ChartData.deploymentStability(name, maybeDataPoints.map(_.stability)))
+          s.time,
+          s.data,
+          ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
+          ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)))
       )
       case _ => NotFound
     }

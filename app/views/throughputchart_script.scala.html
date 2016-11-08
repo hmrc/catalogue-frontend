@@ -1,6 +1,6 @@
-@import uk.gov.hmrc.cataloguefrontend.ChartData
+@import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 
-@(throughputChartData: Option[ChartData])
+@(throughputChartData: Option[ChartDataRows])
 
 google.charts.load('current', {packages: ['corechart', 'line']});
 google.charts.setOnLoadCallback(function () {

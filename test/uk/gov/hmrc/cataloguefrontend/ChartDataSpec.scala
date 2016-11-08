@@ -50,9 +50,9 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
         DeploymentThroughputDataPoint("2016-06", nineMonthsBeforeEndDate, sixMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(10000)), Some(MedianDataPoint(50000)))
       )
 
-      val data: Option[ChartData] = ChartData.deploymentThroughput("my_test_service", Some(points))
+      val data: Option[ChartDataRows] = ServiceChartData.deploymentThroughput("my_test_service", Some(points))
 
-      val chartData: ChartData = data.value
+      val chartData: ChartDataRows = data.value
       val rows: Seq[Html] = chartData.rows
 
       rows.size should ===(3)
@@ -98,9 +98,9 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
         DeploymentStabilityDataPoint("2016-06", nineMonthsBeforeEndDate, sixMonthsBeforeEndDate.minusDays(1), Some(.1), Some(MedianDataPoint(4)))
       )
 
-      val data: Option[ChartData] = ChartData.deploymentStability("my_test_service", Some(points))
+      val data: Option[ChartDataRows] = ServiceChartData.deploymentStability("my_test_service", Some(points))
 
-      val chartData: ChartData = data.value
+      val chartData: ChartDataRows = data.value
       val rows: Seq[Html] = chartData.rows
 
       rows.size should ===(3)
