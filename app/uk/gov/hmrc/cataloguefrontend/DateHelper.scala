@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, LocalDateTime, ZoneId, ZoneOffset}
+import java.time._
 import java.util.Date
 
 import scala.util.Try
@@ -38,6 +38,11 @@ object DateHelper {
     def epochSeconds = d.toEpochSecond(ZoneOffset.UTC)
 
     def asString = d.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
+
+    def asRFC1123: String = {
+      DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.of(d, ZoneId.of("GMT")))
+    }
+
   }
 
   implicit def stringToLocalDateTimeOpt(ds: String) = {

@@ -21,9 +21,9 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ChartData
 @(cacheTimestampFormatted: String,
-  service: RepositoryDetails,
-  throughputChartData: Option[ChartData],
-  stabilityChartData: Option[ChartData])(implicit messages: Messages)
+        service: RepositoryDetails,
+        throughputChartData: Option[ChartData],
+        stabilityChartData: Option[ChartData])(implicit messages: Messages)
 
 @standard_layout(service.name, "services") {
     <header>
@@ -39,9 +39,13 @@
         </p>
     </div>
     <section class="section-wrapper">
+        @partials.service_details(service)
+
         <div class="row">
             @partials.repo_owning_teams(service)
+
             @partials.code_and_builds(service)
+
         </div>
         <div class="row">
         @for(environment <- service.environments.get) {
@@ -76,14 +80,18 @@
                             @renderStabilityGraph
 
                         }
-                     @{
-                         if(throughputChartData.isEmpty) {
-                             {errorMessage}
-                         }else if(throughputChartData.get.isEmpty) {
-                             {noDataToShow}
-                         }
+                        @{
+                            if(throughputChartData.isEmpty) {
+                                {
+                                    errorMessage
+                                }
+                            } else if(throughputChartData.get.isEmpty) {
+                                {
+                                    noDataToShow
+                                }
+                            }
 
-                     }
+                        }
 
                     </div>
                 </div>
@@ -112,8 +120,12 @@
         <div>
             <small>
                 <ul>
-                    <li><strong>Lead Time</strong> - @{Messages("leadtime.explanation.text")}</li>
-                    <li><strong>Interval</strong> - @{Messages("interval.explanation.text")}</li>
+                    <li><strong>Lead Time</strong> - @{
+                        Messages("leadtime.explanation.text")
+                    }</li>
+                    <li><strong>Interval</strong> - @{
+                        Messages("interval.explanation.text")
+                    }</li>
                 </ul>
             </small>
         </div>
@@ -124,28 +136,36 @@
 
 @noDataToShow = {
     <h2 class="chart-message text-center">No data to show</h2>
-@{Html(ViewMessages.noIndicatorsData)}
+@{
+    Html(ViewMessages.noIndicatorsData)
+}
 }
 
 @errorMessage = {
     <h2 class="chart-message text-center">The catalogue encountered an error</h2>
-    <p>@{Html(ViewMessages.indicatorsServiceError)}</p>
+    <p>@{
+        Html(ViewMessages.indicatorsServiceError)
+    }</p>
 }
 @renderGraphText = {
 
-        <p>These indicators show the frequency and stability of your production deployments</p>
-        <p>Each monthly measurement has a 3 month sample size. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>
-        <p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>
+    <p>These indicators show the frequency and stability of your production deployments</p>
+    <p>Each monthly measurement has a 3 month sample size. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>
+    <p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>
 }
 
-@renderStabilityGraph ={
+@renderStabilityGraph = {
     <div class="col-md-6">
         <div id="chart_div_2"></div>
         <div>
             <small>
                 <ul>
-                    <li><strong>Hotfix Rate</strong> - @{Messages("hotfixrate.explanation.text")}</li>
-                    <li><strong>Hotfix Interval</strong> - @{ Messages("hotfixinterval.explanation.text")}</li>
+                    <li><strong>Hotfix Rate</strong> - @{
+                        Messages("hotfixrate.explanation.text")
+                    }</li>
+                    <li><strong>Hotfix Interval</strong> - @{
+                        Messages("hotfixinterval.explanation.text")
+                    }</li>
                 </ul>
             </small>
         </div>

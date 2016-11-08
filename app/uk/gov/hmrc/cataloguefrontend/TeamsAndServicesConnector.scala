@@ -17,15 +17,18 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import java.net.URLEncoder
+import java.time.LocalDateTime
 
 import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http._
+//import uk.gov.hmrc.cataloguefrontend.JavaDateTimeJsonFormatter._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 object RepoType extends Enumeration {
 
@@ -47,7 +50,15 @@ case class Link(name: String, displayName: String, url: String)
 
 case class Environment(name: String, services: Seq[Link])
 
-case class RepositoryDetails(name: String, teamNames: Seq[String], githubUrls: Seq[Link], ci: Seq[Link], environments: Option[Seq[Environment]], repoType: RepoType.RepoType)
+case class RepositoryDetails(name: String,
+                             description: String,
+                             createdAt: LocalDateTime,
+                             lastActive: LocalDateTime,
+                             teamNames: Seq[String],
+                             githubUrls: Seq[Link],
+                             ci: Seq[Link],
+                             environments: Option[Seq[Environment]],
+                             repoType: RepoType.RepoType)
 
 trait TeamsAndServicesConnector extends ServicesConfig {
   type ServiceName = String
@@ -122,8 +133,15 @@ trait TeamsAndServicesConnector extends ServicesConfig {
   def toCachedItemOption[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): Option[CachedItem[T]] =
     r.status match {
       case 404 => None
-      case 200 => Some(new CachedItem(
-        r.json.as[T],
+      case 200 =>
+//!@        r.json.validate[T] match {
+//          case JsSuccess(t, path) =>
+//          case JsError(e) =>
+//        }
+        val data = Try(r.json.as[T])
+        println(data)
+        Some(new CachedItem(
+        data.get,
         r.header(CacheTimestampHeaderName).getOrElse("(None)"))) }
 
   def toCachedList[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): CachedList[T] =
