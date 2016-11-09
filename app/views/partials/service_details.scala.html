@@ -27,15 +27,15 @@
             <ul class="list list--minimal list-group row">
                 <li class="col-xs-6">
                     <label>Description: </label>
-                    @repo.description
+                    @if(repo.description.isEmpty) {None} else {@repo.description}
                     </li>
                 <li class="col-xs-6">
-                    <label>Created at: </label>
+                    <label>Created: </label>
                     @repo.createdAt.asRFC1123
                 </li>
                 <li class="col-xs-6"> </li>
                 <li class="col-xs-6">
-                    <label>Last active at: </label>
+                    <label>Last Active: </label>
                     @repo.lastActive.asRFC1123
                 </li>
             </ul>
