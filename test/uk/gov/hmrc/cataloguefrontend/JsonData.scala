@@ -73,6 +73,24 @@ object JsonData {
       |     }
     """.stripMargin
 
+  val teamDetailsData =
+    """
+      |{
+      |    "Deployable": [
+      |        "service1",
+      |        "service2"
+      |    ],
+      |    "Library": [
+      |        "library1",
+      |        "library2"
+      |    ],
+      |    "Other": [
+      |        "other1",
+      |        "other2"
+      |    ]
+      |}
+    """.stripMargin
+
   val libraryDetailsData =
     """
       |    {

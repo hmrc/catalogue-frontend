@@ -26,7 +26,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WS
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.play.test.UnitSpec
-
+import uk.gov.hmrc.cataloguefrontend.JsonData._
 import scala.collection.JavaConversions._
 import scala.io.Source
 
@@ -39,6 +39,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
     "microservice.services.teams-and-services.host" -> host,
     "microservice.services.teams-and-services.port" -> endpointPort,
+    "microservice.services.indicators.port" -> endpointPort,
+    "microservice.services.indicators.host" -> host,
     "microservice.services.user-management.url" -> endpointMockUrl,
     "usermanagement.portal.url" -> "http://usermanagement/link",
     "microservice.services.user-management.frontPageUrl" -> frontPageUrl,
@@ -210,6 +212,52 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       teamDetailsElements(4).text() shouldBe "Location: STLPD"
     }
 
+    "Render the frequent production indicators graph with throughput" in {
+      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(teamDetailsData)))
+      serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
+
+      val response = await(WS.url(s"http://localhost:$port/teams/teamA?showIndicators").get)
+      response.status shouldBe 200
+      response.body should include(s"""data.addColumn('string', 'Period');""")
+      response.body should include(s"""data.addColumn('number', 'Lead Time');""")
+      response.body should include(s"""data.addColumn('number', 'Interval');""")
+
+      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
+      response.body should include(s"""data.addColumn('number', 'Interval');""")
+      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
+
+      response.body should include(s"""chart.draw(data, options);""")
+
+      response.body should include(s"""data.addColumn('string', 'Period');""")
+      response.body should include(s"""data.addColumn('number', "Hotfix Rate");""")
+      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
+    }
+
+  }
+
+  "Render a message if the indicators service returns 404" in {
+    serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(teamDetailsData)))
+    serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (404, None))
+
+    val response = await(WS.url(s"http://localhost:$port/teams/teamA?showIndicators").get)
+
+    response.status shouldBe 200
+    response.body should include(s"""No data to show""")
+    response.body should include(ViewMessages.noIndicatorsData)
+
+    response.body shouldNot include(s"""chart.draw(data, options);""")
+  }
+
+  "Render a message if the indicators service encounters an error" in {
+    serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(teamDetailsData)))
+    serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (500, None))
+
+    val response = await(WS.url(s"http://localhost:$port/teams/teamA?showIndicators").get)
+    response.status shouldBe 200
+    response.body should include(s"""The catalogue encountered an error""")
+    response.body should include(ViewMessages.indicatorsServiceError)
+
+    response.body shouldNot include(s"""chart.draw(data, options);""")
   }
 
   def verifyTeamOwnerIndicatorLabel(document: Document): Unit = {

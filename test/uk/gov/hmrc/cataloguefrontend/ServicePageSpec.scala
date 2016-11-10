@@ -83,7 +83,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
 
-      val response = await(WS.url(s"http://localhost:$port/services/service-name?stability").get)
+      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
       response.body should include(s"""data.addColumn('string', 'Period');""")
       response.body should include(s"""data.addColumn('number', 'Lead Time');""")
@@ -115,7 +115,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       response.body shouldNot include(s"""chart.draw(data, options);""")
     }
 
-    "Render a message if the indicators service encounters and error" in {
+    "Render a message if the indicators service encounters an error" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (500, None))
 

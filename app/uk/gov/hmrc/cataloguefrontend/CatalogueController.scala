@@ -88,6 +88,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
             errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
             teamDetails,
             TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),
+            TeamChartData.deploymentStability(teamName, teamIndicators.map(_.stability)),
             umpFrontPageUrl(teamName)
           )
           )
