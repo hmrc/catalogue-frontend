@@ -49,7 +49,10 @@ object ViewMessages {
 
   def noDataToShow = {
     Html("""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
+  }
 
+  def noProductionDeploymentFor(numberOfDays: Long) = {
+    Html(s"""<h2 class="chart-message text-center">NO PRODUCTION DEPLOYMENTS FOR $numberOfDays DAYS</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
   }
 
   def errorMessage = {

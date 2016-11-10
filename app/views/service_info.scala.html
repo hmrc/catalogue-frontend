@@ -23,7 +23,8 @@
 @(cacheTimestampFormatted: String,
   service: RepositoryDetails,
   throughputChartData: Option[ChartDataRows],
-  stabilityChartData: Option[ChartDataRows])(implicit messages: Messages)
+  stabilityChartData: Option[ChartDataRows],
+  daysSinceRepositoryCreation: Long)(implicit messages: Messages)
 
 @standard_layout(service.name, "services") {
     <header>
@@ -82,7 +83,7 @@
                          if(throughputChartData.isEmpty) {
                              {ViewMessages.errorMessage}
                          }else if(throughputChartData.get.isEmpty) {
-                             {ViewMessages.noDataToShow}
+                             {ViewMessages.noProductionDeploymentFor(daysSinceRepositoryCreation)}
                          }
 
                         }

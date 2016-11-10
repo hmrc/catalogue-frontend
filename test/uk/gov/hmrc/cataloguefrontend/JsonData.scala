@@ -16,18 +16,22 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.time.{LocalDate, LocalDateTime, ZoneId}
+
 /**
   * Created by armin.
   */
 object JsonData {
+  val createdAt = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
+  val lastActiveAt = LocalDateTime.of(2016, 10, 12, 10, 30, 12)
 
   val serviceDetailsData =
-    """
+    s"""
       |    {
       |	     "name": "serv",
       |      "description": "some description",
-      |      "createdAt": 1456326530000,
-      |      "lastActive": 1478602555000,
+      |      "createdAt": ${createdAt.atZone(ZoneId.of("GMT")).toInstant.toEpochMilli},
+      |      "lastActive": ${lastActiveAt.atZone(ZoneId.of("GMT")).toInstant.toEpochMilli},
       |      "repoType": "Deployable",
       |      "teamNames": ["teamA", "teamB"],
       |	     "githubUrls": [{
