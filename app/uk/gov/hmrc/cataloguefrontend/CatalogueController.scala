@@ -66,54 +66,31 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def team(teamName: String) = Action.async { implicit request =>
 
-    val showIndicators = request.getQueryString("showIndicators").isDefined
-
     val eventualTeamInfo = teamsAndServicesConnector.teamInfo(teamName)
     val eventualErrorOrMembers = userManagementConnector.getTeamMembers(teamName)
     val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
 
-    if(showIndicators) {
-      val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
-      for {
-        typeRepos <- eventualTeamInfo
-        teamMembers <- eventualErrorOrMembers
-        teamDetails <- eventualErrorOrTeamDetails
-        teamIndicators <- eventualMaybeDeploymentIndicators
-      } yield (typeRepos, teamMembers, teamDetails, teamIndicators) match {
-        case (Some(s), _, _, _) =>
-          Ok(team_info(
-            s.time,
-            teamName,
-            repos = s.data,
-            errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
-            teamDetails,
-            TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),
-            TeamChartData.deploymentStability(teamName, teamIndicators.map(_.stability)),
-            umpFrontPageUrl(teamName)
-          )
-          )
-        case _ => NotFound
-      }
-    } else
-      for {
-        typeRepos: Option[CachedItem[Map[String, Seq[String]]]] <- eventualTeamInfo
-        teamMembers: Either[ConnectorError, Seq[TeamMember]] <- eventualErrorOrMembers
-        teamDetails: Either[ConnectorError, TeamDetails] <- eventualErrorOrTeamDetails
-      } yield (typeRepos, teamMembers, teamDetails) match {
-        case (Some(s), _, _) =>
-          Ok(team_info_without_indicators(
-            s.time,
-            teamName,
-            repos = s.data,
-            errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
-            teamDetails,
-            umpFrontPageUrl(teamName)
-          )
-          )
-        case (None, _, _) => NotFound
-      }
-
-
+    val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
+    for {
+      typeRepos <- eventualTeamInfo
+      teamMembers <- eventualErrorOrMembers
+      teamDetails <- eventualErrorOrTeamDetails
+      teamIndicators <- eventualMaybeDeploymentIndicators
+    } yield (typeRepos, teamMembers, teamDetails, teamIndicators) match {
+      case (Some(s), _, _, _) =>
+        Ok(team_info(
+          s.time,
+          teamName,
+          repos = s.data,
+          errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
+          teamDetails,
+          TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),
+          TeamChartData.deploymentStability(teamName, teamIndicators.map(_.stability)),
+          umpFrontPageUrl(teamName)
+        )
+        )
+      case _ => NotFound
+    }
   }
 
   def service(name: String) = Action.async { implicit request =>
