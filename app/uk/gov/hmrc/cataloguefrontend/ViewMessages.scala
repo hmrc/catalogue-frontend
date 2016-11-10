@@ -37,10 +37,6 @@ object ViewMessages {
   val deploymentThroughputAndStabilityGraphText =
     "<p>These indicators show the frequency and stability of your production deployments</p>" ++ mesurementSampleSizeText
 
-  val deploymentThroughputGraphText =
-    "<p>These indicators show the frequency of your production deployments</p>" + mesurementSampleSizeText
-
-
   def noRepoOfType(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
     "target=\"_blank\">#team-platops</a> on Slack."

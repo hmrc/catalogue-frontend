@@ -22,13 +22,14 @@
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamDetails
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @(
-        cacheTimestampFormatted: String,
-        teamName:String,
-        repos: Map[String, Seq[String]],
-        errorOrTeamMembers: Either[ConnectorError, Seq[DisplayableTeamMember]],
-        errorOrTeamDetails: Either[ConnectorError, TeamDetails],
-        throughputChartData: Option[ChartDataRows],
-        umpFrontPageUrl:String
+cacheTimestampFormatted: String,
+teamName:String,
+repos: Map[String, Seq[String]],
+errorOrTeamMembers: Either[ConnectorError, Seq[DisplayableTeamMember]],
+errorOrTeamDetails: Either[ConnectorError, TeamDetails],
+throughputChartData: Option[ChartDataRows],
+stabilityChartData: Option[ChartDataRows],
+umpFrontPageUrl:String
 )(implicit messages: Messages)
 
 @standard_layout(teamName,"teams") {
@@ -46,43 +47,43 @@
                 <h3 class="board__heading">Details</h3>
 
                 @if(errorOrTeamDetails.isRight) {
-                    <div class="board__body">
-                        <ul class="list list--minimal list-group row" id="team_details">
+                <div class="board__body">
+                    <ul class="list list--minimal list-group row" id="team_details">
                         @for(teamDetails <- errorOrTeamDetails.right.toOption){
-                            <li class="col-xs-6">
-                                <label>Description: </label>
-                                @teamDetails.description
-                            </li>
-                            <li class="col-xs-6">
-                                <label>Documentation: </label>
-                                @teamDetails.documentation.map { d =>
-                                    <a href="@d" target="_blank">Go to Confluence space</a>
-                                }
-                            </li>
-                            <li class="col-xs-6">
-                                <label>Organisation: </label>
-                                @teamDetails.organisation
-                            </li>
-                            <li class="col-xs-6">
-                                <label>Slack: </label>
-                                @teamDetails.slack.map { d =>
-                                    <a href="@d" target="_blank">Go to team channel</a>
-                                }
-                            </li>
-                            <li class="col-xs-6">
-                                <label>Location: </label>
-                                @teamDetails.location
-                            </li>
+                        <li class="col-xs-6">
+                            <label>Description: </label>
+                            @teamDetails.description
+                        </li>
+                        <li class="col-xs-6">
+                            <label>Documentation: </label>
+                            @teamDetails.documentation.map { d =>
+                            <a href="@d" target="_blank">Go to Confluence space</a>
+                            }
+                        </li>
+                        <li class="col-xs-6">
+                            <label>Organisation: </label>
+                            @teamDetails.organisation
+                        </li>
+                        <li class="col-xs-6">
+                            <label>Slack: </label>
+                            @teamDetails.slack.map { d =>
+                            <a href="@d" target="_blank">Go to team channel</a>
+                            }
+                        </li>
+                        <li class="col-xs-6">
+                            <label>Location: </label>
+                            @teamDetails.location
+                        </li>
 
                         }
 
-                        </ul>
+                    </ul>
 
-                        @umpUpdateLink
+                    @umpUpdateLink
 
-                    </div>
+                </div>
                 } else {
-                    @showError(errorOrTeamDetails.left.get)
+                @showError(errorOrTeamDetails.left.get)
                 }
             </div>
         </div>
@@ -91,37 +92,36 @@
 
     <div class="row">
 
-         <div class="col-md-4">
+        <div class="col-md-4">
             <div class="board">
                 <h3 class="board__heading">Team Members</h3>
 
                 @if(errorOrTeamMembers.isRight) {
-                    <div class="board__body">
-                        <ul class="list list--minimal" id="team_members">
+                <div class="board__body">
+                    <ul class="list list--minimal" id="team_members">
 
-                            @for(teamMember <- errorOrTeamMembers.right.get) {
-                                <li class="list-item row">
-                                    <div class="col-md-7"  >
-                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
-                                    </div>
-                                    <div class="col-md-4">
-                                    @if(teamMember.isServiceOwner) {
-                                        <span class="label label-success">Service Owner</span>
-                                    }
-                                    </div>
-                                </li>
-                            }
+                        @for(teamMember <- errorOrTeamMembers.right.get) {
+                        <li class="list-item row">
+                            <div class="col-md-7">
+                                <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
+                            </div>
+                            <div class="col-md-4">
+                                @if(teamMember.isServiceOwner) {
+                                <span class="label label-success">Service Owner</span>
+                                }
+                            </div>
+                        </li>
+                        }
 
                     </ul>
-                        @umpUpdateLink
+                    @umpUpdateLink
                 </div>
                 } else {
 
-                    @showError(errorOrTeamMembers.left.get)
+                @showError(errorOrTeamMembers.left.get)
                 }
             </div>
         </div>
-
 
 
         @repos.get("Deployable").map{services =>
@@ -130,39 +130,39 @@
                 <h3 class="board__heading">Services</h3>
 
                 <div class="board__body">
-                        @if(services.isEmpty) {
-                        <p>@Html(ViewMessages.noRepoOfType("service"))</p>
-                        } else {
-                        <ul class="list list--minimal">
+                    @if(services.isEmpty) {
+                    <p>@Html(ViewMessages.noRepoOfType("service"))</p>
+                    } else {
+                    <ul class="list list--minimal">
                         @for(service <- services) {
-                            <li class="list-item" id="@{service}"><a href="/services/@{service}">@service</a></li>
+                        <li class="list-item" id="@{service}"><a href="/services/@{service}">@service</a></li>
                         }
-                        </ul>
-                        }
+                    </ul>
+                    }
                 </div>
             </div>
         </div>
         }
 
         @repos.get("Library").map{libraries =>
-            <div class="col-md-4">
-                <div class="board">
-                    <h3 class="board__heading">Libraries</h3>
+        <div class="col-md-4">
+            <div class="board">
+                <h3 class="board__heading">Libraries</h3>
 
-                    <div class="board__body">
-                            @if(libraries.isEmpty) {
-                               <p>@Html(ViewMessages.noRepoOfType("library"))</p>
+                <div class="board__body">
+                    @if(libraries.isEmpty) {
+                    <p>@Html(ViewMessages.noRepoOfType("library"))</p>
 
-                            } else {
-                                <ul class="list list--minimal">
-                                        @for(library <- libraries) {
-                                            <li class="list-item" id="@{library}"><a href="/libraries/@{library}">@library</a></li>
-                                        }
-                                </ul>
-                            }
-                    </div>
+                    } else {
+                    <ul class="list list--minimal">
+                        @for(library <- libraries) {
+                        <li class="list-item" id="@{library}"><a href="/libraries/@{library}">@library</a></li>
+                        }
+                    </ul>
+                    }
                 </div>
             </div>
+        </div>
         }
         <div class="row">
             <div class="col-md-12">
@@ -170,16 +170,16 @@
                     <h3 class="board__heading">Delivery Indicators</h3>
                     <div class="board__body">
                         @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-                            @{Html(ViewMessages.deploymentThroughputGraphText)}
+                            @renderGraphText
                             @renderThroughputGraph
+                            @renderStabilityGraph
                         }
                         @{
                             if(throughputChartData.isEmpty) {
                                 {ViewMessages.errorMessage}
-                            }else if(throughputChartData.get.isEmpty) {
+                            } else if(throughputChartData.get.isEmpty) {
                                 {ViewMessages.noDataToShow}
                             }
-
                         }
 
                     </div>
@@ -196,12 +196,16 @@
         @views.html.throughputchart_script(throughputChartData)
     }
 
+    @if(stabilityChartData.isDefined && !stabilityChartData.get.isEmpty) {
+        @views.html.stabilitychart_script(stabilityChartData)
+    }
+
 </script>
 
 }
 
 @renderThroughputGraph = {
-<div class="col-md-12">
+<div class="col-md-6">
     <div id="chart_div"></div>
     <div>
         <small>
@@ -215,6 +219,30 @@
 
 }
 
+@renderStabilityGraph = {
+<div class="col-md-6">
+    <div id="chart_div_2"></div>
+    <div>
+        <small>
+            <ul>
+                <li><strong>Hotfix Rate</strong> - @{
+                    Messages("hotfixrate.explanation.text")
+                    }
+                </li>
+                <li><strong>Hotfix Interval</strong> - @{
+                    Messages("hotfixinterval.explanation.text")
+                    }
+                </li>
+            </ul>
+        </small>
+    </div>
+</div>
+}
+
+@renderGraphText = {
+    @{Html(ViewMessages.deploymentThroughputAndStabilityGraphText)}
+}
+
 @umpUpdateLink = {
 <div id="ump-correct-data-link" class="list list--minimal">
     To update any data above please click <a href="@umpFrontPageUrl">here</a>
@@ -223,12 +251,13 @@
 
 @showError(error : ConnectorError)= {
 
-    @error match {
-        case NoData(linkToRectify) => {
-            <div id="linkToRectify" class="list list--minimal">
-                Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
-            </div>
-        }
-        case _ => {<div class="list list--minimal alert">Sorry, the User Management Portal is not available </div>}
-    }
+@error match {
+case NoData(linkToRectify) => {
+<div id="linkToRectify" class="list list--minimal">
+    Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
+</div>
+}
+case _ => {
+<div class="list list--minimal alert">Sorry, the User Management Portal is not available</div>}
+}
 }
