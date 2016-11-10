@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 import play.api.Play.current
 import play.api.data.Forms._
@@ -103,8 +104,9 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
           s.time,
           s.data,
           ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
-          ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)))
-      )
+          ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)),
+          s.data.createdAt.until(LocalDateTime.now, ChronoUnit.DAYS) + 1
+        ))
       case _ => NotFound
     }
   }

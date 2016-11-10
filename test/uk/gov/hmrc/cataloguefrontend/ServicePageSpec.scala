@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.util.Date
+import java.time.{LocalDateTime, ZoneId}
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatestplus.play.OneServerPerSuite
@@ -24,11 +26,9 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
-import DateHelper._
 
 
 class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpoints {
-
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
     "microservice.services.teams-and-services.port" -> endpointPort,
@@ -74,9 +74,8 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       response.body should include(s"http://ser2/serv")
       response.body should include("some description")
 
-      response.body should include(new Date(1456326530000L).toLocalDate.asRFC1123)
-      response.body should include(new Date(1478602555000L).toLocalDate.asRFC1123)
-
+      response.body should include(DateTimeFormatter.RFC_1123_DATE_TIME.format(createdAt.atZone(ZoneId.of("GMT"))))
+      response.body should include(DateTimeFormatter.RFC_1123_DATE_TIME.format(lastActiveAt.atZone(ZoneId.of("GMT"))))
     }
 
     "Render the frequent production indicators graph with throughput and stability" in {
@@ -102,14 +101,16 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
 
 
     "Render a message if the indicators service returns 404" in {
+      val today = LocalDateTime.now
+      val dayInterval = createdAt.until(today, ChronoUnit.DAYS) + 1
+
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
-//      serviceEndpoint(GET, "/api/indicators/service/service-name/throughput", willRespondWith = (404, None))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (404, None))
 
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
-      response.body should include(s"""No data to show""")
+      response.body should include(s"""NO PRODUCTION DEPLOYMENTS FOR $dayInterval DAYS""")
       response.body should include(ViewMessages.noIndicatorsData)
 
       response.body shouldNot include(s"""chart.draw(data, options);""")
