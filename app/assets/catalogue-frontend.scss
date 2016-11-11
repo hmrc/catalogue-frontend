@@ -199,3 +199,9 @@ section {
     width: 20px;
     height: 20px;
 }
+
+.no-border {
+  border: none;
+  background-color: transparent;
+  outline: none;
+}
