@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
@@ -26,8 +27,7 @@ import org.scalatestplus.play.OneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.play.http.HeaderCarrier
-
-import scala.concurrent.Future
+import uk.gov.hmrc.cataloguefrontend.JsonData._
 
 class TeamsAndServicesConnectorSpec extends FunSpec with Matchers  with OneAppPerSuite with TypeCheckedTripleEquals with WireMockEndpoints with ScalaFutures with OptionValues{
 
@@ -51,8 +51,8 @@ class TeamsAndServicesConnectorSpec extends FunSpec with Matchers  with OneAppPe
 
       responseData.name shouldBe "serv"
       responseData.description shouldBe "some description"
-      responseData.createdAt shouldBe new Date(1456326530000L).toLocalDate
-      responseData.lastActive shouldBe new Date(1478602555000L).toLocalDate
+      responseData.createdAt shouldBe createdAt
+      responseData.lastActive shouldBe lastActiveAt
       responseData.teamNames should===(Seq("teamA", "teamB"))
       responseData.githubUrls should===(Seq(Link("github", "github.com", "https://github.com/hmrc/serv")))
       responseData.ci should===(Seq(Link("open1", "open 1", "http://open1/serv"), Link("open2", "open 2", "http://open2/serv")))
