@@ -14,9 +14,11 @@
 * limitations under the License.
 *@
 
-@import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
 @import play.api.mvc.Call
-@(cacheTimestampFormatted: String, repositories: Seq[String], pageTitle: String, activeTab : String, detailsUrl: String => Call)
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.RepositoryDisplayDetails
+
+@(cacheTimestampFormatted: String, repositories: Seq[RepositoryDisplayDetails], pageTitle: String, activeTab : String, detailsUrl: String => Call)
 
 @standard_layout(pageTitle, activeTab) {
     <header>
@@ -26,16 +28,34 @@
 
     <div id="service-list">
         <div>
-        <input class="search" />
-        <span class="sort" data-sort="service-name">Filter</span>
+            <label>Filter: </label>
+            <input class="search" />
         </div>
 
-        <ul class="list" style='padding-top: 20px;'>
-        @for(repository <- repositories) {
-            <li id="@{repository}">
-                <a class="service-name" href="@{detailsUrl(repository).url}">@repository</a>
-            </li>
-        }
-        </ul>
+        <table class="table table-striped">
+            <tr>
+                <th ><span role="button" class="sort" data-sort="service-name">Service</span></th>
+                <th ><span role="button" class="sort " data-sort="created">Created</span></th>
+                <th ><span role="button" class="sort " data-sort="last-active">Last Active</span></th>
+            </tr>
+            <tbody class="list">
+            @repositories.zipWithIndex.map{case (serviceRepository, i) =>
+            <tr id="row@i">
+                <td class="service-name" id="row@{i}_name">
+                    <a href="@{detailsUrl(serviceRepository.name).url}">@serviceRepository.name</a>
+                </td>
+                <td class="created monospaced" id="row@{i}_created">
+                    @serviceRepository.createdAt.asPattern("yyyy-MM-dd")
+                </td>
+                <td class="last-active monospaced" id="row@{i}_lastActive">
+                    @serviceRepository.lastUpdatedAt.asPattern("yyyy-MM-dd")
+                </td>
+            </tr>
+            }
+            </tbody>
+
+
+        </table>
+
     </div>
 }

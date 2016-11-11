@@ -39,6 +39,8 @@ object DateHelper {
 
     def asString = d.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
 
+    def asPattern(pattern: String) = d.format(DateTimeFormatter.ofPattern(pattern))
+
     def asRFC1123: String = {
       DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.of(d, ZoneId.of("GMT")))
     }
