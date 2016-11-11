@@ -61,6 +61,11 @@ case class RepositoryDetails(name: String,
                              environments: Option[Seq[Environment]],
                              repoType: RepoType.RepoType)
 
+case class RepositoryDisplayDetails(name:String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime)
+object RepositoryDisplayDetails {
+  implicit val repoDetailsFormat = Json.format[RepositoryDisplayDetails]
+}
+
 trait TeamsAndServicesConnector extends ServicesConfig {
   type ServiceName = String
   type TeamName = String
@@ -97,15 +102,15 @@ trait TeamsAndServicesConnector extends ServicesConfig {
     }
   }
 
-  def allServiceNames(implicit hc: HeaderCarrier): Future[CachedList[String]] = {
+  def allServiceNamesWithDates(implicit hc: HeaderCarrier): Future[CachedList[RepositoryDisplayDetails]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services").map {
-      toCachedList[String]
+      toCachedList[RepositoryDisplayDetails]
     }
   }
 
-  def allLibraryNames(implicit hc: HeaderCarrier): Future[CachedList[String]] = {
+  def allLibraryNamesWithDates(implicit hc: HeaderCarrier): Future[CachedList[RepositoryDisplayDetails]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/libraries").map {
-      toCachedList[String]
+      toCachedList[RepositoryDisplayDetails]
     }
   }
 

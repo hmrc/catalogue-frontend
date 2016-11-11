@@ -14,7 +14,9 @@
 * limitations under the License.
 *@
 
-@(cacheTimestampFormatted: String, repositories: Seq[String])
+@import uk.gov.hmrc.cataloguefrontend.RepositoryDisplayDetails
+
+@(cacheTimestampFormatted: String, repositories: Seq[RepositoryDisplayDetails])
 
 
 @repository_list(cacheTimestampFormatted, repositories, "Services", "services", uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service _)

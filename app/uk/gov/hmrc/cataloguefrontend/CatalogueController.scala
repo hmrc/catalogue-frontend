@@ -117,13 +117,13 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   }
 
   def allServiceNames() = Action.async { implicit request =>
-    teamsAndServicesConnector.allServiceNames.map { services =>
+    teamsAndServicesConnector.allServiceNamesWithDates.map { services =>
       Ok(services_list(services.time, repositories = services.data))
     }
   }
 
   def allLibraryNames() = Action.async { implicit request =>
-    teamsAndServicesConnector.allLibraryNames.map { libraries =>
+    teamsAndServicesConnector.allLibraryNamesWithDates.map { libraries =>
       Ok(library_list(libraries.time, repositories = libraries.data))
     }
   }
