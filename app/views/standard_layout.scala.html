@@ -14,8 +14,35 @@
             };
 
             var serviceList = new List('service-list', options);
-            serviceList.sort('service-name', { order: "desc" });
         </script>
+
+        <style>
+        table .sort {
+            /*background-image: url(assets/img/listjs-arrow-sort-inactive.png);*/
+
+            background-repeat: no-repeat;
+            background-position: right center;
+            padding-right: 19px;
+            cursor: pointer;
+            cursor: hand;
+        }
+        table .sort.asc {
+            background-image: url(assets/img/listjs-arrow-sort-active-down.png);
+            background-repeat: no-repeat;
+            background-position: right center;
+            padding-right: 19px;
+            cursor: pointer;
+            cursor: hand;
+        }
+        table .sort.desc {
+            background-image: url(assets/img/listjs-arrow-sort-active-up.png);
+            background-repeat: no-repeat;
+            background-position: right center;
+            padding-right: 19px;
+            cursor: pointer;
+            cursor: hand;
+        }
+        </style>
 
     </head>
     <body>
