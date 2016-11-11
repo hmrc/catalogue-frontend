@@ -30,8 +30,6 @@ import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, Te
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
 
-import scala.concurrent.Future
-
 object CatalogueController extends CatalogueController {
 
   override def userManagementConnector: UserManagementConnector = UserManagementConnector

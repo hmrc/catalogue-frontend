@@ -24,6 +24,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http._
+
 //import uk.gov.hmrc.cataloguefrontend.JavaDateTimeJsonFormatter._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -65,6 +66,7 @@ trait TeamsAndServicesConnector extends ServicesConfig {
   type TeamName = String
 
   val http: HttpGet with HttpPost
+
   def teamsAndServicesBaseUrl: String
 
   implicit val linkFormats = Json.format[Link]
@@ -113,13 +115,13 @@ trait TeamsAndServicesConnector extends ServicesConfig {
     }
   }
 
-  def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier) : Future[CachedItem[Map[ServiceName, Seq[TeamName]]]] = {
+  def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[CachedItem[Map[ServiceName, Seq[TeamName]]]] = {
     http.POST[Seq[String], HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true", serviceNames).map {
       toCachedItem[Map[ServiceName, Seq[TeamName]]]
     }
   }
 
-  def allTeamsByService()(implicit hc: HeaderCarrier) : Future[CachedItem[Map[ServiceName, Seq[TeamName]]]] = {
+  def allTeamsByService()(implicit hc: HeaderCarrier): Future[CachedItem[Map[ServiceName, Seq[TeamName]]]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true").map {
       toCachedItem[Map[ServiceName, Seq[TeamName]]]
     }
@@ -134,15 +136,10 @@ trait TeamsAndServicesConnector extends ServicesConfig {
     r.status match {
       case 404 => None
       case 200 =>
-//!@        r.json.validate[T] match {
-//          case JsSuccess(t, path) =>
-//          case JsError(e) =>
-//        }
-        val data = Try(r.json.as[T])
-        println(data)
         Some(new CachedItem(
-        data.get,
-        r.header(CacheTimestampHeaderName).getOrElse("(None)"))) }
+          r.json.as[T],
+          r.header(CacheTimestampHeaderName).getOrElse("(None)")))
+    }
 
   def toCachedList[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): CachedList[T] =
     new CachedList(
@@ -152,5 +149,6 @@ trait TeamsAndServicesConnector extends ServicesConfig {
 
 object TeamsAndServicesConnector extends TeamsAndServicesConnector {
   override val http = WSHttp
+
   override def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
 }
