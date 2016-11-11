@@ -110,7 +110,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
 
       val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
       response.status shouldBe 200
-      response.body should include(s"""NO PRODUCTION DEPLOYMENTS FOR $dayInterval DAYS""")
+      response.body should include(s"""No production deployments for $dayInterval days""")
       response.body should include(ViewMessages.noIndicatorsData)
 
       response.body shouldNot include(s"""chart.draw(data, options);""")
