@@ -34,9 +34,9 @@
 
         <table class="table table-striped">
             <tr>
-                <th ><span role="button" class="sort" data-sort="service-name">Service</span></th>
-                <th ><span role="button" class="sort " data-sort="created">Created</span></th>
-                <th ><span role="button" class="sort " data-sort="last-active">Last Active</span></th>
+                <th class="col-lg-6"><button role="button" class="sort nb" data-sort="service-name">Service</button></th>
+                <th class="col-lg-3"><button role="button" class="sort nb" data-sort="created">Created</button></th>
+                <th class="col-lg-3"><button role="button" class="sort nb" data-sort="last-active">Last Active</button></th>
             </tr>
             <tbody class="list">
             @repositories.zipWithIndex.map{case (serviceRepository, i) =>
