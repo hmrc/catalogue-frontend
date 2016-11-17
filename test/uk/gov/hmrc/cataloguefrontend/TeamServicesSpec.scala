@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.time.{ZoneId, ZoneOffset}
+import java.time.format.DateTimeFormatter
+
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -27,6 +30,7 @@ import play.api.libs.ws.WS
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.JsonData._
+
 import scala.collection.JavaConversions._
 import scala.io.Source
 
@@ -34,7 +38,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
-  val frontPageUrl = "http://some.ump.fontpage.com"
+  val umpFrontPageUrl = "http://some.ump.fontpage.com"
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
     "microservice.services.teams-and-services.host" -> host,
@@ -43,7 +47,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "microservice.services.indicators.host" -> host,
     "microservice.services.user-management.url" -> endpointMockUrl,
     "usermanagement.portal.url" -> "http://usermanagement/link",
-    "microservice.services.user-management.frontPageUrl" -> frontPageUrl,
+    "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
     "play.ws.ssl.loose.acceptAnyCertificate" -> true,
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
 
@@ -53,8 +57,28 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
   "Team services page" should {
 
     "show a list of libraries and services" in {
-      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
-        """{"Library":["teamA-lib"], "Deployable": [ "teamA-serv", "teamA-frontend" ]  }""".stripMargin
+      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
+      """{
+        |    "Library": [
+        |        {
+        |            "name": "teamA-lib",
+        |            "createdAt": 1456326530000,
+        |            "lastUpdatedAt": 1479382566000
+        |        }
+        |    ],
+        |    "Deployable": [
+        |        {
+        |            "name": "teamA-serv",
+        |            "createdAt": 1234,
+        |            "lastUpdatedAt": 1479382566000
+        |        },
+        |        {
+        |            "name": "teamA-frontend",
+        |            "createdAt": 1234,
+        |            "lastUpdatedAt": 1479382566000
+        |        }
+        |    ]
+        |}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
@@ -71,7 +95,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     }
 
     "show user management portal link" ignore {
-      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
         """{"Library":[], "Service": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
@@ -88,7 +112,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
     "show '(None)' if no timestamp is found" in {
 
-      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
         """{"Library":[], "Service": []  }""".stripMargin
       )))
 
@@ -103,7 +127,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
     "show a message if no services are found" in {
 
-      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
         """{"Library":[], "Deployable": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
@@ -120,7 +144,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show team members correctly" in {
       val teamName = "CATO"
 
-      serviceEndpoint(GET, "/api/teams/" + teamName, willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
         """{"Library":[], "Deployable": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
@@ -139,13 +163,38 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       verifyTeamOwnerIndicatorLabel(document)
     }
 
+    "show a First Active and Last Active fields in the Details box" in {
+      serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
+        s"""{
+          |    "Deployable": [
+          |        {
+          |            "name": "service1",
+          |            "createdAt": ${createdAt.toInstant(ZoneOffset.UTC).toEpochMilli},
+          |            "lastUpdatedAt": ${lastActiveAt.toInstant(ZoneOffset.UTC).toEpochMilli}
+          |        }
+          |    ],
+          |    "Library": []
+          |}
+          |""".stripMargin
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+
+      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
+      val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
+
+      response.status shouldBe 200
+
+      response.body should include(DateTimeFormatter.RFC_1123_DATE_TIME.format(createdAt.atZone(ZoneId.of("GMT"))))
+      response.body should include(DateTimeFormatter.RFC_1123_DATE_TIME.format(lastActiveAt.atZone(ZoneId.of("GMT"))))
+    }
+
+
     "show link to UMP's front page when no members node returned" in {
 
       def verifyForFile(fileName : String): Unit = {
 
         val teamName = "CATO"
 
-        serviceEndpoint(GET, "/api/teams/" + teamName, willRespondWith = (200, Some(
+        serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
           """{"Library":[], "Deployable": []  }""".stripMargin
         )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
@@ -155,7 +204,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
 
         response.status shouldBe 200
-        response.body should include(frontPageUrl)
+        response.body should include(umpFrontPageUrl)
 
         val document = asDocument(response.body)
 
@@ -169,7 +218,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     }
 
     "show error message if UMP is not available" in {
-      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
         """{"Library":[], "Deployable": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
@@ -185,35 +234,38 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show team details correctly" in {
       val teamName = "CATO"
 
-      serviceEndpoint(GET, "/api/teams/" + teamName, willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
         """{"Library":[], "Deployable": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName", "/user-management-team-details-response.json")
 
-      //TODO!@ remove the feature toggle
       val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
 
       response.status shouldBe 200
       val document = asDocument(response.body)
 
       val teamDetailsElements = document.select("#team_details li")
-      teamDetailsElements.size() shouldBe 5
+      teamDetailsElements.size() shouldBe 7
 
-      teamDetailsElements(0).text() shouldBe "Description: TEAM-A is a great team"
-      teamDetailsElements(1).text() shouldBe "Documentation: Go to Confluence space"
-      teamDetailsElements(1).toString() should include("""<a href="https://some.documentation.url" target="_blank">Go to Confluence space</a>""")
+      teamDetailsElements(0).text() shouldBe "First Active: None"
+      teamDetailsElements(1).text() shouldBe "Last Active: None"
 
-      teamDetailsElements(2).text() shouldBe "Organisation: ORGA"
+      teamDetailsElements(2).text() shouldBe "Description: TEAM-A is a great team"
+      teamDetailsElements(3).text() shouldBe "Documentation: Go to Confluence space"
+      teamDetailsElements(3).toString() should include("""<a href="https://some.documentation.url" target="_blank">Go to Confluence space</a>""")
 
-      teamDetailsElements(3).text() shouldBe "Slack: Go to team channel"
-      teamDetailsElements(3).toString() should include("""<a href="https://slack.host/messages/team-A" target="_blank">Go to team channel</a>""")
+      teamDetailsElements(4).text() shouldBe "Organisation: ORGA"
 
-      teamDetailsElements(4).text() shouldBe "Location: STLPD"
+      teamDetailsElements(5).text() shouldBe "Slack: Go to team channel"
+      teamDetailsElements(5).toString() should include("""<a href="https://slack.host/messages/team-A" target="_blank">Go to team channel</a>""")
+
+      teamDetailsElements(6).text() shouldBe "Location: STLPD"
+
     }
 
     "Render the frequent production indicators graph with throughput" in {
-      serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(teamDetailsData)))
+      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(teamDetailsData)))
       serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA?showIndicators").get)
@@ -236,7 +288,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
   }
 
   "Render a message if the indicators service returns 404" in {
-    serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(teamDetailsData)))
+    serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(teamDetailsData)))
     serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (404, None))
 
     val response = await(WS.url(s"http://localhost:$port/teams/teamA?showIndicators").get)
@@ -249,7 +301,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
   }
 
   "Render a message if the indicators service encounters an error" in {
-    serviceEndpoint(GET, "/api/teams/teamA", willRespondWith = (200, Some(teamDetailsData)))
+    serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(teamDetailsData)))
     serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (500, None))
 
     val response = await(WS.url(s"http://localhost:$port/teams/teamA?showIndicators").get)
