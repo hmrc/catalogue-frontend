@@ -59,7 +59,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def allTeams() = Action.async { implicit request =>
     teamsAndServicesConnector.allTeams.map { response =>
-      Ok(teams_list(response.time, response.data.sortBy(_.toUpperCase)))
+      Ok(teams_list(response.time, response.data.sortBy(_.name.toUpperCase)))
     }
   }
 

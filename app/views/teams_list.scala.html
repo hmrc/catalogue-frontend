@@ -13,16 +13,40 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
-@(cacheTimestampFormatted: String, teams: Seq[String])
+
+@import uk.gov.hmrc.cataloguefrontend.Team
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@(cacheTimestampFormatted: String, teams: Seq[Team])
 
 @standard_layout("Teams list","teams") {
     <header>
         <h1>Teams</h1>
         <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
     </header>
-    <ul>
-    @for(team <- teams) {
-        <li><a href="/teams/@team">@team</a></li>
+
+<table class="table table-striped" id="service-list">
+    <tr>
+        <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Team</button></th>
+        <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
+        <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
+    </tr>
+    <tbody class="list">
+    @teams.zipWithIndex.map{case (team, i) =>
+    <tr id="row@i">
+        <td class="service-name" id="row@{i}_name">
+            <a href="/teams/@team.name">@team.name</a>
+        </td>
+        <td class="created monospaced" id="row@{i}_created">
+            @team.firstActiveDate.map(_.asPattern("yyyy-MM-dd"))
+        </td>
+        <td class="last-active monospaced" id="row@{i}_lastActive">
+            @team.lastActiveDate.map(_.asPattern("yyyy-MM-dd"))
+        </td>
+    </tr>
     }
-    </ul>
+    </tbody>
+
+
+</table>
+
 }
