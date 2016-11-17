@@ -81,16 +81,40 @@ object JsonData {
     """
       |{
       |    "Deployable": [
-      |        "service1",
-      |        "service2"
+      |        {
+      |            "name": "service1",
+      |            "createdAt": 1456326530000,
+      |            "lastUpdatedAt": 1479382566000
+      |        },
+      |        {
+      |            "name": "service2",
+      |            "createdAt": 1456326530000,
+      |            "lastUpdatedAt": 1479382566000
+      |        }
       |    ],
       |    "Library": [
-      |        "library1",
-      |        "library2"
+      |        {
+      |            "name": "library1",
+      |            "createdAt": 1456326530000,
+      |            "lastUpdatedAt": 1479382566000
+      |        },
+      |        {
+      |            "name": "library2",
+      |            "createdAt": 1456326530000,
+      |            "lastUpdatedAt": 1479382566000
+      |        }
       |    ],
       |    "Other": [
-      |        "other1",
-      |        "other2"
+      |        {
+      |            "name": "other1",
+      |            "createdAt": 1456326530000,
+      |            "lastUpdatedAt": 1479382566000
+      |        },
+      |        {
+      |            "name": "other2",
+      |            "createdAt": 1456326530000,
+      |            "lastUpdatedAt": 1479382566000
+      |        }
       |    ]
       |}
     """.stripMargin

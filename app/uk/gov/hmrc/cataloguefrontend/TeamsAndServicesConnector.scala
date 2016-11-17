@@ -95,12 +95,12 @@ trait TeamsAndServicesConnector extends ServicesConfig {
     }
   }
 
-  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[Map[String, Seq[String]]]]] = {
-    val url = teamsAndServicesBaseUrl + s"/api/teams/${URLEncoder.encode(teamName, "UTF-8")}"
+  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[Map[String, Seq[RepositoryDisplayDetails]]]]] = {
+    val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${URLEncoder.encode(teamName, "UTF-8")}"
 
     http.GET[HttpResponse](url)
       .map {
-        toCachedItemOption[Map[String, Seq[String]]]
+        toCachedItemOption[Map[String, Seq[RepositoryDisplayDetails]]]
       }.recover {
       case ex =>
         Logger.error(s"An error occurred getting teamInfo when connecting to $url: ${ex.getMessage}", ex)

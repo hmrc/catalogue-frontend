@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 import java.time.temporal.ChronoUnit
 
 import play.api.Play.current
@@ -29,6 +29,12 @@ import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMembe
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamDetails, TeamMember}
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
+
+import scala.concurrent.Future
+import scala.util.Try
+
+case class ActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime])
+
 
 object CatalogueController extends CatalogueController {
 
@@ -63,6 +69,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
+
   def team(teamName: String) = Action.async { implicit request =>
 
     val eventualTeamInfo = teamsAndServicesConnector.teamInfo(teamName)
@@ -71,16 +78,22 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
     val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
     for {
-      typeRepos <- eventualTeamInfo
+      typeRepos: Option[CachedItem[Map[String, Seq[RepositoryDisplayDetails]]]] <- eventualTeamInfo
       teamMembers <- eventualErrorOrMembers
       teamDetails <- eventualErrorOrTeamDetails
       teamIndicators <- eventualMaybeDeploymentIndicators
     } yield (typeRepos, teamMembers, teamDetails, teamIndicators) match {
       case (Some(s), _, _, _) =>
+        implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
+
+        val min = Try(s.data.flatMap(_._2).toList.minBy(_.createdAt).createdAt).toOption
+        val max = Try(s.data.flatMap(_._2).toList.maxBy(_.lastUpdatedAt).lastUpdatedAt).toOption
+
         Ok(team_info(
           s.time,
           teamName,
-          repos = s.data,
+          repos = s.data.map { case (k, v) => (k, v.map(_.name)) },
+          activityDates = ActivityDates(min, max),
           errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
           teamDetails,
           TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),

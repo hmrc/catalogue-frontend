@@ -66,8 +66,8 @@ class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServi
     teamName map { t =>
       teamsAndServicesConnector.teamInfo(t).flatMap {
         case Some(x) =>
-          val teamServices = x.data("Deployable")
-          teamsAndServicesConnector.teamsByService(teamServices).map { st => ServiceTeams(st.data) }
+          val teamServiceNames = x.data("Deployable").map(_.name)
+          teamsAndServicesConnector.teamsByService(teamServiceNames).map { st => ServiceTeams(st.data) }
         case None => Future.successful(NotFound) } }
 
   def emptyFilter(implicit hc: HeaderCarrier): Future[ReleaseFilter] =
