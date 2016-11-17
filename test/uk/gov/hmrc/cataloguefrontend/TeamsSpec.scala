@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.time.{LocalDateTime, ZoneOffset}
+
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
@@ -38,16 +40,23 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with
   "Teams list" should {
 
     "show a list of teams" in  {
+      import uk.gov.hmrc.cataloguefrontend.DateHelper._
+
+      val now: LocalDateTime = LocalDateTime.now()
+      val firstactivityDate = now.minusYears(2)
+      val lastactivityDate = now.minusDays(2)
 
       serviceEndpoint(GET, "/api/teams", willRespondWith = (200, Some(
-        """["teamA", "teamB", "TeamC"]"""
+        s"""[{"name":"teamA", "firstActiveDate" :${firstactivityDate.toInstant(ZoneOffset.UTC).toEpochMilli} , "lastActiveDate": ${lastactivityDate.toInstant(ZoneOffset.UTC).toEpochMilli}}]"""
       )), extraHeaders = Map("X-Cache-Timestamp" -> "anything"))
 
       val response = await(WS.url(s"http://localhost:$port/teams").get)
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: anything")
-      response.body should include("""<li><a href="/teams/teamA">teamA</a></li>""")
+      response.body should include("""<a href="/teams/teamA">teamA</a>""")
+      response.body should include(firstactivityDate.asPattern("yyyy-MM-dd"))
+      response.body should include(lastactivityDate.asPattern("yyyy-MM-dd"))
     }
   }
 }

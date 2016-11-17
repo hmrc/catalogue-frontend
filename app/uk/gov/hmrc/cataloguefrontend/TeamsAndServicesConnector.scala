@@ -66,6 +66,12 @@ object RepositoryDisplayDetails {
   implicit val repoDetailsFormat = Json.format[RepositoryDisplayDetails]
 }
 
+case class Team(name:String, firstActiveDate: Option[LocalDateTime], lastActiveDate: Option[LocalDateTime])
+object Team {
+  implicit val format = Json.format[Team]
+}
+
+
 trait TeamsAndServicesConnector extends ServicesConfig {
   type ServiceName = String
   type TeamName = String
@@ -83,9 +89,9 @@ trait TeamsAndServicesConnector extends ServicesConfig {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
-  def allTeams(implicit hc: HeaderCarrier): Future[CachedList[String]] = {
+  def allTeams(implicit hc: HeaderCarrier): Future[CachedList[Team]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map {
-      toCachedList[String]
+      toCachedList[Team]
     }
   }
 
