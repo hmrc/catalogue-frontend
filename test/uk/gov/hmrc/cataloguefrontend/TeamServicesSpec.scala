@@ -59,25 +59,18 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show a list of libraries and services" in {
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
       """{
+        | "name": "teamA",
+        | "firstActiveDate":1234560,
+        | "lastActiveDate":1234561,
+        | "repos":{
         |    "Library": [
-        |        {
-        |            "name": "teamA-lib",
-        |            "createdAt": 1456326530000,
-        |            "lastUpdatedAt": 1479382566000
-        |        }
+        |            "teamA-lib"
         |    ],
         |    "Deployable": [
-        |        {
-        |            "name": "teamA-serv",
-        |            "createdAt": 1234,
-        |            "lastUpdatedAt": 1479382566000
-        |        },
-        |        {
-        |            "name": "teamA-frontend",
-        |            "createdAt": 1234,
-        |            "lastUpdatedAt": 1479382566000
-        |        }
+        |            "teamA-serv",
+        |            "teamA-frontend"
         |    ]
+        |}
         |}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
@@ -113,7 +106,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show '(None)' if no timestamp is found" in {
 
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
-        """{"Library":[], "Service": []  }""".stripMargin
+        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
       )))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
@@ -128,7 +121,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show a message if no services are found" in {
 
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
-        """{"Library":[], "Deployable": []  }""".stripMargin
+        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
+
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
@@ -145,7 +139,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       val teamName = "CATO"
 
       serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
-        """{"Library":[], "Deployable": []  }""".stripMargin
+        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
+
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/large-user-management-response.json")
@@ -166,16 +161,19 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show a First Active and Last Active fields in the Details box" in {
       serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
         s"""{
-          |    "Deployable": [
-          |        {
-          |            "name": "service1",
-          |            "createdAt": ${createdAt.toInstant(ZoneOffset.UTC).toEpochMilli},
-          |            "lastUpdatedAt": ${lastActiveAt.toInstant(ZoneOffset.UTC).toEpochMilli}
-          |        }
+          | "name": "teamA",
+          | "firstActiveDate":${createdAt.toInstant(ZoneOffset.UTC).toEpochMilli},
+          | "lastActiveDate":${lastActiveAt.toInstant(ZoneOffset.UTC).toEpochMilli},
+          | "repos":{
+          |    "Library": [
           |    ],
-          |    "Library": []
+          |    "Deployable": [
+          |            "service1"
+          |    ]
           |}
-          |""".stripMargin
+          |}""".stripMargin
+
+
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
@@ -195,7 +193,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         val teamName = "CATO"
 
         serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
-          """{"Library":[], "Deployable": []  }""".stripMargin
+          """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
+
         )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
         mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", fileName)
@@ -219,7 +218,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
     "show error message if UMP is not available" in {
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
-        """{"Library":[], "Deployable": []  }""".stripMargin
+        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       mockHttpApiCall(url = s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json", httpCodeToBeReturned = 404)
@@ -235,7 +234,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       val teamName = "CATO"
 
       serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
-        """{"Library":[], "Deployable": []  }""".stripMargin
+
+      """{"name":"teamA", "repos":{"Library":[], "Deployable": [] }}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName", "/user-management-team-details-response.json")

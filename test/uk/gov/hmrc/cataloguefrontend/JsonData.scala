@@ -80,42 +80,21 @@ object JsonData {
   val teamDetailsData =
     """
       |{
+      |    "name" : "teamA",
+      |    "repos": {
       |    "Deployable": [
-      |        {
-      |            "name": "service1",
-      |            "createdAt": 1456326530000,
-      |            "lastUpdatedAt": 1479382566000
-      |        },
-      |        {
-      |            "name": "service2",
-      |            "createdAt": 1456326530000,
-      |            "lastUpdatedAt": 1479382566000
-      |        }
+      |            "service1",
+      |            "service2"
       |    ],
       |    "Library": [
-      |        {
-      |            "name": "library1",
-      |            "createdAt": 1456326530000,
-      |            "lastUpdatedAt": 1479382566000
-      |        },
-      |        {
-      |            "name": "library2",
-      |            "createdAt": 1456326530000,
-      |            "lastUpdatedAt": 1479382566000
-      |        }
+      |            "library1",
+      |            "library2"
       |    ],
       |    "Other": [
-      |        {
-      |            "name": "other1",
-      |            "createdAt": 1456326530000,
-      |            "lastUpdatedAt": 1479382566000
-      |        },
-      |        {
-      |            "name": "other2",
-      |            "createdAt": 1456326530000,
-      |            "lastUpdatedAt": 1479382566000
-      |        }
+      |            "other1",
+      |            "other2"
       |    ]
+      |    }
       |}
     """.stripMargin
 
