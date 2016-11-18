@@ -66,7 +66,7 @@ class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServi
     teamName map { t =>
       teamsAndServicesConnector.teamInfo(t).flatMap {
         case Some(x) =>
-          val teamServiceNames = x.data("Deployable").map(_.name)
+          val teamServiceNames = x.data.repos("Deployable")
           teamsAndServicesConnector.teamsByService(teamServiceNames).map { st => ServiceTeams(st.data) }
         case None => Future.successful(NotFound) } }
 

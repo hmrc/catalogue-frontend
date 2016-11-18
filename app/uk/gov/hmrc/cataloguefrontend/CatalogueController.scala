@@ -78,7 +78,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
     val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
     for {
-      typeRepos: Option[CachedItem[Map[String, Seq[RepositoryDisplayDetails]]]] <- eventualTeamInfo
+      typeRepos: Option[CachedItem[Team]] <- eventualTeamInfo
       teamMembers <- eventualErrorOrMembers
       teamDetails <- eventualErrorOrTeamDetails
       teamIndicators <- eventualMaybeDeploymentIndicators
@@ -86,14 +86,11 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       case (Some(s), _, _, _) =>
         implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
 
-        val min = Try(s.data.flatMap(_._2).toList.minBy(_.createdAt).createdAt).toOption
-        val max = Try(s.data.flatMap(_._2).toList.maxBy(_.lastUpdatedAt).lastUpdatedAt).toOption
-
         Ok(team_info(
           s.time,
           teamName,
-          repos = s.data.map { case (k, v) => (k, v.map(_.name)) },
-          activityDates = ActivityDates(min, max),
+          repos = s.data.repos,
+          activityDates = ActivityDates(s.data.firstActiveDate, s.data.lastActiveDate),
           errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
           teamDetails,
           TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),

@@ -66,7 +66,7 @@ object RepositoryDisplayDetails {
   implicit val repoDetailsFormat = Json.format[RepositoryDisplayDetails]
 }
 
-case class Team(name:String, firstActiveDate: Option[LocalDateTime], lastActiveDate: Option[LocalDateTime])
+case class Team(name:String, firstActiveDate: Option[LocalDateTime], lastActiveDate: Option[LocalDateTime], repos: Map[String, Seq[String]])
 object Team {
   implicit val format = Json.format[Team]
 }
@@ -95,12 +95,12 @@ trait TeamsAndServicesConnector extends ServicesConfig {
     }
   }
 
-  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[Map[String, Seq[RepositoryDisplayDetails]]]]] = {
+  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[Team]]] = {
     val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${URLEncoder.encode(teamName, "UTF-8")}"
 
     http.GET[HttpResponse](url)
       .map {
-        toCachedItemOption[Map[String, Seq[RepositoryDisplayDetails]]]
+        toCachedItemOption[Team]
       }.recover {
       case ex =>
         Logger.error(s"An error occurred getting teamInfo when connecting to $url: ${ex.getMessage}", ex)
