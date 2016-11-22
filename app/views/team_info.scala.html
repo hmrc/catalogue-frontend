@@ -194,7 +194,11 @@
                             if(throughputChartData.isEmpty) {
                                 {ViewMessages.errorMessage}
                             } else if(throughputChartData.get.isEmpty) {
-                                {ViewMessages.noDataToShow}
+                                {
+                                    activityDates.firstActive.fold(ViewMessages.noDataToShow){d =>
+                                        ViewMessages.noProductionDeploymentSinceDaysMessage(d)
+                                    }
+                                }
                             }
                         }
 
