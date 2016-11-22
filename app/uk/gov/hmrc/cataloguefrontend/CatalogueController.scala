@@ -113,7 +113,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
           s.data,
           ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
           ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)),
-          s.data.createdAt.until(LocalDateTime.now, ChronoUnit.DAYS) + 1
+          s.data.createdAt
         ))
       case _ => NotFound
     }

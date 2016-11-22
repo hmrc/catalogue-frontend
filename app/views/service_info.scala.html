@@ -18,13 +18,14 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.DeploymentThroughputDataPoint
+@import java.time.LocalDateTime
 
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @(cacheTimestampFormatted: String,
   service: RepositoryDetails,
   throughputChartData: Option[ChartDataRows],
   stabilityChartData: Option[ChartDataRows],
-  daysSinceRepositoryCreation: Long)(implicit messages: Messages)
+  repositoryCreationDate: LocalDateTime)(implicit messages: Messages)
 
 @standard_layout(service.name, "services") {
     <header>
@@ -83,7 +84,7 @@
                          if(throughputChartData.isEmpty) {
                              {ViewMessages.errorMessage}
                          }else if(throughputChartData.get.isEmpty) {
-                             {ViewMessages.noProductionDeploymentFor(daysSinceRepositoryCreation)}
+                             {ViewMessages.noProductionDeploymentSinceDaysMessage(repositoryCreationDate)}
                          }
 
                         }
