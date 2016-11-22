@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+
 import play.api.Play
 import play.api.i18n.Messages
 import play.twirl.api.Html
@@ -51,8 +54,9 @@ object ViewMessages {
     Html("""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
   }
 
-  def noProductionDeploymentFor(numberOfDays: Long) = {
-    Html(s"""<h2 class="chart-message text-center">No production deployments for $numberOfDays days</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
+  def noProductionDeploymentSinceDaysMessage(firstActiveDate: LocalDateTime) = {
+    val daysSinceNoProdDeployment = firstActiveDate.until(LocalDateTime.now(), ChronoUnit.DAYS) + 1
+    Html(s"""<h2 class="chart-message text-center">No production deployments for $daysSinceNoProdDeployment days</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
   }
 
   def errorMessage = {
