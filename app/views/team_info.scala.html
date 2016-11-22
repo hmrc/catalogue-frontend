@@ -261,14 +261,16 @@
 
 @umpUpdateLink = {
 <div id="ump-correct-data-link" class="list list--minimal">
-    To update any data above please click <a href="@umpFrontPageUrl">here</a>
+    <!--To update any data above please click <a href="@umpFrontPageUrl">here</a>-->
+    To update any data above, please raise a TSR
 </div>
 }
 
 @showError(error: ConnectorError) = {
     @error match {
         case NoData(linkToRectify) => {
-            Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>
+            <!--Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>-->
+            Team @teamName is not defined in the User Management Portal. To add it, please raise a TSR.
         }
         case _ => {
             <div class="list list--minimal alert">Sorry, the User Management Portal is not available</div>
