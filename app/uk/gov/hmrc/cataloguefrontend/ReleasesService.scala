@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.time.LocalDateTime
 
-import TeamsAndServicesConnector._
+import TeamsAndRepositoriesConnector._
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,7 +29,7 @@ case class TeamRelease(name: ServiceName, teams: Seq[TeamName], productionDate: 
                        creationDate: Option[LocalDateTime] = None, interval: Option[Long] = None,
                        leadTime:  Option[Long] = None, version: String)
 
-class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServicesConnector: TeamsAndServicesConnector) {
+class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
   type ServiceTeamMappings = Map[ServiceName, Seq[TeamName]]
 
   sealed trait ReleaseFilter { def serviceTeams: ServiceTeamMappings }
