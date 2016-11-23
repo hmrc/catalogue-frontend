@@ -40,11 +40,11 @@ object CatalogueController extends CatalogueController {
 
   override def userManagementConnector: UserManagementConnector = UserManagementConnector
 
-  override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
+  override def teamsAndServicesConnector: TeamsAndRepositoriesConnector = TeamsAndRepositoriesConnector
 
   override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
 
-  override def releasesService: ReleasesService = new ReleasesService(ServiceReleasesConnector, TeamsAndServicesConnector)
+  override def releasesService: ReleasesService = new ReleasesService(ServiceReleasesConnector, TeamsAndRepositoriesConnector)
 }
 
 trait CatalogueController extends FrontendController with UserManagementPortalLink {
@@ -53,7 +53,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def userManagementConnector: UserManagementConnector
 
-  def teamsAndServicesConnector: TeamsAndServicesConnector
+  def teamsAndServicesConnector: TeamsAndRepositoriesConnector
 
   def indicatorsConnector: IndicatorsConnector
 
@@ -147,6 +147,13 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   def allLibraryNames() = Action.async { implicit request =>
     teamsAndServicesConnector.allLibraryNamesWithDates.map { libraries =>
       Ok(library_list(libraries.time, repositories = libraries.data))
+    }
+  }
+
+  def allRepositories() = Action.async{ implicit reuqest =>
+
+    teamsAndServicesConnector.allRepositories.map { repos =>
+      Ok(repositories_list(repos.time, repositories = repos.data))
     }
   }
 

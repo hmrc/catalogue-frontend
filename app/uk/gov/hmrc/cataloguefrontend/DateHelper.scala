@@ -36,6 +36,7 @@ object DateHelper {
     def toDate: Date = Date.from(d.atZone(ZoneId.systemDefault()).toInstant)
 
     def epochSeconds = d.toEpochSecond(ZoneOffset.UTC)
+    def epochMillis = d.atZone(ZoneId.of("GMT")).toInstant.toEpochMilli
 
     def asString = d.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
 

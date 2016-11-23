@@ -52,8 +52,8 @@ class ServicesAndLibrariesSpec extends UnitSpec with BeforeAndAfter with OneServ
 
       serviceEndpoint(GET, "/api/services", willRespondWith = (200, Some(
         s"""[
-          |   {"name":"teamA-serv", "createdAt": $createdDate1, "lastUpdatedAt": $lastActiveDate1},
-          |   {"name":"teamB-frontend", "createdAt": $createdDate2, "lastUpdatedAt": $lastActiveDate2}
+          |   {"name":"teamA-serv", "createdAt": $createdDate1, "lastUpdatedAt": $lastActiveDate1, "repoType" : "Deployable"},
+          |   {"name":"teamB-frontend", "createdAt": $createdDate2, "lastUpdatedAt": $lastActiveDate2, "repoType" : "Deployable"}
           |]""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 
@@ -80,8 +80,8 @@ class ServicesAndLibrariesSpec extends UnitSpec with BeforeAndAfter with OneServ
 
       serviceEndpoint(GET, "/api/libraries", willRespondWith = (200, Some(
         """[
-          |   {"name":"teamA-library", "createdAt": 1429787242000, "lastUpdatedAt": 1452785041000},
-          |   {"name":"teamB-library", "createdAt": 1429787242000, "lastUpdatedAt": 1452785041000}
+          |   {"name":"teamA-library", "createdAt": 1429787242000, "lastUpdatedAt": 1452785041000, "repoType" : "Library"},
+          |   {"name":"teamB-library", "createdAt": 1429787242000, "lastUpdatedAt": 1452785041000, "repoType" : "Library"}
           |]""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
 

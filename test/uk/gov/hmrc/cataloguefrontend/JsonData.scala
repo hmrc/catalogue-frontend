@@ -16,65 +16,74 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{LocalDate, LocalDateTime, ZoneId}
+import java.time.{LocalDateTime, ZoneId}
 
 /**
   * Created by armin.
   */
 object JsonData {
+
+  import DateHelper._
   val createdAt = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
   val lastActiveAt = LocalDateTime.of(2016, 10, 12, 10, 30, 12)
 
+  val repositoriesData =
+    s"""|[
+        |{"name":"teamA-serv", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Deployable"},
+        |{"name":"teamB-library", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Library"},
+        |{"name":"teamB-other", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Other"}
+        |]""".stripMargin
+
   val serviceDetailsData =
     s"""
-      |    {
-      |	     "name": "serv",
-      |      "description": "some description",
-      |      "createdAt": ${createdAt.atZone(ZoneId.of("GMT")).toInstant.toEpochMilli},
-      |      "lastActive": ${lastActiveAt.atZone(ZoneId.of("GMT")).toInstant.toEpochMilli},
-      |      "repoType": "Deployable",
-      |      "teamNames": ["teamA", "teamB"],
-      |	     "githubUrls": [{
-      |		     "name": "github",
-      |        "displayName": "github.com",
-      |		     "url": "https://github.com/hmrc/serv"
-      |	     }],
-      |	     "ci": [
-      |		     {
-      |		       "name": "open1",
-      |		       "displayName": "open 1",
-      |		       "url": "http://open1/serv"
-      |		     },
-      |		     {
-      |		       "name": "open2",
-      |		       "displayName": "open 2",
-      |		       "url": "http://open2/serv"
-      |		     }
-      |	     ],
-      |      "environments" : [{
-      |        "name" : "env1",
-      |        "services" : [{
-      |          "name": "ser1",
-      |		       "displayName": "service1",
-      |          "url": "http://ser1/serv"
-      |        }, {
-      |          "name": "ser2",
-      |		       "displayName": "service2",
-      |          "url": "http://ser2/serv"
-      |        }]
-      |      },{
-      |        "name" : "env2",
-      |        "services" : [{
-      |          "name": "ser1",
-      |		       "displayName": "service1",
-      |          "url": "http://ser1/serv"
-      |        }, {
-      |          "name": "ser2",
-      |		       "displayName": "service2",
-      |          "url": "http://ser2/serv"
-      |        }]
-      |       }]
-      |     }
+       |    {
+       |	     "name": "serv",
+       |      "description": "some description",
+       |      "createdAt": ${createdAt.epochMillis},
+       |      "lastActive": ${lastActiveAt.epochMillis},
+       |      "repoType": "Deployable",
+       |      "teamNames": ["teamA", "teamB"],
+       |	     "githubUrls": [{
+       |		     "name": "github",
+       |        "displayName": "github.com",
+       |		     "url": "https://github.com/hmrc/serv"
+       |	     }],
+       |	     "ci": [
+       |		     {
+       |		       "name": "open1",
+       |		       "displayName": "open 1",
+       |		       "url": "http://open1/serv"
+       |		     },
+       |		     {
+       |		       "name": "open2",
+       |		       "displayName": "open 2",
+       |		       "url": "http://open2/serv"
+       |		     }
+       |	     ],
+       |      "environments" : [{
+       |        "name" : "env1",
+       |        "services" : [{
+       |          "name": "ser1",
+       |		       "displayName": "service1",
+       |          "url": "http://ser1/serv"
+       |        }, {
+       |          "name": "ser2",
+       |		       "displayName": "service2",
+       |          "url": "http://ser2/serv"
+       |        }]
+       |      },{
+       |        "name" : "env2",
+       |        "services" : [{
+       |          "name": "ser1",
+       |		       "displayName": "service1",
+       |          "url": "http://ser1/serv"
+       |        }, {
+       |          "name": "ser2",
+       |		       "displayName": "service2",
+       |          "url": "http://ser2/serv"
+       |        }]
+       |       }]
+       |     }
     """.stripMargin
 
   val teamDetailsData =
@@ -181,6 +190,6 @@ object JsonData {
       |        }
       |    }
       |]
-      |""".stripMargin
+      | """.stripMargin
 
 }
