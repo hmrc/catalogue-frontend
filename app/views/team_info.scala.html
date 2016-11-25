@@ -5,7 +5,7 @@
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
 *
-*     http://www.apache.org/licenses/LICENSE-2.0
+* http://www.apache.org/licenses/LICENSE-2.0
 *
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
-
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, NoData, TeamDetails}
@@ -31,33 +30,33 @@
         umpFrontPageUrl: String
 )(implicit messages: Messages)
 
-@standard_layout(teamName,"teams") {
-<header>
-    <h1>@teamName</h1>
-    <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-</header>
-<section class="section-wrapper">
+@standard_layout(teamName, "teams") {
+    <header>
+        <h1>@teamName</h1>
+        <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    </header>
+    <section class="section-wrapper">
 
-    <div class="row">
+        <div class="row">
 
-        <div class="col-md-12">
-            <div class="board">
-                <h3 class="board__heading">Details</h3>
+            <div class="col-md-12">
+                <div class="board">
+                    <h3 class="board__heading">Details</h3>
 
-                <div class="board__body">
+                    <div class="board__body">
 
-                    <ul class="list list--minimal list-group row" id="team_details">
-                        <li class="col-xs-6">
-                            <label>First Active: </label>
-                            @activityDates.firstActive.map(_.asRFC1123).getOrElse("None")
-                        </li>
-                        <li class="col-xs-6">
-                            <label>Last Active: </label>
-                            @activityDates.lastActive.map(_.asRFC1123).getOrElse("None")
-                        </li>
-                        @if(errorOrTeamDetails.isRight) {
-                                @for(teamDetails <- errorOrTeamDetails.right.toOption){
+                        <ul class="list list--minimal list-group row" id="team_details">
+                            <li class="col-xs-6">
+                                <label>First Active: </label>
+                                @activityDates.firstActive.map(_.asRFC1123).getOrElse("None")
+                            </li>
+                            <li class="col-xs-6">
+                                <label>Last Active: </label>
+                                @activityDates.lastActive.map(_.asRFC1123).getOrElse("None")
+                            </li>
+                            @if(errorOrTeamDetails.isRight) {
+                                @for(teamDetails <- errorOrTeamDetails.right.toOption) {
                                     <li class="col-xs-6">
                                         <label>Description: </label>
                                         @teamDetails.description
@@ -65,7 +64,7 @@
                                     <li class="col-xs-6">
                                         <label>Documentation: </label>
                                         @teamDetails.documentation.map { d =>
-                                        <a href="@d" target="_blank">Go to Confluence space</a>
+                                            <a href="@d" target="_blank">Go to Confluence space</a>
                                         }
                                     </li>
                                     <li class="col-xs-6">
@@ -75,7 +74,7 @@
                                     <li class="col-xs-6">
                                         <label>Slack: </label>
                                         @teamDetails.slack.map { d =>
-                                        <a href="@d" target="_blank">Go to team channel</a>
+                                            <a href="@d" target="_blank">Go to team channel</a>
                                         }
                                     </li>
                                     <li class="col-xs-6">
@@ -85,199 +84,244 @@
                                 }
 
 
-                        } else {
-                            <li class="col-xs-9">
+                            } else {
+                                <li class="col-xs-9">
                                 @showError(errorOrTeamDetails.left.get)
-                            </li>
-                        }
-                    </ul>
-
-                    @if(errorOrTeamDetails.isRight) {
-                        @umpUpdateLink
-                    }
-
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <div class="row">
-
-        <div class="col-md-4">
-            <div class="board">
-                <h3 class="board__heading">Team Members</h3>
-
-                <div class="board__body">
-                    <ul class="list list--minimal" id="team_members">
-                    @if(errorOrTeamMembers.isRight) {
-                        @for(teamMember <- errorOrTeamMembers.right.get) {
-                            <li class="list-item row">
-                                <div class="col-md-7">
-                                    <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
-                                </div>
-                                <div class="col-md-4">
-                                    @if(teamMember.isServiceOwner) {
-                                    <span class="label label-success">Service Owner</span>
-                                    }
-                                </div>
-                            </li>
-                        }
-
-                    } else {
-                        <li id="linkToRectify">
-                            @showError(errorOrTeamMembers.left.get)
-                        </li>
-                    }
-                    </ul>
-
-                    @if(errorOrTeamMembers.isRight) {
-                        @umpUpdateLink
-                    }
-                </div>
-            </div>
-        </div>
-
-
-        @repos.get("Deployable").map{services =>
-        <div class="col-md-4">
-            <div class="board">
-                <h3 class="board__heading">Services</h3>
-
-                <div class="board__body">
-                    @if(services.isEmpty) {
-                    <p>@Html(ViewMessages.noRepoOfType("service"))</p>
-                    } else {
-                    <ul class="list list--minimal">
-                        @for(service <- services) {
-                        <li class="list-item" id="@{service}"><a href="/services/@{service}">@service</a></li>
-                        }
-                    </ul>
-                    }
-                </div>
-            </div>
-        </div>
-        }
-
-        @repos.get("Library").map{libraries =>
-        <div class="col-md-4">
-            <div class="board">
-                <h3 class="board__heading">Libraries</h3>
-
-                <div class="board__body">
-                    @if(libraries.isEmpty) {
-                    <p>@Html(ViewMessages.noRepoOfType("library"))</p>
-
-                    } else {
-                    <ul class="list list--minimal">
-                        @for(library <- libraries) {
-                        <li class="list-item" id="@{library}"><a href="/libraries/@{library}">@library</a></li>
-                        }
-                    </ul>
-                    }
-                </div>
-            </div>
-        </div>
-        }
-        <div class="row">
-            <div class="col-md-12">
-                <div class="board row">
-                    <h3 class="board__heading">Delivery Indicators</h3>
-                    <div class="board__body">
-                        @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-                            @renderGraphText
-                            @renderThroughputGraph
-                            @renderStabilityGraph
-                        }
-                        @{
-                            if(throughputChartData.isEmpty) {
-                                {ViewMessages.errorMessage}
-                            } else if(throughputChartData.get.isEmpty) {
-                                {
-                                    activityDates.firstActive.fold(ViewMessages.noDataToShow){d =>
-                                        ViewMessages.noProductionDeploymentSinceDaysMessage(d)
-                                    }
-                                }
+                                </li>
                             }
+                        </ul>
+
+                        @if(errorOrTeamDetails.isRight) {
+                            @umpUpdateLink
                         }
+
 
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-</section>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="board">
+                    <h3 class="board__heading">Team Members</h3>
 
-<script type="text/javascript">
+                    <div class="board__body">
+                        <ul class="list list--minimal" id="team_members">
+                        @if(errorOrTeamMembers.isRight) {
+                            @for(teamMember <- errorOrTeamMembers.right.get) {
+                                <li class="list-item row">
+                                    <div class="col-md-7">
+                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
+                                    </div>
+                                    <div class="col-md-4">
+                                    @if(teamMember.isServiceOwner) {
+                                        <span class="label label-success">Service Owner</span>
+                                    }
+                                    </div>
+                                </li>
+                            }
 
-    @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-        @views.html.throughputchart_script(throughputChartData)
-    }
+                        } else {
+                            <li id="linkToRectify">
+                            @showError(errorOrTeamMembers.left.get)
+                            </li>
+                        }
+                        </ul>
 
-    @if(stabilityChartData.isDefined && !stabilityChartData.get.isEmpty) {
-        @views.html.stabilitychart_script(stabilityChartData)
-    }
+                        @if(errorOrTeamMembers.isRight) {
+                            @umpUpdateLink
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
 
-</script>
+        <div class="row">
+            @repos.get("Deployable").map { services =>
+                <div class="col-md-4">
+                    <div class="board">
+                        <h3 class="board__heading">Services</h3>
+
+                        <div class="board__body">
+                            @if(services.isEmpty) {
+                                <p>@Html(ViewMessages.noRepoOfType("service"))</p>
+                            } else {
+                                <ul class="list list--minimal">
+                                @for(service <- services) {
+                                    <li class="list-item" id="@{
+                                        service
+                                    }"><a href="/services/@{
+                                        service
+                                    }">@service</a>
+                                    </li>
+                                }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @repos.get("Library").map { libraries =>
+                <div class="col-md-4">
+                    <div class="board">
+                        <h3 class="board__heading">Libraries</h3>
+
+                        <div class="board__body">
+                            @if(libraries.isEmpty) {
+                                <p>@Html(ViewMessages.noRepoOfType("library"))</p>
+
+                            } else {
+                                <ul class="list list--minimal">
+                                @for(library <- libraries) {
+                                    <li class="list-item" id="@{
+                                        library
+                                    }"><a href="/libraries/@{
+                                        library
+                                    }">@library</a>
+                                    </li>
+                                }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @repos.get("Other").map { repositories =>
+                <div class="col-md-4">
+                    <div class="board">
+                        <h3 class="board__heading">Repositories</h3>
+
+                        <div class="board__body">
+                            @if(repositories.isEmpty) {
+                                <p>@Html(ViewMessages.noRepoOfType("repository"))</p>
+
+                            } else {
+                                <ul class="list list--minimal">
+                                @for(repository <- repositories) {
+                                    <li class="list-item" id="@{
+                                        repository
+                                    }"><a href="/libraries/@{
+                                        repository
+                                    }">@repository</a>
+                                    </li>
+                                }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="board row">
+                        <h3 class="board__heading">Delivery Indicators</h3>
+                        <div class="board__body">
+                            @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
+                                @renderGraphText
+                                @renderThroughputGraph
+                                @renderStabilityGraph
+                            }
+                            @{
+                                if(throughputChartData.isEmpty) {
+                                    {
+                                        ViewMessages.errorMessage
+                                    }
+                                } else if(throughputChartData.get.isEmpty) {
+                                    {
+                                        activityDates.firstActive.fold(ViewMessages.noDataToShow) { d =>
+                                            ViewMessages.noProductionDeploymentSinceDaysMessage(d)
+                                        }
+                                    }
+                                }
+                            }
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <script type="text/javascript">
+
+        @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
+            @views.html.throughputchart_script(throughputChartData)
+        }
+
+        @if(stabilityChartData.isDefined && !stabilityChartData.get.isEmpty) {
+            @views.html.stabilitychart_script(stabilityChartData)
+        }
+
+
+    </script>
 
 }
 
 @renderThroughputGraph = {
-<div class="col-md-6">
-    <div id="chart_div"></div>
-    <div>
-        <small>
-            <ul>
-                <li><strong>Lead Time</strong> - @{Messages("leadtime.explanation.text")}</li>
-                <li><strong>Interval</strong> - @{Messages("interval.explanation.text")}</li>
-            </ul>
-        </small>
+    <div class="col-md-6">
+        <div id="chart_div"></div>
+        <div>
+            <small>
+                <ul>
+                    <li><strong>Lead Time</strong> - @{
+                        Messages("leadtime.explanation.text")
+                    }</li>
+                    <li><strong>Interval</strong> - @{
+                        Messages("interval.explanation.text")
+                    }</li>
+                </ul>
+            </small>
+        </div>
     </div>
-</div>
 
 }
 
 @renderStabilityGraph = {
-<div class="col-md-6">
-    <div id="chart_div_2"></div>
-    <div>
-        <small>
-            <ul>
-                <li><strong>Hotfix Rate</strong> - @{
-                    Messages("hotfixrate.explanation.text")
+    <div class="col-md-6">
+        <div id="chart_div_2"></div>
+        <div>
+            <small>
+                <ul>
+                    <li><strong>Hotfix Rate</strong> - @{
+                        Messages("hotfixrate.explanation.text")
                     }
-                </li>
-                <li><strong>Hotfix Interval</strong> - @{
-                    Messages("hotfixinterval.explanation.text")
+                    </li>
+                    <li><strong>Hotfix Interval</strong> - @{
+                        Messages("hotfixinterval.explanation.text")
                     }
-                </li>
-            </ul>
-        </small>
+                    </li>
+                </ul>
+            </small>
+        </div>
     </div>
-</div>
 }
 
 @renderGraphText = {
-    @{Html(ViewMessages.deploymentThroughputAndStabilityGraphText)}
+@{
+    Html(ViewMessages.deploymentThroughputAndStabilityGraphText)
+}
 }
 
 @umpUpdateLink = {
-<div id="ump-correct-data-link" class="list list--minimal">
-    <!--To update any data above please click <a href="@umpFrontPageUrl">here</a>-->
-    To update any data above, please raise a TSR
-</div>
+    <div id="ump-correct-data-link" class="list list--minimal">
+            <!--To update any data above please click <a href="@umpFrontPageUrl">here</a>-->
+        To update any data above, please raise a TSR
+    </div>
 }
 
 @showError(error: ConnectorError) = {
-    @error match {
-        case NoData(linkToRectify) => {
-            <!--Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>-->
-            Team @teamName is not defined in the User Management Portal. To add it, please raise a TSR.
-        }
-        case _ => {
-            <div class="list list--minimal alert">Sorry, the User Management Portal is not available</div>
-        }
+@error match {
+    case NoData(linkToRectify) => {
+            <!--Team  @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>-->
+        Team @teamName is not defined in the User Management Portal. To add it, please raise a TSR.
     }
+    case _ => {
+        <div class="list list--minimal alert">Sorry, the User Management Portal is not available</div>
+    }
+}
 }
