@@ -22,6 +22,7 @@ import java.time.LocalDateTime
 import TeamsAndRepositoriesConnector._
 import uk.gov.hmrc.play.http.HeaderCarrier
 
+import scala.collection.immutable.Iterable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -66,7 +67,7 @@ class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServi
     teamName map { t =>
       teamsAndServicesConnector.teamInfo(t).flatMap {
         case Some(x) =>
-          val teamServiceNames = x.data.repos("Deployable")
+          val teamServiceNames = x.data.repos.getOrElse(Map())("Deployable")
           teamsAndServicesConnector.teamsByService(teamServiceNames).map { st => ServiceTeams(st.data) }
         case None => Future.successful(NotFound) } }
 

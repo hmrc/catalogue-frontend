@@ -89,7 +89,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
       when(teamsAndServicesConnector.teamInfo("b-team")).thenReturn(Future.successful(
         Some(new CachedItem[Team](
           Team(name = "teamName", None, None,
-          repos = Map("Deployable" -> Seq("a-service", "b-service"))), "time"))))
+          repos = Some(Map("Deployable" -> Seq("a-service", "b-service")))), "time"))))
 
       when(teamsAndServicesConnector.teamsByService(Seq("a-service", "b-service"))).thenReturn(
         Future.successful(new CachedItem[Map[ServiceName, Seq[TeamName]]](
