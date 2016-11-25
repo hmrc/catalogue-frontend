@@ -110,13 +110,13 @@ trait UserManagementConnector extends UserManagementPortalLink {
 
    extractor(response.json).flatMap{ js => js.asOpt[T] } match {
      case Some(x) => Right(x)
-     case _ => Left(NoData(umpFrontPageUrl(team)))
+     case _ => Left(NoData(umpMyTeamsPageUrl(team)))
    }
   }
 
   private def extractMembers(team: String, response: HttpResponse): Either[ConnectorError, Seq[TeamMember]] = {
 
-    val left = Left(NoData(umpFrontPageUrl(team)))
+    val left = Left(NoData(umpMyTeamsPageUrl(team)))
 
     val errorOrTeamMembers = (response.json \\ "members")
       .headOption

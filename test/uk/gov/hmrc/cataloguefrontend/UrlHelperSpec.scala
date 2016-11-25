@@ -16,21 +16,19 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import uk.gov.hmrc.play.config.ServicesConfig
+import org.scalatest.{Matchers, WordSpec}
 
-trait UserManagementPortalLink extends ServicesConfig {
-  val serviceName = "user-management"
+class UrlHelperSpec extends WordSpec with Matchers {
 
-  def umpMyTeamsPageUrl(teamName: String): String = {
-
-    val frontPageUrlConfigKey = s"$serviceName.myTeamsUrl"
-    val myTeamsUrl = getConfString(frontPageUrlConfigKey, throw new RuntimeException(s"Could not find config $frontPageUrlConfigKey"))
-
-    s"""${myTeamsUrl.appendSlash}$teamName?edit"""
-
+  "UrlHelper" should  {
+    "append a slash to the url if it doesn't end with one" in {
+      "abc".appendSlash shouldBe "abc/"
+    }
   }
 
-  def userManagementBaseUrl: String =
-    getConfString(s"$serviceName.url", throw new RuntimeException(s"Could not find config $serviceName.url"))
-
+  "UrlHelper" should  {
+    "not append a slash to the url if it already ends with one" in {
+      "abc/".appendSlash shouldBe "abc/"
+    }
+  }
 }

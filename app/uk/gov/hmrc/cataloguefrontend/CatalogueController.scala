@@ -95,7 +95,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
           teamDetails,
           TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),
           TeamChartData.deploymentStability(teamName, teamIndicators.map(_.stability)),
-          umpFrontPageUrl(teamName)
+          umpMyTeamsPageUrl(teamName)
         )
         )
       case _ => NotFound
@@ -209,7 +209,7 @@ object DisplayableTeamMembers {
       DisplayableTeamMember(
         displayName = tm.displayName.getOrElse("DISPLAY NAME NOT PROVIDED"),
         isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.toLowerCase)),
-        umpLink = tm.username.map(x => s"$umpProfileBaseUrl/$x").getOrElse("USERNAME NOT PROVIDED")
+        umpLink = tm.username.map(x => s"${umpProfileBaseUrl.appendSlash}$x?edit").getOrElse("USERNAME NOT PROVIDED")
       )
     )
 

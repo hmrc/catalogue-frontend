@@ -28,7 +28,7 @@
         errorOrTeamDetails: Either[ConnectorError, TeamDetails],
         throughputChartData: Option[ChartDataRows],
         stabilityChartData: Option[ChartDataRows],
-        umpFrontPageUrl: String
+        umpMyTeamsUrl: String
 )(implicit messages: Messages)
 
 @standard_layout(teamName,"teams") {
@@ -93,7 +93,7 @@
                     </ul>
 
                     @if(errorOrTeamDetails.isRight) {
-                        @umpUpdateLink
+                        @umpUpdateLink(false)
                     }
 
 
@@ -133,7 +133,7 @@
                     </ul>
 
                     @if(errorOrTeamMembers.isRight) {
-                        @umpUpdateLink
+                        @umpUpdateLink(true)
                     }
                 </div>
             </div>
@@ -263,18 +263,22 @@
     @{Html(ViewMessages.deploymentThroughputAndStabilityGraphText)}
 }
 
-@umpUpdateLink = {
+@umpUpdateLink(isMemberBox:Boolean) = {
 <div id="ump-correct-data-link" class="list list--minimal">
-    <!--To update any data above please click <a href="@umpFrontPageUrl">here</a>-->
-    To update any data above, please raise a TSR
+    @if(isMemberBox) {
+        To update @teamName team members, go to the <a href="@umpMyTeamsUrl">User Management Portal</a>
+    } else {
+        To update @teamName team details, go to the <a href="@umpMyTeamsUrl">User Management Portal</a>
+
+    }
+
 </div>
 }
 
 @showError(error: ConnectorError) = {
     @error match {
         case NoData(linkToRectify) => {
-            <!--Team @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>-->
-            Team @teamName is not defined in the User Management Portal. To add it, please raise a TSR.
+            @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
         }
         case _ => {
             <div class="list list--minimal alert">Sorry, the User Management Portal is not available</div>
