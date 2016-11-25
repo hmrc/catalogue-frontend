@@ -89,7 +89,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
         Ok(team_info(
           s.time,
           teamName,
-          repos = s.data.repos,
+          repos = s.data.repos.getOrElse(Map()),
           activityDates = ActivityDates(s.data.firstActiveDate, s.data.lastActiveDate),
           errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
           teamDetails,
