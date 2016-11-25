@@ -76,27 +76,27 @@ class DisplayableTeamMembersSpec extends FunSpec with Matchers with TypeCheckedT
       DisplayableTeamMember(
         displayName =  "A Mouse",
         isServiceOwner = true,
-        umpLink = "http://example.com/profile/a.mouse"
+        umpLink = "http://example.com/profile/a.mouse?edit"
       ),
       DisplayableTeamMember(
         displayName =  "B Olapade",
         isServiceOwner = true,
-        umpLink = "http://example.com/profile/b.olapade"
+        umpLink = "http://example.com/profile/b.olapade?edit"
       ),
       DisplayableTeamMember(
         displayName =  "C Bourne",
         isServiceOwner = false,
-        umpLink = "http://example.com/profile/c.bourne"
+        umpLink = "http://example.com/profile/c.bourne?edit"
       ),
       DisplayableTeamMember(
         displayName =  "D Doe",
         isServiceOwner = false,
-        umpLink = "http://example.com/profile/d.doe"
+        umpLink = "http://example.com/profile/d.doe?edit"
       ),
       DisplayableTeamMember(
         displayName =  "E Federer",
         isServiceOwner = false,
-        umpLink = "http://example.com/profile/e.federer"
+        umpLink = "http://example.com/profile/e.federer?edit"
       )
     )
 
