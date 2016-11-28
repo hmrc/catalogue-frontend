@@ -106,18 +106,6 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     }
   }
 
-  def allServiceNamesWithDates(implicit hc: HeaderCarrier): Future[CachedList[RepositoryDisplayDetails]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services").map {
-      toCachedList[RepositoryDisplayDetails]
-    }
-  }
-
-  def allLibraryNamesWithDates(implicit hc: HeaderCarrier): Future[CachedList[RepositoryDisplayDetails]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/libraries").map {
-      toCachedList[RepositoryDisplayDetails]
-    }
-  }
-
   def allRepositories(implicit hc: HeaderCarrier): Future[CachedList[RepositoryDisplayDetails]] =
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories").map {
       toCachedList[RepositoryDisplayDetails]

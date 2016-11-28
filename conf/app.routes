@@ -3,10 +3,8 @@
 GET        /teams                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allTeams
 GET        /repositories           uk.gov.hmrc.cataloguefrontend.CatalogueController.allRepositories
 GET        /teams/:teamName        uk.gov.hmrc.cataloguefrontend.CatalogueController.team(teamName)
-GET        /services               uk.gov.hmrc.cataloguefrontend.CatalogueController.allServiceNames
-GET        /libraries              uk.gov.hmrc.cataloguefrontend.CatalogueController.allLibraryNames
-GET        /services/:name         uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
-GET        /libraries/:name        uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
+GET        /service/:name         uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
+GET        /library/:name        uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /repositories/:name     uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 GET        /releases               uk.gov.hmrc.cataloguefrontend.CatalogueController.releases()
 GET        /assets/*file           controllers.Assets.at(path="/public", file)

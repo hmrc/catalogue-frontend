@@ -50,7 +50,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     "return a 404 when a Library is viewed as a service" in {
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
 
-      val response = await(WS.url(s"http://localhost:$port/services/serv").get)
+      val response = await(WS.url(s"http://localhost:$port/service/serv").get)
       response.status shouldBe 404
     }
 
@@ -58,7 +58,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
         serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(serviceDetailsData)))
         serviceEndpoint(GET, "/api/indicators/service/serv/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
 
-        val response = await(WS.url(s"http://localhost:$port/services/serv").get)
+        val response = await(WS.url(s"http://localhost:$port/service/serv").get)
         response.status shouldBe 200
         response.body should include(s"links on this page are automatically generated")
         response.body should include(s"teamA")
@@ -82,7 +82,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
 
-      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
+      val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
       response.status shouldBe 200
       response.body should include(s"""data.addColumn('string', 'Period');""")
       response.body should include(s"""data.addColumn('number', 'Lead Time');""")
@@ -108,7 +108,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (404, None))
 
 
-      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
+      val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
       response.status shouldBe 200
       response.body should include(s"""No production deployments for $dayInterval days""")
       response.body should include(ViewMessages.noIndicatorsData)
@@ -120,7 +120,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (500, None))
 
-      val response = await(WS.url(s"http://localhost:$port/services/service-name").get)
+      val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
       response.status shouldBe 200
       response.body should include(s"""The catalogue encountered an error""")
       response.body should include(ViewMessages.indicatorsServiceError)

@@ -21,7 +21,7 @@ import java.util.Date
 
 import org.scalatest.{Matchers, WordSpec}
 
-import ReleaseFiltering._
+import SearchFiltering._
 
 class ReleaseFilteringSpec extends WordSpec with Matchers {
 
