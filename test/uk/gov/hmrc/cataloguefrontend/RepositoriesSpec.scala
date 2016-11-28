@@ -44,8 +44,6 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
     "show a list of services and link to the team services page" in {
 
-
-
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(
         JsonData.repositoriesData
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
@@ -55,23 +53,24 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       response.status shouldBe 200
       response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
       response.body should include("<h1>Repositories</h1>")
-      //response.body should include("""href="/services/teamA-serv"""")
-      //response.body should include("""href="/services/teamB-frontend"""")
 
       val document = asDocument(response.body)
 
 
       document.select("#row0_name").select("td a").text() shouldBe "teamA-serv"
+      document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/service/teamA-serv"
       document.select("#row0_created").text() shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
       document.select("#row0_repotype").text() shouldBe "Service"
       document.select("#row0_lastActive").text() shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
 
       document.select("#row1_name").select("td a").text() shouldBe "teamB-library"
+      document.select("#row1_name").select("td a[href]").attr("href") shouldBe "/library/teamB-library"
       document.select("#row1_created").text() shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
       document.select("#row1_repotype").text() shouldBe "Library"
       document.select("#row1_lastActive").text() shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
 
       document.select("#row2_name").select("td a").text() shouldBe "teamB-other"
+      document.select("#row2_name").select("td a[href]").attr("href") shouldBe "/repositories/teamB-other"
       document.select("#row2_created").text() shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
       document.select("#row2_repotype").text() shouldBe "Other"
       document.select("#row2_lastActive").text() shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")

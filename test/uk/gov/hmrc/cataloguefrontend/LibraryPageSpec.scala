@@ -46,7 +46,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
     "return a 404 when a Service is viewed as a Library" in {
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(serviceData)))
 
-      val response = await(WS.url(s"http://localhost:$port/libraries/serv").get)
+      val response = await(WS.url(s"http://localhost:$port/library/serv").get)
       response.status shouldBe 404
     }
 
@@ -54,7 +54,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
 
       serviceEndpoint(GET, "/api/repositories/lib", willRespondWith = (200, Some(libraryData)))
 
-      val response = await(WS.url(s"http://localhost:$port/libraries/lib").get)
+      val response = await(WS.url(s"http://localhost:$port/library/lib").get)
       response.status shouldBe 200
       response.body should include(s"links on this page are automatically generated")
       response.body should include(s"teamA")

@@ -51,6 +51,12 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
 
+  val repotypeToDetailsUrl = Map(
+    RepoType.Deployable -> routes.CatalogueController.service _,
+    RepoType.Other -> routes.CatalogueController.repository _,
+    RepoType.Library -> routes.CatalogueController.library _
+  )
+
   def userManagementConnector: UserManagementConnector
 
   def teamsAndServicesConnector: TeamsAndRepositoriesConnector
@@ -137,27 +143,9 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
-  def allServiceNames() = Action.async { implicit request =>
-    teamsAndServicesConnector.allServiceNamesWithDates.map { services =>
-      Ok(services_list(services.time, repositories = services.data))
-    }
-  }
-
-  def allLibraryNames() = Action.async { implicit request =>
-    teamsAndServicesConnector.allLibraryNamesWithDates.map { libraries =>
-      Ok(library_list(libraries.time, repositories = libraries.data))
-    }
-  }
-
   def allRepositories() = Action.async{ implicit reuqest =>
     import SearchFiltering._
 
-    val repotypeToDetailsUrl = Map(
-      RepoType.Deployable -> routes.CatalogueController.service _,
-      RepoType.Other -> routes.CatalogueController.repository _,
-      RepoType.Library -> routes.CatalogueController.library _
-    )
-    repotypeToDetailsUrl
     teamsAndServicesConnector.allRepositories.map { repos =>
       val form: Form[RepoListFilter] = RepoListFilter.form.bindFromRequest()
       form.fold(
