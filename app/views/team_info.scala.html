@@ -42,44 +42,44 @@
 
         <div class="row">
 
-            <div class="col-md-12">
+            <div class="col-md-4">
                 <div class="board">
                     <h3 class="board__heading">Details</h3>
 
                     <div class="board__body">
 
-                        <ul class="list list--minimal list-group row" id="team_details">
-                            <li class="col-xs-6">
+                        <ul class="list list--minimal" id="team_details">
+                            <li>
                                 <label>First Active: </label>
-                                @activityDates.firstActive.map(_.asRFC1123).getOrElse("None")
+                                @activityDates.firstActive.map(_.displayFormat).getOrElse("None")
                             </li>
-                            <li class="col-xs-6">
+                            <li>
                                 <label>Last Active: </label>
-                                @activityDates.lastActive.map(_.asRFC1123).getOrElse("None")
+                                @activityDates.lastActive.map(_.displayFormat).getOrElse("None")
                             </li>
                             @if(errorOrTeamDetails.isRight) {
                                 @for(teamDetails <- errorOrTeamDetails.right.toOption) {
-                                    <li class="col-xs-6">
+                                    <li>
                                         <label>Description: </label>
                                         @teamDetails.description
                                     </li>
-                                    <li class="col-xs-6">
+                                    <li>
                                         <label>Documentation: </label>
                                         @teamDetails.documentation.map { d =>
                                             <a href="@d" target="_blank">Go to Confluence space</a>
                                         }
                                     </li>
-                                    <li class="col-xs-6">
+                                    <li>
                                         <label>Organisation: </label>
                                         @teamDetails.organisation
                                     </li>
-                                    <li class="col-xs-6">
+                                    <li>
                                         <label>Slack: </label>
                                         @teamDetails.slack.map { d =>
                                             <a href="@d" target="_blank">Go to team channel</a>
                                         }
                                     </li>
-                                    <li class="col-xs-6">
+                                    <li>
                                         <label>Location: </label>
                                         @teamDetails.location
                                     </li>
@@ -87,10 +87,9 @@
 
 
                             } else {
-                                <li class="col-xs-9">
-                                    <div class="list list--minimal alert">@showError(errorOrTeamDetails.left.get)</div>
-                                </li>
+                                <div class="list list--minimal alert">@showError(errorOrTeamDetails.left.get)</div>
                             }
+
                         </ul>
 
                         @if(errorOrTeamDetails.isRight) {
@@ -99,10 +98,8 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-8">
                 <div class="board">
                     <h3 class="board__heading">Team Members</h3>
 
@@ -111,11 +108,8 @@
                             <ul class="list list--minimal" id="team_members">
                             @if(errorOrTeamMembers.isRight) {
                                 @for(teamMember <- errorOrTeamMembers.right.get) {
-                                    <li class="col-xs-4">
-                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
-                                        @if(teamMember.isServiceOwner) {
-                                            <span class="label label-success">Service Owner</span>
-                                        }
+                                    <li class="col-xs-6">
+                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
                                     </li>
                                 }
 
@@ -138,9 +132,7 @@
 
         <div class="row">
             @showRepositories(repos, RepoType.Deployable, "Services", "service", "service")
-
             @showRepositories(repos, RepoType.Library, "Libraries", "library", "library")
-
             @showRepositories(repos, RepoType.Other, "Repositories", "repository", "repositories")
         </div>
 
