@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
-object ReleaseFiltering {
+object SearchFiltering {
 
   implicit class ReleasesResult(releases: Seq[TeamRelease]) {
 
@@ -37,5 +37,17 @@ object ReleaseFiltering {
     }
 
   }
+
+  implicit class RepositoryResult(repositories: Seq[RepositoryDisplayDetails]) {
+
+    def filter(q: RepoListFilter): Seq[RepositoryDisplayDetails] = {
+
+      repositories.toStream
+        .filter(x => q.name.isEmpty || q.name.get == x.name)
+        .filter(x => q.repoType.isEmpty || q.repoType.get.equalsIgnoreCase(x.repoType.toString) || ("service".equalsIgnoreCase(q.repoType.get) && x.repoType == RepoType.Deployable))
+    }
+
+  }
+
 
 }

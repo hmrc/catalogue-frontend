@@ -51,6 +51,12 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
 
+  val repotypeToDetailsUrl = Map(
+    RepoType.Deployable -> routes.CatalogueController.service _,
+    RepoType.Other -> routes.CatalogueController.repository _,
+    RepoType.Library -> routes.CatalogueController.library _
+  )
+
   def userManagementConnector: UserManagementConnector
 
   def teamsAndServicesConnector: TeamsAndRepositoriesConnector
@@ -122,7 +128,6 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   def library(name: String) = Action.async { implicit request =>
     for {
       library <- teamsAndServicesConnector.repositoryDetails(name)
-      maybeDataPoints <- indicatorsConnector.deploymentIndicatorsForService(name)
     } yield library match {
       case Some(s) if s.data.repoType == RepoType.Library => Ok(library_info(s.time, s.data))
       case _ => NotFound
@@ -138,28 +143,21 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
-  def allServiceNames() = Action.async { implicit request =>
-    teamsAndServicesConnector.allServiceNamesWithDates.map { services =>
-      Ok(services_list(services.time, repositories = services.data))
-    }
-  }
-
-  def allLibraryNames() = Action.async { implicit request =>
-    teamsAndServicesConnector.allLibraryNamesWithDates.map { libraries =>
-      Ok(library_list(libraries.time, repositories = libraries.data))
-    }
-  }
-
   def allRepositories() = Action.async{ implicit reuqest =>
+    import SearchFiltering._
 
     teamsAndServicesConnector.allRepositories.map { repos =>
-      Ok(repositories_list(repos.time, repositories = repos.data))
+      val form: Form[RepoListFilter] = RepoListFilter.form.bindFromRequest()
+      form.fold(
+        error => Ok(repositories_list(repos.time, repositories = Seq.empty, repotypeToDetailsUrl, error)),
+        query => Ok(repositories_list(repos.time, repositories = repos.data.filter(query), repotypeToDetailsUrl, form))
+      )
     }
   }
 
   def releases() = Action.async { implicit request =>
 
-    import ReleaseFiltering._
+    import SearchFiltering._
 
     releasesService.getReleases().map { rs =>
 
@@ -186,6 +184,19 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
 case class ReleasesFilter(team: Option[String] = None, serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
   def isEmpty: Boolean = team.isEmpty && serviceName.isEmpty && from.isEmpty && to.isEmpty
+}
+
+case class RepoListFilter(name : Option[String] = None, repoType : Option[String] = None) {
+  def isEmpty = name.isEmpty && repoType.isEmpty
+}
+
+object RepoListFilter{
+  lazy val form = Form (
+    mapping(
+      "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
+      "repoType" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
+    )(RepoListFilter.apply)(RepoListFilter.unapply)
+  )
 }
 
 object ReleasesFilter {
