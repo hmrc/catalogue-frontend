@@ -42,7 +42,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
   "Repositories list" should {
 
-    "show a list of services and link to the team services page" in {
+    "show a list of all repositories when 'all' is selected" in {
 
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(
         JsonData.repositoriesData
@@ -74,26 +74,32 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       document.select("#row2_created").text() shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
       document.select("#row2_repotype").text() shouldBe "Other"
       document.select("#row2_lastActive").text() shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
-
-
     }
 
-//    "show a list of libraries and link to the team library page" in {
-//
-//      serviceEndpoint(GET, "/api/libraries", willRespondWith = (200, Some(
-//        """[
-//          |   {"name":"teamA-library", "createdAt": 1429787242000, "lastUpdatedAt": 1452785041000, "repoType" : "Library"},
-//          |   {"name":"teamB-library", "createdAt": 1429787242000, "lastUpdatedAt": 1452785041000, "repoType" : "Library"}
-//          |]""".stripMargin
-//      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
-//
-//      val response = await(WS.url(s"http://localhost:$port/libraries").get)
-//
-//      response.status shouldBe 200
-//      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
-//      response.body should include("<h1>Libraries</h1>")
-//      response.body should include("""href="/libraries/teamA-library"""")
-//      response.body should include("""href="/libraries/teamB-library"""")
-//    }
+
+    "show a list of all libraries when 'Library' is selected" in {
+
+      serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(
+        JsonData.repositoriesData
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+
+      val response = await(WS.url(s"http://localhost:$port/repositories?repoType=Library").get)
+
+      response.status shouldBe 200
+      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
+      response.body should include("<h1>Repositories</h1>")
+
+      val document = asDocument(response.body)
+
+
+      document.select("tbody.list").select("tr").size() shouldBe 1
+
+      document.select("#row0_name").select("td a").text() shouldBe "teamB-library"
+      document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/library/teamB-library"
+      document.select("#row0_created").text() shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
+      document.select("#row0_repotype").text() shouldBe "Library"
+      document.select("#row0_lastActive").text() shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
+    }
+
   }
 }
