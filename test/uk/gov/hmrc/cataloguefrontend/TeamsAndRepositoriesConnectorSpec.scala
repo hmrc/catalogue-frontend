@@ -17,23 +17,24 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.scalatest.BeforeAndAfter
+import org.scalactic.TypeCheckedTripleEquals
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{BeforeAndAfter, Matchers, OptionValues, WordSpec}
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.play.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 
-class TeamsAndRepositoriesConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures with OneServerPerSuite with WireMockEndpoints with TypeCheckedTripleEquals with OptionValues {
 
-  implicit override lazy val app = new GuiceApplicationBuilder().configure (
-    "microservice.services.indicators.port" -> endpointPort,
-    "microservice.services.indicators.host" -> host,
+  import uk.gov.hmrc.cataloguefrontend.JsonData._
+
+
+  implicit override lazy val app = new GuiceApplicationBuilder().configure(
     "microservice.services.teams-and-services.host" -> host,
     "microservice.services.teams-and-services.port" -> endpointPort,
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
   ).build()
-
 
 
   "teamsByService" should {
@@ -49,13 +50,75 @@ class TeamsAndRepositoriesConnectorSpec extends UnitSpec with BeforeAndAfter wit
           | """.stripMargin
       )), givenJsonBody = Some("[\"serviceA\",\"serviceB\"]"))
 
-      val response = await(TeamsAndServicesConnector.teamsByService(Seq("serviceA","serviceB"))(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+      val response = TeamsAndRepositoriesConnector.teamsByService(Seq("serviceA", "serviceB"))(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response.data.size shouldBe 2
-      response.data("serviceA") shouldBe Seq("teamA","teamB")
+      response.data("serviceA") shouldBe Seq("teamA", "teamB")
       response.data("serviceB") shouldBe Seq("teamA")
 
     }
-
   }
+
+  "repositoryDetails" should {
+    "convert the json string to RepositoryDetails" in {
+      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(JsonData.serviceDetailsData)))
+
+      val responseData: RepositoryDetails =
+        TeamsAndRepositoriesConnector
+          .repositoryDetails("serv")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
+          .futureValue
+          .value
+          .data
+
+      responseData.name shouldBe "serv"
+      responseData.description shouldBe "some description"
+      responseData.createdAt shouldBe createdAt
+      responseData.lastActive shouldBe lastActiveAt
+      responseData.teamNames should ===(Seq("teamA", "teamB"))
+      responseData.githubUrls should ===(Seq(Link("github", "github.com", "https://github.com/hmrc/serv")))
+      responseData.ci should ===(Seq(Link("open1", "open 1", "http://open1/serv"), Link("open2", "open 2", "http://open2/serv")))
+      responseData.environments should ===(Some(Seq(
+        Environment(
+          "env1",
+          Seq(
+            Link("ser1", "service1", "http://ser1/serv"),
+            Link("ser2", "service2", "http://ser2/serv")
+          )),
+        Environment(
+          "env2",
+          Seq(
+            Link("ser1", "service1", "http://ser1/serv"),
+            Link("ser2", "service2", "http://ser2/serv")
+          )
+        ))))
+
+      responseData.repoType should ===(RepoType.Deployable)
+    }
+  }
+
+  "allRepositories" should {
+    "return all the repositories returned by the api" in {
+      serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(JsonData.repositoriesData)))
+
+      val repositories = TeamsAndRepositoriesConnector.allRepositories(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+
+      repositories(0).name shouldBe "teamA-serv"
+      repositories(0).createdAt shouldBe JsonData.createdAt
+      repositories(0).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories(0).repoType shouldBe RepoType.Deployable
+
+      repositories(1).name shouldBe "teamB-library"
+      repositories(1).createdAt shouldBe JsonData.createdAt
+      repositories(1).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories(1).repoType shouldBe RepoType.Library
+
+      repositories(2).name shouldBe "teamB-other"
+      repositories(2).createdAt shouldBe JsonData.createdAt
+      repositories(2).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories(2).repoType shouldBe RepoType.Other
+
+    }
+  }
+
+
 }

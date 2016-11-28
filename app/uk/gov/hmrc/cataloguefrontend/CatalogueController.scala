@@ -40,11 +40,11 @@ object CatalogueController extends CatalogueController {
 
   override def userManagementConnector: UserManagementConnector = UserManagementConnector
 
-  override def teamsAndServicesConnector: TeamsAndServicesConnector = TeamsAndServicesConnector
+  override def teamsAndServicesConnector: TeamsAndRepositoriesConnector = TeamsAndRepositoriesConnector
 
   override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
 
-  override def releasesService: ReleasesService = new ReleasesService(ServiceReleasesConnector, TeamsAndServicesConnector)
+  override def releasesService: ReleasesService = new ReleasesService(ServiceReleasesConnector, TeamsAndRepositoriesConnector)
 }
 
 trait CatalogueController extends FrontendController with UserManagementPortalLink {
@@ -53,7 +53,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def userManagementConnector: UserManagementConnector
 
-  def teamsAndServicesConnector: TeamsAndServicesConnector
+  def teamsAndServicesConnector: TeamsAndRepositoriesConnector
 
   def indicatorsConnector: IndicatorsConnector
 
@@ -89,13 +89,13 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
         Ok(team_info(
           s.time,
           teamName,
-          repos = s.data.repos,
+          repos = s.data.repos.getOrElse(Map()),
           activityDates = ActivityDates(s.data.firstActiveDate, s.data.lastActiveDate),
           errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
           teamDetails,
           TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),
           TeamChartData.deploymentStability(teamName, teamIndicators.map(_.stability)),
-          umpFrontPageUrl(teamName)
+          umpMyTeamsPageUrl(teamName)
         )
         )
       case _ => NotFound
@@ -147,6 +147,13 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   def allLibraryNames() = Action.async { implicit request =>
     teamsAndServicesConnector.allLibraryNamesWithDates.map { libraries =>
       Ok(library_list(libraries.time, repositories = libraries.data))
+    }
+  }
+
+  def allRepositories() = Action.async{ implicit reuqest =>
+
+    teamsAndServicesConnector.allRepositories.map { repos =>
+      Ok(repositories_list(repos.time, repositories = repos.data))
     }
   }
 
@@ -209,7 +216,7 @@ object DisplayableTeamMembers {
       DisplayableTeamMember(
         displayName = tm.displayName.getOrElse("DISPLAY NAME NOT PROVIDED"),
         isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.toLowerCase)),
-        umpLink = tm.username.map(x => s"$umpProfileBaseUrl/$x").getOrElse("USERNAME NOT PROVIDED")
+        umpLink = tm.username.map(x => s"${umpProfileBaseUrl.appendSlash}$x?edit").getOrElse("USERNAME NOT PROVIDED")
       )
     )
 

@@ -37,12 +37,10 @@ object RepoType extends Enumeration {
 
   val Deployable, Library, Other = Value
 
-  implicit val repoType = new Format[RepoType] {
+  implicit val repoType = new Reads[RepoType] {
     override def reads(json: JsValue): JsResult[RepoType] = json match {
       case JsString(s) => JsSuccess(RepoType.withName(s))
     }
-
-    override def writes(o: RepoType): JsValue = ???
   }
 
 }
@@ -61,18 +59,18 @@ case class RepositoryDetails(name: String,
                              environments: Option[Seq[Environment]],
                              repoType: RepoType.RepoType)
 
-case class RepositoryDisplayDetails(name:String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime)
+case class RepositoryDisplayDetails(name:String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime, repoType : RepoType.RepoType)
 object RepositoryDisplayDetails {
   implicit val repoDetailsFormat = Json.format[RepositoryDisplayDetails]
 }
 
-case class Team(name:String, firstActiveDate: Option[LocalDateTime], lastActiveDate: Option[LocalDateTime], repos: Map[String, Seq[String]])
+case class Team(name:String, firstActiveDate: Option[LocalDateTime], lastActiveDate: Option[LocalDateTime], repos: Option[Map[String, Seq[String]]])
 object Team {
   implicit val format = Json.format[Team]
 }
 
 
-trait TeamsAndServicesConnector extends ServicesConfig {
+trait TeamsAndRepositoriesConnector extends ServicesConfig {
   type ServiceName = String
   type TeamName = String
 
@@ -120,6 +118,11 @@ trait TeamsAndServicesConnector extends ServicesConfig {
     }
   }
 
+  def allRepositories(implicit hc: HeaderCarrier): Future[CachedList[RepositoryDisplayDetails]] =
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories").map {
+      toCachedList[RepositoryDisplayDetails]
+    }
+
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[RepositoryDetails]]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories/$name").map {
       toCachedItemOption[RepositoryDetails]
@@ -158,7 +161,7 @@ trait TeamsAndServicesConnector extends ServicesConfig {
       r.header(CacheTimestampHeaderName).getOrElse("(None)"))
 }
 
-object TeamsAndServicesConnector extends TeamsAndServicesConnector {
+object TeamsAndRepositoriesConnector extends TeamsAndRepositoriesConnector {
   override val http = WSHttp
 
   override def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")

@@ -59,6 +59,13 @@ object ViewMessages {
     Html(s"""<h2 class="chart-message text-center">No production deployments for $daysSinceNoProdDeployment days</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
   }
 
+  def toTypeText(repoType: RepoType.RepoType) : String = {
+    repoType match {
+      case RepoType.Deployable => "Service"
+      case t => t.toString
+    }
+  }
+
   def errorMessage = {
     Html("""<h2 class="chart-message text-center">The catalogue encountered an error</h2>""" + s"<p>${ViewMessages.indicatorsServiceError}</p>")
   }
