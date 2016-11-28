@@ -5909,6 +5909,7 @@ section span.other-teams-message {
   margin: 2em 0; }
 
 .list {
+  overflow: hidden;
   padding-left: 1.2em;
   list-style: disc;
   color: #6f777b;

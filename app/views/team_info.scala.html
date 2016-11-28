@@ -107,31 +107,27 @@
                     <h3 class="board__heading">Team Members</h3>
 
                     <div class="board__body">
-                        <ul class="list list--minimal" id="team_members">
-                        @if(errorOrTeamMembers.isRight) {
-                            @for(teamMember <- errorOrTeamMembers.right.get) {
-                                <li class="list-item row">
-                                    <div class="col-md-7">
-                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
-                                    </div>
-                                    <div class="col-md-4">
-                                    @if(teamMember.isServiceOwner) {
-                                        <span class="label label-success">Service Owner</span>
-                                    }
-                                    </div>
+                        <div>
+                            <ul class="list list--minimal" id="team_members">
+                            @if(errorOrTeamMembers.isRight) {
+                                @for(teamMember <- errorOrTeamMembers.right.get) {
+                                    <li class="col-xs-4">
+                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
+                                    </li>
+                                }
+
+                            } else {
+                                <li id="linkToRectify">
+                                @showError(errorOrTeamMembers.left.get)
                                 </li>
                             }
-
-                        } else {
-                            <li id="linkToRectify">
-                            @showError(errorOrTeamMembers.left.get)
-                            </li>
-                        }
-                        </ul>
+                            </ul>
+                        </div>
 
                         @if(errorOrTeamMembers.isRight) {
                             @umpUpdateLink
                         }
+
                     </div>
                 </div>
             </div>
@@ -317,7 +313,10 @@
 @showError(error: ConnectorError) = {
 @error match {
     case NoData(linkToRectify) => {
-            <!--Team  @teamName is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>-->
+            <!--Team
+
+        @teamName
+        is not defined in the User Management Portal, please add it <a href="@linkToRectify">here</a>-->
         Team @teamName is not defined in the User Management Portal. To add it, please raise a TSR.
     }
     case _ => {

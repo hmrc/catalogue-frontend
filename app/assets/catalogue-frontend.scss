@@ -124,6 +124,7 @@ section {
 }
 
 .list {
+  overflow: hidden;
   padding-left: 1.2em;
   list-style: disc;
   color: $grey-1;
