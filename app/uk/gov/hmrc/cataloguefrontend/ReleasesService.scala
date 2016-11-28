@@ -19,9 +19,10 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.time.LocalDateTime
 
-import TeamsAndServicesConnector._
+import TeamsAndRepositoriesConnector._
 import uk.gov.hmrc.play.http.HeaderCarrier
 
+import scala.collection.immutable.Iterable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -29,7 +30,7 @@ case class TeamRelease(name: ServiceName, teams: Seq[TeamName], productionDate: 
                        creationDate: Option[LocalDateTime] = None, interval: Option[Long] = None,
                        leadTime:  Option[Long] = None, version: String)
 
-class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServicesConnector: TeamsAndServicesConnector) {
+class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
   type ServiceTeamMappings = Map[ServiceName, Seq[TeamName]]
 
   sealed trait ReleaseFilter { def serviceTeams: ServiceTeamMappings }
@@ -66,7 +67,7 @@ class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServi
     teamName map { t =>
       teamsAndServicesConnector.teamInfo(t).flatMap {
         case Some(x) =>
-          val teamServiceNames = x.data.repos("Deployable")
+          val teamServiceNames = x.data.repos.getOrElse(Map())("Deployable")
           teamsAndServicesConnector.teamsByService(teamServiceNames).map { st => ServiceTeams(st.data) }
         case None => Future.successful(NotFound) } }
 

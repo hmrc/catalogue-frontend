@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.time.{LocalDateTime, ZoneOffset}
 
-import TeamsAndServicesConnector._
+import TeamsAndRepositoriesConnector._
 import org.mockito
 import org.mockito.Mockito._
 import org.mockito.Matchers._
@@ -41,7 +41,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
 
     "Combine release and team information given an empty filter" in {
       val releasesConnector = mock[ServiceReleasesConnector]
-      val teamsAndServicesConnector = mock[TeamsAndServicesConnector]
+      val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
       when(releasesConnector.getReleases()).thenReturn(Future.successful(Seq(
@@ -62,7 +62,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
 
     "Cope with releases for services that are not known to the catalogue" in {
       val releasesConnector = mock[ServiceReleasesConnector]
-      val teamsAndServicesConnector = mock[TeamsAndServicesConnector]
+      val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
       when(releasesConnector.getReleases()).thenReturn(Future.successful(Seq(
@@ -79,7 +79,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
 
     "Filter results given a team name" in {
       val releasesConnector = mock[ServiceReleasesConnector]
-      val teamsAndServicesConnector = mock[TeamsAndServicesConnector]
+      val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
       when(releasesConnector.getReleases(Seq("a-service", "b-service"))).thenReturn(Future.successful(Seq(
@@ -89,7 +89,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
       when(teamsAndServicesConnector.teamInfo("b-team")).thenReturn(Future.successful(
         Some(new CachedItem[Team](
           Team(name = "teamName", None, None,
-          repos = Map("Deployable" -> Seq("a-service", "b-service"))), "time"))))
+          repos = Some(Map("Deployable" -> Seq("a-service", "b-service")))), "time"))))
 
       when(teamsAndServicesConnector.teamsByService(Seq("a-service", "b-service"))).thenReturn(
         Future.successful(new CachedItem[Map[ServiceName, Seq[TeamName]]](
@@ -104,7 +104,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
 
     "Filter results given a service name" in {
       val releasesConnector = mock[ServiceReleasesConnector]
-      val teamsAndServicesConnector = mock[TeamsAndServicesConnector]
+      val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
       when(releasesConnector.getReleases(Seq("a-service"))).thenReturn(Future.successful(Seq(
@@ -122,7 +122,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
 
     "Give precedence to the service name filter over the team name filter as it is more specific" in {
       val releasesConnector = mock[ServiceReleasesConnector]
-      val teamsAndServicesConnector = mock[TeamsAndServicesConnector]
+      val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
       when(releasesConnector.getReleases(Seq("a-service"))).thenReturn(Future.successful(Seq(
@@ -141,7 +141,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
 
     "Not make unnecessary calls if a team does not exist" in {
       val releasesConnector = mock[ServiceReleasesConnector]
-      val teamsAndServicesConnector = mock[TeamsAndServicesConnector]
+      val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       when(teamsAndServicesConnector.teamInfo("a-team")).thenReturn(Future.successful(None))
 
@@ -153,7 +153,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
 
     "Not make unnecessary calls if a service does not exist" in {
       val releasesConnector = mock[ServiceReleasesConnector]
-      val teamsAndServicesConnector = mock[TeamsAndServicesConnector]
+      val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(Future.successful(None))
 

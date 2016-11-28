@@ -39,7 +39,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
     "microservice.services.user-management.url" -> endpointMockUrl,
-    "microservice.services.user-management.frontPageUrl" -> "http://some.ump.com",
+    "microservice.services.user-management.myTeamsUrl" -> "http://some.ump.com/myTeams",
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
   ).build()
 
@@ -71,13 +71,13 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
     it("has an empty members array in json") {
 
       val error: ConnectorError = callExternalMockedService("team-chicken", Some("/user-management-empty-members.json")).left.value
-      error should ===(NoData("http://some.ump.com/team-chicken"))
+      error should ===(NoData("http://some.ump.com/myTeams/team-chicken?edit"))
     }
 
     it("no members field in json") {
       val error: ConnectorError = callExternalMockedService("team-chicken", Some("/user-management-no-members.json")).left.value
 
-      error should ===(NoData("http://some.ump.com/team-chicken"))
+      error should ===(NoData("http://some.ump.com/myTeams/team-chicken?edit"))
     }
 
     it("api returns an error code") {
@@ -129,7 +129,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
       val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
 
-      teamDetails should ===(NoData("http://some.ump.com/TEAM-A"))
+      teamDetails should ===(NoData("http://some.ump.com/myTeams/TEAM-A?edit"))
     }
 
     it("api returns an error code for team details") {
