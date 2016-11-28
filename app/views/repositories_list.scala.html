@@ -18,8 +18,9 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.RepositoryDisplayDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.RepoType
 
-@(cacheTimestampFormatted: String, repositories: Seq[RepositoryDisplayDetails])
+@(cacheTimestampFormatted: String, repositories: Seq[RepositoryDisplayDetails], repotypeToDetailsUrl: Map[RepoType.Value, (String) => Call], form: Form[_])(implicit messages: Messages)
 
 @standard_layout("Repositories", "repositories") {
     <header>
@@ -27,11 +28,26 @@
         <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
     </header>
 
-    <div id="service-list">
-        <div>
-            <label>Filter: </label>
-            <input class="search" />
-        </div>
+
+@if(form.hasErrors) {
+<div class="alert alert-danger" role="alert">
+    <ul class="list">
+        @form.errors.map { error =>
+        <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+        }
+    </ul>
+</div>
+}
+
+
+<div id="service-list">
+    <form action="/repositories" method="get" class="form-inline">
+        <span>Repo Name: <input type="text" name="name" value=@{form("name").value}></span>
+        <span>Repo Type: <input type="text" name="repoType" value=@{form("repoType").value}></span>
+
+
+        <input type="submit" value="Filter">
+    </form>
 
         <table class="table table-striped">
             <tr>
@@ -44,7 +60,7 @@
             @repositories.zipWithIndex.map{case (repo, i) =>
             <tr id="row@i">
                 <td class="service-name" id="row@{i}_name">
-                    <a href="">@repo.name</a>
+                    <a href="@repotypeToDetailsUrl(repo.repoType)(repo.name)">@repo.name</a>
                 </td>
                 <td class="repo-type monospaced" id="row@{i}_repotype">
                     @ViewMessages.toTypeText(repo.repoType)
