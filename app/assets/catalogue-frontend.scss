@@ -156,6 +156,7 @@ section {
 .board {
   margin-bottom: 1em;
   border: 1px solid $dark-grey;
+  overflow: hidden;
 }
 
 .board__heading {
