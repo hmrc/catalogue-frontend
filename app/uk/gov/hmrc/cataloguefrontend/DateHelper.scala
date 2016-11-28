@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.format.DateTimeFormatter
+import java.time.format.{DateTimeFormatter, FormatStyle}
 import java.time._
 import java.util.Date
 
@@ -27,7 +27,7 @@ object DateHelper {
   val `dd-MM-yyyy`: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
 
   implicit class JavaDateToLocalDateTime(d: Date) {
-    def toLocalDate = LocalDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault())
+    def toLocalDate = LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault())
   }
 
   implicit class LocalDateTimeImplicits(d: LocalDateTime) {
@@ -44,6 +44,10 @@ object DateHelper {
 
     def asRFC1123: String = {
       DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.of(d, ZoneId.of("GMT")))
+    }
+
+    def displayFormat: String = {
+      d.format(DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm"))
     }
 
   }
