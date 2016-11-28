@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import java.time.{ZoneId, ZoneOffset}
 import java.time.format.DateTimeFormatter
 
@@ -185,8 +186,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       response.status shouldBe 200
 
-      response.body should include(DateTimeFormatter.RFC_1123_DATE_TIME.format(createdAt.atZone(ZoneId.of("GMT"))))
-      response.body should include(DateTimeFormatter.RFC_1123_DATE_TIME.format(lastActiveAt.atZone(ZoneId.of("GMT"))))
+      response.body should include(createdAt.displayFormat)
+      response.body should include(lastActiveAt.displayFormat)
     }
 
 
