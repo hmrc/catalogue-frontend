@@ -76,14 +76,14 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         |    ]
         |}
         |}""".stripMargin
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
+      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
 
       response.body should include("""<a href="/library/teamA-lib">teamA-lib</a>""")
       response.body should include("""<a href="/service/teamA-serv">teamA-serv</a>""")
@@ -95,14 +95,14 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show user management portal link" ignore {
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
         """{"Library":[], "Service": []  }""".stripMargin
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
+      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
 
       response.body.toString should include("""<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
 
@@ -128,14 +128,14 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
         """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
 
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
+      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
       response.body should include(ViewMessages.noRepoOfType("service"))
       response.body should include(ViewMessages.noRepoOfType("library"))
     }
@@ -146,7 +146,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
         """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
 
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/large-user-management-response.json")
 
@@ -179,7 +179,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
           |}""".stripMargin
 
 
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
       val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
@@ -200,7 +200,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
           """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
 
-        )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+        )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
         mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", fileName)
 
@@ -224,7 +224,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show error message if UMP is not available" in {
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
         """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       mockHttpApiCall(url = s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json", httpCodeToBeReturned = 404)
 
@@ -241,7 +241,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
 
       """{"name":"teamA", "repos":{"Library":[], "Deployable": [] }}""".stripMargin
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName", "/user-management-team-details-response.json")
 
@@ -354,7 +354,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       method = GET,
       url = url,
       willRespondWith = (httpCodeToBeReturned, Some(json)),
-      extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
     json
   }
