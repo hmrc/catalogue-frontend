@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 
 import java.time.{LocalDateTime, ZoneOffset}
-import java.time.temporal.ChronoUnit
 
 import play.api.Play.current
 import play.api.data.Forms._
@@ -26,12 +25,9 @@ import play.api.data.{Form, Mapping}
 import play.api.i18n.Messages.Implicits._
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamDetails, TeamMember}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamMember}
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
-
-import scala.concurrent.Future
-import scala.util.Try
 
 case class ActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime])
 
@@ -154,25 +150,34 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
-  def allRepositories() = Action.async{ implicit reuqest =>
+  def allServices = Action {
+    Redirect("/repositories?name=&repoType=Deployable")
+  }
+
+  def allLibraries = Action {
+    Redirect("/repositories?name=&repoType=Library")
+  }
+
+  def allRepositories() = Action.async{ implicit request =>
     import SearchFiltering._
 
-    teamsAndServicesConnector.allRepositories.map { repos =>
+    teamsAndServicesConnector.allRepositories.map { repositories =>
       val form: Form[RepoListFilter] = RepoListFilter.form.bindFromRequest()
       form.fold(
         error =>
           Ok(
             repositories_list(
-              repos.formattedTimestamp,
+              repositories.formattedTimestamp,
               repositories = Seq.empty,
               repotypeToDetailsUrl,
               error)),
         query =>
           Ok(
             repositories_list(
-              repos.formattedTimestamp,
-              repositories = repos.data.filter(query),
-              repotypeToDetailsUrl, form))
+              repositories.formattedTimestamp,
+              repositories = repositories.data.filter(query),
+              repotypeToDetailsUrl,
+              form))
       )
     }
   }
