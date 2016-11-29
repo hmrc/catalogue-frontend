@@ -100,22 +100,22 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
     "return all the repositories returned by the api" in {
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(JsonData.repositoriesData)))
 
-      val repositories = TeamsAndRepositoriesConnector.allRepositories(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+      val repositories: Timestamped[Seq[RepositoryDisplayDetails]] = TeamsAndRepositoriesConnector.allRepositories(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
 
-      repositories(0).name shouldBe "teamA-serv"
-      repositories(0).createdAt shouldBe JsonData.createdAt
-      repositories(0).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories(0).repoType shouldBe RepoType.Deployable
+      repositories.data(0).name shouldBe "teamA-serv"
+      repositories.data(0).createdAt shouldBe JsonData.createdAt
+      repositories.data(0).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories.data(0).repoType shouldBe RepoType.Deployable
 
-      repositories(1).name shouldBe "teamB-library"
-      repositories(1).createdAt shouldBe JsonData.createdAt
-      repositories(1).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories(1).repoType shouldBe RepoType.Library
+      repositories.data(1).name shouldBe "teamB-library"
+      repositories.data(1).createdAt shouldBe JsonData.createdAt
+      repositories.data(1).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories.data(1).repoType shouldBe RepoType.Library
 
-      repositories(2).name shouldBe "teamB-other"
-      repositories(2).createdAt shouldBe JsonData.createdAt
-      repositories(2).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories(2).repoType shouldBe RepoType.Other
+      repositories.data(2).name shouldBe "teamB-other"
+      repositories.data(2).createdAt shouldBe JsonData.createdAt
+      repositories.data(2).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories.data(2).repoType shouldBe RepoType.Other
 
     }
   }

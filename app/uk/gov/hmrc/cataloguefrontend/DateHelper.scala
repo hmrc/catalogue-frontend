@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.format.{DateTimeFormatter, FormatStyle}
 import java.time._
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
 import scala.util.Try
@@ -32,27 +32,24 @@ object DateHelper {
 
   implicit class LocalDateTimeImplicits(d: LocalDateTime) {
 
-
     def toDate: Date = Date.from(d.atZone(ZoneId.systemDefault()).toInstant)
 
     def epochSeconds = d.toEpochSecond(ZoneOffset.UTC)
+
     def epochMillis = d.atZone(ZoneId.of("GMT")).toInstant.toEpochMilli
 
     def asString = d.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
 
     def asPattern(pattern: String) = d.format(DateTimeFormatter.ofPattern(pattern))
 
-    def asRFC1123: String = {
+    def asRFC1123: String =
       DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.of(d, ZoneId.of("GMT")))
-    }
 
-    def displayFormat: String = {
+    def displayFormat: String =
       d.format(DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm"))
-    }
-
   }
 
-  implicit def stringToLocalDateTimeOpt(ds: String) = {
+  implicit def stringToLocalDateTimeOpt(ds: String): Option[LocalDateTime] = {
     Try {
       LocalDate.parse(ds, `dd-MM-yyyy`).atStartOfDay()
     }.toOption
