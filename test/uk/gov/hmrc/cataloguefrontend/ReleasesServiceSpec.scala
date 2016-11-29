@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 
 import TeamsAndRepositoriesConnector._
 import org.mockito
@@ -49,9 +49,9 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
         Release("b-service", productionDate = productionDate, version = "0.2.0"))))
 
       when(teamsAndServicesConnector.allTeamsByService()).thenReturn(Future.successful(
-        new CachedItem[Map[ServiceName, Seq[TeamName]]](Map(
+        new Timestamped[Map[ServiceName, Seq[TeamName]]](Map(
           "a-service" -> Seq("a-team", "b-team"),
-          "b-service" -> Seq("c-team")), "time")))
+          "b-service" -> Seq("c-team")), Some(Instant.now))))
 
       val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
       val releases = service.getReleases().futureValue
@@ -69,7 +69,7 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
         Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.allTeamsByService()).thenReturn(Future.successful(
-        new CachedItem[Map[ServiceName, Seq[TeamName]]](Map(), "time")))
+        new Timestamped[Map[ServiceName, Seq[TeamName]]](Map(), Some(Instant.now))))
 
       val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
       val releases = service.getReleases().futureValue
@@ -87,13 +87,13 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
         Release("b-service", productionDate = productionDate, version = "0.2.0"))))
 
       when(teamsAndServicesConnector.teamInfo("b-team")).thenReturn(Future.successful(
-        Some(new CachedItem[Team](
+        Some(new Timestamped[Team](
           Team(name = "teamName", None, None,
-          repos = Some(Map("Deployable" -> Seq("a-service", "b-service")))), "time"))))
+          repos = Some(Map("Deployable" -> Seq("a-service", "b-service")))), Some(Instant.now)))))
 
       when(teamsAndServicesConnector.teamsByService(Seq("a-service", "b-service"))).thenReturn(
-        Future.successful(new CachedItem[Map[ServiceName, Seq[TeamName]]](
-          Map("a-service" -> Seq("a-team", "b-team"), "b-service" -> Seq("b-team", "c-team")), "time")))
+        Future.successful(new Timestamped[Map[ServiceName, Seq[TeamName]]](
+          Map("a-service" -> Seq("a-team", "b-team"), "b-service" -> Seq("b-team", "c-team")), Some(Instant.now))))
 
       val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
       val releases = service.getReleases(teamName = Some("b-team")).futureValue
@@ -111,8 +111,8 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
         Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
-        Future.successful(Some(new CachedItem[RepositoryDetails](
-          RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), "time"))))
+        Future.successful(Some(new Timestamped[RepositoryDetails](
+          RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), Some(Instant.now)))))
 
       val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
       val releases = service.getReleases(serviceName = Some("a-service")).futureValue
@@ -129,8 +129,8 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
         Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
-        Future.successful(Some(new CachedItem[RepositoryDetails](
-          RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), "time"))))
+        Future.successful(Some(new Timestamped[RepositoryDetails](
+          RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), Some(Instant.now)))))
 
       val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
       val releases = service.getReleases(serviceName = Some("a-service"), teamName = Some("non-matching-team")).futureValue

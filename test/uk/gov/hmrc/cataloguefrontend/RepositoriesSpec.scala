@@ -46,16 +46,15 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(
         JsonData.repositoriesData
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       val response = await(WS.url(s"http://localhost:$port/repositories").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
+      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
       response.body should include("<h1>Repositories</h1>")
 
       val document = asDocument(response.body)
-
 
       document.select("#row0_name").select("td a").text() shouldBe "teamA-serv"
       document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/service/teamA-serv"
@@ -81,16 +80,15 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(
         JsonData.repositoriesData
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Tue, 14 Oct 1066 10:03:23 GMT"))
+      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       val response = await(WS.url(s"http://localhost:$port/repositories?repoType=Library").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: Tue, 14 Oct 1066 10:03:23 GMT")
+      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
       response.body should include("<h1>Repositories</h1>")
 
       val document = asDocument(response.body)
-
 
       document.select("tbody.list").select("tr").size() shouldBe 1
 
