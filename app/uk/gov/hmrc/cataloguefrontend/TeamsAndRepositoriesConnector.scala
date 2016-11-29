@@ -29,7 +29,6 @@ import uk.gov.hmrc.play.http._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Try
 
 object RepoType extends Enumeration {
 
@@ -87,18 +86,21 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
-  def allTeams(implicit hc: HeaderCarrier): Future[CachedList[Team]] = {
+  def allTeams(implicit hc: HeaderCarrier): Future[Timestamped[Seq[Team]]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map {
-      toCachedList[Team]
+      timestamp[Seq[Team]]
     }
   }
 
-  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[Team]]] = {
+  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[Timestamped[Team]]] = {
     val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${URLEncoder.encode(teamName, "UTF-8")}"
 
     http.GET[HttpResponse](url)
-      .map {
-        toCachedItemOption[Team]
+      .map { response =>
+        response.status match {
+          case 404 => None
+          case 200 => Some(timestamp[Team](response))
+        }
       }.recover {
       case ex =>
         Logger.error(s"An error occurred getting teamInfo when connecting to $url: ${ex.getMessage}", ex)
@@ -106,47 +108,42 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     }
   }
 
-  def allRepositories(implicit hc: HeaderCarrier): Future[CachedList[RepositoryDisplayDetails]] =
+  def allRepositories(implicit hc: HeaderCarrier): Future[Timestamped[Seq[RepositoryDisplayDetails]]] =
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories").map {
-      toCachedList[RepositoryDisplayDetails]
+      timestamp[Seq[RepositoryDisplayDetails]]
     }
 
-  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[CachedItem[RepositoryDetails]]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories/$name").map {
-      toCachedItemOption[RepositoryDetails]
+  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[Timestamped[RepositoryDetails]]] = {
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories/$name").map { response =>
+      response.status match {
+        case 404 => None
+        case 200 => Some(timestamp[RepositoryDetails](response))
+      }
     }
   }
 
-  def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[CachedItem[Map[ServiceName, Seq[TeamName]]]] = {
+  def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Timestamped[Map[ServiceName, Seq[TeamName]]]] = {
     http.POST[Seq[String], HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true", serviceNames).map {
-      toCachedItem[Map[ServiceName, Seq[TeamName]]]
+      timestamp[Map[ServiceName, Seq[TeamName]]]
     }
   }
 
-  def allTeamsByService()(implicit hc: HeaderCarrier): Future[CachedItem[Map[ServiceName, Seq[TeamName]]]] = {
+  def allTeamsByService()(implicit hc: HeaderCarrier): Future[Timestamped[Map[ServiceName, Seq[TeamName]]]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true").map {
-      toCachedItem[Map[ServiceName, Seq[TeamName]]]
+      timestamp[Map[ServiceName, Seq[TeamName]]]
     }
   }
 
-  def toCachedItem[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): CachedItem[T] =
-    new CachedItem(
+  def timestamp[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): Timestamped[T] =
+    Timestamped.fromStringInstant(
       r.json.as[T],
-      r.header(CacheTimestampHeaderName).getOrElse("(None)"))
+      r.header(CacheTimestampHeaderName))
 
-  def toCachedItemOption[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): Option[CachedItem[T]] =
+  def toCachedItemOption[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): Option[Timestamped[T]] =
     r.status match {
       case 404 => None
-      case 200 =>
-        Some(new CachedItem(
-          r.json.as[T],
-          r.header(CacheTimestampHeaderName).getOrElse("(None)")))
+      case 200 => Some(timestamp(r))
     }
-
-  def toCachedList[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): CachedList[T] =
-    new CachedList(
-      r.json.as[Seq[T]],
-      r.header(CacheTimestampHeaderName).getOrElse("(None)"))
 }
 
 object TeamsAndRepositoriesConnector extends TeamsAndRepositoriesConnector {

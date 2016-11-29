@@ -71,7 +71,10 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def allTeams() = Action.async { implicit request =>
     teamsAndServicesConnector.allTeams.map { response =>
-      Ok(teams_list(response.time, response.data.sortBy(_.name.toUpperCase)))
+      Ok(
+        teams_list(
+          response.formattedTimestamp,
+          response.data.sortBy(_.name.toUpperCase)))
     }
   }
 
@@ -84,7 +87,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
     val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
     for {
-      typeRepos: Option[CachedItem[Team]] <- eventualTeamInfo
+      typeRepos: Option[Timestamped[Team]] <- eventualTeamInfo
       teamMembers <- eventualErrorOrMembers
       teamDetails <- eventualErrorOrTeamDetails
       teamIndicators <- eventualMaybeDeploymentIndicators
@@ -93,7 +96,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
         implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
 
         Ok(team_info(
-          s.time,
+          s.formattedTimestamp,
           teamName,
           repos = s.data.repos.getOrElse(Map()),
           activityDates = ActivityDates(s.data.firstActiveDate, s.data.lastActiveDate),
@@ -115,7 +118,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     } yield service match {
       case Some(s) if s.data.repoType == RepoType.Deployable => Ok(
         service_info(
-          s.time,
+          s.formattedTimestamp,
           s.data,
           ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
           ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)),
@@ -129,7 +132,11 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     for {
       library <- teamsAndServicesConnector.repositoryDetails(name)
     } yield library match {
-      case Some(s) if s.data.repoType == RepoType.Library => Ok(library_info(s.time, s.data))
+      case Some(s) if s.data.repoType == RepoType.Library =>
+        Ok(
+          library_info(
+            s.formattedTimestamp,
+            s.data))
       case _ => NotFound
     }
   }
@@ -138,7 +145,11 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     for {
       repository <- teamsAndServicesConnector.repositoryDetails(name)
     } yield repository match {
-      case Some(s) => Ok(repository_info(s.time, s.data))
+      case Some(s) =>
+        Ok(
+          repository_info(
+            s.formattedTimestamp,
+            s.data))
       case _ => NotFound
     }
   }
@@ -149,8 +160,19 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     teamsAndServicesConnector.allRepositories.map { repos =>
       val form: Form[RepoListFilter] = RepoListFilter.form.bindFromRequest()
       form.fold(
-        error => Ok(repositories_list(repos.time, repositories = Seq.empty, repotypeToDetailsUrl, error)),
-        query => Ok(repositories_list(repos.time, repositories = repos.data.filter(query), repotypeToDetailsUrl, form))
+        error =>
+          Ok(
+            repositories_list(
+              repos.formattedTimestamp,
+              repositories = Seq.empty,
+              repotypeToDetailsUrl,
+              error)),
+        query =>
+          Ok(
+            repositories_list(
+              repos.formattedTimestamp,
+              repositories = repos.data.filter(query),
+              repotypeToDetailsUrl, form))
       )
     }
   }

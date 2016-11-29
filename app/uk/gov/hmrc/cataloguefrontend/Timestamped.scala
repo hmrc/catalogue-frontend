@@ -16,10 +16,24 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-case class CachedItem[T](data: T, time: String)
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId}
 
-class CachedList[T](val data: Seq[T], val time: String) extends Seq[T] {
-  override def length: Int = data.length
-  override def apply(idx: Int): T = data.apply(idx)
-  override def iterator: Iterator[T] = data.iterator
+import scala.util.Try
+
+case class Timestamped[T](data: T, timestamp: Option[Instant]) {
+  def formattedTimestamp =
+    timestamp
+      .map(
+        _.atZone(ZoneId.of("GMT"))
+          .format(DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm")))
+      .getOrElse("(None)")
+}
+
+object Timestamped {
+  def fromStringInstant[T](data: T, stringTimestamp: Option[String] = None): Timestamped[T] =
+    Timestamped(
+      data,
+      stringTimestamp.flatMap(s =>
+        Try(Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(s))).toOption))
 }

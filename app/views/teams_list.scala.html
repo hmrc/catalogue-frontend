@@ -16,12 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.Team
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@(cacheTimestampFormatted: String, teams: Seq[Team])
+@(timestamp: String, teams: Seq[Team])
 
 @standard_layout("Teams list","teams") {
     <header>
         <h1>Teams</h1>
-        <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
+        <time class="last-updated">Last updated at: @timestamp</time>
     </header>
 
 <table class="table table-striped" id="service-list">
