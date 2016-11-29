@@ -20,3 +20,4 @@ dist
 .sass-cache
 npm-debug.log
 /node_modules/
+/public/catalogue-frontend.css.map
