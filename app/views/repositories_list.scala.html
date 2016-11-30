@@ -43,20 +43,16 @@
 
 
 <div id="service-list">
-    <form action="/repositories" method="get" class="form-inline">
-
-        <span>Name: <input type="text" name="name" value=@{form("name").value}></span>
-        <span>Type:
-            <select name="repoType">
-
-                @repoTypes.map{rt =>
-                    <option value="@rt._1" @{if(rt._1 == form("repoType").value.getOrElse("")) "selected"}>@rt._2</option>
-                }
-            </select>
-        </span>
-
-
-        <input type="submit" value="Filter">
+    <form action="/repositories" method="get">
+        <div class="form-group row">
+            <div class="col-xs-1 padding-reset-right">
+                <label for="search">Name:</label>
+            </div>
+            <div class="col col-xs-3">
+                <input class="search form-control" id="search" type="text" name="name"
+                value="@form("name").value" autofocus>
+            </div>
+        </div>
     </form>
 
         <table class="table table-striped">
