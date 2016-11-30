@@ -42,7 +42,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
   "Repositories list" should {
 
-    "show a list of all repositories when 'all' is selected" in {
+    "show a list of all repositories when 'All' is selected" in {
 
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(
         JsonData.repositoriesData
@@ -82,7 +82,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         JsonData.repositoriesData
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      val response = await(WS.url(s"http://localhost:$port/repositories?repoType=Library").get)
+      val response = await(WS.url(s"http://localhost:$port/repositories?name=&type=Library").get)
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: 14 Oct 1983 10:03")
