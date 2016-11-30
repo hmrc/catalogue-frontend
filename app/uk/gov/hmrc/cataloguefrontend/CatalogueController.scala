@@ -151,11 +151,11 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   }
 
   def allServices = Action {
-    Redirect("/repositories?name=&repoType=Deployable")
+    Redirect("/repositories?name=&type=Service")
   }
 
   def allLibraries = Action {
-    Redirect("/repositories?name=&repoType=Library")
+    Redirect("/repositories?name=&type=Library")
   }
 
   def allRepositories() = Action.async{ implicit request =>
@@ -221,7 +221,7 @@ object RepoListFilter{
   lazy val form = Form (
     mapping(
       "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
-      "repoType" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
+      "type" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
     )(RepoListFilter.apply)(RepoListFilter.unapply)
   )
 }
