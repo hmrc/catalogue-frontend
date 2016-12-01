@@ -43,7 +43,7 @@ trait ChartData {
     }
   }
 
-  protected def releasesSerachParameters(name: String, from: String, to: String) : Map[String,String]
+  protected def deploymentsSerachParameters(name: String, from: String, to: String) : Map[String,String]
 
   private def chartRowsThroughput(serviceName: String, points: Seq[DeploymentThroughputDataPoint]): Seq[Html] = {
     for {
@@ -74,11 +74,11 @@ trait ChartData {
 
   private def toPercent(r: Double): Int = (r * 100).toInt
 
-  private def getReleaseUrlAnchor(serviceName: String, from: LocalDate, to: LocalDate) = <a href={releasesUrl(serviceName, dateToString(from), dateToString(to))}>View releases</a>
+  private def getReleaseUrlAnchor(serviceName: String, from: LocalDate, to: LocalDate) = <a href={deploymentsUrl(serviceName, dateToString(from), dateToString(to))}>View deployments</a>
 
-  private def releasesUrl(serviceName: String, from: String, to: String) = {
-    val paramString: String = releasesSerachParameters(serviceName, from, to).toList.map(x => s"${x._1}=${x._2}").mkString("&")
-    s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.releases().url}?$paramString"
+  private def deploymentsUrl(serviceName: String, from: String, to: String) = {
+    val paramString: String = deploymentsSerachParameters(serviceName, from, to).toList.map(x => s"${x._1}=${x._2}").mkString("&")
+    s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.deployments().url}?$paramString"
   }
 
   private def dateToString(date: LocalDate) = date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
@@ -120,7 +120,7 @@ trait ChartData {
 }
 
 object ServiceChartData extends ChartData {
-  override protected def releasesSerachParameters(name: String, from: String, to: String): Map[String, String] = Map(
+  override protected def deploymentsSerachParameters(name: String, from: String, to: String): Map[String, String] = Map(
     "serviceName" -> name,
     "from" -> from,
     "to" -> to
@@ -128,7 +128,7 @@ object ServiceChartData extends ChartData {
 }
 
 object TeamChartData extends ChartData {
-  override protected def releasesSerachParameters(name: String, from: String, to: String): Map[String, String] = Map(
+  override protected def deploymentsSerachParameters(name: String, from: String, to: String): Map[String, String] = Map(
     "team" -> name,
     "from" -> from,
     "to" -> to

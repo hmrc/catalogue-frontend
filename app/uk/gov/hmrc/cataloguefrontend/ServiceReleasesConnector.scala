@@ -49,17 +49,17 @@ case class Release(
                     leadTime: Option[Long] = None,
                     version: String)
 
-trait ServiceReleasesConnector extends ServicesConfig {
+trait ServiceDeploymentsConnector extends ServicesConfig {
   val http: HttpGet with HttpPost
-  def servicesReleasesBaseUrl: String
+  def servicesDeploymentsBaseUrl: String
 
   import uk.gov.hmrc.play.http.HttpReads._
   import JavaDateTimeJsonFormatter._
 
-  implicit val releasesFormat = Json.reads[Release]
+  implicit val deploymentsFormat = Json.reads[Release]
 
-  def getReleases(serviceNames: Iterable[String])(implicit hc: HeaderCarrier) = {
-    val url =  s"$servicesReleasesBaseUrl"
+  def getDeployments(serviceNames: Iterable[String])(implicit hc: HeaderCarrier) = {
+    val url =  s"$servicesDeploymentsBaseUrl"
 
     http.POST[Seq[String],HttpResponse](url, serviceNames.toSeq).map { r =>
       r.status match {
@@ -68,13 +68,13 @@ trait ServiceReleasesConnector extends ServicesConfig {
       }
     }.recover {
       case ex =>
-        Logger.error(s"An error occurred when connecting to $servicesReleasesBaseUrl: ${ex.getMessage}", ex)
+        Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
         Seq.empty
     }
   }
 
-  def getReleases(serviceName: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[Release]] = {
-    val url = serviceName.fold(servicesReleasesBaseUrl)(name => s"$servicesReleasesBaseUrl/$name")
+  def getDeployments(serviceName: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[Release]] = {
+    val url = serviceName.fold(servicesDeploymentsBaseUrl)(name => s"$servicesDeploymentsBaseUrl/$name")
 
     http.GET[HttpResponse](url).map { r =>
       r.status match {
@@ -83,14 +83,14 @@ trait ServiceReleasesConnector extends ServicesConfig {
       }
     }.recover {
       case ex =>
-        Logger.error(s"An error occurred when connecting to $servicesReleasesBaseUrl: ${ex.getMessage}", ex)
+        Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
         Seq.empty
     }
   }
 
 }
 
-object ServiceReleasesConnector extends ServiceReleasesConnector {
+object ServiceDeploymentsConnector extends ServiceDeploymentsConnector {
   override val http = WSHttp
-  override def servicesReleasesBaseUrl: String = baseUrl("service-releases") + "/api/releases"
+  override def servicesDeploymentsBaseUrl: String = baseUrl("service-deployments") + "/api/deployments"
 }

@@ -70,8 +70,8 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
       leadTimeToolTipTableData.get(1).text() should include("Lead Time:")
       leadTimeToolTipTableData.get(1).text() should include("100")
 
-      leadTimeToolTipTableData.get(2).select("a").attr("href") shouldBe "/releases?serviceName=my_test_service&from=30-09-2016&to=31-12-2016"
-      leadTimeToolTipTableData.get(2).select("a").text() shouldBe "View releases"
+      leadTimeToolTipTableData.get(2).select("a").attr("href") shouldBe "/deployments?serviceName=my_test_service&from=30-09-2016&to=31-12-2016"
+      leadTimeToolTipTableData.get(2).select("a").text() shouldBe "View deployments"
 
       getRowColumns(rows(0))(3) should === ("""500""")
 
@@ -82,8 +82,8 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
       intervalToolTipTableData.get(1).text() should include("Interval:")
       intervalToolTipTableData.get(1).text() should include("500")
 
-      intervalToolTipTableData.get(2).select("a").attr("href") shouldBe "/releases?serviceName=my_test_service&from=30-09-2016&to=31-12-2016"
-      intervalToolTipTableData.get(2).select("a").text() shouldBe "View releases"
+      intervalToolTipTableData.get(2).select("a").attr("href") shouldBe "/deployments?serviceName=my_test_service&from=30-09-2016&to=31-12-2016"
+      intervalToolTipTableData.get(2).select("a").text() shouldBe "View deployments"
     }
 
     "return correct html rows for deployment stability data points" in {
@@ -122,8 +122,8 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
       rateToolTipTableData.get(1).text() should include("Hotfix Rate:")
       rateToolTipTableData.get(1).text() should include("35%")
 
-      rateToolTipTableData.get(2).select("a").attr("href") shouldBe "/releases?serviceName=my_test_service&from=30-09-2016&to=31-12-2016"
-      rateToolTipTableData.get(2).select("a").text() shouldBe "View releases"
+      rateToolTipTableData.get(2).select("a").attr("href") shouldBe "/deployments?serviceName=my_test_service&from=30-09-2016&to=31-12-2016"
+      rateToolTipTableData.get(2).select("a").text() shouldBe "View deployments"
 
     }
 

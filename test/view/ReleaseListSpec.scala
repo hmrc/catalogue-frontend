@@ -26,7 +26,7 @@ import play.api.Environment
 import play.api.data.Form
 import play.api.i18n.{DefaultLangs, DefaultMessagesApi}
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.{ReleasesFilter, TeamRelease}
+import uk.gov.hmrc.cataloguefrontend.{DeploymentsFilter, TeamRelease}
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 //import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
@@ -39,7 +39,7 @@ class ReleaseListSpec extends WordSpec with Matchers with OneAppPerTest {
   "release_list" should {
     "display errors" in {
 
-      val formWithErrors: Form[ReleasesFilter] = ReleasesFilter.form.bind(Map("from" -> "23?01/2016", "to" -> "23?01/2016"))
+      val formWithErrors: Form[DeploymentsFilter] = DeploymentsFilter.form.bind(Map("from" -> "23?01/2016", "to" -> "23?01/2016"))
 
       val form: Html = views.html.release_list(Seq.empty, formWithErrors)(applicationMessages)
       val document = asDocument(form)
@@ -55,7 +55,7 @@ class ReleaseListSpec extends WordSpec with Matchers with OneAppPerTest {
       val document = asDocument(views.html.release_list(
         Seq(
           TeamRelease("serv1", Seq("teamA", "teamB"), productionDate = now, creationDate = Some(now.plusDays(2)), interval = Some(2), leadTime = Some(10), version = "1.0")
-        ), ReleasesFilter.form)(applicationMessages))
+        ), DeploymentsFilter.form)(applicationMessages))
 
       document.select("#row0_team").text() shouldBe "teamA teamB"
       document.select("#row0_name").text() shouldBe "serv1"
