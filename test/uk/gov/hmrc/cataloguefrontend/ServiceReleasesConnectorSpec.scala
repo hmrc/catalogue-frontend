@@ -26,20 +26,20 @@ import play.api.test.FakeHeaders
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
     Map(
-    "microservice.services.service-releases.port" -> endpointPort,
-    "microservice.services.service-releases.host" -> host,
+    "microservice.services.service-deployments.port" -> endpointPort,
+    "microservice.services.service-deployments.host" -> host,
      "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
   )).build()
 
 
-  "getReleases" should {
+  "getDeployments" should {
 
-    "return all releases if service name is none" in {
-      serviceEndpoint(GET, "/api/releases", willRespondWith = (200, Some(
+    "return all deployments if service name is none" in {
+      serviceEndpoint(GET, "/api/deployments", willRespondWith = (200, Some(
         """
           |[
           |	{
@@ -59,16 +59,16 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
         """.stripMargin
       )))
 
-      val response = await(ServiceReleasesConnector.getReleases()(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+      val response = await(ServiceDeploymentsConnector.getDeployments()(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
       response(0) shouldBe Release("serviceA", productionDate = toLocalDateTime(1453731429), creationDate = Some(toLocalDateTime(1452701233)), interval = Some(7), leadTime = Some(12), version = "8.96.0")
       response(1) shouldBe Release("serviceB", productionDate = toLocalDateTime(1453713911), creationDate = None, interval = Some(5), leadTime = None, version = "2.38.0")
     }
 
-    "return all releases for a  service if name is given" in {
+    "return all deployments for a  service if name is given" in {
       val serviceName = "serviceNameA"
-      serviceEndpoint(GET, s"/api/releases/$serviceName", willRespondWith = (200, Some(
+      serviceEndpoint(GET, s"/api/deployments/$serviceName", willRespondWith = (200, Some(
         """
           |[
           |	{
@@ -88,17 +88,17 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
         """.stripMargin
       )))
 
-      val response = await(ServiceReleasesConnector.getReleases(Some("serviceNameA"))(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+      val response = await(ServiceDeploymentsConnector.getDeployments(Some("serviceNameA"))(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
       response(0) shouldBe Release("serviceA", productionDate = toLocalDateTime(1453731429), creationDate = Some(toLocalDateTime(1452701233)), interval = Some(7), leadTime = Some(12), version = "8.96.0")
       response(1) shouldBe Release("serviceA", productionDate = toLocalDateTime(1453713911), creationDate = None, interval = Some(5), leadTime = None, version = "2.38.0")
     }
 
-    "return releases for all services mentioned in the body" in {
+    "return deployments for all services mentioned in the body" in {
       val serviceNames = Seq("serviceNameA", "serviceNameB")
 
-      serviceEndpoint(POST, s"/api/releases", willRespondWith = (200, Some(
+      serviceEndpoint(POST, s"/api/deployments", willRespondWith = (200, Some(
         """
           |[
           |	{
@@ -118,7 +118,7 @@ class ServiceReleasesConnectorSpec extends UnitSpec with BeforeAndAfter with One
         """.stripMargin
       )), givenJsonBody = Some("[\"serviceNameA\",\"serviceNameB\"]"))
 
-      val response = await(ServiceReleasesConnector.getReleases(serviceNames)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+      val response = await(ServiceDeploymentsConnector.getDeployments(serviceNames)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
       response(0).name shouldBe "serviceNameA"

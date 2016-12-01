@@ -22,13 +22,13 @@ import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
 object SearchFiltering {
 
-  implicit class ReleasesResult(releases: Seq[TeamRelease]) {
+  implicit class DeploymentsResult(deployments: Seq[TeamRelease]) {
 
-    def filter(query: ReleasesFilter): Seq[TeamRelease] = {
+    def filter(query: DeploymentsFilter): Seq[TeamRelease] = {
 
-      val q = if (query.isEmpty) ReleasesFilter(from = Some(LocalDateTime.now().minusMonths(1))) else query
+      val q = if (query.isEmpty) DeploymentsFilter(from = Some(LocalDateTime.now().minusMonths(1))) else query
 
-      releases.toStream
+      deployments.toStream
         .filter(x => q.team.isEmpty || x.teams.contains(q.team.get))
         .filter(x => q.serviceName.isEmpty || q.serviceName.get == x.name)
         .filter(x => q.from.isEmpty || x.productionDate.epochSeconds >= q.from.get.epochSeconds)

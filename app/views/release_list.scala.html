@@ -14,13 +14,13 @@
 * limitations under the License.
 *@
 
-@(releases: Seq[uk.gov.hmrc.cataloguefrontend.TeamRelease], form: Form[_])(implicit messages: Messages)
+@(deployments: Seq[uk.gov.hmrc.cataloguefrontend.TeamRelease], form: Form[_])(implicit messages: Messages)
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
-@standard_layout("Releases", "releases") {
+@standard_layout("Deployments", "deployments") {
 <header>
-    <h1>Releases</h1>
+    <h1>Deployments</h1>
 </header>
 
 @if(form.hasErrors) {
@@ -44,7 +44,7 @@
 
 
 
-<form action="/releases" method="get" class="form-inline">
+<form action="/deployments" method="get" class="form-inline">
     <span>Team: <input type="text" name="team" value=@{form("team").value}></span>
     <span>Service: <input type="text" name="serviceName" value=@{form("serviceName").value}></span>
 
@@ -68,7 +68,7 @@
         <th><span>Lead Time</span></th>
         <th>Interval</th>
     </tr>
-    @releases.zipWithIndex.map{case (release, i) =>
+    @deployments.zipWithIndex.map{case (release, i) =>
     <tr id="row@i">
         <td id="row@{i}_name"><a
                 href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(release.name).url}">@{release.name}</a>
