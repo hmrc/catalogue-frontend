@@ -29,7 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, Te
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
 
-case class ActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime])
+case class TeamActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime], firstServiceCreationDate : Option[LocalDateTime])
 
 
 object CatalogueController extends CatalogueController {
@@ -95,7 +95,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
           s.formattedTimestamp,
           teamName,
           repos = s.data.repos.getOrElse(Map()),
-          activityDates = ActivityDates(s.data.firstActiveDate, s.data.lastActiveDate),
+          activityDates = TeamActivityDates(s.data.firstActiveDate, s.data.lastActiveDate, s.data.firstServiceCreationDate),
           errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
           teamDetails,
           TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),

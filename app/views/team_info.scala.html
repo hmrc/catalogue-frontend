@@ -17,14 +17,14 @@
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, NoData, TeamDetails}
 @import uk.gov.hmrc.cataloguefrontend.{ChartDataRows, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.ActivityDates
+@import uk.gov.hmrc.cataloguefrontend.TeamActivityDates
 @import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.RepoType
 @(
         cacheTimestampFormatted: String,
         teamName: String,
         repos: Map[String, Seq[String]],
-        activityDates: ActivityDates,
+        activityDates: TeamActivityDates,
         errorOrTeamMembers: Either[ConnectorError, Seq[DisplayableTeamMember]],
         errorOrTeamDetails: Either[ConnectorError, TeamDetails],
         throughputChartData: Option[ChartDataRows],
@@ -153,7 +153,7 @@
                                 }
                             } else if(throughputChartData.get.isEmpty) {
                                 {
-                                    activityDates.firstActive.fold(ViewMessages.noDataToShow) { d =>
+                                    activityDates.firstServiceCreationDate.fold(ViewMessages.noDataToShow) { d =>
                                         ViewMessages.noProductionDeploymentSinceDaysMessage(d)
                                     }
                                 }
