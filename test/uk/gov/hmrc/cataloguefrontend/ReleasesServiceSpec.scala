@@ -88,7 +88,7 @@ class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar wi
 
       when(teamsAndServicesConnector.teamInfo("b-team")).thenReturn(Future.successful(
         Some(new Timestamped[Team](
-          Team(name = "teamName", None, None,
+          Team(name = "teamName", None, None, None,
           repos = Some(Map("Deployable" -> Seq("a-service", "b-service")))), Some(Instant.now)))))
 
       when(teamsAndServicesConnector.teamsByService(Seq("a-service", "b-service"))).thenReturn(
