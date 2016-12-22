@@ -34,7 +34,7 @@ import scala.concurrent.Future
 import scala.io.Source
 
 class UserManagementConnectorSpec extends FunSpec with Matchers with TypeCheckedTripleEquals with BeforeAndAfter
-  with OneServerPerSuite with WireMockEndpoints with ScalaFutures with EitherValues with MockitoSugar {
+  with OneServerPerSuite with WireMockEndpoints with ScalaFutures with EitherValues with MockitoSugar with OptionValues {
 
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
@@ -113,11 +113,11 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
       val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.right.value
 
-      teamDetails.description shouldBe "TEAM-A is a great team"
-      teamDetails.location shouldBe "STLPD"
-      teamDetails.organisation shouldBe "ORGA"
-      teamDetails.slack shouldBe Some("https://slack.host/messages/team-A")
-      teamDetails.documentation shouldBe Some("https://some.documentation.url")
+      teamDetails.description.value shouldBe "TEAM-A is a great team"
+      teamDetails.location.value shouldBe "STLPD"
+      teamDetails.organisation.value shouldBe "ORGA"
+      teamDetails.slack.value shouldBe "https://slack.host/messages/team-A"
+      teamDetails.documentation.value shouldBe "https://some.documentation.url"
     }
 
 
