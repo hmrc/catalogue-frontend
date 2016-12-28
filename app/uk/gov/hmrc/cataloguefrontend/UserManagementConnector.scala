@@ -154,7 +154,7 @@ object UserManagementConnector extends UserManagementConnector {
                          organisation: Option[String],
                          documentation: Option[String],
                          slack: Option[String],
-                         team: Option[String])
+                         team: String)
 
 
 }
