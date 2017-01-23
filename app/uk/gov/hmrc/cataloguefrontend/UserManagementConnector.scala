@@ -149,9 +149,9 @@ object UserManagementConnector extends UserManagementConnector {
                         serviceOwnerFor: Option[Seq[String]],
                         username: Option[String])
 
-  case class TeamDetails(description: String,
-                         location: String,
-                         organisation: String,
+  case class TeamDetails(description: Option[String],
+                         location: Option[String],
+                         organisation: Option[String],
                          documentation: Option[String],
                          slack: Option[String],
                          team: String)

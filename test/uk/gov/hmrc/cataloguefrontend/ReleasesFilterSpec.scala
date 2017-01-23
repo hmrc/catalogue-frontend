@@ -23,7 +23,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.OptionValues._
 import org.scalatest.{Matchers, WordSpec}
 
-class ReleasesFilterSpec extends WordSpec with Matchers with TypeCheckedTripleEquals {
+class DeploymentsFilterSpec extends WordSpec with Matchers with TypeCheckedTripleEquals {
 
   implicit def toDateTime(s: String): LocalDateTime = LocalDate.parse(s, DateTimeFormatter.ofPattern("dd-MM-yyyy")).atStartOfDay()
 
@@ -32,22 +32,22 @@ class ReleasesFilterSpec extends WordSpec with Matchers with TypeCheckedTripleEq
   "form" should {
     "bind the form correctly" in {
 
-      ReleasesFilter.form.bind(formData).value shouldBe Some(ReleasesFilter(Some("teamA"), Some("aService"), Some("23-04-2016"), Some("25-05-2016")))
+      DeploymentsFilter.form.bind(formData).value shouldBe Some(DeploymentsFilter(Some("teamA"), Some("aService"), Some("23-04-2016"), Some("25-05-2016")))
 
-      ReleasesFilter.form.bind(formData - "to").value shouldBe Some(ReleasesFilter(Some("teamA"), Some("aService"), Some("23-04-2016"), None))
-      ReleasesFilter.form.bind(formData - "to" - "from").value shouldBe Some(ReleasesFilter(Some("teamA"), Some("aService"), None, None))
-      ReleasesFilter.form.bind(formData - "team" - "serviceName" - "to" - "from").value shouldBe Some(ReleasesFilter(None, None, None, None))
-      ReleasesFilter.form.bind(formData + ("team" -> "") + ("serviceName" -> "")).value shouldBe Some(ReleasesFilter(None, None, Some("23-04-2016"), Some("25-05-2016")))
-      ReleasesFilter.form.bind(formData + ("team" -> " ") + ("serviceName" -> " ")).value shouldBe Some(ReleasesFilter(None, None, Some("23-04-2016"), Some("25-05-2016")))
+      DeploymentsFilter.form.bind(formData - "to").value shouldBe Some(DeploymentsFilter(Some("teamA"), Some("aService"), Some("23-04-2016"), None))
+      DeploymentsFilter.form.bind(formData - "to" - "from").value shouldBe Some(DeploymentsFilter(Some("teamA"), Some("aService"), None, None))
+      DeploymentsFilter.form.bind(formData - "team" - "serviceName" - "to" - "from").value shouldBe Some(DeploymentsFilter(None, None, None, None))
+      DeploymentsFilter.form.bind(formData + ("team" -> "") + ("serviceName" -> "")).value shouldBe Some(DeploymentsFilter(None, None, Some("23-04-2016"), Some("25-05-2016")))
+      DeploymentsFilter.form.bind(formData + ("team" -> " ") + ("serviceName" -> " ")).value shouldBe Some(DeploymentsFilter(None, None, Some("23-04-2016"), Some("25-05-2016")))
 
     }
 
     "validate date is of correct format (dd-MM-yyyy)" in {
 
-      ReleasesFilter.form.bind(formData + ("from" -> "23/04/2016")).error("from").value.message should ===("from.error.date")
-      ReleasesFilter.form.bind(formData + ("from" -> "23/54/2016")).error("from").value.message should ===("from.error.date")
-      ReleasesFilter.form.bind(formData + ("to" -> "23/04/2016")).error("to").value.message should ===("to.error.date")
-      ReleasesFilter.form.bind(formData + ("to" -> "23/54/2016")).error("to").value.message should ===("to.error.date")
+      DeploymentsFilter.form.bind(formData + ("from" -> "23/04/2016")).error("from").value.message should ===("from.error.date")
+      DeploymentsFilter.form.bind(formData + ("from" -> "23/54/2016")).error("from").value.message should ===("from.error.date")
+      DeploymentsFilter.form.bind(formData + ("to" -> "23/04/2016")).error("to").value.message should ===("to.error.date")
+      DeploymentsFilter.form.bind(formData + ("to" -> "23/54/2016")).error("to").value.message should ===("to.error.date")
 
     }
 

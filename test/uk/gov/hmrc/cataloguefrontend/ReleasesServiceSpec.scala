@@ -30,21 +30,21 @@ import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with ScalaFutures {
+class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar with ScalaFutures {
 
   val now = LocalDateTime.now()
 
 
-  "Releases service" should {
+  "Deployments service" should {
 
     implicit val hc = HeaderCarrier.fromHeadersAndSession(FakeHeaders())
 
     "Combine release and team information given an empty filter" in {
-      val releasesConnector = mock[ServiceReleasesConnector]
+      val deploymentsConnector = mock[ServiceDeploymentsConnector]
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
-      when(releasesConnector.getReleases()).thenReturn(Future.successful(Seq(
+      when(deploymentsConnector.getDeployments()).thenReturn(Future.successful(Seq(
         Release("a-service", productionDate = productionDate, version = "0.1.0"),
         Release("b-service", productionDate = productionDate, version = "0.2.0"))))
 
@@ -53,114 +53,114 @@ class ReleasesServiceSpec extends WordSpec with Matchers with MockitoSugar with 
           "a-service" -> Seq("a-team", "b-team"),
           "b-service" -> Seq("c-team")), Some(Instant.now))))
 
-      val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
-      val releases = service.getReleases().futureValue
+      val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
+      val deployments = service.getDeployments().futureValue
 
-      releases should contain(TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
-      releases should contain(TeamRelease("b-service", teams = Seq("c-team"), productionDate = productionDate, version = "0.2.0"))
+      deployments should contain(TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
+      deployments should contain(TeamRelease("b-service", teams = Seq("c-team"), productionDate = productionDate, version = "0.2.0"))
     }
 
-    "Cope with releases for services that are not known to the catalogue" in {
-      val releasesConnector = mock[ServiceReleasesConnector]
+    "Cope with deployments for services that are not known to the catalogue" in {
+      val deploymentsConnector = mock[ServiceDeploymentsConnector]
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
-      when(releasesConnector.getReleases()).thenReturn(Future.successful(Seq(
+      when(deploymentsConnector.getDeployments()).thenReturn(Future.successful(Seq(
         Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.allTeamsByService()).thenReturn(Future.successful(
         new Timestamped[Map[ServiceName, Seq[TeamName]]](Map(), Some(Instant.now))))
 
-      val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
-      val releases = service.getReleases().futureValue
+      val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
+      val deployments = service.getDeployments().futureValue
 
-      releases should contain(TeamRelease("a-service", teams = Seq(), productionDate = productionDate, version = "0.1.0"))
+      deployments should contain(TeamRelease("a-service", teams = Seq(), productionDate = productionDate, version = "0.1.0"))
     }
 
     "Filter results given a team name" in {
-      val releasesConnector = mock[ServiceReleasesConnector]
+      val deploymentsConnector = mock[ServiceDeploymentsConnector]
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
-      when(releasesConnector.getReleases(Seq("a-service", "b-service"))).thenReturn(Future.successful(Seq(
+      when(deploymentsConnector.getDeployments(Seq("a-service", "b-service"))).thenReturn(Future.successful(Seq(
         Release("a-service", productionDate = productionDate, version = "0.1.0"),
         Release("b-service", productionDate = productionDate, version = "0.2.0"))))
 
       when(teamsAndServicesConnector.teamInfo("b-team")).thenReturn(Future.successful(
         Some(new Timestamped[Team](
-          Team(name = "teamName", None, None,
+          Team(name = "teamName", None, None, None,
           repos = Some(Map("Deployable" -> Seq("a-service", "b-service")))), Some(Instant.now)))))
 
       when(teamsAndServicesConnector.teamsByService(Seq("a-service", "b-service"))).thenReturn(
         Future.successful(new Timestamped[Map[ServiceName, Seq[TeamName]]](
           Map("a-service" -> Seq("a-team", "b-team"), "b-service" -> Seq("b-team", "c-team")), Some(Instant.now))))
 
-      val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
-      val releases = service.getReleases(teamName = Some("b-team")).futureValue
+      val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
+      val deployments = service.getDeployments(teamName = Some("b-team")).futureValue
 
-      releases should contain(TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
-      releases should contain(TeamRelease("b-service", teams = Seq("b-team", "c-team"), productionDate = productionDate, version = "0.2.0"))
+      deployments should contain(TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
+      deployments should contain(TeamRelease("b-service", teams = Seq("b-team", "c-team"), productionDate = productionDate, version = "0.2.0"))
     }
 
     "Filter results given a service name" in {
-      val releasesConnector = mock[ServiceReleasesConnector]
+      val deploymentsConnector = mock[ServiceDeploymentsConnector]
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
-      when(releasesConnector.getReleases(Seq("a-service"))).thenReturn(Future.successful(Seq(
+      when(deploymentsConnector.getDeployments(Seq("a-service"))).thenReturn(Future.successful(Seq(
         Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
         Future.successful(Some(new Timestamped[RepositoryDetails](
           RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), Some(Instant.now)))))
 
-      val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
-      val releases = service.getReleases(serviceName = Some("a-service")).futureValue
+      val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
+      val deployments = service.getDeployments(serviceName = Some("a-service")).futureValue
 
-      releases should contain(TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
+      deployments should contain(TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
     }
 
     "Give precedence to the service name filter over the team name filter as it is more specific" in {
-      val releasesConnector = mock[ServiceReleasesConnector]
+      val deploymentsConnector = mock[ServiceDeploymentsConnector]
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
-      when(releasesConnector.getReleases(Seq("a-service"))).thenReturn(Future.successful(Seq(
+      when(deploymentsConnector.getDeployments(Seq("a-service"))).thenReturn(Future.successful(Seq(
         Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
         Future.successful(Some(new Timestamped[RepositoryDetails](
           RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), Some(Instant.now)))))
 
-      val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
-      val releases = service.getReleases(serviceName = Some("a-service"), teamName = Some("non-matching-team")).futureValue
+      val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
+      val deployments = service.getDeployments(serviceName = Some("a-service"), teamName = Some("non-matching-team")).futureValue
 
-      releases should contain(TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
+      deployments should contain(TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
     }
 
 
     "Not make unnecessary calls if a team does not exist" in {
-      val releasesConnector = mock[ServiceReleasesConnector]
+      val deploymentsConnector = mock[ServiceDeploymentsConnector]
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       when(teamsAndServicesConnector.teamInfo("a-team")).thenReturn(Future.successful(None))
 
-      val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
-      val releases = service.getReleases(teamName = Some("a-team")).futureValue
+      val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
+      val deployments = service.getDeployments(teamName = Some("a-team")).futureValue
 
-      releases shouldBe empty
+      deployments shouldBe empty
     }
 
     "Not make unnecessary calls if a service does not exist" in {
-      val releasesConnector = mock[ServiceReleasesConnector]
+      val deploymentsConnector = mock[ServiceDeploymentsConnector]
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(Future.successful(None))
 
-      val service = new ReleasesService(releasesConnector, teamsAndServicesConnector)
-      val releases = service.getReleases(serviceName = Some("a-service")).futureValue
+      val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
+      val deployments = service.getDeployments(serviceName = Some("a-service")).futureValue
 
-      releases shouldBe empty
+      deployments shouldBe empty
     }
 
   }

@@ -30,7 +30,7 @@ case class TeamRelease(name: ServiceName, teams: Seq[TeamName], productionDate: 
                        creationDate: Option[LocalDateTime] = None, interval: Option[Long] = None,
                        leadTime:  Option[Long] = None, version: String)
 
-class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
+class DeploymentsService(deploymentsConnector: ServiceDeploymentsConnector, teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
   type ServiceTeamMappings = Map[ServiceName, Seq[TeamName]]
 
   sealed trait ReleaseFilter { def serviceTeams: ServiceTeamMappings }
@@ -38,16 +38,16 @@ class ReleasesService(releasesConnector: ServiceReleasesConnector, teamsAndServi
   final case class All(serviceTeams: ServiceTeamMappings) extends ReleaseFilter
   case object NotFound extends ReleaseFilter { val serviceTeams: ServiceTeamMappings = Map() }
 
-  def getReleases(teamName: Option[TeamName] = None, serviceName: Option[ServiceName] = None)(implicit hc: HeaderCarrier): Future[Seq[TeamRelease]] =
+  def getDeployments(teamName: Option[TeamName] = None, serviceName: Option[ServiceName] = None)(implicit hc: HeaderCarrier): Future[Seq[TeamRelease]] =
     for {
       query <- buildFilter(teamName, serviceName)
-      releases <- query match {
-        case All(st) => releasesConnector.getReleases()
+      deployments <- query match {
+        case All(st) => deploymentsConnector.getDeployments()
         case ServiceTeams(st) =>
-          releasesConnector.getReleases(st.keys.toSeq)
+          deploymentsConnector.getDeployments(st.keys.toSeq)
         case NotFound => Future.successful(Seq())
       }
-    } yield releases map teamRelease(query)
+    } yield deployments map teamRelease(query)
 
   private def teamRelease(rq: ReleaseFilter)(r: Release) =
     TeamRelease(r.name, rq.serviceTeams.getOrElse(r.name, Seq()), productionDate = r.productionDate,

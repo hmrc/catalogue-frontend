@@ -29,7 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, Te
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
 
-case class ActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime])
+case class TeamActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime], firstServiceCreationDate : Option[LocalDateTime])
 
 
 object CatalogueController extends CatalogueController {
@@ -40,7 +40,7 @@ object CatalogueController extends CatalogueController {
 
   override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
 
-  override def releasesService: ReleasesService = new ReleasesService(ServiceReleasesConnector, TeamsAndRepositoriesConnector)
+  override def deploymentsService: DeploymentsService = new DeploymentsService(ServiceDeploymentsConnector, TeamsAndRepositoriesConnector)
 }
 
 trait CatalogueController extends FrontendController with UserManagementPortalLink {
@@ -59,7 +59,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def indicatorsConnector: IndicatorsConnector
 
-  def releasesService: ReleasesService
+  def deploymentsService: DeploymentsService
 
   def landingPage() = Action { request =>
     Ok(landing_page())
@@ -95,7 +95,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
           s.formattedTimestamp,
           teamName,
           repos = s.data.repos.getOrElse(Map()),
-          activityDates = ActivityDates(s.data.firstActiveDate, s.data.lastActiveDate),
+          activityDates = TeamActivityDates(s.data.firstActiveDate, s.data.lastActiveDate, s.data.firstServiceCreationDate),
           errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
           teamDetails,
           TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),
@@ -182,13 +182,13 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
-  def releases() = Action.async { implicit request =>
+  def deployments() = Action.async { implicit request =>
 
     import SearchFiltering._
 
-    releasesService.getReleases().map { rs =>
+    deploymentsService.getDeployments().map { rs =>
 
-      val form: Form[ReleasesFilter] = ReleasesFilter.form.bindFromRequest()
+      val form: Form[DeploymentsFilter] = DeploymentsFilter.form.bindFromRequest()
       form.fold(
         errors => Ok(release_list(Nil, errors)),
         query => Ok(release_list(rs.filter(query), form))
@@ -209,7 +209,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
 }
 
-case class ReleasesFilter(team: Option[String] = None, serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
+case class DeploymentsFilter(team: Option[String] = None, serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
   def isEmpty: Boolean = team.isEmpty && serviceName.isEmpty && from.isEmpty && to.isEmpty
 }
 
@@ -226,7 +226,7 @@ object RepoListFilter{
   )
 }
 
-object ReleasesFilter {
+object DeploymentsFilter {
 
   import DateHelper._
 
@@ -236,7 +236,7 @@ object ReleasesFilter {
       "serviceName" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
       "from" -> optionalLocalDateTimeMapping("from.error.date"),
       "to" -> optionalLocalDateTimeMapping("to.error.date")
-    )(ReleasesFilter.apply)(ReleasesFilter.unapply)
+    )(DeploymentsFilter.apply)(DeploymentsFilter.unapply)
   )
 
   def optionalLocalDateTimeMapping(errorCode: String): Mapping[Option[LocalDateTime]] = {
