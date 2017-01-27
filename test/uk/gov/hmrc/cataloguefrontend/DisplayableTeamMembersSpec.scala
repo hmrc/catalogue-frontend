@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 HM Revenue & Customs
+ * Copyright 2017 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,27 +76,27 @@ class DisplayableTeamMembersSpec extends FunSpec with Matchers with TypeCheckedT
       DisplayableTeamMember(
         displayName =  "A Mouse",
         isServiceOwner = true,
-        umpLink = "http://example.com/profile/a.mouse?edit"
+        umpLink = "http://example.com/profile/a.mouse"
       ),
       DisplayableTeamMember(
         displayName =  "B Olapade",
         isServiceOwner = true,
-        umpLink = "http://example.com/profile/b.olapade?edit"
+        umpLink = "http://example.com/profile/b.olapade"
       ),
       DisplayableTeamMember(
         displayName =  "C Bourne",
         isServiceOwner = false,
-        umpLink = "http://example.com/profile/c.bourne?edit"
+        umpLink = "http://example.com/profile/c.bourne"
       ),
       DisplayableTeamMember(
         displayName =  "D Doe",
         isServiceOwner = false,
-        umpLink = "http://example.com/profile/d.doe?edit"
+        umpLink = "http://example.com/profile/d.doe"
       ),
       DisplayableTeamMember(
         displayName =  "E Federer",
         isServiceOwner = false,
-        umpLink = "http://example.com/profile/e.federer?edit"
+        umpLink = "http://example.com/profile/e.federer"
       )
     )
 

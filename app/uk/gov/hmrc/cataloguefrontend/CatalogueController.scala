@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 HM Revenue & Customs
+ * Copyright 2017 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -254,7 +254,7 @@ object DisplayableTeamMembers {
       DisplayableTeamMember(
         displayName = tm.displayName.getOrElse("DISPLAY NAME NOT PROVIDED"),
         isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.toLowerCase)),
-        umpLink = tm.username.map(x => s"${umpProfileBaseUrl.appendSlash}$x?edit").getOrElse("USERNAME NOT PROVIDED")
+        umpLink = tm.username.map(x => s"${umpProfileBaseUrl.appendSlash}$x").getOrElse("USERNAME NOT PROVIDED")
       )
     )
 
@@ -267,6 +267,3 @@ object DisplayableTeamMembers {
                                    umpLink: String)
 
 }
-
-
-
