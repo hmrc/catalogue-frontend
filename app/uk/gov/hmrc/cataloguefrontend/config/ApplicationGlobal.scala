@@ -38,6 +38,7 @@ object ApplicationGlobal extends DefaultFrontendGlobal {
 
   override def onStart(app: Application) {
     Logger.info(s"Starting frontend : $appName : in mode : ${app.mode}")
+    Logger.debug("[Catalogue-frontend] - Strating... ")
     super.onStart(app)
     ApplicationCrypto.verifyConfiguration()
   }
