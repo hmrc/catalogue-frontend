@@ -89,7 +89,7 @@ class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar wi
       when(teamsAndServicesConnector.teamInfo("b-team")).thenReturn(Future.successful(
         Some(new Timestamped[Team](
           Team(name = "teamName", None, None, None,
-          repos = Some(Map("Deployable" -> Seq("a-service", "b-service")))), Some(Instant.now)))))
+          repos = Some(Map("Service" -> Seq("a-service", "b-service")))), Some(Instant.now)))))
 
       when(teamsAndServicesConnector.teamsByService(Seq("a-service", "b-service"))).thenReturn(
         Future.successful(new Timestamped[Map[ServiceName, Seq[TeamName]]](
@@ -112,7 +112,7 @@ class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar wi
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
         Future.successful(Some(new Timestamped[RepositoryDetails](
-          RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), Some(Instant.now)))))
+          RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Service), Some(Instant.now)))))
 
       val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
       val deployments = service.getDeployments(serviceName = Some("a-service")).futureValue
@@ -130,7 +130,7 @@ class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar wi
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
         Future.successful(Some(new Timestamped[RepositoryDetails](
-          RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Deployable), Some(Instant.now)))))
+          RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Seq(), Seq(), None, RepoType.Service), Some(Instant.now)))))
 
       val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
       val deployments = service.getDeployments(serviceName = Some("a-service"), teamName = Some("non-matching-team")).futureValue

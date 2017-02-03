@@ -89,7 +89,7 @@
 
 @repoTypes = @{
     ("" ,"All") +: RepoType.values.map {v =>
-        if (v == RepoType.Deployable) (v.toString, "Service")
+        if (v == RepoType.Service) (v.toString, "Service")
         else (v.toString, v.toString)
     }.toList
 }

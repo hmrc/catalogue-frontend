@@ -76,7 +76,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
     """
       |    {
       |	     "name": "serv",
-      |      "repoType": "Deployable",
+      |      "repoType": "Service",
       |      "teamNames": ["teamA", "teamB"],
       |      "description": "some description",
       |      "createdAt": 1456326530000,

@@ -61,7 +61,7 @@ object ViewMessages {
 
   def toTypeText(repoType: RepoType.RepoType) : String = {
     repoType match {
-      case RepoType.Deployable => "Service"
+      case RepoType.Service => "Service"
       case t => t.toString
     }
   }

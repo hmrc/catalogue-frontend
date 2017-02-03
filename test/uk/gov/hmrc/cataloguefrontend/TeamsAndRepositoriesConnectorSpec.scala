@@ -92,7 +92,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
           )
         ))))
 
-      responseData.repoType should ===(RepoType.Deployable)
+      responseData.repoType should ===(RepoType.Service)
     }
   }
 
@@ -105,7 +105,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
       repositories.data(0).name shouldBe "teamA-serv"
       repositories.data(0).createdAt shouldBe JsonData.createdAt
       repositories.data(0).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories.data(0).repoType shouldBe RepoType.Deployable
+      repositories.data(0).repoType shouldBe RepoType.Service
 
       repositories.data(1).name shouldBe "teamB-library"
       repositories.data(1).createdAt shouldBe JsonData.createdAt

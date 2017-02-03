@@ -67,7 +67,7 @@ class DeploymentsService(deploymentsConnector: ServiceDeploymentsConnector, team
     teamName map { t =>
       teamsAndServicesConnector.teamInfo(t).flatMap {
         case Some(x) =>
-          val teamServiceNames = x.data.repos.getOrElse(Map())("Deployable")
+          val teamServiceNames = x.data.repos.getOrElse(Map())("Service")
           teamsAndServicesConnector.teamsByService(teamServiceNames).map { st => ServiceTeams(st.data) }
         case None => Future.successful(NotFound) } }
 

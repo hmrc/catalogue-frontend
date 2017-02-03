@@ -67,7 +67,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         |    "Library": [
         |            "teamA-lib"
         |    ],
-        |    "Deployable": [
+        |    "Service": [
         |            "teamA-serv",
         |            "teamA-frontend"
         |    ],
@@ -126,7 +126,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show a message if no services are found" in {
 
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
-        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
+        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
 
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
@@ -144,7 +144,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       val teamName = "CATO"
 
       serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
-        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
+        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
 
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
@@ -172,7 +172,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
           | "repos":{
           |    "Library": [
           |    ],
-          |    "Deployable": [
+          |    "Service": [
           |            "service1"
           |    ]
           |}
@@ -198,7 +198,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         val teamName = "CATO"
 
         serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
-          """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
+          """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
 
         )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
@@ -223,7 +223,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
     "show error message if UMP is not available" in {
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
-        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Deployable": [] }}""".stripMargin
+        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       mockHttpApiCall(url = s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json", httpCodeToBeReturned = 404)
@@ -240,7 +240,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
 
-      """{"name":"teamA", "repos":{"Library":[], "Deployable": [] }}""".stripMargin
+      """{"name":"teamA", "repos":{"Library":[], "Service": [] }}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName", "/user-management-team-details-response.json")

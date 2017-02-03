@@ -28,9 +28,9 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
   case class RepositoryDetails(repositoryName: String, repositoryType: RepoType.RepoType)
 
   val repositoryDetails = Seq(
-    RepositoryDetails("service", RepoType.Deployable),
-    RepositoryDetails("library", RepoType.Library),
-    RepositoryDetails("other", RepoType.Other)
+    RepositoryDetails("Service", RepoType.Service),
+    RepositoryDetails("Library", RepoType.Library),
+    RepositoryDetails("Other", RepoType.Other)
   )
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
@@ -49,7 +49,7 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
       response.status shouldBe 404
     }
 
-    "show the teams owning the repository with github links for a Deployable, Library and Other" in {
+    "show the teams owning the repository with github links for a Service, Library and Other" in {
 
       repositoryDetails.foreach { repositoryDetails =>
         serviceEndpoint(GET, s"/api/repositories/${repositoryDetails.repositoryName}", willRespondWith = (200, Some(repositoryData(repositoryDetails))))

@@ -48,7 +48,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
 
   val repotypeToDetailsUrl = Map(
-    RepoType.Deployable -> routes.CatalogueController.service _,
+    RepoType.Service -> routes.CatalogueController.service _,
     RepoType.Other -> routes.CatalogueController.repository _,
     RepoType.Library -> routes.CatalogueController.library _
   )
@@ -112,7 +112,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       service <- teamsAndServicesConnector.repositoryDetails(name)
       maybeDataPoints <- indicatorsConnector.deploymentIndicatorsForService(name)
     } yield service match {
-      case Some(s) if s.data.repoType == RepoType.Deployable => Ok(
+      case Some(s) if s.data.repoType == RepoType.Service => Ok(
         service_info(
           s.formattedTimestamp,
           s.data,

@@ -32,13 +32,13 @@ class RepositoryResultSpec extends WordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Deployable))
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service))
 
       repositories.filter(RepoListFilter(name = Some("serv1"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other))
 
     }
@@ -48,10 +48,10 @@ class RepositoryResultSpec extends WordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Deployable))
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service))
 
       repositories.filter(RepoListFilter(repoType = Some("Other"))) shouldBe Seq(
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other))
@@ -64,11 +64,11 @@ class RepositoryResultSpec extends WordSpec with Matchers {
       val repositories = Seq(
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
         RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other))
 
       repositories.filter(RepoListFilter(repoType = Some("service"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Deployable))
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service))
     }
 
     "get repositories filtered repository type using 'deployable' as type " in {
@@ -78,11 +78,11 @@ class RepositoryResultSpec extends WordSpec with Matchers {
       val repositories = Seq(
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
         RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other))
 
-      repositories.filter(RepoListFilter(repoType = Some("Deployable"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Deployable))
+      repositories.filter(RepoListFilter(repoType = Some("Service"))) shouldBe Seq(
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service))
     }
 
 
@@ -91,11 +91,11 @@ class RepositoryResultSpec extends WordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
         RepositoryDisplayDetails("serv4", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Deployable))
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service))
 
       repositories.filter(RepoListFilter(name = Some("serv1"),repoType = Some("Other"))) shouldBe Seq(
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other))
@@ -106,10 +106,10 @@ class RepositoryResultSpec extends WordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Deployable),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Deployable))
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service))
 
       repositories.filter(RepoListFilter()) shouldBe repositories
     }

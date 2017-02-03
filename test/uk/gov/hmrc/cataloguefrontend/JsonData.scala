@@ -29,7 +29,7 @@ object JsonData {
 
   val repositoriesData =
     s"""|[
-        |{"name":"teamA-serv", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Deployable"},
+        |{"name":"teamA-serv", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Service"},
         |{"name":"teamB-library", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Library"},
         |{"name":"teamB-other", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Other"}
         |]""".stripMargin
@@ -41,7 +41,7 @@ object JsonData {
        |      "description": "some description",
        |      "createdAt": ${createdAt.epochMillis},
        |      "lastActive": ${lastActiveAt.epochMillis},
-       |      "repoType": "Deployable",
+       |      "repoType": "Service",
        |      "teamNames": ["teamA", "teamB"],
        |	     "githubUrls": [{
        |		     "name": "github",
@@ -91,7 +91,7 @@ object JsonData {
       |{
       |    "name" : "teamA",
       |    "repos": {
-      |    "Deployable": [
+      |    "Service": [
       |            "service1",
       |            "service2"
       |    ],

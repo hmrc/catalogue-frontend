@@ -24,7 +24,7 @@ class RepoTypeSpec extends WordSpec with Matchers {
 
   "RepoType" should {
     "be able to be read from a json string" in {
-      Json.parse("""{"type":"Deployable"}""").as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Deployable)
+      Json.parse("""{"type":"Service"}""").as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Service)
       Json.parse("""{"type":"Library"}""").as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Library)
       Json.parse("""{"type":"Other"}""").as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Other)
     }
