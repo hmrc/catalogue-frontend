@@ -32,6 +32,8 @@ package uk.gov.hmrc.cataloguefrontend
  * limitations under the License.
  */
 
+import java.time.LocalDateTime
+
 import play.api.Logger
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
@@ -41,13 +43,20 @@ import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 
 import scala.concurrent.Future
 
-case class Release(
-                    name: String,
-                    productionDate: java.time.LocalDateTime,
+case class Deployer(name : String, deploymentDate: LocalDateTime)
+
+case class Release(name: String,
+                   productionDate: java.time.LocalDateTime,
                     creationDate: Option[java.time.LocalDateTime] = None,
                     interval: Option[Long] = None,
                     leadTime: Option[Long] = None,
-                    version: String)
+                    version: String,
+                    deployers : Seq[Deployer] = Seq.empty
+                  ){
+
+  import DateHelper._
+  val latestDeployer = deployers.sortBy(_.deploymentDate.epochSeconds).lastOption
+}
 
 trait ServiceDeploymentsConnector extends ServicesConfig {
   val http: HttpGet with HttpPost
@@ -56,9 +65,11 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
   import uk.gov.hmrc.play.http.HttpReads._
   import JavaDateTimeJsonFormatter._
 
+  implicit val deployerFormat = Json.format[Deployer]
+
   implicit val deploymentsFormat = Json.reads[Release]
 
-  def getDeployments(serviceNames: Iterable[String])(implicit hc: HeaderCarrier) = {
+  def getDeployments(serviceNames: Iterable[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] = {
     val url =  s"$servicesDeploymentsBaseUrl"
 
     http.POST[Seq[String],HttpResponse](url, serviceNames.toSeq).map { r =>

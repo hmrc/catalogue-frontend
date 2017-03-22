@@ -48,13 +48,15 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
           |		"creationDate": 1452701233,
           |		"productionDate": 1453731429,
           |		"interval": 7,
-          |		"leadTime": 12
+          |		"leadTime": 12,
+          |  "deployers":[{"name":"abcd.xyz", "deploymentDate": 1452701233}]
           |	},
           |	{
           |		"name": "serviceB",
           |		"version": "2.38.0",
           |		"productionDate": 1453713911,
-          |		"interval": 5
+          |		"interval": 5,
+          |  "deployers":[]
           |	}]
         """.stripMargin
       )))
@@ -62,7 +64,7 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
       val response = await(ServiceDeploymentsConnector.getDeployments()(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
-      response(0) shouldBe Release("serviceA", productionDate = toLocalDateTime(1453731429), creationDate = Some(toLocalDateTime(1452701233)), interval = Some(7), leadTime = Some(12), version = "8.96.0")
+      response(0) shouldBe Release("serviceA", productionDate = toLocalDateTime(1453731429), creationDate = Some(toLocalDateTime(1452701233)), interval = Some(7), leadTime = Some(12), version = "8.96.0" ,deployers=Seq(Deployer("abcd.xyz",toLocalDateTime(1452701233))))
       response(1) shouldBe Release("serviceB", productionDate = toLocalDateTime(1453713911), creationDate = None, interval = Some(5), leadTime = None, version = "2.38.0")
     }
 
@@ -77,13 +79,15 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
           |		"creationDate": 1452701233,
           |		"productionDate": 1453731429,
           |		"interval": 7,
-          |		"leadTime": 12
+          |		"leadTime": 12,
+          |  "deployers":[]
           |	},
           |	{
           |		"name": "serviceA",
           |		"version": "2.38.0",
           |		"productionDate": 1453713911,
-          |		"interval": 5
+          |		"interval": 5,
+          |  "deployers":[]
           |	}]
         """.stripMargin
       )))
@@ -107,13 +111,15 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
           |		"creationDate": 1452701233,
           |		"productionDate": 1453731429,
           |		"interval": 7,
-          |		"leadTime": 12
+          |		"leadTime": 12,
+          |  "deployers":[]
           |	},
           |	{
           |		"name": "serviceNameB",
           |		"version": "2.38.0",
           |		"productionDate": 1453713911,
-          |		"interval": 5
+          |		"interval": 5,
+          |  "deployers":[]
           |	}]
         """.stripMargin
       )), givenJsonBody = Some("[\"serviceNameA\",\"serviceNameB\"]"))

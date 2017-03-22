@@ -45,7 +45,7 @@ class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar wi
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
       when(deploymentsConnector.getDeployments()).thenReturn(Future.successful(Seq(
-        Release("a-service", productionDate = productionDate, version = "0.1.0"),
+        Release("a-service", productionDate = productionDate, version = "0.1.0", deployers = Seq(Deployer("abc.xyz",productionDate))),
         Release("b-service", productionDate = productionDate, version = "0.2.0"))))
 
       when(teamsAndServicesConnector.allTeamsByService()).thenReturn(Future.successful(
@@ -56,7 +56,7 @@ class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar wi
       val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
       val deployments = service.getDeployments().futureValue
 
-      deployments should contain(TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
+      deployments should contain(TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0", latestDeployer = Some(Deployer("abc.xyz",productionDate))))
       deployments should contain(TeamRelease("b-service", teams = Seq("c-team"), productionDate = productionDate, version = "0.2.0"))
     }
 

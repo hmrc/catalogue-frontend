@@ -185,13 +185,17 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   def deployments() = Action.async { implicit request =>
 
     import SearchFiltering._
+    val umpProfileUrl = getConfString(profileBaseUrlConfigKey, "#")
 
     deploymentsService.getDeployments().map { rs =>
 
       val form: Form[DeploymentsFilter] = DeploymentsFilter.form.bindFromRequest()
       form.fold(
-        errors => Ok(release_list(Nil, errors)),
-        query => Ok(release_list(rs.filter(query), form))
+        errors => {
+
+          Ok(release_list(Nil, errors, umpProfileUrl))
+        },
+        query => Ok(release_list(rs.filter(query), form, getConfString(profileBaseUrlConfigKey, "#")))
       )
 
     }

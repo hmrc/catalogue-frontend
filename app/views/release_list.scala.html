@@ -14,7 +14,7 @@
 * limitations under the License.
 *@
 
-@(deployments: Seq[uk.gov.hmrc.cataloguefrontend.TeamRelease], form: Form[_])(implicit messages: Messages)
+@(deployments: Seq[uk.gov.hmrc.cataloguefrontend.TeamRelease], form: Form[_], userProfileBaseUrl : String)(implicit messages: Messages)
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
@@ -64,6 +64,7 @@
         <th><span>Teams</span></th>
         <th><span>Version</span></th>
         <th><span>Production deployment</span></th>
+        <th><span>Latest Deployer</span></th>
         <th><span>Created</span></th>
         <th><span>Lead Time</span></th>
         <th>Interval</th>
@@ -82,6 +83,9 @@
         </td>
         <td class="monospaced" id="row@{i}_version">@{release.version}</td>
         <td class="monospaced" id="row@{i}_production">@{release.productionDate.asString}</td>
+        <td class="monospaced" id="row@{i}_deployer">
+            @release.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.name}">@{u.name}</a>}.getOrElse("N/A")
+        </td>
         <td class="monospaced" id="row@{i}_creation">@{release.creationDate.fold("--")(_.asString)}</td>
         <td class="monospaced" id="row@{i}_leadtime">@{release.leadTime.fold("--")(x => s"$x days" )}</td>
         <td class="monospaced" id="row@{i}_interval">@{release.interval.fold("--")(x => s"$x days" )}</td>

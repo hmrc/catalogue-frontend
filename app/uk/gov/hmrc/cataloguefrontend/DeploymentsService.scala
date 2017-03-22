@@ -28,7 +28,7 @@ import scala.concurrent.Future
 
 case class TeamRelease(name: ServiceName, teams: Seq[TeamName], productionDate: LocalDateTime,
                        creationDate: Option[LocalDateTime] = None, interval: Option[Long] = None,
-                       leadTime:  Option[Long] = None, version: String)
+                       leadTime:  Option[Long] = None, version: String, latestDeployer : Option[Deployer] = None)
 
 class DeploymentsService(deploymentsConnector: ServiceDeploymentsConnector, teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
   type ServiceTeamMappings = Map[ServiceName, Seq[TeamName]]
@@ -51,7 +51,7 @@ class DeploymentsService(deploymentsConnector: ServiceDeploymentsConnector, team
 
   private def teamRelease(rq: ReleaseFilter)(r: Release) =
     TeamRelease(r.name, rq.serviceTeams.getOrElse(r.name, Seq()), productionDate = r.productionDate,
-      creationDate = r.creationDate, interval = r.interval, leadTime = r.leadTime, version = r.version)
+      creationDate = r.creationDate, interval = r.interval, leadTime = r.leadTime, version = r.version, r.latestDeployer)
 
   private def buildFilter(teamName: Option[TeamName], serviceName: Option[ServiceName])(implicit hc: HeaderCarrier) : Future[ReleaseFilter] =
     buildFilterFromService(serviceName) getOrElse (
