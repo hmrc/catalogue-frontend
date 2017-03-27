@@ -134,4 +134,33 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
     def toLocalDateTime(millis: Long): LocalDateTime = LocalDateTime.ofEpochSecond(millis, 0, ZoneOffset.UTC)
 
   }
+
+
+  "getWhatIsRunningWhere" should {
+    "return all whats running where for the given application name" in {
+      val applicationName = "appNameA"
+      serviceEndpoint(GET, s"/api/whatsrunningwhere/$applicationName", willRespondWith = (200, Some(
+        s"""[
+           |  {
+           |    "applicationName": "$applicationName",
+           |    "environments": [
+           |      "qa",
+           |      "staging",
+           |      "production",
+           |      "externaltest"
+           |    ]
+           |  }
+           |]
+        """.stripMargin
+      )))
+
+      val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(applicationName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+
+      response.size shouldBe 1
+      response(0) shouldBe WhatIsRunningWhere(applicationName, Seq("qa", "staging", "production", "externaltest"))
+
+    }
+
+  }
+
 }

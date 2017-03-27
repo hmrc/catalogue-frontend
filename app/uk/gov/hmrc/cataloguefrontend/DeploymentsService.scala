@@ -30,7 +30,7 @@ case class TeamRelease(name: ServiceName, teams: Seq[TeamName], productionDate: 
                        creationDate: Option[LocalDateTime] = None, interval: Option[Long] = None,
                        leadTime:  Option[Long] = None, version: String, latestDeployer : Option[Deployer] = None)
 
-class DeploymentsService(deploymentsConnector: ServiceDeploymentsConnector, teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
+class DeploymentsService(serviceDeploymentsConnector: ServiceDeploymentsConnector, teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
   type ServiceTeamMappings = Map[ServiceName, Seq[TeamName]]
 
   sealed trait ReleaseFilter { def serviceTeams: ServiceTeamMappings }
@@ -42,9 +42,9 @@ class DeploymentsService(deploymentsConnector: ServiceDeploymentsConnector, team
     for {
       query <- buildFilter(teamName, serviceName)
       deployments <- query match {
-        case All(st) => deploymentsConnector.getDeployments()
+        case All(st) => serviceDeploymentsConnector.getDeployments()
         case ServiceTeams(st) =>
-          deploymentsConnector.getDeployments(st.keys.toSeq)
+          serviceDeploymentsConnector.getDeployments(st.keys.toSeq)
         case NotFound => Future.successful(Seq())
       }
     } yield deployments map teamRelease(query)

@@ -61,34 +61,34 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
 
   "repositoryDetails" should {
     "convert the json string to RepositoryDetails" in {
-      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(JsonData.serviceDetailsData)))
+      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(JsonData.serviceDetailsData)))
 
       val responseData: RepositoryDetails =
         TeamsAndRepositoriesConnector
-          .repositoryDetails("serv")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
+          .repositoryDetails("service-1")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
           .futureValue
           .value
           .data
 
-      responseData.name shouldBe "serv"
+      responseData.name shouldBe "service-1"
       responseData.description shouldBe "some description"
       responseData.createdAt shouldBe createdAt
       responseData.lastActive shouldBe lastActiveAt
       responseData.teamNames should ===(Seq("teamA", "teamB"))
-      responseData.githubUrls should ===(Seq(Link("github", "github.com", "https://github.com/hmrc/serv")))
-      responseData.ci should ===(Seq(Link("open1", "open 1", "http://open1/serv"), Link("open2", "open 2", "http://open2/serv")))
+      responseData.githubUrls should ===(Seq(Link("github", "github.com", "https://github.com/hmrc/service-1")))
+      responseData.ci should ===(Seq(Link("open1", "open 1", "http://open1/service-1"), Link("open2", "open 2", "http://open2/service-2")))
       responseData.environments should ===(Some(Seq(
         Environment(
           "env1",
           Seq(
-            Link("ser1", "service1", "http://ser1/serv"),
-            Link("ser2", "service2", "http://ser2/serv")
+            Link("ser1", "service-1", "http://ser1/service-1"),
+            Link("ser2", "service-2", "http://ser2/service-2")
           )),
         Environment(
           "env2",
           Seq(
-            Link("ser1", "service1", "http://ser1/serv"),
-            Link("ser2", "service2", "http://ser2/serv")
+            Link("ser1", "service-1", "http://ser1/service-1"),
+            Link("ser2", "service-2", "http://ser2/service-2")
           )
         ))))
 

@@ -58,16 +58,24 @@ case class Release(name: String,
   val latestDeployer = deployers.sortBy(_.deploymentDate.epochSeconds).lastOption
 }
 
+case class WhatIsRunningWhere(applicationName: String, environments: Seq[String])
+
+
 trait ServiceDeploymentsConnector extends ServicesConfig {
+
   val http: HttpGet with HttpPost
   def servicesDeploymentsBaseUrl: String
+  def whatIsRunningWhereBaseUrl: String
 
   import uk.gov.hmrc.play.http.HttpReads._
   import JavaDateTimeJsonFormatter._
 
   implicit val deployerFormat = Json.format[Deployer]
-
+  
   implicit val deploymentsFormat = Json.reads[Release]
+
+  implicit val whatsRunningWhereRead = Json.reads[WhatIsRunningWhere]
+
 
   def getDeployments(serviceNames: Iterable[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] = {
     val url =  s"$servicesDeploymentsBaseUrl"
@@ -99,9 +107,25 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
     }
   }
 
+  def getWhatIsRunningWhere(applicationName: String)(implicit hc: HeaderCarrier): Future[Seq[WhatIsRunningWhere]] = {
+    val url = s"$whatIsRunningWhereBaseUrl/$applicationName"
+
+    http.GET[HttpResponse](url).map { r =>
+      r.status match {
+        case 200 => r.json.as[Seq[WhatIsRunningWhere]]
+        case 404 => Seq()
+      }
+    }.recover {
+      case ex =>
+        Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
+        Seq.empty
+    }
+  }
+
 }
 
 object ServiceDeploymentsConnector extends ServiceDeploymentsConnector {
   override val http = WSHttp
   override def servicesDeploymentsBaseUrl: String = baseUrl("service-deployments") + "/api/deployments"
+  override def whatIsRunningWhereBaseUrl: String = baseUrl("service-deployments") + "/api/whatsrunningwhere"
 }

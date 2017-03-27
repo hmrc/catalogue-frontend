@@ -37,7 +37,7 @@ object JsonData {
   val serviceDetailsData =
     s"""
        |    {
-       |	     "name": "serv",
+       |	     "name": "service-1",
        |      "description": "some description",
        |      "createdAt": ${createdAt.epochMillis},
        |      "lastActive": ${lastActiveAt.epochMillis},
@@ -46,41 +46,41 @@ object JsonData {
        |	     "githubUrls": [{
        |		     "name": "github",
        |        "displayName": "github.com",
-       |		     "url": "https://github.com/hmrc/serv"
+       |		     "url": "https://github.com/hmrc/service-1"
        |	     }],
        |	     "ci": [
        |		     {
        |		       "name": "open1",
        |		       "displayName": "open 1",
-       |		       "url": "http://open1/serv"
+       |		       "url": "http://open1/service-1"
        |		     },
        |		     {
        |		       "name": "open2",
        |		       "displayName": "open 2",
-       |		       "url": "http://open2/serv"
+       |		       "url": "http://open2/service-2"
        |		     }
        |	     ],
        |      "environments" : [{
        |        "name" : "env1",
        |        "services" : [{
        |          "name": "ser1",
-       |		       "displayName": "service1",
-       |          "url": "http://ser1/serv"
+       |		       "displayName": "service-1",
+       |          "url": "http://ser1/service-1"
        |        }, {
        |          "name": "ser2",
-       |		       "displayName": "service2",
-       |          "url": "http://ser2/serv"
+       |		       "displayName": "service-2",
+       |          "url": "http://ser2/service-2"
        |        }]
        |      },{
        |        "name" : "env2",
        |        "services" : [{
        |          "name": "ser1",
-       |		       "displayName": "service1",
-       |          "url": "http://ser1/serv"
+       |		       "displayName": "service-1",
+       |          "url": "http://ser1/service-1"
        |        }, {
        |          "name": "ser2",
-       |		       "displayName": "service2",
-       |          "url": "http://ser2/serv"
+       |		       "displayName": "service-2",
+       |          "url": "http://ser2/service-2"
        |        }]
        |       }]
        |     }

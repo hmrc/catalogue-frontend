@@ -56,23 +56,23 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     }
 
     "show the teams owning the service with github, ci and environment links and info box" in {
-      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(serviceDetailsData)))
-      serviceEndpoint(GET, "/api/indicators/service/serv/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
+      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
 
-      val response = await(WS.url(s"http://localhost:$port/service/serv").get)
+      val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
       response.status shouldBe 200
       response.body should include(s"links on this page are automatically generated")
       response.body should include(s"teamA")
       response.body should include(s"teamB")
       response.body should include(s"open 1")
       response.body should include(s"open 2")
-      response.body should include(s"service1")
-      response.body should include(s"service1")
+      response.body should include(s"service-1")
+      response.body should include(s"service-1")
       response.body should include(s"github.com")
-      response.body should include(s"http://open1/serv")
-      response.body should include(s"http://open2/serv")
-      response.body should include(s"http://ser1/serv")
-      response.body should include(s"http://ser2/serv")
+      response.body should include(s"http://open1/service-1")
+      response.body should include(s"http://open2/service-2")
+      response.body should include(s"http://ser1/service-1")
+      response.body should include(s"http://ser2/service-2")
       response.body should include("some description")
 
       response.body should include(createdAt.displayFormat)
