@@ -29,6 +29,8 @@ import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, Te
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
 
+import scala.concurrent.Future
+
 case class TeamActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime], firstServiceCreationDate : Option[LocalDateTime])
 
 
@@ -107,15 +109,41 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
+
   def service(name: String) = Action.async { implicit request =>
+
+    def getDeployedEnvs(deployedToEnvs: Seq[String], maybeRefEnvironments: Option[Seq[Environment]]) : Option[Seq[Environment]] = {
+
+      val lowerCasedDeployedEnvNames = deployedToEnvs.map(_.toLowerCase)
+
+
+      maybeRefEnvironments.map { environments =>
+        environments
+          .map(e => (e.name.toLowerCase, e))
+          .map {
+            case (lwrCasedEnvName, refEnvironment) if lowerCasedDeployedEnvNames.contains(lwrCasedEnvName) || lwrCasedEnvName == "dev" =>
+              refEnvironment
+            case (_, refEnvironment) =>
+              refEnvironment.copy(services = Nil)
+          }
+      }
+
+    }
+
+    val repositoryDetailsF = teamsAndServicesConnector.repositoryDetails(name)
+    val deploymentIndicatorsForServiceF: Future[Option[DeploymentIndicators]] = indicatorsConnector.deploymentIndicatorsForService(name)
+    val whatsRunningWhereF: Future[Option[WhatIsRunningWhere]] = deploymentsService.getWhatsRunningWhere(name)
+
     for {
-      service <- teamsAndServicesConnector.repositoryDetails(name)
-      maybeDataPoints <- indicatorsConnector.deploymentIndicatorsForService(name)
+      service <- repositoryDetailsF
+      maybeDataPoints <- deploymentIndicatorsForServiceF
+      whatsRunningWhere: Option[WhatIsRunningWhere] <- whatsRunningWhereF
+      deployedToEnvs = whatsRunningWhere.getOrElse(WhatIsRunningWhere(name, Nil)).environments
     } yield service match {
       case Some(s) if s.data.repoType == RepoType.Service => Ok(
         service_info(
           s.formattedTimestamp,
-          s.data,
+          s.data.copy(environments = getDeployedEnvs(deployedToEnvs, s.data.environments)),
           ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
           ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)),
           s.data.createdAt

@@ -60,7 +60,19 @@ object JsonData {
        |		       "url": "http://open2/service-2"
        |		     }
        |	     ],
-       |      "environments" : [{
+       |      "environments" : [
+       |      {
+       |        "name" : "Dev",
+       |        "services" : [{
+       |          "name": "jenkins",
+       |		       "displayName": "Jenkins",
+       |          "url": "http://example.com/job/deploy-microservice"
+       |        }, {
+       |          "name": "grafana",
+       |		       "displayName": "Grafana",
+       |          "url": "http://example.com/#/dashboard"
+       |        }]
+       |       }, {
        |        "name" : "QA",
        |        "services" : [{
        |          "name": "jenkins",

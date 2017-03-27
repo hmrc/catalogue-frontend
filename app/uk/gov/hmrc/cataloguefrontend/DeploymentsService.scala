@@ -49,6 +49,10 @@ class DeploymentsService(serviceDeploymentsConnector: ServiceDeploymentsConnecto
       }
     } yield deployments map teamRelease(query)
 
+  def getWhatsRunningWhere(applicationName: String)(implicit hc: HeaderCarrier): Future[Option[WhatIsRunningWhere]] = {
+    serviceDeploymentsConnector.getWhatIsRunningWhere(applicationName).map(_.headOption)
+  }
+
   private def teamRelease(rq: ReleaseFilter)(r: Release) =
     TeamRelease(r.name, rq.serviceTeams.getOrElse(r.name, Seq()), productionDate = r.productionDate,
       creationDate = r.creationDate, interval = r.interval, leadTime = r.leadTime, version = r.version, r.latestDeployer)

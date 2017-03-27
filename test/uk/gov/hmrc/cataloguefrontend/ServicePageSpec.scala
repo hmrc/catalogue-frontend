@@ -37,6 +37,8 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     "microservice.services.teams-and-services.host" -> host,
     "microservice.services.indicators.port" -> endpointPort,
     "microservice.services.indicators.host" -> host,
+    "microservice.services.service-deployments.port" -> endpointPort,
+    "microservice.services.service-deployments.host" -> host,
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
 
 
@@ -60,6 +62,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
 
       serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
+      serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (200, Some(Json.toJson(Seq(WhatIsRunningWhere("service-1", Seq("qa", "production")))).toString())))
 
       val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
       response.status shouldBe 200
@@ -81,34 +84,58 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       response.body should include(lastActiveAt.displayFormat)
     }
 
-//    "show only show links to environments for which the service is deployed to" in {
-//
-//      import WhatIsRunningWhere._
-//
-//      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
-//      serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
-//      serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (200, Some(Json.toJson(WhatIsRunningWhere("service-1", Seq("env2"))).toString())))
-//
-//      val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
-//      response.status shouldBe 200
-//      response.body should include(s"links on this page are automatically generated")
-//      response.body should include(s"teamA")
-//      response.body should include(s"teamB")
-//      response.body should include(s"open 1")
-//      response.body should include(s"open 2")
-//      response.body should include(s"service-1")
-//      response.body should include(s"service-1")
-//      response.body should include(s"github.com")
-//      response.body should include(s"http://open1/service-1")
-//      response.body should include(s"http://open2/service-2")
-//      response.body should include(s"http://ser1/service-1")
-//      response.body should include(s"http://ser2/service-2")
-//      response.body should include("some description")
-//
-//      response.body should include(createdAt.displayFormat)
-//      response.body should include(lastActiveAt.displayFormat)
-//    }
 
+    "link to environments" should {
+
+      "show only show links to envs for which the service is deployed to" in {
+        import WhatIsRunningWhere._
+
+        serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
+        serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
+        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (200, Some(Json.toJson(Seq(WhatIsRunningWhere("service-1", Seq("production")))).toString())))
+
+        val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
+        response.status shouldBe 200
+        response.body should include("links on this page are automatically generated")
+        response.body should include("teamA")
+        response.body should include("teamB")
+        response.body should include("open 1")
+        response.body should include("open 2")
+        response.body should include("github.com")
+        response.body should include("http://open1/service-1")
+        response.body should include("http://open2/service-2")
+        response.body should include("Jenkins")
+        response.body should include("Grafana")
+
+        response.body should include("some description")
+
+        response.body should include(createdAt.displayFormat)
+        response.body should include(lastActiveAt.displayFormat)
+
+        response.body should include("http://example.com/job/deploy-microservice")
+        response.body should include("http://example.com/#/dashboard")
+        response.body should include("http://example.com/job/deploy-microservice")
+        response.body should include("http://example.com/#/dashboard")
+
+        response.body should not include ("http://example.com/job/deploy-microservice")
+        response.body should not include ("http://example.com/#/dashboard")
+      }
+      "show show links to devs by default" in {
+        import WhatIsRunningWhere._
+
+        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (200, Some(Json.toJson(Seq(WhatIsRunningWhere("service-1", Seq("production")))).toString())))
+        serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
+        serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
+
+        val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
+
+        response.body should include("http://example.com/job/deploy-microservice")
+        response.body should include("http://example.com/#/dashboard")
+
+      }
+
+    }
+    
     "Render the frequent production indicators graph with throughput and stability" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
