@@ -50,8 +50,12 @@
 
         </div>
         <div class="row">
-        @for(environment <- service.environments.get) {
-            <div class="col-md-3">
+        @for((environment, idx) <- service.environments.get.zipWithIndex) {
+            @if(idx < 3) {
+                <div class="col-md-2">
+            } else {
+                <div class="col-md-3">
+            }
                 <div class="board">
                     <h3 class="board__heading">@environment.name</h3>
                     <div class="board__body">
