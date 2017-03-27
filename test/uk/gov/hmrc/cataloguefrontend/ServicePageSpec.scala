@@ -24,6 +24,7 @@ import java.time.temporal.ChronoUnit
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import play.api.libs.ws.WS
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
@@ -56,28 +57,57 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     }
 
     "show the teams owning the service with github, ci and environment links and info box" in {
+
       serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
 
       val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
       response.status shouldBe 200
-      response.body should include(s"links on this page are automatically generated")
-      response.body should include(s"teamA")
-      response.body should include(s"teamB")
-      response.body should include(s"open 1")
-      response.body should include(s"open 2")
-      response.body should include(s"service-1")
-      response.body should include(s"service-1")
-      response.body should include(s"github.com")
-      response.body should include(s"http://open1/service-1")
-      response.body should include(s"http://open2/service-2")
-      response.body should include(s"http://ser1/service-1")
-      response.body should include(s"http://ser2/service-2")
+      response.body should include("links on this page are automatically generated")
+      response.body should include("teamA")
+      response.body should include("teamB")
+      response.body should include("open 1")
+      response.body should include("open 2")
+      response.body should include("github.com")
+      response.body should include("http://open1/service-1")
+      response.body should include("http://open2/service-2")
+      response.body should include("Jenkins")
+      response.body should include("Grafana")
+      response.body should include("http://example.com/job/deploy-microservice")
+      response.body should include("http://example.com/job/deploy-microservice")
       response.body should include("some description")
 
       response.body should include(createdAt.displayFormat)
       response.body should include(lastActiveAt.displayFormat)
     }
+
+//    "show only show links to environments for which the service is deployed to" in {
+//
+//      import WhatIsRunningWhere._
+//
+//      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
+//      serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
+//      serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (200, Some(Json.toJson(WhatIsRunningWhere("service-1", Seq("env2"))).toString())))
+//
+//      val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
+//      response.status shouldBe 200
+//      response.body should include(s"links on this page are automatically generated")
+//      response.body should include(s"teamA")
+//      response.body should include(s"teamB")
+//      response.body should include(s"open 1")
+//      response.body should include(s"open 2")
+//      response.body should include(s"service-1")
+//      response.body should include(s"service-1")
+//      response.body should include(s"github.com")
+//      response.body should include(s"http://open1/service-1")
+//      response.body should include(s"http://open2/service-2")
+//      response.body should include(s"http://ser1/service-1")
+//      response.body should include(s"http://ser2/service-2")
+//      response.body should include("some description")
+//
+//      response.body should include(createdAt.displayFormat)
+//      response.body should include(lastActiveAt.displayFormat)
+//    }
 
     "Render the frequent production indicators graph with throughput and stability" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))

@@ -59,7 +59,9 @@ case class Release(name: String,
 }
 
 case class WhatIsRunningWhere(applicationName: String, environments: Seq[String])
-
+object WhatIsRunningWhere {
+  implicit val whatsRunningWhereFormat = Json.format[WhatIsRunningWhere]
+}
 
 trait ServiceDeploymentsConnector extends ServicesConfig {
 
@@ -69,12 +71,12 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
 
   import uk.gov.hmrc.play.http.HttpReads._
   import JavaDateTimeJsonFormatter._
+  import WhatIsRunningWhere._
 
   implicit val deployerFormat = Json.format[Deployer]
   
   implicit val deploymentsFormat = Json.reads[Release]
 
-  implicit val whatsRunningWhereRead = Json.reads[WhatIsRunningWhere]
 
 
   def getDeployments(serviceNames: Iterable[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] = {

@@ -61,26 +61,26 @@ object JsonData {
        |		     }
        |	     ],
        |      "environments" : [{
-       |        "name" : "env1",
+       |        "name" : "QA",
        |        "services" : [{
-       |          "name": "ser1",
-       |		       "displayName": "service-1",
-       |          "url": "http://ser1/service-1"
+       |          "name": "jenkins",
+       |		       "displayName": "Jenkins",
+       |          "url": "http://example.com/job/deploy-microservice"
        |        }, {
-       |          "name": "ser2",
-       |		       "displayName": "service-2",
-       |          "url": "http://ser2/service-2"
+       |          "name": "grafana",
+       |		       "displayName": "Grafana",
+       |          "url": "http://example.com/#/dashboard"
        |        }]
        |      },{
-       |        "name" : "env2",
+       |        "name" : "Production",
        |        "services" : [{
-       |          "name": "ser1",
-       |		       "displayName": "service-1",
-       |          "url": "http://ser1/service-1"
+       |          "name": "jenkins",
+       |		       "displayName": "Jenkins",
+       |          "url": "http://example.com/job/deploy-microservice"
        |        }, {
-       |          "name": "ser2",
-       |		       "displayName": "service-2",
-       |          "url": "http://ser2/service-2"
+       |          "name": "grafana",
+       |		       "displayName": "Grafana",
+       |          "url": "http://example.com/#/dashboard"
        |        }]
        |       }]
        |     }
