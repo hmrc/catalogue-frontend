@@ -168,7 +168,7 @@ class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar wi
 
       val appName = "app-1"
       
-      val cannedWhatIsRunningWhere = Seq(WhatIsRunningWhere(appName, Seq("qa")))
+      val cannedWhatIsRunningWhere = Seq(WhatIsRunningWhere(appName, Seq(DeployedEnvironmentVO("qa", "qa"))))
       when(deploymentsConnector.getWhatIsRunningWhere(any())(any())).thenReturn(Future.successful(cannedWhatIsRunningWhere))
 
       val service = new DeploymentsService(deploymentsConnector, mock[TeamsAndRepositoriesConnector])

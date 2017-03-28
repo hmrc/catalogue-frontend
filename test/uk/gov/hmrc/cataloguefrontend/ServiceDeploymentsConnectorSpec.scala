@@ -144,10 +144,10 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
            |  {
            |    "applicationName": "$applicationName",
            |    "environments": [
-           |      "qa",
-           |      "staging",
-           |      "production",
-           |      "externaltest"
+           |      { "name": "qa", "whatIsRunningWhereId": "qa" },
+           |      { "name": "staging", "whatIsRunningWhereId": "staging" },
+           |      { "name": "production", "whatIsRunningWhereId": "production" },
+           |      { "name": "external test", "whatIsRunningWhereId": "externaltest" }
            |    ]
            |  }
            |]
@@ -157,7 +157,12 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
       val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(applicationName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 1
-      response(0) shouldBe WhatIsRunningWhere(applicationName, Seq("qa", "staging", "production", "externaltest"))
+      response(0).environments should contain theSameElementsAs Seq(
+        DeployedEnvironmentVO("staging", "staging"),
+        DeployedEnvironmentVO("production", "production"),
+        DeployedEnvironmentVO("qa", "qa"),
+        DeployedEnvironmentVO("external test", "externaltest"))
+      
 
     }
 

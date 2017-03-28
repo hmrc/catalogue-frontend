@@ -112,16 +112,15 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def service(name: String) = Action.async { implicit request =>
 
-    def getDeployedEnvs(deployedToEnvs: Seq[String], maybeRefEnvironments: Option[Seq[Environment]]) : Option[Seq[Environment]] = {
+    def getDeployedEnvs(deployedToEnvs: Seq[DeployedEnvironmentVO], maybeRefEnvironments: Option[Seq[Environment]]) : Option[Seq[Environment]] = {
 
-      val lowerCasedDeployedEnvNames = deployedToEnvs.map(_.toLowerCase)
-
+      val deployedEnvNames = deployedToEnvs.map(_.name)
 
       maybeRefEnvironments.map { environments =>
         environments
           .map(e => (e.name.toLowerCase, e))
           .map {
-            case (lwrCasedEnvName, refEnvironment) if lowerCasedDeployedEnvNames.contains(lwrCasedEnvName) || lwrCasedEnvName == "dev" =>
+            case (lwrCasedRefEnvName, refEnvironment) if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
               refEnvironment
             case (_, refEnvironment) =>
               refEnvironment.copy(services = Nil)
@@ -138,7 +137,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       service <- repositoryDetailsF
       maybeDataPoints <- deploymentIndicatorsForServiceF
       whatsRunningWhere: Option[WhatIsRunningWhere] <- whatsRunningWhereF
-      deployedToEnvs = whatsRunningWhere.getOrElse(WhatIsRunningWhere(name, Nil)).environments
+      deployedToEnvs = whatsRunningWhere.getOrElse(WhatIsRunningWhere(name, Seq.empty)).environments
     } yield service match {
       case Some(s) if s.data.repoType == RepoType.Service => Ok(
         service_info(

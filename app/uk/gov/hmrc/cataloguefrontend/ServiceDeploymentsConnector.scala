@@ -35,7 +35,8 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.LocalDateTime
 
 import play.api.Logger
-import play.api.libs.json.Json
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.{JsPath, Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
@@ -58,7 +59,26 @@ case class Release(name: String,
   val latestDeployer = deployers.sortBy(_.deploymentDate.epochSeconds).lastOption
 }
 
-case class WhatIsRunningWhere(applicationName: String, environments: Seq[String])
+
+final case class DeployedEnvironmentVO(name: String, whatIsRunningWhereId: String)
+
+object DeployedEnvironmentVO {
+
+//  implicit val environmentFormat = Reads[Environment_] = (
+//    (JsPath \ "name").read[String] and
+//      (JsPath \ "whatIsRunningWhereId").read[String]
+//    )(Environment_.apply _)
+
+  implicit val environmentFormat = Json.format[DeployedEnvironmentVO]
+
+  val fullListOfEnvironments = Set(
+    DeployedEnvironmentVO("qa" , "qa"),
+    DeployedEnvironmentVO("staging" , "staging"),
+    DeployedEnvironmentVO("external test" , "externaltest"),
+    DeployedEnvironmentVO("production" , "production")
+  )
+}
+case class WhatIsRunningWhere(applicationName: String, environments: Seq[DeployedEnvironmentVO])
 object WhatIsRunningWhere {
   implicit val whatsRunningWhereFormat = Json.format[WhatIsRunningWhere]
 }
