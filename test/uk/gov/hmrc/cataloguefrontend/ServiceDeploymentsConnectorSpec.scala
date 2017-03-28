@@ -138,11 +138,11 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
 
   "getWhatIsRunningWhere" should {
     "return all whats running where for the given application name" in {
-      val applicationName = "appNameA"
-      serviceEndpoint(GET, s"/api/whatsrunningwhere/$applicationName", willRespondWith = (200, Some(
+      val serviceName = "appNameA"
+      serviceEndpoint(GET, s"/api/whatsrunningwhere/$serviceName", willRespondWith = (200, Some(
         s"""
            |  {
-           |    "applicationName": "$applicationName",
+           |    "serviceName": "$serviceName",
            |    "environments": [
            |      { "name": "qa", "whatIsRunningWhereId": "qa" },
            |      { "name": "staging", "whatIsRunningWhereId": "staging" },
@@ -154,7 +154,7 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
         """.stripMargin
       )))
 
-      val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(applicationName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+      val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
 
       response.right.get.environments should contain theSameElementsAs Seq(

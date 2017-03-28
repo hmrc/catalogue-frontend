@@ -40,7 +40,7 @@ import play.api.libs.json.{JsPath, Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
+import uk.gov.hmrc.play.http._
 
 import scala.concurrent.Future
 import scala.util.{Success, Try}
@@ -67,7 +67,7 @@ object DeployedEnvironmentVO {
   implicit val environmentFormat = Json.format[DeployedEnvironmentVO]
 }
 
-case class WhatIsRunningWhere(applicationName: String, environments: Seq[DeployedEnvironmentVO])
+case class WhatIsRunningWhere(serviceName: String, environments: Seq[DeployedEnvironmentVO])
 object WhatIsRunningWhere {
   implicit val whatsRunningWhereFormat = Json.format[WhatIsRunningWhere]
 }
@@ -118,17 +118,20 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
     }
   }
 
-  def getWhatIsRunningWhere(applicationName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, WhatIsRunningWhere]] = {
-    val url = s"$whatIsRunningWhereBaseUrl/$applicationName"
+  def getWhatIsRunningWhere(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, WhatIsRunningWhere]] = {
+    val url = s"$whatIsRunningWhereBaseUrl/$serviceName"
 
-    http.GET[HttpResponse](url).map { r =>
+    val eventualEither = http.GET[HttpResponse](url).map { r =>
       r.status match {
         case 200 =>
           Try(r.json.as[WhatIsRunningWhere]).transform(s => Success(Right(s)), f => Success(Left(f))).get
         case 404 =>
           Left(new RuntimeException("Got a 404 from downstream when getting WhatIsRunningWhere"))
       }
-    }.recover {
+    }
+
+    eventualEither.recover {
+      case e: NotFoundException => Right(WhatIsRunningWhere(serviceName, Nil))
       case ex =>
         Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
         Left(ex)
