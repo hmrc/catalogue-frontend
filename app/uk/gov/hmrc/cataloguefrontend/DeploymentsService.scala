@@ -49,8 +49,8 @@ class DeploymentsService(serviceDeploymentsConnector: ServiceDeploymentsConnecto
       }
     } yield deployments map teamRelease(query)
 
-  def getWhatsRunningWhere(applicationName: String)(implicit hc: HeaderCarrier): Future[Option[WhatIsRunningWhere]] = {
-    serviceDeploymentsConnector.getWhatIsRunningWhere(applicationName).map(_.headOption)
+  def getWhatsRunningWhere(applicationName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, WhatIsRunningWhere]] = {
+    serviceDeploymentsConnector.getWhatIsRunningWhere(applicationName)
   }
 
   private def teamRelease(rq: ReleaseFilter)(r: Release) =

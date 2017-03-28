@@ -43,6 +43,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 
 import scala.concurrent.Future
+import scala.util.{Success, Try}
 
 case class Deployer(name : String, deploymentDate: LocalDateTime)
 
@@ -63,21 +64,9 @@ case class Release(name: String,
 final case class DeployedEnvironmentVO(name: String, whatIsRunningWhereId: String)
 
 object DeployedEnvironmentVO {
-
-//  implicit val environmentFormat = Reads[Environment_] = (
-//    (JsPath \ "name").read[String] and
-//      (JsPath \ "whatIsRunningWhereId").read[String]
-//    )(Environment_.apply _)
-
   implicit val environmentFormat = Json.format[DeployedEnvironmentVO]
-
-  val fullListOfEnvironments = Set(
-    DeployedEnvironmentVO("qa" , "qa"),
-    DeployedEnvironmentVO("staging" , "staging"),
-    DeployedEnvironmentVO("external test" , "externaltest"),
-    DeployedEnvironmentVO("production" , "production")
-  )
 }
+
 case class WhatIsRunningWhere(applicationName: String, environments: Seq[DeployedEnvironmentVO])
 object WhatIsRunningWhere {
   implicit val whatsRunningWhereFormat = Json.format[WhatIsRunningWhere]
@@ -129,18 +118,20 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
     }
   }
 
-  def getWhatIsRunningWhere(applicationName: String)(implicit hc: HeaderCarrier): Future[Seq[WhatIsRunningWhere]] = {
+  def getWhatIsRunningWhere(applicationName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, WhatIsRunningWhere]] = {
     val url = s"$whatIsRunningWhereBaseUrl/$applicationName"
 
     http.GET[HttpResponse](url).map { r =>
       r.status match {
-        case 200 => r.json.as[Seq[WhatIsRunningWhere]]
-        case 404 => Seq()
+        case 200 =>
+          Try(r.json.as[WhatIsRunningWhere]).transform(s => Success(Right(s)), f => Success(Left(f))).get
+        case 404 =>
+          Left(new RuntimeException("Got a 404 from downstream when getting WhatIsRunningWhere"))
       }
     }.recover {
       case ex =>
-        Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
-        Seq.empty
+        Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+        Left(ex)
     }
   }
 

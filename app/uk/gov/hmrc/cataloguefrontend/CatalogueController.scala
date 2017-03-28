@@ -131,18 +131,20 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
     val repositoryDetailsF = teamsAndServicesConnector.repositoryDetails(name)
     val deploymentIndicatorsForServiceF: Future[Option[DeploymentIndicators]] = indicatorsConnector.deploymentIndicatorsForService(name)
-    val whatsRunningWhereF: Future[Option[WhatIsRunningWhere]] = deploymentsService.getWhatsRunningWhere(name)
+    val whatsRunningWhereF: Future[Either[Throwable, WhatIsRunningWhere]] = deploymentsService.getWhatsRunningWhere(name)
 
     for {
       service <- repositoryDetailsF
       maybeDataPoints <- deploymentIndicatorsForServiceF
-      whatsRunningWhere: Option[WhatIsRunningWhere] <- whatsRunningWhereF
-      deployedToEnvs = whatsRunningWhere.getOrElse(WhatIsRunningWhere(name, Seq.empty)).environments
-    } yield service match {
-      case Some(s) if s.data.repoType == RepoType.Service => Ok(
+      whatsRunningWhere: Either[Throwable, WhatIsRunningWhere] <- whatsRunningWhereF
+    } yield (service, whatsRunningWhere) match {
+      case (_, Left(t)) =>
+        t.printStackTrace()
+        ServiceUnavailable(t.getMessage)
+      case (Some(s), Right(deployedToEnvs: WhatIsRunningWhere)) if s.data.repoType == RepoType.Service => Ok(
         service_info(
           s.formattedTimestamp,
-          s.data.copy(environments = getDeployedEnvs(deployedToEnvs, s.data.environments)),
+          s.data.copy(environments = getDeployedEnvs(deployedToEnvs.environments, s.data.environments)),
           ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
           ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)),
           s.data.createdAt

@@ -24,13 +24,13 @@ import org.mockito.Mockito._
 import org.mockito.Matchers._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, OptionValues, WordSpec}
+import org.scalatest.{EitherValues, Matchers, OptionValues, WordSpec}
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar with ScalaFutures with OptionValues {
+class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar with ScalaFutures with OptionValues with EitherValues {
 
   val now = LocalDateTime.now()
 
@@ -168,14 +168,14 @@ class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar wi
 
       val appName = "app-1"
       
-      val cannedWhatIsRunningWhere = Seq(WhatIsRunningWhere(appName, Seq(DeployedEnvironmentVO("qa", "qa"))))
+      val cannedWhatIsRunningWhere = Right(WhatIsRunningWhere(appName, Seq(DeployedEnvironmentVO("qa", "qa"))))
       when(deploymentsConnector.getWhatIsRunningWhere(any())(any())).thenReturn(Future.successful(cannedWhatIsRunningWhere))
 
       val service = new DeploymentsService(deploymentsConnector, mock[TeamsAndRepositoriesConnector])
 
       val whatIsRunningWhere = service.getWhatsRunningWhere(appName).futureValue
 
-      whatIsRunningWhere shouldBe cannedWhatIsRunningWhere.headOption
+      whatIsRunningWhere shouldBe cannedWhatIsRunningWhere
       verify(deploymentsConnector).getWhatIsRunningWhere(appName)
     }
   }

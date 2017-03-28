@@ -26,7 +26,7 @@ import play.api.test.FakeHeaders
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints with EitherValues {
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
     Map(
@@ -140,7 +140,7 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
     "return all whats running where for the given application name" in {
       val applicationName = "appNameA"
       serviceEndpoint(GET, s"/api/whatsrunningwhere/$applicationName", willRespondWith = (200, Some(
-        s"""[
+        s"""
            |  {
            |    "applicationName": "$applicationName",
            |    "environments": [
@@ -150,14 +150,14 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
            |      { "name": "external test", "whatIsRunningWhereId": "externaltest" }
            |    ]
            |  }
-           |]
+           |
         """.stripMargin
       )))
 
       val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(applicationName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
-      response.size shouldBe 1
-      response(0).environments should contain theSameElementsAs Seq(
+
+      response.right.get.environments should contain theSameElementsAs Seq(
         DeployedEnvironmentVO("staging", "staging"),
         DeployedEnvironmentVO("production", "production"),
         DeployedEnvironmentVO("qa", "qa"),
