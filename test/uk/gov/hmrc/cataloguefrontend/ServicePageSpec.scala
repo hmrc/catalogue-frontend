@@ -124,6 +124,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
         response.body should not include ("http://example.com/job/deploy-microservice")
         response.body should not include ("http://example.com/#/dashboard")
       }
+      
       "show show links to devs by default" in {
         import WhatIsRunningWhere._
 
@@ -135,6 +136,29 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
 
         response.body should include("http://example.com/job/deploy-microservice")
         response.body should include("http://example.com/#/dashboard")
+
+      }
+
+      "show show 'Not deployed' for envs in which the service is not deployed" in {
+        import WhatIsRunningWhere._
+
+        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (404, None))
+        serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
+        serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
+
+        val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
+
+        // Dev links should always be present
+        response.body should include regex """https:\/\/(deploy-dev).*\/job\/deploy-microservice.*"""
+        response.body should include regex """https:\/\/(grafana-dev).*\/#\/dashboard"""
+
+        // Links for other environments should not be present
+        response.body should not include regex ("""https:\/\/(?!deploy-dev).*\/job\/deploy-microservice.*""")
+        response.body should not include regex ("""https:\/\/(?!grafana-dev).*\/#\/dashboard""")
+
+        countSubstring(response.body , "Not deployed") shouldBe 2
+
+        def countSubstring( str:String, substr:String ) = substr.r.findAllMatchIn(str).length
 
       }
 

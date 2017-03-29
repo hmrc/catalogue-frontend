@@ -166,6 +166,18 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
 
     }
 
+    "return an empty list of environments in WhatsRunningWhere when the service is not deployed to any environments " in {
+      val serviceName = "appNameA"
+      serviceEndpoint(GET, s"/api/whatsrunningwhere/$serviceName", willRespondWith = (404, None))
+
+      val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+
+      response.right.get.environments shouldBe Seq()
+      response.right.get.serviceName shouldBe serviceName
+
+
+    }
+
   }
 
 }

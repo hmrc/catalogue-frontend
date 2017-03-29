@@ -118,7 +118,7 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
     }
   }
 
-  //!@TODO unit test
+
   def getWhatIsRunningWhere(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, WhatIsRunningWhere]] = {
     val url = s"$whatIsRunningWhereBaseUrl/$serviceName"
 
