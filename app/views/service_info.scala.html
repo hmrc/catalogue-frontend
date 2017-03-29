@@ -60,14 +60,20 @@
                     <h3 class="board__heading">@environment.name</h3>
                     <div class="board__body">
                         <ul class="list list--minimal">
-                        @for(tool <- environment.services) {
-                            <li class="list-item"><a href="@{
-                                tool.url
-                            }" target="_blank">@{
-                                tool.displayName
-                            }</a>
-                            </li>
-                        }
+                            @if(environment.services.isEmpty) {
+                                <li class="list-item">
+                                    Not deployed
+                                </li>
+                            } else {
+                                @for(tool <- environment.services) {
+                                    <li class="list-item"><a href="@{
+                                        tool.url
+                                    }" target="_blank">@{
+                                        tool.displayName
+                                    }</a>
+                                    </li>
+                                }
+                            }
                         </ul>
                     </div>
                 </div>

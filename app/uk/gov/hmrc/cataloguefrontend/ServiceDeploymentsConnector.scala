@@ -118,20 +118,17 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
     }
   }
 
+  //!@TODO unit test
   def getWhatIsRunningWhere(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, WhatIsRunningWhere]] = {
     val url = s"$whatIsRunningWhereBaseUrl/$serviceName"
 
-    val eventualEither = http.GET[HttpResponse](url).map { r =>
+    http.GET[HttpResponse](url).map { r =>
       r.status match {
         case 200 =>
           Try(r.json.as[WhatIsRunningWhere]).transform(s => Success(Right(s)), f => Success(Left(f))).get
-        case 404 =>
-          Left(new RuntimeException("Got a 404 from downstream when getting WhatIsRunningWhere"))
       }
-    }
-
-    eventualEither.recover {
-      case e: NotFoundException => Right(WhatIsRunningWhere(serviceName, Nil))
+    }.recover {
+      case _: NotFoundException => Right(WhatIsRunningWhere(serviceName, Nil)) // 404 if the service has had no deployments
       case ex =>
         Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
         Left(ex)
