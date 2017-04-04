@@ -18,6 +18,8 @@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
+
+
 @standard_layout("Deployments", "deployments") {
 <header>
     <h1>Deployments</h1>
@@ -44,9 +46,9 @@
 
 
 
-<form action="/deployments" method="get" class="form-inline">
-    <span>Team: <input type="text" name="team" value=@{form("team").value}></span>
-    <span>Service: <input type="text" name="serviceName" value=@{form("serviceName").value}></span>
+<form action="/deployments" method="get" class="form-inline" id="search-form">
+    <span>Team: <input id="team-search-input" type="text" name="team" value=@{form("team").value}></span>
+    <span>Service: <input id="service-search-input" type="text" name="serviceName" value=@{form("serviceName").value}></span>
 
     <div class="input-group">
         Production deployment from: <input type="text" name="from" value='@{form("from").value}'
@@ -94,5 +96,28 @@
 
 
 </table>
+
+<script>
+    function addTextBoxDelayedCallback(textArea, callback, delay) {
+        var timer = null;
+        textArea.onkeyup= function() {
+            if (timer) {
+                window.clearTimeout(timer);
+            }
+            timer = window.setTimeout( function() {
+                timer = null;
+                callback();
+            }, delay );
+        };
+        textArea = null;
+    }
+
+    function submitForm() {
+        document.getElementById("search-form").submit();
+    }
+    
+    addTextBoxDelayedCallback( document.getElementById("service-search-input"), submitForm, 1900 );
+    addTextBoxDelayedCallback( document.getElementById("team-search-input"), submitForm, 1900 );
+</script>
 
 }
