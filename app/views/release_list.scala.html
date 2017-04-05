@@ -98,18 +98,24 @@
 </table>
 
 <script>
-    function addTextBoxDelayedCallback(textArea, callback, delay) {
-        var timer = null;
-        textArea.onkeyup= function() {
+    var timer = null;
+    function addTextBoxDelayedCallback(textAreas, callback, delay) {
+
+        textAreas.onkeyup = function (e) {
             if (timer) {
                 window.clearTimeout(timer);
             }
-            timer = window.setTimeout( function() {
+            timer = window.setTimeout(function () {
                 timer = null;
                 callback();
-            }, delay );
+            }, delay);
+
+            // keycodes: 9 = tab
+            if (e.which === 9 || e.shiftKey || (e.which === 9 && e.shiftKey)) {
+                window.clearTimeout(timer);
+            }
         };
-        textArea = null;
+        textAreas = null;
     }
 
     function submitForm() {
