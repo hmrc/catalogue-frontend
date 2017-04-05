@@ -53,7 +53,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     RepoType.Service -> routes.CatalogueController.service _,
     RepoType.Other -> routes.CatalogueController.repository _,
     RepoType.Library -> routes.CatalogueController.library _,
-    RepoType.Prototype -> routes.CatalogueController.prototype _
+    RepoType.Prototype -> null
   )
 
   def userManagementConnector: UserManagementConnector
@@ -186,6 +186,10 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def allLibraries = Action {
     Redirect("/repositories?name=&type=Library")
+  }
+
+  def allPrototypes = Action {
+    Redirect("/repositories?name=&type=Prototype")
   }
 
   def allRepositories() = Action.async{ implicit request =>
