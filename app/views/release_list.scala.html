@@ -47,8 +47,8 @@
 
 
 <form action="/deployments" method="get" class="form-inline" id="search-form">
-    <span>Team: <input id="team-search-input" type="text" name="team" value=@{form("team").value}></span>
     <span>Service: <input id="service-search-input" type="text" name="serviceName" value=@{form("serviceName").value}></span>
+    <span>Team: <input id="team-search-input" type="text" name="team" value=@{form("team").value}></span>
 
     <div class="input-group">
         Production deployment from: <input type="text" name="from" value='@{form("from").value}'
@@ -77,9 +77,9 @@
                 href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(release.name).url}">@{release.name}</a>
         </td>
         <td id="row@{i}_team">
-            <ul>
+            <ul class="list-group">
             @for(team <- release.teams) {
-                <li><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team}</a></li>
+                <li ><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team}</a></li>
             }
             </ul>
         </td>

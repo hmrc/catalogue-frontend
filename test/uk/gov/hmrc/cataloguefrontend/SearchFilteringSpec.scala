@@ -156,7 +156,7 @@ class SearchFilteringSpec extends WordSpec with Matchers {
         TeamRelease("serv3", Seq("teamA"), productionDate = now.minusDays(3), version = "4.0"),
         TeamRelease("serv1", Seq("teamB"), productionDate = now.minusDays(4), version = "3.0"),
         TeamRelease("serv2", Seq("teamC"), productionDate = now.minusDays(10), version = "2.0"),
-        TeamRelease("serv1", Seq("teamD"), productionDate = now.minusDays(20), version = "1.0")
+        TeamRelease("serv1",  Seq("teamD"), productionDate = now.minusDays(20), version = "1.0")
       )
 
       deployments.filter(DeploymentsFilter(serviceName = Some("serv2"), from = Some(now.minusDays(10)), to = Some(now.minusDays(4)))) shouldBe Seq(
