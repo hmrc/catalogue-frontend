@@ -110,8 +110,9 @@
                 callback();
             }, delay);
 
-            // keycodes: 9 = tab
-            if (e.which === 9 || e.shiftKey || (e.which === 9 && e.shiftKey)) {
+            // keycodes:
+            // 9: tab, 16: shift
+            if (e.which === 9 || e.which === 16 || (e.which === 9 && e.shiftKey)) {
                 window.clearTimeout(timer);
             }
         };
