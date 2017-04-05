@@ -52,7 +52,8 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   val repotypeToDetailsUrl = Map(
     RepoType.Service -> routes.CatalogueController.service _,
     RepoType.Other -> routes.CatalogueController.repository _,
-    RepoType.Library -> routes.CatalogueController.library _
+    RepoType.Library -> routes.CatalogueController.library _,
+    RepoType.Prototype -> routes.CatalogueController.prototype _
   )
 
   def userManagementConnector: UserManagementConnector
