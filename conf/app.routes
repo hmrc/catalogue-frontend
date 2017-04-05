@@ -9,6 +9,7 @@ GET        /libraries              uk.gov.hmrc.cataloguefrontend.CatalogueContro
 GET        /library/:name          uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /repositories/:name     uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 GET        /prototypes             uk.gov.hmrc.cataloguefrontend.CatalogueController.allPrototypes
+GET        /prototype/:name        uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
 GET        /deployments            uk.gov.hmrc.cataloguefrontend.CatalogueController.deployments()
 GET        /assets/*file           controllers.Assets.at(path="/public", file)
 GET        /                       uk.gov.hmrc.cataloguefrontend.CatalogueController.landingPage

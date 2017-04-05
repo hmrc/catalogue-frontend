@@ -31,7 +31,7 @@ import views.html._
 
 import scala.concurrent.Future
 
-case class TeamActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime], firstServiceCreationDate : Option[LocalDateTime])
+case class TeamActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime], firstServiceCreationDate: Option[LocalDateTime])
 
 
 object CatalogueController extends CatalogueController {
@@ -53,7 +53,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     RepoType.Service -> routes.CatalogueController.service _,
     RepoType.Other -> routes.CatalogueController.repository _,
     RepoType.Library -> routes.CatalogueController.library _,
-    RepoType.Prototype -> null
+    RepoType.Prototype -> routes.CatalogueController.prototype _
   )
 
   def userManagementConnector: UserManagementConnector
@@ -113,7 +113,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def service(name: String) = Action.async { implicit request =>
 
-    def getDeployedEnvs(deployedToEnvs: Seq[DeployedEnvironmentVO], maybeRefEnvironments: Option[Seq[Environment]]) : Option[Seq[Environment]] = {
+    def getDeployedEnvs(deployedToEnvs: Seq[DeployedEnvironmentVO], maybeRefEnvironments: Option[Seq[Environment]]): Option[Seq[Environment]] = {
 
       val deployedEnvNames = deployedToEnvs.map(_.name)
 
@@ -167,6 +167,20 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
+  def prototype(name: String) = Action.async { implicit request =>
+    teamsAndServicesConnector
+      .repositoryDetails(name)
+      .map {
+        case Some(s) if s.data.repoType == RepoType.Prototype =>
+          val result = Ok(prototype_info(
+            s.formattedTimestamp,
+            s.data.copy(environments = None),
+            s.data.createdAt))
+          result
+        case _ => NotFound
+      }
+  }
+
   def repository(name: String) = Action.async { implicit request =>
     for {
       repository <- teamsAndServicesConnector.repositoryDetails(name)
@@ -192,7 +206,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     Redirect("/repositories?name=&type=Prototype")
   }
 
-  def allRepositories() = Action.async{ implicit request =>
+  def allRepositories() = Action.async { implicit request =>
     import SearchFiltering._
 
     teamsAndServicesConnector.allRepositories.map { repositories =>
@@ -251,12 +265,12 @@ case class DeploymentsFilter(team: Option[String] = None, serviceName: Option[St
   def isEmpty: Boolean = team.isEmpty && serviceName.isEmpty && from.isEmpty && to.isEmpty
 }
 
-case class RepoListFilter(name : Option[String] = None, repoType : Option[String] = None) {
+case class RepoListFilter(name: Option[String] = None, repoType: Option[String] = None) {
   def isEmpty = name.isEmpty && repoType.isEmpty
 }
 
-object RepoListFilter{
-  lazy val form = Form (
+object RepoListFilter {
+  lazy val form = Form(
     mapping(
       "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
       "type" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
