@@ -31,28 +31,17 @@ import uk.gov.hmrc.cataloguefrontend.DateHelper._
 //import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
 
-class ReleaseListSpec extends WordSpec with Matchers with OneAppPerTest {
+class DeploymentsListSpec extends WordSpec with Matchers with OneAppPerTest {
 
 
   def asDocument(html: Html): Document = Jsoup.parse(html.toString())
 
-  "release_list" should {
-    "display errors" in {
-
-      val formWithErrors: Form[DeploymentsFilter] = DeploymentsFilter.form.bind(Map("from" -> "23?01/2016", "to" -> "23?01/2016"))
-
-      val form: Html = views.html.release_list(Seq.empty, formWithErrors, "user-profile-base")(applicationMessages)
-      val document = asDocument(form)
-
-      document.select("li.alert-danger").get(0).text() shouldBe "Production date from should be of format dd-mm-yyyy"
-      document.select("li.alert-danger").get(1).text() shouldBe "Production date to should be of format dd-mm-yyyy"
-
-    }
+  "deployments_list" should {
 
     "display data" in {
       val now = LocalDateTime.now()
 
-      val document = asDocument(views.html.release_list(
+      val document = asDocument(views.html.deployments_list(
         Seq(
           TeamRelease("serv1",
             Seq("teamA", "teamB"),
@@ -68,7 +57,7 @@ class ReleaseListSpec extends WordSpec with Matchers with OneAppPerTest {
             leadTime = Some(10), version = "2.0",
             latestDeployer = Some(Deployer("xyz.abc", now))
           )
-        ), DeploymentsFilter.form, "user-profile-base")(applicationMessages))
+        ), "user-profile-base")(applicationMessages))
 
       document.select("#row0_team").text() shouldBe "teamA teamB"
       document.select("#row0_name").text() shouldBe "serv1"

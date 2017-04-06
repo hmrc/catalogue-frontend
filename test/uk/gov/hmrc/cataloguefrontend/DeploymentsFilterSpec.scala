@@ -25,20 +25,20 @@ import org.scalatest.{Matchers, WordSpec}
 
 class DeploymentsFilterSpec extends WordSpec with Matchers with TypeCheckedTripleEquals {
 
-  implicit def toDateTime(s: String): LocalDateTime = LocalDate.parse(s, DateTimeFormatter.ofPattern("dd-MM-yyyy")).atStartOfDay()
+  implicit def toDateTime(s: String): LocalDateTime = LocalDate.parse(s, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay()
 
-  val formData: Map[String, String] = Map("team" -> "teamA", "serviceName" -> "aService", "from" -> "23-04-2016", "to" -> "25-05-2016")
+  val formData: Map[String, String] = Map("team" -> "teamA", "serviceName" -> "aService", "from" -> "2016-04-23", "to" -> "2016-05-25")
 
   "form" should {
     "bind the form correctly" in {
 
-      DeploymentsFilter.form.bind(formData).value shouldBe Some(DeploymentsFilter(Some("teamA"), Some("aService"), Some("23-04-2016"), Some("25-05-2016")))
+      DeploymentsFilter.form.bind(formData).value shouldBe Some(DeploymentsFilter(Some("teamA"), Some("aService"), Some("2016-04-23"), Some("2016-05-25")))
 
-      DeploymentsFilter.form.bind(formData - "to").value shouldBe Some(DeploymentsFilter(Some("teamA"), Some("aService"), Some("23-04-2016"), None))
+      DeploymentsFilter.form.bind(formData - "to").value shouldBe Some(DeploymentsFilter(Some("teamA"), Some("aService"), Some("2016-04-23"), None))
       DeploymentsFilter.form.bind(formData - "to" - "from").value shouldBe Some(DeploymentsFilter(Some("teamA"), Some("aService"), None, None))
       DeploymentsFilter.form.bind(formData - "team" - "serviceName" - "to" - "from").value shouldBe Some(DeploymentsFilter(None, None, None, None))
-      DeploymentsFilter.form.bind(formData + ("team" -> "") + ("serviceName" -> "")).value shouldBe Some(DeploymentsFilter(None, None, Some("23-04-2016"), Some("25-05-2016")))
-      DeploymentsFilter.form.bind(formData + ("team" -> " ") + ("serviceName" -> " ")).value shouldBe Some(DeploymentsFilter(None, None, Some("23-04-2016"), Some("25-05-2016")))
+      DeploymentsFilter.form.bind(formData + ("team" -> "") + ("serviceName" -> "")).value shouldBe Some(DeploymentsFilter(None, None, Some("2016-04-23"), Some("2016-05-25")))
+      DeploymentsFilter.form.bind(formData + ("team" -> " ") + ("serviceName" -> " ")).value shouldBe Some(DeploymentsFilter(None, None, Some("2016-04-23"), Some("2016-05-25")))
 
     }
 

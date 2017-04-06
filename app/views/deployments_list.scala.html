@@ -1,0 +1,54 @@
+@*
+* Copyright 2016 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+
+@(deployments: Seq[uk.gov.hmrc.cataloguefrontend.TeamRelease], userProfileBaseUrl : String)(implicit messages: Messages)
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+
+<table class="table table-striped">
+    <tr>
+        <th><span>Service</span></th>
+        <th><span>Teams</span></th>
+        <th><span>Version</span></th>
+        <th><span>Production deployment</span></th>
+        <th><span>Latest Deployer</span></th>
+        <th><span>Created</span></th>
+        <th><span>Lead Time</span></th>
+        <th>Interval</th>
+    </tr>
+    @deployments.zipWithIndex.map{case (release, i) =>
+    <tr id="row@i">
+        <td id="row@{i}_name"><a
+                href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(release.name).url}">@{release.name}</a>
+        </td>
+        <td id="row@{i}_team">
+            <ul class="list-group">
+            @for(team <- release.teams) {
+                <li ><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team}</a></li>
+            }
+            </ul>
+        </td>
+        <td class="monospaced" id="row@{i}_version">@{release.version}</td>
+        <td class="monospaced" id="row@{i}_production">@{release.productionDate.asString}</td>
+        <td class="monospaced" id="row@{i}_deployer">
+            @release.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.name}">@{u.name}</a>}.getOrElse("N/A")
+        </td>
+        <td class="monospaced" id="row@{i}_creation">@{release.creationDate.fold("--")(_.asString)}</td>
+        <td class="monospaced" id="row@{i}_leadtime">@{release.leadTime.fold("--")(x => s"$x days" )}</td>
+        <td class="monospaced" id="row@{i}_interval">@{release.interval.fold("--")(x => s"$x days" )}</td>
+    </tr>
+    }
+
+</table>

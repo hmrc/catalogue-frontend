@@ -26,6 +26,7 @@ import scala.util.Try
 object DateHelper {
 
   val `dd-MM-yyyy`: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+  val `yyyy-MM-dd`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
   implicit class JavaDateToLocalDateTime(d: Date) {
     def toLocalDate = LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault())
@@ -52,7 +53,7 @@ object DateHelper {
 
   implicit def stringToLocalDateTimeOpt(ds: String): Option[LocalDateTime] = {
     Try {
-      LocalDate.parse(ds, `dd-MM-yyyy`).atStartOfDay()
+      LocalDate.parse(ds, `yyyy-MM-dd`).atStartOfDay()
     }.toOption
 
   }

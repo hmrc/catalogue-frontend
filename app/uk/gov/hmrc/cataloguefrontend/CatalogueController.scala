@@ -24,6 +24,7 @@ import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
 import play.api.i18n.Messages.Implicits._
 import play.api.mvc._
+import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, TeamMember}
 import uk.gov.hmrc.play.frontend.controller.FrontendController
@@ -232,20 +233,23 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
-  def deployments() = Action.async { implicit request =>
+  def deploymentsPage() = Action.async { implicit request =>
+    val umpProfileUrl = getConfString(profileBaseUrlConfigKey, "#")
+    val form: Form[DeploymentsFilter] = DeploymentsFilter.form.bindFromRequest()
+    Future.successful(Ok(deployments_page(form, umpProfileUrl)))
+  }
 
+  def deploymentsList() = Action.async { implicit request =>
     import SearchFiltering._
     val umpProfileUrl = getConfString(profileBaseUrlConfigKey, "#")
 
     deploymentsService.getDeployments().map { rs =>
-
       val form: Form[DeploymentsFilter] = DeploymentsFilter.form.bindFromRequest()
       form.fold(
         errors => {
-
-          Ok(release_list(Nil, errors, umpProfileUrl))
+          Ok(deployments_list(Nil, umpProfileUrl))
         },
-        query => Ok(release_list(rs.filter(query), form, getConfString(profileBaseUrlConfigKey, "#")))
+        query => Ok(deployments_list(rs.filter(query), umpProfileUrl))
       )
 
     }
@@ -295,7 +299,7 @@ object DeploymentsFilter {
 
   def optionalLocalDateTimeMapping(errorCode: String): Mapping[Option[LocalDateTime]] = {
     optional(text.verifying(errorCode, x => stringToLocalDateTimeOpt(x).isDefined))
-      .transform[Option[LocalDateTime]](_.flatMap(stringToLocalDateTimeOpt), _.map(_.format(`dd-MM-yyyy`)))
+      .transform[Option[LocalDateTime]](_.flatMap(stringToLocalDateTimeOpt), _.map(_.format(`yyyy-MM-dd`)))
   }
 }
 

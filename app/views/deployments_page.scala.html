@@ -1,0 +1,117 @@
+@*
+* Copyright 2016 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+
+@(form: Form[_], userProfileBaseUrl : String)(implicit messages: Messages)
+
+@standard_layout("Deployments", "deployments") {
+<header>
+    <h1>Deployments</h1>
+</header>
+
+<dl class="table-key">
+    <dt><img class="info-icon" src="assets/infoicon.svg"/></dt>
+    <dt>Lead Time</dt>
+    <dd>@{Messages("leadtime.explanation.text")}</dd>
+    <dt>Interval</dt>
+    <dd>@{Messages("interval.explanation.text")}</dd>
+</dl>
+
+<form onsubmit="return updateDeployments()" class="form-inline" id="search-form">
+    <span>Service: <input id="service-search-input" type="text" name="serviceName" value=@{form("serviceName").value}></span>
+    <span>Team: <input id="team-search-input" type="text" name="team" value=@{form("team").value}></span>
+
+    <div class="input-group">
+        Production deployment from: <input id="from-search-input" type="date" name="from" value='@{form("from").value}'>
+        to:<input type="date" id="to-search-input" name="to" value='@{form("to").value}'>
+    </div>
+    <input type="submit" value="Filter">
+</form>
+
+<div id="deployments" style="text-align: center">
+
+</div>
+
+<script>
+    var timer = null, delay = 1000;
+
+    if (document.readyState != 'loading'){
+        ready();
+    } else {
+        document.addEventListener('DOMContentLoaded', ready);
+    }
+
+    function update() {
+        delayedCallBack(updateDeployments)
+    }
+
+    function ready() {
+        document.getElementById("service-search-input").onkeyup = update;
+        document.getElementById("team-search-input").onkeyup = update;
+        document.getElementById("from-search-input").onchange = updateDeployments;
+        document.getElementById("to-search-input").onchange = updateDeployments;
+
+        updateDeployments();
+    }
+
+    function error() {
+        document.getElementById("deployments").innerHTML = "<h1>Unfortunately an error occurred</h1>";
+    }
+
+    function updateDeployments() {
+        var search = {
+            "serviceName": document.getElementById("service-search-input").value,
+            "team": document.getElementById("team-search-input").value,
+            "from": document.getElementById("from-search-input").value,
+            "to": document.getElementById("to-search-input").value
+        };
+
+        var esc = encodeURIComponent;
+        var query = Object.keys(search).map(function (k) { return esc(k) + '=' + esc(search[k]); }).join('&');
+
+        window.history.pushState(null, null, "/deployments?" + query);
+
+        document.getElementById("deployments").innerHTML = "<image width='441' height='291' src='assets/loading.gif'></image>";
+
+        var request = new XMLHttpRequest();
+        request.open('GET', '/deployments/list?' + query, true);
+        request.onerror = error;
+        request.onload = function() {
+            if (request.status >= 200 && request.status < 400) {
+                var html = request.responseText;
+                document.getElementById("deployments").innerHTML = html;
+            } else {
+                error();
+            }
+        };
+
+        request.send();
+        return false;
+    }
+
+    function delayedCallBack(fn) {
+        if (timer) {
+            window.clearTimeout(timer);
+        }
+
+        timer = window.setTimeout(function () {
+            timer = null;
+            fn();
+        }, delay);
+    }
+
+</script>
+
+}

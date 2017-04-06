@@ -78,7 +78,7 @@ trait ChartData {
 
   private def deploymentsUrl(serviceName: String, from: String, to: String) = {
     val paramString: String = deploymentsSerachParameters(serviceName, from, to).toList.map(x => s"${x._1}=${x._2}").mkString("&")
-    s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.deployments().url}?$paramString"
+    s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.deploymentsPage().url}?$paramString"
   }
 
   private def dateToString(date: LocalDate) = date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
