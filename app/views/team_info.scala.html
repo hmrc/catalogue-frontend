@@ -133,6 +133,7 @@
         <div class="row">
             @showRepositories(repos, RepoType.Service, "Services", "service", "service")
             @showRepositories(repos, RepoType.Library, "Libraries", "library", "library")
+            @showRepositories(repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
             @showRepositories(repos, RepoType.Other, "Repositories", "repository", "repositories")
         </div>
 
@@ -247,7 +248,7 @@
 
 @showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {
     @repos.get(repoType.toString).map { repositories =>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="board">
                 <h3 class="board__heading">@headerName</h3>
 

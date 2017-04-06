@@ -1,0 +1,46 @@
+@*
+* Copyright 2016 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+@import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+
+@(repo: RepositoryDetails)
+
+<div>
+    <div class="board" class="col-md-12">
+        <h3 class="board__heading">Details</h3>
+        <div class="board__body">
+
+            <ul class="list list--minimal list-group row">
+                <li class="col-xs-6">
+                    <label>Description: </label>
+                    @if(repo.description.isEmpty) {None} else {@repo.description}
+                    </li>
+                <li class="col-xs-6">
+                    <label>Created: </label>
+                    @repo.createdAt.displayFormat
+                </li>
+                <li class="col-xs-6">
+                    <label>Url: </label>
+                    <a href="https://www.prototypes.tax.service.gov.uk/@{repo.name}">https://www.prototypes.tax.service.gov.uk/@{repo.name}</a>
+                </li>
+                <li class="col-xs-6">
+                    <label>Last Active: </label>
+                    @repo.lastActive.displayFormat
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

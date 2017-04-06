@@ -24,6 +24,7 @@ import java.time.{LocalDateTime, ZoneId}
 object JsonData {
 
   import DateHelper._
+
   val createdAt = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
   val lastActiveAt = LocalDateTime.of(2016, 10, 12, 10, 30, 12)
 
@@ -118,6 +119,31 @@ object JsonData {
       |    }
       |}
     """.stripMargin
+
+  val prototypeDetailsData =
+    s"""
+       |{
+       |  "name": "2fa-prototype",
+       |  "description": "some description",
+       |  "createdAt": ${createdAt.epochMillis},
+       |  "lastActive": ${lastActiveAt.epochMillis},
+       |  "repoType": "Prototype",
+       |  "teamNames": [
+       |  "CATO",
+       |  "Designers"
+       |  ],
+       |  "githubUrls": [
+       |  {
+       |    "name": "github-enterprise",
+       |    "displayName": "Github Enterprise",
+       |    "url": "http://example.com/HMRC/2fa-prototype"
+       |  }
+       |  ],
+       |  "ci": [ ],
+       |  "environments": [ ]
+       |}
+    """.stripMargin
+
 
   val libraryDetailsData =
     """
