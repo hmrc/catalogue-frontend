@@ -52,7 +52,7 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val deployments = Seq(
         TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),
         TeamRelease("serv2", Seq("teamB"), productionDate = now, version = "2.0"),
-        TeamRelease("filter-out-this-serv", Seq("teamD"), productionDate = now, version = "4.0"))
+        TeamRelease("filter-out-this-one", Seq("teamD"), productionDate = now, version = "4.0"))
 
       deployments.filter(DeploymentsFilter(serviceName = Some("SERV"))) should contain theSameElementsAs Seq(
         TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),
@@ -187,7 +187,7 @@ class SearchFilteringSpec extends WordSpec with Matchers {
         TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),
         TeamRelease("serv2", Seq("teamA"), productionDate = now, version = "2.0"),
         TeamRelease("serv1", Seq("teamB"), productionDate = now, version = "3.0"),
-        TeamRelease("serv3", Seq("filter-out-this-team"), productionDate = now, version = "4.0"))
+        TeamRelease("serv3", Seq("filter-out-this-one"), productionDate = now, version = "4.0"))
 
       deployments.filter(DeploymentsFilter(team = Some("TEAM"))).toList should contain theSameElementsAs Seq(
         TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),

@@ -29,8 +29,8 @@ object SearchFiltering {
       val q = if (query.isEmpty) DeploymentsFilter(from = Some(LocalDateTime.now().minusMonths(1))) else query
 
       deployments.toStream
-        .filter(x => q.team.isEmpty || x.teams.map(_.toLowerCase).exists(_.startsWith(q.team.get.toLowerCase)))
-        .filter(x => q.serviceName.isEmpty || x.name.toLowerCase.startsWith(q.serviceName.get.toLowerCase))
+        .filter(x => q.team.isEmpty || x.teams.map(_.toLowerCase).exists(_.contains(q.team.get.toLowerCase)))
+        .filter(x => q.serviceName.isEmpty || x.name.toLowerCase.contains(q.serviceName.get.toLowerCase))
         .filter(x => q.from.isEmpty || x.productionDate.epochSeconds >= q.from.get.epochSeconds)
         .filter(x => q.to.isEmpty || x.productionDate.epochSeconds < q.to.get.plusDays(1).epochSeconds)
 
