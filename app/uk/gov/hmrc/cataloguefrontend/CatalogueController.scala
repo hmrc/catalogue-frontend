@@ -142,10 +142,12 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       case (_, Left(t)) =>
         t.printStackTrace()
         ServiceUnavailable(t.getMessage)
-      case (Some(s), Right(deployedToEnvs: WhatIsRunningWhere)) if s.data.repoType == RepoType.Service => Ok(
+      case (Some(s), Right(deployedToEnvs: WhatIsRunningWhere)) if s.data.repoType == RepoType.Service =>
+        val envs = getDeployedEnvs(deployedToEnvs.environments, s.data.environments)
+        Ok(
         service_info(
           s.formattedTimestamp,
-          s.data.copy(environments = getDeployedEnvs(deployedToEnvs.environments, s.data.environments)),
+          s.data.copy(environments = envs),
           ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
           ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)),
           s.data.createdAt

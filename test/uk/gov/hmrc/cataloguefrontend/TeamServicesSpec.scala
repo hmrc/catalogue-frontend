@@ -57,7 +57,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
   "Team services page" should {
 
-    "show a list of libraries, services and repositories" in {
+    "show a list of libraries, services, prototypes and repositories" in {
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
       """{
         | "name": "teamA",
@@ -65,14 +65,18 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         | "lastActiveDate":1234561,
         | "repos":{
         |    "Library": [
-        |            "teamA-lib"
+        |        "teamA-lib"
         |    ],
         |    "Service": [
-        |            "teamA-serv",
-        |            "teamA-frontend"
+        |        "teamA-serv",
+        |        "teamA-frontend"
+        |    ],
+        |    "Prototype": [
+        |        "service1-prototype",
+        |        "service2-prototype"
         |    ],
         |    "Other": [
-        |            "teamA-other"
+        |        "teamA-other"
         |    ]
         |}
         |}""".stripMargin
@@ -88,6 +92,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       response.body should include("""<a href="/library/teamA-lib">teamA-lib</a>""")
       response.body should include("""<a href="/service/teamA-serv">teamA-serv</a>""")
       response.body should include("""<a href="/service/teamA-frontend">teamA-frontend</a>""")
+      response.body should include("""<a href="/prototype/service1-prototype">service1-prototype</a>""")
+      response.body should include("""<a href="/prototype/service2-prototype">service2-prototype</a>""")
       response.body should include("""<a href="/repositories/teamA-other">teamA-other</a>""")
 
     }
