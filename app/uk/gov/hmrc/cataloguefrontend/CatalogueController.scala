@@ -114,9 +114,9 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def service(name: String) = Action.async { implicit request =>
 
-    def getDeployedEnvs(deployedToEnvs: Seq[DeployedEnvironmentVO], maybeRefEnvironments: Option[Seq[Environment]]): Option[Seq[Environment]] = {
+    def getDeployedEnvs(deployedToEnvs: Seq[DeploymentVO], maybeRefEnvironments: Option[Seq[Environment]]): Option[Seq[Environment]] = {
 
-      val deployedEnvNames = deployedToEnvs.map(_.name)
+      val deployedEnvNames = deployedToEnvs.map(_.environmentMappings.name)
 
       maybeRefEnvironments.map { environments =>
         environments
@@ -144,7 +144,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
         t.printStackTrace()
         ServiceUnavailable(t.getMessage)
       case (Some(s), Right(deployedToEnvs: WhatIsRunningWhere)) if s.data.repoType == RepoType.Service =>
-        val envs = getDeployedEnvs(deployedToEnvs.environments, s.data.environments)
+        val envs = getDeployedEnvs(deployedToEnvs.deployments, s.data.environments)
         Ok(
         service_info(
           s.formattedTimestamp,

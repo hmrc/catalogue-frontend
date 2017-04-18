@@ -143,11 +143,13 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
         s"""
            |  {
            |    "serviceName": "$serviceName",
-           |    "environments": [
-           |      { "name": "qa", "whatIsRunningWhereId": "qa" },
-           |      { "name": "staging", "whatIsRunningWhereId": "staging" },
-           |      { "name": "production", "whatIsRunningWhereId": "production" },
-           |      { "name": "external test", "whatIsRunningWhereId": "externaltest" }
+           |    "deployments": [
+           |      { "environmentMappings": {"name": "qa", "releasesAppId": "qa"}, "datacentre": "datacentred-sal01", "version": "0.0.1" },
+           |      { "environmentMappings": {"name": "staging", "releasesAppId": "staging"}, "datacentre": "skyscape-farnborough", "version": "0.0.1" },
+           |      { "environmentMappings": {"name": "staging", "releasesAppId": "staging"}, "datacentre": "datacentred-sal01", "version": "0.0.2" },
+           |      { "environmentMappings": {"name": "production", "releasesAppId": "production"}, "datacentre": "skyscape-farnborough", "version": "0.0.1" },
+           |      { "environmentMappings": {"name": "production", "releasesAppId": "production"}, "datacentre": "datacentred-sal01", "version": "0.0.2" },
+           |      { "environmentMappings": {"name": "external test", "releasesAppId": "externaltest"}, "datacentre": "datacentred-sal01", "version": "0.0.1" }
            |    ]
            |  }
            |
@@ -157,13 +159,13 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
       val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
 
-      response.right.get.environments should contain theSameElementsAs Seq(
-        DeployedEnvironmentVO("staging", "staging"),
-        DeployedEnvironmentVO("production", "production"),
-        DeployedEnvironmentVO("qa", "qa"),
-        DeployedEnvironmentVO("external test", "externaltest"))
-      
-
+      response.right.get.deployments shouldEqual Seq(
+        DeploymentVO(EnvironmentMapping("qa", "qa"), "datacentred-sal01", "0.0.1"),
+        DeploymentVO(EnvironmentMapping("staging", "staging"), "skyscape-farnborough", "0.0.1"),
+        DeploymentVO(EnvironmentMapping("staging", "staging"), "datacentred-sal01", "0.0.2"),
+        DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"),
+        DeploymentVO(EnvironmentMapping("production", "production"), "datacentred-sal01", "0.0.2"),
+        DeploymentVO(EnvironmentMapping("external test", "externaltest"), "datacentred-sal01", "0.0.1"))
     }
 
     "return an empty list of environments in WhatsRunningWhere when the service is not deployed to any environments " in {
@@ -172,7 +174,7 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
 
       val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
 
-      response.right.get.environments shouldBe Seq()
+      response.right.get.deployments shouldBe Seq()
       response.right.get.serviceName shouldBe serviceName
 
 

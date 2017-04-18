@@ -64,8 +64,8 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
       serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (200, Some(Json.toJson(Some(WhatIsRunningWhere("service-1", Seq(
-        DeployedEnvironmentVO("production", "production"),
-        DeployedEnvironmentVO("qa", "qa"))
+        DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"),
+        DeploymentVO(EnvironmentMapping("qa", "qa"), "skyscape-farnborough", "0.0.1"))
       ))).toString())))
 
       val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
@@ -96,7 +96,8 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
 
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
         serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
-        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (200, Some(Json.toJson(Some(WhatIsRunningWhere("service-1", Seq(DeployedEnvironmentVO("production", "production"))))).toString())))
+        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith =
+          (200, Some(Json.toJson(Some(WhatIsRunningWhere("service-1", Seq(DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"))))).toString())))
 
         val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
         response.status shouldBe 200
@@ -128,7 +129,8 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       "show show links to devs by default" in {
         import WhatIsRunningWhere._
 
-        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (200, Some(Json.toJson(Some(WhatIsRunningWhere("service-1", Seq(DeployedEnvironmentVO("production", "production"))))).toString())))
+        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith =
+          (200, Some(Json.toJson(Some(WhatIsRunningWhere("service-1", Seq(DeploymentVO(EnvironmentMapping("production", "production"), "datacentred-sal01", "0.0.1"))))).toString())))
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
         serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
 

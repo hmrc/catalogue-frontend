@@ -60,14 +60,18 @@ case class Release(name: String,
   val latestDeployer = deployers.sortBy(_.deploymentDate.epochSeconds).lastOption
 }
 
-
-final case class DeployedEnvironmentVO(name: String, whatIsRunningWhereId: String)
-
-object DeployedEnvironmentVO {
-  implicit val environmentFormat = Json.format[DeployedEnvironmentVO]
+final case class EnvironmentMapping(name: String, releasesAppId: String)
+object EnvironmentMapping {
+  implicit val environmentFormat = Json.format[EnvironmentMapping]
 }
 
-case class WhatIsRunningWhere(serviceName: String, environments: Seq[DeployedEnvironmentVO])
+final case class DeploymentVO(environmentMappings: EnvironmentMapping, datacentre: String, version: String)
+
+object DeploymentVO {
+  implicit val environmentFormat = Json.format[DeploymentVO]
+}
+
+case class WhatIsRunningWhere(serviceName: String, deployments: Seq[DeploymentVO])
 object WhatIsRunningWhere {
   implicit val whatsRunningWhereFormat = Json.format[WhatIsRunningWhere]
 }
