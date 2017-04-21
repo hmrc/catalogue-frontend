@@ -116,7 +116,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
     def getDeployedEnvs(deployedToEnvs: Seq[DeploymentVO], maybeRefEnvironments: Option[Seq[Environment]]): Option[Seq[Environment]] = {
 
-      val deployedEnvNames = deployedToEnvs.map(_.environmentMappings.name)
+      val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
 
       maybeRefEnvironments.map { environments =>
         environments
@@ -133,25 +133,34 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
     val repositoryDetailsF = teamsAndServicesConnector.repositoryDetails(name)
     val deploymentIndicatorsForServiceF: Future[Option[DeploymentIndicators]] = indicatorsConnector.deploymentIndicatorsForService(name)
-    val whatsRunningWhereF: Future[Either[Throwable, WhatIsRunningWhere]] = deploymentsService.getWhatsRunningWhere(name)
+    val serviceDeploymentInformationF: Future[Either[Throwable, ServiceDeploymentInformation]] = deploymentsService.getWhatsRunningWhere(name)
 
     for {
       service <- repositoryDetailsF
       maybeDataPoints <- deploymentIndicatorsForServiceF
-      whatsRunningWhere: Either[Throwable, WhatIsRunningWhere] <- whatsRunningWhereF
-    } yield (service, whatsRunningWhere) match {
+      serviceDeploymentInformation: Either[Throwable, ServiceDeploymentInformation] <- serviceDeploymentInformationF
+    } yield (service, serviceDeploymentInformation) match {
       case (_, Left(t)) =>
         t.printStackTrace()
         ServiceUnavailable(t.getMessage)
-      case (Some(s), Right(deployedToEnvs: WhatIsRunningWhere)) if s.data.repoType == RepoType.Service =>
-        val envs = getDeployedEnvs(deployedToEnvs.deployments, s.data.environments)
-        Ok(
+      case (Some(repositoryDetails), Right(sdi: ServiceDeploymentInformation)) if repositoryDetails.data.repoType == RepoType.Service =>
+        val maybeDeployedEnvironments =
+          getDeployedEnvs(sdi.deployments, repositoryDetails.data.environments)
+
+        val deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]] =
+          sdi.deployments.map(deployment =>
+            deployment.environmentMapping.name -> sdi.deployments
+              .filter(_.environmentMapping.name == deployment.environmentMapping.name))
+            .toMap
+
+      Ok(
         service_info(
-          s.formattedTimestamp,
-          s.data.copy(environments = envs),
+          repositoryDetails.formattedTimestamp,
+          repositoryDetails.data.copy(environments = maybeDeployedEnvironments),
           ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
           ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)),
-          s.data.createdAt
+          repositoryDetails.data.createdAt,
+          deploymentsByEnvironmentName
         ))
       case _ => NotFound
     }

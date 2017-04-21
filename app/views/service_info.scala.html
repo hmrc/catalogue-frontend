@@ -19,13 +19,22 @@
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.DeploymentThroughputDataPoint
 @import java.time.LocalDateTime
+@import uk.gov.hmrc.cataloguefrontend.DeploymentVO
 
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @(cacheTimestampFormatted: String,
   service: RepositoryDetails,
   throughputChartData: Option[ChartDataRows],
   stabilityChartData: Option[ChartDataRows],
-  repositoryCreationDate: LocalDateTime)(implicit messages: Messages)
+  repositoryCreationDate: LocalDateTime,
+  deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]])(implicit messages: Messages)
+
+@datacentreMappings(datacentreLongName: String) = @{
+    datacentreLongName.toLowerCase match {
+        case "datacentred-sal01" => "DCD"
+        case "skyscape-farnborough" => "SS"
+    }
+}
 
 @standard_layout(service.name, "services") {
     <header>
@@ -57,8 +66,20 @@
                 <div class="col-md-3">
             }
                 <div class="board">
-                    <h3 class="board__heading">@environment.name</h3>
+                    <h3 class="board__heading">
+                        @environment.name
+                        @for(environmentDeployments <- deploymentsByEnvironmentName.get(environment.name.toLowerCase)) {
+                            @for(environmentDeployment <- environmentDeployments) {
+                                <div class="small" style="margin-top: 0.1em;">
+                                    @environmentDeployment.version
+                                <span title="@environmentDeployment.datacentre">(@datacentreMappings(environmentDeployment.datacentre))</span>
+                                </div>
+                            }
+                        }
+                    </h3>
+
                     <div class="board__body">
+
                         <ul class="list list--minimal">
                             @if(environment.services.isEmpty) {
                                 <li class="list-item">

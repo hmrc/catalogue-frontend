@@ -53,7 +53,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
 
     "return a 404 when a Library is viewed as a service" in {
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
-      serviceEndpoint(GET, "/api/whatsrunningwhere/serv", willRespondWith = (200, Some(Json.toJson(Some(WhatIsRunningWhere("serv", Nil))).toString())))
+      serviceEndpoint(GET, "/api/whatsrunningwhere/serv", willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("serv", Nil))).toString())))
 
       val response = await(WS.url(s"http://localhost:$port/service/serv").get)
       response.status shouldBe 404
@@ -63,7 +63,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
 
       serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
-      serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (200, Some(Json.toJson(Some(WhatIsRunningWhere("service-1", Seq(
+      serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("service-1", Seq(
         DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"),
         DeploymentVO(EnvironmentMapping("qa", "qa"), "skyscape-farnborough", "0.0.1"))
       ))).toString())))
@@ -92,12 +92,12 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     "link to environments" should {
 
       "show only show links to envs for which the service is deployed to" in {
-        import WhatIsRunningWhere._
+        import ServiceDeploymentInformation._
 
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
         serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
         serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith =
-          (200, Some(Json.toJson(Some(WhatIsRunningWhere("service-1", Seq(DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"))))).toString())))
+          (200, Some(Json.toJson(Some(ServiceDeploymentInformation("service-1", Seq(DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"))))).toString())))
 
         val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
         response.status shouldBe 200
@@ -127,10 +127,10 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       }
       
       "show show links to devs by default" in {
-        import WhatIsRunningWhere._
+        import ServiceDeploymentInformation._
 
         serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith =
-          (200, Some(Json.toJson(Some(WhatIsRunningWhere("service-1", Seq(DeploymentVO(EnvironmentMapping("production", "production"), "datacentred-sal01", "0.0.1"))))).toString())))
+          (200, Some(Json.toJson(Some(ServiceDeploymentInformation("service-1", Seq(DeploymentVO(EnvironmentMapping("production", "production"), "datacentred-sal01", "0.0.1"))))).toString())))
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
         serviceEndpoint(GET, "/api/indicators/service/service-1/throughput", willRespondWith = (200, Some(deploymentThroughputData)))
 
@@ -142,7 +142,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       }
 
       "show show 'Not deployed' for envs in which the service is not deployed" in {
-        import WhatIsRunningWhere._
+        import ServiceDeploymentInformation._
 
         serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (404, None))
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
@@ -169,7 +169,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     "Render the frequent production indicators graph with throughput and stability" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
-      serviceEndpoint(GET, "/api/whatsrunningwhere/service-name", willRespondWith = (200, Some(Json.toJson(Some(WhatIsRunningWhere("serv", Nil))).toString())))
+      serviceEndpoint(GET, "/api/whatsrunningwhere/service-name", willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("serv", Nil))).toString())))
 
       val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
       response.status shouldBe 200
@@ -194,7 +194,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       val dayInterval = createdAt.until(today, ChronoUnit.DAYS) + 1
 
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
-      serviceEndpoint(GET, "/api/whatsrunningwhere/service-name", willRespondWith = (200, Some(Json.toJson(Some(WhatIsRunningWhere("xyz", Nil))).toString())))
+      serviceEndpoint(GET, "/api/whatsrunningwhere/service-name", willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("xyz", Nil))).toString())))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (404, None))
 
 
@@ -209,7 +209,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     "Render a message if the indicators service encounters an error" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (500, None))
-      serviceEndpoint(GET, "/api/whatsrunningwhere/service-name", willRespondWith = (200, Some(Json.toJson(Some(WhatIsRunningWhere("xyz", Nil))).toString())))
+      serviceEndpoint(GET, "/api/whatsrunningwhere/service-name", willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("xyz", Nil))).toString())))
 
       val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
       response.status shouldBe 200

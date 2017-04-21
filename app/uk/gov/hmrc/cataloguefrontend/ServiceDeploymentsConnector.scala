@@ -65,15 +65,15 @@ object EnvironmentMapping {
   implicit val environmentFormat = Json.format[EnvironmentMapping]
 }
 
-final case class DeploymentVO(environmentMappings: EnvironmentMapping, datacentre: String, version: String)
+final case class DeploymentVO(environmentMapping: EnvironmentMapping, datacentre: String, version: String)
 
 object DeploymentVO {
   implicit val environmentFormat = Json.format[DeploymentVO]
 }
 
-case class WhatIsRunningWhere(serviceName: String, deployments: Seq[DeploymentVO])
-object WhatIsRunningWhere {
-  implicit val whatsRunningWhereFormat = Json.format[WhatIsRunningWhere]
+case class ServiceDeploymentInformation(serviceName: String, deployments: Seq[DeploymentVO])
+object ServiceDeploymentInformation {
+  implicit val whatsRunningWhereFormat = Json.format[ServiceDeploymentInformation]
 }
 
 trait ServiceDeploymentsConnector extends ServicesConfig {
@@ -84,7 +84,7 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
 
   import uk.gov.hmrc.play.http.HttpReads._
   import JavaDateTimeJsonFormatter._
-  import WhatIsRunningWhere._
+  import ServiceDeploymentInformation._
 
   implicit val deployerFormat = Json.format[Deployer]
   
@@ -123,16 +123,16 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
   }
 
 
-  def getWhatIsRunningWhere(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, WhatIsRunningWhere]] = {
+  def getWhatIsRunningWhere(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, ServiceDeploymentInformation]] = {
     val url = s"$whatIsRunningWhereBaseUrl/$serviceName"
 
     http.GET[HttpResponse](url).map { r =>
       r.status match {
         case 200 =>
-          Try(r.json.as[WhatIsRunningWhere]).transform(s => Success(Right(s)), f => Success(Left(f))).get
+          Try(r.json.as[ServiceDeploymentInformation]).transform(s => Success(Right(s)), f => Success(Left(f))).get
       }
     }.recover {
-      case _: NotFoundException => Right(WhatIsRunningWhere(serviceName, Nil)) // 404 if the service has had no deployments
+      case _: NotFoundException => Right(ServiceDeploymentInformation(serviceName, Nil)) // 404 if the service has had no deployments
       case ex =>
         Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
         Left(ex)

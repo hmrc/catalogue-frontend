@@ -49,7 +49,7 @@ class DeploymentsService(serviceDeploymentsConnector: ServiceDeploymentsConnecto
       }
     } yield deployments map teamRelease(query)
 
-  def getWhatsRunningWhere(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, WhatIsRunningWhere]] = {
+  def getWhatsRunningWhere(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, ServiceDeploymentInformation]] = {
     serviceDeploymentsConnector.getWhatIsRunningWhere(serviceName)
   }
 

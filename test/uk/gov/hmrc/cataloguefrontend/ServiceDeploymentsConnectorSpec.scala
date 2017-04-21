@@ -144,12 +144,12 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
            |  {
            |    "serviceName": "$serviceName",
            |    "deployments": [
-           |      { "environmentMappings": {"name": "qa", "releasesAppId": "qa"}, "datacentre": "datacentred-sal01", "version": "0.0.1" },
-           |      { "environmentMappings": {"name": "staging", "releasesAppId": "staging"}, "datacentre": "skyscape-farnborough", "version": "0.0.1" },
-           |      { "environmentMappings": {"name": "staging", "releasesAppId": "staging"}, "datacentre": "datacentred-sal01", "version": "0.0.2" },
-           |      { "environmentMappings": {"name": "production", "releasesAppId": "production"}, "datacentre": "skyscape-farnborough", "version": "0.0.1" },
-           |      { "environmentMappings": {"name": "production", "releasesAppId": "production"}, "datacentre": "datacentred-sal01", "version": "0.0.2" },
-           |      { "environmentMappings": {"name": "external test", "releasesAppId": "externaltest"}, "datacentre": "datacentred-sal01", "version": "0.0.1" }
+           |      { "environmentMapping": {"name": "qa", "releasesAppId": "qa"}, "datacentre": "datacentred-sal01", "version": "0.0.1" },
+           |      { "environmentMapping": {"name": "staging", "releasesAppId": "staging"}, "datacentre": "skyscape-farnborough", "version": "0.0.1" },
+           |      { "environmentMapping": {"name": "staging", "releasesAppId": "staging"}, "datacentre": "datacentred-sal01", "version": "0.0.2" },
+           |      { "environmentMapping": {"name": "production", "releasesAppId": "production"}, "datacentre": "skyscape-farnborough", "version": "0.0.1" },
+           |      { "environmentMapping": {"name": "production", "releasesAppId": "production"}, "datacentre": "datacentred-sal01", "version": "0.0.2" },
+           |      { "environmentMapping": {"name": "external test", "releasesAppId": "externaltest"}, "datacentre": "datacentred-sal01", "version": "0.0.1" }
            |    ]
            |  }
            |
