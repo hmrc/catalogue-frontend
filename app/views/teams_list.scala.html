@@ -5,7 +5,7 @@
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
 *
-*     http://www.apache.org/licenses/LICENSE-2.0
+* http://www.apache.org/licenses/LICENSE-2.0
 *
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,40 +13,69 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
-
 @import uk.gov.hmrc.cataloguefrontend.Team
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@(timestamp: String, teams: Seq[Team])
+@(timestamp: String, teams: Seq[Team], form: Form[_])(implicit messages: Messages)
 
-@standard_layout("Teams list","teams") {
-    <header>
-        <h1>Teams</h1>
-        <time class="last-updated">Last updated at: @timestamp</time>
-    </header>
+    @standard_layout("Teams list", "teams") {
+        <header>
+            <h1>Teams</h1>
+            <time class="last-updated">Last updated at: @timestamp</time>
+        </header>
 
-<table class="table table-striped" id="service-list">
-    <tr>
-        <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Team</button></th>
-        <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
-        <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
-    </tr>
-    <tbody class="list">
-    @teams.zipWithIndex.map{case (team, i) =>
-    <tr id="row@i">
-        <td class="service-name" id="row@{i}_name">
-            <a href="/teams/@team.name">@team.name</a>
-        </td>
-        <td class="created monospaced" id="row@{i}_created">
-            @team.firstActiveDate.map(_.asPattern("yyyy-MM-dd"))
-        </td>
-        <td class="last-active monospaced" id="row@{i}_lastActive">
-            @team.lastActiveDate.map(_.asPattern("yyyy-MM-dd"))
-        </td>
-    </tr>
+        @if(form.hasErrors) {
+            <div class="alert alert-danger" role="alert">
+                <ul class="list">
+                @form.errors.map { error =>
+                    <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+                }
+                </ul>
+            </div>
+        }
+
+        <div id="teams-list">
+            <form action="/teams" method="get">
+                <div class="form-group row">
+                    <div class="col-xs-1 padding-reset-right">
+                        <label for="search">Team:</label>
+                    </div>
+                    <div class="col col-xs-3">
+                        <input class="search form-control" id="search" type="text" name="name"
+                        value="@form("name").value" autofocus>
+                    </div>
+                </div>
+            </form>
+
+            <table class="table table-striped" id="service-list">
+                <tr>
+                    <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">
+                        Team</button></th>
+                    <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="created">
+                        First Active</button></th>
+                    <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="last-active">
+                        Last Active</button></th>
+                </tr>
+                <tbody class="list">
+                @teams.zipWithIndex.map { case (team, i) =>
+                <tr id="row@i">
+                    <td class="service-name" id="row@{
+                        i
+                    }_name">
+                        <a href="/teams/@team.name">@team.name</a>
+                    </td>
+                    <td class="created monospaced" id="row@{
+                        i
+                    }_created">
+                    @team.firstActiveDate.map(_.asPattern("yyyy-MM-dd"))
+                    </td>
+                    <td class="last-active monospaced" id="row@{
+                        i
+                    }_lastActive">
+                    @team.lastActiveDate.map(_.asPattern("yyyy-MM-dd"))
+                </td>
+                </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     }
-    </tbody>
-
-
-</table>
-
-}

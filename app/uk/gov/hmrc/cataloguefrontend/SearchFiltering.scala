@@ -49,5 +49,14 @@ object SearchFiltering {
 
   }
 
+  implicit class TeamResult(teams: Seq[Team]) {
+
+    def filter(teamFilter: TeamFilter): Seq[Team] = {
+      teams.filter(team =>
+        teamFilter.name.isEmpty || team.name.toLowerCase.contains(teamFilter.name.get.toLowerCase))
+    }
+
+  }
+
 
 }

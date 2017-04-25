@@ -70,11 +70,29 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   }
 
   def allTeams() = Action.async { implicit request =>
+    import SearchFiltering._
+
     teamsAndServicesConnector.allTeams.map { response =>
-      Ok(
-        teams_list(
-          response.formattedTimestamp,
-          response.data.sortBy(_.name.toUpperCase)))
+      val form: Form[TeamFilter] = TeamFilter.form.bindFromRequest()
+
+      form.fold(
+        error =>
+          Ok(
+            teams_list(
+              response.formattedTimestamp,
+              teams = Seq.empty,
+              form)),
+        query => {
+          Ok(
+            teams_list(
+              response.formattedTimestamp,
+              response
+                .data
+                .filter(query)
+                .sortBy(_.name.toUpperCase),
+              form))
+        }
+      )
     }
   }
 
@@ -274,6 +292,18 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
 
 
+}
+
+case class TeamFilter(name: Option[String] = None) {
+  def isEmpty = name.isEmpty
+}
+
+object TeamFilter {
+  lazy val form = Form(
+    mapping(
+      "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
+    )(TeamFilter.apply)(TeamFilter.unapply)
+  )
 }
 
 case class DeploymentsFilter(team: Option[String] = None, serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
