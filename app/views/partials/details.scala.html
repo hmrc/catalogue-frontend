@@ -17,7 +17,7 @@
 @import java.time.format.DateTimeFormatter
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
-@(repo: RepositoryDetails)
+@(repositoryDetails: RepositoryDetails)
 
 <div>
     <div class="board" class="col-md-12">
@@ -27,16 +27,16 @@
             <ul class="list list--minimal list-group row">
                 <li class="col-xs-6">
                     <label>Description: </label>
-                    @if(repo.description.isEmpty) {None} else {@repo.description}
+                    @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
                     </li>
                 <li class="col-xs-6">
                     <label>Created: </label>
-                    @repo.createdAt.displayFormat
+                    @repositoryDetails.createdAt.displayFormat
                 </li>
                 <li class="col-xs-6"> </li>
                 <li class="col-xs-6">
                     <label>Last Active: </label>
-                    @repo.lastActive.displayFormat
+                    @repositoryDetails.lastActive.displayFormat
                 </li>
             </ul>
         </div>
