@@ -250,13 +250,17 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
               repotypeToDetailsUrl,
               error)),
         query =>
-          Ok(
+{
+  println(query)
+  Ok(
+
             repositories_list(
               repositories.formattedTimestamp,
               repositories = repositories.data.filter(query),
               repotypeToDetailsUrl,
               form))
-      )
+
+}      )
     }
   }
 

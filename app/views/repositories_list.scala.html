@@ -49,8 +49,26 @@
                 <label for="search">Name:</label>
             </div>
             <div class="col col-xs-3">
-                <input class="search form-control" id="search" type="text" name="name"
-                value="@form("name").value" autofocus>
+                <input class="search form-control" id="search" type="text" name="name" value="@form("name").value" autofocus>
+            </div>
+            <div class="col-xs-1 col-xs-offset-2">
+                <label for="type-search">Type:</label>
+            </div>
+
+            <div class="col col-xs-2">
+                @select(
+                    field = form("type"),
+                    options = Seq(
+                        "Library" -> "Library",
+                        "Prototype" -> "Prototype",
+                        "Service" -> "Service",
+                        "Other" -> "Other"
+                    ),
+                    '_default -> "All",
+                    '_label -> "",
+                    'onchange -> "this.form.submit()",
+                    'id -> "type-search"
+            )
             </div>
         </div>
     </form>

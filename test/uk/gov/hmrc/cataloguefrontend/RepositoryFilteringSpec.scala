@@ -43,6 +43,23 @@ class RepositoryResultSpec extends WordSpec with Matchers {
 
     }
 
+    "get repositories filtered by partial repository name and case insensitive" in {
+
+      val now = LocalDateTime.now()
+
+      val repositories = Seq(
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
+        RepositoryDisplayDetails("FOO", createdAt = now, lastUpdatedAt = now, RepoType.Service))
+
+      repositories.filter(RepoListFilter(name = Some("eRV"))) shouldBe Seq(
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other))
+
+    }
+
     "get repositories filtered by only repository type" in {
 
       val now = LocalDateTime.now()

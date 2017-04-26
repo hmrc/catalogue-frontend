@@ -43,7 +43,7 @@ object SearchFiltering {
     def filter(q: RepoListFilter): Seq[RepositoryDisplayDetails] = {
 
       repositories.toStream
-        .filter(x => q.name.isEmpty || q.name.get == x.name)
+        .filter(x => q.name.isEmpty || x.name.toLowerCase.contains(q.name.get.toLowerCase))
         .filter(x => q.repoType.isEmpty || q.repoType.get.equalsIgnoreCase(x.repoType.toString) || ("service".equalsIgnoreCase(q.repoType.get) && x.repoType == RepoType.Service))
     }
 
