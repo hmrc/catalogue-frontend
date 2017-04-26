@@ -62,6 +62,45 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
         response.body should include(s"github.com")
       }
     }
+
+    "Render the frequent production indicators graph with throughput and stability" in {
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
+      serviceEndpoint(GET, "/api/indicators/repository/service-name/builds", willRespondWith = (200, Some(JsonData.jobExecutionTimeData)))
+
+      val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
+      response.status shouldBe 200
+
+      response.body should include(s"""data.addColumn('string', 'Period');""")
+      response.body should include(s"""data.addColumn('number', "Duration");""")
+      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
+
+      response.body should include(s"""chart.draw(data, classicOptions);""")
+    }
+
+    "Render a message if the indicators service returns 404" in {
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
+      serviceEndpoint(GET, "/api/indicators/repository/service-name/builds", willRespondWith = (404, None))
+
+      val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
+      response.status shouldBe 200
+
+      response.body should include(s"""No data to show""")
+      response.body should include(ViewMessages.noJobExecutionData)
+
+      response.body shouldNot include(s"""chart.draw(data, options);""")
+    }
+
+    "Render a message if the indicators service encounters an error" in {
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
+      serviceEndpoint(GET, "/api/indicators/repository/service-name/builds", willRespondWith = (500, None))
+
+      val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
+      response.status shouldBe 200
+      response.body should include(s"""The catalogue encountered an error""")
+      response.body should include(ViewMessages.indicatorsServiceError)
+
+      response.body shouldNot include(s"""chart.draw(data, options);""")
+    }
   }
 
   def repositoryData(repositoryDetails: RepositoryDetails) =

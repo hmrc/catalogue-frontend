@@ -29,6 +29,11 @@ object ViewMessages {
     "to see your data. If you think you're seeing this message in error or have any other feedback, please let us know in " +
     """<a href="https://hmrcdigital.slack.com/messages/team-platops/">#team-platops</a></p>"""
 
+  val noJobExecutionData = "<p>It's possible that there is no Jenkins job set up for this repository, or a job exists " +
+    "but there is no past build data available. If you think you're seeing this message in error or have any other feedback, " +
+    "please let us know in " +
+    """<a href="https://hmrcdigital.slack.com/messages/team-platops/">#team-platops</a></p>"""
+
   val indicatorsServiceError = "Sorry about that, there was a problem fetching the indicator data. This will " +
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
     "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\">#team-platops</a>"
@@ -57,6 +62,10 @@ object ViewMessages {
   def noProductionDeploymentSinceDaysMessage(firstActiveDate: LocalDateTime) = {
     val daysSinceNoProdDeployment = firstActiveDate.until(LocalDateTime.now(), ChronoUnit.DAYS) + 1
     Html(s"""<h2 class="chart-message text-center">No production deployments for $daysSinceNoProdDeployment days</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
+  }
+
+  def noJobExecutionTimeDataHtml = {
+    Html(s"""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>${ViewMessages.noJobExecutionData}</p>")
   }
 
   def toTypeText(repoType: RepoType.RepoType) : String = {

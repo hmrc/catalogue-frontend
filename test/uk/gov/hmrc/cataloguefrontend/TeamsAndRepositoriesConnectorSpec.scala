@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Millis, Span}
 import org.scalatest.{BeforeAndAfter, Matchers, OptionValues, WordSpec}
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -28,7 +29,7 @@ import uk.gov.hmrc.play.http.HeaderCarrier
 class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures with OneServerPerSuite with WireMockEndpoints with TypeCheckedTripleEquals with OptionValues {
 
   import uk.gov.hmrc.cataloguefrontend.JsonData._
-
+  implicit val defaultPatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure(
     "microservice.services.teams-and-services.host" -> host,

@@ -26,7 +26,7 @@ import org.scalatestplus.play.{OneAppPerSuite, OneAppPerTest, OneServerPerTest}
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{FakeApplication, FakeHeaders}
-import uk.gov.hmrc.cataloguefrontend.JsonData.deploymentThroughputData
+import uk.gov.hmrc.cataloguefrontend.JsonData.{deploymentThroughputData, jobExecutionTimeData}
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 
 import scala.concurrent.Future
@@ -51,7 +51,7 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneApp
       val deploymentIndicatorsForService: Future[Option[DeploymentIndicators]] =
         IndicatorsConnector.deploymentIndicatorsForService("serv")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
 
-      deploymentIndicatorsForService.futureValue should not be (None)
+      deploymentIndicatorsForService.futureValue should not be None
       deploymentIndicatorsForService.futureValue.get.throughput.size should be(3)
       deploymentIndicatorsForService.futureValue.get.stability.size should be(3)
     }
@@ -62,9 +62,20 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneApp
       val deploymentIndicatorsForService: Future[Option[DeploymentIndicators]] =
         IndicatorsConnector.deploymentIndicatorsForTeam("teamA")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
 
-      deploymentIndicatorsForService.futureValue should not be (None)
+      deploymentIndicatorsForService.futureValue should not be None
       deploymentIndicatorsForService.futureValue.get.throughput.size should be(3)
       deploymentIndicatorsForService.futureValue.get.stability.size should be(3)
+
+    }
+
+    it("should get a sequence of JobExecutionTimeDataPoints for a repository") {
+      serviceEndpoint(GET, "/api/indicators/repository/reponame/builds", willRespondWith = (200, Some(jobExecutionTimeData)))
+
+      val buildIndicatorsForRepository: Future[Option[Seq[JobExecutionTimeDataPoint]]] =
+        IndicatorsConnector.buildIndicatorsForRepository("reponame")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
+
+      buildIndicatorsForRepository.futureValue should not be None
+      buildIndicatorsForRepository.futureValue.get.size should be(12)
 
     }
   }

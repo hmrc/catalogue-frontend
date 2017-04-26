@@ -18,12 +18,17 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 
-@(cacheTimestampFormatted: String, repository: RepositoryDetails)
+@import uk.gov.hmrc.cataloguefrontend.JobExecutionTimeDataPoint
+@import uk.gov.hmrc.cataloguefrontend.ChartDataRows
+@(cacheTimestampFormatted: String, repository: RepositoryDetails, jobExecutionTimeChartData: Option[ChartDataRows])
 
 @standard_layout(repository.name, "repository") {
 <header>
     <h1>Repository: @repository.name</h1>
     <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
 </header>
 
 <div class="alert alert-success" role="alert" id="@repository.name">
@@ -38,5 +43,40 @@
         @partials.repo_owning_teams(repository)
         @partials.code(repository)
     </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="board row">
+                <h3 class="board__heading">Delivery Indicators</h3>
+                <div class="board__body">
+                    @if(jobExecutionTimeChartData.isDefined && !jobExecutionTimeChartData.get.isEmpty) {
+                        @renderJobExecutionTimeGraph
+                    }
+
+                    @{
+                        if(jobExecutionTimeChartData.isEmpty) {
+                            {ViewMessages.errorMessage}
+                        } else if(jobExecutionTimeChartData.get.isEmpty) {
+                            {ViewMessages.noJobExecutionTimeDataHtml}
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
+<script type="text/javascript">
+
+    @if(jobExecutionTimeChartData.isDefined && !jobExecutionTimeChartData.get.isEmpty) {
+        @views.html.jobexecutiontimechart_script(jobExecutionTimeChartData)
+    }
+
+</script>
+}
+
+@renderJobExecutionTimeGraph = {
+    <div class="col-md-12">
+        <div id="chart_div"></div>
+    </div>
+
 }

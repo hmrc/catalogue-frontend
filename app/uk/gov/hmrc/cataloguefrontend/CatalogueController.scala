@@ -214,12 +214,14 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   def repository(name: String) = Action.async { implicit request =>
     for {
       repository <- teamsAndServicesConnector.repositoryDetails(name)
-    } yield repository match {
-      case Some(s) =>
+      indicators <- indicatorsConnector.buildIndicatorsForRepository(name)
+    } yield (repository, indicators) match {
+      case (Some(s), maybeDataPoints) =>
         Ok(
           repository_info(
             s.formattedTimestamp,
-            s.data))
+            s.data,
+            ServiceChartData.jobExecutionTime(name, maybeDataPoints)))
       case _ => NotFound
     }
   }

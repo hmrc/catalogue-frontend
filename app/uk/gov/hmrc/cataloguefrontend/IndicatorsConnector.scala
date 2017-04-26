@@ -49,6 +49,8 @@ case class DeploymentThroughputDataPoint(period: String, from: LocalDate, to: Lo
 
 case class DeploymentStabilityDataPoint(period: String, from: LocalDate, to: LocalDate, hotfixRate: Option[Double], hotfixInterval: Option[MedianDataPoint])
 
+case class JobExecutionTimeDataPoint(period: String, from: LocalDate, to: LocalDate, duration: Option[MedianDataPoint])
+
 case class DeploymentIndicators(throughput: Seq[DeploymentThroughputDataPoint], stability: Seq[DeploymentStabilityDataPoint])
 
 case class DeploymentsMetricResult(period: String,
@@ -75,8 +77,8 @@ trait IndicatorsConnector extends ServicesConfig {
   implicit val throughputFormats = Json.reads[Throughput]
   implicit val stabilityFormats = Json.reads[Stability]
   implicit val deploymentsMetricResultFormats = Json.reads[DeploymentsMetricResult]
-
-
+  implicit val medianDataPointFormats = Json.reads[MedianDataPoint]
+  implicit val jobExecutionTimeDataPointFormats = Json.reads[JobExecutionTimeDataPoint]
 
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse) = response
@@ -108,6 +110,22 @@ trait IndicatorsConnector extends ServicesConfig {
             }.unzip
 
           Some(DeploymentIndicators(deploymentThroughputs, deploymentStabilities))
+      }
+    }.recover {
+      case ex =>
+        Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+        None
+    }
+  }
+
+  def buildIndicatorsForRepository(repositoryName :String)(implicit hc: HeaderCarrier) = buildIndicators(s"/repository/$repositoryName/builds")
+  private def buildIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[Seq[JobExecutionTimeDataPoint]]] = {
+    val url = indicatorsBaseUrl + path
+    val eventualResponse: Future[HttpResponse] = http.GET[HttpResponse](url)
+    eventualResponse.map { r =>
+      r.status match {
+        case 404 => Some(Nil)
+        case 200 => Some(r.json.as[Seq[JobExecutionTimeDataPoint]])
       }
     }.recover {
       case ex =>

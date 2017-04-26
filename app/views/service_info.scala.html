@@ -111,13 +111,13 @@
                             @renderThroughputGraph
                             @renderStabilityGraph
                         }
-                     @{
-                         if(throughputChartData.isEmpty) {
-                             {ViewMessages.errorMessage}
-                         }else if(throughputChartData.get.isEmpty) {
-                             {ViewMessages.noProductionDeploymentSinceDaysMessage(repositoryCreationDate)}
-                         }
 
+                        @{
+                            if(throughputChartData.isEmpty) {
+                                {ViewMessages.errorMessage}
+                            } else if(throughputChartData.get.isEmpty) {
+                                {ViewMessages.noProductionDeploymentSinceDaysMessage(repositoryCreationDate)}
+                            }
                         }
 
                     </div>
