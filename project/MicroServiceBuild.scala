@@ -20,6 +20,7 @@ private object AppDependencies {
   private val govTemplateVersion = "5.0.0"
   private val playUIVersion = "5.0.0"
   private val urlBuilderVersion = "1.1.0"
+  private val catsVersion = "0.9.0"
 
   private val hmrcTestVersion = "2.0.0"
 
@@ -52,9 +53,8 @@ private object AppDependencies {
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
         "com.github.tomakehurst" % "wiremock" % "1.52" % scope,
         "org.jsoup" % "jsoup" % "1.9.2" % scope,
-        "org.mockito" % "mockito-all" % "1.10.19" % scope
-
-
+        "org.mockito" % "mockito-all" % "1.10.19" % scope,
+        "org.typelevel" %% "cats-core" % catsVersion % scope
       )
     }.test
   }

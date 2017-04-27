@@ -71,7 +71,7 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneApp
     it("should get a sequence of JobExecutionTimeDataPoints for a repository") {
       serviceEndpoint(GET, "/api/indicators/repository/reponame/builds", willRespondWith = (200, Some(jobExecutionTimeData)))
 
-      val buildIndicatorsForRepository: Future[Option[Seq[JobExecutionTimeDataPoint]]] =
+      val buildIndicatorsForRepository: Future[Option[Seq[JobMetricDataPoint]]] =
         IndicatorsConnector.buildIndicatorsForRepository("reponame")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
 
       buildIndicatorsForRepository.futureValue should not be None

@@ -127,16 +127,16 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
 
     }
 
-    "return correct html rows for job execution time data points" in {
-      val endDate: LocalDate = LocalDate.of(2016, 12, 31)
-      val threeMonthsBeforeEndDate = endDate.minusMonths(3)
-      val sixMonthsBeforeEndDate = endDate.minusMonths(6)
-      val nineMonthsBeforeEndDate = endDate.minusMonths(9)
+      "return correct html rows for job execution time data points" in {
+        val endDate: LocalDate = LocalDate.of(2016, 12, 31)
+        val threeMonthsBeforeEndDate = endDate.minusMonths(3)
+        val sixMonthsBeforeEndDate = endDate.minusMonths(6)
+        val nineMonthsBeforeEndDate = endDate.minusMonths(9)
 
-      val points: Seq[JobExecutionTimeDataPoint] = Seq(
-        JobExecutionTimeDataPoint("2016-12", threeMonthsBeforeEndDate, endDate, Some(MedianDataPoint(23000))),
-        JobExecutionTimeDataPoint("2016-09", sixMonthsBeforeEndDate, threeMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(1432005))),
-        JobExecutionTimeDataPoint("2016-06", nineMonthsBeforeEndDate, sixMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(23456005)))
+      val points: Seq[JobMetricDataPoint] = Seq(
+        JobMetricDataPoint("2016-12", threeMonthsBeforeEndDate, endDate, Some(MedianDataPoint(23000)), Some(0.3)),
+        JobMetricDataPoint("2016-09", sixMonthsBeforeEndDate, threeMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(1432005)), Some(0.2)),
+        JobMetricDataPoint("2016-06", nineMonthsBeforeEndDate, sixMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(23456005)), None)
       )
 
       val data: Option[ChartDataRows] = ServiceChartData.jobExecutionTime("test-repo", Some(points))

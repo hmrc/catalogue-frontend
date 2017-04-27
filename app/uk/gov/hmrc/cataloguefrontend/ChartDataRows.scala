@@ -40,7 +40,7 @@ trait ChartData {
       ChartDataRows(chartRowsStability(serviceName, points))
     }
 
-  def jobExecutionTime(repositoryName: String, dataPoints: Option[Seq[JobExecutionTimeDataPoint]]): Option[ChartDataRows] =
+  def jobExecutionTime(repositoryName: String, dataPoints: Option[Seq[JobMetricDataPoint]]): Option[ChartDataRows] =
     dataPoints.map { points =>
       ChartDataRows(chartRowsJobExecutionTime(repositoryName, points))
     }
@@ -95,22 +95,27 @@ trait ChartData {
 
   }
 
-  private def chartRowsJobExecutionTime(repositoryName: String, points: Seq[JobExecutionTimeDataPoint]): Seq[Html] = {
+  private def chartRowsJobExecutionTime(repositoryName: String, points: Seq[JobMetricDataPoint]): Seq[Html] = {
     import scala.concurrent.duration._
 
     for {
       dataPoint <- points
     } yield {
-
-      val tip = toolTip(dataPoint.period, None) _
-      val jobExecutionTimeTooltip: Html =
-        tip("Job Execution Time", dataPoint.duration.map(formatTime))
-
       val timeData = dataPoint.duration.map(d =>
         s"${(d.median millis).toMinutes}"
       ).getOrElse("null")
 
-      Html(s"""["${dataPoint.period}", $timeData, "$jobExecutionTimeTooltip"]""")
+      //      val tip = toolTip(dataPoint.period, None) _
+      val jobExecutionTimeTooltip: Html =
+        toolTip(dataPoint.period, None)("Job Execution Time", dataPoint.duration.map(formatTime))
+
+
+      val successRateToolTip =
+        toolTip(dataPoint.period, None)("Success Rate", dataPoint.successRate.map(r => s"${toPercent(r)}%"))
+
+      val successRate = s"""${unwrap(dataPoint.successRate)}"""
+//      val successRate = s"""0.90"""
+      Html(s"""["${dataPoint.period}", $timeData, "$jobExecutionTimeTooltip", $successRate, "$successRateToolTip"]""")
     }
   }
 

@@ -49,7 +49,7 @@ case class DeploymentThroughputDataPoint(period: String, from: LocalDate, to: Lo
 
 case class DeploymentStabilityDataPoint(period: String, from: LocalDate, to: LocalDate, hotfixRate: Option[Double], hotfixInterval: Option[MedianDataPoint])
 
-case class JobExecutionTimeDataPoint(period: String, from: LocalDate, to: LocalDate, duration: Option[MedianDataPoint])
+case class JobMetricDataPoint(period: String, from: LocalDate, to: LocalDate, duration: Option[MedianDataPoint], successRate: Option[Double])
 
 case class DeploymentIndicators(throughput: Seq[DeploymentThroughputDataPoint], stability: Seq[DeploymentStabilityDataPoint])
 
@@ -78,7 +78,7 @@ trait IndicatorsConnector extends ServicesConfig {
   implicit val stabilityFormats = Json.reads[Stability]
   implicit val deploymentsMetricResultFormats = Json.reads[DeploymentsMetricResult]
   implicit val medianDataPointFormats = Json.reads[MedianDataPoint]
-  implicit val jobExecutionTimeDataPointFormats = Json.reads[JobExecutionTimeDataPoint]
+  implicit val jobExecutionTimeDataPointFormats = Json.reads[JobMetricDataPoint]
 
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse) = response
@@ -119,13 +119,17 @@ trait IndicatorsConnector extends ServicesConfig {
   }
 
   def buildIndicatorsForRepository(repositoryName :String)(implicit hc: HeaderCarrier) = buildIndicators(s"/repository/$repositoryName/builds")
-  private def buildIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[Seq[JobExecutionTimeDataPoint]]] = {
+
+  private def buildIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[Seq[JobMetricDataPoint]]] = {
     val url = indicatorsBaseUrl + path
     val eventualResponse: Future[HttpResponse] = http.GET[HttpResponse](url)
     eventualResponse.map { r =>
       r.status match {
         case 404 => Some(Nil)
-        case 200 => Some(r.json.as[Seq[JobExecutionTimeDataPoint]])
+        case 200 =>
+          val x = r.json.as[Seq[JobMetricDataPoint]]
+          println(x)
+          Some(x)
       }
     }.recover {
       case ex =>
