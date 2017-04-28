@@ -107,12 +107,12 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
 
       rows(0).toString().startsWith("[") shouldBe true
       rows(0).toString().endsWith("]") shouldBe true
-      getRowColumns(rows(0))(0) should === (""""2016-12"""")
-      getRowColumns(rows(0))(1) should === ("""0.35""")
-      getRowColumns(rows(1))(0) should === (""""2016-09"""")
-      getRowColumns(rows(1))(1) should === ("""0.25""")
-      getRowColumns(rows(2))(0) should === (""""2016-06"""")
-      getRowColumns(rows(2))(1) should === ("""0.1""")
+      getRowColumns(rows(0))(0) should ===(""""2016-12"""")
+      getRowColumns(rows(0))(1) should ===("""0.35""")
+      getRowColumns(rows(1))(0) should ===(""""2016-09"""")
+      getRowColumns(rows(1))(1) should ===("""0.25""")
+      getRowColumns(rows(2))(0) should ===(""""2016-06"""")
+      getRowColumns(rows(2))(1) should ===("""0.1""")
 
       val rateToolTip = asDocument(getRowColumns(rows(0))(2))
 
@@ -127,17 +127,17 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
 
     }
 
-      "return correct html rows for job execution time data points" in {
+    "return correct html rows for job execution time data points" in {
         val endDate: LocalDate = LocalDate.of(2016, 12, 31)
         val threeMonthsBeforeEndDate = endDate.minusMonths(3)
         val sixMonthsBeforeEndDate = endDate.minusMonths(6)
         val nineMonthsBeforeEndDate = endDate.minusMonths(9)
 
-      val points: Seq[JobMetricDataPoint] = Seq(
-        JobMetricDataPoint("2016-12", threeMonthsBeforeEndDate, endDate, Some(MedianDataPoint(23000)), Some(0.3)),
-        JobMetricDataPoint("2016-09", sixMonthsBeforeEndDate, threeMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(1432005)), Some(0.2)),
-        JobMetricDataPoint("2016-06", nineMonthsBeforeEndDate, sixMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(23456005)), None)
-      )
+        val points: Seq[JobMetricDataPoint] = Seq(
+          JobMetricDataPoint("2016-12", threeMonthsBeforeEndDate, endDate, Some(MedianDataPoint(23000)), Some(0.3)),
+          JobMetricDataPoint("2016-09", sixMonthsBeforeEndDate, threeMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(1432005)), Some(0.2)),
+          JobMetricDataPoint("2016-06", nineMonthsBeforeEndDate, sixMonthsBeforeEndDate.minusDays(1), Some(MedianDataPoint(23456005)), None)
+        )
 
       val data: Option[ChartDataRows] = ServiceChartData.jobExecutionTime("test-repo", Some(points))
 
@@ -150,34 +150,64 @@ class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals 
       rows(0).toString().endsWith("]") shouldBe true
       getRowColumns(rows(0))(0) should === (""""2016-12"""")
       getRowColumns(rows(0))(1) should === ("""0""")
+      getRowColumns(rows(0))(3) should === ("""0.3""")
       getRowColumns(rows(1))(0) should === (""""2016-09"""")
       getRowColumns(rows(1))(1) should === ("""23""")
+      getRowColumns(rows(1))(3) should === ("""0.2""")
       getRowColumns(rows(2))(0) should === (""""2016-06"""")
       getRowColumns(rows(2))(1) should === ("""390""")
+      getRowColumns(rows(2))(3) should === ("""null""")
 
-      val rateToolTipTableData0 =
+      val executionTimeToolTipTableData0 =
         asDocument(getRowColumns(rows(0))(2)).select("tr td")
 
-      rateToolTipTableData0.get(0).text() should include("Period:")
-      rateToolTipTableData0.get(0).text() should include("2016-12")
-      rateToolTipTableData0.get(1).text() should include("Job Execution Time:")
-      rateToolTipTableData0.get(1).text() should include("23sec")
+      executionTimeToolTipTableData0.get(0).text() should include("Period:")
+      executionTimeToolTipTableData0.get(0).text() should include("2016-12")
+      executionTimeToolTipTableData0.get(1).text() should include("Job Execution Time:")
+      executionTimeToolTipTableData0.get(1).text() should include("23sec")
 
-      val rateToolTipTableData1 =
+      val successRateToolTipTableData0 =
+        asDocument(getRowColumns(rows(0))(4)).select("tr td")
+
+      successRateToolTipTableData0.get(0).text() should include("Period:")
+      successRateToolTipTableData0.get(0).text() should include("2016-12")
+      successRateToolTipTableData0.get(1).text() should include("Success Rate:")
+      successRateToolTipTableData0.get(1).text() should include("30%")
+
+
+
+      val executionTimeToolTipTableData1 =
         asDocument(getRowColumns(rows(1))(2)).select("tr td")
 
-      rateToolTipTableData1.get(0).text() should include("Period:")
-      rateToolTipTableData1.get(0).text() should include("2016-09")
-      rateToolTipTableData1.get(1).text() should include("Job Execution Time:")
-      rateToolTipTableData1.get(1).text() should include("23min 52sec")
+      executionTimeToolTipTableData1.get(0).text() should include("Period:")
+      executionTimeToolTipTableData1.get(0).text() should include("2016-09")
+      executionTimeToolTipTableData1.get(1).text() should include("Job Execution Time:")
+      executionTimeToolTipTableData1.get(1).text() should include("23min 52sec")
 
-      val rateToolTipTableData2 =
+      val successRateToolTipTableData1 =
+        asDocument(getRowColumns(rows(1))(4)).select("tr td")
+
+      successRateToolTipTableData1.get(0).text() should include("Period:")
+      successRateToolTipTableData1.get(0).text() should include("2016-09")
+      successRateToolTipTableData1.get(1).text() should include("Success Rate:")
+      successRateToolTipTableData1.get(1).text() should include("20%")
+
+
+
+      val executionTimeToolTipTableData2 =
         asDocument(getRowColumns(rows(2))(2)).select("tr td")
 
-      rateToolTipTableData2.get(0).text() should include("Period:")
-      rateToolTipTableData2.get(0).text() should include("2016-06")
-      rateToolTipTableData2.get(1).text() should include("Job Execution Time:")
-      rateToolTipTableData2.get(1).text() should include("6h 30min 56sec")
+      executionTimeToolTipTableData2.get(0).text() should include("Period:")
+      executionTimeToolTipTableData2.get(0).text() should include("2016-06")
+      executionTimeToolTipTableData2.get(1).text() should include("Job Execution Time:")
+      executionTimeToolTipTableData2.get(1).text() should include("6h 30min 56sec")
+
+      val successRateToolTipTableData2 =
+        asDocument(getRowColumns(rows(2))(4)).select("tr td")
+
+      successRateToolTipTableData2.get(0).text() should include("Period:")
+      successRateToolTipTableData2.get(0).text() should include("2016-06")
+      successRateToolTipTableData2.get(1).text() should ===("Success Rate:")
     }
 
   }

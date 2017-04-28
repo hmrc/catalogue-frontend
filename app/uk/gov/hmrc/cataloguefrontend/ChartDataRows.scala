@@ -42,7 +42,7 @@ trait ChartData {
 
   def jobExecutionTime(repositoryName: String, dataPoints: Option[Seq[JobMetricDataPoint]]): Option[ChartDataRows] =
     dataPoints.map { points =>
-      ChartDataRows(chartRowsJobExecutionTime(repositoryName, points))
+      ChartDataRows(chartRowsJobMetrics(repositoryName, points))
     }
 
   protected def deploymentsSerachParameters(name: String, from: String, to: String) : Map[String,String]
@@ -95,7 +95,7 @@ trait ChartData {
 
   }
 
-  private def chartRowsJobExecutionTime(repositoryName: String, points: Seq[JobMetricDataPoint]): Seq[Html] = {
+  private def chartRowsJobMetrics(repositoryName: String, points: Seq[JobMetricDataPoint]): Seq[Html] = {
     import scala.concurrent.duration._
 
     for {
@@ -105,7 +105,6 @@ trait ChartData {
         s"${(d.median millis).toMinutes}"
       ).getOrElse("null")
 
-      //      val tip = toolTip(dataPoint.period, None) _
       val jobExecutionTimeTooltip: Html =
         toolTip(dataPoint.period, None)("Job Execution Time", dataPoint.duration.map(formatTime))
 
@@ -114,7 +113,6 @@ trait ChartData {
         toolTip(dataPoint.period, None)("Success Rate", dataPoint.successRate.map(r => s"${toPercent(r)}%"))
 
       val successRate = s"""${unwrap(dataPoint.successRate)}"""
-//      val successRate = s"""0.90"""
       Html(s"""["${dataPoint.period}", $timeData, "$jobExecutionTimeTooltip", $successRate, "$successRateToolTip"]""")
     }
   }
