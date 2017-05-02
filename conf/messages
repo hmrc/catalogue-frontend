@@ -4,3 +4,5 @@ leadtime.explanation.text=number of days between release creation and production
 interval.explanation.text=number of days between production deployments
 hotfixrate.explanation.text=percentage of production deployments that were hotfix versions
 hotfixinterval.explanation.text=number of days between production deployment and its hotfix
+duration.explanation.text=amount of time that your build took to complete
+successrate.explanation.text=percentage of builds that have succeeded

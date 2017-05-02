@@ -38,12 +38,15 @@ object ViewMessages {
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
     "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\">#team-platops</a>"
 
-  val mesurementSampleSizeText =
-    "<p>Each monthly measurement has a 3 month sample size. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>" +
+  val deploymentThroughputAndStabilityGraphText =
+    "<p>These indicators show the frequency and stability of your production deployments</p>" +
+      "<p>Each monthly measurement has a 3 month sample size. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>" +
       "<p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>"
 
-  val deploymentThroughputAndStabilityGraphText =
-    "<p>These indicators show the frequency and stability of your production deployments</p>" ++ mesurementSampleSizeText
+  val repositoryBuildDetailsGraphText =
+    "<p>These indicators show the duration and stability of your build.</p> " +
+      "<p>Each monthly measurement has a 3 month sample size. Trending towards lower success rate indicates instability in the build. Trending towards higher duration indicates that something is causing your build time to increase.</p>" +
+      "<p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>"
 
   def noRepoOfType(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +

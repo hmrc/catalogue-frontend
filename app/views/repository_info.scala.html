@@ -20,7 +20,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.JobMetricDataPoint
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
-@(cacheTimestampFormatted: String, repository: RepositoryDetails, jobExecutionTimeChartData: Option[ChartDataRows])
+@(cacheTimestampFormatted: String, repository: RepositoryDetails, jobExecutionTimeChartData: Option[ChartDataRows])(implicit messages: Messages)
 
 @standard_layout(repository.name, "repository") {
 <header>
@@ -50,6 +50,7 @@
                 <h3 class="board__heading">Delivery Indicators</h3>
                 <div class="board__body">
                     @if(jobExecutionTimeChartData.isDefined && !jobExecutionTimeChartData.get.isEmpty) {
+                        @renderGraphText
                         @renderJobExecutionTimeGraph
                     }
 
@@ -74,9 +75,25 @@
 </script>
 }
 
+@renderGraphText = {
+    @{Html(ViewMessages.repositoryBuildDetailsGraphText)}
+}
+
 @renderJobExecutionTimeGraph = {
     <div class="col-md-12">
         <div id="chart_div"></div>
+        <div>
+            <small>
+                <ul>
+                    <li><strong>Duration</strong> - @{
+                        Messages("duration.explanation.text")
+                    }</li>
+                    <li><strong>Success Rate</strong> - @{
+                        Messages("successrate.explanation.text")
+                    }</li>
+                </ul>
+            </small>
+        </div>
     </div>
 
 }
