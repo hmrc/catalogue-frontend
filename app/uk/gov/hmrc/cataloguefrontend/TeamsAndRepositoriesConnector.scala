@@ -98,6 +98,12 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     }
   }
 
+  def allDigitalServices(implicit hc: HeaderCarrier): Future[Timestamped[Seq[String]]] = {
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/digital_services").map {
+      timestamp[Seq[String]]
+    }
+  }
+
   def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[Timestamped[Team]]] = {
     val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${URLEncoder.encode(teamName, "UTF-8")}"
 

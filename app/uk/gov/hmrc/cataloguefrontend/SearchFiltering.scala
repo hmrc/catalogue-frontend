@@ -58,5 +58,14 @@ object SearchFiltering {
 
   }
 
+  implicit class DigitalServiceNameResult(digitalServiceNames: Seq[String]) {
+
+    def filter(digitalServiceNameFilter: DigitalServiceNameFilter): Seq[String] = {
+      digitalServiceNames.filter(digitalServiceName =>
+        digitalServiceNameFilter.value.isEmpty || digitalServiceName.toLowerCase.contains(digitalServiceNameFilter.value.get.toLowerCase))
+    }
+
+  }
+
 
 }

@@ -141,11 +141,19 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
 
       responseData.name shouldBe "service-1"
 
-
       responseData.repositories.size should ===(3)
     }
   }
 
+  "allDigitalServices" should {
+    "return all the digital service names" in {
+      serviceEndpoint(GET, "/api/digital_services", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
 
+      val digitalServiceNames: Timestamped[Seq[String]] =
+        TeamsAndRepositoriesConnector.allDigitalServices(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+
+      digitalServiceNames.data shouldBe Seq("digital-service-1", "digital-service-2", "digital-service-3")
+    }
+  }
 
 }

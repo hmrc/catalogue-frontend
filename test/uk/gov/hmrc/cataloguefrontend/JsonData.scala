@@ -22,7 +22,14 @@ import java.time.{LocalDateTime, ZoneId}
   * Created by armin.
   */
 object JsonData {
-
+  val digitalServiceNamesData =
+    """
+      |[
+      |   "digital-service-1",
+      |   "digital-service-2",
+      |   "digital-service-3"
+      |]
+    """.stripMargin
 
 
   import DateHelper._

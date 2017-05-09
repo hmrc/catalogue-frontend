@@ -1,8 +1,9 @@
 # microservice specific routes
 
-GET        /teams                                   uk.gov.hmrc.cataloguefrontend.CatalogueController.allTeams
 GET        /repositories                            uk.gov.hmrc.cataloguefrontend.CatalogueController.allRepositories
+GET        /teams                                   uk.gov.hmrc.cataloguefrontend.CatalogueController.allTeams
 GET        /teams/:teamName                         uk.gov.hmrc.cataloguefrontend.CatalogueController.team(teamName)
+GET        /digital_services                        uk.gov.hmrc.cataloguefrontend.CatalogueController.allDigitalServices
 GET        /digital_service/:digitalServiceName     uk.gov.hmrc.cataloguefrontend.CatalogueController.digitalService(digitalServiceName)
 GET        /services                                uk.gov.hmrc.cataloguefrontend.CatalogueController.allServices
 GET        /service/:name                           uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)

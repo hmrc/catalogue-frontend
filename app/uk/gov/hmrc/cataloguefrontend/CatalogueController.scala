@@ -118,6 +118,34 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
+  def allDigitalServices = Action.async { implicit request =>
+    import SearchFiltering._
+
+    teamsAndRepositoriesConnector.allDigitalServices.map { response =>
+
+      val form: Form[DigitalServiceNameFilter] = DigitalServiceNameFilter.form.bindFromRequest()
+
+      form.fold(
+        error =>
+          Ok(
+            digital_service_list(
+              response.formattedTimestamp,
+              digitalServices = Seq.empty,
+              form)),
+        query => {
+          Ok(
+            digital_service_list(
+              response.formattedTimestamp,
+              response
+                .data
+                .filter(query)
+                .sortBy(_.toUpperCase),
+              form))
+        }
+      )
+    }
+  }
+
 
   def team(teamName: String) = Action.async { implicit request =>
 
@@ -327,6 +355,18 @@ object TeamFilter {
     mapping(
       "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
     )(TeamFilter.apply)(TeamFilter.unapply)
+  )
+}
+
+case class DigitalServiceNameFilter(value: Option[String] = None) {
+  def isEmpty = value.isEmpty
+}
+
+object DigitalServiceNameFilter {
+  lazy val form = Form(
+    mapping(
+      "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
+    )(DigitalServiceNameFilter.apply)(DigitalServiceNameFilter.unapply)
   )
 }
 

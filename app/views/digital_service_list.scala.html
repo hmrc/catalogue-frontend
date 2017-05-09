@@ -1,0 +1,74 @@
+@*
+* Copyright 2016 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@(timestamp: String, digitalServices: Seq[String], form: Form[_])(implicit messages: Messages)
+
+    @standard_layout("Digital Service list", "digital_services") {
+        <header>
+            <h1>Digital Services</h1>
+            <time class="last-updated">Last updated at: @timestamp</time>
+        </header>
+
+        @if(form.hasErrors) {
+            <div class="alert alert-danger" role="alert">
+                <ul class="list">
+                @form.errors.map { error =>
+                    <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+                }
+                </ul>
+            </div>
+        }
+
+        <div id="digital-service-list">
+            <form action="/digital-services" method="get">
+                <div class="form-group row">
+                    <div class="col-xs-2 padding-reset-right">
+                        <label for="search">Digital Service:</label>
+                    </div>
+                    <div class="col col-xs-3">
+                        <input class="search form-control" id="search" type="text" name="name"
+                        value="@form("name").value" autofocus>
+                    </div>
+                </div>
+            </form>
+
+            <table class="table table-striped" id="service-list">
+                <tr>
+                    <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">
+                        Digital Service</button></th>
+
+                </tr>
+                <tbody class="list">
+                @digitalServices.zipWithIndex.map { case (digitalServiceName, i) =>
+                <tr id="row@i">
+                    <td class="service-name" id="row@{
+                        i
+                    }_name">
+                        <a href="/digital_service/@digitalServiceName">@digitalServiceName</a>
+                    </td>
+
+                </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <script>
+       var options = { valueNames: ['service-name'] };
+
+       var serviceList = new List('digital-service-list', options);
+    </script>
