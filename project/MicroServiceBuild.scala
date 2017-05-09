@@ -34,6 +34,7 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "govuk-template" % govTemplateVersion,
     "uk.gov.hmrc" %% "play-ui" % playUIVersion,
     "uk.gov.hmrc" %% "url-builder" % urlBuilderVersion,
+    "org.typelevel" %% "cats-core" % catsVersion,
     "org.apache.httpcomponents" % "httpcore" % "4.3.2",
     "org.apache.httpcomponents" % "httpclient" % "4.3.5"
   )
@@ -53,8 +54,7 @@ private object AppDependencies {
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
         "com.github.tomakehurst" % "wiremock" % "1.52" % scope,
         "org.jsoup" % "jsoup" % "1.9.2" % scope,
-        "org.mockito" % "mockito-all" % "1.10.19" % scope,
-        "org.typelevel" %% "cats-core" % catsVersion % scope
+        "org.mockito" % "mockito-all" % "1.10.19" % scope
       )
     }.test
   }

@@ -69,6 +69,12 @@ object Team {
 }
 
 
+case class DigitalService(name: String, lastUpdatedAt: Long, repositories: Seq[RepositoryDisplayDetails])
+
+object DigitalService {
+  implicit val digitalServiceFormat = Json.format[DigitalService]
+}
+
 trait TeamsAndRepositoriesConnector extends ServicesConfig {
   type ServiceName = String
   type TeamName = String
@@ -104,6 +110,22 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
       }.recover {
       case ex =>
         Logger.error(s"An error occurred getting teamInfo when connecting to $url: ${ex.getMessage}", ex)
+        None
+    }
+  }
+
+  def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[Timestamped[DigitalService]]] = {
+    val url = teamsAndServicesBaseUrl + s"/api/digital_services/${URLEncoder.encode(digitalServiceName, "UTF-8")}"
+
+    http.GET[HttpResponse](url)
+      .map { response =>
+        response.status match {
+          case 404 => None
+          case 200 => Some(timestamp[DigitalService](response))
+        }
+      }.recover {
+      case ex =>
+        Logger.error(s"An error occurred getting digitalServiceInfo when connecting to $url: ${ex.getMessage}", ex)
         None
     }
   }

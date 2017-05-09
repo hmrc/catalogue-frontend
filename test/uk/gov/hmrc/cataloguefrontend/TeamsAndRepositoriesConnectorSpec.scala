@@ -128,4 +128,24 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
   }
 
 
+  "digitalServiceDetails" should {
+    "convert the json string to DigitalServiceDetails" in {
+      serviceEndpoint(GET, "/api/digital_services/service-1", willRespondWith = (200, Some(JsonData.digitalServiceData)))
+
+      val responseData =
+        TeamsAndRepositoriesConnector
+          .digitalServiceInfo("service-1")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
+          .futureValue
+          .value
+          .data
+
+      responseData.name shouldBe "service-1"
+
+
+      responseData.repositories.size should ===(3)
+    }
+  }
+
+
+
 }

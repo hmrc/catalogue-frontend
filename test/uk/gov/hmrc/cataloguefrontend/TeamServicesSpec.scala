@@ -142,8 +142,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: 14 Oct 1983 10:03")
-      response.body should include(ViewMessages.noRepoOfType("service"))
-      response.body should include(ViewMessages.noRepoOfType("library"))
+      response.body should include(ViewMessages.noRepoOfTypeForTeam("service"))
+      response.body should include(ViewMessages.noRepoOfTypeForTeam("library"))
     }
 
     "show team members correctly" in {

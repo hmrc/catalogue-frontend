@@ -23,6 +23,7 @@ import play.api.Play.current
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
 import play.api.i18n.Messages.Implicits._
+import play.api.libs.json.Json
 import play.api.mvc._
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
@@ -39,11 +40,12 @@ object CatalogueController extends CatalogueController {
 
   override def userManagementConnector: UserManagementConnector = UserManagementConnector
 
-  override def teamsAndServicesConnector: TeamsAndRepositoriesConnector = TeamsAndRepositoriesConnector
+  override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = TeamsAndRepositoriesConnector
 
   override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
 
   override def deploymentsService: DeploymentsService = new DeploymentsService(ServiceDeploymentsConnector, TeamsAndRepositoriesConnector)
+
 }
 
 trait CatalogueController extends FrontendController with UserManagementPortalLink {
@@ -59,7 +61,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def userManagementConnector: UserManagementConnector
 
-  def teamsAndServicesConnector: TeamsAndRepositoriesConnector
+  def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
 
   def indicatorsConnector: IndicatorsConnector
 
@@ -72,7 +74,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   def allTeams() = Action.async { implicit request =>
     import SearchFiltering._
 
-    teamsAndServicesConnector.allTeams.map { response =>
+    teamsAndRepositoriesConnector.allTeams.map { response =>
       val form: Form[TeamFilter] = TeamFilter.form.bindFromRequest()
 
       form.fold(
@@ -96,10 +98,30 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
+  def digitalService(digitalServiceName: String) = Action.async { implicit request =>
+    val eventualDigitalServiceInfo: Future[Option[Timestamped[DigitalService]]] = teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName)
+
+    def getRepos(data: DigitalService) = {
+      val emptyMapOfRepoTypes = RepoType.values.map(v => v.toString -> List.empty[String]).toMap
+      val mapOfRepoTypes = data.repositories.groupBy(_.repoType).map { case (k, v) => k.toString -> v.map(_.name) }
+
+      emptyMapOfRepoTypes ++ mapOfRepoTypes
+    }
+
+    eventualDigitalServiceInfo.map { maybeTimestamped =>
+      maybeTimestamped.map( timestamptedDigitalService =>
+        Ok(digital_service_info(
+          timestamptedDigitalService.formattedTimestamp,
+          timestamptedDigitalService.data.name,
+          repos = getRepos(timestamptedDigitalService.data)
+        ))).getOrElse(NotFound)
+    }
+  }
+
 
   def team(teamName: String) = Action.async { implicit request =>
 
-    val eventualTeamInfo = teamsAndServicesConnector.teamInfo(teamName)
+    val eventualTeamInfo = teamsAndRepositoriesConnector.teamInfo(teamName)
     val eventualErrorOrMembers = userManagementConnector.getTeamMembers(teamName)
     val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
 
@@ -149,7 +171,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
     }
 
-    val repositoryDetailsF = teamsAndServicesConnector.repositoryDetails(name)
+    val repositoryDetailsF = teamsAndRepositoriesConnector.repositoryDetails(name)
     val deploymentIndicatorsForServiceF: Future[Option[DeploymentIndicators]] = indicatorsConnector.deploymentIndicatorsForService(name)
     val serviceDeploymentInformationF: Future[Either[Throwable, ServiceDeploymentInformation]] = deploymentsService.getWhatsRunningWhere(name)
 
@@ -186,7 +208,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def library(name: String) = Action.async { implicit request =>
     for {
-      library <- teamsAndServicesConnector.repositoryDetails(name)
+      library <- teamsAndRepositoriesConnector.repositoryDetails(name)
     } yield library match {
       case Some(s) if s.data.repoType == RepoType.Library =>
         Ok(
@@ -198,7 +220,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   }
 
   def prototype(name: String) = Action.async { implicit request =>
-    teamsAndServicesConnector
+    teamsAndRepositoriesConnector
       .repositoryDetails(name)
       .map {
         case Some(s) if s.data.repoType == RepoType.Prototype =>
@@ -213,7 +235,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def repository(name: String) = Action.async { implicit request =>
     for {
-      repository <- teamsAndServicesConnector.repositoryDetails(name)
+      repository <- teamsAndRepositoriesConnector.repositoryDetails(name)
       indicators <- indicatorsConnector.buildIndicatorsForRepository(name)
     } yield (repository, indicators) match {
       case (Some(s), maybeDataPoints) =>
@@ -241,7 +263,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   def allRepositories() = Action.async { implicit request =>
     import SearchFiltering._
 
-    teamsAndServicesConnector.allRepositories.map { repositories =>
+    teamsAndRepositoriesConnector.allRepositories.map { repositories =>
       val form: Form[RepoListFilter] = RepoListFilter.form.bindFromRequest()
       form.fold(
         error =>

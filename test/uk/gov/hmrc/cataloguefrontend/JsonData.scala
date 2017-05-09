@@ -23,6 +23,8 @@ import java.time.{LocalDateTime, ZoneId}
   */
 object JsonData {
 
+
+
   import DateHelper._
 
   val createdAt = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
@@ -309,5 +311,34 @@ object JsonData {
       |        }
       |    }
       |]""".stripMargin
+
+
+  val digitalServiceData =
+    """
+      |{
+      |  "name": "service-1",
+      |  "lastUpdatedAt": 1494240869000,
+      |  "repositories": [
+      |    {
+      |      "name": "catalogue-frontend",
+      |      "createdAt": "2016-02-24T15:08:50",
+      |      "lastUpdatedAt": "2017-05-08T10:53:29",
+      |      "repoType": "Service"
+      |    },
+      |    {
+      |      "name": "repository-jobs",
+      |      "createdAt": "2017-04-11T13:14:29",
+      |      "lastUpdatedAt": "2017-05-08T10:54:29",
+      |      "repoType": "Service"
+      |    },
+      |    {
+      |      "name": "teams-and-repositories",
+      |      "createdAt": "2016-02-05T10:55:16",
+      |      "lastUpdatedAt": "2017-05-08T10:53:58",
+      |      "repoType": "Service"
+      |    }
+      |  ]
+      |}
+    """.stripMargin
 
 }
