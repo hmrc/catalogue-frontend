@@ -22,7 +22,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @(cacheTimestampFormatted: String, repository: RepositoryDetails, jobExecutionTimeChartData: Option[ChartDataRows])(implicit messages: Messages)
 
-@standard_layout(repository.name, "repository") {
+@standard_layout(repository.name, "repositories") {
 <header>
     <h1>Repository: @repository.name</h1>
     <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
