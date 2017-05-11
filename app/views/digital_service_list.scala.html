@@ -16,7 +16,7 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @(timestamp: String, digitalServices: Seq[String], form: Form[_])(implicit messages: Messages)
 
-    @standard_layout("Digital Service list", "digital_services") {
+    @standard_layout("Digital Service list", "digital-services") {
         <header>
             <h1>Digital Services</h1>
             <time class="last-updated">Last updated at: @timestamp</time>
@@ -33,7 +33,7 @@
         }
 
         <div id="digital-service-list">
-            <form action="/digital_services" method="get">
+            <form action="/digital-services" method="get">
                 <div class="form-group row">
                     <div class="col-xs-2 padding-reset-right">
                         <label for="search">Digital Service:</label>
@@ -57,7 +57,7 @@
                     <td class="service-name" id="row@{
                         i
                     }_name">
-                        <a href="/digital_service/@digitalServiceName">@digitalServiceName</a>
+                        <a href="/digital-service/@digitalServiceName">@digitalServiceName</a>
                     </td>
 
                 </tr>
