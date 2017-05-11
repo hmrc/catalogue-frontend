@@ -52,9 +52,7 @@ object ViewMessages {
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
     "target=\"_blank\">#team-platops</a> on Slack."
 
-  def noRepoOfTypeForDigitalService(item : String) = s"This digital service doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
-    "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
-    "target=\"_blank\">#team-platops</a> on Slack."
+  def noRepoOfTypeForDigitalService(item : String) = s"""This digital service doesn't have any $item repositories assigned to it. The <a href=\" / \">home</a> page provides the necessary instructions to make it appear. Reach out in #team-platops on Slack for inquiries."""
 
   val otherTeamsAre = "Other teams that also have a stake in this service are:"
 

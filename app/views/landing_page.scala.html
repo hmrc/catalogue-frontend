@@ -20,5 +20,9 @@
             <a href="@Html(ViewMessages.appConfigBaseUrl)">app-config-base</a>. If you want a repository or team hidden,
             you can send us a pull request.</p>
         <p>We reload the catalogue once every hour, so you may need to wait a little while until your changes take effect.</p>
+
+        <h3 id="detection-strategy">Populating the Digital Service page</h3>
+        <p>A digital service is an end-to-end service that is composed of multiple microservices. Each one potentially spans multiple teams and has many services/libraries/prototypes/repositories attached to it. Unfortunately there is no automatic way to assign a digital service name to each repository on our platform. Thus the catalogue uses the convention that the digital service name for a given repository be located in its root directory in a <a href="https://github.com/hmrc/catalogue-frontend/blob/master/repository.yaml" target="_blank">repository.yaml file.</a>
+        <p>In order to populate the catalogue with your digital service, you would need to add this repository.yaml file at the root level of every service/library/prototype/repository belonging to your team with its respective digital service name.</p>
     </section>
 }
