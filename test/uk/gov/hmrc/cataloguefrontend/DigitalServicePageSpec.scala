@@ -57,7 +57,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
   "DigitalService page" should {
 
     "show a list of libraries, services, prototypes and repositories" in {
-      serviceEndpoint(GET, s"/api/digital_services/$digitalServiceName", willRespondWith = (200, Some(
+      serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
 s"""{
   |  "name": "$digitalServiceName",
   |  "lastUpdatedAt": 1494240869000,
@@ -90,7 +90,7 @@ s"""{
   |}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      val response = await(WS.url(s"http://localhost:$port/digital_service/$digitalServiceName").get)
+      val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: 14 Oct 1983 10:03")
@@ -104,7 +104,7 @@ s"""{
 
     "show '(None)' if no timestamp is found" in {
 
-      serviceEndpoint(GET, s"/api/digital_services/$digitalServiceName", willRespondWith = (200, Some(
+      serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
         s"""{
           |   "name":"$digitalServiceName",
           |   "lastUpdatedAt": 1494240869000,
@@ -112,7 +112,7 @@ s"""{
           | }""".stripMargin
       )))
 
-      val response = await(WS.url(s"http://localhost:$port/digital_service/$digitalServiceName").get)
+      val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: (None)")
@@ -121,7 +121,7 @@ s"""{
 
     "show a message if no services are found" in {
 
-      serviceEndpoint(GET, s"/api/digital_services/$digitalServiceName", willRespondWith = (200, Some(
+      serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
         s"""{
           |   "name":"$digitalServiceName",
           |   "lastUpdatedAt":12345,
@@ -130,7 +130,7 @@ s"""{
 
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      val response = await(WS.url(s"http://localhost:$port/digital_service/$digitalServiceName").get)
+      val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: 14 Oct 1983 10:03")

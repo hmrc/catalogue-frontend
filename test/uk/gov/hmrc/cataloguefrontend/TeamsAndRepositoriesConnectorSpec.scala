@@ -130,7 +130,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
 
   "digitalServiceDetails" should {
     "convert the json string to DigitalServiceDetails" in {
-      serviceEndpoint(GET, "/api/digital_services/service-1", willRespondWith = (200, Some(JsonData.digitalServiceData)))
+      serviceEndpoint(GET, "/api/digital-services/service-1", willRespondWith = (200, Some(JsonData.digitalServiceData)))
 
       val responseData =
         TeamsAndRepositoriesConnector
@@ -147,7 +147,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
 
   "allDigitalServices" should {
     "return all the digital service names" in {
-      serviceEndpoint(GET, "/api/digital_services", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
+      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
 
       val digitalServiceNames: Timestamped[Seq[String]] =
         TeamsAndRepositoriesConnector.allDigitalServices(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue

@@ -99,7 +99,7 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
   }
 
   def allDigitalServices(implicit hc: HeaderCarrier): Future[Timestamped[Seq[String]]] = {
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/digital_services").map {
+    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/digital-services").map {
       timestamp[Seq[String]]
     }
   }
@@ -121,7 +121,7 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
   }
 
   def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[Timestamped[DigitalService]]] = {
-    val url = teamsAndServicesBaseUrl + s"/api/digital_services/${URLEncoder.encode(digitalServiceName, "UTF-8")}"
+    val url = teamsAndServicesBaseUrl + s"/api/digital-services/${URLEncoder.encode(digitalServiceName, "UTF-8")}"
 
     http.GET[HttpResponse](url)
       .map { response =>

@@ -44,11 +44,11 @@ class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPer
 
     "show a list of all digital services" in {
 
-      serviceEndpoint(GET, "/api/digital_services", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(
         JsonData.digitalServiceNamesData
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      val response = await(WS.url(s"http://localhost:$port/digital_services").get)
+      val response = await(WS.url(s"http://localhost:$port/digital-services").get)
 
       response.status shouldBe 200
       response.body should include(s"Last updated at: 14 Oct 1983 10:03")
@@ -57,13 +57,13 @@ class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPer
       val document = asDocument(response.body)
 
       document.select("#row0_name").select("td a").text() shouldBe "digital-service-1"
-      document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/digital_service/digital-service-1"
+      document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/digital-service/digital-service-1"
 
       document.select("#row1_name").select("td a").text() shouldBe "digital-service-2"
-      document.select("#row1_name").select("td a[href]").attr("href") shouldBe "/digital_service/digital-service-2"
+      document.select("#row1_name").select("td a[href]").attr("href") shouldBe "/digital-service/digital-service-2"
 
       document.select("#row2_name").select("td a").text() shouldBe "digital-service-3"
-      document.select("#row2_name").select("td a[href]").attr("href") shouldBe "/digital_service/digital-service-3"
+      document.select("#row2_name").select("td a[href]").attr("href") shouldBe "/digital-service/digital-service-3"
     }
   }
 }
