@@ -330,19 +330,22 @@ object JsonData {
       |      "name": "catalogue-frontend",
       |      "createdAt": "2016-02-24T15:08:50",
       |      "lastUpdatedAt": "2017-05-08T10:53:29",
-      |      "repoType": "Service"
+      |      "repoType": "Service",
+      |      "teamNames": ["Team1", "Team2"]
       |    },
       |    {
       |      "name": "repository-jobs",
       |      "createdAt": "2017-04-11T13:14:29",
       |      "lastUpdatedAt": "2017-05-08T10:54:29",
-      |      "repoType": "Service"
+      |      "repoType": "Service",
+      |      "teamNames": ["Team1"]
       |    },
       |    {
       |      "name": "teams-and-repositories",
       |      "createdAt": "2016-02-05T10:55:16",
       |      "lastUpdatedAt": "2017-05-08T10:53:58",
-      |      "repoType": "Service"
+      |      "repoType": "Service",
+      |      "teamNames": ["Team2"]
       |    }
       |  ]
       |}

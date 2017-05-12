@@ -58,36 +58,40 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
     "show a list of libraries, services, prototypes and repositories" in {
       serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
-s"""{
-  |  "name": "$digitalServiceName",
-  |  "lastUpdatedAt": 1494240869000,
-  |  "repositories": [
-  |    {
-  |      "name": "A",
-  |      "createdAt": 1456326530000,
-  |      "lastUpdatedAt": 1494240809000,
-  |      "repoType": "Service"
-  |    },
-  |    {
-  |      "name": "B",
-  |      "createdAt": 1491916469000,
-  |      "lastUpdatedAt": 1494240869000,
-  |      "repoType": "Prototype"
-  |    },
-  |    {
-  |      "name": "C",
-  |      "createdAt": 1454669716000,
-  |      "lastUpdatedAt": 1494240838000,
-  |      "repoType": "Library"
-  |    },
-  |    {
-  |      "name": "D",
-  |      "createdAt": 1454669716000,
-  |      "lastUpdatedAt": 1494240838000,
-  |      "repoType": "Other"
-  |    }
-  |  ]
-  |}""".stripMargin
+      s"""{
+         |  "name": "$digitalServiceName",
+         |  "lastUpdatedAt": 1494240869000,
+         |  "repositories": [
+         |    {
+         |      "name": "A",
+         |      "createdAt": 1456326530000,
+         |      "lastUpdatedAt": 1494240809000,
+         |      "repoType": "Service",
+         |      "teamNames": ["Team1", "Team2"]
+         |    },
+         |    {
+         |      "name": "B",
+         |      "createdAt": 1491916469000,
+         |      "lastUpdatedAt": 1494240869000,
+         |      "repoType": "Prototype",
+         |      "teamNames": ["Team1"]
+         |    },
+         |    {
+         |      "name": "C",
+         |      "createdAt": 1454669716000,
+         |      "lastUpdatedAt": 1494240838000,
+         |      "repoType": "Library",
+         |      "teamNames": ["Team2"]
+         |    },
+         |    {
+         |      "name": "D",
+         |      "createdAt": 1454669716000,
+         |      "lastUpdatedAt": 1494240838000,
+         |      "repoType": "Other",
+         |      "teamNames": ["Team3"]
+         |    }
+         |  ]
+         |}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)

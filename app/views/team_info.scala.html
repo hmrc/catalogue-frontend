@@ -15,7 +15,7 @@
 *@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
-@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, NoData, TeamDetails}
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{UMPError, NoData, TeamDetails}
 @import uk.gov.hmrc.cataloguefrontend.{ChartDataRows, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.TeamActivityDates
 @import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
@@ -25,8 +25,8 @@
         teamName: String,
         repos: Map[String, Seq[String]],
         activityDates: TeamActivityDates,
-        errorOrTeamMembers: Either[ConnectorError, Seq[DisplayableTeamMember]],
-        errorOrTeamDetails: Either[ConnectorError, TeamDetails],
+        errorOrTeamMembers: Either[UMPError, Seq[DisplayableTeamMember]],
+        errorOrTeamDetails: Either[UMPError, TeamDetails],
         throughputChartData: Option[ChartDataRows],
         stabilityChartData: Option[ChartDataRows],
         umpMyTeamsUrl: String
@@ -235,7 +235,7 @@
     </div>
 }
 
-@showError(error: ConnectorError) = {
+@showError(error: UMPError) = {
 @error match {
     case NoData(linkToRectify) => {
         @teamName is unknown to the User Management Portal. To add the team, please raise a TSR

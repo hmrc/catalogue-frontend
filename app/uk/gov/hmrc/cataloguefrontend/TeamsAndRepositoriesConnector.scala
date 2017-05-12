@@ -21,6 +21,8 @@ import java.time.LocalDateTime
 
 import play.api.Logger
 import play.api.libs.json._
+import uk.gov.hmrc.cataloguefrontend.DigitalService.DigitalServiceRepository
+import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError, TeamsAndRepositoriesError}
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http._
@@ -68,10 +70,14 @@ object Team {
   implicit val format = Json.format[Team]
 }
 
-
-case class DigitalService(name: String, lastUpdatedAt: Long, repositories: Seq[RepositoryDisplayDetails])
+case class DigitalService(name: String, lastUpdatedAt: Long, repositories: Seq[DigitalServiceRepository])
 
 object DigitalService {
+  case class DigitalServiceRepository(name:String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime, repoType : RepoType.RepoType, teamNames: Seq[String])
+
+  implicit val repoDetailsFormat = Json.format[DigitalServiceRepository]
+
+
   implicit val digitalServiceFormat = Json.format[DigitalService]
 }
 
@@ -120,19 +126,19 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     }
   }
 
-  def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[Timestamped[DigitalService]]] = {
+  def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Either[TeamsAndRepositoriesError, Timestamped[DigitalService]]] = {
     val url = teamsAndServicesBaseUrl + s"/api/digital-services/${URLEncoder.encode(digitalServiceName, "UTF-8")}"
 
     http.GET[HttpResponse](url)
       .map { response =>
         response.status match {
-          case 404 => None
-          case 200 => Some(timestamp[DigitalService](response))
+          case 404 => Left(HTTPError(404))
+          case 200 => Right(timestamp[DigitalService](response))
         }
       }.recover {
       case ex =>
         Logger.error(s"An error occurred getting digitalServiceInfo when connecting to $url: ${ex.getMessage}", ex)
-        None
+        Left(ConnectionError(ex))
     }
   }
 
@@ -178,4 +184,12 @@ object TeamsAndRepositoriesConnector extends TeamsAndRepositoriesConnector {
   override val http = WSHttp
 
   override def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
+
+  sealed trait TeamsAndRepositoriesError
+
+  case class HTTPError(code: Int) extends TeamsAndRepositoriesError
+
+  case class ConnectionError(exception: Throwable) extends TeamsAndRepositoriesError {
+    override def toString: String = exception.getMessage
+  }
 }

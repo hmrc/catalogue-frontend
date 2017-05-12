@@ -27,7 +27,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, ConnectorError, HTTPError, NoData, TeamMember}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, UMPError, HTTPError, NoData, TeamMember}
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 
 import scala.concurrent.Future
@@ -70,18 +70,18 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
     it("has an empty members array in json") {
 
-      val error: ConnectorError = callExternalMockedService("team-chicken", Some("/user-management-empty-members.json")).left.value
+      val error: UMPError = callExternalMockedService("team-chicken", Some("/user-management-empty-members.json")).left.value
       error should ===(NoData("http://some.ump.com/myTeams/team-chicken?edit"))
     }
 
     it("no members field in json") {
-      val error: ConnectorError = callExternalMockedService("team-chicken", Some("/user-management-no-members.json")).left.value
+      val error: UMPError = callExternalMockedService("team-chicken", Some("/user-management-no-members.json")).left.value
 
       error should ===(NoData("http://some.ump.com/myTeams/team-chicken?edit"))
     }
 
     it("api returns an error code") {
-      val error: ConnectorError = callExternalMockedService("team-chicken", None, 404).left.value
+      val error: UMPError = callExternalMockedService("team-chicken", None, 404).left.value
 
       error should ===(HTTPError(404))
     }
@@ -99,7 +99,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
       when(mockedHttpGet.GET(anyString())(any(), any())).thenReturn(Future.failed(expectedException))
 
-      val error: ConnectorError = userManagementConnector.getTeamMembers("teamName")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
+      val error: UMPError = userManagementConnector.getTeamMembersFromUMP("teamName")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
       error should ===(ConnectionError(expectedException))
     }
 
@@ -156,13 +156,13 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
       when(mockedHttpGet.GET(anyString())(any(), any())).thenReturn(Future.failed(expectedException))
 
-      val error: ConnectorError = userManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
+      val error: UMPError = userManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
       error should ===(ConnectionError(expectedException))
     }
   }
 
 
-  def callExternalMockedService(teamName: String, jsonFileNameOpt: Option[String], httpCode: Int = 200): Either[ConnectorError, Seq[TeamMember]] = {
+  def callExternalMockedService(teamName: String, jsonFileNameOpt: Option[String], httpCode: Int = 200): Either[UMPError, Seq[TeamMember]] = {
 
     stubUserManagementEndPoint(
       GET,
@@ -170,7 +170,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
       s"/v1/organisations/mdtp/teams/$teamName/members",
       jsonFileNameOpt)
 
-    val errorOrResponse: Either[ConnectorError, Seq[TeamMember]] = UserManagementConnector.getTeamMembers(teamName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+    val errorOrResponse: Either[UMPError, Seq[TeamMember]] = UserManagementConnector.getTeamMembersFromUMP(teamName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
     errorOrResponse
 
   }

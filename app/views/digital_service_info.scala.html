@@ -15,14 +15,16 @@
 *@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
-@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectorError, NoData, TeamDetails}
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{UMPError, NoData, TeamDetails}
 @import uk.gov.hmrc.cataloguefrontend.{ChartDataRows, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.TeamActivityDates
 @import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.RepoType
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 @(
         cacheTimestampFormatted: String,
         teamName: String,
+        teamMembersLookUp: Map[String, Seq[TeamMember]],
         repos: Map[String, Seq[String]]
 )(implicit messages: Messages)
 

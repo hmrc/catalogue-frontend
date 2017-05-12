@@ -1,0 +1,129 @@
+@*
+* Copyright 2016 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.UMPError
+@import uk.gov.hmrc.cataloguefrontend.{ChartDataRows, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.TeamActivityDates
+@import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
+@import uk.gov.hmrc.cataloguefrontend.RepoType
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+@import uk.gov.hmrc.cataloguefrontend.Timestamped
+@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
+
+@import uk.gov.hmrc.cataloguefrontend.DigitalServiceDetails
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.NoData
+@(digitalServiceName: String, timestampedRepos: Either[TeamsAndRepositoriesError, Timestamped[DigitalServiceDetails]] )(implicit messages: Messages)
+
+@standard_layout(digitalServiceName, "digital-services") {
+    <header>
+        <h1>Digital Service: @digitalServiceName</h1>
+        <time class="last-updated">Last updated at: @{timestampedRepos.right.map(_.formattedTimestamp).right.get}</time>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    </header>
+
+
+
+    @if(timestampedRepos.isRight) {
+        @for(timestampedDigitalService <- timestampedRepos.right.toOption) {
+
+            @for((teamName, errorOrMembers) <- timestampedDigitalService.data.teamMembersLookUp) {
+                       <div class="row">
+                           <div class="col-md-12">
+                               <div class="board">
+                                   <h3 class="board__heading">Team: <a href="/teams/@teamName">@teamName</a></h3>
+
+                                   <div class="board__body">
+                                       <div>
+                                           <ul class="list list--minimal" id="team_members">
+                                           @if(errorOrMembers.isRight) {
+                                               @for(teamMember <- errorOrMembers.right.get) {
+                                                   <li class="col-xs-6">
+                                                       <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
+                                                   </li>
+                                               }
+
+                                           } else {
+                                               <li id="linkToRectify">
+                                               @showError(errorOrMembers.left.get, teamName)
+                                               </li>
+                                           }
+                                           </ul>
+                                           
+                                       </div>
+
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
+            }
+
+            <section class="section-wrapper">
+                <div class="row">
+
+                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Service, "Services", "service", "service")
+                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Library, "Libraries", "library", "library")
+                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
+                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Other, "Repositories", "other", "repositories")
+
+                </div>
+            </section>
+
+        }
+
+
+    }
+}
+
+@showError(error: UMPError, teamName: String) = {
+@error match {
+    case NoData(linkToRectify) => {
+        @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
+    }
+    case _ => {
+        Sorry, the User Management Portal is not available
+    }
+}
+}
+
+
+@showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {
+    @repos.get(repoType.toString).map { repositories =>
+        <div class="col-md-3">
+            <div class="board">
+                <h3 class="board__heading">@headerName</h3>
+
+                <div class="board__body">
+                    @if(repositories.isEmpty) {
+                        <p>@Html(ViewMessages.noRepoOfTypeForDigitalService(typeName))</p>
+
+                    } else {
+                        <ul class="list list--minimal">
+                        @for(repository <- repositories) {
+                            <li class="list-item" id="@{
+                                repository
+                            }"><a href="/@href/@{
+                                repository
+                            }">@repository</a>
+                            </li>
+                        }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}

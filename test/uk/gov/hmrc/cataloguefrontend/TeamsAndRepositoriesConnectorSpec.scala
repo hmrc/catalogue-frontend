@@ -143,6 +143,18 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
 
       responseData.repositories.size should ===(3)
     }
+
+    "return a None when asking for a non-existing digital service" in {
+      serviceEndpoint(GET, "/api/digital-services/non-existing-service", willRespondWith = (404, None))
+
+      val responseData =
+        TeamsAndRepositoriesConnector
+          .digitalServiceInfo("non-existing-service")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
+          .futureValue
+
+      responseData shouldBe None
+    }
+
   }
 
   "allDigitalServices" should {

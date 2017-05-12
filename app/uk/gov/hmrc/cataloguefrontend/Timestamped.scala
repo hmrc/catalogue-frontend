@@ -28,6 +28,9 @@ case class Timestamped[T](data: T, timestamp: Option[Instant]) {
         _.atZone(ZoneId.of("GMT"))
           .format(DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm")))
       .getOrElse("(None)")
+
+  def map[B](f: T => B): Timestamped[B] =
+    Timestamped(f(data), timestamp)
 }
 
 object Timestamped {
