@@ -17,17 +17,27 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import org.mockito
+import org.mockito.Matchers._
+import org.mockito.Mockito
+import org.mockito.Mockito.{mock, when}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
 import org.scalatest._
+import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Writes
 import play.api.test.FakeHeaders
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
-import uk.gov.hmrc.play.http.HeaderCarrier
+import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError}
+import uk.gov.hmrc.play.http.hooks.HttpHook
+import uk.gov.hmrc.play.http._
 
-class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures with OneServerPerSuite with WireMockEndpoints with TypeCheckedTripleEquals with OptionValues with EitherValues {
+import scala.concurrent.Future
+import scala.util.Failure
+
+class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures with OneServerPerSuite with WireMockEndpoints with TypeCheckedTripleEquals with OptionValues with EitherValues with MockitoSugar {
 
   import uk.gov.hmrc.cataloguefrontend.JsonData._
   implicit val defaultPatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
@@ -129,7 +139,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
   }
 
 
-  "digitalServiceDetails" should {
+  "digitalServiceInfo" should {
     "convert the json string to DigitalServiceDetails" in {
       serviceEndpoint(GET, "/api/digital-services/service-1", willRespondWith = (200, Some(JsonData.digitalServiceData)))
 
@@ -145,15 +155,26 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
       responseData.repositories.size should ===(3)
     }
 
-    "return a None when asking for a non-existing digital service" in {
-      serviceEndpoint(GET, "/api/digital-services/non-existing-service", willRespondWith = (404, None))
+    "return a http error with the status code returned" in {
+      serviceEndpoint(GET, "/api/digital-services/non-existing-service", willRespondWith = (300, None))
 
       val responseData =
         TeamsAndRepositoriesConnector
           .digitalServiceInfo("non-existing-service")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
           .futureValue
 
-      responseData.left.value shouldBe HTTPError(404)
+      responseData.left.value shouldBe HTTPError(300)
+    }
+
+    "return a connection error if the connector fails to connect" in {
+      val exception = new RuntimeException("boom!")
+
+      val responseData =
+        teamsAndRepositoriesHttpGETExceptionThrower(exception)
+          .digitalServiceInfo("non-existing-service")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
+          .futureValue
+
+      responseData.left.value shouldBe ConnectionError(exception)
     }
 
   }
@@ -169,4 +190,18 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
     }
   }
 
+  def teamsAndRepositoriesHttpGETExceptionThrower(exception: Throwable) = new TeamsAndRepositoriesConnector {
+    override def teamsAndServicesBaseUrl: String = "someUrl"
+    override val http: HttpGet with HttpPost = new HttpGet with HttpPost {
+
+      override def GET[A](url: String)(implicit rds: HttpReads[A], hc: HeaderCarrier): Future[A] = Future.failed(exception)
+
+      override protected def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = ???
+      override protected def doPost[A](url: String, body: A, headers: Seq[(String, String)])(implicit wts: Writes[A], hc: HeaderCarrier): Future[HttpResponse] = ???
+      override protected def doPostString(url: String, body: String, headers: Seq[(String, String)])(implicit hc: HeaderCarrier): Future[HttpResponse] = ???
+      override protected def doEmptyPost[A](url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = ???
+      override protected def doFormPost(url: String, body: Map[String, Seq[String]])(implicit hc: HeaderCarrier): Future[HttpResponse] = ???
+      override val hooks: Seq[HttpHook] = Nil
+    }
+  }
 }

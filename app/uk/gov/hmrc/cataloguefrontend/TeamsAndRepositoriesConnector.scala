@@ -134,8 +134,8 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     http.GET[HttpResponse](url)
       .map { response =>
         response.status match {
-          case 404 => Left(HTTPError(404))
           case 200 => Right(timestamp[DigitalService](response))
+          case statusCode => Left(HTTPError(statusCode))
         }
       }.recover {
       case ex =>
