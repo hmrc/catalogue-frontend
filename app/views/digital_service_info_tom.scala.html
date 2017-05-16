@@ -26,12 +26,14 @@
 
 @import uk.gov.hmrc.cataloguefrontend.DigitalServiceDetails
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.NoData
+@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.ConnectionError
+@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
 @(digitalServiceName: String, timestampedRepos: Either[TeamsAndRepositoriesError, Timestamped[DigitalServiceDetails]] )(implicit messages: Messages)
 
 @standard_layout(digitalServiceName, "digital-services") {
     <header>
         <h1>Digital Service: @digitalServiceName</h1>
-        <time class="last-updated">Last updated at: @{timestampedRepos.right.map(_.formattedTimestamp).right.get}</time>
+        <time class="last-updated">Last updated at: @{timestampedRepos.right.map(_.formattedTimestamp).right.getOrElse("Not Available")}</time>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
@@ -57,8 +59,8 @@
                                                }
 
                                            } else {
-                                               <li id="linkToRectify">
-                                               @showError(errorOrMembers.left.get, teamName)
+                                               <li id="ump-error-@{teamName}">
+                                               @showUmpError(errorOrMembers.left.get, teamName)
                                                </li>
                                            }
                                            </ul>
@@ -85,16 +87,30 @@
         }
 
 
+    } else {
+        <div id="teams-and-repositories-error" class="row">
+            @showTeamsAndRepositoriesError(timestampedRepos.left.get, digitalServiceName)
+        </div>
     }
 }
 
-@showError(error: UMPError, teamName: String) = {
+@showUmpError(error: UMPError, teamName: String) = {
 @error match {
     case NoData(linkToRectify) => {
         @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
     }
     case _ => {
         Sorry, the User Management Portal is not available
+    }
+}
+}
+@showTeamsAndRepositoriesError(error: TeamsAndRepositoriesError, digitalServiceName: String) = {
+@error match {
+    case HTTPError(errorCode) => {
+        An HTTP error occurred while retrieving digital service (@digitalServiceName): @errorCode
+    }
+    case ConnectionError(e) => {
+        A connection error to the teams-and-repositories microservice occurred while retrieving digital service (@digitalServiceName)
     }
 }
 }
