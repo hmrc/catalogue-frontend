@@ -59,73 +59,13 @@ trait UserManagementConnector extends UserManagementPortalLink {
   }
 
 
-//  def getTeamMembersArmin(teams: Seq[String])(implicit hc: HeaderCarrier): Future[Either[UMPError, Map[String, Seq[TeamMember]]]] = {
-//
-//    val xs: Future[Seq[(String, Either[UMPError, Seq[TeamMember]])]] = Future.sequence(teams.distinct.map((teamName: String) => getTeamMembersFromUMP(teamName).map(x => (teamName, x))))
-//
-//
-//    val yy: Future[Either[ConnectorErrors, Map[String, Seq[TeamMember]]]] = xs.map{ (a: Seq[(String, Either[UMPError, Seq[TeamMember]])]) =>
-//      val eitherErrorOrMapOfTeamNameAndMembers = a.map { case (teamName, e) => e.right.map(teamMembers => (teamName, teamMembers)).right.map(Map(_)) }
-//
-//      val partition = eitherErrorOrMapOfTeamNameAndMembers.partition(_.isLeft)
-//
-//      partition match {
-//        case (Nil, teamMaps) =>
-//          val stringToMemberses = for {Right(i) <- teamMaps} yield i
-//          val left = stringToMemberses.foldLeft(Map.empty[String, Seq[TeamMember]])((acc, b) => b ++ acc)
-//          Right(left)
-//        case (errors, _) => Left((for {Left(e) <- errors} yield e).foldLeft(ConnectorErrors(Nil))((acc, b) => ConnectorErrors(acc.errors :+ b)))
-//      }
-//    }
-//
-//    yy.map(println)
-//    yy
-//  }
+  def getTeamMembersForTeams(teamNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[String, Either[UMPError, Seq[TeamMember]]]] = {
 
+    def getTeamMembers(teamName: String) = getTeamMembersFromUMP(teamName).map(umpErrorOrTeamMembers => (teamName, umpErrorOrTeamMembers))
 
-  def getTeamMembersForTeams(teamNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[String, Either[UMPError, Seq[TeamMember]]]] =
-      Future.sequence(
-        teamNames.map(getTeamMembers)
-      ).map(_.toMap)
-
-
-  private def getTeamMembers(teamName: String)(implicit hc: HeaderCarrier) = {
-    getTeamMembersFromUMP(teamName).map(umpErrorOrteamMembers => (teamName, umpErrorOrteamMembers))
+    Future.sequence(teamNames.map(getTeamMembers)).map(_.toMap)
   }
 
-//  def getTeamMembersNew(teams: Seq[String])(implicit hc: HeaderCarrier): Future[Either[UMPError, Map[String, Seq[TeamMember]]]] = {
-//
-//
-//    val xs: Future[Seq[(String, Either[UMPError, Seq[TeamMember]])]] = Future.sequence(teams
-//      .map(teamName => getTeamMembersFromUMP(teamName).map((x: Either[UMPError, Seq[TeamMember]]) => (teamName, x))))
-//
-//
-//    val y: Future[Seq[Either[UMPError, Map[String, Seq[TeamMember]]]]] = xs.map{ s =>
-//      s.map {
-//        case (k, v) => v.right.map(s => (k,s)).right.map(Map(_))
-//      }
-//    }
-//
-//    val blah: Future[Either[Seq[UMPError], Seq[Map[String, Seq[TeamMember]]]]] = y.map { (s: Seq[Either[UMPError, Map[String, Seq[TeamMember]]]]) =>
-//      s.partition(_.isLeft) match {
-//        case (Nil,  teamMaps) => Right(for(Right(i) <- teamMaps.view) yield i)
-//        case (connectionErrors, _) => Left(for(Left(s) <- connectionErrors.view) yield s)
-//      }
-//    }
-//
-//    import cats.syntax.applicative._
-//
-//    import cats.Monoid
-//
-////    val yy: EitherT[Future, ConnectorError, Map[String, Seq[TeamMember]]] =
-////      y.fold(Seq.empty[(String, Seq[TeamMember])].pure[EitherTMap])(Monoid[EitherT[Future, ConnectorError, Seq[(String, Seq[TeamMember])]]].combine)
-////        .map(_.toMap)
-////
-////    yy.value
-//
-////    y.foldLeft(Map[String, Seq[TeamMember]].pure[EitherTMap])((acc, next: EitherT[Future, ConnectorError, Seq[TeamMember]]) => acc.combine())
-//    ???
-//  }
 
   def getTeamMembersFromUMP(team: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")

@@ -121,9 +121,9 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     val errorOrTeamMembersLookupF: Future[Either[TeamsAndRepositoriesError, Map[String, Either[UMPError, Seq[DisplayableTeamMember]]]]] = errorOrTeamNames.flatMap {
       case Right(teamNames) =>
         userManagementConnector
-      .getTeamMembersForTeams(teamNames)
-      .map(convertToDisplayableTeamMembers)
-      .map(Right(_))
+          .getTeamMembersForTeams(teamNames)
+          .map(convertToDisplayableTeamMembers)
+          .map(Right(_))
       case Left(connectorError) =>
         Future.successful(Left(connectorError))
     }
