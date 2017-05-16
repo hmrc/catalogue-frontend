@@ -22,12 +22,14 @@ import java.time.LocalDateTime
 import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.DigitalService.DigitalServiceRepository
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError, TeamsAndRepositoriesError}
+import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.ConnectionError
+import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
+import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
+
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http._
 
-//import uk.gov.hmrc.cataloguefrontend.JavaDateTimeJsonFormatter._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

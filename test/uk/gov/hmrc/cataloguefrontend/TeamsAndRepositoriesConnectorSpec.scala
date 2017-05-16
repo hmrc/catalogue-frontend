@@ -20,13 +20,14 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
-import org.scalatest.{BeforeAndAfter, Matchers, OptionValues, WordSpec}
+import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
+import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
 import uk.gov.hmrc.play.http.HeaderCarrier
 
-class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures with OneServerPerSuite with WireMockEndpoints with TypeCheckedTripleEquals with OptionValues {
+class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures with OneServerPerSuite with WireMockEndpoints with TypeCheckedTripleEquals with OptionValues with EitherValues {
 
   import uk.gov.hmrc.cataloguefrontend.JsonData._
   implicit val defaultPatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
@@ -136,7 +137,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
         TeamsAndRepositoriesConnector
           .digitalServiceInfo("service-1")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
           .futureValue
-          .value
+          .right.value
           .data
 
       responseData.name shouldBe "service-1"
@@ -152,7 +153,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
           .digitalServiceInfo("non-existing-service")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
           .futureValue
 
-      responseData shouldBe None
+      responseData.left.value shouldBe HTTPError(404)
     }
 
   }
