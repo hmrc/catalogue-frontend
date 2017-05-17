@@ -134,7 +134,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       teamMembers <- EitherT(errorOrTeamMembersLookupF)
     } yield timestampedDigitalService.map(digitalService => DigitalServiceDetails(digitalServiceName, teamMembers, getRepos(digitalService)))
 
-    digitalServiceDetails.value.map(d => Ok(digital_service_info_tom(digitalServiceName, d)))
+    digitalServiceDetails.value.map(d => Ok(digital_service_info(digitalServiceName, d)))
   }
 
   def getRepos(data: DigitalService) = {

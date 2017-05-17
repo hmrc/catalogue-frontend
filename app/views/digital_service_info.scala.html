@@ -15,35 +15,106 @@
 *@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
-@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{UMPError, NoData, TeamDetails}
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.UMPError
 @import uk.gov.hmrc.cataloguefrontend.{ChartDataRows, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.TeamActivityDates
 @import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.RepoType
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-@(
-        cacheTimestampFormatted: String,
-        teamName: String,
-        teamMembersLookUp: Map[String, Seq[TeamMember]],
-        repos: Map[String, Seq[String]]
-)(implicit messages: Messages)
+@import uk.gov.hmrc.cataloguefrontend.Timestamped
+@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
 
-@standard_layout(teamName, "digital-services") {
+@import uk.gov.hmrc.cataloguefrontend.DigitalServiceDetails
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.NoData
+@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.ConnectionError
+@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
+@(digitalServiceName: String, timestampedRepos: Either[TeamsAndRepositoriesError, Timestamped[DigitalServiceDetails]] )(implicit messages: Messages)
+
+@standard_layout(digitalServiceName, "digital-services") {
     <header>
-        <h1>@teamName</h1>
-        <time class="last-updated">Last updated at: @cacheTimestampFormatted</time>
+        <h1>Digital Service: @digitalServiceName</h1>
+        <time class="last-updated">Last updated at: @{timestampedRepos.right.map(_.formattedTimestamp).right.getOrElse("Not Available")}</time>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
-    <section class="section-wrapper">
 
-        <div class="row">
-            @showRepositories(repos, RepoType.Service, "Services", "service", "service")
-            @showRepositories(repos, RepoType.Library, "Libraries", "library", "library")
-            @showRepositories(repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
-            @showRepositories(repos, RepoType.Other, "Repositories", "other", "repositories")
+
+
+    @if(timestampedRepos.isRight) {
+        @for(timestampedDigitalService <- timestampedRepos.right.toOption) {
+
+            @for((teamName, errorOrMembers) <- timestampedDigitalService.data.teamMembersLookUp) {
+                       <div class="row">
+                           <div class="col-md-12">
+                               <div class="board">
+                                   <h3 class="board__heading">Team: <a href="/teams/@teamName">@teamName</a></h3>
+
+                                   <div class="board__body">
+                                       <div>
+                                           <ul class="list list--minimal" id="team_members">
+                                           @if(errorOrMembers.isRight) {
+                                               @for(teamMember <- errorOrMembers.right.get) {
+                                                   <li class="col-xs-6">
+                                                       <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
+                                                   </li>
+                                               }
+
+                                           } else {
+                                               <li id="ump-error-@{teamName}">
+                                               @showUmpError(errorOrMembers.left.get, teamName)
+                                               </li>
+                                           }
+                                           </ul>
+                                           
+                                       </div>
+
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
+            }
+
+            <section class="section-wrapper">
+                <div class="row">
+
+                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Service, "Services", "service", "service")
+                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Library, "Libraries", "library", "library")
+                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
+                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Other, "Repositories", "other", "repositories")
+
+                </div>
+            </section>
+
+        }
+
+
+    } else {
+        <div id="teams-and-repositories-error" class="row">
+            @showTeamsAndRepositoriesError(timestampedRepos.left.get, digitalServiceName)
         </div>
-    </section>
+    }
 }
+
+@showUmpError(error: UMPError, teamName: String) = {
+@error match {
+    case NoData(linkToRectify) => {
+        @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
+    }
+    case _ => {
+        Sorry, the User Management Portal is not available
+    }
+}
+}
+@showTeamsAndRepositoriesError(error: TeamsAndRepositoriesError, digitalServiceName: String) = {
+@error match {
+    case HTTPError(errorCode) => {
+        An HTTP error occurred while retrieving digital service (@digitalServiceName): @errorCode
+    }
+    case ConnectionError(e) => {
+        A connection error to the teams-and-repositories microservice occurred while retrieving digital service (@digitalServiceName)
+    }
+}
+}
+
 
 @showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {
     @repos.get(repoType.toString).map { repositories =>
