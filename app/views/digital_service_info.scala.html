@@ -42,24 +42,25 @@
     @if(timestampedRepos.isRight) {
         @for(timestampedDigitalService <- timestampedRepos.right.toOption) {
 
-            @for((teamName, errorOrMembers) <- timestampedDigitalService.data.teamMembersLookUp) {
-                       <div class="row">
-                           <div class="col-md-12">
-                               <div class="board">
-                                   <h3 class="board__heading">Team: <a href="/teams/@teamName">@teamName</a></h3>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="board">
+                        <h3 class="board__heading">Contributing Teams</h3>
+                        @for((teamName, errorOrMembers) <- timestampedDigitalService.data.teamMembersLookUp) {
+                            <h4 class="sub__heading"><a href="/teams/@teamName">@teamName</a></h4>
 
                                    <div class="board__body">
                                        <div>
                                            <ul class="list list--minimal" id="team_members">
                                            @if(errorOrMembers.isRight) {
                                                @for(teamMember <- errorOrMembers.right.get) {
-                                                   <li class="col-xs-6">
+                                                   <li class="col-xs-3">
                                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
                                                    </li>
                                                }
 
                                            } else {
-                                               <li id="ump-error-@{teamName}">
+                                               <li class="list list--minimal" id="ump-error-@{teamName}">
                                                @showUmpError(errorOrMembers.left.get, teamName)
                                                </li>
                                            }
@@ -68,10 +69,10 @@
                                        </div>
 
                                    </div>
-                               </div>
-                           </div>
-                       </div>
-            }
+                        }
+                    </div>
+                </div>
+            </div>
 
             <section class="section-wrapper">
                 <div class="row">
