@@ -268,6 +268,80 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       document.select(s"#ump-error-$teamName").text() should === ("Sorry, the User Management Portal is not available")
     }
 
+    "show the right error message the ump send no data" in {
+
+      val digitalServiceName = "digital-service-123"
+
+      val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
+      val umpConnectorMock = mock[UserManagementConnector]
+
+      val catalogueController = new CatalogueController {
+        override def userManagementConnector: UserManagementConnector = umpConnectorMock
+        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+        override def indicatorsConnector: IndicatorsConnector = ???
+        override def deploymentsService: DeploymentsService = ???
+      }
+
+      val teamName = "Team1"
+
+      val exception = new RuntimeException("Boooom!")
+
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(Timestamped(DigitalService(digitalServiceName, 1, Nil), None))))
+      when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
+      Future.successful(
+          Map(teamName -> Left(UserManagementConnector.NoData("https://some-link-to-rectify")))
+        )
+      )
+
+
+      val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
+      response.header.status shouldBe 200
+
+      import play.api.test.Helpers._
+
+      val document: Document = asDocument(contentAsString(response))
+
+      println(contentAsString(response))
+      document.select(s"#ump-error-$teamName").text() should === (s"$teamName is unknown to the User Management Portal. To add the team, please raise a TSR")
+    }
+
+    "show the right error message the ump gives an Http error" in {
+
+      val digitalServiceName = "digital-service-123"
+
+      val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
+      val umpConnectorMock = mock[UserManagementConnector]
+
+      val catalogueController = new CatalogueController {
+        override def userManagementConnector: UserManagementConnector = umpConnectorMock
+        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+        override def indicatorsConnector: IndicatorsConnector = ???
+        override def deploymentsService: DeploymentsService = ???
+      }
+
+      val teamName = "Team1"
+
+      val exception = new RuntimeException("Boooom!")
+
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(Timestamped(DigitalService(digitalServiceName, 1, Nil), None))))
+      when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
+      Future.successful(
+          Map(teamName -> Left(UserManagementConnector.HTTPError(404)))
+        )
+      )
+
+
+      val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
+      response.header.status shouldBe 200
+
+      import play.api.test.Helpers._
+
+      val document: Document = asDocument(contentAsString(response))
+
+      println(contentAsString(response))
+      document.select(s"#ump-error-$teamName").text() should === (s"Sorry, the User Management Portal is not available")
+    }
+
   }
 
   def mockHttpApiCall(url: String, jsonResponseFile: String, httpCodeToBeReturned: Int = 200): String = {
