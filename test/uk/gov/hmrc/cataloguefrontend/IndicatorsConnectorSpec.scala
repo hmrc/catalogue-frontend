@@ -38,7 +38,9 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneApp
 
 
   override def newAppForTest(testData: TestData): Application = {
-    new GuiceApplicationBuilder().configure(
+    new GuiceApplicationBuilder()
+      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
+      .configure(
       "microservice.services.indicators.port" -> endpointPort,
       "microservice.services.indicators.host" -> host
     ).build()

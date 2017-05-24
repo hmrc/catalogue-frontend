@@ -1,17 +1,8 @@
 {
-  "backends": ["organisations"],
-  "data": {
-    "organisations": {
-      "data": {
-        "description": "TEAM-A is a great team",
-        "location": "STLPD",
-        "organisation": "ORGA",
-        "slack": "https://slack.host/messages/team-A",
-        "team": "TEAM-A",
-        "documentation" : "https://some.documentation.url"
-      },
-      "message": "OK",
-      "status_code": 200
-    }
-  }
+  "description": "TEAM-A is a great team",
+  "location": "STLPD",
+  "organisation": "ORGA",
+  "slack": "https://slack.host/messages/team-A",
+  "team": "TEAM-A",
+  "documentation" : "https://some.documentation.url"
 }

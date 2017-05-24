@@ -36,7 +36,9 @@ import play.api.mvc.{Action, AnyContent, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
+import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.collection.JavaConversions._
@@ -62,6 +64,10 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
 
   val digitalServiceName = "digital-service-a"
+
+  val serviceOwnerName = "Mr. someone"
+  val mockedModelService = mock[ReadModelService]
+  when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwnerName))
 
   "DigitalService page" should {
 
@@ -153,6 +159,56 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       response.body should include(ViewMessages.noRepoOfTypeForDigitalService("other"))
     }
 
+    "show 'Not specified' if service owner is not set" in {
+
+
+      val digitalServiceName = "digital-service-123"
+      val response = await(WS.url(s"http://localhost:$port/digital-service/${digitalServiceName}").get)
+
+      val document = asDocument(response.body)
+
+      val serviceOwnerO = document.select("#service_owner_edit_input").iterator().toList.headOption
+
+      serviceOwnerO.isDefined shouldBe true
+      serviceOwnerO.get.attr("value") shouldBe "Not specified"
+    }
+
+    "show service owner" in {
+
+
+
+      val mockedConnector = mock[TeamsAndRepositoriesConnector]
+      when(mockedConnector.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Left(HTTPError(999))))
+
+
+      //      val mockedEventService = mock[EventService]
+
+      val catalogueController = new CatalogueController {
+        override def userManagementConnector: UserManagementConnector = ???
+        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mockedConnector
+        override def indicatorsConnector: IndicatorsConnector = ???
+        override def deploymentsService: DeploymentsService = ???
+
+        override def readModelService: ReadModelService = mockedModelService
+        override def eventService: EventService = ??? //mockedEventService
+      }
+
+      val digitalServiceName = "digital-service-123"
+
+      val responseF = catalogueController.digitalService(digitalServiceName)(FakeRequest())
+
+      val response = responseF.futureValue
+
+      import play.api.test.Helpers._
+      val document = asDocument(contentAsString(response))
+
+      val serviceOwnerO = document.select("#service_owner_edit_input").iterator().toList.headOption
+
+      serviceOwnerO.isDefined shouldBe true
+      serviceOwnerO.get.attr("value") shouldBe serviceOwnerName
+    }
+
+
     "show team members for teams correctly" in {
       val team1 = "Team1"
       val team2 = "Team2"
@@ -182,9 +238,8 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
 
-      mockHttpApiCall(s"/v1/organisations/mdtp/teams/${team1}/members", "/user-management-response-team1.json")
-      mockHttpApiCall(s"/v1/organisations/mdtp/teams/${team2}/members", "/user-management-response-team2.json")
-
+      mockHttpApiCall(s"/v2/organisations/teams/$team1/members", "/user-management-response-team1.json")
+      mockHttpApiCall(s"/v2/organisations/teams/$team2/members", "/user-management-response-team2.json")
 
       val response = await(WS.url(s"http://localhost:$port/digital-service/${digitalServiceName}").get)
 
@@ -196,7 +251,6 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       verifyTeamMemberHrefLinks(document)
 
-      verifyTeamOwnerIndicatorLabel(document)
     }
 
     "show the right error message when unable to connect to teams-and-repositories" in {
@@ -210,6 +264,9 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
         override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
+        override def readModelService: ReadModelService = mockedModelService
+
+        override def eventService: EventService = ???
       }
 
       val exception = new RuntimeException("Boooom!")
@@ -244,6 +301,9 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
         override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
+        override def readModelService: ReadModelService = mockedModelService
+
+        override def eventService: EventService = ???
       }
 
       val teamName = "Team1"
@@ -280,6 +340,9 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
         override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
+        override def readModelService: ReadModelService = mockedModelService
+
+        override def eventService: EventService = ???
       }
 
       val teamName = "Team1"
@@ -317,6 +380,9 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
         override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
+        override def readModelService: ReadModelService = mockedModelService
+
+        override def eventService: EventService = ???
       }
 
       val teamName = "Team1"
@@ -361,12 +427,6 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
     Source.fromURL(getClass.getResource(jsonFilePath)).getLines().mkString("\n")
   }
 
-  def verifyTeamOwnerIndicatorLabel(document: Document): Unit = {
-    val serviceOwnersLiLabels = document.select("#team_members li .label-success")
-    serviceOwnersLiLabels.size() shouldBe 2
-    serviceOwnersLiLabels.iterator().toSeq.map(_.text()) shouldBe Seq("Service Owner", "Service Owner")
-  }
-
   def verifyTeamMemberHrefLinks(document: Document): Boolean = {
     val hrefs = document.select("#team_members [href]").iterator().toList
 
@@ -382,9 +442,9 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
     teamMembersLiElements.length shouldBe 4
 
-    teamMembersLiElements(0).text() should include("Joe Black Service Owner")
+    teamMembersLiElements(0).text() should include("Joe Black")
     teamMembersLiElements(1).text() should include("James Roger")
-    teamMembersLiElements(2).text() should include("Casey Binge Service Owner")
+    teamMembersLiElements(2).text() should include("Casey Binge")
     teamMembersLiElements(3).text() should include("Marc Palazzo")
   }
 

@@ -1,59 +1,48 @@
 {
-  "backends": [
-    "organisations"
-  ],
-  "data": {
-    "organisations": {
-      "data": {
-        "description": "CATO",
-        "location": "DDCS",
-        "members": [
+  "description": "CATO",
+  "documentation": "https://confluence.gov.uk/display/CATO",
+  "members": [
 
-          {
-            "displayName": "K S",
-            "familyName": "S",
-            "givenName": "K",
-            "primaryEmail": "k.s@xyzgov.uk",
-            "username": "k.s"
-          },
-          {
-            "displayName": "Mx P",
-            "familyName": "P",
-            "givenName": "Mx",
-            "primaryEmail": "Mx.P@xyzgov.uk",
-            "username": "mx.p",
-            "serviceOwnerFor": ["CHICKEN"]
+    {
+      "displayName": "K S",
+      "familyName": "S",
+      "givenName": "K",
+      "primaryEmail": "k.s@xyzgov.uk",
+      "username": "k.s"
+    },
+    {
+      "displayName": "Mx P",
+      "familyName": "P",
+      "givenName": "Mx",
+      "primaryEmail": "Mx.P@xyzgov.uk",
+      "username": "mx.p",
+      "serviceOwnerFor": ["CHICKEN"]
 
-          },
-          {
-            "displayName": "Ma B",
-            "familyName": "B",
-            "givenName": "Ma",
-            "primaryEmail": "ma.b@taranis-PHI.com",
-            "username": "ma.b"
-          },
-          {
-            "displayName": "M Q",
-            "familyName": "Q",
-            "givenName": "M",
-            "primaryEmail": "m.q@xyzgov.uk",
-            "username": "m.q",
-            "serviceOwnerFor": ["CATO", "CHICKEN"]
-          },
-          {
-            "displayName": "S M",
-            "familyName": "M",
-            "givenName": "S",
-            "primaryEmail": "s.m@xyzgov.uk",
-            "username": "s.m",
-            "serviceOwnerFor": ["CATO", "CHICKEN"]
-          }
-        ],
-        "organisation": "HMRC",
-        "team": "CATO"
-      },
-      "message": "OK",
-      "status_code": 200
+    },
+    {
+      "displayName": "Ma B",
+      "familyName": "B",
+      "givenName": "Ma",
+      "primaryEmail": "ma.b@taranis-PHI.com",
+      "username": "ma.b"
+    },
+    {
+      "displayName": "M Q",
+      "familyName": "Q",
+      "givenName": "M",
+      "primaryEmail": "m.q@xyzgov.uk",
+      "username": "m.q",
+      "serviceOwnerFor": ["CATO", "CHICKEN"]
+    },
+    {
+      "displayName": "S M",
+      "familyName": "M",
+      "givenName": "S",
+      "primaryEmail": "s.m@xyzgov.uk",
+      "username": "s.m",
+      "serviceOwnerFor": ["CATO", "CHICKEN"]
     }
-  }
+  ],
+  "organisation": "HMRC",
+  "team": "CATO"
 }

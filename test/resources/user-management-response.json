@@ -1,35 +1,24 @@
 {
-  "backends": [
-    "organisations"
-  ],
-  "data": {
-    "organisations": {
-      "data": {
-        "description": "CATO",
-        "location": "DDCS",
-        "members": [
-          {
-            "displayName": "Jim Willman",
-            "familyName": "Willman",
-            "givenName": "Jim",
-            "primaryEmail": "jim.willman@digital.hmrc.gov.uk",
-            "serviceOwnerFor":["MATO"],
-            "username": "jim.willman"
-          },
-          {
-            "displayName": "Karl GoJarvis",
-            "familyName": "GoJarvis",
-            "givenName": "Karl",
-            "primaryEmail": "karl.gojarvis@hmrc.gsi.gov.uk",
-            "serviceOwnerFor":["CATO", "SOME-SERVICE"],
-            "username": "karl.gojarvis"
-          }
-        ],
-        "organisation": "HMRC",
-        "team": "CATO"
-      },
-      "message": "OK",
-      "status_code": 200
+  "description": "CATO",
+  "location": "DDCS",
+  "members": [
+    {
+      "displayName": "Jim Willman",
+      "familyName": "Willman",
+      "givenName": "Jim",
+      "primaryEmail": "jim.willman@digital.hmrc.gov.uk",
+      "serviceOwnerFor":["MATO"],
+      "username": "jim.willman"
+    },
+    {
+      "displayName": "Karl GoJarvis",
+      "familyName": "GoJarvis",
+      "givenName": "Karl",
+      "primaryEmail": "karl.gojarvis@hmrc.gsi.gov.uk",
+      "serviceOwnerFor":["CATO", "SOME-SERVICE"],
+      "username": "karl.gojarvis"
     }
-  }
+  ],
+  "organisation": "HMRC",
+  "team": "CATO"
 }

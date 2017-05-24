@@ -1,0 +1,6 @@
+.editable-label {
+  margin-bottom: 1em; }
+  .editable-label .editable-label__field {
+    border: 0.1px dotted rgba(34, 72, 65, 0.19);
+    -webkit-box-shadow: none;
+    box-shadow: none; }

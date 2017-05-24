@@ -1,6 +1,13 @@
 @import '_vars';
 @import '../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap';
 
+
+
+//components
+
+@import 'components/jquery-ui-autocomplete';
+@import 'components/editable-label';
+
 *,
 *:before,
 *:after {
@@ -226,3 +233,7 @@ section {
 .padding-reset-right {
   padding-right: 0;
 }
+
+
+
+

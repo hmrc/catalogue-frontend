@@ -13,22 +13,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
-@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.UMPError
-@import uk.gov.hmrc.cataloguefrontend.{ChartDataRows, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.TeamActivityDates
 @import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
-@import uk.gov.hmrc.cataloguefrontend.RepoType
-@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-@import uk.gov.hmrc.cataloguefrontend.Timestamped
-@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
-
-@import uk.gov.hmrc.cataloguefrontend.DigitalServiceDetails
-@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.NoData
-@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.ConnectionError
-@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
-@(digitalServiceName: String, timestampedRepos: Either[TeamsAndRepositoriesError, Timestamped[DigitalServiceDetails]] )(implicit messages: Messages)
+@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError, TeamsAndRepositoriesError}
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{NoData, UMPError}
+@import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, RepoType, Timestamped, ViewMessages}
+@(digitalServiceName: String, timestampedRepos: Either[TeamsAndRepositoriesError, Timestamped[DigitalServiceDetails]], digitalServiceOwner: Option[String] )(implicit messages: Messages)
 
 @standard_layout(digitalServiceName, "digital-services") {
     <header>
@@ -37,7 +26,44 @@
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
+    
 
+    <div class="row">
+        <div class="col-md-12">
+            <div class="board">
+                <h3 class="board__heading">Details</h3>
+                <div class="board__body">
+                    <div class="col-lg-7 editable-label">
+                        <label >Service Owner: </label>
+                        <span id="service_owner_edit_component" style="display: None">
+                            <div class="input-group">
+                                <input type="text" id="service_owner_edit_input" class="form-control" value="@{digitalServiceOwner.getOrElse("Not specified")}">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-primary" onclick="saveServiceOwner()">
+                                        <span aria-hidden="true"></span> Save
+                                    </button>
+                                    <button type="button" class="btn" onclick="endServiceOwnerEditMode()">
+                                        <span aria-hidden="true"></span> Cancel
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="service-owner-error" class="alert alert-danger" style="display: none"></div>
+                        </span>
+                        <span id="service_owner_view_component" class="service-owner-view" >
+                            <div class="input-group">
+                                <span id="service_owner_view_field" class="form-control editable-label__field">@{ digitalServiceOwner.getOrElse("Not specified")}</span>
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-primary" onclick="enterServiceOwnerEditMode()">
+                                        <span aria-hidden="true"></span> Edit
+                                    </button>
+                                </div>
+                            </div>
+                        </span>
+                    </div>
+                    </div>
+            </div>
+        </div>
+    </div>
 
     @if(timestampedRepos.isRight) {
         @for(timestampedDigitalService <- timestampedRepos.right.toOption) {
@@ -47,28 +73,28 @@
                     <div class="board">
                         <h3 class="board__heading">Contributing Teams</h3>
                         @for((teamName, errorOrMembers) <- timestampedDigitalService.data.teamMembersLookUp) {
-                            <h4 class="sub__heading"><a href="/teams/@teamName">@teamName</a></h4>
+                           <h4 class="sub__heading"><a href="/teams/@teamName">@teamName</a></h4>
 
-                                   <div class="board__body">
-                                       <div>
-                                           <ul class="list list--minimal" id="team_members">
-                                           @if(errorOrMembers.isRight) {
-                                               @for(teamMember <- errorOrMembers.right.get) {
-                                                   <li class="col-xs-3">
-                                                       <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
-                                                   </li>
-                                               }
+                           <div class="board__body">
+                               <div>
+                                   <ul class="list list--minimal" id="team_members">
+                                   @if(errorOrMembers.isRight) {
+                                       @for(teamMember <- errorOrMembers.right.get) {
+                                           <li class="col-xs-3">
+                                               <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
+                                           </li>
+                                       }
 
-                                           } else {
-                                               <li class="list list--minimal" id="ump-error-@{teamName}">
-                                               @showUmpError(errorOrMembers.left.get, teamName)
-                                               </li>
-                                           }
-                                           </ul>
-                                           
-                                       </div>
+                                   } else {
+                                       <li class="list list--minimal" id="ump-error-@{teamName}">
+                                       @showUmpError(errorOrMembers.left.get, teamName)
+                                       </li>
+                                   }
+                                   </ul>
 
-                                   </div>
+                               </div>
+
+                           </div>
                         }
                     </div>
                 </div>
@@ -93,6 +119,72 @@
             @showTeamsAndRepositoriesError(timestampedRepos.left.get, digitalServiceName)
         </div>
     }
+
+    <script>
+        function hideErrors(){
+            $('#service-owner-error').hide();
+        }
+
+        function enterServiceOwnerEditMode() {
+            hideErrors();
+
+            var currentServiceOwnerValue = $('#service_owner_view_field').text();
+            if(currentServiceOwnerValue === 'Not specified') {
+                currentServiceOwnerValue = '';
+            }
+            $('#service_owner_edit_input').val(currentServiceOwnerValue);
+
+            $('#service_owner_edit_component').show();
+            $('#service_owner_view_component').hide();
+        }
+
+        function endServiceOwnerEditMode() {
+            $('#service_owner_view_component').show();
+            $('#service_owner_edit_component').hide();
+        }
+
+
+        $(function() {
+            $( '#service_owner_edit_input').autocomplete({
+                source: "/users",
+                autoFocus: true,
+                minLength: 3,
+                select: function() {
+                    hideErrors();
+                }
+            });
+        });
+
+        function saveServiceOwner() {
+            var digitalServiceOwnerName = $('#service_owner_edit_input').val();
+            var data = {
+                service: "@digitalServiceName",
+                name: digitalServiceOwnerName
+            };
+
+            $.ajax({
+                url: 'owner',
+                type: 'post',
+                dataType: 'json',
+                headers: { 'Content-Type': 'application/json' },
+                data: JSON.stringify(data),
+                success: function(result,status,xhr){
+                    $("#service_owner_view_field").text(result);
+                    endServiceOwnerEditMode();
+                },
+                error: function(xhr,status,error){
+                    debugger;
+                    $("#service-owner-error").show().text(xhr.responseJSON);
+                }
+            });
+
+
+        }
+
+
+
+    </script>
+
 }
 
 @showUmpError(error: UMPError, teamName: String) = {

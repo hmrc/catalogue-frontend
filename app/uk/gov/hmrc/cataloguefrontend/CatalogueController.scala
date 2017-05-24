@@ -17,24 +17,25 @@
 package uk.gov.hmrc.cataloguefrontend
 
 
-import java.io
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.{LocalDateTime, ZoneOffset}
 
-import cats.data.{EitherT, OptionT}
+import cats.data.EitherT
 import play.api.Play.current
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
 import play.api.i18n.Messages.Implicits._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-import play.twirl.api.Html
+import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Await, Future}
 
 case class TeamActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime], firstServiceCreationDate: Option[LocalDateTime])
 
@@ -43,8 +44,7 @@ case class DigitalServiceDetails(digitalServiceName: String,
                                  repos: Map[String, Seq[String]])
 
 
-
-object CatalogueController extends CatalogueController {
+object CatalogueController extends CatalogueController with MongoDbConnection {
 
   override def userManagementConnector: UserManagementConnector = UserManagementConnector
 
@@ -52,8 +52,11 @@ object CatalogueController extends CatalogueController {
 
   override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
 
-  override def deploymentsService: DeploymentsService = new DeploymentsService(ServiceDeploymentsConnector, TeamsAndRepositoriesConnector)
+  lazy override val deploymentsService: DeploymentsService = new DeploymentsService(ServiceDeploymentsConnector, TeamsAndRepositoriesConnector)
 
+  lazy override val eventService = new DefaultEventService(new MongoEventRepository(db))
+
+  lazy override val readModelService = new DefaultReadModelService(eventService, UserManagementConnector)
 }
 
 trait CatalogueController extends FrontendController with UserManagementPortalLink {
@@ -75,9 +78,34 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   def deploymentsService: DeploymentsService
 
+  def eventService: EventService
+
+  def readModelService: ReadModelService
+
   def landingPage() = Action { request =>
     Ok(landing_page())
   }
+
+  def serviceOwner(digitalService: String) = Action {
+    readModelService.getDigitalServiceOwner(digitalService).fold(NotFound(Json.toJson(s"owner for $digitalService not found")))(ds => Ok(Json.toJson(ds)))
+  }
+
+
+  def saveServiceOwner() = Action.async { implicit request =>
+    request.body.asJson.map{ payload =>
+      val serviceOwnerUpdatedEventData = payload.as[ServiceOwnerUpdatedEventData]
+      val userValid = readModelService.getAllUsers.map(_.displayName.getOrElse("")).contains(serviceOwnerUpdatedEventData.name)
+      if (userValid) {
+        eventService.saveServiceOwnerUpdatedEvent(serviceOwnerUpdatedEventData).map { _ =>
+          Ok(Json.toJson(s"${serviceOwnerUpdatedEventData.name}"))
+        }
+      } else {
+        Future(NotAcceptable(Json.toJson(s"Invalid user: ${serviceOwnerUpdatedEventData.name}")))
+      }
+    }.getOrElse(Future.successful(BadRequest(Json.toJson( s"""Unable to parse json: "${request.body.asText.getOrElse("No Text!")}""""))))
+
+  }
+
 
   def allTeams() = Action.async { implicit request =>
     import SearchFiltering._
@@ -106,17 +134,18 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
   }
 
+
   def digitalService(digitalServiceName: String) = Action.async { implicit request =>
     import cats.instances.future._
 
     type TeamsAndRepoType[A] = Future[Either[TeamsAndRepositoriesError, A]]
 
     val eventualDigitalServiceInfoF: TeamsAndRepoType[Timestamped[DigitalService]] =
-    teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName)
+      teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName)
 
 
     val errorOrTeamNames: TeamsAndRepoType[Seq[String]] =
-    eventualDigitalServiceInfoF.map(_.right.map(_.data.repositories.flatMap(_.teamNames)).right.map(_.distinct))
+      eventualDigitalServiceInfoF.map(_.right.map(_.data.repositories.flatMap(_.teamNames)).right.map(_.distinct))
 
     val errorOrTeamMembersLookupF: Future[Either[TeamsAndRepositoriesError, Map[String, Either[UMPError, Seq[DisplayableTeamMember]]]]] = errorOrTeamNames.flatMap {
       case Right(teamNames) =>
@@ -134,7 +163,18 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       teamMembers <- EitherT(errorOrTeamMembersLookupF)
     } yield timestampedDigitalService.map(digitalService => DigitalServiceDetails(digitalServiceName, teamMembers, getRepos(digitalService)))
 
-    digitalServiceDetails.value.map(d => Ok(digital_service_info(digitalServiceName, d)))
+    digitalServiceDetails.value.map(d => {
+      Ok(digital_service_info(digitalServiceName, d, readModelService.getDigitalServiceOwner(digitalServiceName)))
+    })
+  }
+
+  def allUsers = Action { implicit request =>
+
+    val filterTerm = request.getQueryString("term").getOrElse("")
+    println(s"getting users: $filterTerm")
+    val filteredUsers: Seq[Option[String]] = readModelService.getAllUsers.map(_.displayName).filter(displayName => displayName.getOrElse("").toLowerCase.contains(filterTerm.toLowerCase))
+
+    Ok(Json.toJson(filteredUsers))
   }
 
   def getRepos(data: DigitalService) = {

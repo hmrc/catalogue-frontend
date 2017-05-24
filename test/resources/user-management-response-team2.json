@@ -1,35 +1,24 @@
 {
-  "backends": [
-    "organisations"
-  ],
-  "data": {
-    "organisations": {
-      "data": {
-        "description": "Team2",
-        "location": "DDCS",
-        "members": [
-          {
-            "displayName": "Casey Binge",
-            "familyName": "Binge",
-            "givenName": "Casey",
-            "primaryEmail": "casey.binge@digital.hmrc.gov.uk",
-            "serviceOwnerFor":["Team2"],
-            "username": "casey.binge"
-          },
-          {
-            "displayName": "Marc Palazzo",
-            "familyName": "Palazzo",
-            "givenName": "Marc",
-            "primaryEmail": "marc.palazzo@hmrc.gsi.gov.uk",
-            "serviceOwnerFor":[],
-            "username": "marc.palazzo"
-          }
-        ],
-        "organisation": "HMRC",
-        "team": "Team2"
-      },
-      "message": "OK",
-      "status_code": 200
+  "description": "Team2",
+  "location": "DDCS",
+  "members": [
+    {
+      "displayName": "Casey Binge",
+      "familyName": "Binge",
+      "givenName": "Casey",
+      "primaryEmail": "casey.binge@digital.hmrc.gov.uk",
+      "serviceOwnerFor":["Team2"],
+      "username": "casey.binge"
+    },
+    {
+      "displayName": "Marc Palazzo",
+      "familyName": "Palazzo",
+      "givenName": "Marc",
+      "primaryEmail": "marc.palazzo@hmrc.gsi.gov.uk",
+      "serviceOwnerFor":[],
+      "username": "marc.palazzo"
     }
-  }
+  ],
+  "organisation": "HMRC",
+  "team": "Team2"
 }

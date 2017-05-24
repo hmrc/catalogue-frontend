@@ -28,7 +28,9 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints with EitherValues {
 
-  implicit override lazy val app = new GuiceApplicationBuilder().configure (
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .disable(classOf[com.kenshoo.play.metrics.PlayModule])
+    .configure (
     Map(
     "microservice.services.service-deployments.port" -> endpointPort,
     "microservice.services.service-deployments.host" -> host,

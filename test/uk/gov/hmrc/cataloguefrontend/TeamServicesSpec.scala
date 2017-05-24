@@ -82,7 +82,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         |}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
+      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
+
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -103,7 +104,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         """{"Library":[], "Service": []  }""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
+      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -120,7 +121,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
       )))
 
-      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
+      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -136,7 +137,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
+      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -154,7 +155,9 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/large-user-management-response.json")
+//      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/large-user-management-response.json")
+      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/large-user-management-response.json")
+
 
       val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
 
@@ -187,7 +190,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json")
+      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
       val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
 
       response.status shouldBe 200
@@ -208,7 +211,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
         )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-        mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", fileName)
+        mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", fileName)
 
 
         val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
@@ -232,7 +235,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      mockHttpApiCall(url = s"/v1/organisations/mdtp/teams/$teamName/members", "/user-management-response.json", httpCodeToBeReturned = 404)
+      mockHttpApiCall(url = s"/v2/organisations/teams/$teamName/members", "/user-management-response.json", httpCodeToBeReturned = 404)
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -249,7 +252,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       """{"name":"teamA", "repos":{"Library":[], "Service": [] }}""".stripMargin
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName", "/user-management-team-details-response.json")
+      mockHttpApiCall(s"/v2/organisations/teams/$teamName", "/user-management-team-details-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
 
@@ -375,5 +378,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       .map(js => js.as[Seq[TeamMember]]).getOrElse(throw new RuntimeException(s"not able to extract team members from json: $jsonString"))
 
   }
+
 
 }

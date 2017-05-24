@@ -1,0 +1,9 @@
+{
+	"version": 3,
+	"file": "editable-label.css",
+	"sources": [
+		"../../app/assets/components/editable-label.scss"
+	],
+	"mappings": "AAAA,AAAA,eAAe,CAAC;EACd,aAAa,EAAE,GAAI,GAMpB;EAPD,AAEE,eAFa,CAEb,sBAAsB,CAAC;IACrB,MAAM,EAAE,KAAK,CAAC,MAAM,CAAC,sBAAI;IACzB,kBAAkB,EAAE,IAAK;IACzB,UAAU,EAAE,IAAK,GAClB",
+	"names": []
+}

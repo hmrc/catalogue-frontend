@@ -33,4 +33,7 @@ trait UserManagementPortalLink extends ServicesConfig {
   def userManagementBaseUrl: String =
     getConfString(s"$serviceName.url", throw new RuntimeException(s"Could not find config $serviceName.url"))
 
+//  def userManagementBaseUrlV2: String =
+//    getConfString(s"$serviceName.url-v2", throw new RuntimeException(s"Could not find config $serviceName.url-v2"))
+
 }

@@ -1,35 +1,24 @@
 {
-  "backends": [
-    "organisations"
-  ],
-  "data": {
-    "organisations": {
-      "data": {
-        "description": "Team1",
-        "location": "DDCS",
-        "members": [
-          {
-            "displayName": "Joe Black",
-            "familyName": "Black",
-            "givenName": "Joe",
-            "primaryEmail": "joe.black@digital.hmrc.gov.uk",
-            "serviceOwnerFor":["Team1"],
-            "username": "joe.black"
-          },
-          {
-            "displayName": "James Roger",
-            "familyName": "Roger",
-            "givenName": "James",
-            "primaryEmail": "james.roger@hmrc.gsi.gov.uk",
-            "serviceOwnerFor":[],
-            "username": "james.roger"
-          }
-        ],
-        "organisation": "HMRC",
-        "team": "Team1"
-      },
-      "message": "OK",
-      "status_code": 200
+  "description": "Team1",
+  "location": "DDCS",
+  "members": [
+    {
+      "displayName": "Joe Black",
+      "familyName": "Black",
+      "givenName": "Joe",
+      "primaryEmail": "joe.black@digital.hmrc.gov.uk",
+      "serviceOwnerFor":["Team1"],
+      "username": "joe.black"
+    },
+    {
+      "displayName": "James Roger",
+      "familyName": "Roger",
+      "givenName": "James",
+      "primaryEmail": "james.roger@hmrc.gsi.gov.uk",
+      "serviceOwnerFor":[],
+      "username": "james.roger"
     }
-  }
+  ],
+  "organisation": "HMRC",
+  "team": "Team1"
 }

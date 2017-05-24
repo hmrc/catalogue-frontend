@@ -34,6 +34,7 @@ import play.api.i18n.Messages.Implicits._
 class DeploymentsListSpec extends WordSpec with Matchers with OneAppPerTest {
 
 
+
   def asDocument(html: Html): Document = Jsoup.parse(html.toString())
 
   "deployments_list" should {

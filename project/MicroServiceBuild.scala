@@ -21,6 +21,7 @@ private object AppDependencies {
   private val playUIVersion = "5.0.0"
   private val urlBuilderVersion = "1.1.0"
   private val catsVersion = "0.9.0"
+  private val playReactivemongoVersion = "5.0.0"
 
   private val hmrcTestVersion = "2.0.0"
 
@@ -34,6 +35,7 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "govuk-template" % govTemplateVersion,
     "uk.gov.hmrc" %% "play-ui" % playUIVersion,
     "uk.gov.hmrc" %% "url-builder" % urlBuilderVersion,
+    "uk.gov.hmrc" %% "play-reactivemongo" % playReactivemongoVersion,
     "org.typelevel" %% "cats-core" % catsVersion,
     "org.apache.httpcomponents" % "httpcore" % "4.3.2",
     "org.apache.httpcomponents" % "httpclient" % "4.3.5"
@@ -48,6 +50,7 @@ private object AppDependencies {
     def apply() = new TestDependencies {
       override lazy val test = Seq(
         "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
+        "uk.gov.hmrc" %% "reactivemongo-test" % "1.6.0" % scope,
         "org.scalatest" %% "scalatest" % "2.2.6" % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % scope,
         "org.pegdown" % "pegdown" % "1.4.2" % scope,        

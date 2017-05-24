@@ -32,18 +32,25 @@ package uk.gov.hmrc.cataloguefrontend
  * limitations under the License.
  */
 
+import java.io.{File, InputStream}
+
 import cats.Applicative
 import cats.data.EitherT
 import play.api.Logger
-import play.api.libs.json.{JsValue, Json, Reads}
+import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import cats.instances.future._
+import play.api.data.validation.ValidationError
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, getAllUsersFromUMP}
+
+import scala.io.Source
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 trait UserManagementConnector extends UserManagementPortalLink {
@@ -51,7 +58,7 @@ trait UserManagementConnector extends UserManagementPortalLink {
 
   import UserManagementConnector._
 
-  implicit val teamMemberReads = Json.reads[TeamMember]
+  implicit val teamMemberFormat = Json.format[TeamMember]
   implicit val teamDetailsReads = Json.reads[TeamDetails]
 
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
@@ -70,7 +77,8 @@ trait UserManagementConnector extends UserManagementPortalLink {
   def getTeamMembersFromUMP(team: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
 
-    val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team/members"
+//    val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team/members"
+    val url = s"$userManagementBaseUrl/v2/organisations/teams/$team/members"
 
     def isHttpCodeFailure: Option[(Either[UMPError, _]) => Boolean] =
       Some { errorOrMembers: Either[UMPError, _] =>
@@ -96,16 +104,64 @@ trait UserManagementConnector extends UserManagementPortalLink {
   }
 
 
+//  def getAllUsersFromUMP_fromfile(): Future[Either[UMPError, Seq[TeamMember]]] = {
+//
+//    val stream: InputStream = getClass.getResourceAsStream("/ump/all-users.json")
+//
+//    val fileContents = Source.fromInputStream(stream).getLines().mkString("\n")
+////    println(fileContents)
+//
+//    val teamMembers = (Json.parse(fileContents) \ "users").validate[Seq[TeamMember]]
+//
+//    teamMembers match {
+//      case JsSuccess(tms, _) =>
+//        println(tms.size)
+//        Future.successful(Right(tms))
+//      case JsError(errors) => Future.successful(Left(ConnectionError(new RuntimeException(errors.toString()))))
+//    }
+//  }
+
+
+  def getAllUsersFromUMP(): Future[Either[UMPError, Seq[TeamMember]]] = {
+
+    val newHeaderCarrier = HeaderCarrier().withExtraHeaders("requester" -> "None", "Token" -> "None")
+
+    val url = s"$userManagementBaseUrl/v2/organisations/users"
+
+    def isHttpCodeFailure: Option[(Either[UMPError, _]) => Boolean] =
+      Some { errorOrMembers: Either[UMPError, _] =>
+        errorOrMembers match {
+          case Left(HTTPError(code)) if code != 200 => true
+          case _ => false
+        }
+      }
+
+    val eventualErrorOrTeamMembers = http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
+      response.status match {
+        case 200 => Right(extractUsers(response))
+        case httpCode => Left(HTTPError(httpCode))
+      }
+    }
+
+    withTimerAndCounter("ump") (eventualErrorOrTeamMembers, isHttpCodeFailure)
+      .recover {
+        case ex =>
+          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          Left(ConnectionError(ex))
+      }
+  }
+
+
+
+
   def getTeamDetails(team: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, TeamDetails]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team"
+//    val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team"
+    val url = s"$userManagementBaseUrl/v2/organisations/teams/$team"
     withTimerAndCounter("ump-teamdetails") {
       http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
         response.status match {
-          case 200 => extractData[TeamDetails](team, response) {
-            json =>
-              (json \\ "organisations").lastOption.flatMap(x => (x \ "data").toOption)
-          }
+          case 200 => extractData[TeamDetails](team, response)
           case httpCode => Left(HTTPError(httpCode))
         }
       }.recover {
@@ -118,9 +174,9 @@ trait UserManagementConnector extends UserManagementPortalLink {
   }
 
 
-  def extractData[T](team: String, response: HttpResponse)(extractor: JsValue => Option[JsValue])(implicit rd: Reads[T]): Either[UMPError, T] = {
+  def extractData[T](team: String, response: HttpResponse)(implicit rd: Reads[T]): Either[UMPError, T] = {
 
-   extractor(response.json).flatMap{ js => js.asOpt[T] } match {
+   Option(response.json).flatMap{ js => js.asOpt[T] } match {
      case Some(x) => Right(x)
      case _ => Left(NoData(umpMyTeamsPageUrl(team)))
    }
@@ -137,6 +193,13 @@ trait UserManagementConnector extends UserManagementPortalLink {
 
     if (errorOrTeamMembers.isRight && errorOrTeamMembers.right.get.isEmpty) left else errorOrTeamMembers
   }
+
+  def extractUsers(response: HttpResponse): Seq[TeamMember] =
+    (response.json \\ "users")
+      .headOption
+      .map(js => js.as[Seq[TeamMember]])
+      .getOrElse(throw new RuntimeException(s"Unable to parse or extract UMP users: ${response.json}"))
+
 
 
 }
@@ -170,4 +233,21 @@ object UserManagementConnector extends UserManagementConnector {
                          team: String)
 
 
+
+
 }
+
+import scala.concurrent.duration._
+
+//object Runner {
+//  def main(args: Array[String]): Unit = {
+//    val allUsers: Future[Either[UserManagementConnector.UMPError, Seq[UserManagementConnector.TeamMember]]] = UserManagementConnector.getAllUsersFromUMP()
+//    Await.result(allUsers, 4 seconds) match {
+//      case Right(users) => println(users)
+//      case Left(e) => println(e)
+//      case x => println(x)
+//    }
+//
+////    Thread.sleep(10000)
+//  }
+//}

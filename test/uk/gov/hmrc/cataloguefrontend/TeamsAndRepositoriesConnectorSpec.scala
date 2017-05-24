@@ -42,7 +42,8 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
   import uk.gov.hmrc.cataloguefrontend.JsonData._
   implicit val defaultPatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
-  implicit override lazy val app = new GuiceApplicationBuilder().configure(
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(
     "microservice.services.teams-and-services.host" -> host,
     "microservice.services.teams-and-services.port" -> endpointPort,
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"

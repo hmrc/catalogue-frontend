@@ -9,7 +9,7 @@
     "css": "node-sass --style compressed ./app/assets/ -o ./public/"
   },
   "dependencies": {
-    "bootstrap-sass": "^3.3.6",
+    "bootstrap-sass": "^3.3.7",
     "node-sass": "^3.7.0"
   }
 }

@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "displayName": "Ricky Micky",
+      "familyName": "Micky",
+      "givenName": "Ricky",
+      "phoneNumber": "+",
+      "primaryEmail": "ricky.micky@gov.uk",
+      "username": "ricky.micky"
+    },
+    {
+      "displayName": "Aleks Malkes",
+      "familyName": "Malkes",
+      "givenName": "Aleks",
+      "phoneNumber": "+",
+      "primaryEmail": "aleks.malkes@gov.uk",
+      "username": "aleks.malkes"
+    },
+    {
+      "displayName": "Anand Manand",
+      "familyName": "Manand",
+      "givenName": "Anand",
+      "phoneNumber": "+",
+      "primaryEmail": "anand.manand@gov.uk",
+      "username": "anand.manand"
+    }
+  ]
+}

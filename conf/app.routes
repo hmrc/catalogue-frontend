@@ -5,6 +5,10 @@ GET        /teams                                   uk.gov.hmrc.cataloguefronten
 GET        /teams/:teamName                         uk.gov.hmrc.cataloguefrontend.CatalogueController.team(teamName)
 GET        /digital-services                        uk.gov.hmrc.cataloguefrontend.CatalogueController.allDigitalServices
 GET        /digital-service/:digitalServiceName     uk.gov.hmrc.cataloguefrontend.CatalogueController.digitalService(digitalServiceName)
+GET        /digital-service/owner/:digitalServiceName     uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceOwner(digitalServiceName)
+POST       /digital-service/owner                   uk.gov.hmrc.cataloguefrontend.CatalogueController.saveServiceOwner()
+GET        /users                                   uk.gov.hmrc.cataloguefrontend.CatalogueController.allUsers
+
 GET        /services                                uk.gov.hmrc.cataloguefrontend.CatalogueController.allServices
 GET        /service/:name                           uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
 GET        /libraries                               uk.gov.hmrc.cataloguefrontend.CatalogueController.allLibraries
