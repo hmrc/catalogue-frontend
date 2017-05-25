@@ -33,7 +33,7 @@
             <div class="board">
                 <h3 class="board__heading">Details</h3>
                 <div class="board__body">
-                    <div class="col-lg-7 editable-label">
+                    <div class="col-lg-6 editable-label">
                         <label >Service Owner: </label>
                         <span id="service_owner_edit_component" style="display: None">
                             <div class="input-group">
@@ -47,7 +47,6 @@
                                     </button>
                                 </div>
                             </div>
-                            <div id="service-owner-error" class="alert alert-danger" style="display: none"></div>
                         </span>
                         <span id="service_owner_view_component" class="service-owner-view" >
                             <div class="input-group">
@@ -56,9 +55,12 @@
                                     <button type="button" class="btn btn-primary" onclick="enterServiceOwnerEditMode()">
                                         <span aria-hidden="true"></span> Edit
                                     </button>
+                                    <div id="saved-badge" class="btn alert-success" style="display: none">Saved</div>
                                 </div>
+
                             </div>
                         </span>
+                        @*<span id="saved-badge" class="badge" style="display: none">Saved</span>*@
                     </div>
                     </div>
             </div>
@@ -120,14 +122,11 @@
         </div>
     }
 
+
+    <div id="snackbar" class="snackbar"></div>
     <script>
-        function hideErrors(){
-            $('#service-owner-error').hide();
-        }
 
         function enterServiceOwnerEditMode() {
-            hideErrors();
-
             var currentServiceOwnerValue = $('#service_owner_view_field').text();
             if(currentServiceOwnerValue === 'Not specified') {
                 currentServiceOwnerValue = '';
@@ -144,14 +143,23 @@
         }
 
 
+        $("#service_owner_edit_input").keyup(function(e) {
+            if (e.keyCode == 27) { // escape key maps to keycode `27`
+                endServiceOwnerEditMode();
+            }
+        });
+
+        $("#service_owner_edit_input").keyup(function(e) {
+            if (e.keyCode == 13) { // enter key maps to keycode `13`
+                saveServiceOwner();
+            }
+        });
+
         $(function() {
             $( '#service_owner_edit_input').autocomplete({
                 source: "/users",
                 autoFocus: true,
-                minLength: 3,
-                select: function() {
-                    hideErrors();
-                }
+                minLength: 3
             });
         });
 
@@ -168,18 +176,41 @@
                 dataType: 'json',
                 headers: { 'Content-Type': 'application/json' },
                 data: JSON.stringify(data),
-                success: function(result,status,xhr){
+                success: function(result, status, xhr){
                     $("#service_owner_view_field").text(result);
+                    showSnackBar("Service Owner saved: '" + result + "'");
                     endServiceOwnerEditMode();
                 },
                 error: function(xhr,status,error){
-                    debugger;
-                    $("#service-owner-error").show().text(xhr.responseJSON);
+                    showSnackBar(xhr.responseJSON, true);
                 }
             });
 
 
         }
+
+        function showSnackBar(message, error) {
+            // Get the snackbar DIV
+            var x = document.getElementById("snackbar");
+
+            if(error) {
+                x.style.backgroundColor = "#FF3044";
+                x.style.color = "#000000";
+            } else {
+                x.style.backgroundColor = "";
+                x.style.color = "";
+            }
+
+            x.innerHTML = message
+            // Add the "show" class to DIV
+            x.className = "show";
+//            debugger;
+
+            // After 3 seconds, remove the show class from DIV
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+        
+
 
 
 
