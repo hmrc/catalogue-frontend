@@ -88,7 +88,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
+      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
 
       response.body should include("""<a href="/library/teamA-lib">teamA-lib</a>""")
       response.body should include("""<a href="/service/teamA-serv">teamA-serv</a>""")
@@ -109,7 +109,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
+      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
 
       response.body.toString should include("""<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
 
@@ -126,7 +126,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: (None)")
+      response.body should include(s"Last updated from Github at: (None)")
 
     }
 
@@ -142,7 +142,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
+      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include(ViewMessages.noRepoOfTypeForTeam("service"))
       response.body should include(ViewMessages.noRepoOfTypeForTeam("library"))
     }

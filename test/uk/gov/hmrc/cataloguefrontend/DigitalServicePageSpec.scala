@@ -112,7 +112,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
+      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
 
       response.body should include("""<a href="/service/A">A</a>""")
       response.body should include("""<a href="/prototype/B">B</a>""")
@@ -134,7 +134,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: (None)")
+      response.body should include(s"Last updated from Github at: (None)")
 
     }
 
@@ -152,7 +152,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
+      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include(ViewMessages.noRepoOfTypeForDigitalService("service"))
       response.body should include(ViewMessages.noRepoOfTypeForDigitalService("library"))
       response.body should include(ViewMessages.noRepoOfTypeForDigitalService("prototype"))
