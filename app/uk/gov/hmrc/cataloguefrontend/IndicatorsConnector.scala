@@ -126,10 +126,7 @@ trait IndicatorsConnector extends ServicesConfig {
     eventualResponse.map { r =>
       r.status match {
         case 404 => Some(Nil)
-        case 200 =>
-          val x = r.json.as[Seq[JobMetricDataPoint]]
-          println(x)
-          Some(x)
+        case 200 => Some(r.json.as[Seq[JobMetricDataPoint]])
       }
     }.recover {
       case ex =>

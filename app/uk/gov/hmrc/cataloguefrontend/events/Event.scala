@@ -22,6 +22,7 @@ import play.api.libs.json._
 
 
 sealed trait EventData
+//!@ TODO rename 'name' to userName
 case class ServiceOwnerUpdatedEventData(service: String, name: String) extends EventData
 case class SomeOtherEventData(something: String, somethingElse: Long) extends EventData // <--- this is an example event type showing how to add other EventData types
 

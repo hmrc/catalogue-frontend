@@ -48,6 +48,8 @@ import play.api.test.Helpers._
 class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneServerPerSuite with WireMockEndpoints with MockitoSugar with ScalaFutures {
 
   val umpFrontPageUrl = "http://some.ump.fontpage.com"
+  val umpBaseUrl = "http://things.things.com"
+
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
     "microservice.services.teams-and-services.host" -> host,
@@ -56,6 +58,7 @@ class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneS
     "microservice.services.indicators.host" -> host,
     "microservice.services.user-management.url" -> endpointMockUrl,
     "usermanagement.portal.url" -> "http://usermanagement/link",
+    "user-management.profileBaseUrl" -> "http://usermanagement/linkBase",
     "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
     "play.ws.ssl.loose.acceptAnyCertificate" -> true,
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
@@ -73,6 +76,14 @@ class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneS
   }
 
   val catalogueController = new CatalogueController {
+
+    override def getConfString(key: String, defString: => String): String = {
+      key match {
+        case "user-management.profileBaseUrl" => umpBaseUrl
+        case _ => super.getConfString(key, defString)
+      }
+    }
+
     override def userManagementConnector: UserManagementConnector = ???
     override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = ???
     override def indicatorsConnector: IndicatorsConnector = ???
@@ -86,18 +97,17 @@ class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneS
   "serviceOwner" should {
 
     val digitalServiceName = "SomeDigitalService"
-    val serviceOwnerName = "Some Owner"
+    val serviceOwner = TeamMember(None,None,None,None,None,None)
 
     "return the service owner for a given digital service" in {
 
-
-      when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwnerName))
+      when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwner))
       val response: Result = catalogueController.serviceOwner(digitalServiceName)(FakeRequest()).futureValue
 
       response.header.status shouldBe 200
 
       val responseAsJson = contentAsJson(response)
-      responseAsJson.as[String] shouldBe serviceOwnerName
+      responseAsJson.as[TeamMember] shouldBe serviceOwner
       verify(mockedModelService).getDigitalServiceOwner(digitalServiceName)
     }
     
@@ -117,30 +127,52 @@ class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneS
 
   "saveServiceOwner" should {
 
-    val teamMembers = Seq(teamMember("member 1"), teamMember("member 2"), teamMember("member 3"))
+    val teamMember1 = teamMember("member 1", "member.1")
+    val teamMembers = Seq(
+      teamMember1,
+      teamMember("member 2", "member.2"),
+      teamMember("member 3", "member.3"))
 
-    "delegate the saving of the service owner to the EventService" in {
+    "save the username of the service owner and return the his/her full DisplayableTeamMember object" in {
       when(mockedModelService.getAllUsers).thenReturn(teamMembers)
       when(mockedEventService.saveServiceOwnerUpdatedEvent(any())).thenReturn(Future.successful(true))
 
-      val ownerUpdatedEventData = ServiceOwnerUpdatedEventData("service-abc", "member 1")
+      val serviceOwnerSaveEventData = ServiceOwnerSaveEventData("service-abc", "member 1")
       val response = catalogueController.saveServiceOwner()(FakeRequest(Helpers.POST, "/")
-      .withHeaders("Content-Type" -> "application/json")
-      .withJsonBody(Json.toJson(ownerUpdatedEventData))
+        .withHeaders("Content-Type" -> "application/json")
+        .withJsonBody(Json.toJson(serviceOwnerSaveEventData))
       ).futureValue
+
+      verify(mockedEventService).saveServiceOwnerUpdatedEvent(ServiceOwnerUpdatedEventData("service-abc", "member.1"))
 
       response.header.status shouldBe 200
 
+      contentAsJson(response).as[DisplayableTeamMember] shouldBe DisplayableTeamMember(teamMember1.getDisplayName, false, s"$umpBaseUrl/${teamMember1.username.get}"  )
+    }
+
+    "not save the service owner if it doesn't contain a username" in {
+      val member = TeamMember(Some("member 1"), None, None, None, None, None)
+      when(mockedModelService.getAllUsers).thenReturn(Seq(member))
+      when(mockedEventService.saveServiceOwnerUpdatedEvent(any())).thenReturn(Future.successful(true))
+
+      val serviceOwnerSaveEventData = ServiceOwnerSaveEventData("service-abc", "member 1")
+      val response = catalogueController.saveServiceOwner()(FakeRequest(Helpers.POST, "/")
+        .withHeaders("Content-Type" -> "application/json")
+        .withJsonBody(Json.toJson(serviceOwnerSaveEventData))
+      ).futureValue
+
+      response.header.status shouldBe 417
       val responseAsJson = contentAsJson(response)
-      responseAsJson.as[String] shouldBe "member 1"
-      verify(mockedEventService).saveServiceOwnerUpdatedEvent(ownerUpdatedEventData)
+      responseAsJson.as[String] shouldBe s"Username was not set (by UMP) for $member!"
+      Mockito.verifyZeroInteractions(mockedEventService)
+
     }
 
     "not save the user if he/she is not a valid user (from UMP)" in {
 
       when(mockedModelService.getAllUsers).thenReturn(teamMembers)
 
-      val ownerUpdatedEventData = ServiceOwnerUpdatedEventData("service-abc", "Mrs Invalid Person")
+      val ownerUpdatedEventData = ServiceOwnerSaveEventData("service-abc", "Mrs Invalid Person")
       val response = catalogueController.saveServiceOwner()(FakeRequest(Helpers.POST, "/")
       .withHeaders("Content-Type" -> "application/json")
       .withJsonBody(Json.toJson(ownerUpdatedEventData))
@@ -149,7 +181,7 @@ class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneS
       response.header.status shouldBe NOT_ACCEPTABLE
 
       val responseAsJson = contentAsJson(response)
-      responseAsJson.as[String] shouldBe s"Invalid user: ${ownerUpdatedEventData.name}"
+      responseAsJson.as[String] shouldBe s"Invalid user: ${ownerUpdatedEventData.displayName}"
       Mockito.verifyZeroInteractions(mockedEventService)
     }
 
@@ -172,8 +204,8 @@ class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneS
   }
 
 
-  private def teamMember(displayName: String) = {
-    TeamMember(Some(displayName), None, None, None, None, None)
+  private def teamMember(displayName: String, userName: String) = {
+    TeamMember(Some(displayName), None, None, None, None, Some(userName))
   }
 
 }

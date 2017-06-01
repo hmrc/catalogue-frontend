@@ -83,4 +83,7 @@ object ViewMessages {
   def errorMessage = {
     Html("""<h2 class="chart-message text-center">The catalogue encountered an error</h2>""" + s"<p>${ViewMessages.indicatorsServiceError}</p>")
   }
+
+  val notSpecifiedText = "Not specified"
+
 }

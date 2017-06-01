@@ -65,9 +65,9 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
   val digitalServiceName = "digital-service-a"
 
-  val serviceOwnerName = "Mr. someone"
+  val serviceOwner = TeamMember(Some("Jack Low"), None, None, None, None, Some("jack.low"))
   val mockedModelService = mock[ReadModelService]
-  when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwnerName))
+  when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwner))
 
   "DigitalService page" should {
 
@@ -205,7 +205,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val serviceOwnerO = document.select("#service_owner_edit_input").iterator().toList.headOption
 
       serviceOwnerO.isDefined shouldBe true
-      serviceOwnerO.get.attr("value") shouldBe serviceOwnerName
+      serviceOwnerO.get.attr("value") shouldBe serviceOwner.getDisplayName
     }
 
 

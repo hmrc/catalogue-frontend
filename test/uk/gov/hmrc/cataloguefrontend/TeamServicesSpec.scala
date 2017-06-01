@@ -152,10 +152,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
         """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
-
       )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
 
-//      mockHttpApiCall(s"/v1/organisations/mdtp/teams/$teamName/members", "/large-user-management-response.json")
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/large-user-management-response.json")
 
 

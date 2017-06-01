@@ -27,7 +27,7 @@ import play.api.i18n.Messages.Implicits._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import play.modules.reactivemongo.MongoDbConnection
-import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers.DisplayableTeamMember
+import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.events._
@@ -43,6 +43,10 @@ case class DigitalServiceDetails(digitalServiceName: String,
                                  teamMembersLookUp: Map[String, Either[UMPError, Seq[DisplayableTeamMember]]],
                                  repos: Map[String, Seq[String]])
 
+case class ServiceOwnerSaveEventData(service: String, displayName: String)
+object ServiceOwnerSaveEventData {
+  implicit val serviceOwnerSaveEventDataFormat = Json.format[ServiceOwnerSaveEventData]
+}
 
 object CatalogueController extends CatalogueController with MongoDbConnection {
 
@@ -90,21 +94,29 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     readModelService.getDigitalServiceOwner(digitalService).fold(NotFound(Json.toJson(s"owner for $digitalService not found")))(ds => Ok(Json.toJson(ds)))
   }
 
-
   def saveServiceOwner() = Action.async { implicit request =>
+
     request.body.asJson.map{ payload =>
-      val serviceOwnerUpdatedEventData = payload.as[ServiceOwnerUpdatedEventData]
-      val userValid = readModelService.getAllUsers.map(_.displayName.getOrElse("")).contains(serviceOwnerUpdatedEventData.name)
-      if (userValid) {
-        eventService.saveServiceOwnerUpdatedEvent(serviceOwnerUpdatedEventData).map { _ =>
-          Ok(Json.toJson(s"${serviceOwnerUpdatedEventData.name}"))
+      val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
+      val serviceOwnerDisplayName: String = serviceOwnerSaveEventData.displayName
+      val maybeTeamMember: Option[TeamMember] = readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
+
+      maybeTeamMember.fold {
+        Future(NotAcceptable(Json.toJson(s"Invalid user: $serviceOwnerDisplayName")))
+      } { member =>
+        member.username.fold(Future.successful(ExpectationFailed(Json.toJson(s"Username was not set (by UMP) for $member!")))) {
+          serviceOwnerUsername =>
+            eventService.saveServiceOwnerUpdatedEvent(ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
+              .map(_ => {
+                val string = getConfString(profileBaseUrlConfigKey, "#")
+                Ok(Json.toJson(DisplayableTeamMember(member, string)))
+              })
         }
-      } else {
-        Future(NotAcceptable(Json.toJson(s"Invalid user: ${serviceOwnerUpdatedEventData.name}")))
       }
-    }.getOrElse(Future.successful(BadRequest(Json.toJson( s"""Unable to parse json: "${request.body.asText.getOrElse("No Text!")}""""))))
+    }.getOrElse(Future.successful(BadRequest(Json.toJson( s"""Unable to parse json: "${request.body.asText.getOrElse("No text in request body!")}""""))))
 
   }
+
 
 
   def allTeams() = Action.async { implicit request =>
@@ -163,9 +175,9 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       teamMembers <- EitherT(errorOrTeamMembersLookupF)
     } yield timestampedDigitalService.map(digitalService => DigitalServiceDetails(digitalServiceName, teamMembers, getRepos(digitalService)))
 
-    digitalServiceDetails.value.map(d => {
-      Ok(digital_service_info(digitalServiceName, d, readModelService.getDigitalServiceOwner(digitalServiceName)))
-    })
+    digitalServiceDetails.value.map(d =>
+      Ok(digital_service_info(digitalServiceName, d, readModelService.getDigitalServiceOwner(digitalServiceName).map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))))
+    )
   }
 
   def allUsers = Action { implicit request =>
@@ -476,25 +488,4 @@ object DeploymentsFilter {
   }
 }
 
-object DisplayableTeamMembers {
 
-
-  def apply(teamName: String, umpProfileBaseUrl: String, teamMembers: Seq[TeamMember]): Seq[DisplayableTeamMember] = {
-
-    val displayableTeamMembers = teamMembers.map(tm =>
-      DisplayableTeamMember(
-        displayName = tm.displayName.getOrElse("DISPLAY NAME NOT PROVIDED"),
-        isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.toLowerCase)),
-        umpLink = tm.username.map(x => s"${umpProfileBaseUrl.appendSlash}$x").getOrElse("USERNAME NOT PROVIDED")
-      )
-    )
-
-    val (serviceOwners, others) = displayableTeamMembers.partition(_.isServiceOwner)
-    serviceOwners.sortBy(_.displayName) ++ others.sortBy(_.displayName)
-  }
-
-  case class DisplayableTeamMember(displayName: String,
-                                   isServiceOwner: Boolean = false,
-                                   umpLink: String)
-
-}

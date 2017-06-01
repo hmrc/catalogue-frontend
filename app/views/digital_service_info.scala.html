@@ -17,7 +17,12 @@
 @import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError, TeamsAndRepositoriesError}
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{NoData, UMPError}
 @import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, RepoType, Timestamped, ViewMessages}
-@(digitalServiceName: String, timestampedRepos: Either[TeamsAndRepositoriesError, Timestamped[DigitalServiceDetails]], digitalServiceOwner: Option[String] )(implicit messages: Messages)
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages._
+@import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
+@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
+@(digitalServiceName: String, timestampedRepos: Either[TeamsAndRepositoriesError, Timestamped[DigitalServiceDetails]], digitalServiceOwner: Option[DisplayableTeamMember] )(implicit messages: Messages)
+
 
 @standard_layout(digitalServiceName, "digital-services") {
     <header>
@@ -26,7 +31,7 @@
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
-    
+
 
     <div class="row">
         <div class="col-md-12">
@@ -35,9 +40,28 @@
                 <div class="board__body">
                     <div class="col-lg-6 editable-label">
                         <label >Service Owner: </label>
+                        <span id="service_owner_view_component" class="service-owner-view" >
+                            <div class="input-group">
+                                <span class="form-control editable-label__field">
+                                        @digitalServiceOwner.map { so =>
+                                            <a href="@{so.umpLink}" id="service_owner_view_field">@{so.displayName}</a>
+                                    }.getOrElse {
+                                            <span id="service_owner_view_field">
+                                                @notSpecifiedText
+                                            </span>
+                                        }
+                                </span>
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-primary" onclick="enterServiceOwnerEditMode()">
+                                        <span aria-hidden="true"></span> Edit
+                                    </button>
+                                </div>
+
+                            </div>
+                        </span>
                         <span id="service_owner_edit_component" style="display: None">
                             <div class="input-group">
-                                <input type="text" id="service_owner_edit_input" class="form-control" value="@{digitalServiceOwner.getOrElse("Not specified")}">
+                                <input type="text" id="service_owner_edit_input" class="form-control" value="@{digitalServiceOwner.map(_.displayName).getOrElse("Not specified")}">
                                 <div class="input-group-btn">
                                     <button type="button" class="btn btn-primary" onclick="saveServiceOwner()">
                                         <span aria-hidden="true"></span> Save
@@ -48,19 +72,7 @@
                                 </div>
                             </div>
                         </span>
-                        <span id="service_owner_view_component" class="service-owner-view" >
-                            <div class="input-group">
-                                <span id="service_owner_view_field" class="form-control editable-label__field">@{ digitalServiceOwner.getOrElse("Not specified")}</span>
-                                <div class="input-group-btn">
-                                    <button type="button" class="btn btn-primary" onclick="enterServiceOwnerEditMode()">
-                                        <span aria-hidden="true"></span> Edit
-                                    </button>
-                                    <div id="saved-badge" class="btn alert-success" style="display: none">Saved</div>
-                                </div>
 
-                            </div>
-                        </span>
-                        @*<span id="saved-badge" class="badge" style="display: none">Saved</span>*@
                     </div>
                     </div>
             </div>
@@ -127,8 +139,8 @@
     <script>
 
         function enterServiceOwnerEditMode() {
-            var currentServiceOwnerValue = $('#service_owner_view_field').text();
-            if(currentServiceOwnerValue === 'Not specified') {
+            var currentServiceOwnerValue = $('#service_owner_view_field').text().trim();
+            if(currentServiceOwnerValue === '@notSpecifiedText') {
                 currentServiceOwnerValue = '';
             }
             $('#service_owner_edit_input').val(currentServiceOwnerValue);
@@ -167,7 +179,7 @@
             var digitalServiceOwnerName = $('#service_owner_edit_input').val();
             var data = {
                 service: "@digitalServiceName",
-                name: digitalServiceOwnerName
+                displayName: digitalServiceOwnerName
             };
 
             $.ajax({
@@ -177,9 +189,15 @@
                 headers: { 'Content-Type': 'application/json' },
                 data: JSON.stringify(data),
                 success: function(result, status, xhr){
-                    $("#service_owner_view_field").text(result);
-                    showSnackBar("Service Owner saved: '" + result + "'");
                     endServiceOwnerEditMode();
+                    var displayName = result.displayName;
+                    var umpLink = result.umpLink;
+
+                    debugger;
+                    $("#service_owner_view_field").text("");
+                    $("#service_owner_view_field").append("<a href='"+ umpLink +"'>"+ displayName +"</a>");
+//                    $("#service_owner_view_field").attr("href", umpLink);
+                    showSnackBar("Service Owner saved: '" + displayName + "'");
                 },
                 error: function(xhr,status,error){
                     showSnackBar(xhr.responseJSON, true);
@@ -210,10 +228,6 @@
             setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
         }
         
-
-
-
-
     </script>
 
 }
@@ -238,6 +252,7 @@
     }
 }
 }
+
 
 
 @showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {
@@ -267,3 +282,4 @@
         </div>
     }
 }
+

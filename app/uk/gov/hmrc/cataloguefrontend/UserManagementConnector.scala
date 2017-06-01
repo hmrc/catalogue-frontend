@@ -223,7 +223,13 @@ object UserManagementConnector extends UserManagementConnector {
                         givenName: Option[String],
                         primaryEmail: Option[String],
                         serviceOwnerFor: Option[Seq[String]],
-                        username: Option[String])
+                        username: Option[String]) {
+
+    def getUmpLink(umpProfileBaseUrl: String) =
+      this.username.map(x => s"${umpProfileBaseUrl.appendSlash}$x").getOrElse("USERNAME NOT PROVIDED")
+
+    def getDisplayName = this.displayName.getOrElse("DISPLAY NAME NOT PROVIDED")
+  }
 
   case class TeamDetails(description: Option[String],
                          location: Option[String],

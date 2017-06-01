@@ -27,13 +27,16 @@ import scala.concurrent.Future
 
 trait ReadModelService {
 
-  def refreshEventsCache: Future[Map[String, String]]
+  type ServiceName = String
+  type ServiceOwnerUserName = String
+
+  def refreshEventsCache: Future[Map[ServiceName, ServiceOwnerUserName]]
   def refreshUmpCache: Future[Seq[TeamMember]]
 
-  private[events] var eventsCache = Map.empty[String, String]
+  private[events] var eventsCache = Map.empty[ServiceName, ServiceOwnerUserName]
   protected[events] var umpUsersCache = Seq.empty[TeamMember]
 
-  def getDigitalServiceOwner(digitalService: String): Option[String] = eventsCache.get(digitalService)
+  def getDigitalServiceOwner(digitalService: String): Option[TeamMember] = umpUsersCache.find(_.username == eventsCache.get(digitalService))
 
   def getAllUsers = umpUsersCache
 }
