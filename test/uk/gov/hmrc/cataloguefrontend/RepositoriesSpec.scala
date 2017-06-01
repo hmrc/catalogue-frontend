@@ -51,7 +51,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       val response = await(WS.url(s"http://localhost:$port/repositories").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
+      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include("<h1>Repositories</h1>")
 
       val document = asDocument(response.body)
@@ -85,7 +85,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       val response = await(WS.url(s"http://localhost:$port/repositories?name=&type=Library").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
+      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include("<h1>Repositories</h1>")
 
       val document = asDocument(response.body)

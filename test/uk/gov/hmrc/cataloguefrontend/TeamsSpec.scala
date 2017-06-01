@@ -53,7 +53,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with
       val response = await(WS.url(s"http://localhost:$port/teams").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
+      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include("""<a href="/teams/teamA">teamA</a>""")
       response.body should include(firstactivityDate.asPattern("yyyy-MM-dd"))
       response.body should include(lastactivityDate.asPattern("yyyy-MM-dd"))

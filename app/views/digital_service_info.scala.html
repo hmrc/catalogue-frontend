@@ -27,7 +27,7 @@
 @standard_layout(digitalServiceName, "digital-services") {
     <header>
         <h1>Digital Service: @digitalServiceName</h1>
-        <time class="last-updated">Last updated at: @{timestampedRepos.right.map(_.formattedTimestamp).right.getOrElse("Not Available")}</time>
+        <time class="last-updated">Last updated from Github at: @{timestampedRepos.right.map(_.formattedTimestamp).right.getOrElse("Not Available")}</time>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
@@ -227,7 +227,7 @@
             // After 3 seconds, remove the show class from DIV
             setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
         }
-        
+
     </script>
 
 }

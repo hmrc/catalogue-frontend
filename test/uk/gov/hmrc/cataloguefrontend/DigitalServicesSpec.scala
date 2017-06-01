@@ -51,7 +51,7 @@ class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPer
       val response = await(WS.url(s"http://localhost:$port/digital-services").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated at: 14 Oct 1983 10:03")
+      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include("<h1>Digital Services</h1>")
 
       val document = asDocument(response.body)
