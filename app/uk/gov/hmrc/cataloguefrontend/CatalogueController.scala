@@ -117,7 +117,9 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   }
 
-
+  def removeAllEvents() = Action.async {
+    eventService.deleteAllEvents.map(_ => Ok("All Events are deleted"))
+  }
 
   def allTeams() = Action.async { implicit request =>
     import SearchFiltering._

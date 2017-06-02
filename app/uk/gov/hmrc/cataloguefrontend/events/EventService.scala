@@ -23,6 +23,7 @@ import scala.concurrent.Future
 trait EventService {
   def saveServiceOwnerUpdatedEvent(serviceOwnerUpdatedEventData: ServiceOwnerUpdatedEventData) : Future[Boolean]
   def getAllEvents: Future[List[Event]]
+  def deleteAllEvents: Future[Boolean]
 }
 
 class DefaultEventService(eventRepository: EventRepository) extends EventService {
@@ -31,4 +32,8 @@ class DefaultEventService(eventRepository: EventRepository) extends EventService
     eventRepository.add(Event(EventType.ServiceOwnerUpdated, data = Json.toJson(serviceOwnerUpdatedEventData).as[JsObject]))
 
   override def getAllEvents = eventRepository.getAllEvents
+
+  override def deleteAllEvents = eventRepository.clearAllData
+
+
 }

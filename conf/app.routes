@@ -21,3 +21,5 @@ GET        /deployments/list                        uk.gov.hmrc.cataloguefronten
 GET        /assets/*file                            controllers.Assets.at(path="/public", file)
 GET        /                                        uk.gov.hmrc.cataloguefrontend.CatalogueController.landingPage
 GET        /admin/metrics                           @com.kenshoo.play.metrics.MetricsController.metrics
+
+GET        /events/delete                                  uk.gov.hmrc.cataloguefrontend.CatalogueController.removeAllEvents
