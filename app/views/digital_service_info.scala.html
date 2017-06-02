@@ -95,7 +95,7 @@
                                    @if(errorOrMembers.isRight) {
                                        @for(teamMember <- errorOrMembers.right.get) {
                                            <li class="col-xs-3">
-                                               <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
+                                               <a href="@teamMember.umpLink">@teamMember.displayName</a>
                                            </li>
                                        }
 

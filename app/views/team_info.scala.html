@@ -110,7 +110,7 @@
                             @if(errorOrTeamMembers.isRight) {
                                 @for(teamMember <- errorOrTeamMembers.right.get) {
                                     <li class="col-xs-6">
-                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
+                                        <a href="@teamMember.umpLink">@teamMember.displayName</a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
                                     </li>
                                 }
 
