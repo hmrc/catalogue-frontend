@@ -36,7 +36,7 @@ import play.api.mvc.{Action, Result}
 import play.api.test.FakeRequest
 import play.test.Helpers
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerUpdatedEventData}
+import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.collection.JavaConversions._

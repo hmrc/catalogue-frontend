@@ -22,8 +22,7 @@ import play.api.libs.json._
 
 
 sealed trait EventData
-//!@ TODO rename 'name' to userName
-case class ServiceOwnerUpdatedEventData(service: String, name: String) extends EventData
+case class ServiceOwnerUpdatedEventData(service: String, username: String) extends EventData
 case class SomeOtherEventData(something: String, somethingElse: Long) extends EventData // <--- this is an example event type showing how to add other EventData types
 
 
@@ -32,6 +31,7 @@ object EventData extends EventData {
   implicit val  someOtherEventDataFormat = Json.format[SomeOtherEventData]
 }
 
+// this gets persisted
 case class Event(eventType: EventType.Value,
                  timestamp: Long = new Date().getTime,
                  data: JsObject,
@@ -41,7 +41,11 @@ object Event {
   implicit val format = Json.format[Event]
 }
 
-
+// this is inbound message type from UI
+case class ServiceOwnerSaveEventData(service: String, displayName: String)
+object ServiceOwnerSaveEventData {
+  implicit val serviceOwnerSaveEventDataFormat = Json.format[ServiceOwnerSaveEventData]
+}
 
 
 

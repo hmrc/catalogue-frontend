@@ -68,8 +68,8 @@ class MongoEventRepositorySpec extends UnitSpec with LoneElement with MongoSpecS
       events.size shouldBe 2
       events should contain theSameElementsAs
         Seq(
-          Event(EventType.ServiceOwnerUpdated, timestamp = timestamp, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject]),
-          Event(EventType.ServiceOwnerUpdated, timestamp = timestamp + 1, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
+          Event(EventType.ServiceOwnerUpdated, timestamp = timestamp, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "joe.black")).as[JsObject]),
+          Event(EventType.ServiceOwnerUpdated, timestamp = timestamp + 1, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "joe.black")).as[JsObject])
         )
     }
   }
@@ -79,7 +79,7 @@ class MongoEventRepositorySpec extends UnitSpec with LoneElement with MongoSpecS
       "eventType" -> "ServiceOwnerUpdated",
       "data" -> Json.obj(
         "service" -> "Catalogue",
-        "name" -> "Joe Black"
+        "username" -> "joe.black"
       ),
       "timestamp" -> theTimestamp,
       "metadata" -> Json.obj()

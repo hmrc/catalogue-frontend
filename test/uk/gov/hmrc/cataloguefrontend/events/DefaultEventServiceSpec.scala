@@ -34,9 +34,9 @@ class DefaultEventServiceSpec extends FunSpec with Matchers with MockitoSugar wi
     val eventService = new DefaultEventService(eventRepository)
 
     it("should save service owner update data by delegating to the event repository") {
-      val serviceOwnerName = "Joe Black"
+      val serviceOwnerUsername = "joe.black"
       val serviceName = "service-abc"
-      val eventData = ServiceOwnerUpdatedEventData(serviceName, serviceOwnerName)
+      val eventData = ServiceOwnerUpdatedEventData(serviceName, serviceOwnerUsername)
       eventService.saveServiceOwnerUpdatedEvent(eventData)
 
 
@@ -44,7 +44,7 @@ class DefaultEventServiceSpec extends FunSpec with Matchers with MockitoSugar wi
       verify(eventRepository).add(argumentCaptor.capture)
 
       argumentCaptor.getValue.eventType shouldBe EventType.ServiceOwnerUpdated
-      argumentCaptor.getValue.data shouldBe JsObject(Seq("service" -> JsString(serviceName), "name" -> JsString(serviceOwnerName)))
+      argumentCaptor.getValue.data shouldBe JsObject(Seq("service" -> JsString(serviceName), "username" -> JsString(serviceOwnerUsername)))
       argumentCaptor.getValue.metadata shouldBe JsObject(Seq.empty)
       argumentCaptor.getValue.timestamp should be > testStartTime
       argumentCaptor.getValue.timestamp should be < System.currentTimeMillis()

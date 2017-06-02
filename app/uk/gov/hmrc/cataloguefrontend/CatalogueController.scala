@@ -43,10 +43,7 @@ case class DigitalServiceDetails(digitalServiceName: String,
                                  teamMembersLookUp: Map[String, Either[UMPError, Seq[DisplayableTeamMember]]],
                                  repos: Map[String, Seq[String]])
 
-case class ServiceOwnerSaveEventData(service: String, displayName: String)
-object ServiceOwnerSaveEventData {
-  implicit val serviceOwnerSaveEventDataFormat = Json.format[ServiceOwnerSaveEventData]
-}
+
 
 object CatalogueController extends CatalogueController with MongoDbConnection {
 

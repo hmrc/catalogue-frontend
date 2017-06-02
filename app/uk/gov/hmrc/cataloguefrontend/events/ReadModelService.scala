@@ -50,7 +50,7 @@ class DefaultReadModelService(eventService: EventService, userManagementConnecto
       eventsCache = events.toStream.filter(_.eventType == EventType.ServiceOwnerUpdated)
         .sortBy(_.timestamp)
         .map(_.data.as[ServiceOwnerUpdatedEventData]).groupBy(_.service)
-        .map { case (service, eventDataList) => (service, eventDataList.last.name) }
+        .map { case (service, eventDataList) => (service, eventDataList.last.username) }
       eventsCache
     }
 
