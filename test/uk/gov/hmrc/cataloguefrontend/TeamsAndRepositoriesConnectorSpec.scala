@@ -94,20 +94,20 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
         Environment(
           "Dev",
           Seq(
-            Link("jenkins", "Jenkins", "http://example.com/job/deploy-microservice"),
-            Link("grafana", "Grafana", "http://example.com/#/dashboard")
+            Link("jenkins", "Jenkins", "https://deploy-dev.co.uk/job/deploy-microservice"),
+            Link("grafana", "Grafana", "https://grafana-dev.co.uk/#/dashboard")
           )),
                 Environment(
           "QA",
           Seq(
-            Link("jenkins", "Jenkins", "http://example.com/job/deploy-microservice"),
-            Link("grafana", "Grafana", "http://example.com/#/dashboard")
+            Link("jenkins", "Jenkins", "https://deploy-qa.co.uk/job/deploy-microservice"),
+            Link("grafana", "Grafana", "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
           )),
         Environment(
           "Production",
           Seq(
-            Link("jenkins", "Jenkins", "http://example.com/job/deploy-microservice"),
-            Link("grafana", "Grafana", "http://example.com/#/dashboard")
+            Link("jenkins", "Jenkins", "https://deploy-prod.co.uk/job/deploy-microservice"),
+            Link("grafana", "Grafana", "https://grafana-prod.co.uk/#/dashboard")
           )
         ))))
 

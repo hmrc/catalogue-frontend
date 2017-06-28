@@ -80,8 +80,8 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       response.body should include("http://open2/service-2")
       response.body should include("Jenkins")
       response.body should include("Grafana")
-      response.body should include("http://example.com/job/deploy-microservice")
-      response.body should include("http://example.com/job/deploy-microservice")
+      response.body should include("https://deploy-qa.co.uk/job/deploy-microservice")
+      response.body should include("https://deploy-prod.co.uk/job/deploy-microservice")
       response.body should include("some description")
 
       response.body should include(createdAt.displayFormat)
@@ -117,13 +117,13 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
         response.body should include(createdAt.displayFormat)
         response.body should include(lastActiveAt.displayFormat)
 
-        response.body should include("http://example.com/job/deploy-microservice")
-        response.body should include("http://example.com/#/dashboard")
-        response.body should include("http://example.com/job/deploy-microservice")
-        response.body should include("http://example.com/#/dashboard")
+        response.body should include("https://deploy-prod.co.uk/job/deploy-microservice")
+        response.body should include("https://grafana-prod.co.uk/#/dashboard")
+        response.body should include("https://deploy-dev.co.uk/job/deploy-microservice")
+        response.body should include("https://grafana-dev.co.uk/#/dashboard")
 
-        response.body should not include ("http://example.com/job/deploy-microservice")
-        response.body should not include ("http://example.com/#/dashboard")
+        response.body should not include ("https://deploy-qa.co.uk/job/deploy-microservice")
+        response.body should not include ("https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
       }
       
       "show show links to devs by default" in {
@@ -136,8 +136,8 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
 
         val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
 
-        response.body should include("http://example.com/job/deploy-microservice")
-        response.body should include("http://example.com/#/dashboard")
+        response.body should include("https://deploy-dev.co.uk/job/deploy-microservice")
+        response.body should include("https://grafana-dev.co.uk/#/dashboard")
 
       }
 

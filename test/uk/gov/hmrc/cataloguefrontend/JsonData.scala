@@ -76,33 +76,33 @@ object JsonData {
        |        "services" : [{
        |          "name": "jenkins",
        |		       "displayName": "Jenkins",
-       |          "url": "http://example.com/job/deploy-microservice"
+       |          "url": "https://deploy-dev.co.uk/job/deploy-microservice"
        |        }, {
        |          "name": "grafana",
        |		       "displayName": "Grafana",
-       |          "url": "http://example.com/#/dashboard"
+       |          "url": "https://grafana-dev.co.uk/#/dashboard"
        |        }]
        |       }, {
        |        "name" : "QA",
        |        "services" : [{
        |          "name": "jenkins",
        |		       "displayName": "Jenkins",
-       |          "url": "http://example.com/job/deploy-microservice"
+       |          "url": "https://deploy-qa.co.uk/job/deploy-microservice"
        |        }, {
        |          "name": "grafana",
        |		       "displayName": "Grafana",
-       |          "url": "http://example.com/#/dashboard"
+       |          "url": "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard"
        |        }]
        |      },{
        |        "name" : "Production",
        |        "services" : [{
        |          "name": "jenkins",
        |		       "displayName": "Jenkins",
-       |          "url": "http://example.com/job/deploy-microservice"
+       |          "url": "https://deploy-prod.co.uk/job/deploy-microservice"
        |        }, {
        |          "name": "grafana",
        |		       "displayName": "Grafana",
-       |          "url": "http://example.com/#/dashboard"
+       |          "url": "https://grafana-prod.co.uk/#/dashboard"
        |        }]
        |       }]
        |     }
@@ -145,7 +145,7 @@ object JsonData {
        |  {
        |    "name": "github-enterprise",
        |    "displayName": "Github Enterprise",
-       |    "url": "http://example.com/HMRC/2fa-prototype"
+       |    "url": "https://github.gov.uk/HMRC/2fa-prototype"
        |  }
        |  ],
        |  "ci": [ ],
