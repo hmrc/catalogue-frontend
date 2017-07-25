@@ -30,10 +30,10 @@
 
 
                 @if(mayBeDependencies.isDefined && !mayBeDependencies.get.libraryDependenciesState.isEmpty) {
-                    <li class="col-xs-8">
+                    <li class="col-xs-9">
                         @*<a href="@dependencies.umpLink">@dependencies.displayName</a> @if(dependencies.isServiceOwner) { <span class="label label-success">Service Owner</span>}*@
                         @*case class LibraryDependencyState(libraryName: String, currentVersion: Version, latestVersion: Version)*@
-                        <span class="col-xs-3"><label>Name</label></span>
+                        <span class="col-xs-4"><label>Name</label></span>
                         <span class="col-xs-3"><label>Current Version</label></span>
                         <span class="col-xs-3"><label>Latest Version</label></span>
 
@@ -42,16 +42,16 @@
                         <li>
                             @*<div style="background:@{getBackgroundColour(dependencyState.currentVersion,dependencyState.latestVersion)}" class="col-xs-8">*@
                             <div class="col-xs-8">
-                                <span class="col-xs-3">
+                                <span class="col-xs-4">
                                     @if(isInternalDependency(dependencyState)) {
                                         <a href="/repositories/@{dependencyState.libraryName}">@dependencyState.libraryName</a>
                                     } else {
                                         @dependencyState.libraryName
                                     }
                                 </span>
-                                <span class="col-xs-2 label @{getBackgroundColour(dependencyState.currentVersion,dependencyState.latestVersion)}">@dependencyState.currentVersion</span>
+                                <span class="col-xs-3 label @{getBackgroundColour(dependencyState.currentVersion,dependencyState.latestVersion)}">@dependencyState.currentVersion</span>
                                 <span class="col-xs-1 glyphicon glyphicon-arrow-right"></span>
-                                <span class="col-xs-2 label label-info">@dependencyState.latestVersion</span>
+                                <span class="col-xs-3 label label-info">@dependencyState.latestVersion</span>
                             </div>
                         </li>
                     }
