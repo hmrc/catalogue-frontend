@@ -41,13 +41,13 @@
                             </li>
                             @for(dependencyState <- mayBeDependencies.get.libraryDependenciesState) {
                                 <li>
-                                    <div class="@{getRAGClass(dependencyState.currentVersion,dependencyState.latestVersion)} col-xs-10">
+                                    <div class="@{getRAGClass(dependencyState.currentVersion,dependencyState.latestVersion)} col-xs-10" id="@{dependencyState.libraryName}">
                                         <span class="col-xs-3">
-                                        @if(isInternalDependency(dependencyState)) {
-                                            <a href="/repositories/@{dependencyState.libraryName}">@dependencyState.libraryName</a>
-                                        } else {
-                                            @dependencyState.libraryName
-                                        }
+                                            @if(isInternalDependency(dependencyState)) {
+                                                <a href="/repositories/@{dependencyState.libraryName}">@dependencyState.libraryName</a>
+                                            } else {
+                                                @dependencyState.libraryName
+                                            }
                                         </span>
                                         <span class="col-xs-3">@dependencyState.currentVersion</span>
                                         <span class="col-xs-1 glyphicon glyphicon-arrow-right"></span>

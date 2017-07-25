@@ -17,10 +17,13 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
+import play.twirl.api.Html
 import uk.gov.hmrc.play.test.UnitSpec
 
 class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
@@ -36,6 +39,8 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
     "microservice.services.teams-and-services.host" -> host,
     "microservice.services.teams-and-services.port" -> endpointPort,
+    "microservice.services.service-dependencies.host" -> host,
+    "microservice.services.service-dependencies.port" -> endpointPort,
     "microservice.services.indicators.port" -> endpointPort,
     "microservice.services.indicators.host" -> host,
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
@@ -101,7 +106,85 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
 
       response.body shouldNot include(s"""chart.draw(data, options);""")
     }
+
+    val dependencies = """{
+                         |  "repositoryName": "service-name",
+                         |  "libraryDependenciesState": [
+                         |    {
+                         |      "libraryName": "lib1-up-to-date",
+                         |      "currentVersion": {
+                         |        "major": 1,
+                         |        "minor": 0,
+                         |        "patch": 0
+                         |      } ,
+                         |      "latestVersion": {
+                         |        "major": 1,
+                         |        "minor": 0,
+                         |        "patch": 0
+                         |      }
+                         |    },
+                         |    {
+                         |      "libraryName": "lib2-minor-behind",
+                         |      "currentVersion": {
+                         |        "major": 2,
+                         |        "minor": 0,
+                         |        "patch": 0
+                         |      },
+                         |      "latestVersion": {
+                         |        "major": 2,
+                         |        "minor": 1,
+                         |        "patch": 0
+                         |      }
+                         |    },
+                         |    {
+                         |      "libraryName": "lib3-major-behind",
+                         |      "currentVersion": {
+                         |        "major": 3,
+                         |        "minor": 0,
+                         |        "patch": 0
+                         |      },
+                         |      "latestVersion": {
+                         |        "major": 4,
+                         |        "minor": 0,
+                         |        "patch": 0
+                         |      }
+                         |    },
+                         |    {
+                         |      "libraryName": "lib4-not-mdtp",
+                         |      "currentVersion": {
+                         |        "major": 3,
+                         |        "minor": 0,
+                         |        "patch": 0
+                         |      }
+                         |    }
+                         |  ]
+                         |}""".stripMargin
+
+    "Render dependencies with red, green, amber and grey colours" in {
+
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
+      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, Some(dependencies)))
+
+      val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
+      response.status shouldBe 200
+
+      val document = asDocument(response.body)
+
+      document.select("#lib1-up-to-date").get(0).text() shouldBe "lib1-up-to-date 1.0.0 1.0.0"
+      document.select("#lib1-up-to-date").hasClass("green") shouldBe true
+
+      document.select("#lib2-minor-behind").get(0).text() shouldBe "lib2-minor-behind 2.0.0 2.1.0"
+      document.select("#lib2-minor-behind").hasClass("amber") shouldBe true
+
+      document.select("#lib3-major-behind").get(0).text() shouldBe "lib3-major-behind 3.0.0 4.0.0"
+      document.select("#lib3-major-behind").hasClass("red") shouldBe true
+
+      document.select("#lib4-not-mdtp").get(0).text() shouldBe "lib4-not-mdtp 3.0.0"
+      document.select("#lib4-not-mdtp").hasClass("grey") shouldBe true
+    }
   }
+
+  def asDocument(html: String): Document = Jsoup.parse(html)
 
   def repositoryData(repositoryDetails: RepositoryDetails) =
     s"""
