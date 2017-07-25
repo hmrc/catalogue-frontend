@@ -22,12 +22,20 @@ import play.api.libs.json.Json
 case class Dependencies(repositoryName: String,
                         libraryDependenciesState: Seq[LibraryDependencyState])
 
-case class Version(major: Int, minor: Int, patch: Int)
+case class Version(major: Int, minor: Int, patch: Int) {
+  override def toString: String = s"$major.$minor.$patch"
+
+  //!@TODO test
+  def -(other: Version): (Int, Int, Int) = {
+    (this.major - other.major, this.minor - other.minor, this.patch - other.patch)
+  }
+
+}
 
 
 
 
-case class LibraryDependencyState(libraryName: String, currentVersion: Version, latestVersion: Version)
+case class LibraryDependencyState(libraryName: String, currentVersion: Version, latestVersion: Option[Version])
 
 
 object Dependencies {

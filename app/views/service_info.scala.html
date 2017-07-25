@@ -22,8 +22,10 @@
 @import uk.gov.hmrc.cataloguefrontend.DeploymentVO
 
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @(cacheTimestampFormatted: String,
   service: RepositoryDetails,
+  mayBeDependencies: Option[Dependencies],
   throughputChartData: Option[ChartDataRows],
   stabilityChartData: Option[ChartDataRows],
   repositoryCreationDate: LocalDateTime,
@@ -52,6 +54,7 @@
     </div>
     <section class="section-wrapper">
         @partials.details(service)
+        @partials.dependencies(mayBeDependencies)
 
         <div class="row">
             @partials.repo_owning_teams(service)

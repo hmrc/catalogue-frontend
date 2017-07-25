@@ -18,7 +18,8 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 
-@(cacheTimestampFormatted: String, library: RepositoryDetails)
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+@(cacheTimestampFormatted: String, library: RepositoryDetails, mayBeDependencies: Option[Dependencies])
 
 @standard_layout(library.name,"libraries") {
 <header>
@@ -33,6 +34,8 @@
 </div>
 <section class="section-wrapper">
     @partials.details(library)
+    @partials.dependencies(mayBeDependencies)
+
 
     <div class="row">
         @partials.repo_owning_teams(library)

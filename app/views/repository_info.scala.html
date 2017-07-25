@@ -20,7 +20,8 @@
 
 @import uk.gov.hmrc.cataloguefrontend.JobMetricDataPoint
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
-@(cacheTimestampFormatted: String, repository: RepositoryDetails, jobExecutionTimeChartData: Option[ChartDataRows])(implicit messages: Messages)
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+@(cacheTimestampFormatted: String, repository: RepositoryDetails, mayBeDependencies: Option[Dependencies], jobExecutionTimeChartData: Option[ChartDataRows])(implicit messages: Messages)
 
 @standard_layout(repository.name, "repositories") {
 <header>
@@ -38,6 +39,7 @@
 </div>
 <section class="section-wrapper">
     @partials.details(repository)
+    @partials.dependencies(mayBeDependencies)
 
     <div class="row">
         @partials.repo_owning_teams(repository)

@@ -77,7 +77,6 @@ trait UserManagementConnector extends UserManagementPortalLink {
   def getTeamMembersFromUMP(team: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
 
-//    val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team/members"
     val url = s"$userManagementBaseUrl/v2/organisations/teams/$team/members"
 
     def isHttpCodeFailure: Option[(Either[UMPError, _]) => Boolean] =

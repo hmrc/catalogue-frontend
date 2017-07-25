@@ -185,7 +185,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val catalogueController = new CatalogueController {
         override def userManagementConnector: UserManagementConnector = ???
-        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mockedConnector
+        override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = mockedConnector
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
 
@@ -261,7 +261,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val catalogueController = new CatalogueController {
         override def userManagementConnector: UserManagementConnector = ???
-        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+        override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
         override def readModelService: ReadModelService = mockedModelService
@@ -298,7 +298,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val catalogueController = new CatalogueController {
         override def userManagementConnector: UserManagementConnector = umpConnectorMock
-        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+        override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
         override def readModelService: ReadModelService = mockedModelService
@@ -337,7 +337,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val catalogueController = new CatalogueController {
         override def userManagementConnector: UserManagementConnector = umpConnectorMock
-        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+        override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
         override def readModelService: ReadModelService = mockedModelService
@@ -377,7 +377,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val catalogueController = new CatalogueController {
         override def userManagementConnector: UserManagementConnector = umpConnectorMock
-        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+        override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
         override def readModelService: ReadModelService = mockedModelService

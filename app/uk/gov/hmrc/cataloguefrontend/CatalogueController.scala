@@ -30,6 +30,7 @@ import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
@@ -58,6 +59,8 @@ object CatalogueController extends CatalogueController with MongoDbConnection {
   lazy override val eventService = new DefaultEventService(new MongoEventRepository(db))
 
   lazy override val readModelService = new DefaultReadModelService(eventService, UserManagementConnector)
+
+  lazy override val serviceDependencyConnector: ServiceDependenciesConnector = ServiceDependenciesConnector
 }
 
 trait CatalogueController extends FrontendController with UserManagementPortalLink {
@@ -74,6 +77,8 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   def userManagementConnector: UserManagementConnector
 
   def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
+
+  def serviceDependencyConnector : ServiceDependenciesConnector
 
   def indicatorsConnector: IndicatorsConnector
 
@@ -277,11 +282,13 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     val repositoryDetailsF = teamsAndRepositoriesConnector.repositoryDetails(name)
     val deploymentIndicatorsForServiceF: Future[Option[DeploymentIndicators]] = indicatorsConnector.deploymentIndicatorsForService(name)
     val serviceDeploymentInformationF: Future[Either[Throwable, ServiceDeploymentInformation]] = deploymentsService.getWhatsRunningWhere(name)
+    val dependenciesF = serviceDependencyConnector.getDependencies(name)
 
     for {
       service <- repositoryDetailsF
       maybeDataPoints <- deploymentIndicatorsForServiceF
       serviceDeploymentInformation: Either[Throwable, ServiceDeploymentInformation] <- serviceDeploymentInformationF
+      mayBeDependencies <- dependenciesF
     } yield (service, serviceDeploymentInformation) match {
       case (_, Left(t)) =>
         t.printStackTrace()
@@ -300,6 +307,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
         service_info(
           repositoryDetails.formattedTimestamp,
           repositoryDetails.data.copy(environments = maybeDeployedEnvironments),
+          mayBeDependencies,
           ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
           ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)),
           repositoryDetails.data.createdAt,
@@ -312,12 +320,14 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
   def library(name: String) = Action.async { implicit request =>
     for {
       library <- teamsAndRepositoriesConnector.repositoryDetails(name)
+      mayBeDependencies <- serviceDependencyConnector.getDependencies(name)
     } yield library match {
       case Some(s) if s.data.repoType == RepoType.Library =>
         Ok(
           library_info(
             s.formattedTimestamp,
-            s.data))
+            s.data,
+            mayBeDependencies))
       case _ => NotFound
     }
   }
@@ -340,12 +350,14 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     for {
       repository <- teamsAndRepositoriesConnector.repositoryDetails(name)
       indicators <- indicatorsConnector.buildIndicatorsForRepository(name)
+      mayBeDependencies <- serviceDependencyConnector.getDependencies(name)
     } yield (repository, indicators) match {
       case (Some(s), maybeDataPoints) =>
         Ok(
           repository_info(
             s.formattedTimestamp,
             s.data,
+            mayBeDependencies,
             ServiceChartData.jobExecutionTime(name, maybeDataPoints)))
       case _ => NotFound
     }

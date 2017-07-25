@@ -85,7 +85,7 @@ class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneS
     }
 
     override def userManagementConnector: UserManagementConnector = ???
-    override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = ???
+    override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = ???
     override def indicatorsConnector: IndicatorsConnector = ???
     override def deploymentsService: DeploymentsService = ???
 
