@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.connector
 
 import java.time.{LocalDateTime, ZoneOffset}
 
@@ -23,6 +23,7 @@ import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
+import uk.gov.hmrc.cataloguefrontend.{Deployer, DeploymentVO, EnvironmentMapping, Release, ServiceDeploymentsConnector, WireMockEndpoints}
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 

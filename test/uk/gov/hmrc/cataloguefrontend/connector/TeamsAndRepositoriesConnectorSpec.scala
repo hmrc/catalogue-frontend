@@ -14,28 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.mockito
-import org.mockito.Matchers._
-import org.mockito.Mockito
-import org.mockito.Mockito.{mock, when}
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Millis, Span}
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Writes
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError}
-import uk.gov.hmrc.play.http.hooks.HttpHook
+import uk.gov.hmrc.cataloguefrontend.{Environment, JsonData, Link, RepoType, RepositoryDetails, RepositoryDisplayDetails, TeamsAndRepositoriesConnector, Timestamped, WireMockEndpoints}
 import uk.gov.hmrc.play.http._
+import uk.gov.hmrc.play.http.hooks.HttpHook
 
 import scala.concurrent.Future
-import scala.util.Failure
 
 class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures with OneServerPerSuite with WireMockEndpoints with TypeCheckedTripleEquals with OptionValues with EitherValues with MockitoSugar {
 
