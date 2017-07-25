@@ -38,6 +38,7 @@ import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -185,12 +186,15 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val catalogueController = new CatalogueController {
         override def userManagementConnector: UserManagementConnector = ???
-        override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = mockedConnector
+
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
 
         override def readModelService: ReadModelService = mockedModelService
         override def eventService: EventService = ??? //mockedEventService
+        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mockedConnector
+
+        override def serviceDependencyConnector: ServiceDependenciesConnector = ???
       }
 
       val digitalServiceName = "digital-service-123"
@@ -261,12 +265,15 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val catalogueController = new CatalogueController {
         override def userManagementConnector: UserManagementConnector = ???
-        override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
         override def readModelService: ReadModelService = mockedModelService
 
         override def eventService: EventService = ???
+
+        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+
+        override def serviceDependencyConnector: ServiceDependenciesConnector = ???
       }
 
       val exception = new RuntimeException("Boooom!")
@@ -298,12 +305,15 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val catalogueController = new CatalogueController {
         override def userManagementConnector: UserManagementConnector = umpConnectorMock
-        override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
         override def readModelService: ReadModelService = mockedModelService
 
         override def eventService: EventService = ???
+
+        override def serviceDependencyConnector: ServiceDependenciesConnector = ???
       }
 
       val teamName = "Team1"
@@ -337,12 +347,15 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val catalogueController = new CatalogueController {
         override def userManagementConnector: UserManagementConnector = umpConnectorMock
-        override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
         override def readModelService: ReadModelService = mockedModelService
 
         override def eventService: EventService = ???
+
+        override def serviceDependencyConnector: ServiceDependenciesConnector = ???
       }
 
       val teamName = "Team1"
@@ -377,12 +390,15 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val catalogueController = new CatalogueController {
         override def userManagementConnector: UserManagementConnector = umpConnectorMock
-        override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
+
         override def indicatorsConnector: IndicatorsConnector = ???
         override def deploymentsService: DeploymentsService = ???
         override def readModelService: ReadModelService = mockedModelService
 
         override def eventService: EventService = ???
+
+        override def serviceDependencyConnector: ServiceDependenciesConnector = ???
       }
 
       val teamName = "Team1"

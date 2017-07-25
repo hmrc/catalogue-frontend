@@ -1,13 +1,15 @@
 @import '_vars';
 @import '../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap';
 
-
+$icon-font-path: './fonts/';
 
 //components
 
 @import 'components/jquery-ui-autocomplete';
 @import 'components/editable-label';
 @import 'components/snackbar';
+
+
 
 *,
 *:before,
@@ -70,6 +72,8 @@ a {
     color: $brand-primary;
   }
 }
+
+
 
 label {
   line-height: 2.2em;
@@ -233,6 +237,34 @@ section {
 
 .padding-reset-right {
   padding-right: 0;
+}
+
+.red {
+  color: red;
+  a {
+    color: red;
+  }
+}
+
+.amber {
+  color: orange;
+  a {
+    color: orange;
+  }
+}
+
+.green {
+  color: forestgreen;
+  a {
+    color: forestgreen;
+  }
+}
+
+.grey {
+  color: gray;
+  a {
+    color: gray;
+  }
 }
 
 

@@ -85,8 +85,8 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
       response.value.repositoryName shouldBe "repo1"
       response.value.libraryDependenciesState should contain theSameElementsAs
         Seq(
-          LibraryDependencyState("frontend-bootstrap", Version(7, 11, 0), Version(8, 80, 0)),
-          LibraryDependencyState("play-config", Version(3, 0, 0), Version(7, 70, 0))
+          LibraryDependencyState("frontend-bootstrap", Version(7, 11, 0), Some(Version(8, 80, 0))),
+          LibraryDependencyState("play-config", Version(3, 0, 0), Some(Version(7, 70, 0)))
         )
     }
 

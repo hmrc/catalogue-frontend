@@ -44,6 +44,7 @@ import scala.collection.immutable
 import scala.concurrent.Future
 import scala.io.Source
 import play.api.test.Helpers._
+import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 
 class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneServerPerSuite with WireMockEndpoints with MockitoSugar with ScalaFutures {
 
@@ -85,12 +86,16 @@ class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneS
     }
 
     override def userManagementConnector: UserManagementConnector = ???
-    override def serviceDependenciesConnector: TeamsAndRepositoriesConnector = ???
+
     override def indicatorsConnector: IndicatorsConnector = ???
     override def deploymentsService: DeploymentsService = ???
 
     override def readModelService: ReadModelService = mockedModelService
     override def eventService: EventService = mockedEventService
+
+    override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = ???
+
+    override def serviceDependencyConnector: ServiceDependenciesConnector = ???
   }
 
 
