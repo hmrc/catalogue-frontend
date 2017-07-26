@@ -11909,6 +11909,11 @@ section span.other-teams-message {
   .red a {
     color: red; }
 
+.dark_amber {
+  color: #9b4f0f; }
+  .dark_amber a {
+    color: orange; }
+
 .amber {
   color: orange; }
   .amber a {
@@ -11929,3 +11934,5 @@ section span.other-teams-message {
   border-radius: 4px;
   padding: 8px;
   width: 100%; }
+
+/*# sourceMappingURL=catalogue-frontend.css.map */

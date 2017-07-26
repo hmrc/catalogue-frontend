@@ -13,13 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
-@import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
-@import java.time.format.DateTimeFormatter
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
-
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-@import uk.gov.hmrc.cataloguefrontend.connector.model.LibraryDependencyState
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, LibraryDependencyState, Version}
 @(mayBeDependencies: Option[Dependencies])
 
 <div>
@@ -30,7 +24,6 @@
             <div class="col-xs-8">
 
                 <ul class="list list--minimal list-group row">
-
 
                     @if(mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty) {
                         <li>
@@ -78,29 +71,11 @@
                     <ul class="list list--minimal list-group legend" >
                         <li><span class="green">Up to date</span></li>
                         <li><span class="amber">Minor version behind</span></li>
-                        <li><span class="red">Major or more than 2 minor versions behind</span></li>
+                        <li><span class="dark_amber">More than 2 minor versions behind</span></li>
+                        <li><span class="red">Major version behind</span></li>
                     </ul>
                 </div>
             </div>
-
-
-            @*<label>Legend:</label>*@
-            @*<div class="btn-group btn-group-sm" role="group">*@
-                @*<button type="button" class="green btn btn-default">Up to date</button>*@
-                @*<button type="button" class="amber btn btn-default">minor version behind</button>*@
-                @*<button type="button" class="red btn btn-default">major version behind</button>*@
-            @*</div>*@
-
-            @*<div>*@
-                @*<ul class="breadcrumb list list--minimal list-group">*@
-                    @*<label>Legend:</label>*@
-                    @*<li><span class="green">Up to date</span></li>*@
-                    @*<li><span class="amber">minor version behind</span></li>*@
-                    @*<li><span class="red">major version behind</span></li>*@
-                @*</ul>*@
-            @*</div>*@
-
-
         </div>
     </div>
 
@@ -108,17 +83,16 @@
     libraryDependencyState.latestVersion.isDefined
 }
 
-    @getRAGClass(currentVersion: Version, mayBeLatestVersion: Option[Version]) = @{
-        mayBeLatestVersion.fold("grey") { latestVersion =>
-            latestVersion - currentVersion match {
-                case (0, 0, _) => "green" // green
-                case (0, minor, _) if minor >= 1 => "amber" //amber
-                case (major, minor, _) if major >= 1 => "red" //red
-            }
+@getRAGClass(currentVersion: Version, mayBeLatestVersion: Option[Version]) = @{
+    mayBeLatestVersion.fold("grey") { latestVersion =>
+        latestVersion - currentVersion match {
+            case (0, 0, _) => "green"
+            case (0, minor, _) if minor > 2 => "dark_amber"
+            case (0, minor, _) if minor >= 1 => "amber"
+            case (major, _, _) if major >= 1 => "red"
         }
     }
-
-
+}
 
 </div>
 

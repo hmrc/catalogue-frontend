@@ -150,7 +150,20 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
                          |      }
                          |    },
                          |    {
-                         |      "libraryName": "lib4-not-mdtp",
+                         |      "libraryName": "lib4-more-than-2-minor-behind",
+                         |      "currentVersion": {
+                         |        "major": 3,
+                         |        "minor": 0,
+                         |        "patch": 0
+                         |      },
+                         |      "latestVersion": {
+                         |        "major": 3,
+                         |        "minor": 3,
+                         |        "patch": 0
+                         |      }
+                         |    },
+                         |    {
+                         |      "libraryName": "lib5-not-mdtp",
                          |      "currentVersion": {
                          |        "major": 3,
                          |        "minor": 0,
@@ -179,8 +192,12 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
       document.select("#lib3-major-behind").get(0).text() shouldBe "lib3-major-behind 3.0.0 4.0.0"
       document.select("#lib3-major-behind").hasClass("red") shouldBe true
 
-      document.select("#lib4-not-mdtp").get(0).text() shouldBe "lib4-not-mdtp 3.0.0"
-      document.select("#lib4-not-mdtp").hasClass("grey") shouldBe true
+      println(document.select("#lib4-more-than-2-minor-behind"))
+      document.select("#lib4-more-than-2-minor-behind").get(0).text() shouldBe "lib4-more-than-2-minor-behind 3.0.0 3.3.0"
+      document.select("#lib4-more-than-2-minor-behind").hasClass("dark_amber") shouldBe true
+
+      document.select("#lib5-not-mdtp").get(0).text() shouldBe "lib5-not-mdtp 3.0.0"
+      document.select("#lib5-not-mdtp").hasClass("grey") shouldBe true
     }
   }
 
