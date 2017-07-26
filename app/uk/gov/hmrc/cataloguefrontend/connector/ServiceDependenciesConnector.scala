@@ -33,6 +33,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
  */
 
 import play.api.Logger
+import uk.gov.hmrc.cataloguefrontend.UrlHelper
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 import uk.gov.hmrc.play.config.ServicesConfig
@@ -52,7 +53,7 @@ trait ServiceDependenciesConnector extends ServicesConfig {
   def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
     val url = s"$servicesDependenciesBaseUrl"
 
-    http.GET[Option[Dependencies]](s"$url/dependencies/$repositoryName")
+    http.GET[Option[Dependencies]](s"${url.appendSlash}dependencies/$repositoryName")
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)

@@ -20,6 +20,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import play.twirl.api.Html
+import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentStabilityDataPoint, DeploymentThroughputDataPoint, JobMetricDataPoint, MedianDataPoint}
 
 import scala.concurrent.duration.Duration
 import scala.xml.{Elem, NodeSeq}

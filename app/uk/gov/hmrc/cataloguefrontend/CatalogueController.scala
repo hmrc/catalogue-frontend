@@ -30,8 +30,9 @@ import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events._
+import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 import views.html._
 

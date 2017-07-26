@@ -27,6 +27,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{FakeApplication, FakeHeaders}
 import uk.gov.hmrc.cataloguefrontend.JsonData.{deploymentThroughputData, jobExecutionTimeData}
+import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, JobMetricDataPoint}
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 
 import scala.concurrent.Future

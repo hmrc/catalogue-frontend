@@ -44,7 +44,8 @@ import scala.collection.immutable
 import scala.concurrent.Future
 import scala.io.Source
 import play.api.test.Helpers._
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
 
 class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneServerPerSuite with WireMockEndpoints with MockitoSugar with ScalaFutures {
 

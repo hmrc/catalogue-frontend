@@ -25,6 +25,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.OptionValues._
 import play.twirl.api.Html
+import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentStabilityDataPoint, DeploymentThroughputDataPoint, JobMetricDataPoint, MedianDataPoint}
 
 
 class ChartDataSpec extends WordSpec with Matchers with TypeCheckedTripleEquals {

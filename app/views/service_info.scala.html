@@ -17,11 +17,11 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 @import play.twirl.api.Html
-@import uk.gov.hmrc.cataloguefrontend.DeploymentThroughputDataPoint
 @import java.time.LocalDateTime
-@import uk.gov.hmrc.cataloguefrontend.DeploymentVO
 
+@import uk.gov.hmrc.cataloguefrontend.DeploymentVO
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
+@import uk.gov.hmrc.cataloguefrontend.connector.DeploymentThroughputDataPoint
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @(cacheTimestampFormatted: String,
   service: RepositoryDetails,

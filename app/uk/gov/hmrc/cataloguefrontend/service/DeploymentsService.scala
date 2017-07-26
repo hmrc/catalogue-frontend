@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
-
+package uk.gov.hmrc.cataloguefrontend.service
 
 import java.time.LocalDateTime
 
-import TeamsAndRepositoriesConnector._
+import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.{Deployer, Release, ServiceDeploymentInformation, ServiceDeploymentsConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.play.http.HeaderCarrier
 
-import scala.collection.immutable.Iterable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

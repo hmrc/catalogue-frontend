@@ -26,8 +26,9 @@ import play.api.Environment
 import play.api.data.Form
 import play.api.i18n.{DefaultLangs, DefaultMessagesApi}
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.{Deployer, DeploymentsFilter, TeamRelease}
+import uk.gov.hmrc.cataloguefrontend.{Deployer, DeploymentsFilter}
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
+import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
 //import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
 

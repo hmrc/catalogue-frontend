@@ -38,8 +38,9 @@ import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
+import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.collection.JavaConversions._

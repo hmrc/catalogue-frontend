@@ -26,6 +26,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{EitherValues, Matchers, OptionValues, WordSpec}
 import play.api.test.FakeHeaders
+import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, TeamRelease}
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future

@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{ZoneId, LocalDateTime}
+import java.time.{LocalDateTime, ZoneId}
 import java.util.Date
 
 import org.scalatest.{Matchers, WordSpec}
-
 import SearchFiltering._
+import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
 
 class SearchFilteringSpec extends WordSpec with Matchers {
 

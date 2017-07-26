@@ -32,10 +32,7 @@ package uk.gov.hmrc.cataloguefrontend
  * limitations under the License.
  */
 
-import java.io.{File, InputStream}
 
-import cats.Applicative
-import cats.data.EitherT
 import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
@@ -45,9 +42,6 @@ import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.{Await, Future}
-import cats.instances.future._
-import play.api.data.validation.ValidationError
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, getAllUsersFromUMP}
 
 import scala.io.Source
 import scala.concurrent.ExecutionContext.Implicits.global

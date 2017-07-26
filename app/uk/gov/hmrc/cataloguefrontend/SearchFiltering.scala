@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.LocalDateTime
 
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
+import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
 
 object SearchFiltering {
 

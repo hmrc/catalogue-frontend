@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.connector
 
 /*
  * Copyright 2016 HM Revenue & Customs
@@ -33,6 +33,7 @@ package uk.gov.hmrc.cataloguefrontend
  */
 
 import java.time.LocalDate
+
 import play.api.Logger
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
@@ -70,8 +71,6 @@ case class MeasureResult(median: Int)
 trait IndicatorsConnector extends ServicesConfig {
   val http: HttpGet
   def indicatorsBaseUrl: String
-
-  import JavaDateTimeJsonFormatter._
 
   implicit val mesureResultFormats = Json.reads[MeasureResult]
   implicit val throughputFormats = Json.reads[Throughput]
