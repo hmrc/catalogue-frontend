@@ -30,6 +30,8 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
     "microservice.services.teams-and-services.port" -> endpointPort,
     "microservice.services.indicators.port" -> endpointPort,
     "microservice.services.indicators.host" -> host,
+    "microservice.services.service-dependencies.host" -> host,
+    "microservice.services.service-dependencies.port" -> endpointPort,
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
 
 
@@ -69,6 +71,16 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       response.body should not include "http://ser1/serv"
       response.body should not include "http://ser2/serv"
     }
+
+
+    "Render dependencies with red, green, amber and grey colours" in new PlatformDependenciesSection {
+
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(libraryData)))
+      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, Some(dependencies)))
+
+      override val response = await(WS.url(s"http://localhost:$port/library/service-name").get)
+    }.runTests()
+
 
   }
 

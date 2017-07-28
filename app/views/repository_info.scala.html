@@ -38,12 +38,13 @@
 </div>
 <section class="section-wrapper">
     @partials.details(repository)
-    @partials.dependencies(mayBeDependencies)
 
     <div class="row">
         @partials.repo_owning_teams(repository)
         @partials.code(repository)
     </div>
+
+    @partials.dependencies(mayBeDependencies)
 
     <div class="row">
         <div class="col-md-12">

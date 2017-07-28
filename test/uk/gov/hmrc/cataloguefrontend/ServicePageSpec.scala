@@ -37,6 +37,8 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     "microservice.services.teams-and-services.host" -> host,
     "microservice.services.indicators.port" -> endpointPort,
     "microservice.services.indicators.host" -> host,
+    "microservice.services.service-dependencies.host" -> host,
+    "microservice.services.service-dependencies.port" -> endpointPort,
     "microservice.services.service-deployments.port" -> endpointPort,
     "microservice.services.service-deployments.host" -> host,
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
@@ -218,6 +220,18 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
 
       response.body shouldNot include(s"""chart.draw(data, options);""")
     }
+
+    "Render dependencies with red, green, amber and grey colours" in new PlatformDependenciesSection {
+
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (500, None))
+      serviceEndpoint(GET, "/api/whatsrunningwhere/service-name", willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("xyz", Nil))).toString())))
+
+      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, Some(dependencies)))
+
+      override val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
+    }.runTests()
+
   }
 
 

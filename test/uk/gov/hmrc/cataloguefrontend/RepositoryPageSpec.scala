@@ -22,7 +22,7 @@ import org.jsoup.nodes.Document
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WS
+import play.api.libs.ws.{WS, WSResponse}
 import play.twirl.api.Html
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -107,98 +107,14 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
       response.body shouldNot include(s"""chart.draw(data, options);""")
     }
 
-    val dependencies = """{
-                         |  "repositoryName": "service-name",
-                         |  "libraryDependenciesState": [
-                         |    {
-                         |      "libraryName": "lib1-up-to-date",
-                         |      "currentVersion": {
-                         |        "major": 1,
-                         |        "minor": 0,
-                         |        "patch": 0
-                         |      } ,
-                         |      "latestVersion": {
-                         |        "major": 1,
-                         |        "minor": 0,
-                         |        "patch": 0
-                         |      }
-                         |    },
-                         |    {
-                         |      "libraryName": "lib2-minor-behind",
-                         |      "currentVersion": {
-                         |        "major": 2,
-                         |        "minor": 0,
-                         |        "patch": 0
-                         |      },
-                         |      "latestVersion": {
-                         |        "major": 2,
-                         |        "minor": 1,
-                         |        "patch": 0
-                         |      }
-                         |    },
-                         |    {
-                         |      "libraryName": "lib3-major-behind",
-                         |      "currentVersion": {
-                         |        "major": 3,
-                         |        "minor": 0,
-                         |        "patch": 0
-                         |      },
-                         |      "latestVersion": {
-                         |        "major": 4,
-                         |        "minor": 0,
-                         |        "patch": 0
-                         |      }
-                         |    },
-                         |    {
-                         |      "libraryName": "lib4-more-than-2-minor-behind",
-                         |      "currentVersion": {
-                         |        "major": 3,
-                         |        "minor": 0,
-                         |        "patch": 0
-                         |      },
-                         |      "latestVersion": {
-                         |        "major": 3,
-                         |        "minor": 3,
-                         |        "patch": 0
-                         |      }
-                         |    },
-                         |    {
-                         |      "libraryName": "lib5-not-mdtp",
-                         |      "currentVersion": {
-                         |        "major": 3,
-                         |        "minor": 0,
-                         |        "patch": 0
-                         |      }
-                         |    }
-                         |  ]
-                         |}""".stripMargin
-
-    "Render dependencies with red, green, amber and grey colours" in {
+    "Render dependencies with red, green, amber and grey colours" in new PlatformDependenciesSection {
 
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
       serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, Some(dependencies)))
 
-      val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
-      response.status shouldBe 200
+      override val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
 
-      val document = asDocument(response.body)
-
-      document.select("#lib1-up-to-date").get(0).text() shouldBe "lib1-up-to-date 1.0.0 1.0.0"
-      document.select("#lib1-up-to-date").hasClass("green") shouldBe true
-
-      document.select("#lib2-minor-behind").get(0).text() shouldBe "lib2-minor-behind 2.0.0 2.1.0"
-      document.select("#lib2-minor-behind").hasClass("amber") shouldBe true
-
-      document.select("#lib3-major-behind").get(0).text() shouldBe "lib3-major-behind 3.0.0 4.0.0"
-      document.select("#lib3-major-behind").hasClass("red") shouldBe true
-
-      println(document.select("#lib4-more-than-2-minor-behind"))
-      document.select("#lib4-more-than-2-minor-behind").get(0).text() shouldBe "lib4-more-than-2-minor-behind 3.0.0 3.3.0"
-      document.select("#lib4-more-than-2-minor-behind").hasClass("dark_amber") shouldBe true
-
-      document.select("#lib5-not-mdtp").get(0).text() shouldBe "lib5-not-mdtp 3.0.0"
-      document.select("#lib5-not-mdtp").hasClass("grey") shouldBe true
-    }
+    }.runTests()
   }
 
   def asDocument(html: String): Document = Jsoup.parse(html)

@@ -18,7 +18,7 @@
 
 <div>
     <div class="board">
-        <h3 class="board__heading">Dependencies</h3>
+        <h3 class="board__heading">Platform Dependencies</h3>
         <div class="board__body">
 
             <div class="col-xs-8">
@@ -27,7 +27,7 @@
 
                     @if(mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty) {
                         <li>
-                            <span class="col-xs-3"></span>
+                            <span class="col-xs-4"></span>
                             <span class="col-xs-3"><label>Current Version</label></span>
                             <span class="col-xs-1"><label> </label></span>
                             <span class="col-xs-3"><label>Latest Version</label></span>
@@ -36,11 +36,8 @@
                         @for(dependencyState <- mayBeDependencies.get.libraryDependenciesState) {
                             <li>
                                 <div class="@{
-                                    getRAGClass(dependencyState.currentVersion, dependencyState.latestVersion)
-                                }" id="@{
-                                    dependencyState.libraryName
-                                }">
-                                    <span class="col-xs-3">
+                                    getRAGClass(dependencyState.currentVersion, dependencyState.latestVersion)}" id="@{dependencyState.libraryName}">
+                                    <span class="col-xs-4">
                                     @if(isInternalDependency(dependencyState)) {
                                         <a href="/repositories/@{
                                             dependencyState.libraryName
@@ -65,17 +62,18 @@
 
                 </ul>
             </div>
-            <div class="col-xs-4">
-                <div>
-                    <label>Legend:</label>
-                    <ul class="list list--minimal list-group legend" >
-                        <li><span class="green">Up to date</span></li>
-                        <li><span class="amber">Minor version behind</span></li>
-                        <li><span class="dark_amber">More than 2 minor versions behind</span></li>
-                        <li><span class="red">Major version behind</span></li>
-                    </ul>
+            @if(mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty) {
+                <div class="col-xs-4">
+                    <div>
+                        <label>Legend:</label>
+                        <ul class="list list--minimal list-group legend" >
+                            <li><span class="green">Up to date</span></li>
+                            <li><span class="amber">Minor version behind</span></li>
+                            <li><span class="red">Major version behind</span></li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 
@@ -84,11 +82,10 @@
 }
 
 @getRAGClass(currentVersion: Version, mayBeLatestVersion: Option[Version]) = @{
-    mayBeLatestVersion.fold("grey") { latestVersion =>
+    mayBeLatestVersion.fold("") { latestVersion =>
         latestVersion - currentVersion match {
-            case (0, 0, _) => "green"
-            case (0, minor, _) if minor > 2 => "dark_amber"
-            case (0, minor, _) if minor >= 1 => "amber"
+            case (0, 0, 0) => "green"
+            case (0, minor, patch) if minor != 0 || patch != 0 => "amber"
             case (major, _, _) if major >= 1 => "red"
         }
     }

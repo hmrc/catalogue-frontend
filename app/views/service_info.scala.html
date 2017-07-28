@@ -54,7 +54,6 @@
     </div>
     <section class="section-wrapper">
         @partials.details(service)
-        @partials.dependencies(mayBeDependencies)
 
         <div class="row">
             @partials.repo_owning_teams(service)
@@ -105,6 +104,7 @@
             </div>
         }
         </div>
+            @partials.dependencies(mayBeDependencies)
         <div class="row">
             <div class="col-md-12">
                 <div class="board row">

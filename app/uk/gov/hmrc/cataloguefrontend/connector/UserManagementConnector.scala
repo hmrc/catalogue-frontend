@@ -236,17 +236,4 @@ object UserManagementConnector extends UserManagementConnector {
 
 }
 
-import scala.concurrent.duration._
 
-//object Runner {
-//  def main(args: Array[String]): Unit = {
-//    val allUsers: Future[Either[UserManagementConnector.UMPError, Seq[UserManagementConnector.TeamMember]]] = UserManagementConnector.getAllUsersFromUMP()
-//    Await.result(allUsers, 4 seconds) match {
-//      case Right(users) => println(users)
-//      case Left(e) => println(e)
-//      case x => println(x)
-//    }
-//
-////    Thread.sleep(10000)
-//  }
-//}

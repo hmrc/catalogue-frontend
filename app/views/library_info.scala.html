@@ -34,12 +34,11 @@
 </div>
 <section class="section-wrapper">
     @partials.details(library)
-    @partials.dependencies(mayBeDependencies)
-
 
     <div class="row">
         @partials.repo_owning_teams(library)
         @partials.code_and_builds(library)
     </div>
+    @partials.dependencies(mayBeDependencies)
 </section>
 }
