@@ -48,6 +48,11 @@ object ViewMessages {
       "<p>Each monthly measurement has a 3 month sample size. Trending towards lower success rate indicates instability in the build. Trending towards higher duration indicates that something is causing your build time to increase.</p>" +
       "<p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>"
 
+  val dependenciesText = """<p>This report shows the platform dependencies the code in your repository has, what version they are currently at, and highlights if any later versions are available. You should act quickly to rectify the issue when you see a minor version discrepancy, and immediately if you see a major version discrepancy.</p>
+                            <p/>
+                            <p>You should also monitor the #announcements channel for details of any upgrades that may be more involved than simply bumping a version number</p>"""
+
+
   def noRepoOfTypeForTeam(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
     "target=\"_blank\">#team-platops</a> on Slack."

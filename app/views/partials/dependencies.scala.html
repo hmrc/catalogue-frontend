@@ -14,18 +14,21 @@
 * limitations under the License.
 *@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, LibraryDependencyState, Version}
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @(mayBeDependencies: Option[Dependencies])
 
 <div>
     <div class="board">
         <h3 class="board__heading">Platform Dependencies</h3>
         <div class="board__body">
-
-            <div class="col-xs-8">
-
+            @if(dependencyDataAvailable()) {
+                @{Html(ViewMessages.dependenciesText)}
+            }
+        <div class="col-xs-8">
                 <ul class="list list--minimal list-group row">
 
-                    @if(mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty) {
+                    @if(dependencyDataAvailable()) {
+
                         <li>
                             <span class="col-xs-4"></span>
                             <span class="col-xs-3"><label>Current Version</label></span>
@@ -89,6 +92,10 @@
             case (major, _, _) if major >= 1 => "red"
         }
     }
+}
+
+@dependencyDataAvailable() = @{
+    mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty
 }
 
 </div>
