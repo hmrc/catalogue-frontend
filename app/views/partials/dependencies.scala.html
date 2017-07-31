@@ -17,86 +17,87 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @(mayBeDependencies: Option[Dependencies])
 
-<div>
-    <div class="board">
-        <h3 class="board__heading">Platform Dependencies</h3>
-        <div class="board__body">
-            @if(dependencyDataAvailable()) {
-                @{Html(ViewMessages.dependenciesText)}
-            }
-        <div class="col-xs-8">
-                <ul class="list list--minimal list-group row">
 
-                    @if(dependencyDataAvailable()) {
+<div id="platform-dependencies" class="board">
+    <h3 class="board__heading">Platform Dependencies</h3>
+    <div class="board__body">
+        @if(dependencyDataAvailable()) {
+            @{Html(ViewMessages.dependenciesText)}
+        }
+    <div class="col-xs-8">
+            <ul class="list list--minimal list-group row">
 
+                @if(dependencyDataAvailable()) {
+
+                    <li>
+                        <span class="col-xs-4"></span>
+                        <span class="col-xs-3"><label>Current Version</label></span>
+                        <span class="col-xs-1"><label> </label></span>
+                        <span class="col-xs-3"><label>Latest Version</label></span>
+
+                    </li>
+                    @for(dependencyState <- mayBeDependencies.get.libraryDependenciesState) {
                         <li>
-                            <span class="col-xs-4"></span>
-                            <span class="col-xs-3"><label>Current Version</label></span>
-                            <span class="col-xs-1"><label> </label></span>
-                            <span class="col-xs-3"><label>Latest Version</label></span>
-
+                            <div class="@{
+                                getRAGClass(dependencyState.currentVersion, dependencyState.latestVersion)}" id="@{dependencyState.libraryName}">
+                                <span class="col-xs-4">
+                                @if(isInternalDependency(dependencyState)) {
+                                    <a href="/repositories/@{
+                                        dependencyState.libraryName
+                                    }">@dependencyState.libraryName</a>
+                                } else {
+                                    @dependencyState.libraryName
+                                }
+                                </span>
+                                <span class="col-xs-3">@dependencyState.currentVersion</span>
+                                <span class="col-xs-1 glyphicon glyphicon-arrow-right"> </span>
+                                <span class="col-xs-3">@dependencyState.latestVersion.getOrElse("(not found)")</span>
+                            </div>
                         </li>
-                        @for(dependencyState <- mayBeDependencies.get.libraryDependenciesState) {
-                            <li>
-                                <div class="@{
-                                    getRAGClass(dependencyState.currentVersion, dependencyState.latestVersion)}" id="@{dependencyState.libraryName}">
-                                    <span class="col-xs-4">
-                                    @if(isInternalDependency(dependencyState)) {
-                                        <a href="/repositories/@{
-                                            dependencyState.libraryName
-                                        }">@dependencyState.libraryName</a>
-                                    } else {
-                                        @dependencyState.libraryName
-                                    }
-                                    </span>
-                                    <span class="col-xs-3">@dependencyState.currentVersion</span>
-                                    <span class="col-xs-1 glyphicon glyphicon-arrow-right"> </span>
-                                    <span class="col-xs-3">@dependencyState.latestVersion</span>
-                                </div>
-                            </li>
 
-                        }
-
-                    } else {
-                        <li class="col-xs-6">
-                            No Library dependencies available
-                        </li>
                     }
 
-                </ul>
-            </div>
-            @if(mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty) {
-                <div class="col-xs-4">
-                    <div>
-                        <label>Legend:</label>
-                        <ul class="list list--minimal list-group legend" >
-                            <li><span class="green">Up to date</span></li>
-                            <li><span class="amber">Minor version behind</span></li>
-                            <li><span class="red">Major version behind</span></li>
-                        </ul>
-                    </div>
-                </div>
-            }
+                } else {
+                    <li class="col-xs-6">
+                        No Library dependencies available
+                    </li>
+                }
+
+            </ul>
         </div>
+        @if(mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty) {
+            <div class="col-xs-4">
+                <div>
+                    <label>Legend:</label>
+                    <ul class="list list--minimal list-group legend" >
+                        <li><span class="green">Up to date</span></li>
+                        <li><span class="amber">Minor version behind</span></li>
+                        <li><span class="red">Major version behind</span></li>
+                    </ul>
+                </div>
+            </div>
+        }
     </div>
+    @isInternalDependency(libraryDependencyState: LibraryDependencyState) = @{
+        libraryDependencyState.latestVersion.isDefined
+    }
 
-@isInternalDependency(libraryDependencyState: LibraryDependencyState) = @{
-    libraryDependencyState.latestVersion.isDefined
-}
+    @getRAGClass(currentVersion: Version, mayBeLatestVersion: Option[Version]) = @{
+        mayBeLatestVersion.fold("grey") { latestVersion =>
+            latestVersion - currentVersion match {
+                case (0, 0, 0) => "green"
+                case (0, minor, patch) if minor != 0 || patch != 0 => "amber"
+                case (major, _, _) if major >= 1 => "red"
 
-@getRAGClass(currentVersion: Version, mayBeLatestVersion: Option[Version]) = @{
-    mayBeLatestVersion.fold("") { latestVersion =>
-        latestVersion - currentVersion match {
-            case (0, 0, 0) => "green"
-            case (0, minor, patch) if minor != 0 || patch != 0 => "amber"
-            case (major, _, _) if major >= 1 => "red"
+            }
         }
     }
-}
 
-@dependencyDataAvailable() = @{
-    mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty
-}
-
+    @dependencyDataAvailable() = @{
+        mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty
+    }
 </div>
+
+
+
 

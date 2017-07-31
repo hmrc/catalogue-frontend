@@ -107,14 +107,18 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
       response.body shouldNot include(s"""chart.draw(data, options);""")
     }
 
-    "Render dependencies with red, green, amber and grey colours" in new PlatformDependenciesSection {
+    "Render dependencies with red, green, amber and grey colours" in {
 
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
-      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, Some(dependencies)))
+      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
 
-      override val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
+      val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
 
-    }.runTests()
+      val document = Jsoup.parse(response.body)
+
+      document.select("#platform-dependencies").size() should be > 0
+
+    }
   }
 
   def asDocument(html: String): Document = Jsoup.parse(html)

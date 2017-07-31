@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import org.jsoup.Jsoup
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -73,13 +74,18 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
     }
 
 
-    "Render dependencies with red, green, amber and grey colours" in new PlatformDependenciesSection {
+    "Render dependencies with red, green, amber and grey colours" in {
 
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(libraryData)))
-      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, Some(dependencies)))
+      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
 
-      override val response = await(WS.url(s"http://localhost:$port/library/service-name").get)
-    }.runTests()
+      val response = await(WS.url(s"http://localhost:$port/library/service-name").get)
+
+      val document = Jsoup.parse(response.body)
+
+      document.select("#platform-dependencies").size() shouldBe 1
+
+    }
 
 
   }

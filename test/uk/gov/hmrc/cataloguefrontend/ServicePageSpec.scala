@@ -22,6 +22,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import org.jsoup.Jsoup
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -221,16 +222,21 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       response.body shouldNot include(s"""chart.draw(data, options);""")
     }
 
-    "Render dependencies with red, green, amber and grey colours" in new PlatformDependenciesSection {
+    "Render platform dependencies section" in  {
 
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (500, None))
       serviceEndpoint(GET, "/api/whatsrunningwhere/service-name", willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("xyz", Nil))).toString())))
 
-      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, Some(dependencies)))
+      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
 
-      override val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
-    }.runTests()
+      val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
+
+      val document = Jsoup.parse(response.body)
+
+      document.select("#platform-dependencies").size() should be > 0
+
+    }
 
   }
 
