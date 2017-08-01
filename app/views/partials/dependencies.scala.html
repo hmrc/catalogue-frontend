@@ -23,12 +23,13 @@
     <div class="board__body">
         @if(dependencyDataAvailable()) {
             @{Html(ViewMessages.dependenciesText)}
+            @{Html(ViewMessages.curatedLibsText)}
+
         }
     <div class="col-xs-8">
             <ul class="list list--minimal list-group row">
 
                 @if(dependencyDataAvailable()) {
-
                     <li>
                         <span class="col-xs-4"></span>
                         <span class="col-xs-3"><label>Current Version</label></span>

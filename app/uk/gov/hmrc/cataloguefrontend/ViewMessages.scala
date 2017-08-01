@@ -52,6 +52,8 @@ object ViewMessages {
                             <p/>
                             <p>You should also monitor the #announcements channel for details of any upgrades that may be more involved than simply bumping a version number</p>"""
 
+  val curatedLibsText = """<p>Click <a href="https://github.com/hmrc/service-dependencies/blob/master/conf/dependency-versions-config.json">here</a> to see the platform libraries that are included in the dependency analysis</p>"""
+
 
   def noRepoOfTypeForTeam(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
     "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
