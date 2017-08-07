@@ -12,18 +12,18 @@ private object AppDependencies {
   import play.sbt.PlayImport._
 
 
-  private val frontendBootstrapVersion = "7.11.0"
+  private val frontendBootstrapVersion = "7.26.0"
   private val playConfigVersion = "3.0.0"
   private val logbackJsonLoggerVersion = "3.0.0"
-  private val playJsonLoggerVersion = "3.0.0"
+  private val playJsonLoggerVersion = "3.1.0"
   private val playHealthVersion = "2.0.0"
   private val govTemplateVersion = "5.0.0"
-  private val playUIVersion = "5.0.0"
+  private val playUIVersion = "7.4.0"
   private val urlBuilderVersion = "1.1.0"
   private val catsVersion = "0.9.0"
-  private val playReactivemongoVersion = "5.0.0"
+  private val playReactivemongoVersion = "5.2.0"
 
-  private val hmrcTestVersion = "2.0.0"
+  private val hmrcTestVersion = "2.3.0"
 
 
   val compile = Seq(
@@ -50,7 +50,7 @@ private object AppDependencies {
     def apply() = new TestDependencies {
       override lazy val test = Seq(
         "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
-        "uk.gov.hmrc" %% "reactivemongo-test" % "1.6.0" % scope,
+        "uk.gov.hmrc" %% "reactivemongo-test" % "2.0.0" % scope,
         "org.scalatest" %% "scalatest" % "2.2.6" % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % scope,
         "org.pegdown" % "pegdown" % "1.4.2" % scope,        
