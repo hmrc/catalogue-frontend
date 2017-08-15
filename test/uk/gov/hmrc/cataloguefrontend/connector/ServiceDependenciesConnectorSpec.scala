@@ -87,7 +87,8 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           |        "major": 1,
           |        "minor": 1,
           |        "patch": 0
-          |      }
+          |      },
+          |      "isExternal": true
           |    },
           |    {
           |      "sbtPluginName": "plugin-2",
@@ -100,7 +101,8 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           |        "major": 2,
           |        "minor": 1,
           |        "patch": 0
-          |      }
+          |      },
+          |      "isExternal": false
           |    }
           |  ]
           |}""".stripMargin
@@ -118,8 +120,8 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
         )
       response.value.sbtPluginsDependenciesState should contain theSameElementsAs
         Seq(
-          SbtPluginsDependenciesState("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0))),
-          SbtPluginsDependenciesState("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)))
+          SbtPluginsDependenciesState("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
+          SbtPluginsDependenciesState("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
         )
     }
 
