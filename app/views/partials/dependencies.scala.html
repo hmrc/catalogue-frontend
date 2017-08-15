@@ -108,7 +108,7 @@
     }
 
     @isInternalSbtPlugin(sbtPluginsDependenciesState: SbtPluginsDependenciesState) = @{
-        sbtPluginsDependenciesState.latestVersion.isDefined
+        !sbtPluginsDependenciesState.isExternal
     }
 
     @getRAGClass(currentVersion: Version, mayBeLatestVersion: Option[Version]) = @{

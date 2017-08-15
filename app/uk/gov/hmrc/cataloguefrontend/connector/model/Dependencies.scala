@@ -41,7 +41,8 @@ case class LibraryDependencyState(libraryName: String, currentVersion: Version, 
 
 case class SbtPluginsDependenciesState(sbtPluginName: String,
                                        currentVersion: Version,
-                                       latestVersion: Option[Version])
+                                       latestVersion: Option[Version],
+                                       isExternal: Boolean = false)
 
 
 
