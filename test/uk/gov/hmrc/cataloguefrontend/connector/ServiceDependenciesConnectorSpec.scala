@@ -23,7 +23,7 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
-import uk.gov.hmrc.cataloguefrontend.connector.model.{LibraryDependencyState, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{LibraryDependencyState, SbtPluginsDependenciesState, Version}
 import uk.gov.hmrc.play.http.hooks.HttpHook
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpResponse}
 
@@ -74,6 +74,34 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           |        "patch": 0
           |      }
           |    }
+          |  ],
+          |  "sbtPluginsDependenciesState": [
+          |    {
+          |      "sbtPluginName": "plugin-1",
+          |      "currentVersion": {
+          |        "major": 1,
+          |        "minor": 0,
+          |        "patch": 0
+          |      } ,
+          |      "latestVersion": {
+          |        "major": 1,
+          |        "minor": 1,
+          |        "patch": 0
+          |      }
+          |    },
+          |    {
+          |      "sbtPluginName": "plugin-2",
+          |      "currentVersion": {
+          |        "major": 2,
+          |        "minor": 0,
+          |        "patch": 0
+          |      },
+          |      "latestVersion": {
+          |        "major": 2,
+          |        "minor": 1,
+          |        "patch": 0
+          |      }
+          |    }
           |  ]
           |}""".stripMargin
       )))
@@ -87,6 +115,11 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
         Seq(
           LibraryDependencyState("frontend-bootstrap", Version(7, 11, 0), Some(Version(8, 80, 0))),
           LibraryDependencyState("play-config", Version(3, 0, 0), Some(Version(7, 70, 0)))
+        )
+      response.value.sbtPluginsDependenciesState should contain theSameElementsAs
+        Seq(
+          SbtPluginsDependenciesState("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0))),
+          SbtPluginsDependenciesState("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)))
         )
     }
 

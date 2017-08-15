@@ -20,7 +20,9 @@ import play.api.libs.json.Json
 
 
 case class Dependencies(repositoryName: String,
-                        libraryDependenciesState: Seq[LibraryDependencyState])
+                        libraryDependenciesState: Seq[LibraryDependencyState],
+                        sbtPluginsDependenciesState: Seq[SbtPluginsDependenciesState])
+
 
 case class Version(major: Int, minor: Int, patch: Int) {
   override def toString: String = s"$major.$minor.$patch"
@@ -37,10 +39,16 @@ case class Version(major: Int, minor: Int, patch: Int) {
 
 case class LibraryDependencyState(libraryName: String, currentVersion: Version, latestVersion: Option[Version])
 
+case class SbtPluginsDependenciesState(sbtPluginName: String,
+                                       currentVersion: Version,
+                                       latestVersion: Option[Version])
+
+
 
 object Dependencies {
   implicit val cvf = Json.format[Version]
   implicit val ldsf = Json.format[LibraryDependencyState]
+  implicit val spdsf = Json.format[SbtPluginsDependenciesState]
   implicit val format = Json.format[Dependencies]
 
 }
