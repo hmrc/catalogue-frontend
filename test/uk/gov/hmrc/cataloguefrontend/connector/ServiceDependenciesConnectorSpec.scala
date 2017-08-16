@@ -118,6 +118,7 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           LibraryDependencyState("frontend-bootstrap", Version(7, 11, 0), Some(Version(8, 80, 0))),
           LibraryDependencyState("play-config", Version(3, 0, 0), Some(Version(7, 70, 0)))
         )
+      
       response.value.sbtPluginsDependenciesState should contain theSameElementsAs
         Seq(
           SbtPluginsDependenciesState("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), true),

@@ -38,7 +38,10 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "play-reactivemongo" % playReactivemongoVersion,
     "org.typelevel" %% "cats-core" % catsVersion,
     "org.apache.httpcomponents" % "httpcore" % "4.3.2",
-    "org.apache.httpcomponents" % "httpclient" % "4.3.5"
+    "org.apache.httpcomponents" % "httpclient" % "4.3.5",
+    "com.github.tototoshi" %% "scala-csv" % "1.3.4" ,
+    "com.github.melrief" %% "purecsv" % "0.1.0",
+    "com.opencsv" % "opencsv" % "4.0"
   )
 
   trait TestDependencies {
