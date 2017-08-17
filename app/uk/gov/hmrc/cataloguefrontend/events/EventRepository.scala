@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
+import play.api.libs.json.Json
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
@@ -32,6 +33,7 @@ trait EventRepository {
   def getAllEvents: Future[List[Event]]
   def clearAllData: Future[Boolean]
 }
+
 
 class MongoEventRepository(mongo: () => DB)
   extends ReactiveRepository[Event, BSONObjectID](

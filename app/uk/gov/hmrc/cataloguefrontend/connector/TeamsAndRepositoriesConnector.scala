@@ -128,6 +128,22 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     }
   }
 
+  def teamsWithRepositories()(implicit hc: HeaderCarrier): Future[Seq[Team]] = {
+    val url = teamsAndServicesBaseUrl + s"/api/teams_with_repositories"
+
+    http.GET[HttpResponse](url)
+      .map { response =>
+        response.status match {
+          case 404 => Nil
+          case 200 => response.json.as[Seq[Team]]
+        }
+      }.recover {
+      case ex =>
+        Logger.error(s"An error occurred getting teamsWithRepositories when connecting to $url: ${ex.getMessage}", ex)
+        Seq.empty[Team]
+    }
+  }
+
   def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Either[TeamsAndRepositoriesError, Timestamped[DigitalService]]] = {
     val url = teamsAndServicesBaseUrl + s"/api/digital-services/${URLEncoder.encode(digitalServiceName, "UTF-8")}"
 

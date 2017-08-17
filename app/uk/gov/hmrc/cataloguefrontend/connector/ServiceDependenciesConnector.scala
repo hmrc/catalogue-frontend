@@ -61,6 +61,17 @@ trait ServiceDependenciesConnector extends ServicesConfig {
       }
   }
 
+  def getAllDependencies()(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
+    val url = s"$servicesDependenciesBaseUrl"
+
+    http.GET[Seq[Dependencies]](s"${url.appendSlash}dependencies")
+      .recover {
+        case ex =>
+          Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)
+          Nil
+      }
+  }
+
 }
 
 object ServiceDependenciesConnector extends ServiceDependenciesConnector {
