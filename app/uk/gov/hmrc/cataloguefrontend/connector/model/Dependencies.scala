@@ -31,6 +31,10 @@ case class Version(major: Int, minor: Int, patch: Int) {
   def -(other: Version): (Int, Int, Int) = {
     (this.major - other.major, this.minor - other.minor, this.patch - other.patch)
   }
+  def +(other: Version): Version = {
+    Version(this.major + other.major, this.minor + other.minor, this.patch + other.patch)
+  }
+
 
 }
 

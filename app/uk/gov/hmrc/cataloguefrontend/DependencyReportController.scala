@@ -40,7 +40,7 @@ object DependencyReportController extends DependencyReportController  {
 }
 
 case class DependencyReport(repository: String,
-                            repoType: String,
+//                            repoType: String,
                             team: String,
                             digitalService: String,
                             dependencyName: String,
@@ -61,8 +61,7 @@ trait DependencyReportController extends FrontendController with UserManagementP
   implicit val drFormat = Json.format[DependencyReport]
 
 
-  private def persistDependencies(digitalServices: Seq[Either[TeamsAndRepositoriesError, DigitalService]],
-                                  allRepos: Seq[RepositoryDisplayDetails],
+  private def getDependencies(digitalServices: Seq[Either[TeamsAndRepositoriesError, DigitalService]],
                                   allTeams: Seq[Team],
                                   dependencies: Dependencies) = {
 
@@ -70,7 +69,6 @@ trait DependencyReportController extends FrontendController with UserManagementP
 
     val libraryDependencyReportLines = dependencies.libraryDependenciesState.map { d =>
       DependencyReport(repository = repoName,
-        repoType = getRepositoryType(repoName, allRepos),
         team = findTeamNames(repoName, allTeams).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
         dependencyName = d.libraryName,
@@ -83,7 +81,7 @@ trait DependencyReportController extends FrontendController with UserManagementP
     val sbtPluginDependencyReportLines = dependencies.sbtPluginsDependenciesState.map { d =>
 
       DependencyReport(repository = repoName,
-        repoType = getRepositoryType(repoName, allRepos),
+//        repoType = getRepositoryType(repoName, allRepos),
         team = findTeamNames(repoName, allTeams).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
         dependencyName = d.sbtPluginName,
@@ -96,7 +94,7 @@ trait DependencyReportController extends FrontendController with UserManagementP
     libraryDependencyReportLines ++ sbtPluginDependencyReportLines
   }
 
-  def toCsv(deps: Seq[DependencyReport], ignoreFields: Seq[String]): String = {
+  private def toCsv(deps: Seq[DependencyReport], ignoreFields: Seq[String]): String = {
 
     def ccToMap(cc: AnyRef) =
       cc.getClass.getDeclaredFields.foldLeft(Map[String, Any]()) { (acc, field) =>
@@ -107,6 +105,7 @@ trait DependencyReportController extends FrontendController with UserManagementP
           acc + (field.getName -> field.get(cc))
         }
       }
+
     val dependencyDataMaps = deps.map(ccToMap)
     val headers = dependencyDataMaps.headOption.map{row => row.keys.mkString(",")}
     val dataRows = dependencyDataMaps.map{row => row.values.mkString(",")}
@@ -117,19 +116,19 @@ trait DependencyReportController extends FrontendController with UserManagementP
 
 
 
-  def getRepositoryType(repositoryName:String, allRepos: Seq[RepositoryDisplayDetails]): String =
-    allRepos.find(r => r.name == repositoryName).map(_.repoType).getOrElse("Unknown").toString
+//  private def getRepositoryType(repositoryName:String, allRepos: Seq[RepositoryDisplayDetails]): String =
+//    allRepos.find(r => r.name == repositoryName).map(_.repoType).getOrElse("Unknown").toString
 
-  def findTeamNames(repositoryName: String, teams: Seq[Team]): Seq[String] =
+  private def findTeamNames(repositoryName: String, teams: Seq[Team]): Seq[String] =
     teams.filter(_.repos.isDefined).filter(team => team.repos.get.values.flatten.toSeq.contains(repositoryName)).map(_.name)
 
-  def findDigitalServiceName(repositoryName: String, errorsOrDigitalServices: Seq[Either[TeamsAndRepositoriesError, DigitalService]]): String =
+  private def findDigitalServiceName(repositoryName: String, errorsOrDigitalServices: Seq[Either[TeamsAndRepositoriesError, DigitalService]]): String =
     errorsOrDigitalServices
       .filter(errorOrDigitalService => errorOrDigitalService.isRight)
       .find(_.right.get.repositories.exists(_.name == repositoryName))
       .map(_.right.get.name).getOrElse("Unknown")
 
-  def getColour(currentVersion: Version, mayBeLatestVersion: Option[Version]): String = {
+  private def getColour(currentVersion: Version, mayBeLatestVersion: Option[Version]): String = {
     mayBeLatestVersion.fold("grey") { latestVersion =>
       latestVersion - currentVersion match {
         case (0, 0, 0) => "green"
@@ -152,32 +151,24 @@ trait DependencyReportController extends FrontendController with UserManagementP
     }
 
     val eventualDependencyReports = for {
-      allRepos <- teamsAndRepositoriesConnector.allRepositories.map(_.data)
       allTeams: Seq[Team] <- allTeamsF
       digitalServices <- digitalServicesF
       allDependencies <- serviceDependencyConnector.getAllDependencies
     } yield {
       allDependencies.flatMap { dependencies =>
-        persistDependencies(digitalServices, allRepos, allTeams, dependencies)
+        getDependencies(digitalServices, allTeams, dependencies)
       }
     }
 
     eventualDependencyReports.map { deps =>
-      val source = StreamConverters.fromInputStream(() => IOUtils.toInputStream(toCsv(deps, Seq("timestamp")), "UTF-8"))
+      val csv = toCsv(deps, Seq("timestamp"))
+      val source = StreamConverters.fromInputStream(() => {
+        IOUtils.toInputStream(csv, "UTF-8")
+      })
       Result(
         header = ResponseHeader(200, Map.empty),
         body = HttpEntity.Streamed(source, None, Some("text/csv"))
       )
     }
   }
-
 }
-
-
-
-
-
-
-
-
-
