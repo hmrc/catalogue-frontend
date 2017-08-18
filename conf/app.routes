@@ -23,4 +23,3 @@ GET        /                                            uk.gov.hmrc.cataloguefro
 GET        /admin/metrics                               @com.kenshoo.play.metrics.MetricsController.metrics
 
 GET        /dependencyReport                            uk.gov.hmrc.cataloguefrontend.DependencyReportController.dependencyReport()
-GET        /getDependencyReport                            uk.gov.hmrc.cataloguefrontend.DependencyReportController.getDependencyReport()

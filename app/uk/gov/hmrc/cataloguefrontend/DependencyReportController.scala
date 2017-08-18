@@ -16,30 +16,39 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.util.Date
+
 import akka.stream.scaladsl._
 import org.apache.commons.io.IOUtils
 import play.api.http.HttpEntity
 import play.api.libs.json.Json
 import play.api.mvc._
-import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, LibraryDependencyState, Version}
-import uk.gov.hmrc.cataloguefrontend.report.{DependencyReport, DependencyReportRepository, MongoDependencyReportRepository}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version}
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-object DependencyReportController extends DependencyReportController with MongoDbConnection {
+object DependencyReportController extends DependencyReportController  {
 
   override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = TeamsAndRepositoriesConnector
 
-  lazy override val dependencyReportRepository = new MongoDependencyReportRepository(db)
-
   lazy override val serviceDependencyConnector: ServiceDependenciesConnector = ServiceDependenciesConnector
 }
+
+case class DependencyReport(repository: String,
+                            repoType: String,
+                            team: String,
+                            digitalService: String,
+                            dependencyName: String,
+                            dependencyType: String,
+                            currentVersion: String,
+                            latestVersion: String,
+                            colour: String,
+                            timestamp: Long = new Date().getTime)
 
 trait DependencyReportController extends FrontendController with UserManagementPortalLink {
 
@@ -48,14 +57,9 @@ trait DependencyReportController extends FrontendController with UserManagementP
 
   def serviceDependencyConnector: ServiceDependenciesConnector
 
-  def dependencyReportRepository: DependencyReportRepository
-
 
   implicit val drFormat = Json.format[DependencyReport]
 
-  def getDependencyReport = Action.async {
-    dependencyReportRepository.getAllDependencyReports.map(d => Ok(Json.toJson(d)))
-  }
 
   private def persistDependencies(digitalServices: Seq[Either[TeamsAndRepositoriesError, DigitalService]],
                                   allRepos: Seq[RepositoryDisplayDetails],
@@ -65,8 +69,7 @@ trait DependencyReportController extends FrontendController with UserManagementP
     val repoName = dependencies.repositoryName
 
     val libraryDependencyReportLines = dependencies.libraryDependenciesState.map { d =>
-
-      val libraryDependencyLine = DependencyReport(repository = repoName,
+      DependencyReport(repository = repoName,
         repoType = getRepositoryType(repoName, allRepos),
         team = findTeamNames(repoName, allTeams).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
@@ -75,14 +78,11 @@ trait DependencyReportController extends FrontendController with UserManagementP
         currentVersion = d.currentVersion.toString,
         latestVersion = d.latestVersion.getOrElse("Unknown").toString,
         colour = getColour(d.currentVersion, d.latestVersion))
-
-      dependencyReportRepository.add(libraryDependencyLine)
-      libraryDependencyLine
     }
 
     val sbtPluginDependencyReportLines = dependencies.sbtPluginsDependenciesState.map { d =>
 
-      val sbtPluginLine = DependencyReport(repository = repoName,
+      DependencyReport(repository = repoName,
         repoType = getRepositoryType(repoName, allRepos),
         team = findTeamNames(repoName, allTeams).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
@@ -91,9 +91,6 @@ trait DependencyReportController extends FrontendController with UserManagementP
         currentVersion = d.currentVersion.toString,
         latestVersion = d.latestVersion.getOrElse("Unknown").toString,
         colour = getColour(d.currentVersion, d.latestVersion))
-
-      dependencyReportRepository.add(sbtPluginLine)
-      sbtPluginLine
     }
 
     libraryDependencyReportLines ++ sbtPluginDependencyReportLines
@@ -155,7 +152,6 @@ trait DependencyReportController extends FrontendController with UserManagementP
     }
 
     val eventualDependencyReports = for {
-      _ <- dependencyReportRepository.clearAllData // DELETES ALL THE DATA
       allRepos <- teamsAndRepositoriesConnector.allRepositories.map(_.data)
       allTeams: Seq[Team] <- allTeamsF
       digitalServices <- digitalServicesF
