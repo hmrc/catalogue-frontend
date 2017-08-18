@@ -153,4 +153,172 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
     }
   }
 
+  "GET all dependencies for report" - {
+
+    "return dependencies for all repositories" in {
+
+      serviceEndpoint(GET, "/api/service-dependencies/dependencies", willRespondWith = (200, Some(
+        """[
+          |  {
+          |    "repositoryName": "repo1",
+          |    "libraryDependenciesState": [
+          |      {
+          |        "libraryName": "frontend-bootstrap",
+          |        "currentVersion": {
+          |          "major": 7,
+          |          "minor": 11,
+          |          "patch": 0
+          |        } ,
+          |        "latestVersion": {
+          |          "major": 8,
+          |          "minor": 80,
+          |          "patch": 0
+          |        }
+          |      },
+          |      {
+          |        "libraryName": "play-config",
+          |        "currentVersion": {
+          |          "major": 3,
+          |          "minor": 0,
+          |          "patch": 0
+          |        },
+          |        "latestVersion": {
+          |          "major": 7,
+          |          "minor": 70,
+          |          "patch": 0
+          |        }
+          |      }
+          |    ],
+          |    "sbtPluginsDependenciesState": [
+          |      {
+          |        "sbtPluginName": "plugin-1",
+          |        "currentVersion": {
+          |          "major": 1,
+          |          "minor": 0,
+          |          "patch": 0
+          |        } ,
+          |        "latestVersion": {
+          |          "major": 1,
+          |          "minor": 1,
+          |          "patch": 0
+          |        },
+          |        "isExternal": true
+          |      },
+          |      {
+          |        "sbtPluginName": "plugin-2",
+          |        "currentVersion": {
+          |          "major": 2,
+          |          "minor": 0,
+          |          "patch": 0
+          |        },
+          |        "latestVersion": {
+          |          "major": 2,
+          |          "minor": 1,
+          |          "patch": 0
+          |        },
+          |        "isExternal": false
+          |      }
+          |    ]
+          |  },
+          |  {
+          |    "repositoryName": "repo2",
+          |    "libraryDependenciesState": [
+          |      {
+          |        "libraryName": "some-lib-1",
+          |        "currentVersion": {
+          |          "major": 7,
+          |          "minor": 77,
+          |          "patch": 0
+          |        } ,
+          |        "latestVersion": {
+          |          "major": 8,
+          |          "minor": 80,
+          |          "patch": 0
+          |        }
+          |      },
+          |      {
+          |        "libraryName": "some-lib-2",
+          |        "currentVersion": {
+          |          "major": 3,
+          |          "minor": 0,
+          |          "patch": 0
+          |        },
+          |        "latestVersion": {
+          |          "major": 7,
+          |          "minor": 70,
+          |          "patch": 0
+          |        }
+          |      }
+          |    ],
+          |    "sbtPluginsDependenciesState": [
+          |      {
+          |        "sbtPluginName": "plugin-3",
+          |        "currentVersion": {
+          |          "major": 1,
+          |          "minor": 0,
+          |          "patch": 0
+          |        } ,
+          |        "latestVersion": {
+          |          "major": 1,
+          |          "minor": 1,
+          |          "patch": 0
+          |        },
+          |        "isExternal": true
+          |      },
+          |      {
+          |        "sbtPluginName": "plugin-4",
+          |        "currentVersion": {
+          |          "major": 2,
+          |          "minor": 0,
+          |          "patch": 0
+          |        },
+          |        "latestVersion": {
+          |          "major": 2,
+          |          "minor": 1,
+          |          "patch": 0
+          |        },
+          |        "isExternal": false
+          |      }
+          |    ]
+          |  }
+          |]""".stripMargin
+      )))
+
+      val response = ServiceDependenciesConnector.getAllDependencies()(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+
+      response.size shouldBe 2
+
+      response.head.libraryDependenciesState.size shouldBe 2
+
+      response.head.repositoryName shouldBe "repo1"
+      response.head.libraryDependenciesState should contain theSameElementsAs
+        Seq(
+          LibraryDependencyState("frontend-bootstrap", Version(7, 11, 0), Some(Version(8, 80, 0))),
+          LibraryDependencyState("play-config", Version(3, 0, 0), Some(Version(7, 70, 0)))
+        )
+
+      response.head.sbtPluginsDependenciesState should contain theSameElementsAs
+        Seq(
+          SbtPluginsDependenciesState("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
+          SbtPluginsDependenciesState("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
+        )
+
+
+      response.last.libraryDependenciesState.size shouldBe 2
+
+      response.last.repositoryName shouldBe "repo2"
+      response.last.libraryDependenciesState should contain theSameElementsAs
+        Seq(
+          LibraryDependencyState("some-lib-1", Version(7, 77, 0), Some(Version(8, 80, 0))),
+          LibraryDependencyState("some-lib-2", Version(3, 0, 0), Some(Version(7, 70, 0)))
+        )
+
+      response.last.sbtPluginsDependenciesState should contain theSameElementsAs
+        Seq(
+          SbtPluginsDependenciesState("plugin-3", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
+          SbtPluginsDependenciesState("plugin-4", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
+        )
+    }
+  }
+
 }

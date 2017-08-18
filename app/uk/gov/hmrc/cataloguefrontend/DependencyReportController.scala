@@ -24,7 +24,7 @@ import play.api.mvc._
 import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, LibraryDependencyState, Version}
 import uk.gov.hmrc.cataloguefrontend.report.{DependencyReport, DependencyReportRepository, MongoDependencyReportRepository}
 import uk.gov.hmrc.play.frontend.controller.FrontendController
 
@@ -43,14 +43,6 @@ object DependencyReportController extends DependencyReportController with MongoD
 
 trait DependencyReportController extends FrontendController with UserManagementPortalLink {
 
-  val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
-
-  val repotypeToDetailsUrl = Map(
-    RepoType.Service -> routes.CatalogueController.service _,
-    RepoType.Other -> routes.CatalogueController.repository _,
-    RepoType.Library -> routes.CatalogueController.library _,
-    RepoType.Prototype -> routes.CatalogueController.prototype _
-  )
 
   def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
 
@@ -65,31 +57,46 @@ trait DependencyReportController extends FrontendController with UserManagementP
     dependencyReportRepository.getAllDependencyReports.map(d => Ok(Json.toJson(d)))
   }
 
-
-
   private def persistDependencies(digitalServices: Seq[Either[TeamsAndRepositoriesError, DigitalService]],
                                   allRepos: Seq[RepositoryDisplayDetails],
                                   allTeams: Seq[Team],
                                   dependencies: Dependencies) = {
 
     val repoName = dependencies.repositoryName
-    dependencies.libraryDependenciesState.map { d =>
 
-      val report = DependencyReport(repository = repoName,
-                                    repoType = getRepositoryType(repoName, allRepos),
-                                    team = findTeamNames(repoName, allTeams).mkString(";"),
-                                    digitalService = findDigitalServiceName(repoName, digitalServices),
-                                    dependencyName = d.libraryName,
-                                    dependencyType = "library",
-                                    currentVersion = d.currentVersion.toString,
-                                    latestVersion = d.latestVersion.getOrElse("Unknown").toString,
-                                    colour = getColour(d.currentVersion, d.latestVersion))
+    val libraryDependencyReportLines = dependencies.libraryDependenciesState.map { d =>
 
+      val libraryDependencyLine = DependencyReport(repository = repoName,
+        repoType = getRepositoryType(repoName, allRepos),
+        team = findTeamNames(repoName, allTeams).mkString(";"),
+        digitalService = findDigitalServiceName(repoName, digitalServices),
+        dependencyName = d.libraryName,
+        dependencyType = "library",
+        currentVersion = d.currentVersion.toString,
+        latestVersion = d.latestVersion.getOrElse("Unknown").toString,
+        colour = getColour(d.currentVersion, d.latestVersion))
 
-      dependencyReportRepository.add(report)
-      report
+      dependencyReportRepository.add(libraryDependencyLine)
+      libraryDependencyLine
     }
 
+    val sbtPluginDependencyReportLines = dependencies.sbtPluginsDependenciesState.map { d =>
+
+      val sbtPluginLine = DependencyReport(repository = repoName,
+        repoType = getRepositoryType(repoName, allRepos),
+        team = findTeamNames(repoName, allTeams).mkString(";"),
+        digitalService = findDigitalServiceName(repoName, digitalServices),
+        dependencyName = d.sbtPluginName,
+        dependencyType = "plugin",
+        currentVersion = d.currentVersion.toString,
+        latestVersion = d.latestVersion.getOrElse("Unknown").toString,
+        colour = getColour(d.currentVersion, d.latestVersion))
+
+      dependencyReportRepository.add(sbtPluginLine)
+      sbtPluginLine
+    }
+
+    libraryDependencyReportLines ++ sbtPluginDependencyReportLines
   }
 
   def toCsv(deps: Seq[DependencyReport], ignoreFields: Seq[String]): String = {
@@ -148,7 +155,7 @@ trait DependencyReportController extends FrontendController with UserManagementP
     }
 
     val eventualDependencyReports = for {
-      _ <- dependencyReportRepository.clearAllData
+      _ <- dependencyReportRepository.clearAllData // DELETES ALL THE DATA
       allRepos <- teamsAndRepositoriesConnector.allRepositories.map(_.data)
       allTeams: Seq[Team] <- allTeamsF
       digitalServices <- digitalServicesF
@@ -167,8 +174,6 @@ trait DependencyReportController extends FrontendController with UserManagementP
       )
     }
   }
-
-
 
 }
 

@@ -31,6 +31,41 @@ object JsonData {
       |]
     """.stripMargin
 
+  val teamsWithRepos =
+    """
+      |[
+      |  {
+      |    "name": "team1",
+      |    "repos": {
+      |      "Service": [
+      |        "service1",
+      |        "service2"
+      |      ],
+      |      "Library": ["lib1", "lib2"],
+      |      "Prototype": [],
+      |      "Other": [
+      |        "other1",
+      |        "other2"
+      |      ]
+      |    }
+      |  },
+      |  {
+      |    "name": "team2",
+      |    "repos": {
+      |      "Service": [
+      |        "service3",
+      |        "service4"
+      |      ],
+      |      "Library": ["lib3", "lib4"],
+      |      "Prototype": ["prototype1"],
+      |      "Other": [
+      |        "other3",
+      |        "other4"
+      |      ]
+      |    }
+      |  }
+      |]
+    """.stripMargin
 
   import DateHelper._
 

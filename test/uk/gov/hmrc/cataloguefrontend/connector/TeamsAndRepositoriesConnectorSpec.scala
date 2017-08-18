@@ -27,7 +27,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Writes
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError}
-import uk.gov.hmrc.cataloguefrontend.{Environment, JsonData, Link, RepoType, RepositoryDetails, RepositoryDisplayDetails, TeamsAndRepositoriesConnector, Timestamped, WireMockEndpoints}
+import uk.gov.hmrc.cataloguefrontend.{Environment, JsonData, Link, RepoType, RepositoryDetails, RepositoryDisplayDetails, Team, TeamsAndRepositoriesConnector, Timestamped, WireMockEndpoints}
 import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.hooks.HttpHook
 
@@ -184,6 +184,32 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
         TeamsAndRepositoriesConnector.allDigitalServices(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
 
       digitalServiceNames.data shouldBe Seq("digital-service-1", "digital-service-2", "digital-service-3")
+    }
+  }
+
+  "teamsWithRepositories" should {
+    "return all the teams and their repositories" in {
+      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
+
+      val teams: Seq[Team] =
+        TeamsAndRepositoriesConnector.teamsWithRepositories()(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+
+      teams.size shouldBe 2
+      teams should contain theSameElementsAs
+        Seq(
+          Team("team1", None, None, None, Some(Map(
+            "Service" -> Seq("service1", "service2"),
+            "Library" -> Seq("lib1", "lib2"),
+            "Prototype" -> Seq(),
+            "Other" -> Seq("other1", "other2")
+          ))),
+          Team("team2", None, None, None, Some(Map(
+            "Service" -> Seq("service3", "service4"),
+            "Library" -> Seq("lib3", "lib4"),
+            "Prototype" -> Seq("prototype1"),
+            "Other" -> Seq("other3", "other4")
+          )))
+        )
     }
   }
 
