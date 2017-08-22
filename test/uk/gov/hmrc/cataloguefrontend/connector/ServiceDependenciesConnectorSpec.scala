@@ -23,7 +23,7 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
-import uk.gov.hmrc.cataloguefrontend.connector.model.{LibraryDependencyState, SbtPluginsDependenciesState, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{LibraryDependencyState, OtherDependenciesState, SbtPluginsDependenciesState, Version}
 import uk.gov.hmrc.play.http.hooks.HttpHook
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpResponse}
 
@@ -104,26 +104,48 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           |      },
           |      "isExternal": false
           |    }
+          |  ],
+          |  "otherDependenciesState": [
+          |    {
+          |      "name": "sbt",
+          |      "currentVersion": {
+          |        "major": 0,
+          |        "minor": 13,
+          |        "patch": 8
+          |      },
+          |      "latestVersion": {
+          |        "major": 0,
+          |        "minor": 13,
+          |        "patch": 15
+          |      }
+          |    }
           |  ]
           |}""".stripMargin
       )))
 
-      val response = ServiceDependenciesConnector.getDependencies("repo1")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = ServiceDependenciesConnector.getDependencies("repo1")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.value
 
-      response.value.libraryDependenciesState.size shouldBe 2
 
-      response.value.repositoryName shouldBe "repo1"
-      response.value.libraryDependenciesState should contain theSameElementsAs
+
+      response.libraryDependenciesState.size shouldBe 2
+
+      response.repositoryName shouldBe "repo1"
+      response.libraryDependenciesState should contain theSameElementsAs
         Seq(
           LibraryDependencyState("frontend-bootstrap", Version(7, 11, 0), Some(Version(8, 80, 0))),
           LibraryDependencyState("play-config", Version(3, 0, 0), Some(Version(7, 70, 0)))
         )
       
-      response.value.sbtPluginsDependenciesState should contain theSameElementsAs
+      response.sbtPluginsDependenciesState should contain theSameElementsAs
         Seq(
           SbtPluginsDependenciesState("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
           SbtPluginsDependenciesState("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
         )
+      response.otherDependenciesState should contain theSameElementsAs
+        Seq(
+          OtherDependenciesState("sbt", Version(0, 13, 8), Some(Version(0, 13, 15)))
+        )
+
     }
 
     "return a None for non existing repository" in {
@@ -218,6 +240,21 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           |        },
           |        "isExternal": false
           |      }
+          |    ],
+          |    "otherDependenciesState": [
+          |      {
+          |        "name": "sbt",
+          |        "currentVersion": {
+          |          "major": 0,
+          |          "minor": 13,
+          |          "patch": 7
+          |        },
+          |        "latestVersion": {
+          |          "major": 0,
+          |          "minor": 13,
+          |          "patch": 15
+          |        }
+          |      }
           |    ]
           |  },
           |  {
@@ -279,6 +316,21 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           |        },
           |        "isExternal": false
           |      }
+          |    ],
+          |    "otherDependenciesState": [
+          |      {
+          |        "name": "sbt",
+          |        "currentVersion": {
+          |          "major": 0,
+          |          "minor": 13,
+          |          "patch": 8
+          |        },
+          |        "latestVersion": {
+          |          "major": 0,
+          |          "minor": 13,
+          |          "patch": 15
+          |        }
+          |      }
           |    ]
           |  }
           |]""".stripMargin
@@ -303,6 +355,12 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           SbtPluginsDependenciesState("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
         )
 
+      response.head.otherDependenciesState should contain theSameElementsAs
+        Seq(
+          OtherDependenciesState("sbt", Version(0, 13, 7), Some(Version(0, 13, 15)))
+        )
+
+
 
       response.last.libraryDependenciesState.size shouldBe 2
 
@@ -317,6 +375,11 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
         Seq(
           SbtPluginsDependenciesState("plugin-3", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
           SbtPluginsDependenciesState("plugin-4", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
+        )
+
+      response.last.otherDependenciesState should contain theSameElementsAs
+        Seq(
+          OtherDependenciesState("sbt", Version(0, 13, 8), Some(Version(0, 13, 15)))
         )
     }
   }

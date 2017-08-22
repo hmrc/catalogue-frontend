@@ -20,8 +20,7 @@ import java.time.LocalDateTime
 
 import akka.stream.Materializer
 import com.github.tomakehurst.wiremock.http.RequestMethod.{GET => WIREMOCK_GET}
-import org.mockito.Matchers._
-import org.mockito.Matchers.{eq => eqTo}
+import org.mockito.Matchers.{eq => eqTo, _}
 import org.mockito.Mockito.when
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
@@ -105,7 +104,7 @@ class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach wi
             sbtPluginsDependenciesState = Seq(
               sbtPluginsDependencyState("PLUGIN-1", 1, "amber" ),
               sbtPluginsDependencyState("PLUGIN-2", 2, "red" )
-            )
+            ), Seq()
           ),
           Dependencies(
             repositoryName = "repo-2",
@@ -113,7 +112,8 @@ class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach wi
               libraryDependencyState("LIBRARY-3", 3, "green")
             ),
             sbtPluginsDependenciesState = Seq(
-              sbtPluginsDependencyState("PLUGIN-3", 3, "red"))
+              sbtPluginsDependencyState("PLUGIN-3", 3, "red")
+            ), Seq()
           )
         )))
     }
@@ -139,7 +139,6 @@ class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach wi
       csvLines should contain ("repo-1,PLUGIN-2,digital-service-1,red,plugin,team1,3.0.0,2.0.0")
       csvLines should contain ("repo-2,LIBRARY-3,digital-service-2,green,library,team2,3.0.0,3.0.0")
       csvLines should contain ("repo-2,PLUGIN-3,digital-service-2,red,plugin,team2,4.0.0,3.0.0")
-
     }
 
   }

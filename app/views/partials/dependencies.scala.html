@@ -62,8 +62,7 @@
                     <li><span class="col-xs-12"><label>Sbt plugins</label></span></li>
                     @for(sbtPluginState <- mayBeDependencies.get.sbtPluginsDependenciesState) {
                         <li>
-                            <div class="@{
-                                getRAGClass(sbtPluginState.currentVersion, sbtPluginState.latestVersion)}" id="@{sbtPluginState.sbtPluginName}">
+                            <div class="@{getRAGClass(sbtPluginState.currentVersion, sbtPluginState.latestVersion)}" id="@{sbtPluginState.sbtPluginName}">
                                 <span class="col-xs-4">
                                 @if(isInternalSbtPlugin(sbtPluginState)) {
                                     <a href="/repositories/@{
@@ -76,6 +75,21 @@
                                 <span class="col-xs-3">@sbtPluginState.currentVersion</span>
                                 <span class="col-xs-1 glyphicon glyphicon-arrow-right"> </span>
                                 <span class="col-xs-3">@sbtPluginState.latestVersion.getOrElse("(not found)")</span>
+                            </div>
+                        </li>
+
+                    }
+                    <li><span class="col-xs-12">&nbsp;</span></li>
+                    <li><span class="col-xs-12"><label>Other</label></span></li>
+                    @for(otherDependenciesState <- mayBeDependencies.get.otherDependenciesState) {
+                        <li>
+                            <div class="@{getRAGClass(otherDependenciesState.currentVersion, otherDependenciesState.latestVersion)}" id="@{otherDependenciesState.name}">
+                                <span class="col-xs-4">
+                                    @otherDependenciesState.name
+                                </span>
+                                <span class="col-xs-3">@otherDependenciesState.currentVersion</span>
+                                <span class="col-xs-1 glyphicon glyphicon-arrow-right"> </span>
+                                <span class="col-xs-3">@otherDependenciesState.latestVersion.getOrElse("(not found)")</span>
                             </div>
                         </li>
 
@@ -123,7 +137,10 @@
     }
 
     @dependencyDataAvailable() = @{
-        mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty
+        mayBeDependencies.isDefined &&
+        (mayBeDependencies.get.libraryDependenciesState.nonEmpty ||
+            mayBeDependencies.get.sbtPluginsDependenciesState.nonEmpty ||
+            mayBeDependencies.get.otherDependenciesState.nonEmpty)
     }
 </div>
 
