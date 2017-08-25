@@ -44,6 +44,7 @@ import uk.gov.hmrc.play.http._
 
 import scala.concurrent.Future
 import scala.util.{Success, Try}
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpGet, HttpPost, HttpResponse, NotFoundException }
 
 case class Deployer(name : String, deploymentDate: LocalDateTime)
 
@@ -82,7 +83,7 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
   def servicesDeploymentsBaseUrl: String
   def whatIsRunningWhereBaseUrl: String
 
-  import uk.gov.hmrc.play.http.HttpReads._
+  import _root_.uk.gov.hmrc.http.HttpReads._
   import JavaDateTimeJsonFormatter._
   import ServiceDeploymentInformation._
 

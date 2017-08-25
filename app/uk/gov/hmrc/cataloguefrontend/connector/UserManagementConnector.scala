@@ -39,12 +39,12 @@ import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
 import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http._
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.{Await, Future}
-
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.io.Source
 import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpReads, HttpResponse}
 
 
 trait UserManagementConnector extends UserManagementPortalLink {
@@ -81,7 +81,7 @@ trait UserManagementConnector extends UserManagementPortalLink {
       }
     }
 
-    val eventualConnectorErrorOrTeamMembers = http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
+    val eventualConnectorErrorOrTeamMembers = http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>
       response.status match {
         case 200 => extractMembers(team, response)
         case httpCode => Left(HTTPError(httpCode))
@@ -129,7 +129,7 @@ trait UserManagementConnector extends UserManagementPortalLink {
         }
       }
 
-    val eventualErrorOrTeamMembers = http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
+    val eventualErrorOrTeamMembers = http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>
       response.status match {
         case 200 => Right(extractUsers(response))
         case httpCode => Left(HTTPError(httpCode))
@@ -152,7 +152,7 @@ trait UserManagementConnector extends UserManagementPortalLink {
 //    val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team"
     val url = s"$userManagementBaseUrl/v2/organisations/teams/$team"
     withTimerAndCounter("ump-teamdetails") {
-      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier).map { response =>
+      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>
         response.status match {
           case 200 => extractData[TeamDetails](team, response)
           case httpCode => Left(HTTPError(httpCode))

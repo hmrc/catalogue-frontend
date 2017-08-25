@@ -29,10 +29,11 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, HTTPError, NoData, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.{UserManagementConnector, WireMockEndpoints}
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 
 import scala.concurrent.Future
 import scala.io.Source
+import uk.gov.hmrc.http.{HeaderCarrier, HttpGet}
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class UserManagementConnectorSpec extends FunSpec with Matchers with TypeCheckedTripleEquals with BeforeAndAfter
   with OneServerPerSuite with WireMockEndpoints with ScalaFutures with EitherValues with MockitoSugar with OptionValues {
@@ -98,9 +99,9 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
       val expectedException = new RuntimeException("some error")
 
-      when(mockedHttpGet.GET(anyString())(any(), any())).thenReturn(Future.failed(expectedException))
+      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(expectedException))
 
-      val error: UMPError = userManagementConnector.getTeamMembersFromUMP("teamName")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
+      val error: UMPError = userManagementConnector.getTeamMembersFromUMP("teamName")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
       error should ===(ConnectionError(expectedException))
     }
 
@@ -113,7 +114,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
         jsonFileNameOpt = Some("/user-management-team-details-response.json")
       )
 
-      val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.right.value
+      val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.right.value
 
       teamDetails.description.value shouldBe "TEAM-A is a great team"
       teamDetails.location.value shouldBe "STLPD"
@@ -130,7 +131,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
         jsonFileNameOpt = Some("/user-management-team-details-nodata-response.json")
       )
 
-      val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
+      val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
 
       teamDetails should ===(NoData("http://some.ump.com/myTeams/TEAM-A?edit"))
     }
@@ -142,7 +143,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
         jsonFileNameOpt = None,
         httpCode = 404
       )
-      val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
+      val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
 
       teamDetails should ===(HTTPError(404))
     }
@@ -158,9 +159,9 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
       val expectedException = new RuntimeException("some error")
 
-      when(mockedHttpGet.GET(anyString())(any(), any())).thenReturn(Future.failed(expectedException))
+      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(expectedException))
 
-      val error: UMPError = userManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
+      val error: UMPError = userManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
       error should ===(ConnectionError(expectedException))
     }
 
@@ -180,7 +181,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
           url =  "/v2/organisations/teams/Team2/members",
           jsonFileNameOpt = Some("/user-management-response-team2.json")
         )
-        val teamsAndMembers = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+        val teamsAndMembers = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
@@ -210,7 +211,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
           httpCode = 404
         )
 
-        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
 
@@ -239,9 +240,9 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
         val teamNames = Seq("Team1", "Team2")
 
         val exception = new RuntimeException("Boooom!")
-        when(mockedHttpGet.GET(anyString())(any(), any())).thenReturn(Future.failed(exception))
+        when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(exception))
 
-        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
 
@@ -267,7 +268,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
           jsonFileNameOpt = Some("/user-management-team-details-nodata-response.json")
         )
 
-        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
 
@@ -322,7 +323,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 //          httpCode = 404
 //        )
 //
-//        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+//        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 //
 //        teamsAndMembers.keys should contain theSameElementsAs teamNames
 //
@@ -353,7 +354,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 //        val exception = new RuntimeException("Boooom!")
 //        when(mockedHttpGet.GET(anyString())(any(), any())).thenReturn(Future.failed(exception))
 //
-//        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+//        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 //
 //        teamsAndMembers.keys should contain theSameElementsAs teamNames
 //
@@ -377,7 +378,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 //          jsonFileNameOpt = Some("/user-management-team-details-nodata-response.json")
 //        )
 //
-//        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+//        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 //
 //        teamsAndMembers.keys should contain theSameElementsAs teamNames
 //
@@ -407,7 +408,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
       s"/v2/organisations/teams/$teamName/members",
       jsonFileNameOpt)
 
-    val errorOrResponse: Either[UMPError, Seq[TeamMember]] = UserManagementConnector.getTeamMembersFromUMP(teamName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+    val errorOrResponse: Either[UMPError, Seq[TeamMember]] = UserManagementConnector.getTeamMembersFromUMP(teamName)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
     errorOrResponse
 
   }

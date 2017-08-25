@@ -12,13 +12,7 @@ private object AppDependencies {
   import play.sbt.PlayImport._
 
 
-  private val frontendBootstrapVersion = "7.26.0"
-  private val playConfigVersion = "3.0.0"
-  private val logbackJsonLoggerVersion = "3.0.0"
-  private val playJsonLoggerVersion = "3.1.0"
-  private val playHealthVersion = "2.0.0"
-  private val govTemplateVersion = "5.0.0"
-  private val playUIVersion = "7.4.0"
+  private val frontendBootstrapVersion = "8.5.0"
   private val urlBuilderVersion = "1.1.0"
   private val catsVersion = "0.9.0"
   private val playReactivemongoVersion = "5.2.0"
@@ -27,13 +21,7 @@ private object AppDependencies {
 
 
   val compile = Seq(
-//    ws,
     "uk.gov.hmrc" %% "frontend-bootstrap" % frontendBootstrapVersion,
-    "uk.gov.hmrc" %% "play-config" % playConfigVersion,
-    "uk.gov.hmrc" %% "play-json-logger" % playJsonLoggerVersion,
-    "uk.gov.hmrc" %% "play-health" % playHealthVersion,
-    "uk.gov.hmrc" %% "govuk-template" % govTemplateVersion,
-    "uk.gov.hmrc" %% "play-ui" % playUIVersion,
     "uk.gov.hmrc" %% "url-builder" % urlBuilderVersion,
     "uk.gov.hmrc" %% "play-reactivemongo" % playReactivemongoVersion,
     "org.typelevel" %% "cats-core" % catsVersion,

@@ -19,6 +19,7 @@ trait MicroService {
     .enablePlugins(Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin) ++ plugins : _*)
     .settings(publishingSettings: _*)
     .settings(
+      scalaVersion := "2.11.11",
       libraryDependencies ++= appDependencies,
       retrieveManaged := true,
       forceSourceHeader := true,

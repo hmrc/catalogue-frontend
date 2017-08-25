@@ -24,8 +24,9 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.{Deployer, DeploymentVO, EnvironmentMapping, Release, ServiceDeploymentsConnector, WireMockEndpoints}
-import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints with EitherValues {
 
@@ -64,7 +65,7 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
         """.stripMargin
       )))
 
-      val response = await(ServiceDeploymentsConnector.getDeployments()(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+      val response = await(ServiceDeploymentsConnector.getDeployments()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
       response(0) shouldBe Release("serviceA", productionDate = toLocalDateTime(1453731429), creationDate = Some(toLocalDateTime(1452701233)), interval = Some(7), leadTime = Some(12), version = "8.96.0" ,deployers=Seq(Deployer("abcd.xyz",toLocalDateTime(1452701233))))
@@ -95,7 +96,7 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
         """.stripMargin
       )))
 
-      val response = await(ServiceDeploymentsConnector.getDeployments(Some("serviceNameA"))(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+      val response = await(ServiceDeploymentsConnector.getDeployments(Some("serviceNameA"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
       response(0) shouldBe Release("serviceA", productionDate = toLocalDateTime(1453731429), creationDate = Some(toLocalDateTime(1452701233)), interval = Some(7), leadTime = Some(12), version = "8.96.0")
@@ -127,7 +128,7 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
         """.stripMargin
       )), givenJsonBody = Some("[\"serviceNameA\",\"serviceNameB\"]"))
 
-      val response = await(ServiceDeploymentsConnector.getDeployments(serviceNames)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+      val response = await(ServiceDeploymentsConnector.getDeployments(serviceNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
       response(0).name shouldBe "serviceNameA"
@@ -159,7 +160,7 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
         """.stripMargin
       )))
 
-      val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+      val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
 
       response.right.get.deployments shouldEqual Seq(
@@ -175,7 +176,7 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
       val serviceName = "appNameA"
       serviceEndpoint(GET, s"/api/whatsrunningwhere/$serviceName", willRespondWith = (404, None))
 
-      val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(HeaderCarrier.fromHeadersAndSession(FakeHeaders())))
+      val response = await(ServiceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
       response.right.get.deployments shouldBe Seq()
       response.right.get.serviceName shouldBe serviceName
