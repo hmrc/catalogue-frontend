@@ -28,9 +28,10 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{FakeApplication, FakeHeaders}
 import uk.gov.hmrc.cataloguefrontend.JsonData.{deploymentThroughputData, jobExecutionTimeData}
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, JobMetricDataPoint}
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet}
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneAppPerTest with Matchers with TypeCheckedTripleEquals with ScalaFutures{
 
@@ -52,7 +53,7 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneApp
       serviceEndpoint(GET, "/api/indicators/service/serv/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
 
       val deploymentIndicatorsForService: Future[Option[DeploymentIndicators]] =
-        IndicatorsConnector.deploymentIndicatorsForService("serv")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
+        IndicatorsConnector.deploymentIndicatorsForService("serv")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
 
       deploymentIndicatorsForService.futureValue should not be None
       deploymentIndicatorsForService.futureValue.get.throughput.size should be(3)
@@ -63,7 +64,7 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneApp
       serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
 
       val deploymentIndicatorsForService: Future[Option[DeploymentIndicators]] =
-        IndicatorsConnector.deploymentIndicatorsForTeam("teamA")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
+        IndicatorsConnector.deploymentIndicatorsForTeam("teamA")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
 
       deploymentIndicatorsForService.futureValue should not be None
       deploymentIndicatorsForService.futureValue.get.throughput.size should be(3)
@@ -75,7 +76,7 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneApp
       serviceEndpoint(GET, "/api/indicators/repository/reponame/builds", willRespondWith = (200, Some(jobExecutionTimeData)))
 
       val buildIndicatorsForRepository: Future[Option[Seq[JobMetricDataPoint]]] =
-        IndicatorsConnector.buildIndicatorsForRepository("reponame")(HeaderCarrier.fromHeadersAndSession(FakeHeaders()))
+        IndicatorsConnector.buildIndicatorsForRepository("reponame")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
 
       buildIndicatorsForRepository.futureValue should not be None
       buildIndicatorsForRepository.futureValue.get.size should be(12)

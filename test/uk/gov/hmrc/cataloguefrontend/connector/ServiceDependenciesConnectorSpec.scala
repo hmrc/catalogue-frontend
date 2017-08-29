@@ -24,10 +24,11 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.cataloguefrontend.connector.model.{LibraryDependencyState, OtherDependenciesState, SbtPluginsDependenciesState, Version}
-import uk.gov.hmrc.play.http.hooks.HttpHook
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpResponse}
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpResponse}
+import uk.gov.hmrc.http.hooks.HttpHook
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints with EitherValues with OptionValues with ScalaFutures with IntegrationPatience {
 
@@ -123,7 +124,7 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           |}""".stripMargin
       )))
 
-      val response = ServiceDependenciesConnector.getDependencies("repo1")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue.value
+      val response = ServiceDependenciesConnector.getDependencies("repo1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.value
 
 
 
@@ -152,7 +153,7 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
 
       serviceEndpoint(GET, "/api/dependencies/non-existing-repo", willRespondWith = (404, None))
 
-      val response = ServiceDependenciesConnector.getDependencies("non-existing-repo")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = ServiceDependenciesConnector.getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response shouldBe None
 
@@ -164,12 +165,14 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
         override def servicesDependenciesBaseUrl: String = "some.url"
 
         override val http: HttpGet = new HttpGet {
-          override protected def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = Future.failed(new RuntimeException("Boom!!"))
+          override def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = Future.failed(new RuntimeException("Boom!!"))
           override val hooks: Seq[HttpHook] = Nil
+
+          override def configuration = None
         }
       }
 
-      val response = failingServiceDependenciesConnector.getDependencies("non-existing-repo")(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = failingServiceDependenciesConnector.getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response shouldBe None
     }
@@ -336,7 +339,7 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           |]""".stripMargin
       )))
 
-      val response = ServiceDependenciesConnector.getAllDependencies()(HeaderCarrier.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = ServiceDependenciesConnector.getAllDependencies()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response.size shouldBe 2
 

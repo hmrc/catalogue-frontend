@@ -20,10 +20,10 @@ import java.time.LocalDateTime
 
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.{Deployer, Release, ServiceDeploymentInformation, ServiceDeploymentsConnector, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import uk.gov.hmrc.http.HeaderCarrier
 
 case class TeamRelease(name: ServiceName, teams: Seq[TeamName], productionDate: LocalDateTime,
                        creationDate: Option[LocalDateTime] = None, interval: Option[Long] = None,

@@ -35,17 +35,18 @@ import uk.gov.hmrc.cataloguefrontend.RepoType._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, LibraryDependencyState, SbtPluginsDependenciesState, Version}
-import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach with OneServerPerSuite with WireMockEndpoints with MockitoSugar with ScalaFutures {
 
 
   val now = LocalDateTime.now()
 
-  implicit val hc = HeaderCarrier.fromHeadersAndSession(FakeHeaders())
+  implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
 
   implicit override lazy val app = new GuiceApplicationBuilder().configure (
     "microservice.services.teams-and-services.host" -> host,
