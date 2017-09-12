@@ -131,15 +131,12 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
         error =>
           Ok(
             teams_list(
-              response.formattedTimestamp,
               teams = Seq.empty,
               form)),
         query => {
           Ok(
             teams_list(
-              response.formattedTimestamp,
               response
-                .data
                 .filter(query)
                 .sortBy(_.name.toUpperCase),
               form))
@@ -154,12 +151,12 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
     type TeamsAndRepoType[A] = Future[Either[TeamsAndRepositoriesError, A]]
 
-    val eventualDigitalServiceInfoF: TeamsAndRepoType[Timestamped[DigitalService]] =
+    val eventualDigitalServiceInfoF: TeamsAndRepoType[DigitalService] =
       teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName)
 
 
     val errorOrTeamNames: TeamsAndRepoType[Seq[String]] =
-      eventualDigitalServiceInfoF.map(_.right.map(_.data.repositories.flatMap(_.teamNames)).right.map(_.distinct))
+      eventualDigitalServiceInfoF.map(_.right.map(_.repositories.flatMap(_.teamNames)).right.map(_.distinct))
 
     val errorOrTeamMembersLookupF: Future[Either[TeamsAndRepositoriesError, Map[String, Either[UMPError, Seq[DisplayableTeamMember]]]]] = errorOrTeamNames.flatMap {
       case Right(teamNames) =>
@@ -172,10 +169,10 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     }
 
 
-    val digitalServiceDetails: EitherT[Future, TeamsAndRepositoriesError, Timestamped[DigitalServiceDetails]] = for {
-      timestampedDigitalService <- EitherT(eventualDigitalServiceInfoF)
+    val digitalServiceDetails: EitherT[Future, TeamsAndRepositoriesError, DigitalServiceDetails] = for {
+      digitalService <- EitherT(eventualDigitalServiceInfoF)
       teamMembers <- EitherT(errorOrTeamMembersLookupF)
-    } yield timestampedDigitalService.map(digitalService => DigitalServiceDetails(digitalServiceName, teamMembers, getRepos(digitalService)))
+    } yield DigitalServiceDetails(digitalServiceName, teamMembers, getRepos(digitalService))
 
     digitalServiceDetails.value.map(d =>
       Ok(digital_service_info(digitalServiceName, d, readModelService.getDigitalServiceOwner(digitalServiceName).map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))))
@@ -210,15 +207,12 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
         error =>
           Ok(
             digital_service_list(
-              response.formattedTimestamp,
               digitalServices = Seq.empty,
               form)),
         query => {
           Ok(
             digital_service_list(
-              response.formattedTimestamp,
               response
-                .data
                 .filter(query)
                 .sortBy(_.toUpperCase),
               form))
@@ -236,7 +230,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
     val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
     for {
-      typeRepos: Option[Timestamped[Team]] <- eventualTeamInfo
+      typeRepos: Option[Team] <- eventualTeamInfo
       teamMembers <- eventualErrorOrMembers
       teamDetails <- eventualErrorOrTeamDetails
       teamIndicators <- eventualMaybeDeploymentIndicators
@@ -245,10 +239,9 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
         implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
 
         Ok(team_info(
-          s.formattedTimestamp,
           teamName,
-          repos = s.data.repos.getOrElse(Map()),
-          activityDates = TeamActivityDates(s.data.firstActiveDate, s.data.lastActiveDate, s.data.firstServiceCreationDate),
+          repos = s.repos.getOrElse(Map()),
+          activityDates = TeamActivityDates(s.firstActiveDate, s.lastActiveDate, s.firstServiceCreationDate),
           errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
           teamDetails,
           TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),
@@ -294,9 +287,9 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       case (_, Left(t)) =>
         t.printStackTrace()
         ServiceUnavailable(t.getMessage)
-      case (Some(repositoryDetails), Right(sdi: ServiceDeploymentInformation)) if repositoryDetails.data.repoType == RepoType.Service =>
+      case (Some(repositoryDetails), Right(sdi: ServiceDeploymentInformation)) if repositoryDetails.repoType == RepoType.Service =>
         val maybeDeployedEnvironments =
-          getDeployedEnvs(sdi.deployments, repositoryDetails.data.environments)
+          getDeployedEnvs(sdi.deployments, repositoryDetails.environments)
 
         val deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]] =
           sdi.deployments.map(deployment =>
@@ -306,12 +299,11 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
       Ok(
         service_info(
-          repositoryDetails.formattedTimestamp,
-          repositoryDetails.data.copy(environments = maybeDeployedEnvironments),
+          repositoryDetails.copy(environments = maybeDeployedEnvironments),
           mayBeDependencies,
           ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
           ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)),
-          repositoryDetails.data.createdAt,
+          repositoryDetails.createdAt,
           deploymentsByEnvironmentName
         ))
       case _ => NotFound
@@ -323,11 +315,10 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       library <- teamsAndRepositoriesConnector.repositoryDetails(name)
       mayBeDependencies <- serviceDependencyConnector.getDependencies(name)
     } yield library match {
-      case Some(s) if s.data.repoType == RepoType.Library =>
+      case Some(s) if s.repoType == RepoType.Library =>
         Ok(
           library_info(
-            s.formattedTimestamp,
-            s.data,
+            s,
             mayBeDependencies))
       case _ => NotFound
     }
@@ -337,11 +328,10 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     teamsAndRepositoriesConnector
       .repositoryDetails(name)
       .map {
-        case Some(s) if s.data.repoType == RepoType.Prototype =>
+        case Some(s) if s.repoType == RepoType.Prototype =>
           val result = Ok(prototype_info(
-            s.formattedTimestamp,
-            s.data.copy(environments = None),
-            s.data.createdAt))
+            s.copy(environments = None),
+            s.createdAt))
           result
         case _ => NotFound
       }
@@ -356,8 +346,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
       case (Some(s), maybeDataPoints) =>
         Ok(
           repository_info(
-            s.formattedTimestamp,
-            s.data,
+            s,
             mayBeDependencies,
             ServiceChartData.jobExecutionTime(name, maybeDataPoints)))
       case _ => NotFound
@@ -385,15 +374,15 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
         error =>
           Ok(
             repositories_list(
-              repositories.formattedTimestamp,
+
               repositories = Seq.empty,
               repotypeToDetailsUrl,
               error)),
         query =>
           Ok(
             repositories_list(
-              repositories.formattedTimestamp,
-              repositories = repositories.data.filter(query),
+
+              repositories = repositories.filter(query),
               repotypeToDetailsUrl,
               form))
       )

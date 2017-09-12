@@ -48,12 +48,11 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with
 
       serviceEndpoint(GET, "/api/teams", willRespondWith = (200, Some(
         s"""[{"name":"teamA", "firstActiveDate" :${firstactivityDate.toInstant(ZoneOffset.UTC).toEpochMilli} , "lastActiveDate": ${lastactivityDate.toInstant(ZoneOffset.UTC).toEpochMilli}, "repos":{}}]"""
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
+      )))
 
       val response = await(WS.url(s"http://localhost:$port/teams").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include("""<a href="/teams/teamA">teamA</a>""")
       response.body should include(firstactivityDate.asPattern("yyyy-MM-dd"))
       response.body should include(lastactivityDate.asPattern("yyyy-MM-dd"))

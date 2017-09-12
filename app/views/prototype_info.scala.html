@@ -18,14 +18,11 @@
 @import play.twirl.api.Html
 @import java.time.LocalDateTime
 
-@(cacheTimestampFormatted: String,
-        prototype: RepositoryDetails,
-        repositoryCreationDate: LocalDateTime)(implicit messages: Messages)
+@(prototype: RepositoryDetails, repositoryCreationDate: LocalDateTime)(implicit messages: Messages)
 
 @standard_layout(prototype.name, "prototypes") {
     <header>
         <h1>Prototype: @prototype.name</h1>
-        <time class="last-updated">Last updated from Github at: @cacheTimestampFormatted</time>
 
         <script typr="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>

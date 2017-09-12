@@ -144,10 +144,10 @@ trait DependencyReportController extends FrontendController with UserManagementP
     type RepoName = String
 
     val allTeamsF = teamsAndRepositoriesConnector.teamsWithRepositories()
-    val digitalServicesF = teamsAndRepositoriesConnector.allDigitalServices.map(_.data).flatMap { digitalServices =>
+    val digitalServicesF = teamsAndRepositoriesConnector.allDigitalServices.flatMap { digitalServices =>
       Future.sequence {
         digitalServices.map(teamsAndRepositoriesConnector.digitalServiceInfo)
-      }.map(errorsOrDigitalServices => errorsOrDigitalServices.map(errorOrDigitalService => errorOrDigitalService.right.map(_.data)))
+      }.map(errorsOrDigitalServices => errorsOrDigitalServices.map(errorOrDigitalService => errorOrDigitalService.right.map(identity)))
     }
 
     val eventualDependencyReports = for {

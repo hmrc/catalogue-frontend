@@ -64,16 +64,16 @@ class DeploymentsService(serviceDeploymentsConnector: ServiceDeploymentsConnecto
   def buildFilterFromService(serviceName: Option[ServiceName])(implicit hc: HeaderCarrier): Option[Future[ReleaseFilter]] =
     serviceName map { s =>
       for (service <- teamsAndServicesConnector.repositoryDetails(s))
-        yield service map { s => ServiceTeams(Map(s.data.name -> s.data.teamNames)) } getOrElse NotFound }
+        yield service map { s => ServiceTeams(Map(s.name -> s.teamNames)) } getOrElse NotFound }
 
   def buildFilterFromTeam(teamName: Option[TeamName])(implicit hc: HeaderCarrier): Option[Future[ReleaseFilter]] =
     teamName map { t =>
       teamsAndServicesConnector.teamInfo(t).flatMap {
         case Some(x) =>
-          val teamServiceNames = x.data.repos.getOrElse(Map())("Service")
-          teamsAndServicesConnector.teamsByService(teamServiceNames).map { st => ServiceTeams(st.data) }
+          val teamServiceNames = x.repos.getOrElse(Map())("Service")
+          teamsAndServicesConnector.teamsByService(teamServiceNames).map { st => ServiceTeams(st) }
         case None => Future.successful(NotFound) } }
 
   def emptyFilter(implicit hc: HeaderCarrier): Future[ReleaseFilter] =
-    teamsAndServicesConnector.allTeamsByService().map { cached => All(cached.data) }
+    teamsAndServicesConnector.allTeamsByService().map { cached => All(cached) }
 }

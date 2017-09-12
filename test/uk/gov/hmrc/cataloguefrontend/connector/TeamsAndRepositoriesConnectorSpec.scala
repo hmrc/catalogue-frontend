@@ -27,7 +27,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Writes
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError}
-import uk.gov.hmrc.cataloguefrontend.{Environment, JsonData, Link, RepoType, RepositoryDetails, RepositoryDisplayDetails, Team, TeamsAndRepositoriesConnector, Timestamped, WireMockEndpoints}
+import uk.gov.hmrc.cataloguefrontend.{Environment, JsonData, Link, RepoType, RepositoryDetails, RepositoryDisplayDetails, Team, TeamsAndRepositoriesConnector, WireMockEndpoints}
 import uk.gov.hmrc.play.http._
 
 import scala.concurrent.Future
@@ -63,9 +63,9 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
 
       val response = TeamsAndRepositoriesConnector.teamsByService(Seq("serviceA", "serviceB"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
-      response.data.size shouldBe 2
-      response.data("serviceA") shouldBe Seq("teamA", "teamB")
-      response.data("serviceB") shouldBe Seq("teamA")
+      response.size shouldBe 2
+      response("serviceA") shouldBe Seq("teamA", "teamB")
+      response("serviceB") shouldBe Seq("teamA")
 
     }
   }
@@ -79,7 +79,6 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
           .repositoryDetails("service-1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
           .value
-          .data
 
       responseData.name shouldBe "service-1"
       responseData.description shouldBe "some description"
@@ -117,22 +116,22 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
     "return all the repositories returned by the api" in {
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(JsonData.repositoriesData)))
 
-      val repositories: Timestamped[Seq[RepositoryDisplayDetails]] = TeamsAndRepositoriesConnector.allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+      val repositories: Seq[RepositoryDisplayDetails] = TeamsAndRepositoriesConnector.allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
-      repositories.data(0).name shouldBe "teamA-serv"
-      repositories.data(0).createdAt shouldBe JsonData.createdAt
-      repositories.data(0).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories.data(0).repoType shouldBe RepoType.Service
+      repositories(0).name shouldBe "teamA-serv"
+      repositories(0).createdAt shouldBe JsonData.createdAt
+      repositories(0).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories(0).repoType shouldBe RepoType.Service
 
-      repositories.data(1).name shouldBe "teamB-library"
-      repositories.data(1).createdAt shouldBe JsonData.createdAt
-      repositories.data(1).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories.data(1).repoType shouldBe RepoType.Library
+      repositories(1).name shouldBe "teamB-library"
+      repositories(1).createdAt shouldBe JsonData.createdAt
+      repositories(1).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories(1).repoType shouldBe RepoType.Library
 
-      repositories.data(2).name shouldBe "teamB-other"
-      repositories.data(2).createdAt shouldBe JsonData.createdAt
-      repositories.data(2).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories.data(2).repoType shouldBe RepoType.Other
+      repositories(2).name shouldBe "teamB-other"
+      repositories(2).createdAt shouldBe JsonData.createdAt
+      repositories(2).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories(2).repoType shouldBe RepoType.Other
 
     }
   }
@@ -147,7 +146,6 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
           .digitalServiceInfo("service-1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
           .right.value
-          .data
 
       responseData.name shouldBe "service-1"
 
@@ -182,10 +180,10 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
     "return all the digital service names" in {
       serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
 
-      val digitalServiceNames: Timestamped[Seq[String]] =
+      val digitalServiceNames: Seq[String] =
         TeamsAndRepositoriesConnector.allDigitalServices(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
-      digitalServiceNames.data shouldBe Seq("digital-service-1", "digital-service-2", "digital-service-3")
+      digitalServiceNames shouldBe Seq("digital-service-1", "digital-service-2", "digital-service-3")
     }
   }
 

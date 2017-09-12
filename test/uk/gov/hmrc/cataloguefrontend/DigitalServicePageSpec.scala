@@ -16,26 +16,19 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.ZoneOffset
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mockito
 import org.mockito.Matchers._
-import org.mockito.Mockito
 import org.mockito.Mockito.when
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
 import play.api.libs.ws.WS
-import play.api.mvc.{Action, AnyContent, Result}
+import play.api.mvc.Result
 import play.api.test.FakeRequest
-import uk.gov.hmrc.cataloguefrontend.DateHelper._
-import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
@@ -109,12 +102,11 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
          |    }
          |  ]
          |}""".stripMargin
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
+      )))
 
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
 
       response.body should include("""<a href="/service/A">A</a>""")
       response.body should include("""<a href="/prototype/B">B</a>""")
@@ -123,22 +115,6 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
     }
 
-    "show '(None)' if no timestamp is found" in {
-
-      serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
-        s"""{
-          |   "name":"$digitalServiceName",
-          |   "lastUpdatedAt": 1494240869000,
-          |   "repositories":[]
-          | }""".stripMargin
-      )))
-
-      val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
-
-      response.status shouldBe 200
-      response.body should include(s"Last updated from Github at: (None)")
-
-    }
 
     "show a message if no services are found" in {
 
@@ -149,12 +125,11 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
           |   "repositories":[]
           | }""".stripMargin
 
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
+      )))
 
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include(ViewMessages.noRepoOfTypeForDigitalService("service"))
       response.body should include(ViewMessages.noRepoOfTypeForDigitalService("library"))
       response.body should include(ViewMessages.noRepoOfTypeForDigitalService("prototype"))
@@ -240,7 +215,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
         """.stripMargin
       serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
         json
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
+      )))
 
 
       mockHttpApiCall(s"/v2/organisations/teams/$team1/members", "/user-management-response-team1.json")
@@ -320,7 +295,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val teamName = "Team1"
 
       val exception = new RuntimeException("Boooom!")
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(Timestamped(DigitalService(digitalServiceName, 1, Nil), None))))
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
       Future.successful(
       Map(teamName -> Left(UserManagementConnector.ConnectionError(exception)))
@@ -363,7 +338,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val exception = new RuntimeException("Boooom!")
 
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(Timestamped(DigitalService(digitalServiceName, 1, Nil), None))))
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
       Future.successful(
           Map(teamName -> Left(UserManagementConnector.NoData("https://some-link-to-rectify")))
@@ -406,7 +381,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val exception = new RuntimeException("Boooom!")
 
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(Timestamped(DigitalService(digitalServiceName, 1, Nil), None))))
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
       Future.successful(
           Map(teamName -> Left(UserManagementConnector.HTTPError(404)))
@@ -434,8 +409,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
     serviceEndpoint(
       method = GET,
       url = url,
-      willRespondWith = (httpCodeToBeReturned, Some(json)),
-      extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
+      willRespondWith = (httpCodeToBeReturned, Some(json)))
 
     json
   }

@@ -19,12 +19,11 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
-@(cacheTimestampFormatted: String, library: RepositoryDetails, mayBeDependencies: Option[Dependencies])
+@(library: RepositoryDetails, mayBeDependencies: Option[Dependencies])
 
 @standard_layout(library.name,"libraries") {
 <header>
     <h1>Library: @library.name</h1>
-    <time class="last-updated">Last updated from Github at: @cacheTimestampFormatted</time>
 </header>
 
 <div class="alert alert-success" role="alert" id="@library.name">

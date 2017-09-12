@@ -46,12 +46,11 @@ class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPer
 
       serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(
         JsonData.digitalServiceNamesData
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
+      )))
 
       val response = await(WS.url(s"http://localhost:$port/digital-services").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include("<h1>Digital Services</h1>")
 
       val document = asDocument(response.body)

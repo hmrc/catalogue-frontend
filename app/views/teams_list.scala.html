@@ -15,12 +15,11 @@
 *@
 @import uk.gov.hmrc.cataloguefrontend.Team
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@(timestamp: String, teams: Seq[Team], form: Form[_])(implicit messages: Messages)
+@(teams: Seq[Team], form: Form[_])(implicit messages: Messages)
 
     @standard_layout("Teams list", "teams") {
         <header>
             <h1>Teams</h1>
-            <time class="last-updated">Last updated from Github at: @timestamp</time>
         </header>
 
         @if(form.hasErrors) {

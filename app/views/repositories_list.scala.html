@@ -22,12 +22,11 @@
 @import helper._
 @import uk.gov.hmrc.cataloguefrontend.RepoType
 
-@(cacheTimestampFormatted: String, repositories: Seq[RepositoryDisplayDetails], repotypeToDetailsUrl: Map[RepoType.Value, (String) => Call], form: Form[_])(implicit messages: Messages)
+@(repositories: Seq[RepositoryDisplayDetails], repotypeToDetailsUrl: Map[RepoType.Value, (String) => Call], form: Form[_])(implicit messages: Messages)
 
 @standard_layout("Repositories", "repositories") {
     <header>
         <h1>Repositories</h1>
-        <time class="last-updated">Last updated from Github at: @cacheTimestampFormatted</time>
     </header>
 
 

@@ -46,12 +46,11 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(
         JsonData.repositoriesData
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
+      )))
 
       val response = await(WS.url(s"http://localhost:$port/repositories").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include("<h1>Repositories</h1>")
 
       val document = asDocument(response.body)
@@ -80,12 +79,11 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(
         JsonData.repositoriesData
-      )), extraHeaders = Map("X-Cache-Timestamp" -> "Fri, 14 Oct 1983 10:03:23 GMT"))
+      )))
 
       val response = await(WS.url(s"http://localhost:$port/repositories?name=&type=Library").get)
 
       response.status shouldBe 200
-      response.body should include(s"Last updated from Github at: 14 Oct 1983 10:03")
       response.body should include("<h1>Repositories</h1>")
 
       val document = asDocument(response.body)

@@ -72,16 +72,16 @@ class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach wi
 
     def mockDigitalService() = {
       when(mockedTeamsAndRepositoriesConnector.allDigitalServices(any()))
-        .thenReturn(Future.successful(Timestamped(Seq(digitalService1, digitalService2), None)))
+        .thenReturn(Future.successful(Seq(digitalService1, digitalService2)))
 
       
       when(mockedTeamsAndRepositoriesConnector.digitalServiceInfo(eqTo(digitalService1))(any()))
-        .thenReturn(Future.successful(Right(Timestamped(DigitalService(digitalService1, 1,
-          Seq(digitalServiceRepository("repo-1"))), None))))
+        .thenReturn(Future.successful(Right(DigitalService(digitalService1, 1,
+          Seq(digitalServiceRepository("repo-1"))))))
 
       when(mockedTeamsAndRepositoriesConnector.digitalServiceInfo(eqTo(digitalService2))(any()))
-        .thenReturn(Future.successful(Right(Timestamped(DigitalService(digitalService2, 1,
-          Seq(digitalServiceRepository("repo-2"))), None))))
+        .thenReturn(Future.successful(Right(DigitalService(digitalService2, 1,
+          Seq(digitalServiceRepository("repo-2"))))))
     }
 
 

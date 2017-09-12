@@ -101,19 +101,19 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
-  def allTeams(implicit hc: HeaderCarrier): Future[Timestamped[Seq[Team]]] = {
+  def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map {
       timestamp[Seq[Team]]
     }
   }
 
-  def allDigitalServices(implicit hc: HeaderCarrier): Future[Timestamped[Seq[String]]] = {
+  def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/digital-services").map {
       timestamp[Seq[String]]
     }
   }
 
-  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[Timestamped[Team]]] = {
+  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[Team]] = {
     val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${URLEncoder.encode(teamName, "UTF-8")}"
 
     http.GET[HttpResponse](url)
@@ -145,7 +145,7 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     }
   }
 
-  def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Either[TeamsAndRepositoriesError, Timestamped[DigitalService]]] = {
+  def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Either[TeamsAndRepositoriesError, DigitalService]] = {
     val url = teamsAndServicesBaseUrl + s"/api/digital-services/${URLEncoder.encode(digitalServiceName, "UTF-8")}"
 
     http.GET[HttpResponse](url)
@@ -161,12 +161,12 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     }
   }
 
-  def allRepositories(implicit hc: HeaderCarrier): Future[Timestamped[Seq[RepositoryDisplayDetails]]] =
+  def allRepositories(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories").map {
       timestamp[Seq[RepositoryDisplayDetails]]
     }
 
-  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[Timestamped[RepositoryDetails]]] = {
+  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories/$name").map { response =>
       response.status match {
         case 404 => None
@@ -175,28 +175,28 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     }
   }
 
-  def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Timestamped[Map[ServiceName, Seq[TeamName]]]] = {
+  def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] = {
     http.POST[Seq[String], HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true", serviceNames).map {
       timestamp[Map[ServiceName, Seq[TeamName]]]
     }
   }
 
-  def allTeamsByService()(implicit hc: HeaderCarrier): Future[Timestamped[Map[ServiceName, Seq[TeamName]]]] = {
+  def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true").map {
       timestamp[Map[ServiceName, Seq[TeamName]]]
     }
   }
 
-  def timestamp[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): Timestamped[T] =
-    Timestamped.fromStringInstant(
-      r.json.as[T],
-      r.header(CacheTimestampHeaderName))
+  //!@ rename or inline
+  def timestamp[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): T =
+    r.json.as[T]
 
-  def toCachedItemOption[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): Option[Timestamped[T]] =
-    r.status match {
-      case 404 => None
-      case 200 => Some(timestamp(r))
-    }
+//!@ not used, remove
+//  def toCachedItemOption[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): Option[T] =
+//    r.status match {
+//      case 404 => None
+//      case 200 => Some(timestamp(r))
+//    }
 }
 
 object TeamsAndRepositoriesConnector extends TeamsAndRepositoriesConnector {

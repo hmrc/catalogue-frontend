@@ -22,7 +22,6 @@
 @import uk.gov.hmrc.cataloguefrontend.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @(
-        cacheTimestampFormatted: String,
         teamName: String,
         repos: Map[String, Seq[String]],
         activityDates: TeamActivityDates,
@@ -36,7 +35,6 @@
 @standard_layout(teamName, "teams") {
     <header>
         <h1>@teamName</h1>
-        <time class="last-updated">Last updated from Github at: @cacheTimestampFormatted</time>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
     <section class="section-wrapper">

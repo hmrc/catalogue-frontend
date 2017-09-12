@@ -16,18 +16,17 @@
 @import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError, TeamsAndRepositoriesError}
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{NoData, UMPError}
-@import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, RepoType, Timestamped, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, RepoType, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
-@(digitalServiceName: String, timestampedRepos: Either[TeamsAndRepositoriesError, Timestamped[DigitalServiceDetails]], digitalServiceOwner: Option[DisplayableTeamMember] )(implicit messages: Messages)
+@(digitalServiceName: String, timestampedRepos: Either[TeamsAndRepositoriesError, DigitalServiceDetails], digitalServiceOwner: Option[DisplayableTeamMember] )(implicit messages: Messages)
 
 
 @standard_layout(digitalServiceName, "digital-services") {
     <header>
         <h1>Digital Service: @digitalServiceName</h1>
-        <time class="last-updated">Last updated from Github at: @{timestampedRepos.right.map(_.formattedTimestamp).right.getOrElse("Not Available")}</time>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
@@ -86,7 +85,7 @@
                 <div class="col-md-12">
                     <div class="board">
                         <h3 class="board__heading">Contributing Teams</h3>
-                        @for((teamName, errorOrMembers) <- timestampedDigitalService.data.teamMembersLookUp) {
+                        @for((teamName, errorOrMembers) <- timestampedDigitalService.teamMembersLookUp) {
                            <h4 class="sub__heading"><a href="/teams/@teamName">@teamName</a></h4>
 
                            <div class="board__body">
@@ -117,10 +116,10 @@
             <section class="section-wrapper">
                 <div class="row">
 
-                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Service, "Services", "service", "service")
-                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Library, "Libraries", "library", "library")
-                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
-                    @showRepositories(timestampedDigitalService.data.repos, RepoType.Other, "Repositories", "other", "repositories")
+                    @showRepositories(timestampedDigitalService.repos, RepoType.Service, "Services", "service", "service")
+                    @showRepositories(timestampedDigitalService.repos, RepoType.Library, "Libraries", "library", "library")
+                    @showRepositories(timestampedDigitalService.repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
+                    @showRepositories(timestampedDigitalService.repos, RepoType.Other, "Repositories", "other", "repositories")
 
                 </div>
             </section>

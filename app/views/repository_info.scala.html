@@ -20,12 +20,11 @@
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @import uk.gov.hmrc.cataloguefrontend.connector.JobMetricDataPoint
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
-@(cacheTimestampFormatted: String, repository: RepositoryDetails, mayBeDependencies: Option[Dependencies], jobExecutionTimeChartData: Option[ChartDataRows])(implicit messages: Messages)
+@(repository: RepositoryDetails, mayBeDependencies: Option[Dependencies], jobExecutionTimeChartData: Option[ChartDataRows])(implicit messages: Messages)
 
 @standard_layout(repository.name, "repositories") {
 <header>
     <h1>Repository: @repository.name</h1>
-    <time class="last-updated">Last updated from Github at: @cacheTimestampFormatted</time>
 
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
