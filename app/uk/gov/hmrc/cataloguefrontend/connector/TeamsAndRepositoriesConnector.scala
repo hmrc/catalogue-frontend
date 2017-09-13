@@ -103,13 +103,13 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
 
   def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map {
-      timestamp[Seq[Team]]
+      toJson[Seq[Team]]
     }
   }
 
   def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/digital-services").map {
-      timestamp[Seq[String]]
+      toJson[Seq[String]]
     }
   }
 
@@ -120,7 +120,7 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
       .map { response =>
         response.status match {
           case 404 => None
-          case 200 => Some(timestamp[Team](response))
+          case 200 => Some(toJson[Team](response))
         }
       }.recover {
       case ex =>
@@ -151,7 +151,7 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
     http.GET[HttpResponse](url)
       .map { response =>
         response.status match {
-          case 200 => Right(timestamp[DigitalService](response))
+          case 200 => Right(toJson[DigitalService](response))
           case statusCode => Left(HTTPError(statusCode))
         }
       }.recover {
@@ -163,40 +163,34 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
 
   def allRepositories(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories").map {
-      timestamp[Seq[RepositoryDisplayDetails]]
+      toJson[Seq[RepositoryDisplayDetails]]
     }
 
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories/$name").map { response =>
       response.status match {
         case 404 => None
-        case 200 => Some(timestamp[RepositoryDetails](response))
+        case 200 => Some(toJson[RepositoryDetails](response))
       }
     }
   }
 
   def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] = {
     http.POST[Seq[String], HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true", serviceNames).map {
-      timestamp[Map[ServiceName, Seq[TeamName]]]
+      toJson[Map[ServiceName, Seq[TeamName]]]
     }
   }
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] = {
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true").map {
-      timestamp[Map[ServiceName, Seq[TeamName]]]
+      toJson[Map[ServiceName, Seq[TeamName]]]
     }
   }
 
-  //!@ rename or inline
-  def timestamp[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): T =
+  def toJson[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): T =
     r.json.as[T]
 
-//!@ not used, remove
-//  def toCachedItemOption[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): Option[T] =
-//    r.status match {
-//      case 404 => None
-//      case 200 => Some(timestamp(r))
-//    }
+
 }
 
 object TeamsAndRepositoriesConnector extends TeamsAndRepositoriesConnector {
