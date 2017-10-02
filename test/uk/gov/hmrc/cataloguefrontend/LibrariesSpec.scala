@@ -17,16 +17,32 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.mock.MockitoSugar
+import play.api.Configuration
+import play.api.i18n.MessagesApi
 import play.api.mvc.Result
 import play.api.test.FakeRequest
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
+import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
 import uk.gov.hmrc.play.test.UnitSpec
 
-class LibrariesSpec extends UnitSpec with ScalaFutures {
+class LibrariesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
   "/libraries" should {
     "redirect to the repositories page with the appropriate filters" in {
 
       val result: Result =
-        CatalogueController.allLibraries(FakeRequest()).futureValue
+        new CatalogueController(
+          mock[UserManagementConnector],
+          mock[TeamsAndRepositoriesConnector],
+          mock[ServiceDependenciesConnector],
+          mock[IndicatorsConnector],
+          mock[DeploymentsService],
+          mock[EventService],
+          mock[ReadModelService],
+          mock[play.api.Environment],
+          Configuration(),
+          mock[MessagesApi]).allLibraries(FakeRequest()).futureValue
 
       println(result)
 

@@ -18,22 +18,17 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.net.URLEncoder
 import java.time.LocalDateTime
+import javax.inject.{Inject, Singleton}
 
-import play.api.Logger
 import play.api.libs.json._
+import play.api.{Configuration, Logger, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.DigitalService.DigitalServiceRepository
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.ConnectionError
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
-
-import uk.gov.hmrc.cataloguefrontend.config.WSHttp
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http._
-
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpGet, HttpPost, HttpReads, HttpResponse }
 
 object RepoType extends Enumeration {
 
@@ -84,13 +79,18 @@ object DigitalService {
   implicit val digitalServiceFormat = Json.format[DigitalService]
 }
 
-trait TeamsAndRepositoriesConnector extends ServicesConfig {
+@Singleton
+class TeamsAndRepositoriesConnector @Inject()(http : HttpClient, override val runModeConfiguration:Configuration, environment : PlayEnvironment) extends ServicesConfig {
   type ServiceName = String
   type TeamName = String
 
-  val http: HttpGet with HttpPost
+  import TeamsAndRepositoriesConnector._
 
-  def teamsAndServicesBaseUrl: String
+  override protected def mode = environment.mode
+
+  def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
+
+
 
   implicit val linkFormats = Json.format[Link]
   implicit val environmentsFormats = Json.format[Environment]
@@ -193,10 +193,10 @@ trait TeamsAndRepositoriesConnector extends ServicesConfig {
 
 }
 
-object TeamsAndRepositoriesConnector extends TeamsAndRepositoriesConnector {
-  override val http = WSHttp
+object TeamsAndRepositoriesConnector {
 
-  override def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
+  type ServiceName = String
+  type TeamName = String
 
   sealed trait TeamsAndRepositoriesError
 

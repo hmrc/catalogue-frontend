@@ -25,6 +25,8 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
+import play.api.Configuration
+import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
 import play.api.mvc.Result
@@ -68,40 +70,40 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
     "show a list of libraries, services, prototypes and repositories" in {
       serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
-      s"""{
-         |  "name": "$digitalServiceName",
-         |  "lastUpdatedAt": 1494240869000,
-         |  "repositories": [
-         |    {
-         |      "name": "A",
-         |      "createdAt": 1456326530000,
-         |      "lastUpdatedAt": 1494240809000,
-         |      "repoType": "Service",
-         |      "teamNames": ["Team1", "Team2"]
-         |    },
-         |    {
-         |      "name": "B",
-         |      "createdAt": 1491916469000,
-         |      "lastUpdatedAt": 1494240869000,
-         |      "repoType": "Prototype",
-         |      "teamNames": ["Team1"]
-         |    },
-         |    {
-         |      "name": "C",
-         |      "createdAt": 1454669716000,
-         |      "lastUpdatedAt": 1494240838000,
-         |      "repoType": "Library",
-         |      "teamNames": ["Team2"]
-         |    },
-         |    {
-         |      "name": "D",
-         |      "createdAt": 1454669716000,
-         |      "lastUpdatedAt": 1494240838000,
-         |      "repoType": "Other",
-         |      "teamNames": ["Team3"]
-         |    }
-         |  ]
-         |}""".stripMargin
+        s"""{
+           |  "name": "$digitalServiceName",
+           |  "lastUpdatedAt": 1494240869000,
+           |  "repositories": [
+           |    {
+           |      "name": "A",
+           |      "createdAt": 1456326530000,
+           |      "lastUpdatedAt": 1494240809000,
+           |      "repoType": "Service",
+           |      "teamNames": ["Team1", "Team2"]
+           |    },
+           |    {
+           |      "name": "B",
+           |      "createdAt": 1491916469000,
+           |      "lastUpdatedAt": 1494240869000,
+           |      "repoType": "Prototype",
+           |      "teamNames": ["Team1"]
+           |    },
+           |    {
+           |      "name": "C",
+           |      "createdAt": 1454669716000,
+           |      "lastUpdatedAt": 1494240838000,
+           |      "repoType": "Library",
+           |      "teamNames": ["Team2"]
+           |    },
+           |    {
+           |      "name": "D",
+           |      "createdAt": 1454669716000,
+           |      "lastUpdatedAt": 1494240838000,
+           |      "repoType": "Other",
+           |      "teamNames": ["Team3"]
+           |    }
+           |  ]
+           |}""".stripMargin
       )))
 
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
@@ -120,10 +122,10 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
         s"""{
-          |   "name":"$digitalServiceName",
-          |   "lastUpdatedAt":12345,
-          |   "repositories":[]
-          | }""".stripMargin
+           |   "name":"$digitalServiceName",
+           |   "lastUpdatedAt":12345,
+           |   "repositories":[]
+           | }""".stripMargin
 
       )))
 
@@ -158,20 +160,18 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       when(mockedConnector.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Left(HTTPError(999))))
 
 
-      //      val mockedEventService = mock[EventService]
 
-      val catalogueController = new CatalogueController {
-        override def userManagementConnector: UserManagementConnector = ???
-
-        override def indicatorsConnector: IndicatorsConnector = ???
-        override def deploymentsService: DeploymentsService = ???
-
-        override def readModelService: ReadModelService = mockedModelService
-        override def eventService: EventService = ??? //mockedEventService
-        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mockedConnector
-
-        override def serviceDependencyConnector: ServiceDependenciesConnector = ???
-      }
+      val catalogueController =         new CatalogueController(
+        mock[UserManagementConnector],
+        mockedConnector,
+        mock[ServiceDependenciesConnector],
+        mock[IndicatorsConnector],
+        mock[DeploymentsService],
+        mock[EventService],
+        mockedModelService,
+        mock[play.api.Environment],
+        app.configuration,
+        mock[MessagesApi])
 
       val digitalServiceName = "digital-service-123"
 
@@ -199,19 +199,19 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val json =
         s"""
-          |{
-          |  "name": "Catalogue",
-          |  "lastUpdatedAt": 1494864193000,
-          |  "repositories": [
-          |    {
-          |      "name": "catalogue-frontend",
-          |      "createdAt": 1456326530000,
-          |      "lastUpdatedAt": 1494864193000,
-          |      "repoType": "Service",
-          |      "teamNames": [ "$team1", "$team2"]
-          |    }
-          |  ]
-          |}
+           |{
+           |  "name": "Catalogue",
+           |  "lastUpdatedAt": 1494864193000,
+           |  "repositories": [
+           |    {
+           |      "name": "catalogue-frontend",
+           |      "createdAt": 1456326530000,
+           |      "lastUpdatedAt": 1494864193000,
+           |      "repoType": "Service",
+           |      "teamNames": [ "$team1", "$team2"]
+           |    }
+           |  ]
+           |}
         """.stripMargin
       serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
         json
@@ -239,22 +239,19 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
 
-      val catalogueController = new CatalogueController {
-        override def userManagementConnector: UserManagementConnector = ???
-        override def indicatorsConnector: IndicatorsConnector = ???
-        override def deploymentsService: DeploymentsService = ???
-        override def readModelService: ReadModelService = mockedModelService
-
-        override def eventService: EventService = ???
-
-        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
-
-        override def serviceDependencyConnector: ServiceDependenciesConnector = ???
-      }
+      val catalogueController =         new CatalogueController(
+        mock[UserManagementConnector],
+        teamsAndRepositoriesConnectorMock,
+        mock[ServiceDependenciesConnector],
+        mock[IndicatorsConnector],
+        mock[DeploymentsService],
+        mock[EventService],
+        mockedModelService,
+        mock[play.api.Environment],
+        app.configuration,
+        mock[MessagesApi])
 
       val exception = new RuntimeException("Boooom!")
-
-      //import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.ConnectionError
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(
         Future.successful(
@@ -279,27 +276,26 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock = mock[UserManagementConnector]
 
-      val catalogueController = new CatalogueController {
-        override def userManagementConnector: UserManagementConnector = umpConnectorMock
-        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
-
-        override def indicatorsConnector: IndicatorsConnector = ???
-        override def deploymentsService: DeploymentsService = ???
-        override def readModelService: ReadModelService = mockedModelService
-
-        override def eventService: EventService = ???
-
-        override def serviceDependencyConnector: ServiceDependenciesConnector = ???
-      }
+      val catalogueController =         new CatalogueController(
+        umpConnectorMock,
+        teamsAndRepositoriesConnectorMock,
+        mock[ServiceDependenciesConnector],
+        mock[IndicatorsConnector],
+        mock[DeploymentsService],
+        mock[EventService],
+        mockedModelService,
+        mock[play.api.Environment],
+        app.configuration,
+        mock[MessagesApi])
 
       val teamName = "Team1"
 
       val exception = new RuntimeException("Boooom!")
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
-      Future.successful(
-      Map(teamName -> Left(UserManagementConnector.ConnectionError(exception)))
-      )
+        Future.successful(
+          Map(teamName -> Left(UserManagementConnector.ConnectionError(exception)))
+        )
       )
 
 
@@ -321,18 +317,17 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock = mock[UserManagementConnector]
 
-      val catalogueController = new CatalogueController {
-        override def userManagementConnector: UserManagementConnector = umpConnectorMock
-        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
-
-        override def indicatorsConnector: IndicatorsConnector = ???
-        override def deploymentsService: DeploymentsService = ???
-        override def readModelService: ReadModelService = mockedModelService
-
-        override def eventService: EventService = ???
-
-        override def serviceDependencyConnector: ServiceDependenciesConnector = ???
-      }
+      val catalogueController =         new CatalogueController(
+        umpConnectorMock,
+        teamsAndRepositoriesConnectorMock,
+        mock[ServiceDependenciesConnector],
+        mock[IndicatorsConnector],
+        mock[DeploymentsService],
+        mock[EventService],
+        mockedModelService,
+        mock[play.api.Environment],
+        app.configuration,
+        mock[MessagesApi])
 
       val teamName = "Team1"
 
@@ -340,7 +335,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
-      Future.successful(
+        Future.successful(
           Map(teamName -> Left(UserManagementConnector.NoData("https://some-link-to-rectify")))
         )
       )
@@ -364,18 +359,17 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock = mock[UserManagementConnector]
 
-      val catalogueController = new CatalogueController {
-        override def userManagementConnector: UserManagementConnector = umpConnectorMock
-        override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock
-
-        override def indicatorsConnector: IndicatorsConnector = ???
-        override def deploymentsService: DeploymentsService = ???
-        override def readModelService: ReadModelService = mockedModelService
-
-        override def eventService: EventService = ???
-
-        override def serviceDependencyConnector: ServiceDependenciesConnector = ???
-      }
+      val catalogueController =         new CatalogueController(
+        umpConnectorMock,
+        teamsAndRepositoriesConnectorMock,
+        mock[ServiceDependenciesConnector],
+        mock[IndicatorsConnector],
+        mock[DeploymentsService],
+        mock[EventService],
+        mockedModelService,
+        mock[play.api.Environment],
+        app.configuration,
+        mock[MessagesApi])
 
       val teamName = "Team1"
 
@@ -383,7 +377,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
-      Future.successful(
+        Future.successful(
           Map(teamName -> Left(UserManagementConnector.HTTPError(404)))
         )
       )

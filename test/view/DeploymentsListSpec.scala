@@ -22,21 +22,18 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.OneAppPerTest
-import play.api.Environment
-import play.api.data.Form
-import play.api.i18n.{DefaultLangs, DefaultMessagesApi}
+
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.{Deployer, DeploymentsFilter}
+import uk.gov.hmrc.cataloguefrontend.Deployer
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
-//import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
 
 class DeploymentsListSpec extends WordSpec with Matchers with OneAppPerTest {
 
 
 
-  def asDocument(html: Html): Document = Jsoup.parse(html.toString())
+  def asDocument(html: Html): Document = Jsoup.parse  (html.toString())
 
   "deployments_list" should {
 

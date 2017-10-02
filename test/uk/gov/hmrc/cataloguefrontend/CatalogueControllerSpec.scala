@@ -28,6 +28,8 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
+import play.api.Configuration
+import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.streams.Accumulator
@@ -77,7 +79,17 @@ class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneS
     Mockito.reset(mockedEventService)
   }
 
-  val catalogueController = new CatalogueController {
+  val catalogueController =         new CatalogueController(
+    mock[UserManagementConnector],
+    mock[TeamsAndRepositoriesConnector],
+    mock[ServiceDependenciesConnector],
+    mock[IndicatorsConnector],
+    mock[DeploymentsService],
+    mockedEventService,
+    mockedModelService,
+    mock[play.api.Environment],
+    app.configuration,
+    mock[MessagesApi]) {
 
     override def getConfString(key: String, defString: => String): String = {
       key match {
@@ -86,17 +98,6 @@ class CatalogueControllerSpec extends UnitSpec with BeforeAndAfterEach with OneS
       }
     }
 
-    override def userManagementConnector: UserManagementConnector = ???
-
-    override def indicatorsConnector: IndicatorsConnector = ???
-    override def deploymentsService: DeploymentsService = ???
-
-    override def readModelService: ReadModelService = mockedModelService
-    override def eventService: EventService = mockedEventService
-
-    override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = ???
-
-    override def serviceDependencyConnector: ServiceDependenciesConnector = ???
   }
 
 

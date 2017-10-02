@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
+import javax.inject.{Inject, Singleton}
+
 import play.api.Logger
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
@@ -25,13 +27,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-trait ReadModelService {
+@Singleton
+class ReadModelService @Inject()(eventService: EventService, userManagementConnector: UserManagementConnector) {
 
   type ServiceName = String
   type ServiceOwnerUserName = String
-
-  def refreshEventsCache: Future[Map[ServiceName, ServiceOwnerUserName]]
-  def refreshUmpCache: Future[Seq[TeamMember]]
 
   private[events] var eventsCache = Map.empty[ServiceName, ServiceOwnerUserName]
   protected[events] var umpUsersCache = Seq.empty[TeamMember]
@@ -39,9 +39,6 @@ trait ReadModelService {
   def getDigitalServiceOwner(digitalService: String): Option[TeamMember] = umpUsersCache.find(_.username == eventsCache.get(digitalService))
 
   def getAllUsers = umpUsersCache
-}
-
-class DefaultReadModelService(eventService: EventService, userManagementConnector: UserManagementConnector) extends ReadModelService {
 
   def refreshEventsCache = {
      val eventualEvents = eventService.getAllEvents
@@ -56,7 +53,7 @@ class DefaultReadModelService(eventService: EventService, userManagementConnecto
 
   }
 
-  override def refreshUmpCache: Future[Seq[TeamMember]] = {
+  def refreshUmpCache: Future[Seq[TeamMember]] = {
     userManagementConnector.getAllUsersFromUMP().map {
       case Right(tms) =>
         Logger.info(s"Got ${tms.length} set of UMP users")

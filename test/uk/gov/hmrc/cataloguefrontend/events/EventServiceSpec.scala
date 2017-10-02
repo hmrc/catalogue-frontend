@@ -26,12 +26,12 @@ import play.api.libs.json.{JsObject, JsString}
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
-class DefaultEventServiceSpec extends FunSpec with Matchers with MockitoSugar with ScalaFutures {
+class EventServiceSpec extends FunSpec with Matchers with MockitoSugar with ScalaFutures {
 
   describe("EventService") {
     val testStartTime = System.currentTimeMillis()
     val eventRepository = mock[EventRepository]
-    val eventService = new DefaultEventService(eventRepository)
+    val eventService = new EventService(eventRepository)
 
     it("should save service owner update data by delegating to the event repository") {
       val serviceOwnerUsername = "joe.black"

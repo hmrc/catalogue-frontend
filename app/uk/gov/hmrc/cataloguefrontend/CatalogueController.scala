@@ -18,26 +18,27 @@ package uk.gov.hmrc.cataloguefrontend
 
 
 import java.time.{LocalDateTime, ZoneOffset}
+import javax.inject.{Inject, Singleton}
 
 import cats.data.EitherT
-import play.api.Play.current
+import play.api
+import play.api.Configuration
+import play.api.i18n.{I18nSupport, Messages, MessagesApi}
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
-import play.api.i18n.Messages.Implicits._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
-import uk.gov.hmrc.play.frontend.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 case class TeamActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime], firstServiceCreationDate: Option[LocalDateTime])
 
@@ -47,26 +48,26 @@ case class DigitalServiceDetails(digitalServiceName: String,
 
 
 
-object CatalogueController extends CatalogueController with MongoDbConnection {
+@Singleton
+class CatalogueController @Inject()(userManagementConnector: UserManagementConnector,
+                                    teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+                                    serviceDependencyConnector : ServiceDependenciesConnector,
+                                    indicatorsConnector: IndicatorsConnector,
+                                    deploymentsService: DeploymentsService,
+                                    eventService: EventService,
+                                    readModelService: ReadModelService,
+                                    environment: api.Environment,
+                                    override val runModeConfiguration: Configuration,
+                                    val messagesApi: MessagesApi
+                                   ) extends FrontendController with UserManagementPortalLink with I18nSupport {
 
-  override def userManagementConnector: UserManagementConnector = UserManagementConnector
-
-  override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = TeamsAndRepositoriesConnector
-
-  override def indicatorsConnector: IndicatorsConnector = IndicatorsConnector
-
-  lazy override val deploymentsService: DeploymentsService = new DeploymentsService(ServiceDeploymentsConnector, TeamsAndRepositoriesConnector)
-
-  lazy override val eventService = new DefaultEventService(new MongoEventRepository(db))
-
-  lazy override val readModelService = new DefaultReadModelService(eventService, UserManagementConnector)
-
-  lazy override val serviceDependencyConnector: ServiceDependenciesConnector = ServiceDependenciesConnector
-}
-
-trait CatalogueController extends FrontendController with UserManagementPortalLink {
+  import UserManagementConnector._
 
   val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
+
+
+  override protected def mode = environment.mode
+
 
   val repotypeToDetailsUrl = Map(
     RepoType.Service -> routes.CatalogueController.service _,
@@ -75,23 +76,11 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
     RepoType.Prototype -> routes.CatalogueController.prototype _
   )
 
-  def userManagementConnector: UserManagementConnector
-
-  def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
-
-  def serviceDependencyConnector : ServiceDependenciesConnector
-
-  def indicatorsConnector: IndicatorsConnector
-
-  def deploymentsService: DeploymentsService
-
-  def eventService: EventService
-
-  def readModelService: ReadModelService
 
   def landingPage() = Action { request =>
     Ok(landing_page())
   }
+
 
   def serviceOwner(digitalService: String) = Action {
     readModelService.getDigitalServiceOwner(digitalService).fold(NotFound(Json.toJson(s"owner for $digitalService not found")))(ds => Ok(Json.toJson(ds)))
@@ -168,6 +157,7 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
         Future.successful(Left(connectorError))
     }
 
+//    teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]]
 
     val digitalServiceDetails: EitherT[Future, TeamsAndRepositoriesError, DigitalServiceDetails] = for {
       digitalService <- EitherT(eventualDigitalServiceInfoF)
@@ -422,7 +412,6 @@ trait CatalogueController extends FrontendController with UserManagementPortalLi
 
   private def convertToDisplayableTeamMembers(teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]]): Map[String, Either[UMPError, Seq[DisplayableTeamMember]]] =
     teamsAndMembers.map { case (teamName, errorOrMembers) => (teamName, convertToDisplayableTeamMembers(teamName, errorOrMembers)) }
-
 
 }
 

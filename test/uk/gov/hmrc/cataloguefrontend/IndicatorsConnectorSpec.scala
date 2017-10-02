@@ -48,12 +48,14 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneApp
     ).build()
   }
 
+  lazy val indicatorsConnector = app.injector.instanceOf[IndicatorsConnector]
+
   describe("IndicatorsConnector") {
     it("should convert the DeploymentsMetricResult to DeploymentIndicators for a service") {
       serviceEndpoint(GET, "/api/indicators/service/serv/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
 
       val deploymentIndicatorsForService: Future[Option[DeploymentIndicators]] =
-        IndicatorsConnector.deploymentIndicatorsForService("serv")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        indicatorsConnector.deploymentIndicatorsForService("serv")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
 
       deploymentIndicatorsForService.futureValue should not be None
       deploymentIndicatorsForService.futureValue.get.throughput.size should be(3)
@@ -64,7 +66,7 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneApp
       serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
 
       val deploymentIndicatorsForService: Future[Option[DeploymentIndicators]] =
-        IndicatorsConnector.deploymentIndicatorsForTeam("teamA")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        indicatorsConnector.deploymentIndicatorsForTeam("teamA")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
 
       deploymentIndicatorsForService.futureValue should not be None
       deploymentIndicatorsForService.futureValue.get.throughput.size should be(3)
@@ -76,7 +78,7 @@ class IndicatorsConnectorSpec extends FunSpec with WireMockEndpoints with OneApp
       serviceEndpoint(GET, "/api/indicators/repository/reponame/builds", willRespondWith = (200, Some(jobExecutionTimeData)))
 
       val buildIndicatorsForRepository: Future[Option[Seq[JobMetricDataPoint]]] =
-        IndicatorsConnector.buildIndicatorsForRepository("reponame")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        indicatorsConnector.buildIndicatorsForRepository("reponame")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
 
       buildIndicatorsForRepository.futureValue should not be None
       buildIndicatorsForRepository.futureValue.get.size should be(12)

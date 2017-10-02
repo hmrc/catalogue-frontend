@@ -33,18 +33,17 @@ package uk.gov.hmrc.cataloguefrontend
  */
 
 import java.time.LocalDateTime
+import javax.inject.{Inject, Singleton}
 
-import play.api.Logger
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{JsPath, Json, Reads}
-import uk.gov.hmrc.cataloguefrontend.config.WSHttp
+import play.api.libs.json.Json
+import play.api.{Configuration, Logger, Environment => PlayEnvironment}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-import uk.gov.hmrc.play.http._
 
 import scala.concurrent.Future
 import scala.util.{Success, Try}
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpGet, HttpPost, HttpResponse, NotFoundException }
 
 case class Deployer(name : String, deploymentDate: LocalDateTime)
 
@@ -77,11 +76,14 @@ object ServiceDeploymentInformation {
   implicit val whatsRunningWhereFormat = Json.format[ServiceDeploymentInformation]
 }
 
-trait ServiceDeploymentsConnector extends ServicesConfig {
 
-  val http: HttpGet with HttpPost
-  def servicesDeploymentsBaseUrl: String
-  def whatIsRunningWhereBaseUrl: String
+@Singleton
+class ServiceDeploymentsConnector @Inject()(http : HttpClient, override val runModeConfiguration:Configuration, environment : PlayEnvironment) extends ServicesConfig {
+
+  def servicesDeploymentsBaseUrl: String = baseUrl("service-deployments") + "/api/deployments"
+  def whatIsRunningWhereBaseUrl: String = baseUrl("service-deployments") + "/api/whatsrunningwhere"
+
+  override protected def mode = environment.mode
 
   import _root_.uk.gov.hmrc.http.HttpReads._
   import JavaDateTimeJsonFormatter._
@@ -140,10 +142,4 @@ trait ServiceDeploymentsConnector extends ServicesConfig {
     }
   }
 
-}
-
-object ServiceDeploymentsConnector extends ServiceDeploymentsConnector {
-  override val http = WSHttp
-  override def servicesDeploymentsBaseUrl: String = baseUrl("service-deployments") + "/api/deployments"
-  override def whatIsRunningWhereBaseUrl: String = baseUrl("service-deployments") + "/api/whatsrunningwhere"
 }

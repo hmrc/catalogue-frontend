@@ -17,9 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import org.mockito
+import org.mockito.Matchers.any
+import org.mockito.Mockito
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
+import play.api.{Configuration, Environment}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
@@ -29,8 +34,19 @@ import scala.concurrent.Future
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpResponse}
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints with EitherValues with OptionValues with ScalaFutures with IntegrationPatience {
+class ServiceDependenciesConnectorSpec
+  extends FreeSpec
+    with Matchers
+    with BeforeAndAfter
+    with OneServerPerSuite
+    with WireMockEndpoints
+    with EitherValues
+    with OptionValues
+    with ScalaFutures
+    with MockitoSugar
+    with IntegrationPatience {
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .disable(classOf[com.kenshoo.play.metrics.PlayModule])
@@ -40,6 +56,8 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
         "microservice.services.service-dependencies.host" -> host
       )).build()
 
+
+  val serviceDependenciesConnector = app.injector.instanceOf[ServiceDependenciesConnector]
 
   "GET Dependencies" - {
 
@@ -124,7 +142,7 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           |}""".stripMargin
       )))
 
-      val response = ServiceDependenciesConnector.getDependencies("repo1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.value
+      val response = serviceDependenciesConnector.getDependencies("repo1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.value
 
 
 
@@ -136,7 +154,7 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           LibraryDependencyState("frontend-bootstrap", Version(7, 11, 0), Some(Version(8, 80, 0))),
           LibraryDependencyState("play-config", Version(3, 0, 0), Some(Version(7, 70, 0)))
         )
-      
+
       response.sbtPluginsDependenciesState should contain theSameElementsAs
         Seq(
           SbtPluginsDependenciesState("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
@@ -153,7 +171,7 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
 
       serviceEndpoint(GET, "/api/dependencies/non-existing-repo", willRespondWith = (404, None))
 
-      val response = ServiceDependenciesConnector.getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = serviceDependenciesConnector.getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response shouldBe None
 
@@ -161,15 +179,10 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
 
     "return a None for if a communication error occurs" in {
 
-      val failingServiceDependenciesConnector = new ServiceDependenciesConnector {
-        override def servicesDependenciesBaseUrl: String = "some.url"
-
-        override val http: HttpGet = new HttpGet {
-          override def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = Future.failed(new RuntimeException("Boom!!"))
-          override val hooks: Seq[HttpHook] = Nil
-
-          override def configuration = None
-        }
+      val mockedHttpClient = mock[HttpClient]
+      Mockito.when(mockedHttpClient.GET(any())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("Boom!!")))
+      val failingServiceDependenciesConnector = new ServiceDependenciesConnector(mockedHttpClient, Configuration(), mock[Environment]) {
+        override def servicesDependenciesBaseUrl = "chicken.com"
       }
 
       val response = failingServiceDependenciesConnector.getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
@@ -339,7 +352,7 @@ class ServiceDependenciesConnectorSpec extends FreeSpec with Matchers with Befor
           |]""".stripMargin
       )))
 
-      val response = ServiceDependenciesConnector.getAllDependencies()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = serviceDependenciesConnector.getAllDependencies()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response.size shouldBe 2
 

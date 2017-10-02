@@ -70,7 +70,6 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
 
     val builder = new MappingBuilder(method, urlEqualTo(url))
     requestHeaders.map { case (k, v) => builder.withHeader(k, equalTo(v)) }
-    //    .withHeader("Content-Type", equalTo("application/json"))
 
     givenJsonBody.map { b =>
       builder.withRequestBody(equalToJson(b))

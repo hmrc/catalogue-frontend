@@ -17,12 +17,16 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import org.mockito.Matchers.any
+import org.mockito.Mockito
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.play.OneServerPerSuite
+import play.api
+import play.api.Configuration
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Writes
 import play.api.test.FakeHeaders
@@ -31,9 +35,10 @@ import uk.gov.hmrc.cataloguefrontend.{Environment, JsonData, Link, RepoType, Rep
 import uk.gov.hmrc.play.http._
 
 import scala.concurrent.Future
-import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpReads, HttpResponse}
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures with OneServerPerSuite with WireMockEndpoints with TypeCheckedTripleEquals with OptionValues with EitherValues with MockitoSugar {
 
@@ -47,6 +52,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
   ).build()
 
+  val teamsAndRepositoriesConnector = app.injector.instanceOf[TeamsAndRepositoriesConnector]
 
   "teamsByService" should {
 
@@ -61,7 +67,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
           | """.stripMargin
       )), givenJsonBody = Some("[\"serviceA\",\"serviceB\"]"))
 
-      val response = TeamsAndRepositoriesConnector.teamsByService(Seq("serviceA", "serviceB"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = teamsAndRepositoriesConnector.teamsByService(Seq("serviceA", "serviceB"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response.size shouldBe 2
       response("serviceA") shouldBe Seq("teamA", "teamB")
@@ -75,7 +81,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
       serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(JsonData.serviceDetailsData)))
 
       val responseData: RepositoryDetails =
-        TeamsAndRepositoriesConnector
+        teamsAndRepositoriesConnector
           .repositoryDetails("service-1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
           .value
@@ -116,7 +122,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
     "return all the repositories returned by the api" in {
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(JsonData.repositoriesData)))
 
-      val repositories: Seq[RepositoryDisplayDetails] = TeamsAndRepositoriesConnector.allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+      val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector.allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       repositories(0).name shouldBe "teamA-serv"
       repositories(0).createdAt shouldBe JsonData.createdAt
@@ -142,7 +148,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
       serviceEndpoint(GET, "/api/digital-services/service-1", willRespondWith = (200, Some(JsonData.digitalServiceData)))
 
       val responseData =
-        TeamsAndRepositoriesConnector
+        teamsAndRepositoriesConnector
           .digitalServiceInfo("service-1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
           .right.value
@@ -156,7 +162,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
       serviceEndpoint(GET, "/api/digital-services/non-existing-service", willRespondWith = (300, None))
 
       val responseData =
-        TeamsAndRepositoriesConnector
+        teamsAndRepositoriesConnector
           .digitalServiceInfo("non-existing-service")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
 
@@ -164,10 +170,12 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
     }
 
     "return a connection error if the connector fails to connect" in {
+      val mockedHttpClient = mock[HttpClient]
       val exception = new RuntimeException("boom!")
+      Mockito.when(mockedHttpClient.GET(any())(any(), any(), any())).thenReturn(Future.failed(exception))
 
       val responseData =
-        teamsAndRepositoriesHttpGETExceptionThrower(exception)
+        teamsAndRepositoriesWithMockedHttp(mockedHttpClient)
           .digitalServiceInfo("non-existing-service")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
 
@@ -181,7 +189,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
       serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
 
       val digitalServiceNames: Seq[String] =
-        TeamsAndRepositoriesConnector.allDigitalServices(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        teamsAndRepositoriesConnector.allDigitalServices(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       digitalServiceNames shouldBe Seq("digital-service-1", "digital-service-2", "digital-service-3")
     }
@@ -192,7 +200,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
       serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
 
       val teams: Seq[Team] =
-        TeamsAndRepositoriesConnector.teamsWithRepositories()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        teamsAndRepositoriesConnector.teamsWithRepositories()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       teams.size shouldBe 2
       teams should contain theSameElementsAs
@@ -213,20 +221,9 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
     }
   }
 
-  def teamsAndRepositoriesHttpGETExceptionThrower(exception: Throwable) = new TeamsAndRepositoriesConnector {
+
+
+  def teamsAndRepositoriesWithMockedHttp(httpClient: HttpClient) = new TeamsAndRepositoriesConnector(httpClient, Configuration(), mock[api.Environment]) {
     override def teamsAndServicesBaseUrl: String = "someUrl"
-    override val http: HttpGet with HttpPost = new HttpGet with HttpPost {
-
-//      override def GET[A](url: String)(implicit rds: HttpReads[A], hc: HeaderCarrier): Future[A] = Future.failed(exception)
-
-      override def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = Future.failed(exception)
-      override def doPost[A](url: String, body: A, headers: Seq[(String, String)])(implicit wts: Writes[A], hc: HeaderCarrier): Future[HttpResponse] = ???
-      override def doPostString(url: String, body: String, headers: Seq[(String, String)])(implicit hc: HeaderCarrier): Future[HttpResponse] = ???
-      override def doEmptyPost[A](url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = ???
-      override def doFormPost(url: String, body: Map[String, Seq[String]])(implicit hc: HeaderCarrier): Future[HttpResponse] = ???
-      override val hooks: Seq[HttpHook] = Nil
-
-      override val configuration = None
-    }
   }
 }
