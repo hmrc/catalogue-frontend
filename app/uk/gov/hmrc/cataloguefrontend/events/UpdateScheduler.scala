@@ -17,6 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 
+import javax.inject.{Inject, Singleton}
+
 import akka.actor.{ActorSystem, Cancellable}
 import play.Logger
 import play.libs.Akka
@@ -31,15 +33,10 @@ import scala.concurrent.duration.{FiniteDuration, _}
 
 
 
-trait DefaultSchedulerDependencies extends MongoDbConnection  {
 
-  val akkaSystem = Akka.system()
+@Singleton
+class UpdateScheduler @Inject()(actorSystem: ActorSystem, readModelService: ReadModelService) {
 
-}
-
-abstract class Scheduler {
-  def akkaSystem: ActorSystem
-  def readModelService: ReadModelService
 
   def updateEventsReadModel: Future[Map[String, String]] = readModelService.refreshEventsCache
   def updateUmpCacheReadModel: Future[Seq[TeamMember]] = readModelService.refreshUmpCache
@@ -47,7 +44,7 @@ abstract class Scheduler {
   def startUpdatingEventsReadModel(interval: FiniteDuration): Cancellable = {
     Logger.info(s"Initialising Event read model update every $interval")
 
-    val scheduler = akkaSystem.scheduler.schedule(100 milliseconds, interval) {
+    val scheduler = actorSystem.scheduler.schedule(100 milliseconds, interval) {
       updateEventsReadModel
     }
 
@@ -57,7 +54,7 @@ abstract class Scheduler {
   def startUpdatingUmpCacheReadModel(interval: FiniteDuration): Cancellable = {
     Logger.info(s"Initialising UMP cache read model update every $interval")
 
-    val scheduler = akkaSystem.scheduler.schedule(100 milliseconds, interval) {
+    val scheduler = actorSystem.scheduler.schedule(100 milliseconds, interval) {
       updateUmpCacheReadModel
     }
 
@@ -65,9 +62,3 @@ abstract class Scheduler {
   }
 
 }
-
-
-object UpdateScheduler extends Scheduler with DefaultSchedulerDependencies {
-  override def readModelService: ReadModelService = CatalogueController.readModelService
-}
-

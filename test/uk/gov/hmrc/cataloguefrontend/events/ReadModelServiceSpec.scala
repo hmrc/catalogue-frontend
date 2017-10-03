@@ -34,7 +34,7 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
 
   val eventService = mock[EventService]
   val userManagementConnector = mock[UserManagementConnector]
-  val readModelService = new DefaultReadModelService(eventService, userManagementConnector)
+  val readModelService = new ReadModelService(eventService, userManagementConnector)
 
   describe("refreshEventsCache") {
 

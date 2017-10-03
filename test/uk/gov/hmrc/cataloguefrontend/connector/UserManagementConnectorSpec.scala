@@ -25,6 +25,7 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
+import play.api.{Configuration, Environment}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, HTTPError, NoData, TeamMember, UMPError}
@@ -34,6 +35,7 @@ import scala.concurrent.Future
 import scala.io.Source
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet}
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 class UserManagementConnectorSpec extends FunSpec with Matchers with TypeCheckedTripleEquals with BeforeAndAfter
   with OneServerPerSuite with WireMockEndpoints with ScalaFutures with EitherValues with MockitoSugar with OptionValues {
@@ -45,6 +47,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
   ).build()
 
+  val userManagementConnector = app.injector.instanceOf[UserManagementConnector]
 
   describe("User management connector") {
     it("should get the team members from the user-management service") {
@@ -90,11 +93,10 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
     it("api returns a connection error") {
 
-      val mockedHttpGet = mock[HttpGet]
+      val mockedHttpGet = mock[HttpClient]
 
-      val userManagementConnector = new UserManagementConnector {
+      val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[Environment]) {
         override val userManagementBaseUrl = "http://some.non.existing.url.com"
-        override val http = mockedHttpGet
       }
 
       val expectedException = new RuntimeException("some error")
@@ -109,12 +111,11 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
     it("should get the team details from the user-management service") {
       stubUserManagementEndPoint(
-//        url = "/v1/organisations/mdtp/teams/TEAM-A",
         url = "/v2/organisations/teams/TEAM-A",
         jsonFileNameOpt = Some("/user-management-team-details-response.json")
       )
 
-      val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.right.value
+      val teamDetails = userManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.right.value
 
       teamDetails.description.value shouldBe "TEAM-A is a great team"
       teamDetails.location.value shouldBe "STLPD"
@@ -126,35 +127,32 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
     it("no organization/data field in json for team details") {
       stubUserManagementEndPoint(
-//        url = "/v1/organisations/mdtp/teams/TEAM-A",
         url = "/v2/organisations/teams/TEAM-A",
         jsonFileNameOpt = Some("/user-management-team-details-nodata-response.json")
       )
 
-      val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
+      val teamDetails = userManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
 
       teamDetails should ===(NoData("http://some.ump.com/myTeams/TEAM-A?edit"))
     }
 
     it("api returns an error code for team details") {
       stubUserManagementEndPoint(
-//        url = "/v1/organisations/mdtp/teams/TEAM-A",
         url = "/v2/organisations/teams/TEAM-A",
         jsonFileNameOpt = None,
         httpCode = 404
       )
-      val teamDetails = UserManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
+      val teamDetails = userManagementConnector.getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.left.value
 
       teamDetails should ===(HTTPError(404))
     }
 
     it("api returns a connection error for team details") {
 
-      val mockedHttpGet = mock[HttpGet]
+      val mockedHttpGet = mock[HttpClient]
 
-      val userManagementConnector = new UserManagementConnector {
+      val userManagementConnector = new UserManagementConnector (mockedHttpGet, Configuration(), mock[Environment]) {
         override val userManagementBaseUrl = "http://some.non.existing.url.com"
-        override val http = mockedHttpGet
       }
 
       val expectedException = new RuntimeException("some error")
@@ -171,17 +169,15 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
         val teamNames = Seq("Team1", "Team2")
 
         stubUserManagementEndPoint(
-//        url = "/v1/organisations/mdtp/teams/Team1/members",
         url =  "/v2/organisations/teams/Team1/members",
         jsonFileNameOpt = Some("/user-management-response-team1.json")
         )
 
         stubUserManagementEndPoint(
-//        url = "/v1/organisations/mdtp/teams/Team2/members",
           url =  "/v2/organisations/teams/Team2/members",
           jsonFileNameOpt = Some("/user-management-response-team2.json")
         )
-        val teamsAndMembers = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        val teamsAndMembers = userManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
@@ -197,21 +193,19 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
         val teamNames = Seq("Team1", "Team2")
 
         stubUserManagementEndPoint(
-//          url = "/v1/organisations/mdtp/teams/Team1/members",
           url =  "/v2/organisations/teams/Team1/members",
 
           jsonFileNameOpt = Some("/user-management-response-team1.json")
         )
 
         stubUserManagementEndPoint(
-//          url = "/v1/organisations/mdtp/teams/Team2/members",
           url =  "/v2/organisations/teams/Team2/members",
 
           jsonFileNameOpt = None,
           httpCode = 404
         )
 
-        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
 
@@ -230,9 +224,9 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
       it("should return a connection error for calls which fail with an exception") {
 
-        val mockedHttpGet = mock[HttpGet]
+        val mockedHttpGet = mock[HttpClient]
 
-        val userManagementConnector = new UserManagementConnector {
+        val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[Environment]) {
           override val userManagementBaseUrl = "http://some.non.existing.url.com"
           override val http = mockedHttpGet
         }
@@ -257,18 +251,16 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
         val teamNames = Seq("Team1", "Team2")
 
         stubUserManagementEndPoint(
-//          url = "/v1/organisations/mdtp/teams/Team1/members",
           url =  "/v2/organisations/teams/Team1/members",
           jsonFileNameOpt = Some("/user-management-response-team1.json")
         )
 
         stubUserManagementEndPoint(
-//          url = "/v1/organisations/mdtp/teams/Team2/members",
           url =  "/v2/organisations/teams/Team2/members",
           jsonFileNameOpt = Some("/user-management-team-details-nodata-response.json")
         )
 
-        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
 
@@ -295,7 +287,7 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
           jsonFileNameOpt = Some("/all-users.json")
         )
 
-        val allUsers = UserManagementConnector.getAllUsersFromUMP().futureValue
+        val allUsers = userManagementConnector.getAllUsersFromUMP().futureValue
 
         allUsers.right.value.size shouldBe 3
 
@@ -309,91 +301,6 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
 
       }
 
-//      it("should return an Http error for calls with non-200 status codes") {
-//        val teamNames = Seq("Team1", "Team2")
-//
-//        stubUserManagementEndPoint(
-//          url = "/v1/organisations/mdtp/teams/Team1/members",
-//          jsonFileNameOpt = Some("/user-management-response-team1.json")
-//        )
-//
-//        stubUserManagementEndPoint(
-//          url = "/v1/organisations/mdtp/teams/Team2/members",
-//          jsonFileNameOpt = None,
-//          httpCode = 404
-//        )
-//
-//        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
-//
-//        teamsAndMembers.keys should contain theSameElementsAs teamNames
-//
-//        val team1Result = teamsAndMembers.get("Team1").value
-//        val team2Result = teamsAndMembers.get("Team2").value
-//
-//        team2Result should===(Left(HTTPError(404)))
-//
-//        def getMembersDetails(extractor: (TeamMember) => String): Iterable[String] =
-//          team1Result.right.value.map(extractor)
-//
-//        getMembersDetails(_.displayName.value) shouldBe Seq("Joe Black", "James Roger")
-//        getMembersDetails(_.username.value) shouldBe Seq("joe.black", "james.roger")
-//        getMembersDetails(_.primaryEmail.value) shouldBe Seq("joe.black@digital.hmrc.gov.uk", "james.roger@hmrc.gsi.gov.uk")
-//      }
-
-//      it("should return a connection error for calls which fail with an exception") {
-//
-//        val mockedHttpGet = mock[HttpGet]
-//
-//        val userManagementConnector = new UserManagementConnector {
-//          override val userManagementBaseUrl = "http://some.non.existing.url.com"
-//          override val http = mockedHttpGet
-//        }
-//
-//        val teamNames = Seq("Team1", "Team2")
-//
-//        val exception = new RuntimeException("Boooom!")
-//        when(mockedHttpGet.GET(anyString())(any(), any())).thenReturn(Future.failed(exception))
-//
-//        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
-//
-//        teamsAndMembers.keys should contain theSameElementsAs teamNames
-//
-//        val team1Result = teamsAndMembers.get("Team1").value
-//        val team2Result = teamsAndMembers.get("Team2").value
-//
-//        team1Result should===(Left(ConnectionError(exception)))
-//        team2Result should===(Left(ConnectionError(exception)))
-//      }
-
-//      it("should return a no data error if the json from UMP doesn't conform to the expected shape") {
-//        val teamNames = Seq("Team1", "Team2")
-//
-//        stubUserManagementEndPoint(
-//          url = "/v1/organisations/mdtp/teams/Team1/members",
-//          jsonFileNameOpt = Some("/user-management-response-team1.json")
-//        )
-//
-//        stubUserManagementEndPoint(
-//          url = "/v1/organisations/mdtp/teams/Team2/members",
-//          jsonFileNameOpt = Some("/user-management-team-details-nodata-response.json")
-//        )
-//
-//        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = UserManagementConnector.getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
-//
-//        teamsAndMembers.keys should contain theSameElementsAs teamNames
-//
-//        val team1Result = teamsAndMembers.get("Team1").value
-//        val team2Result = teamsAndMembers.get("Team2").value
-//
-//        team2Result should===(Left(NoData("http://some.ump.com/myTeams/Team2?edit")))
-//
-//        def getMembersDetails(extractor: (TeamMember) => String): Iterable[String] =
-//          team1Result.right.value.map(extractor)
-//
-//        getMembersDetails(_.displayName.value) shouldBe Seq("Joe Black", "James Roger")
-//        getMembersDetails(_.username.value) shouldBe Seq("joe.black", "james.roger")
-//        getMembersDetails(_.primaryEmail.value) shouldBe Seq("joe.black@digital.hmrc.gov.uk", "james.roger@hmrc.gsi.gov.uk")
-//      }
 
     }
   }
@@ -404,11 +311,10 @@ class UserManagementConnectorSpec extends FunSpec with Matchers with TypeChecked
     stubUserManagementEndPoint(
       GET,
       httpCode,
-//      s"/v1/organisations/mdtp/teams/$teamName/members",
       s"/v2/organisations/teams/$teamName/members",
       jsonFileNameOpt)
 
-    val errorOrResponse: Either[UMPError, Seq[TeamMember]] = UserManagementConnector.getTeamMembersFromUMP(teamName)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+    val errorOrResponse: Either[UMPError, Seq[TeamMember]] = userManagementConnector.getTeamMembersFromUMP(teamName)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
     errorOrResponse
 
   }

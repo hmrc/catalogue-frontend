@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.events
+package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
 
-import play.api.libs.json.{JsObject, Json}
-
+import play.api.Configuration
+import play.api.i18n.MessagesApi
+import play.api.mvc.Request
+import uk.gov.hmrc.play.bootstrap.http.FrontendErrorHandler
 
 @Singleton
-class EventService @Inject()(eventRepository: EventRepository) {
+class CatalogueErrorHandler @Inject()(val messagesApi: MessagesApi, val configuration: Configuration) extends FrontendErrorHandler {
 
-  def saveServiceOwnerUpdatedEvent(serviceOwnerUpdatedEventData: ServiceOwnerUpdatedEventData) =
-    eventRepository.add(Event(EventType.ServiceOwnerUpdated, data = Json.toJson(serviceOwnerUpdatedEventData).as[JsObject]))
-
-  def getAllEvents = eventRepository.getAllEvents
-
-  def deleteAllEvents = eventRepository.clearAllData
-
-
+  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: Request[_]) =
+  views.html.error_template(pageTitle, heading, message)
 }

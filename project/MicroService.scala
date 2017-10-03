@@ -1,12 +1,12 @@
-import play.routes.compiler.StaticRoutesGenerator
+import play.routes.compiler.InjectedRoutesGenerator
+import play.sbt.routes.RoutesKeys.routesGenerator
 import sbt.Keys._
 import sbt._
+import uk.gov.hmrc.SbtAutoBuildPlugin
+import uk.gov.hmrc.SbtAutoBuildPlugin._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import uk.gov.hmrc.versioning.SbtGitVersioning
-import uk.gov.hmrc.SbtAutoBuildPlugin
-import uk.gov.hmrc.SbtAutoBuildPlugin._
-import play.sbt.routes.RoutesKeys.routesGenerator
 
 
 trait MicroService {
@@ -23,6 +23,6 @@ trait MicroService {
       libraryDependencies ++= appDependencies,
       retrieveManaged := true,
       forceSourceHeader := true,
-      routesGenerator := StaticRoutesGenerator)
+      routesGenerator := InjectedRoutesGenerator)
     .settings(resolvers ++= Seq(Resolver.bintrayRepo("hmrc", "releases"), Resolver.jcenterRepo))
 }

@@ -26,6 +26,7 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
+import play.api.Environment
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
 import play.api.test.Helpers._
@@ -40,6 +41,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach with OneServerPerSuite with WireMockEndpoints with MockitoSugar with ScalaFutures {
 
@@ -59,11 +61,11 @@ class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach wi
   val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
   val mockedDependenciesConnector = mock[ServiceDependenciesConnector]
 
-  val dependencyReportController = new DependencyReportController {
-    override def teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mockedTeamsAndRepositoriesConnector
-
-    override def serviceDependencyConnector: ServiceDependenciesConnector = mockedDependenciesConnector
-  }
+  val dependencyReportController = new DependencyReportController(
+    mock[HttpClient],
+    app.configuration, mock[play.api.Environment],
+    mockedTeamsAndRepositoriesConnector,
+    mockedDependenciesConnector)
 
   "dependencyReport" should {
 

@@ -33,15 +33,16 @@ package uk.gov.hmrc.cataloguefrontend.connector
  */
 
 import java.time.LocalDate
+import javax.inject.{Inject, Singleton}
 
-import play.api.Logger
 import play.api.libs.json.Json
-import uk.gov.hmrc.cataloguefrontend.config.WSHttp
+import play.api.{Configuration, Environment, Logger}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpGet, HttpReads, HttpResponse }
 
 
 case class MedianDataPoint(median: Int)
@@ -68,9 +69,14 @@ case class Stability(hotfixRate: Option[Double], hotfixInterval: Option[MeasureR
 case class MeasureResult(median: Int)
 
 
-trait IndicatorsConnector extends ServicesConfig {
-  val http: HttpGet
-  def indicatorsBaseUrl: String
+@Singleton
+class IndicatorsConnector @Inject()(http: HttpClient,
+                                    override val runModeConfiguration: Configuration,
+                                    environment : Environment) extends ServicesConfig {
+  def indicatorsBaseUrl = baseUrl("indicators") + "/api/indicators"
+
+  override protected def mode = environment.mode
+
 
   implicit val mesureResultFormats = Json.reads[MeasureResult]
   implicit val throughputFormats = Json.reads[Throughput]
@@ -83,8 +89,9 @@ trait IndicatorsConnector extends ServicesConfig {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
-  def deploymentIndicatorsForTeam(teamName :String)(implicit hc: HeaderCarrier) = deploymentIndicators(s"/team/$teamName/deployments")
-  def deploymentIndicatorsForService(serviceName :String)(implicit hc: HeaderCarrier) = deploymentIndicators(s"/service/$serviceName/deployments")
+  def deploymentIndicatorsForTeam(teamName: String)(implicit hc: HeaderCarrier) = deploymentIndicators(s"/team/$teamName/deployments")
+
+  def deploymentIndicatorsForService(serviceName: String)(implicit hc: HeaderCarrier) = deploymentIndicators(s"/service/$serviceName/deployments")
 
   private def deploymentIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] = {
     val url = indicatorsBaseUrl + path
@@ -117,7 +124,7 @@ trait IndicatorsConnector extends ServicesConfig {
     }
   }
 
-  def buildIndicatorsForRepository(repositoryName :String)(implicit hc: HeaderCarrier) = buildIndicators(s"/repository/$repositoryName/builds")
+  def buildIndicatorsForRepository(repositoryName: String)(implicit hc: HeaderCarrier) = buildIndicators(s"/repository/$repositoryName/builds")
 
   private def buildIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[Seq[JobMetricDataPoint]]] = {
     val url = indicatorsBaseUrl + path
@@ -133,9 +140,5 @@ trait IndicatorsConnector extends ServicesConfig {
         None
     }
   }
-}
 
-object IndicatorsConnector extends IndicatorsConnector {
-  override def indicatorsBaseUrl: String = baseUrl("indicators") + "/api/indicators"
-  override val http = WSHttp
 }

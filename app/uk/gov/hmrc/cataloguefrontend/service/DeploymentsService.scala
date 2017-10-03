@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import java.time.LocalDateTime
+import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.{Deployer, Release, ServiceDeploymentInformation, ServiceDeploymentsConnector, TeamsAndRepositoriesConnector}
@@ -29,7 +30,8 @@ case class TeamRelease(name: ServiceName, teams: Seq[TeamName], productionDate: 
                        creationDate: Option[LocalDateTime] = None, interval: Option[Long] = None,
                        leadTime:  Option[Long] = None, version: String, latestDeployer : Option[Deployer] = None)
 
-class DeploymentsService(serviceDeploymentsConnector: ServiceDeploymentsConnector, teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
+@Singleton
+class DeploymentsService @Inject() (serviceDeploymentsConnector: ServiceDeploymentsConnector, teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
   type ServiceTeamMappings = Map[ServiceName, Seq[TeamName]]
 
   sealed trait ReleaseFilter { def serviceTeams: ServiceTeamMappings }

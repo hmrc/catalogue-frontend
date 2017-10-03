@@ -32,24 +32,26 @@ package uk.gov.hmrc.cataloguefrontend.connector
  * limitations under the License.
  */
 
-import play.api.Logger
+import javax.inject.{Inject, Singleton}
+
+import play.api.{Configuration, Logger, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.UrlHelper
-import uk.gov.hmrc.cataloguefrontend.config.WSHttp
 import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpGet }
 
 
 
-trait ServiceDependenciesConnector extends ServicesConfig {
+@Singleton
+class ServiceDependenciesConnector @Inject()(http : HttpClient, override val runModeConfiguration:Configuration, environment : PlayEnvironment) extends ServicesConfig {
 
-  val http: HttpGet
+  def servicesDependenciesBaseUrl: String = baseUrl("service-dependencies") + "/api/service-dependencies"
 
-  def servicesDependenciesBaseUrl: String
+  override protected def mode = environment.mode
 
   def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
     val url = s"$servicesDependenciesBaseUrl"
@@ -73,10 +75,4 @@ trait ServiceDependenciesConnector extends ServicesConfig {
       }
   }
 
-}
-
-object ServiceDependenciesConnector extends ServiceDependenciesConnector {
-  override val http = WSHttp
-
-  override def servicesDependenciesBaseUrl: String = baseUrl("service-dependencies") + "/api/service-dependencies"
 }
