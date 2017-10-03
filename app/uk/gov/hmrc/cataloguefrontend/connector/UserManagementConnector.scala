@@ -125,9 +125,7 @@ case class UserManagementConnector @Inject()(http : HttpClient, override val run
 
 
   def getTeamDetails(team: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, TeamDetails]] = {
-    import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.teamDetailsReads
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    //    val url = s"$userManagementBaseUrl/v1/organisations/mdtp/teams/$team"
     val url = s"$userManagementBaseUrl/v2/organisations/teams/$team"
     withTimerAndCounter("ump-teamdetails") {
       http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>

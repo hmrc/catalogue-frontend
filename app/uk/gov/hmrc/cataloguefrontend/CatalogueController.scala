@@ -157,8 +157,6 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
         Future.successful(Left(connectorError))
     }
 
-//    teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]]
-
     val digitalServiceDetails: EitherT[Future, TeamsAndRepositoriesError, DigitalServiceDetails] = for {
       digitalService <- EitherT(eventualDigitalServiceInfoF)
       teamMembers <- EitherT(errorOrTeamMembersLookupF)
