@@ -11935,4 +11935,5 @@ section span.other-teams-message {
   padding: 8px;
   width: 100%; }
 
-/*# sourceMappingURL=catalogue-frontend.css.map */
+.left-aligned {
+  clear: left; }

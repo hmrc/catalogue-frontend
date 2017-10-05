@@ -42,7 +42,7 @@
                         <li>
                             <div class="@{
                                 getRAGClass(libraryState.currentVersion, libraryState.latestVersion)}" id="@{libraryState.libraryName}">
-                                <span class="col-xs-4">
+                                <span class="col-xs-4 left-aligned">
                                 @if(isInternalLibrary(libraryState)) {
                                     <a href="/repositories/@{
                                         libraryState.libraryName
@@ -63,7 +63,7 @@
                     @for(sbtPluginState <- mayBeDependencies.get.sbtPluginsDependenciesState) {
                         <li>
                             <div class="@{getRAGClass(sbtPluginState.currentVersion, sbtPluginState.latestVersion)}" id="@{sbtPluginState.sbtPluginName}">
-                                <span class="col-xs-4">
+                                <span class="col-xs-4 left-aligned">
                                 @if(isInternalSbtPlugin(sbtPluginState)) {
                                     <a href="/repositories/@{
                                         sbtPluginState.sbtPluginName
@@ -84,7 +84,7 @@
                     @for(otherDependenciesState <- mayBeDependencies.get.otherDependenciesState) {
                         <li>
                             <div class="@{getRAGClass(otherDependenciesState.currentVersion, otherDependenciesState.latestVersion)}" id="@{otherDependenciesState.name}">
-                                <span class="col-xs-4">
+                                <span class="col-xs-4 left-aligned">
                                     @otherDependenciesState.name
                                 </span>
                                 <span class="col-xs-3">@otherDependenciesState.currentVersion</span>
