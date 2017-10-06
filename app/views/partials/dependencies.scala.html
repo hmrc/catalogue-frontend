@@ -39,19 +39,19 @@
 
                     </li>
                     @for(dependency <- mayBeDependencies.get.libraryDependenciesState) {
-                        <li id="@{dependency.id}-library-dependency">
+                        <li>
                             <div class="@{
                                 getRAGClass(dependency.currentVersion, dependency.latestVersion)}" id="@{dependency.libraryName}">
                                 <span class="col-xs-4 left-aligned">
                                 @if(isInternalLibrary(dependency)) {
-                                    <a id="link-to-@{dependency.id}" href="/repositories/@{dependency.libraryName}">@dependency.libraryName</a>
+                                    <a id="link-to-@{dependency.libraryName}" href="/repositories/@{dependency.libraryName}">@dependency.libraryName</a>
                                 } else {
                                     @dependency.libraryName
                                 }
                                 </span>
-                                <span id="@{dependency.id}-current-version" class="col-xs-3">@dependency.currentVersion</span>
+                                <span id="@{dependency.libraryName}-current-version" class="col-xs-3">@dependency.currentVersion</span>
                                 <span class="col-xs-1 glyphicon glyphicon-arrow-right"> </span>
-                                <span id="@{dependency.id}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
+                                <span id="@{dependency.libraryName}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
                             </div>
                         </li>
 
@@ -59,18 +59,18 @@
                     <li><span class="col-xs-12">&nbsp;</span></li>
                     <li><span class="col-xs-12"><label>Sbt plugins</label></span></li>
                     @for(dependency <- mayBeDependencies.get.sbtPluginsDependenciesState) {
-                        <li id="@{dependency.id}-sbt-dependency>">
+                        <li>
                             <div class="@{getRAGClass(dependency.currentVersion, dependency.latestVersion)}" id="@{dependency.sbtPluginName}">
                                 <span class="col-xs-4 left-aligned">
                                 @if(isInternalSbtPlugin(dependency)) {
-                                    <a id="link-to-@{dependency.id}" href="/repositories/@{dependency.sbtPluginName}">@dependency.sbtPluginName</a>
+                                    <a id="link-to-@{dependency.sbtPluginName}" href="/repositories/@{dependency.sbtPluginName}">@dependency.sbtPluginName</a>
                                 } else {
                                     @dependency.sbtPluginName
                                 }
                                 </span>
-                                <span id="@{dependency.id}-current-version" class="col-xs-3">@dependency.currentVersion</span>
+                                <span id="@{dependency.sbtPluginName}-current-version" class="col-xs-3">@dependency.currentVersion</span>
                                 <span class="col-xs-1 glyphicon glyphicon-arrow-right"> </span>
-                                <span id="@{dependency.id}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
+                                <span id="@{dependency.sbtPluginName}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
                             </div>
                         </li>
 
@@ -78,14 +78,14 @@
                     <li><span class="col-xs-12">&nbsp;</span></li>
                     <li><span class="col-xs-12"><label>Other</label></span></li>
                     @for(dependency <- mayBeDependencies.get.otherDependenciesState) {
-                        <li id="@{dependency.id}-other-dependency>">
+                        <li>
                             <div class="@{getRAGClass(dependency.currentVersion, dependency.latestVersion)}" id="@{dependency.name}">
                                 <span class="col-xs-4 left-aligned">
                                     @dependency.name
                                 </span>
-                                <span id="@{dependency.id}-current-version" class="col-xs-3">@dependency.currentVersion</span>
+                                <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion</span>
                                 <span class="col-xs-1 glyphicon glyphicon-arrow-right"> </span>
-                                <span id="@{dependency.id}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
+                                <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
                             </div>
                         </li>
 

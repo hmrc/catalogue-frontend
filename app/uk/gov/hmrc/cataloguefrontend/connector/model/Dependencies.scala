@@ -41,19 +41,12 @@ case class Version(major: Int, minor: Int, patch: Int) {
 
 
 
-case class LibraryDependencyState(libraryName: String, currentVersion: Version, latestVersion: Option[Version]){
-  val id = libraryName.toLowerCase.replaceAll(" ", "-")
-}
-case class OtherDependenciesState(name: String, currentVersion: Version, latestVersion: Option[Version]) {
-  val id = name.toLowerCase.replaceAll(" ", "-")
-}
-
+case class LibraryDependencyState(libraryName: String, currentVersion: Version, latestVersion: Option[Version])
+case class OtherDependenciesState(name: String, currentVersion: Version, latestVersion: Option[Version])
 case class SbtPluginsDependenciesState(sbtPluginName: String,
                                        currentVersion: Version,
                                        latestVersion: Option[Version],
-                                       isExternal: Boolean = false) {
-  val id = sbtPluginName.toLowerCase.replaceAll(" ", "-")
-}
+                                       isExternal: Boolean = false)
 
 
 

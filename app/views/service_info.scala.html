@@ -89,12 +89,7 @@
                                 </li>
                             } else {
                                 @for(tool <- environment.services) {
-                                    <li id="link-to-@{tool.id}" class="list-item"><a href="@{
-                                        tool.url
-                                    }" target="_blank">@{
-                                        tool.displayName
-                                    }</a>
-                                    </li>
+                                    <li class="list-item"><a id="link-to-@{tool.id}" href="@{tool.url}" target="_blank">@{tool.displayName}</a></li>
                                 }
                             }
                         </ul>
