@@ -36,12 +36,15 @@ class ReadModelService @Inject()(eventService: EventService, userManagementConne
   private[events] var eventsCache = Map.empty[ServiceName, ServiceOwnerUserName]
   protected[events] var umpUsersCache = Seq.empty[TeamMember]
 
-  def getDigitalServiceOwner(digitalService: String): Option[TeamMember] = umpUsersCache.find(_.username == eventsCache.get(digitalService))
+  def getDigitalServiceOwner(digitalService: String): Option[TeamMember] =
+    umpUsersCache.find(_.username == eventsCache.get(digitalService))
 
   def getAllUsers = umpUsersCache
 
   def refreshEventsCache = {
      val eventualEvents = eventService.getAllEvents
+
+    println("refreshEventsCache")
 
      eventualEvents.map { events =>
       eventsCache = events.toStream.filter(_.eventType == EventType.ServiceOwnerUpdated)
@@ -49,7 +52,11 @@ class ReadModelService @Inject()(eventService: EventService, userManagementConne
         .map(_.data.as[ServiceOwnerUpdatedEventData]).groupBy(_.service)
         .map { case (service, eventDataList) => (service, eventDataList.last.username) }
       eventsCache
-    }
+    }.recover{
+       case e =>
+         Logger.logger.error("Unable to refresh event cache", e)
+         throw e
+     }
 
   }
 

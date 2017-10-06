@@ -33,7 +33,8 @@ class UpdateSchedulerSpec extends FunSpec with Matchers with MockitoSugar with O
 
       scheduler.startUpdatingEventsReadModel(100 milliseconds)
 
-      verify(readModelService, Mockito.after(550).atLeast(4)).refreshEventsCache
+
+      verify(readModelService, Mockito.after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshEventsCache
       verify(readModelService, times(0)).refreshUmpCache
     }
   }
@@ -45,7 +46,7 @@ class UpdateSchedulerSpec extends FunSpec with Matchers with MockitoSugar with O
 
       scheduler.startUpdatingUmpCacheReadModel(100 milliseconds)
 
-      verify(readModelService, Mockito.after(550).atLeast(4)).refreshUmpCache
+      verify(readModelService, Mockito.after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshUmpCache
       verify(readModelService, times(0)).refreshEventsCache
     }
   }

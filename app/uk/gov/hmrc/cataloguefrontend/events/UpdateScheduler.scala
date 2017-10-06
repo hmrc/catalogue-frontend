@@ -41,10 +41,12 @@ class UpdateScheduler @Inject()(actorSystem: ActorSystem, readModelService: Read
   def updateEventsReadModel: Future[Map[String, String]] = readModelService.refreshEventsCache
   def updateUmpCacheReadModel: Future[Seq[TeamMember]] = readModelService.refreshUmpCache
 
+  val initialDelay: FiniteDuration = 1 second
+
   def startUpdatingEventsReadModel(interval: FiniteDuration): Cancellable = {
     Logger.info(s"Initialising Event read model update every $interval")
 
-    val scheduler = actorSystem.scheduler.schedule(100 milliseconds, interval) {
+    val scheduler = actorSystem.scheduler.schedule(initialDelay, interval) {
       updateEventsReadModel
     }
 
@@ -54,7 +56,7 @@ class UpdateScheduler @Inject()(actorSystem: ActorSystem, readModelService: Read
   def startUpdatingUmpCacheReadModel(interval: FiniteDuration): Cancellable = {
     Logger.info(s"Initialising UMP cache read model update every $interval")
 
-    val scheduler = actorSystem.scheduler.schedule(100 milliseconds, interval) {
+    val scheduler = actorSystem.scheduler.schedule(initialDelay, interval) {
       updateUmpCacheReadModel
     }
 

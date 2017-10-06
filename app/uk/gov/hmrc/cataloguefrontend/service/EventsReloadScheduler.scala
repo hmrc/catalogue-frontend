@@ -21,7 +21,6 @@ import javax.inject.{Inject, Singleton}
 import play.api._
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.cataloguefrontend.events.UpdateScheduler
-import uk.gov.hmrc.crypto.ApplicationCrypto
 import uk.gov.hmrc.play.bootstrap.config.AppName
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,7 +39,7 @@ class EventsReloadScheduler @Inject()(appLifecycle: ApplicationLifecycle,
   Logger.info(s"Starting : $appName : in mode : ${environment.mode}")
   Logger.debug("[Catalogue-frontend] - Starting... ")
 
-  ApplicationCrypto.verifyConfiguration()
+
 
   scheduleEventsReloadSchedule(appLifecycle, configuration)
   scheduleUmpCacheReloadSchedule(appLifecycle, configuration)
@@ -48,7 +47,7 @@ class EventsReloadScheduler @Inject()(appLifecycle: ApplicationLifecycle,
   private def scheduleEventsReloadSchedule(appLifecycle: ApplicationLifecycle,
                                            configuration: Configuration) = {
 
-    val maybeReloadInterval = configuration.getInt(eventReloadIntervalKey)
+    lazy val maybeReloadInterval = configuration.getInt(eventReloadIntervalKey)
 
     maybeReloadInterval.fold {
       Logger.warn(s"$eventReloadIntervalKey is missing. Event cache reload will be disabled")
@@ -60,7 +59,7 @@ class EventsReloadScheduler @Inject()(appLifecycle: ApplicationLifecycle,
   }
 
   private def scheduleUmpCacheReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration) = {
-    val maybeUmpCacheReloadInterval = configuration.getInt(umpCacheReloadIntervalKey)
+    lazy val maybeUmpCacheReloadInterval = configuration.getInt(umpCacheReloadIntervalKey)
 
     maybeUmpCacheReloadInterval.fold {
       Logger.warn(s"$umpCacheReloadIntervalKey is missing. Ump cache reload will be disabled")
