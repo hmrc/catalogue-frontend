@@ -44,9 +44,15 @@ object RepoType extends Enumeration {
 
 }
 
-case class Link(name: String, displayName: String, url: String)
 
-case class Environment(name: String, services: Seq[Link])
+
+case class Link(name: String, displayName: String, url: String) {
+  val id = displayName.toLowerCase.replaceAll(" ", "-")
+}
+
+case class Environment(name: String, services: Seq[Link]){
+  val id = name.toLowerCase.replaceAll(" ", "-")
+}
 
 case class RepositoryDetails(name: String,
                              description: String,

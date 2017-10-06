@@ -41,7 +41,7 @@
 
 @standard_layout(service.name, "services") {
     <header>
-        <h1>Service: @service.name</h1>
+        <h1 id="service-header">Service: @service.name</h1>
 
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
@@ -63,9 +63,9 @@
         <div class="row">
         @for((environment, idx) <- service.environments.get.zipWithIndex) {
             @if(idx < 3) {
-                <div class="col-md-2">
+                <div id="@{environment.id}-environment" class="col-md-2">
             } else {
-                <div class="col-md-3">
+                <div id="@{environment.id}-environment" class="col-md-3">
             }
                 <div class="board">
                     <h3 class="board__heading">
@@ -89,7 +89,7 @@
                                 </li>
                             } else {
                                 @for(tool <- environment.services) {
-                                    <li class="list-item"><a href="@{
+                                    <li id="link-to-@{tool.id}" class="list-item"><a href="@{
                                         tool.url
                                     }" target="_blank">@{
                                         tool.displayName
@@ -106,7 +106,7 @@
             @partials.dependencies(mayBeDependencies)
         <div class="row">
             <div class="col-md-12">
-                <div class="board row">
+                <div class="board">
                     <h3 class="board__heading">Delivery Indicators</h3>
                     <div class="board__body">
                         @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {

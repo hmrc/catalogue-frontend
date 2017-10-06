@@ -18,16 +18,16 @@
 
 @(repo: RepositoryDetails)
 
-<div class="col-md-6">
+<div id="code-and-build" class="col-md-6">
     <div class="board">
         <h3 class="board__heading">Code and Build</h3>
         <div class="board__body">
             <ul class="list list--minimal">
                 @for(githubUrl <- repo.githubUrls) {
-                <li class="list-item"><a href="@{githubUrl.url}" target="_blank">@{githubUrl.displayName}</a></li>
+                <li id="link-to-@{githubUrl.id}" class="list-item"><a href="@{githubUrl.url}" target="_blank">@{githubUrl.displayName}</a></li>
                 }
                 @for(ciLink <- repo.ci) {
-                <li class="list-item"><a href="@{ciLink.url}" target="_blank">@{ciLink.displayName}</a></li>
+                <li id="link-to-@{ciLink.id}" class="list-item"><a href="@{ciLink.url}" target="_blank">@{ciLink.displayName}</a></li>
                 }
             </ul>
         </div>
