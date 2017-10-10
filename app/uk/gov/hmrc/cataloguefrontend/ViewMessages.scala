@@ -27,12 +27,12 @@ import play.twirl.api.Html
 object ViewMessages {
   val noIndicatorsData = "<p>There's nothing here - this probably means you haven't released anything yet! Get shipping " +
     "to see your data. If you think you're seeing this message in error or have any other feedback, please let us know in " +
-    """<a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops</a></p>"""
+    """<a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops  <small><span class="glyphicon glyphicon-new-window"/></small></a></p>"""
 
   val noJobExecutionData = "<p>It's possible that there is no Jenkins job set up for this repository, or a job exists " +
     "but there is no past build data available. If you think you're seeing this message in error or have any other feedback, " +
     "please let us know in " +
-    """<a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops</a></p>"""
+    """<a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops  <small><span class="glyphicon glyphicon-new-window"/></small></a></p>"""
 
   val indicatorsServiceError = "Sorry about that, there was a problem fetching the indicator data. This will " +
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
@@ -50,9 +50,9 @@ object ViewMessages {
 
   val dependenciesText = """<p>This report shows the platform dependencies the code in your repository has, what version they are currently at, and highlights if any later versions are available. You should act quickly to rectify the issue when you see a minor version discrepancy, and immediately if you see a major version discrepancy.</p>
                             <p/>
-                            <p>You should also monitor the <a href="https://hmrcdigital.slack.com/messages/C04RY81QK" target="_blank">#announcements</a> channel for details of any upgrades that may be more involved than simply bumping a version number</p>"""
+                            <p>You should also monitor the <a href="https://hmrcdigital.slack.com/messages/C04RY81QK" target="_blank">#announcements  <small><span class="glyphicon glyphicon-new-window"/></small></a> channel for details of any upgrades that may be more involved than simply bumping a version number</p>"""
 
-  val curatedLibsText = """<p>Click <a href="https://github.com/hmrc/service-dependencies/blob/master/conf/dependency-versions-config.json" target="_blank">here</a> to see the platform libraries that are included in the dependency analysis</p>"""
+  val curatedLibsText = """<p>Click <a href="https://github.com/hmrc/service-dependencies/blob/master/conf/dependency-versions-config.json" target="_blank">here  <small><span class="glyphicon glyphicon-new-window"/></small></a> to see the platform libraries that are included in the dependency analysis</p>"""
 
 
   def noRepoOfTypeForTeam(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +

@@ -24,7 +24,7 @@
         <div class="board__body">
             <ul class="list list--minimal">
                 @for(githubUrl <- repo.githubUrls) {
-                <li class="list-item"><a id="link-to-@{githubUrl.id}" href="@{githubUrl.url}" target="_blank">@{githubUrl.displayName}</a></li>
+                <li class="list-item"><a id="link-to-@{githubUrl.id}" href="@{githubUrl.url}" target="_blank">@{githubUrl.displayName} <small><span class="glyphicon glyphicon-new-window"/></small></a></li>
                 }
             </ul>
         </div>

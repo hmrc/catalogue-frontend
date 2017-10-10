@@ -285,4 +285,12 @@ section {
   clear: left;
 }
 
+.glyphicon {
+  font-size: 11px;
+}
+
+//a::after[target="_blank"] {
+//  @extend .glyphicon;
+//  @extend .glyphicon-new-window;
+//}
 

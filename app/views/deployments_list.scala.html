@@ -43,7 +43,7 @@
         <td class="monospaced" id="row@{i}_version">@{release.version}</td>
         <td class="monospaced" id="row@{i}_production">@{release.productionDate.asString}</td>
         <td class="monospaced" id="row@{i}_deployer">
-            @release.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.name}" target="_blank">@{u.name}</a>}.getOrElse("N/A")
+        @release.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.name}" target="_blank">@{u.name} <small><span class="glyphicon glyphicon-new-window"/></small></a>}.getOrElse("N/A")
         </td>
         <td class="monospaced" id="row@{i}_creation">@{release.creationDate.fold("--")(_.asString)}</td>
         <td class="monospaced" id="row@{i}_leadtime">@{release.leadTime.fold("--")(x => s"$x days" )}</td>

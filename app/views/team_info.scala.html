@@ -65,7 +65,7 @@
                                     <li>
                                         <label>Documentation: </label>
                                         @teamDetails.documentation.map { d =>
-                                            <a href="@d" target="_blank">Go to Confluence space</a>
+                                            <a href="@d" target="_blank">Go to Confluence space <small><span class="glyphicon glyphicon-new-window"/></small></a>
                                         }
                                     </li>
                                     <li>
@@ -75,7 +75,7 @@
                                     <li>
                                         <label>Slack: </label>
                                         @teamDetails.slack.map { d =>
-                                            <a href="@d" target="_blank">Go to team channel</a>
+                                            <a href="@d" target="_blank">Go to team channel <small><span class="glyphicon glyphicon-new-window"/></small></a>
                                         }
                                     </li>
                                     <li>
@@ -108,7 +108,7 @@
                             @if(errorOrTeamMembers.isRight) {
                                 @for(teamMember <- errorOrTeamMembers.right.get) {
                                     <li class="col-xs-6">
-                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
+                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName <small><span class="glyphicon glyphicon-new-window"/></small></a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
                                     </li>
                                 }
 
@@ -227,9 +227,9 @@
 @umpUpdateLink(isMemberBox: Boolean) = {
     <div id="ump-correct-data-link" class="list list--minimal">
     @if(isMemberBox) {
-        To update @teamName team members, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal</a>
+        To update @teamName team members, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal <small><span class="glyphicon glyphicon-new-window"/></small></a>
     } else {
-        To update @teamName team details, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal</a>
+        To update @teamName team details, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal <small><span class="glyphicon glyphicon-new-window"/></small></a>
     }
     </div>
 }
