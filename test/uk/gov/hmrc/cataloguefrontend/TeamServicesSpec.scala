@@ -248,12 +248,12 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       teamDetailsElements(2).text() shouldBe "Description: TEAM-A is a great team"
       teamDetailsElements(3).text() shouldBe "Documentation: Go to Confluence space"
-      teamDetailsElements(3).toString() should include("""<a href="https://some.documentation.url" target="_blank">Go to Confluence space</a>""")
+      teamDetailsElements(3).toString() should include("""<a href="https://some.documentation.url" target="_blank">Go to Confluence space <small><span class="glyphicon glyphicon-new-window"""")
 
       teamDetailsElements(4).text() shouldBe "Organisation: ORGA"
 
       teamDetailsElements(5).text() shouldBe "Slack: Go to team channel"
-      teamDetailsElements(5).toString() should include("""<a href="https://slack.host/messages/team-A" target="_blank">Go to team channel</a>""")
+      teamDetailsElements(5).toString() should include("""<a href="https://slack.host/messages/team-A" target="_blank">Go to team channel <small><span class="glyphicon glyphicon-new-window"""")
 
       teamDetailsElements(6).text() shouldBe "Location: STLPD"
 
