@@ -43,7 +43,7 @@
                             <div class="input-group">
                                 <span class="form-control editable-label__field">
                                         @digitalServiceOwner.map { so =>
-                                            <a href="@{so.umpLink}" id="service_owner_view_field">@{so.displayName}</a>
+                                            <a href="@{so.umpLink}" target="_blank" id="service_owner_view_field">@{so.displayName}</a>
                                     }.getOrElse {
                                             <span id="service_owner_view_field">
                                                 @notSpecifiedText
@@ -94,7 +94,7 @@
                                    @if(errorOrMembers.isRight) {
                                        @for(teamMember <- errorOrMembers.right.get) {
                                            <li class="col-xs-3">
-                                               <a href="@teamMember.umpLink">@teamMember.displayName</a>
+                                               <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName</a>
                                            </li>
                                        }
 

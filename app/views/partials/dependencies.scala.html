@@ -99,9 +99,9 @@
 
             </ul>
         </div>
-        @if(mayBeDependencies.isDefined && mayBeDependencies.get.libraryDependenciesState.nonEmpty) {
+        @if(mayBeDependencies.exists(dependencies => dependencies.libraryDependenciesState.nonEmpty || dependencies.sbtPluginsDependenciesState.nonEmpty || dependencies.otherDependenciesState.nonEmpty)) {
             <div class="col-xs-4">
-                <div>
+                <div id="legend">
                     <label>Legend:</label>
                     <ul class="list list--minimal list-group legend" >
                         <li><span class="green">Up to date</span></li>

@@ -108,7 +108,8 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
 
       document.select("#plugin6-invalid-ahead-current").get(0).text() shouldBe "plugin6-invalid-ahead-current 4.0.0 3.0.1"
       verifyColour(document, "#plugin6-invalid-ahead-current", "black")
-    }                                                                                          
+    }
+
   }
 
   private def verifyColour(document: Document, elementsCssSelector: String, colour: String) = {
@@ -171,4 +172,37 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
     }
   }
 
+  "legend section" should {
+    "be shown if least one library dependency entry exists" in {
+      val dependencies = Dependencies("service", Seq(LibraryDependencyState("lib1-up-to-date", Version(1, 0, 0), Some(Version(1, 0, 0)))),Nil, Nil)
+      val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
+
+      verifyLegendSectionIsShowing(document)
+    }
+
+    "be shown if at least one sbt dependency entry exists" in {
+      val dependencies = Dependencies("service", Nil ,Seq(SbtPluginsDependenciesState("plugin1-up-to-date", Version(1, 0, 0), Some(Version(1, 0, 0)))), Nil)
+      val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
+
+      verifyLegendSectionIsShowing(document)
+    }
+
+    "be shown if at least one other dependency entry exists" in {
+      val dependencies = Dependencies("service", Nil ,Nil , Seq(OtherDependenciesState("sbt", Version(1,0,0), None)))
+      val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
+
+      verifyLegendSectionIsShowing(document)
+    }
+    
+    "not be shown if no dependency entry exists" in {
+      val dependencies = Dependencies("service", Nil ,Nil , Nil)
+      val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
+
+      document.select("#legend") shouldBe empty
+    }
+  }
+
+  private def verifyLegendSectionIsShowing(document: Document) = {
+    document.select("#legend").get(0).text() shouldBe "Legend: Up to date Minor version behind Major version behind"
+  }
 }

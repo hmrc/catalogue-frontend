@@ -50,9 +50,9 @@ object ViewMessages {
 
   val dependenciesText = """<p>This report shows the platform dependencies the code in your repository has, what version they are currently at, and highlights if any later versions are available. You should act quickly to rectify the issue when you see a minor version discrepancy, and immediately if you see a major version discrepancy.</p>
                             <p/>
-                            <p>You should also monitor the #announcements channel for details of any upgrades that may be more involved than simply bumping a version number</p>"""
+                            <p>You should also monitor the <a href="https://hmrcdigital.slack.com/messages/C04RY81QK" target="_blank">#announcements</a> channel for details of any upgrades that may be more involved than simply bumping a version number</p>"""
 
-  val curatedLibsText = """<p>Click <a href="https://github.com/hmrc/service-dependencies/blob/master/conf/dependency-versions-config.json">here</a> to see the platform libraries that are included in the dependency analysis</p>"""
+  val curatedLibsText = """<p>Click <a href="https://github.com/hmrc/service-dependencies/blob/master/conf/dependency-versions-config.json" target="_blank">here</a> to see the platform libraries that are included in the dependency analysis</p>"""
 
 
   def noRepoOfTypeForTeam(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
