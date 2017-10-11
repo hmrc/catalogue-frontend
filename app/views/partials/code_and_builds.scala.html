@@ -24,10 +24,10 @@
         <div class="board__body">
             <ul class="list list--minimal">
                 @for(githubUrl <- repo.githubUrls) {
-                <li class="list-item"><a id="link-to-@{githubUrl.id}" href="@{githubUrl.url}" target="_blank">@{githubUrl.displayName} <small><span class="glyphicon glyphicon-new-window"/></small></a></li>
+                <li class="list-item"><a id="link-to-@{githubUrl.id}" href="@{githubUrl.url}" target="_blank">@{githubUrl.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
                 }
                 @for(ciLink <- repo.ci) {
-                <li class="list-item"><a id="link-to-@{ciLink.id}" href="@{ciLink.url}" target="_blank">@{ciLink.displayName} <small><span class="glyphicon glyphicon-new-window"/></small></a></li>
+                <li class="list-item"><a id="link-to-@{ciLink.id}" href="@{ciLink.url}" target="_blank">@{ciLink.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
                 }
             </ul>
         </div>
