@@ -59,7 +59,7 @@ case class RepositoryDetails(name: String,
                              createdAt: LocalDateTime,
                              lastActive: LocalDateTime,
                              teamNames: Seq[String],
-                             githubUrls: Seq[Link],
+                             githubUrls: Set[Link],
                              ci: Seq[Link],
                              environments: Option[Seq[Environment]],
                              repoType: RepoType.RepoType)
