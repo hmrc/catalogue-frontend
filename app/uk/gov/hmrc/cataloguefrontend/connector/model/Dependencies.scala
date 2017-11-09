@@ -16,13 +16,34 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import play.api.libs.json.Json
+import org.joda.time.DateTime
+import play.api.libs.json.{JsPath, Json, Reads}
+import uk.gov.hmrc.http.controllers.RestFormats
 
 
-case class Dependencies(repositoryName: String,
-                        libraryDependenciesState: Seq[LibraryDependencyState],
-                        sbtPluginsDependenciesState: Seq[SbtPluginsDependenciesState],
-                        otherDependenciesState: Seq[OtherDependenciesState])
+
+case class Dependency(
+                       name: String,
+                       currentVersion: Version,
+                       latestVersion: Option[Version],
+                       isExternal: Boolean = false
+                     )
+
+case class Dependencies(
+                         repositoryName: String,
+                         libraryDependencies: Seq[Dependency],
+                         sbtPluginsDependencies: Seq[Dependency],
+                         otherDependencies: Seq[Dependency],
+                         lastUpdated: DateTime
+                       )
+
+object Dependencies {
+  implicit val vf = Json.format[Version]
+  implicit val dtr = RestFormats.dateTimeFormats
+  implicit val osf = Json.format[Dependency]
+  implicit val format = Json.format[Dependencies]
+}
+
 
 
 case class Version(major: Int, minor: Int, patch: Int) {
@@ -36,26 +57,5 @@ case class Version(major: Int, minor: Int, patch: Int) {
     Version(this.major + other.major, this.minor + other.minor, this.patch + other.patch)
   }
 
-
-}
-
-
-
-case class LibraryDependencyState(libraryName: String, currentVersion: Version, latestVersion: Option[Version])
-case class OtherDependenciesState(name: String, currentVersion: Version, latestVersion: Option[Version])
-case class SbtPluginsDependenciesState(sbtPluginName: String,
-                                       currentVersion: Version,
-                                       latestVersion: Option[Version],
-                                       isExternal: Boolean = false)
-
-
-
-object Dependencies {
-  implicit val cvf = Json.format[Version]
-  implicit val ldsf = Json.format[LibraryDependencyState]
-  implicit val spdsf = Json.format[SbtPluginsDependenciesState]
-  implicit val odsf = Json.format[OtherDependenciesState]
-
-  implicit val format = Json.format[Dependencies]
 
 }

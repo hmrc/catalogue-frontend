@@ -22,6 +22,7 @@ import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.OneAppPerTest
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.time.DateTimeUtils
 
 class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
 
@@ -31,22 +32,23 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
   "library and sbt plugin dependencies list" should {
 
     val dependencies = Dependencies("service", Seq(
-      LibraryDependencyState("lib1-up-to-date", Version(1, 0, 0), Some(Version(1, 0, 0))),
-      LibraryDependencyState("lib2-minor-behind", Version(2, 0, 0), Some(Version(2, 1, 0))),
-      LibraryDependencyState("lib3-major-behind", Version(3, 0, 0), Some(Version(4, 0, 0))),
-      LibraryDependencyState("lib4-patch-behind", Version(3, 0, 0), Some(Version(3, 0, 1))),
-      LibraryDependencyState("lib5-no-latest-version", Version(3, 0, 0), None),
-      LibraryDependencyState("lib6-invalid-ahead-current", Version(4, 0, 0), Some(Version(3, 0, 1)))
+      Dependency("lib1-up-to-date", Version(1, 0, 0), Some(Version(1, 0, 0))),
+      Dependency("lib2-minor-behind", Version(2, 0, 0), Some(Version(2, 1, 0))),
+      Dependency("lib3-major-behind", Version(3, 0, 0), Some(Version(4, 0, 0))),
+      Dependency("lib4-patch-behind", Version(3, 0, 0), Some(Version(3, 0, 1))),
+      Dependency("lib5-no-latest-version", Version(3, 0, 0), None),
+      Dependency("lib6-invalid-ahead-current", Version(4, 0, 0), Some(Version(3, 0, 1)))
 
     ), Seq(
-      SbtPluginsDependenciesState("plugin1-up-to-date", Version(1, 0, 0), Some(Version(1, 0, 0))),
-      SbtPluginsDependenciesState("plugin2-minor-behind", Version(2, 0, 0), Some(Version(2, 1, 0))),
-      SbtPluginsDependenciesState("plugin3-major-behind", Version(3, 0, 0), Some(Version(4, 0, 0))),
-      SbtPluginsDependenciesState("plugin4-patch-behind", Version(3, 0, 0), Some(Version(3, 0, 1))),
-      SbtPluginsDependenciesState("plugin5-no-latest-version", Version(3, 0, 0), None),
-      SbtPluginsDependenciesState("plugin6-invalid-ahead-current", Version(4, 0, 0), Some(Version(3, 0, 1)))
+      Dependency("plugin1-up-to-date", Version(1, 0, 0), Some(Version(1, 0, 0))),
+      Dependency("plugin2-minor-behind", Version(2, 0, 0), Some(Version(2, 1, 0))),
+      Dependency("plugin3-major-behind", Version(3, 0, 0), Some(Version(4, 0, 0))),
+      Dependency("plugin4-patch-behind", Version(3, 0, 0), Some(Version(3, 0, 1))),
+      Dependency("plugin5-no-latest-version", Version(3, 0, 0), None),
+      Dependency("plugin6-invalid-ahead-current", Version(4, 0, 0), Some(Version(3, 0, 1)))
     ),
-      Seq(OtherDependenciesState("sbt", Version(0,13,11), Some(Version(0,13,15))))
+      Seq(Dependency("sbt", Version(0,13,11), Some(Version(0,13,15)))),
+      lastUpdated = DateTimeUtils.now
     )
 
 
@@ -115,13 +117,13 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
   private def verifyColour(document: Document, elementsCssSelector: String, colour: String) = {
     import collection.JavaConverters._
     val elements = document.select(elementsCssSelector)
-    assert(elements.hasClass(colour) == true, s"colour($colour) is not found in element's classes: [${elements.get(0).classNames().asScala.mkString(", ")}]")
+    assert(elements.hasClass(colour), s"colour($colour) is not found in element's classes: [${elements.get(0).classNames().asScala.mkString(", ")}]")
   }
 
   "sbt dependency" should {
 
     "show green if versions are the same" in {
-      val dependencies = Dependencies("service", Nil, Nil, Seq(OtherDependenciesState("sbt", Version(1,0,0), Some(Version(1,0,0)))))
+      val dependencies = Dependencies("service", Nil, Nil, Seq(Dependency("sbt", Version(1,0,0), Some(Version(1,0,0)))), lastUpdated = DateTimeUtils.now)
       val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 1.0.0"
@@ -130,7 +132,7 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
     }
 
     "show amber if there is a minor version discrepancy" in {
-      val dependencies = Dependencies("service", Nil, Nil, Seq(OtherDependenciesState("sbt", Version(1,1,0), Some(Version(1,0,0)))))
+      val dependencies = Dependencies("service", Nil, Nil, Seq(Dependency("sbt", Version(1,1,0), Some(Version(1,0,0)))), lastUpdated = DateTimeUtils.now)
       val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 1.1.0 1.0.0"
@@ -139,7 +141,7 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
     }
 
     "show amber if there is a patch version discrepancy" in {
-      val dependencies = Dependencies("service", Nil, Nil, Seq(OtherDependenciesState("sbt", Version(1,0,0), Some(Version(1,0,1)))))
+      val dependencies = Dependencies("service", Nil, Nil, Seq(Dependency("sbt", Version(1,0,0), Some(Version(1,0,1)))), lastUpdated = DateTimeUtils.now)
       val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 1.0.1"
@@ -148,7 +150,7 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
     }
 
     "show red if there is a major version discrepancy" in {
-      val dependencies = Dependencies("service", Nil, Nil, Seq(OtherDependenciesState("sbt", Version(1,0,0), Some(Version(2,0,0)))))
+      val dependencies = Dependencies("service", Nil, Nil, Seq(Dependency("sbt", Version(1,0,0), Some(Version(2,0,0)))), lastUpdated = DateTimeUtils.now)
       val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 2.0.0"
@@ -156,7 +158,7 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
     }
 
     "show grey and (not found) if there is no latest version available" in {
-      val dependencies = Dependencies("service", Nil, Nil, Seq(OtherDependenciesState("sbt", Version(1,0,0), None)))
+      val dependencies = Dependencies("service", Nil, Nil, Seq(Dependency("sbt", Version(1,0,0), None)), lastUpdated = DateTimeUtils.now)
       val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 (not found)"
@@ -164,7 +166,7 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
     }
 
     "show black if versions are invalid (eg: current version > latest version)" in {
-      val dependencies = Dependencies("service", Nil, Nil, Seq(OtherDependenciesState("sbt", Version(5,0,0), Some(Version(1,0,0)))))
+      val dependencies = Dependencies("service", Nil, Nil, Seq(Dependency("sbt", Version(5,0,0), Some(Version(1,0,0)))), lastUpdated = DateTimeUtils.now)
       val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 5.0.0 1.0.0"
@@ -174,28 +176,28 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
 
   "legend section" should {
     "be shown if least one library dependency entry exists" in {
-      val dependencies = Dependencies("service", Seq(LibraryDependencyState("lib1-up-to-date", Version(1, 0, 0), Some(Version(1, 0, 0)))),Nil, Nil)
+      val dependencies = Dependencies("service", Seq(Dependency("lib1-up-to-date", Version(1, 0, 0), Some(Version(1, 0, 0)))),Nil, Nil, lastUpdated = DateTimeUtils.now)
       val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
 
       verifyLegendSectionIsShowing(document)
     }
 
     "be shown if at least one sbt dependency entry exists" in {
-      val dependencies = Dependencies("service", Nil ,Seq(SbtPluginsDependenciesState("plugin1-up-to-date", Version(1, 0, 0), Some(Version(1, 0, 0)))), Nil)
+      val dependencies = Dependencies("service", Nil ,Seq(Dependency("plugin1-up-to-date", Version(1, 0, 0), Some(Version(1, 0, 0)))), Nil, lastUpdated = DateTimeUtils.now)
       val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
 
       verifyLegendSectionIsShowing(document)
     }
 
     "be shown if at least one other dependency entry exists" in {
-      val dependencies = Dependencies("service", Nil ,Nil , Seq(OtherDependenciesState("sbt", Version(1,0,0), None)))
+      val dependencies = Dependencies("service", Nil ,Nil , Seq(Dependency("sbt", Version(1,0,0), None)), lastUpdated = DateTimeUtils.now)
       val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
 
       verifyLegendSectionIsShowing(document)
     }
     
     "not be shown if no dependency entry exists" in {
-      val dependencies = Dependencies("service", Nil ,Nil , Nil)
+      val dependencies = Dependencies("service", Nil ,Nil , Nil, lastUpdated = DateTimeUtils.now)
       val document = asDocument(views.html.partials.dependencies(Some(dependencies)))
 
       document.select("#legend") shouldBe empty

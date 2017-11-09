@@ -26,7 +26,6 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
-import play.api.Environment
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
 import play.api.test.Helpers._
@@ -35,13 +34,13 @@ import uk.gov.hmrc.cataloguefrontend.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.cataloguefrontend.RepoType._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, LibraryDependencyState, SbtPluginsDependenciesState, Version}
-import uk.gov.hmrc.play.test.UnitSpec
-
-import scala.concurrent.Future
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.time.DateTimeUtils
+
+import scala.concurrent.Future
 
 class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach with OneServerPerSuite with WireMockEndpoints with MockitoSugar with ScalaFutures {
 
@@ -100,23 +99,25 @@ class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach wi
         .thenReturn(Future.successful(Seq(
           Dependencies(
             repositoryName = "repo-1",
-            libraryDependenciesState = Seq(
-              libraryDependencyState("LIBRARY-1", 1, "green"),
-              libraryDependencyState("LIBRARY-2", 2, "red")
+            libraryDependencies = Seq(
+              libraryDependency("LIBRARY-1", 1, "green"),
+              libraryDependency("LIBRARY-2", 2, "red")
             ),
-            sbtPluginsDependenciesState = Seq(
+            sbtPluginsDependencies = Seq(
               sbtPluginsDependencyState("PLUGIN-1", 1, "amber" ),
               sbtPluginsDependencyState("PLUGIN-2", 2, "red" )
-            ), Seq()
+            ), Seq(),
+            lastUpdated = DateTimeUtils.now
           ),
           Dependencies(
             repositoryName = "repo-2",
-            libraryDependenciesState = Seq(
-              libraryDependencyState("LIBRARY-3", 3, "green")
+            libraryDependencies = Seq(
+              libraryDependency("LIBRARY-3", 3, "green")
             ),
-            sbtPluginsDependenciesState = Seq(
+            sbtPluginsDependencies = Seq(
               sbtPluginsDependencyState("PLUGIN-3", 3, "red")
-            ), Seq()
+            ), Seq(),
+            lastUpdated = DateTimeUtils.now
           )
         )))
     }
@@ -159,12 +160,12 @@ class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach wi
 
   private def sbtPluginsDependencyState(sbtPluginName: String, majorVersion: Int, colour: String) = {
     val currentVersion = Version(majorVersion, 0, 0)
-    SbtPluginsDependenciesState(sbtPluginName, currentVersion, latestVersion(currentVersion, colour))
+    Dependency(sbtPluginName, currentVersion, latestVersion(currentVersion, colour))
   }
 
-  private def libraryDependencyState(libraryName: String, majorVersion: Int, colour: String) = {
+  private def libraryDependency(libraryName: String, majorVersion: Int, colour: String) = {
     val currentVersion = Version(majorVersion, 0, 0)
-    LibraryDependencyState(libraryName, currentVersion, latestVersion(currentVersion, colour))
+    Dependency(libraryName, currentVersion, latestVersion(currentVersion, colour))
   }
 
   private def digitalServiceRepository(repoName: String) = {

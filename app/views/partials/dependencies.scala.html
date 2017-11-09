@@ -13,9 +13,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, LibraryDependencyState, Version}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.model.SbtPluginsDependenciesState
+@import uk.gov.hmrc.cataloguefrontend.connector.model._
 @(mayBeDependencies: Option[Dependencies])
 
 
@@ -38,46 +37,46 @@
                         <span class="col-xs-3"><label>Latest Version</label></span>
 
                     </li>
-                    @for(dependency <- mayBeDependencies.get.libraryDependenciesState) {
+                    @for(dependency <- mayBeDependencies.get.libraryDependencies) {
                         <li>
                             <div class="@{
-                                getRAGClass(dependency.currentVersion, dependency.latestVersion)}" id="@{dependency.libraryName}">
+                                getRAGClass(dependency.currentVersion, dependency.latestVersion)}" id="@{dependency.name}">
                                 <span class="col-xs-4 left-aligned">
                                 @if(isInternalLibrary(dependency)) {
-                                    <a id="link-to-@{dependency.libraryName}" href="/repositories/@{dependency.libraryName}">@dependency.libraryName</a>
+                                    <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}">@dependency.name</a>
                                 } else {
-                                    @dependency.libraryName
+                                    @dependency.name
                                 }
                                 </span>
-                                <span id="@{dependency.libraryName}-current-version" class="col-xs-3">@dependency.currentVersion</span>
+                                <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion</span>
                                 <span class="col-xs-1 glyphicon glyphicon-arrow-right"> </span>
-                                <span id="@{dependency.libraryName}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
+                                <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
                             </div>
                         </li>
 
                     }
                     <li><span class="col-xs-12">&nbsp;</span></li>
                     <li><span class="col-xs-12"><label>Sbt plugins</label></span></li>
-                    @for(dependency <- mayBeDependencies.get.sbtPluginsDependenciesState) {
+                    @for(dependency <- mayBeDependencies.get.sbtPluginsDependencies) {
                         <li>
-                            <div class="@{getRAGClass(dependency.currentVersion, dependency.latestVersion)}" id="@{dependency.sbtPluginName}">
+                            <div class="@{getRAGClass(dependency.currentVersion, dependency.latestVersion)}" id="@{dependency.name}">
                                 <span class="col-xs-4 left-aligned">
                                 @if(isInternalSbtPlugin(dependency)) {
-                                    <a id="link-to-@{dependency.sbtPluginName}" href="/repositories/@{dependency.sbtPluginName}">@dependency.sbtPluginName</a>
+                                    <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}">@dependency.name</a>
                                 } else {
-                                    @dependency.sbtPluginName
+                                    @dependency.name
                                 }
                                 </span>
-                                <span id="@{dependency.sbtPluginName}-current-version" class="col-xs-3">@dependency.currentVersion</span>
+                                <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion</span>
                                 <span class="col-xs-1 glyphicon glyphicon-arrow-right"> </span>
-                                <span id="@{dependency.sbtPluginName}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
+                                <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
                             </div>
                         </li>
 
                     }
                     <li><span class="col-xs-12">&nbsp;</span></li>
                     <li><span class="col-xs-12"><label>Other</label></span></li>
-                    @for(dependency <- mayBeDependencies.get.otherDependenciesState) {
+                    @for(dependency <- mayBeDependencies.get.otherDependencies) {
                         <li>
                             <div class="@{getRAGClass(dependency.currentVersion, dependency.latestVersion)}" id="@{dependency.name}">
                                 <span class="col-xs-4 left-aligned">
@@ -99,7 +98,7 @@
 
             </ul>
         </div>
-        @if(mayBeDependencies.exists(dependencies => dependencies.libraryDependenciesState.nonEmpty || dependencies.sbtPluginsDependenciesState.nonEmpty || dependencies.otherDependenciesState.nonEmpty)) {
+        @if(mayBeDependencies.exists(dependencies => dependencies.libraryDependencies.nonEmpty || dependencies.sbtPluginsDependencies.nonEmpty || dependencies.otherDependencies.nonEmpty)) {
             <div class="col-xs-4">
                 <div id="legend">
                     <label>Legend:</label>
@@ -113,12 +112,12 @@
         }
     </div>
 
-    @isInternalLibrary(libraryDependencyState: LibraryDependencyState) = @{
-        libraryDependencyState.latestVersion.isDefined
+    @isInternalLibrary(libraryDependency: Dependency) = @{
+        libraryDependency.latestVersion.isDefined
     }
 
-    @isInternalSbtPlugin(sbtPluginsDependenciesState: SbtPluginsDependenciesState) = @{
-        !sbtPluginsDependenciesState.isExternal
+    @isInternalSbtPlugin(sbtPluginsDependencies: Dependency) = @{
+        !sbtPluginsDependencies.isExternal
     }
 
     @getRAGClass(currentVersion: Version, mayBeLatestVersion: Option[Version]) = @{
@@ -134,9 +133,9 @@
 
     @dependencyDataAvailable() = @{
         mayBeDependencies.isDefined &&
-        (mayBeDependencies.get.libraryDependenciesState.nonEmpty ||
-            mayBeDependencies.get.sbtPluginsDependenciesState.nonEmpty ||
-            mayBeDependencies.get.otherDependenciesState.nonEmpty)
+        (mayBeDependencies.get.libraryDependencies.nonEmpty ||
+            mayBeDependencies.get.sbtPluginsDependencies.nonEmpty ||
+            mayBeDependencies.get.otherDependencies.nonEmpty)
     }
 </div>
 

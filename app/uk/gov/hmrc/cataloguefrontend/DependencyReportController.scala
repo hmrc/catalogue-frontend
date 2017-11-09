@@ -65,23 +65,23 @@ class DependencyReportController @Inject()(http : HttpClient,
 
     val repoName = dependencies.repositoryName
 
-    val libraryDependencyReportLines = dependencies.libraryDependenciesState.map { d =>
+    val libraryDependencyReportLines = dependencies.libraryDependencies.map { d =>
       DependencyReport(repository = repoName,
         team = findTeamNames(repoName, allTeams).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
-        dependencyName = d.libraryName,
+        dependencyName = d.name,
         dependencyType = "library",
         currentVersion = d.currentVersion.toString,
         latestVersion = d.latestVersion.getOrElse("Unknown").toString,
         colour = getColour(d.currentVersion, d.latestVersion))
     }
 
-    val sbtPluginDependencyReportLines = dependencies.sbtPluginsDependenciesState.map { d =>
+    val sbtPluginDependencyReportLines = dependencies.sbtPluginsDependencies.map { d =>
 
       DependencyReport(repository = repoName,
         team = findTeamNames(repoName, allTeams).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
-        dependencyName = d.sbtPluginName,
+        dependencyName = d.name,
         dependencyType = "plugin",
         currentVersion = d.currentVersion.toString,
         latestVersion = d.latestVersion.getOrElse("Unknown").toString,
