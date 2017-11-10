@@ -285,9 +285,14 @@ section {
   clear: left;
 }
 
-.glyphicon {
+.small-glyphicon {
   font-size: 8px;
   vertical-align: text-top;
+}
+
+.medium-glyphicon {
+  font-size: 15px;
+  //vertical-align: text-top;
 }
 
 .glyphicon-new-window {

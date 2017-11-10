@@ -1,0 +1,52 @@
+@*
+* Copyright 2016 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+
+
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependency
+@import uk.gov.hmrc.cataloguefrontend.connector.model._
+@(dependencies: Seq[Dependency])
+
+
+@for(dependency <- dependencies)  {
+        <li>
+            <div class="@{getColourClass(dependency)}" id="@{dependency.name}">
+                <span class="col-xs-4 left-aligned">
+                    <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}"> </span> @dependency.name
+                </span>
+                <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion</span>
+                <span class="col-xs-1 glyphicon glyphicon-arrow-right small-glyphicon"> </span>
+                <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
+            </div>
+        </li>
+}
+
+@getColourClass(dependency: Dependency) = @{
+    dependency.getVersionState.fold("grey") {
+        case UpToDate => "green"
+        case MinorVersionOutOfDate => "amber"
+        case MajorVersionOutOfDate => "red"
+        case InvalidVersionState => "black"
+    }
+}
+
+@getIconClass(dependency: Dependency) = @{
+    " medium-glyphicon glyphicon " + dependency.getVersionState.fold("glyphicon-question-sign") {
+        case UpToDate => "glyphicon-ok-circle"
+        case MinorVersionOutOfDate => "glyphicon-alert"
+        case MajorVersionOutOfDate => "glyphicon-ban-circle"
+        case InvalidVersionState => "glyphicon-question-sign"
+    }
+}

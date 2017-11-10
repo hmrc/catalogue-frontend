@@ -11938,11 +11938,12 @@ section span.other-teams-message {
 .left-aligned {
   clear: left; }
 
-.glyphicon {
+.small-glyphicon {
   font-size: 8px;
   vertical-align: text-top; }
 
+.medium-glyphicon {
+  font-size: 15px; }
+
 .glyphicon-new-window {
   padding-left: 2px; }
-
-/*# sourceMappingURL=catalogue-frontend.css.map */
