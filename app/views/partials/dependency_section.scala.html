@@ -24,7 +24,7 @@
         <li>
             <div class="@{getColourClass(dependency)}" id="@{dependency.name}">
                 <span class="col-xs-4 left-aligned">
-                    <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}"> </span> @dependency.name
+                    <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}" title="@{getAltText(dependency)}"> </span> @dependency.name
                 </span>
                 <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion</span>
                 <span class="col-xs-1 glyphicon glyphicon-arrow-right small-glyphicon"> </span>
@@ -48,5 +48,14 @@
         case MinorVersionOutOfDate => "glyphicon-alert"
         case MajorVersionOutOfDate => "glyphicon-ban-circle"
         case InvalidVersionState => "glyphicon-question-sign"
+    }
+}
+
+@getAltText(dependency: Dependency) = @{
+    dependency.getVersionState.fold("not found") {
+        case UpToDate => "up to date"
+        case MinorVersionOutOfDate => "minor version behind"
+        case MajorVersionOutOfDate => "major version behind"
+        case InvalidVersionState => "invalid version difference"
     }
 }
