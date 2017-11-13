@@ -154,7 +154,6 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
   }
 
   def verifyTitle(document: Document, elementsCssSelector: String, title: String) = {
-    import collection.JavaConverters._
     val elements = document.select(elementsCssSelector)
 
       assert(
