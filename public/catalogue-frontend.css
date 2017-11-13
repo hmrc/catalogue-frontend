@@ -11943,9 +11943,10 @@ section span.other-teams-message {
   vertical-align: text-top; }
 
 .medium-glyphicon {
-  font-size: 15px; }
+  font-size: 13px; }
 
 .glyphicon-new-window {
-  padding-left: 2px; }
+  padding-left: 2px;
+  font-size: 7px; }
 
 /*# sourceMappingURL=catalogue-frontend.css.map */

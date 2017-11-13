@@ -60,10 +60,12 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
       document.select("#lib1-up-to-date").get(0).text() shouldBe "lib1-up-to-date 1.0.0 1.0.0"
       verifyColour(document, "#lib1-up-to-date", "green")
       verifyIcon(document, "#lib1-up-to-date-icon", "glyphicon", "glyphicon-ok-circle")
+      verifyTitle(document, "#lib1-up-to-date-icon", "up to date")
 
       document.select("#plugin1-up-to-date").get(0).text() shouldBe "plugin1-up-to-date 1.0.0 1.0.0"
       verifyColour(document, "#plugin1-up-to-date", "green")
       verifyIcon(document, "#plugin1-up-to-date-icon", "glyphicon", "glyphicon-ok-circle")
+      verifyTitle(document, "#plugin1-up-to-date-icon", "up to date")
     }
 
     "show amber and alert icon if there is a minor version discrepancy" in {
@@ -72,10 +74,12 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
       document.select("#lib2-minor-behind").get(0).text() shouldBe "lib2-minor-behind 2.0.0 2.1.0"
       verifyColour(document, "#lib2-minor-behind", "amber")
       verifyIcon(document, "#lib2-minor-behind-icon", "glyphicon", "glyphicon-alert")
+      verifyTitle(document, "#lib2-minor-behind-icon", "minor version behind")
 
       document.select("#plugin2-minor-behind").get(0).text() shouldBe "plugin2-minor-behind 2.0.0 2.1.0"
       verifyColour(document, "#plugin2-minor-behind", "amber")
       verifyIcon(document, "#plugin2-minor-behind-icon", "glyphicon", "glyphicon-alert")
+      verifyTitle(document, "#plugin2-minor-behind-icon", "minor version behind")
     }
 
     "show amber and alert icon if there is a patch version discrepancy" in {
@@ -84,11 +88,13 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
       document.select("#lib4-patch-behind").get(0).text() shouldBe "lib4-patch-behind 3.0.0 3.0.1"
       verifyColour(document, "#lib4-patch-behind", "amber")
       verifyIcon(document, "#lib4-patch-behind-icon", "glyphicon", "glyphicon-alert")
+      verifyTitle(document, "#lib4-patch-behind-icon", "minor version behind")
 
 
       document.select("#plugin4-patch-behind").get(0).text() shouldBe "plugin4-patch-behind 3.0.0 3.0.1"
       verifyColour(document, "#plugin4-patch-behind", "amber")
       verifyIcon(document, "#plugin4-patch-behind-icon", "glyphicon", "glyphicon-alert")
+      verifyTitle(document, "#plugin4-patch-behind-icon", "minor version behind")
 
     }
 
@@ -98,11 +104,13 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
       document.select("#lib3-major-behind").get(0).text() shouldBe "lib3-major-behind 3.0.0 4.0.0"
       verifyColour(document, "#lib3-major-behind", "red")
       verifyIcon(document, "#lib3-major-behind-icon", "glyphicon", "glyphicon-ban-circle")
+      verifyTitle(document, "#lib3-major-behind-icon", "major version behind")
 
 
       document.select("#plugin3-major-behind").get(0).text() shouldBe "plugin3-major-behind 3.0.0 4.0.0"
       verifyColour(document, "#plugin3-major-behind", "red")
       verifyIcon(document, "#plugin3-major-behind-icon", "glyphicon", "glyphicon-ban-circle")
+      verifyTitle(document, "#plugin3-major-behind-icon", "major version behind")
     }
 
     "show grey and question mark icon if there is no latest version available (not found)" in {
@@ -111,10 +119,12 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
       document.select("#lib5-no-latest-version").get(0).text() shouldBe "lib5-no-latest-version 3.0.0 (not found)"
       verifyColour(document, "#lib5-no-latest-version", "grey")
       verifyIcon(document, "#lib5-no-latest-version-icon", "glyphicon", "glyphicon-question-sign")
+      verifyTitle(document, "#lib5-no-latest-version-icon", "not found")
 
       document.select("#plugin5-no-latest-version").get(0).text() shouldBe "plugin5-no-latest-version 3.0.0 (not found)"
       verifyColour(document, "#plugin5-no-latest-version", "grey")
       verifyIcon(document, "#plugin5-no-latest-version-icon", "glyphicon", "glyphicon-question-sign")
+      verifyTitle(document, "#plugin5-no-latest-version-icon", "not found")
     }
 
     "show black and question mark icon if versions are invalid (eg: current version > latest version) - (this scenario should not happen unless the reloading of the libraries' latest versions has been failing)" in {
@@ -123,11 +133,13 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
       document.select("#lib6-invalid-ahead-current").get(0).text() shouldBe "lib6-invalid-ahead-current 4.0.0 3.0.1"
       verifyColour(document, "#lib6-invalid-ahead-current", "black")
       verifyIcon(document, "#lib6-invalid-ahead-current-icon", "glyphicon", "glyphicon-question-sign")
+      verifyTitle(document, "#lib6-invalid-ahead-current-icon", "invalid version difference")
 
 
       document.select("#plugin6-invalid-ahead-current").get(0).text() shouldBe "plugin6-invalid-ahead-current 4.0.0 3.0.1"
       verifyColour(document, "#plugin6-invalid-ahead-current", "black")
       verifyIcon(document, "#lib6-invalid-ahead-current-icon", "glyphicon", "glyphicon-question-sign")
+      verifyTitle(document, "#lib6-invalid-ahead-current-icon", "invalid version difference")
 
     }
 
@@ -139,6 +151,17 @@ class DependenciesSpec extends WordSpec with Matchers with OneAppPerTest {
 
   def verifyIcon(document: Document, elementsCssSelector: String, iconCssClasses: String*) = {
     verifyCss(document, elementsCssSelector, iconCssClasses: _*)
+  }
+
+  def verifyTitle(document: Document, elementsCssSelector: String, title: String) = {
+    import collection.JavaConverters._
+    val elements = document.select(elementsCssSelector)
+
+      assert(
+        elements.attr("title").contains(title),
+        s"element title ($title) is not found : [${elements.text()}]"
+      )
+
   }
 
   private def verifyCss(document: Document, elementsCssSelector: String, iconCssClasses: String*) = {
