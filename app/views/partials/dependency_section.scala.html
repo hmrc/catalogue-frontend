@@ -24,7 +24,12 @@
         <li>
             <div class="@{getColourClass(dependency)}" id="@{dependency.name}">
                 <span class="col-xs-4 left-aligned">
-                    <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}" title="@{getAltText(dependency)}"> </span> @dependency.name
+                    <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}" title="@{getAltText(dependency)}"> </span>
+                    @if(dependency.latestVersion.isDefined) {
+                        <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}">@dependency.name</a>
+                    } else {
+                        @dependency.name
+                    }
                 </span>
                 <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion</span>
                 <span class="col-xs-1 glyphicon glyphicon-arrow-right small-glyphicon"> </span>
@@ -59,3 +64,5 @@
         case InvalidVersionState => "invalid version difference"
     }
 }
+
+
