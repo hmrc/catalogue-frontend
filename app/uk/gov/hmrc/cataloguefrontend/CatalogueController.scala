@@ -160,7 +160,7 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
     val digitalServiceDetails: EitherT[Future, TeamsAndRepositoriesError, DigitalServiceDetails] = for {
       digitalService <- EitherT(eventualDigitalServiceInfoF)
       teamMembers <- EitherT(errorOrTeamMembersLookupF)
-    } yield DigitalServiceDetails(digitalServiceName, teamMembers, getRepos(digitalService))
+    } yield DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService))
 
     digitalServiceDetails.value.map(d =>
       Ok(digital_service_info(digitalServiceName, d, readModelService.getDigitalServiceOwner(digitalServiceName).map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))))
@@ -223,18 +223,18 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
       teamDetails <- eventualErrorOrTeamDetails
       teamIndicators <- eventualMaybeDeploymentIndicators
     } yield (typeRepos, teamMembers, teamDetails, teamIndicators) match {
-      case (Some(s), _, _, _) =>
+      case (Some(team), _, _, _) =>
         implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
 
         Ok(team_info(
-          teamName,
-          repos = s.repos.getOrElse(Map()),
-          activityDates = TeamActivityDates(s.firstActiveDate, s.lastActiveDate, s.firstServiceCreationDate),
-          errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
+          team.name,
+          repos = team.repos.getOrElse(Map()),
+          activityDates = TeamActivityDates(team.firstActiveDate, team.lastActiveDate, team.firstServiceCreationDate),
+          errorOrTeamMembers = convertToDisplayableTeamMembers(team.name, teamMembers),
           teamDetails,
-          TeamChartData.deploymentThroughput(teamName, teamIndicators.map(_.throughput)),
-          TeamChartData.deploymentStability(teamName, teamIndicators.map(_.stability)),
-          umpMyTeamsPageUrl(teamName)
+          TeamChartData.deploymentThroughput(team.name, teamIndicators.map(_.throughput)),
+          TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
+          umpMyTeamsPageUrl(team.name)
         )
         )
       case _ => NotFound
@@ -289,8 +289,8 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
         service_info(
           repositoryDetails.copy(environments = maybeDeployedEnvironments),
           mayBeDependencies,
-          ServiceChartData.deploymentThroughput(name, maybeDataPoints.map(_.throughput)),
-          ServiceChartData.deploymentStability(name, maybeDataPoints.map(_.stability)),
+          ServiceChartData.deploymentThroughput(repositoryDetails.name, maybeDataPoints.map(_.throughput)),
+          ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
           repositoryDetails.createdAt,
           deploymentsByEnvironmentName
         ))
@@ -336,7 +336,7 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
           repository_info(
             s,
             mayBeDependencies,
-            ServiceChartData.jobExecutionTime(name, maybeDataPoints)))
+            ServiceChartData.jobExecutionTime(s.name, maybeDataPoints)))
       case _ => NotFound
     }
   }
