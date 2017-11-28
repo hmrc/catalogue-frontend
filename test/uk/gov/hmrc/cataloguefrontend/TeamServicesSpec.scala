@@ -118,7 +118,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
         """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
-
       )))
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
@@ -134,7 +133,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       val teamName = "CATO"
 
       serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
-        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
+        """{"name":"CATO", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
       )))
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/large-user-management-response.json")
