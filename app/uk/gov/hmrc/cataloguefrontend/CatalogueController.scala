@@ -20,17 +20,15 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.{LocalDateTime, ZoneOffset}
 import javax.inject.{Inject, Singleton}
 
-import cats.data.EitherT
 import play.api
 import play.api.Configuration
-import play.api.i18n.{I18nSupport, Messages, MessagesApi}
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
-import play.api.libs.json.{JsValue, Json}
+import play.api.i18n.{I18nSupport, MessagesApi}
+import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
