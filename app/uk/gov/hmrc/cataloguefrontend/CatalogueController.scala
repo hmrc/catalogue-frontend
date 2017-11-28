@@ -136,35 +136,18 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
 
 
   def digitalService(digitalServiceName: String) = Action.async { implicit request =>
-    import cats.instances.future._
 
-    type TeamsAndRepoType[A] = Future[Either[TeamsAndRepositoriesError, A]]
-
-    val eventualDigitalServiceInfoF: TeamsAndRepoType[DigitalService] =
-      teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName)
-
-
-    val errorOrTeamNames: TeamsAndRepoType[Seq[String]] =
-      eventualDigitalServiceInfoF.map(_.right.map(_.repositories.flatMap(_.teamNames)).right.map(_.distinct))
-
-    val errorOrTeamMembersLookupF: Future[Either[TeamsAndRepositoriesError, Map[String, Either[UMPError, Seq[DisplayableTeamMember]]]]] = errorOrTeamNames.flatMap {
-      case Right(teamNames) =>
+    teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName) flatMap {
+      case Some(digitalService) =>
+        val teamNames = digitalService.repositories.flatMap(_.teamNames).map(_.distinct)
         userManagementConnector
           .getTeamMembersForTeams(teamNames)
           .map(convertToDisplayableTeamMembers)
-          .map(Right(_))
-      case Left(connectorError) =>
-        Future.successful(Left(connectorError))
+          .map(teamMembers =>
+            Ok(digital_service_info(DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)), readModelService.getDigitalServiceOwner(digitalServiceName).map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))))
+          )
+      case None => Future(NotFound)
     }
-
-    val digitalServiceDetails: EitherT[Future, TeamsAndRepositoriesError, DigitalServiceDetails] = for {
-      digitalService <- EitherT(eventualDigitalServiceInfoF)
-      teamMembers <- EitherT(errorOrTeamMembersLookupF)
-    } yield DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService))
-
-    digitalServiceDetails.value.map(d =>
-      Ok(digital_service_info(digitalServiceName, d, readModelService.getDigitalServiceOwner(digitalServiceName).map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))))
-    )
   }
 
   def allUsers = Action { implicit request =>

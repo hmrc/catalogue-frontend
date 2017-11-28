@@ -59,7 +59,7 @@ class DependencyReportController @Inject()(http : HttpClient,
   implicit val drFormat = Json.format[DependencyReport]
 
 
-  private def getDependencies(digitalServices: Seq[Either[TeamsAndRepositoriesError, DigitalService]],
+  private def getDependencies(digitalServices: Seq[DigitalService],
                               allTeams: Seq[Team],
                               dependencies: Dependencies) = {
 
@@ -114,11 +114,10 @@ class DependencyReportController @Inject()(http : HttpClient,
   private def findTeamNames(repositoryName: String, teams: Seq[Team]): Seq[String] =
     teams.filter(_.repos.isDefined).filter(team => team.repos.get.values.flatten.toSeq.contains(repositoryName)).map(_.name)
 
-  private def findDigitalServiceName(repositoryName: String, errorsOrDigitalServices: Seq[Either[TeamsAndRepositoriesError, DigitalService]]): String =
+  private def findDigitalServiceName(repositoryName: String, errorsOrDigitalServices: Seq[DigitalService]): String =
     errorsOrDigitalServices
-      .filter(errorOrDigitalService => errorOrDigitalService.isRight)
-      .find(_.right.get.repositories.exists(_.name == repositoryName))
-      .map(_.right.get.name).getOrElse("Unknown")
+      .find(_.repositories.exists(_.name == repositoryName))
+      .map(_.name).getOrElse("Unknown")
 
   private def getColour(currentVersion: Version, mayBeLatestVersion: Option[Version]): String = {
     mayBeLatestVersion.fold("grey") { latestVersion =>
@@ -136,10 +135,10 @@ class DependencyReportController @Inject()(http : HttpClient,
     type RepoName = String
 
     val allTeamsF = teamsAndRepositoriesConnector.teamsWithRepositories()
-    val digitalServicesF = teamsAndRepositoriesConnector.allDigitalServices.flatMap { digitalServices =>
+    val digitalServicesF: Future[Seq[DigitalService]] = teamsAndRepositoriesConnector.allDigitalServices.flatMap { digitalServices =>
       Future.sequence {
         digitalServices.map(teamsAndRepositoriesConnector.digitalServiceInfo)
-      }.map(errorsOrDigitalServices => errorsOrDigitalServices.map(errorOrDigitalService => errorOrDigitalService.right.map(identity)))
+      }.map(_.flatten)
     }
 
     val eventualDependencyReports = for {

@@ -14,19 +14,17 @@
 * limitations under the License.
 *@
 @import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
-@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError, TeamsAndRepositoriesError}
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{NoData, UMPError}
 @import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, RepoType, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
-@import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
-@(digitalServiceName: String, timestampedRepos: Either[TeamsAndRepositoriesError, DigitalServiceDetails], digitalServiceOwner: Option[DisplayableTeamMember] )(implicit messages: Messages)
+@(timestampedRepos: DigitalServiceDetails, digitalServiceOwner: Option[DisplayableTeamMember] )(implicit messages: Messages)
 
 
-@standard_layout(digitalServiceName, "digital-services") {
+@standard_layout(timestampedRepos.digitalServiceName, "digital-services") {
     <header>
-        <h1>Digital Service: @digitalServiceName</h1>
+        <h1>Digital Service: @{timestampedRepos.digitalServiceName}</h1>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
@@ -78,60 +76,50 @@
         </div>
     </div>
 
-    @if(timestampedRepos.isRight) {
-        @for(timestampedDigitalService <- timestampedRepos.right.toOption) {
+    <div class="row">
+        <div class="col-md-12">
+            <div class="board">
+                <h3 class="board__heading">Contributing Teams</h3>
+                @for((teamName, errorOrMembers) <- timestampedRepos.teamMembersLookUp) {
+                   <h4 class="sub__heading"><a href="/teams/@teamName">@teamName</a></h4>
 
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="board">
-                        <h3 class="board__heading">Contributing Teams</h3>
-                        @for((teamName, errorOrMembers) <- timestampedDigitalService.teamMembersLookUp) {
-                           <h4 class="sub__heading"><a href="/teams/@teamName">@teamName</a></h4>
+                   <div class="board__body">
+                       <div>
+                           <ul class="list list--minimal" id="team_members">
+                           @if(errorOrMembers.isRight) {
+                               @for(teamMember <- errorOrMembers.right.get) {
+                                   <li class="col-xs-3">
+                                       <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a>
+                                   </li>
+                               }
 
-                           <div class="board__body">
-                               <div>
-                                   <ul class="list list--minimal" id="team_members">
-                                   @if(errorOrMembers.isRight) {
-                                       @for(teamMember <- errorOrMembers.right.get) {
-                                           <li class="col-xs-3">
-                                               <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a>
-                                           </li>
-                                       }
+                           } else {
+                               <li class="list list--minimal" id="ump-error-@{teamName}">
+                               @showUmpError(errorOrMembers.left.get, teamName)
+                               </li>
+                           }
+                           </ul>
 
-                                   } else {
-                                       <li class="list list--minimal" id="ump-error-@{teamName}">
-                                       @showUmpError(errorOrMembers.left.get, teamName)
-                                       </li>
-                                   }
-                                   </ul>
+                       </div>
 
-                               </div>
-
-                           </div>
-                        }
-                    </div>
-                </div>
+                   </div>
+                }
             </div>
-
-            <section class="section-wrapper">
-                <div class="row">
-
-                    @showRepositories(timestampedDigitalService.repos, RepoType.Service, "Services", "service", "service")
-                    @showRepositories(timestampedDigitalService.repos, RepoType.Library, "Libraries", "library", "library")
-                    @showRepositories(timestampedDigitalService.repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
-                    @showRepositories(timestampedDigitalService.repos, RepoType.Other, "Repositories", "other", "repositories")
-
-                </div>
-            </section>
-
-        }
-
-
-    } else {
-        <div id="teams-and-repositories-error" class="row">
-            @showTeamsAndRepositoriesError(timestampedRepos.left.get, digitalServiceName)
         </div>
-    }
+    </div>
+
+    <section class="section-wrapper">
+        <div class="row">
+
+            @showRepositories(timestampedRepos.repos, RepoType.Service, "Services", "service", "service")
+            @showRepositories(timestampedRepos.repos, RepoType.Library, "Libraries", "library", "library")
+            @showRepositories(timestampedRepos.repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
+            @showRepositories(timestampedRepos.repos, RepoType.Other, "Repositories", "other", "repositories")
+
+        </div>
+    </section>
+
+
 
 
     <div id="snackbar" class="snackbar"></div>
@@ -177,7 +165,7 @@
         function saveServiceOwner() {
             var digitalServiceOwnerName = $('#service_owner_edit_input').val();
             var data = {
-                service: "@digitalServiceName",
+                service: "@{timestampedRepos.digitalServiceName}",
                 displayName: digitalServiceOwnerName
             };
 
@@ -241,17 +229,6 @@
     }
 }
 }
-@showTeamsAndRepositoriesError(error: TeamsAndRepositoriesError, digitalServiceName: String) = {
-@error match {
-    case HTTPError(errorCode) => {
-        An HTTP error occurred while retrieving digital service (@digitalServiceName): @errorCode
-    }
-    case ConnectionError(e) => {
-        A connection error to the teams-and-repositories microservice occurred while retrieving digital service (@digitalServiceName)
-    }
-}
-}
-
 
 
 @showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {

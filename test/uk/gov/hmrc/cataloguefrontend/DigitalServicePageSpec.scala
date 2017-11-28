@@ -25,20 +25,19 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
-import play.api.Configuration
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.HTTPError
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.collection.JavaConversions._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.Source
 
@@ -142,7 +141,16 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
 
       val digitalServiceName = "digital-service-123"
-      val response = await(WS.url(s"http://localhost:$port/digital-service/${digitalServiceName}").get)
+
+      serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
+        s"""{
+           |   "name":"$digitalServiceName",
+           |   "lastUpdatedAt":12345,
+           |   "repositories":[]
+           | }""".stripMargin
+
+      )))
+      val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       val document = asDocument(response.body)
 
@@ -154,15 +162,16 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
     "show service owner" in {
 
-
-
+      val digitalServiceName = "digital-service-123"
       val mockedConnector = mock[TeamsAndRepositoriesConnector]
-      when(mockedConnector.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Left(HTTPError(999))))
+      when(mockedConnector.digitalServiceInfo(any())(any())).thenReturn(Future(Some(DigitalService(digitalServiceName, 0L, Seq.empty))))
 
+      val userManagementConnector = mock[UserManagementConnector]
+      when(userManagementConnector.getTeamMembersForTeams(any())(any())).thenReturn(Future(Map.empty[String, Either[UMPError, Seq[TeamMember]]]))
 
 
       val catalogueController =         new CatalogueController(
-        mock[UserManagementConnector],
+        userManagementConnector,
         mockedConnector,
         mock[ServiceDependenciesConnector],
         mock[IndicatorsConnector],
@@ -173,7 +182,6 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
         app.configuration,
         mock[MessagesApi])
 
-      val digitalServiceName = "digital-service-123"
 
       val responseF = catalogueController.digitalService(digitalServiceName)(FakeRequest())
 
@@ -233,42 +241,6 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
     }
 
-    "show the right error message when unable to connect to teams-and-repositories" in {
-
-      val digitalServiceName = "digital-service-123"
-
-      val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
-
-      val catalogueController =         new CatalogueController(
-        mock[UserManagementConnector],
-        teamsAndRepositoriesConnectorMock,
-        mock[ServiceDependenciesConnector],
-        mock[IndicatorsConnector],
-        mock[DeploymentsService],
-        mock[EventService],
-        mockedModelService,
-        mock[play.api.Environment],
-        app.configuration,
-        mock[MessagesApi])
-
-      val exception = new RuntimeException("Boooom!")
-
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(
-        Future.successful(
-          Left(TeamsAndRepositoriesConnector.ConnectionError(exception))
-        )
-      )
-
-      val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
-
-      response.header.status shouldBe 200
-
-      import play.api.test.Helpers._
-      val document: Document = asDocument(contentAsString(response))
-
-      document.select("#teams-and-repositories-error").text() should === (s"""A connection error to the teams-and-repositories microservice occurred while retrieving digital service ($digitalServiceName)""")
-    }
-
     "show the right error message when unable to connect to ump" in {
 
       val digitalServiceName = "digital-service-123"
@@ -291,7 +263,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val teamName = "Team1"
 
       val exception = new RuntimeException("Boooom!")
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(DigitalService(digitalServiceName, 1, Nil))))
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
           Map(teamName -> Left(UserManagementConnector.ConnectionError(exception)))
@@ -333,7 +305,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val exception = new RuntimeException("Boooom!")
 
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(DigitalService(digitalServiceName, 1, Nil))))
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
           Map(teamName -> Left(UserManagementConnector.NoData("https://some-link-to-rectify")))
@@ -375,7 +347,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val exception = new RuntimeException("Boooom!")
 
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Right(DigitalService(digitalServiceName, 1, Nil))))
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
           Map(teamName -> Left(UserManagementConnector.HTTPError(404)))
