@@ -12,7 +12,6 @@ private object AppDependencies {
   import play.sbt.PlayImport._
 
   private val urlBuilderVersion = "1.1.0"
-  private val catsVersion = "0.9.0"
   private val playReactivemongoVersion = "6.1.0"
 
   private val hmrcTestVersion = "2.3.0"
@@ -24,7 +23,6 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "play-ui" % "7.8.0",
     "uk.gov.hmrc" %% "url-builder" % urlBuilderVersion,
     "uk.gov.hmrc" %% "play-reactivemongo" % playReactivemongoVersion,
-    "org.typelevel" %% "cats-core" % catsVersion,
     "org.apache.httpcomponents" % "httpcore" % "4.3.2",
     "org.apache.httpcomponents" % "httpclient" % "4.3.5",
     "com.github.tototoshi" %% "scala-csv" % "1.3.4" ,

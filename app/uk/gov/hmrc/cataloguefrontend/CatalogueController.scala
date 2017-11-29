@@ -20,17 +20,15 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.{LocalDateTime, ZoneOffset}
 import javax.inject.{Inject, Singleton}
 
-import cats.data.EitherT
 import play.api
 import play.api.Configuration
-import play.api.i18n.{I18nSupport, Messages, MessagesApi}
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
-import play.api.libs.json.{JsValue, Json}
+import play.api.i18n.{I18nSupport, MessagesApi}
+import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
@@ -47,11 +45,10 @@ case class DigitalServiceDetails(digitalServiceName: String,
                                  repos: Map[String, Seq[String]])
 
 
-
 @Singleton
 class CatalogueController @Inject()(userManagementConnector: UserManagementConnector,
                                     teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-                                    serviceDependencyConnector : ServiceDependenciesConnector,
+                                    serviceDependencyConnector: ServiceDependenciesConnector,
                                     indicatorsConnector: IndicatorsConnector,
                                     deploymentsService: DeploymentsService,
                                     eventService: EventService,
@@ -88,7 +85,7 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
 
   def saveServiceOwner() = Action.async { implicit request =>
 
-    request.body.asJson.map{ payload =>
+    request.body.asJson.map { payload =>
       val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
       val serviceOwnerDisplayName: String = serviceOwnerSaveEventData.displayName
       val maybeTeamMember: Option[TeamMember] = readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
@@ -136,35 +133,21 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
 
 
   def digitalService(digitalServiceName: String) = Action.async { implicit request =>
-    import cats.instances.future._
 
-    type TeamsAndRepoType[A] = Future[Either[TeamsAndRepositoriesError, A]]
-
-    val eventualDigitalServiceInfoF: TeamsAndRepoType[DigitalService] =
-      teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName)
-
-
-    val errorOrTeamNames: TeamsAndRepoType[Seq[String]] =
-      eventualDigitalServiceInfoF.map(_.right.map(_.repositories.flatMap(_.teamNames)).right.map(_.distinct))
-
-    val errorOrTeamMembersLookupF: Future[Either[TeamsAndRepositoriesError, Map[String, Either[UMPError, Seq[DisplayableTeamMember]]]]] = errorOrTeamNames.flatMap {
-      case Right(teamNames) =>
+    teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName) flatMap {
+      case Some(digitalService) =>
+        val teamNames = digitalService.repositories.flatMap(_.teamNames).map(_.distinct)
         userManagementConnector
           .getTeamMembersForTeams(teamNames)
           .map(convertToDisplayableTeamMembers)
-          .map(Right(_))
-      case Left(connectorError) =>
-        Future.successful(Left(connectorError))
+          .map(teamMembers =>
+            Ok(digital_service_info(
+              DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)), readModelService.getDigitalServiceOwner(digitalServiceName)
+                .map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))
+            ))
+          )
+      case None => Future.successful(NotFound)
     }
-
-    val digitalServiceDetails: EitherT[Future, TeamsAndRepositoriesError, DigitalServiceDetails] = for {
-      digitalService <- EitherT(eventualDigitalServiceInfoF)
-      teamMembers <- EitherT(errorOrTeamMembersLookupF)
-    } yield DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService))
-
-    digitalServiceDetails.value.map(d =>
-      Ok(digital_service_info(digitalServiceName, d, readModelService.getDigitalServiceOwner(digitalServiceName).map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))))
-    )
   }
 
   def allUsers = Action { implicit request =>
@@ -285,15 +268,15 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
               .filter(_.environmentMapping.name == deployment.environmentMapping.name))
             .toMap
 
-      Ok(
-        service_info(
-          repositoryDetails.copy(environments = maybeDeployedEnvironments),
-          mayBeDependencies,
-          ServiceChartData.deploymentThroughput(repositoryDetails.name, maybeDataPoints.map(_.throughput)),
-          ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
-          repositoryDetails.createdAt,
-          deploymentsByEnvironmentName
-        ))
+        Ok(
+          service_info(
+            repositoryDetails.copy(environments = maybeDeployedEnvironments),
+            mayBeDependencies,
+            ServiceChartData.deploymentThroughput(repositoryDetails.name, maybeDataPoints.map(_.throughput)),
+            ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
+            repositoryDetails.createdAt,
+            deploymentsByEnvironmentName
+          ))
       case _ => NotFound
     }
   }

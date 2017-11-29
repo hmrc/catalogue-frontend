@@ -135,36 +135,12 @@ class TeamsAndRepositoriesConnector @Inject()(http : HttpClient, override val ru
     }
   }
 
-  def teamsWithRepositories()(implicit hc: HeaderCarrier): Future[Seq[Team]] = {
-    val url = teamsAndServicesBaseUrl + s"/api/teams_with_repositories"
+  def teamsWithRepositories()(implicit hc: HeaderCarrier): Future[Seq[Team]] =
+    http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams_with_repositories")
 
-    http.GET[HttpResponse](url)
-      .map { response =>
-        response.status match {
-          case 404 => Nil
-          case 200 => response.json.as[Seq[Team]]
-        }
-      }.recover {
-      case ex =>
-        Logger.error(s"An error occurred getting teamsWithRepositories when connecting to $url: ${ex.getMessage}", ex)
-        Seq.empty[Team]
-    }
-  }
-
-  def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Either[TeamsAndRepositoriesError, DigitalService]] = {
+  def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[DigitalService]] = {
     val url = teamsAndServicesBaseUrl + s"/api/digital-services/${URLEncoder.encode(digitalServiceName, "UTF-8")}"
-
-    http.GET[HttpResponse](url)
-      .map { response =>
-        response.status match {
-          case 200 => Right(toJson[DigitalService](response))
-          case statusCode => Left(HTTPError(statusCode))
-        }
-      }.recover {
-      case ex =>
-        Logger.error(s"An error occurred getting digitalServiceInfo when connecting to $url: ${ex.getMessage}", ex)
-        Left(ConnectionError(ex))
-    }
+    http.GET[Option[DigitalService]](url)
   }
 
   def allRepositories(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =

@@ -43,14 +43,15 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures with OneServerPerSuite with WireMockEndpoints with TypeCheckedTripleEquals with OptionValues with EitherValues with MockitoSugar {
 
   import uk.gov.hmrc.cataloguefrontend.JsonData._
+
   implicit val defaultPatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(
-    "microservice.services.teams-and-services.host" -> host,
-    "microservice.services.teams-and-services.port" -> endpointPort,
-    "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
-  ).build()
+      "microservice.services.teams-and-services.host" -> host,
+      "microservice.services.teams-and-services.port" -> endpointPort,
+      "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
+    ).build()
 
   val teamsAndRepositoriesConnector = app.injector.instanceOf[TeamsAndRepositoriesConnector]
 
@@ -100,7 +101,7 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
             Link("jenkins", "Jenkins", "https://deploy-dev.co.uk/job/deploy-microservice"),
             Link("grafana", "Grafana", "https://grafana-dev.co.uk/#/dashboard")
           )),
-                Environment(
+        Environment(
           "QA",
           Seq(
             Link("jenkins", "Jenkins", "https://deploy-qa.co.uk/job/deploy-microservice"),
@@ -151,37 +152,12 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
         teamsAndRepositoriesConnector
           .digitalServiceInfo("service-1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
-          .right.value
+          .get
 
       responseData.name shouldBe "service-1"
 
       responseData.repositories.size should ===(3)
     }
-
-    "return a http error with the status code returned" in {
-      serviceEndpoint(GET, "/api/digital-services/non-existing-service", willRespondWith = (300, None))
-
-      val responseData =
-        teamsAndRepositoriesConnector
-          .digitalServiceInfo("non-existing-service")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-          .futureValue
-
-      responseData.left.value shouldBe HTTPError(300)
-    }
-
-    "return a connection error if the connector fails to connect" in {
-      val mockedHttpClient = mock[HttpClient]
-      val exception = new RuntimeException("boom!")
-      Mockito.when(mockedHttpClient.GET(any())(any(), any(), any())).thenReturn(Future.failed(exception))
-
-      val responseData =
-        teamsAndRepositoriesWithMockedHttp(mockedHttpClient)
-          .digitalServiceInfo("non-existing-service")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-          .futureValue
-
-      responseData.left.value shouldBe ConnectionError(exception)
-    }
-
   }
 
   "allDigitalServices" should {
@@ -220,7 +196,6 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
         )
     }
   }
-
 
 
   def teamsAndRepositoriesWithMockedHttp(httpClient: HttpClient) = new TeamsAndRepositoriesConnector(httpClient, Configuration(), mock[api.Environment]) {

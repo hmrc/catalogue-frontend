@@ -77,11 +77,11 @@ class DependencyReportControllerSpec extends UnitSpec with BeforeAndAfterEach wi
 
       
       when(mockedTeamsAndRepositoriesConnector.digitalServiceInfo(eqTo(digitalService1))(any()))
-        .thenReturn(Future.successful(Right(DigitalService(digitalService1, 1,
+        .thenReturn(Future.successful(Some(DigitalService(digitalService1, 1,
           Seq(digitalServiceRepository("repo-1"))))))
 
       when(mockedTeamsAndRepositoriesConnector.digitalServiceInfo(eqTo(digitalService2))(any()))
-        .thenReturn(Future.successful(Right(DigitalService(digitalService2, 1,
+        .thenReturn(Future.successful(Some(DigitalService(digitalService2, 1,
           Seq(digitalServiceRepository("repo-2"))))))
     }
 
