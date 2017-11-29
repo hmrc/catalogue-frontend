@@ -45,11 +45,10 @@ case class DigitalServiceDetails(digitalServiceName: String,
                                  repos: Map[String, Seq[String]])
 
 
-
 @Singleton
 class CatalogueController @Inject()(userManagementConnector: UserManagementConnector,
                                     teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-                                    serviceDependencyConnector : ServiceDependenciesConnector,
+                                    serviceDependencyConnector: ServiceDependenciesConnector,
                                     indicatorsConnector: IndicatorsConnector,
                                     deploymentsService: DeploymentsService,
                                     eventService: EventService,
@@ -86,7 +85,7 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
 
   def saveServiceOwner() = Action.async { implicit request =>
 
-    request.body.asJson.map{ payload =>
+    request.body.asJson.map { payload =>
       val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
       val serviceOwnerDisplayName: String = serviceOwnerSaveEventData.displayName
       val maybeTeamMember: Option[TeamMember] = readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
@@ -142,9 +141,12 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
           .getTeamMembersForTeams(teamNames)
           .map(convertToDisplayableTeamMembers)
           .map(teamMembers =>
-            Ok(digital_service_info(DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)), readModelService.getDigitalServiceOwner(digitalServiceName).map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))))
+            Ok(digital_service_info(
+              DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)), readModelService.getDigitalServiceOwner(digitalServiceName)
+                .map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))
+            ))
           )
-      case None => Future(NotFound)
+      case None => Future.successful(NotFound)
     }
   }
 
@@ -266,15 +268,15 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
               .filter(_.environmentMapping.name == deployment.environmentMapping.name))
             .toMap
 
-      Ok(
-        service_info(
-          repositoryDetails.copy(environments = maybeDeployedEnvironments),
-          mayBeDependencies,
-          ServiceChartData.deploymentThroughput(repositoryDetails.name, maybeDataPoints.map(_.throughput)),
-          ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
-          repositoryDetails.createdAt,
-          deploymentsByEnvironmentName
-        ))
+        Ok(
+          service_info(
+            repositoryDetails.copy(environments = maybeDeployedEnvironments),
+            mayBeDependencies,
+            ServiceChartData.deploymentThroughput(repositoryDetails.name, maybeDataPoints.map(_.throughput)),
+            ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
+            repositoryDetails.createdAt,
+            deploymentsByEnvironmentName
+          ))
       case _ => NotFound
     }
   }
