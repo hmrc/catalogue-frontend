@@ -49,7 +49,7 @@ import scala.concurrent.Future
 @Singleton
 class ServiceDependenciesConnector @Inject()(http : HttpClient, override val runModeConfiguration:Configuration, environment : PlayEnvironment) extends ServicesConfig {
 
-  def servicesDependenciesBaseUrl: String = baseUrl("service-dependencies") + "/api/service-dependencies"
+  def servicesDependenciesBaseUrl: String = baseUrl("service-dependencies") + "/api"
 
   override protected def mode = environment.mode
 

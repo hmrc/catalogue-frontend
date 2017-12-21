@@ -60,7 +60,7 @@ class ServiceDependenciesConnectorSpec
 
     "return a list of dependencies for a repository" in {
 
-      serviceEndpoint(GET, "/api/service-dependencies/dependencies/repo1", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/dependencies/repo1", willRespondWith = (200, Some(
         """{
           |  "repositoryName": "repo1",
           |  "libraryDependencies": [
@@ -196,7 +196,7 @@ class ServiceDependenciesConnectorSpec
 
     "return dependencies for all repositories" in {
 
-      serviceEndpoint(GET, "/api/service-dependencies/dependencies", willRespondWith = (200, Some(
+      serviceEndpoint(GET, "/api/dependencies", willRespondWith = (200, Some(
         """[
           |  {
           |    "repositoryName": "repo1",
