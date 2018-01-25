@@ -40,8 +40,11 @@
 }
 
 @standard_layout(service.name, "services") {
-    <header>
-        <h1 id="service-header">Service: @service.name</h1>
+    <header class="header-with-github-badge">
+        <div>
+            <h1 id="service-header">Service: @service.name</h1>
+            <p>Public</p>
+        </div>
 
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>

@@ -11950,3 +11950,22 @@ section span.other-teams-message {
   font-size: 9px; }
 
 /*# sourceMappingURL=catalogue-frontend.css.map */
+
+.header-with-github-badge > div:first-child {
+    border-bottom: 3px solid #008770;
+    margin-bottom: 3em;
+}
+
+.header-with-github-badge h1 {
+  border-bottom: none;
+  margin-bottom: 0px;
+  display: inline-block;
+}
+
+.header-with-github-badge p {
+  display: inline-block;
+  border: 1px solid #008770;
+  border-radius: 2px;
+  padding: 4px;
+  margin-left: 5px
+}

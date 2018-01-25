@@ -22,8 +22,11 @@
 @(library: RepositoryDetails, mayBeDependencies: Option[Dependencies])
 
 @standard_layout(library.name,"libraries") {
-<header>
-    <h1>Library: @library.name</h1>
+<header class="header-with-github-badge">
+    <div>
+        <h1>Library: @library.name</h1>
+        <p>Internal</p>
+    </div>
 </header>
 
 <div class="alert alert-success" role="alert" id="@library.name">
