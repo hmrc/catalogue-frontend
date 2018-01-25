@@ -127,6 +127,7 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
     s"""
       |    {
       |	     "name": "${repositoryDetails.repositoryName}",
+      |      "isPrivate": false,
       |      "repoType": "${repositoryDetails.repositoryType}",
       |      "teamNames": ["teamA", "teamB"],
       |      "description": "some description",

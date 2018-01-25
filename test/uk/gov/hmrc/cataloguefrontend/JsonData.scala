@@ -82,7 +82,8 @@ object JsonData {
   val serviceDetailsData =
     s"""
        |    {
-       |	     "name": "service-1",
+       |	    "name": "service-1",
+       |      "isPrivate": false,
        |      "description": "some description",
        |      "createdAt": ${createdAt.epochMillis},
        |      "lastActive": ${lastActiveAt.epochMillis},
@@ -168,6 +169,7 @@ object JsonData {
     s"""
        |{
        |  "name": "2fa-prototype",
+       |  "isPrivate": false,
        |  "description": "some description",
        |  "createdAt": ${createdAt.epochMillis},
        |  "lastActive": ${lastActiveAt.epochMillis},
@@ -193,6 +195,7 @@ object JsonData {
     """
       |    {
       |	     "name": "serv",
+      |      "isPrivate": false,
       |      "description": "some description",
       |      "createdAt": 1456326530000,
       |      "lastActive": 1478602555000,

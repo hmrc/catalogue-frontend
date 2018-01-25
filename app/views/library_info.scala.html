@@ -17,15 +17,16 @@
 @import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
-
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+@import views.partials.githubBadgeType
+
 @(library: RepositoryDetails, mayBeDependencies: Option[Dependencies])
 
 @standard_layout(library.name,"libraries") {
 <header class="header-with-github-badge">
     <div>
         <h1>Library: @library.name</h1>
-        <p>Internal</p>
+        <p>@githubBadgeType(library)</p>
     </div>
 </header>
 

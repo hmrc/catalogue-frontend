@@ -62,7 +62,8 @@ case class RepositoryDetails(name: String,
                              githubUrls: Set[Link],
                              ci: Seq[Link],
                              environments: Option[Seq[Environment]],
-                             repoType: RepoType.RepoType)
+                             repoType: RepoType.RepoType,
+                             isPrivate: Boolean)
 
 case class RepositoryDisplayDetails(name:String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime, repoType : RepoType.RepoType)
 object RepositoryDisplayDetails {

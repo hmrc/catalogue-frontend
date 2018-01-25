@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import play.twirl.api.Html
 @import java.time.LocalDateTime
+@import views.partials.githubBadgeType
 
 @(prototype: RepositoryDetails, repositoryCreationDate: LocalDateTime)(implicit messages: Messages)
 
@@ -24,7 +25,7 @@
     <header class="header-with-github-badge">
         <div>
             <h1>Prototype: @prototype.name</h1>
-            <p>Private</p>
+            <p>@githubBadgeType(prototype)</p>
         </div>
         <script typr="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>

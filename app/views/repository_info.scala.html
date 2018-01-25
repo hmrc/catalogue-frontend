@@ -20,13 +20,15 @@
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @import uk.gov.hmrc.cataloguefrontend.connector.JobMetricDataPoint
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+@import views.partials.githubBadgeType
+
 @(repository: RepositoryDetails, mayBeDependencies: Option[Dependencies], jobExecutionTimeChartData: Option[ChartDataRows])(implicit messages: Messages)
 
 @standard_layout(repository.name, "repositories") {
 <header class="header-with-github-badge">
     <div>
         <h1>Repository: @repository.name</h1>
-        <p>Private</p>
+        <p>@githubBadgeType(repository)</p>
     </div>
 
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>

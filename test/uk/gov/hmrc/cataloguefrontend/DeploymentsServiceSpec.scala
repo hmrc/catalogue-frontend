@@ -111,7 +111,7 @@ class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar wi
         Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
-        Future.successful(Some(RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Set(), Seq(), None, RepoType.Service))))
+        Future.successful(Some(RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Set(), Seq(), None, RepoType.Service, false))))
 
       val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
       val deployments = service.getDeployments(serviceName = Some("a-service")).futureValue
@@ -128,7 +128,7 @@ class DeploymentsServiceSpec extends WordSpec with Matchers with MockitoSugar wi
         Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
-        Future.successful(Some(RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Set(), Seq(), None, RepoType.Service)))
+        Future.successful(Some(RepositoryDetails("a-service", "some description", now, now, Seq("a-team", "b-team"), Set(), Seq(), None, RepoType.Service, false)))
       )
 
       val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
