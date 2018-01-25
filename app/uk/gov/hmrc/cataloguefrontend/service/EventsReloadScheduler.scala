@@ -28,24 +28,23 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 @Singleton
-class EventsReloadScheduler @Inject()(appLifecycle: ApplicationLifecycle,
-                                      override val configuration: Configuration,
-                                      environment: Environment,
-                                     updateScheduler: UpdateScheduler) extends AppName {
+class EventsReloadScheduler @Inject()(
+  appLifecycle: ApplicationLifecycle,
+  override val configuration: Configuration,
+  environment: Environment,
+  updateScheduler: UpdateScheduler)
+    extends AppName {
 
-  val eventReloadIntervalKey = "event.reload.interval"
+  val eventReloadIntervalKey    = "event.reload.interval"
   val umpCacheReloadIntervalKey = "ump.cache.reload.interval"
 
   Logger.info(s"Starting : $appName : in mode : ${environment.mode}")
   Logger.debug("[Catalogue-frontend] - Starting... ")
 
-
-
   scheduleEventsReloadSchedule(appLifecycle, configuration)
   scheduleUmpCacheReloadSchedule(appLifecycle, configuration)
 
-  private def scheduleEventsReloadSchedule(appLifecycle: ApplicationLifecycle,
-                                           configuration: Configuration) = {
+  private def scheduleEventsReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration) = {
 
     lazy val maybeReloadInterval = configuration.getMilliseconds(eventReloadIntervalKey).map(_.millisecond)
 

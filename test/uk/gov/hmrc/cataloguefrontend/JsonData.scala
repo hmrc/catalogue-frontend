@@ -69,7 +69,7 @@ object JsonData {
 
   import DateHelper._
 
-  val createdAt = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
+  val createdAt    = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
   val lastActiveAt = LocalDateTime.of(2016, 10, 12, 10, 30, 12)
 
   val repositoriesData =
@@ -189,7 +189,6 @@ object JsonData {
        |  "environments": [ ]
        |}
     """.stripMargin
-
 
   val libraryDetailsData =
     """
@@ -356,7 +355,6 @@ object JsonData {
       |        }
       |    }
       |]""".stripMargin
-
 
   val digitalServiceData =
     """

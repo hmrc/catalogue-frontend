@@ -44,33 +44,41 @@ object RepoType extends Enumeration {
 
 }
 
-
-
 case class Link(name: String, displayName: String, url: String) {
   val id = displayName.toLowerCase.replaceAll(" ", "-")
 }
 
-case class Environment(name: String, services: Seq[Link]){
+case class Environment(name: String, services: Seq[Link]) {
   val id = name.toLowerCase.replaceAll(" ", "-")
 }
 
-case class RepositoryDetails(name: String,
-                             description: String,
-                             createdAt: LocalDateTime,
-                             lastActive: LocalDateTime,
-                             teamNames: Seq[String],
-                             githubUrls: Set[Link],
-                             ci: Seq[Link],
-                             environments: Option[Seq[Environment]],
-                             repoType: RepoType.RepoType,
-                             isPrivate: Boolean)
+case class RepositoryDetails(
+  name: String,
+  description: String,
+  createdAt: LocalDateTime,
+  lastActive: LocalDateTime,
+  teamNames: Seq[String],
+  githubUrls: Set[Link],
+  ci: Seq[Link],
+  environments: Option[Seq[Environment]],
+  repoType: RepoType.RepoType,
+  isPrivate: Boolean)
 
-case class RepositoryDisplayDetails(name:String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime, repoType : RepoType.RepoType)
+case class RepositoryDisplayDetails(
+  name: String,
+  createdAt: LocalDateTime,
+  lastUpdatedAt: LocalDateTime,
+  repoType: RepoType.RepoType)
 object RepositoryDisplayDetails {
   implicit val repoDetailsFormat = Json.format[RepositoryDisplayDetails]
 }
 
-case class Team(name:String, firstActiveDate: Option[LocalDateTime], lastActiveDate: Option[LocalDateTime], firstServiceCreationDate : Option[LocalDateTime], repos: Option[Map[String, Seq[String]]])
+case class Team(
+  name: String,
+  firstActiveDate: Option[LocalDateTime],
+  lastActiveDate: Option[LocalDateTime],
+  firstServiceCreationDate: Option[LocalDateTime],
+  repos: Option[Map[String, Seq[String]]])
 object Team {
   implicit val format = Json.format[Team]
 }
@@ -78,18 +86,26 @@ object Team {
 case class DigitalService(name: String, lastUpdatedAt: Long, repositories: Seq[DigitalServiceRepository])
 
 object DigitalService {
-  case class DigitalServiceRepository(name:String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime, repoType : RepoType.RepoType, teamNames: Seq[String])
+  case class DigitalServiceRepository(
+    name: String,
+    createdAt: LocalDateTime,
+    lastUpdatedAt: LocalDateTime,
+    repoType: RepoType.RepoType,
+    teamNames: Seq[String])
 
   implicit val repoDetailsFormat = Json.format[DigitalServiceRepository]
-
 
   implicit val digitalServiceFormat = Json.format[DigitalService]
 }
 
 @Singleton
-class TeamsAndRepositoriesConnector @Inject()(http : HttpClient, override val runModeConfiguration:Configuration, environment : PlayEnvironment) extends ServicesConfig {
+class TeamsAndRepositoriesConnector @Inject()(
+  http: HttpClient,
+  override val runModeConfiguration: Configuration,
+  environment: PlayEnvironment)
+    extends ServicesConfig {
   type ServiceName = String
-  type TeamName = String
+  type TeamName    = String
 
   import TeamsAndRepositoriesConnector._
 
@@ -97,43 +113,41 @@ class TeamsAndRepositoriesConnector @Inject()(http : HttpClient, override val ru
 
   def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
 
-
-
-  implicit val linkFormats = Json.format[Link]
+  implicit val linkFormats         = Json.format[Link]
   implicit val environmentsFormats = Json.format[Environment]
-  implicit val serviceFormats = Json.format[RepositoryDetails]
+  implicit val serviceFormats      = Json.format[RepositoryDetails]
 
   val CacheTimestampHeaderName = "X-Cache-Timestamp"
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
-  def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] = {
+  def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map {
       toJson[Seq[Team]]
     }
-  }
 
-  def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] = {
+  def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] =
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/digital-services").map {
       toJson[Seq[String]]
     }
-  }
 
   def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[Team]] = {
     val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${URLEncoder.encode(teamName, "UTF-8")}"
 
-    http.GET[HttpResponse](url)
+    http
+      .GET[HttpResponse](url)
       .map { response =>
         response.status match {
           case 404 => None
           case 200 => Some(toJson[Team](response))
         }
-      }.recover {
-      case ex =>
-        Logger.error(s"An error occurred getting teamInfo when connecting to $url: ${ex.getMessage}", ex)
-        None
-    }
+      }
+      .recover {
+        case ex =>
+          Logger.error(s"An error occurred getting teamInfo when connecting to $url: ${ex.getMessage}", ex)
+          None
+      }
   }
 
   def teamsWithRepositories()(implicit hc: HeaderCarrier): Future[Seq[Team]] =
@@ -149,37 +163,35 @@ class TeamsAndRepositoriesConnector @Inject()(http : HttpClient, override val ru
       toJson[Seq[RepositoryDisplayDetails]]
     }
 
-  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] = {
+  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] =
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories/$name").map { response =>
       response.status match {
         case 404 => None
         case 200 => Some(toJson[RepositoryDetails](response))
       }
     }
-  }
 
-  def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] = {
-    http.POST[Seq[String], HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true", serviceNames).map {
-      toJson[Map[ServiceName, Seq[TeamName]]]
-    }
-  }
+  def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
+    http
+      .POST[Seq[String], HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true", serviceNames)
+      .map {
+        toJson[Map[ServiceName, Seq[TeamName]]]
+      }
 
-  def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] = {
+  def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true").map {
       toJson[Map[ServiceName, Seq[TeamName]]]
     }
-  }
 
   def toJson[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): T =
     r.json.as[T]
-
 
 }
 
 object TeamsAndRepositoriesConnector {
 
   type ServiceName = String
-  type TeamName = String
+  type TeamName    = String
 
   sealed trait TeamsAndRepositoriesError
 

@@ -24,7 +24,8 @@ trait UserManagementPortalLink extends ServicesConfig {
   def umpMyTeamsPageUrl(teamName: String): String = {
 
     val frontPageUrlConfigKey = s"$serviceName.myTeamsUrl"
-    val myTeamsUrl = getConfString(frontPageUrlConfigKey, throw new RuntimeException(s"Could not find config $frontPageUrlConfigKey"))
+    val myTeamsUrl =
+      getConfString(frontPageUrlConfigKey, throw new RuntimeException(s"Could not find config $frontPageUrlConfigKey"))
 
     s"""${myTeamsUrl.appendSlash}$teamName?edit"""
 

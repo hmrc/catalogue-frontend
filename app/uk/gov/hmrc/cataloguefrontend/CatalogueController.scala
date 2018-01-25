@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-
 import java.time.{LocalDateTime, ZoneOffset}
 import javax.inject.{Inject, Singleton}
 
@@ -38,74 +37,82 @@ import views.html._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class TeamActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime], firstServiceCreationDate: Option[LocalDateTime])
+case class TeamActivityDates(
+  firstActive: Option[LocalDateTime],
+  lastActive: Option[LocalDateTime],
+  firstServiceCreationDate: Option[LocalDateTime])
 
-case class DigitalServiceDetails(digitalServiceName: String,
-                                 teamMembersLookUp: Map[String, Either[UMPError, Seq[DisplayableTeamMember]]],
-                                 repos: Map[String, Seq[String]])
-
-
+case class DigitalServiceDetails(
+  digitalServiceName: String,
+  teamMembersLookUp: Map[String, Either[UMPError, Seq[DisplayableTeamMember]]],
+  repos: Map[String, Seq[String]])
 @Singleton
-class CatalogueController @Inject()(userManagementConnector: UserManagementConnector,
-                                    teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-                                    serviceDependencyConnector: ServiceDependenciesConnector,
-                                    indicatorsConnector: IndicatorsConnector,
-                                    deploymentsService: DeploymentsService,
-                                    eventService: EventService,
-                                    readModelService: ReadModelService,
-                                    environment: api.Environment,
-                                    override val runModeConfiguration: Configuration,
-                                    val messagesApi: MessagesApi
-                                   ) extends FrontendController with UserManagementPortalLink with I18nSupport {
+class CatalogueController @Inject()(
+  userManagementConnector: UserManagementConnector,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  serviceDependencyConnector: ServiceDependenciesConnector,
+  indicatorsConnector: IndicatorsConnector,
+  deploymentsService: DeploymentsService,
+  eventService: EventService,
+  readModelService: ReadModelService,
+  environment: api.Environment,
+  override val runModeConfiguration: Configuration,
+  val messagesApi: MessagesApi)
+    extends FrontendController
+    with UserManagementPortalLink
+    with I18nSupport {
 
   import UserManagementConnector._
 
   val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
 
-
   override protected def mode = environment.mode
 
-
   val repotypeToDetailsUrl = Map(
-    RepoType.Service -> routes.CatalogueController.service _,
-    RepoType.Other -> routes.CatalogueController.repository _,
-    RepoType.Library -> routes.CatalogueController.library _,
+    RepoType.Service   -> routes.CatalogueController.service _,
+    RepoType.Other     -> routes.CatalogueController.repository _,
+    RepoType.Library   -> routes.CatalogueController.library _,
     RepoType.Prototype -> routes.CatalogueController.prototype _
   )
-
 
   def landingPage() = Action { request =>
     Ok(landing_page())
   }
 
-
   def serviceOwner(digitalService: String) = Action {
-    readModelService.getDigitalServiceOwner(digitalService).fold(NotFound(Json.toJson(s"owner for $digitalService not found")))(ds => Ok(Json.toJson(ds)))
+    readModelService
+      .getDigitalServiceOwner(digitalService)
+      .fold(NotFound(Json.toJson(s"owner for $digitalService not found")))(ds => Ok(Json.toJson(ds)))
   }
 
   def saveServiceOwner() = Action.async { implicit request =>
+    request.body.asJson
+      .map { payload =>
+        val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
+        val serviceOwnerDisplayName: String                      = serviceOwnerSaveEventData.displayName
+        val maybeTeamMember: Option[TeamMember] =
+          readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
 
-    request.body.asJson.map { payload =>
-      val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
-      val serviceOwnerDisplayName: String = serviceOwnerSaveEventData.displayName
-      val maybeTeamMember: Option[TeamMember] = readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
-
-      maybeTeamMember.fold {
-        Future(NotAcceptable(Json.toJson(s"Invalid user: $serviceOwnerDisplayName")))
-      } { member =>
-        member.username.fold(Future.successful(ExpectationFailed(Json.toJson(s"Username was not set (by UMP) for $member!")))) {
-          serviceOwnerUsername =>
-            eventService.saveServiceOwnerUpdatedEvent(ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
-              .map(_ => {
-                val string = getConfString(profileBaseUrlConfigKey, "#")
-                Ok(Json.toJson(DisplayableTeamMember(member, string)))
-              })
+        maybeTeamMember.fold {
+          Future(NotAcceptable(Json.toJson(s"Invalid user: $serviceOwnerDisplayName")))
+        } { member =>
+          member.username.fold(
+            Future.successful(ExpectationFailed(Json.toJson(s"Username was not set (by UMP) for $member!")))) {
+            serviceOwnerUsername =>
+              eventService
+                .saveServiceOwnerUpdatedEvent(
+                  ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
+                .map(_ => {
+                  val string = getConfString(profileBaseUrlConfigKey, "#")
+                  Ok(Json.toJson(DisplayableTeamMember(member, string)))
+                })
+          }
         }
       }
-    }.getOrElse(Future.successful(BadRequest(Json.toJson( s"""Unable to parse json: "${request.body.asText.getOrElse("No text in request body!")}""""))))
+      .getOrElse(Future.successful(BadRequest(Json.toJson(s"""Unable to parse json: "${request.body.asText
+        .getOrElse("No text in request body!")}""""))))
 
   }
-
 
   def allTeams() = Action.async { implicit request =>
     import SearchFiltering._
@@ -114,11 +121,7 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
       val form: Form[TeamFilter] = TeamFilter.form.bindFromRequest()
 
       form.fold(
-        error =>
-          Ok(
-            teams_list(
-              teams = Seq.empty,
-              form)),
+        error => Ok(teams_list(teams = Seq.empty, form)),
         query => {
           Ok(
             teams_list(
@@ -131,9 +134,7 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
     }
   }
 
-
   def digitalService(digitalServiceName: String) = Action.async { implicit request =>
-
     teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName) flatMap {
       case Some(digitalService) =>
         val teamNames = digitalService.repositories.flatMap(_.teamNames).map(_.distinct)
@@ -142,44 +143,40 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
           .map(convertToDisplayableTeamMembers)
           .map(teamMembers =>
             Ok(digital_service_info(
-              DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)), readModelService.getDigitalServiceOwner(digitalServiceName)
+              DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)),
+              readModelService
+                .getDigitalServiceOwner(digitalServiceName)
                 .map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))
-            ))
-          )
+            )))
       case None => Future.successful(NotFound)
     }
   }
 
   def allUsers = Action { implicit request =>
-
     val filterTerm = request.getQueryString("term").getOrElse("")
     println(s"getting users: $filterTerm")
-    val filteredUsers: Seq[Option[String]] = readModelService.getAllUsers.map(_.displayName).filter(displayName => displayName.getOrElse("").toLowerCase.contains(filterTerm.toLowerCase))
+    val filteredUsers: Seq[Option[String]] = readModelService.getAllUsers
+      .map(_.displayName)
+      .filter(displayName => displayName.getOrElse("").toLowerCase.contains(filterTerm.toLowerCase))
 
     Ok(Json.toJson(filteredUsers))
   }
 
   def getRepos(data: DigitalService) = {
     val emptyMapOfRepoTypes = RepoType.values.map(v => v.toString -> List.empty[String]).toMap
-    val mapOfRepoTypes = data.repositories.groupBy(_.repoType).map { case (k, v) => k.toString -> v.map(_.name) }
+    val mapOfRepoTypes      = data.repositories.groupBy(_.repoType).map { case (k, v) => k.toString -> v.map(_.name) }
 
     emptyMapOfRepoTypes ++ mapOfRepoTypes
   }
-
 
   def allDigitalServices = Action.async { implicit request =>
     import SearchFiltering._
 
     teamsAndRepositoriesConnector.allDigitalServices.map { response =>
-
       val form: Form[DigitalServiceNameFilter] = DigitalServiceNameFilter.form.bindFromRequest()
 
       form.fold(
-        error =>
-          Ok(
-            digital_service_list(
-              digitalServices = Seq.empty,
-              form)),
+        error => Ok(digital_service_list(digitalServices = Seq.empty, form)),
         query => {
           Ok(
             digital_service_list(
@@ -192,42 +189,42 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
     }
   }
 
-
   def team(teamName: String) = Action.async { implicit request =>
-
-    val eventualTeamInfo = teamsAndRepositoriesConnector.teamInfo(teamName)
-    val eventualErrorOrMembers = userManagementConnector.getTeamMembersFromUMP(teamName)
+    val eventualTeamInfo           = teamsAndRepositoriesConnector.teamInfo(teamName)
+    val eventualErrorOrMembers     = userManagementConnector.getTeamMembersFromUMP(teamName)
     val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
 
     val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
     for {
       typeRepos: Option[Team] <- eventualTeamInfo
-      teamMembers <- eventualErrorOrMembers
-      teamDetails <- eventualErrorOrTeamDetails
-      teamIndicators <- eventualMaybeDeploymentIndicators
-    } yield (typeRepos, teamMembers, teamDetails, teamIndicators) match {
-      case (Some(team), _, _, _) =>
-        implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
+      teamMembers             <- eventualErrorOrMembers
+      teamDetails             <- eventualErrorOrTeamDetails
+      teamIndicators          <- eventualMaybeDeploymentIndicators
+    } yield
+      (typeRepos, teamMembers, teamDetails, teamIndicators) match {
+        case (Some(team), _, _, _) =>
+          implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
 
-        Ok(team_info(
-          team.name,
-          repos = team.repos.getOrElse(Map()),
-          activityDates = TeamActivityDates(team.firstActiveDate, team.lastActiveDate, team.firstServiceCreationDate),
-          errorOrTeamMembers = convertToDisplayableTeamMembers(team.name, teamMembers),
-          teamDetails,
-          TeamChartData.deploymentThroughput(team.name, teamIndicators.map(_.throughput)),
-          TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
-          umpMyTeamsPageUrl(team.name)
-        )
-        )
-      case _ => NotFound
-    }
+          Ok(
+            team_info(
+              team.name,
+              repos = team.repos.getOrElse(Map()),
+              activityDates =
+                TeamActivityDates(team.firstActiveDate, team.lastActiveDate, team.firstServiceCreationDate),
+              errorOrTeamMembers = convertToDisplayableTeamMembers(team.name, teamMembers),
+              teamDetails,
+              TeamChartData.deploymentThroughput(team.name, teamIndicators.map(_.throughput)),
+              TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
+              umpMyTeamsPageUrl(team.name)
+            ))
+        case _ => NotFound
+      }
   }
 
-
   def service(name: String) = Action.async { implicit request =>
-
-    def getDeployedEnvs(deployedToEnvs: Seq[DeploymentVO], maybeRefEnvironments: Option[Seq[Environment]]): Option[Seq[Environment]] = {
+    def getDeployedEnvs(
+      deployedToEnvs: Seq[DeploymentVO],
+      maybeRefEnvironments: Option[Seq[Environment]]): Option[Seq[Environment]] = {
 
       val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
 
@@ -235,7 +232,8 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
         environments
           .map(e => (e.name.toLowerCase, e))
           .map {
-            case (lwrCasedRefEnvName, refEnvironment) if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
+            case (lwrCasedRefEnvName, refEnvironment)
+                if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
               refEnvironment
             case (_, refEnvironment) =>
               refEnvironment.copy(services = Nil)
@@ -245,54 +243,58 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
     }
 
     val repositoryDetailsF = teamsAndRepositoriesConnector.repositoryDetails(name)
-    val deploymentIndicatorsForServiceF: Future[Option[DeploymentIndicators]] = indicatorsConnector.deploymentIndicatorsForService(name)
-    val serviceDeploymentInformationF: Future[Either[Throwable, ServiceDeploymentInformation]] = deploymentsService.getWhatsRunningWhere(name)
+    val deploymentIndicatorsForServiceF: Future[Option[DeploymentIndicators]] =
+      indicatorsConnector.deploymentIndicatorsForService(name)
+    val serviceDeploymentInformationF: Future[Either[Throwable, ServiceDeploymentInformation]] =
+      deploymentsService.getWhatsRunningWhere(name)
     val dependenciesF = serviceDependencyConnector.getDependencies(name)
 
     for {
-      service <- repositoryDetailsF
-      maybeDataPoints <- deploymentIndicatorsForServiceF
+      service                                                                       <- repositoryDetailsF
+      maybeDataPoints                                                               <- deploymentIndicatorsForServiceF
       serviceDeploymentInformation: Either[Throwable, ServiceDeploymentInformation] <- serviceDeploymentInformationF
-      mayBeDependencies <- dependenciesF
-    } yield (service, serviceDeploymentInformation) match {
-      case (_, Left(t)) =>
-        t.printStackTrace()
-        ServiceUnavailable(t.getMessage)
-      case (Some(repositoryDetails), Right(sdi: ServiceDeploymentInformation)) if repositoryDetails.repoType == RepoType.Service =>
-        val maybeDeployedEnvironments =
-          getDeployedEnvs(sdi.deployments, repositoryDetails.environments)
+      mayBeDependencies                                                             <- dependenciesF
+    } yield
+      (service, serviceDeploymentInformation) match {
+        case (_, Left(t)) =>
+          t.printStackTrace()
+          ServiceUnavailable(t.getMessage)
+        case (Some(repositoryDetails), Right(sdi: ServiceDeploymentInformation))
+            if repositoryDetails.repoType == RepoType.Service =>
+          val maybeDeployedEnvironments =
+            getDeployedEnvs(sdi.deployments, repositoryDetails.environments)
 
-        val deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]] =
-          sdi.deployments.map(deployment =>
-            deployment.environmentMapping.name -> sdi.deployments
-              .filter(_.environmentMapping.name == deployment.environmentMapping.name))
-            .toMap
+          val deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]] =
+            sdi.deployments
+              .map(
+                deployment =>
+                  deployment.environmentMapping.name -> sdi.deployments
+                    .filter(_.environmentMapping.name == deployment.environmentMapping.name))
+              .toMap
 
-        Ok(
-          service_info(
-            repositoryDetails.copy(environments = maybeDeployedEnvironments),
-            mayBeDependencies,
-            ServiceChartData.deploymentThroughput(repositoryDetails.name, maybeDataPoints.map(_.throughput)),
-            ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
-            repositoryDetails.createdAt,
-            deploymentsByEnvironmentName
-          ))
-      case _ => NotFound
-    }
+          Ok(
+            service_info(
+              repositoryDetails.copy(environments = maybeDeployedEnvironments),
+              mayBeDependencies,
+              ServiceChartData.deploymentThroughput(repositoryDetails.name, maybeDataPoints.map(_.throughput)),
+              ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
+              repositoryDetails.createdAt,
+              deploymentsByEnvironmentName
+            ))
+        case _ => NotFound
+      }
   }
 
   def library(name: String) = Action.async { implicit request =>
     for {
-      library <- teamsAndRepositoriesConnector.repositoryDetails(name)
+      library           <- teamsAndRepositoriesConnector.repositoryDetails(name)
       mayBeDependencies <- serviceDependencyConnector.getDependencies(name)
-    } yield library match {
-      case Some(s) if s.repoType == RepoType.Library =>
-        Ok(
-          library_info(
-            s,
-            mayBeDependencies))
-      case _ => NotFound
-    }
+    } yield
+      library match {
+        case Some(s) if s.repoType == RepoType.Library =>
+          Ok(library_info(s, mayBeDependencies))
+        case _ => NotFound
+      }
   }
 
   def prototype(name: String) = Action.async { implicit request =>
@@ -300,9 +302,7 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
       .repositoryDetails(name)
       .map {
         case Some(s) if s.repoType == RepoType.Prototype =>
-          val result = Ok(prototype_info(
-            s.copy(environments = None),
-            s.createdAt))
+          val result = Ok(prototype_info(s.copy(environments = None), s.createdAt))
           result
         case _ => NotFound
       }
@@ -310,18 +310,15 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
 
   def repository(name: String) = Action.async { implicit request =>
     for {
-      repository <- teamsAndRepositoriesConnector.repositoryDetails(name)
-      indicators <- indicatorsConnector.buildIndicatorsForRepository(name)
+      repository        <- teamsAndRepositoriesConnector.repositoryDetails(name)
+      indicators        <- indicatorsConnector.buildIndicatorsForRepository(name)
       mayBeDependencies <- serviceDependencyConnector.getDependencies(name)
-    } yield (repository, indicators) match {
-      case (Some(s), maybeDataPoints) =>
-        Ok(
-          repository_info(
-            s,
-            mayBeDependencies,
-            ServiceChartData.jobExecutionTime(s.name, maybeDataPoints)))
-      case _ => NotFound
-    }
+    } yield
+      (repository, indicators) match {
+        case (Some(s), maybeDataPoints) =>
+          Ok(repository_info(s, mayBeDependencies, ServiceChartData.jobExecutionTime(s.name, maybeDataPoints)))
+        case _ => NotFound
+      }
   }
 
   def allServices = Action {
@@ -342,26 +339,14 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
     teamsAndRepositoriesConnector.allRepositories.map { repositories =>
       val form: Form[RepoListFilter] = RepoListFilter.form.bindFromRequest()
       form.fold(
-        error =>
-          Ok(
-            repositories_list(
-
-              repositories = Seq.empty,
-              repotypeToDetailsUrl,
-              error)),
-        query =>
-          Ok(
-            repositories_list(
-
-              repositories = repositories.filter(query),
-              repotypeToDetailsUrl,
-              form))
+        error => Ok(repositories_list(repositories = Seq.empty, repotypeToDetailsUrl, error)),
+        query => Ok(repositories_list(repositories = repositories.filter(query), repotypeToDetailsUrl, form))
       )
     }
   }
 
   def deploymentsPage() = Action.async { implicit request =>
-    val umpProfileUrl = getConfString(profileBaseUrlConfigKey, "#")
+    val umpProfileUrl                 = getConfString(profileBaseUrlConfigKey, "#")
     val form: Form[DeploymentsFilter] = DeploymentsFilter.form.bindFromRequest()
     Future.successful(Ok(deployments_page(form, umpProfileUrl)))
   }
@@ -383,16 +368,20 @@ class CatalogueController @Inject()(userManagementConnector: UserManagementConne
 
   }
 
-  private def convertToDisplayableTeamMembers(teamName: String, errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]): Either[UMPError, Seq[DisplayableTeamMember]] =
+  private def convertToDisplayableTeamMembers(
+    teamName: String,
+    errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]): Either[UMPError, Seq[DisplayableTeamMember]] =
     errorOrTeamMembers match {
       case Left(err) => Left(err)
       case Right(tms) =>
         Right(DisplayableTeamMembers(teamName, getConfString(profileBaseUrlConfigKey, "#"), tms))
     }
 
-
-  private def convertToDisplayableTeamMembers(teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]]): Map[String, Either[UMPError, Seq[DisplayableTeamMember]]] =
-    teamsAndMembers.map { case (teamName, errorOrMembers) => (teamName, convertToDisplayableTeamMembers(teamName, errorOrMembers)) }
+  private def convertToDisplayableTeamMembers(teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]])
+    : Map[String, Either[UMPError, Seq[DisplayableTeamMember]]] =
+    teamsAndMembers.map {
+      case (teamName, errorOrMembers) => (teamName, convertToDisplayableTeamMembers(teamName, errorOrMembers))
+    }
 
 }
 
@@ -420,7 +409,11 @@ object DigitalServiceNameFilter {
   )
 }
 
-case class DeploymentsFilter(team: Option[String] = None, serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
+case class DeploymentsFilter(
+  team: Option[String]        = None,
+  serviceName: Option[String] = None,
+  from: Option[LocalDateTime] = None,
+  to: Option[LocalDateTime]   = None) {
   def isEmpty: Boolean = team.isEmpty && serviceName.isEmpty && from.isEmpty && to.isEmpty
 }
 
@@ -444,14 +437,14 @@ object DeploymentsFilter {
   lazy val form = Form(
     mapping(
       "team" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
-      "serviceName" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
+      "serviceName" -> optional(text)
+        .transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
       "from" -> optionalLocalDateTimeMapping("from.error.date"),
-      "to" -> optionalLocalDateTimeMapping("to.error.date")
+      "to"   -> optionalLocalDateTimeMapping("to.error.date")
     )(DeploymentsFilter.apply)(DeploymentsFilter.unapply)
   )
 
-  def optionalLocalDateTimeMapping(errorCode: String): Mapping[Option[LocalDateTime]] = {
+  def optionalLocalDateTimeMapping(errorCode: String): Mapping[Option[LocalDateTime]] =
     optional(text.verifying(errorCode, x => stringToLocalDateTimeOpt(x).isDefined))
       .transform[Option[LocalDateTime]](_.flatMap(stringToLocalDateTimeOpt), _.map(_.format(`yyyy-MM-dd`)))
-  }
 }

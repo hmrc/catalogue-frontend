@@ -45,16 +45,16 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 import scala.concurrent.Future
 import scala.util.{Success, Try}
 
-case class Deployer(name : String, deploymentDate: LocalDateTime)
+case class Deployer(name: String, deploymentDate: LocalDateTime)
 
-case class Release(name: String,
-                   productionDate: java.time.LocalDateTime,
-                    creationDate: Option[java.time.LocalDateTime] = None,
-                    interval: Option[Long] = None,
-                    leadTime: Option[Long] = None,
-                    version: String,
-                    deployers : Seq[Deployer] = Seq.empty
-                  ){
+case class Release(
+  name: String,
+  productionDate: java.time.LocalDateTime,
+  creationDate: Option[java.time.LocalDateTime] = None,
+  interval: Option[Long]                        = None,
+  leadTime: Option[Long]                        = None,
+  version: String,
+  deployers: Seq[Deployer] = Seq.empty) {
 
   import DateHelper._
   val latestDeployer = deployers.sortBy(_.deploymentDate.epochSeconds).lastOption
@@ -75,13 +75,15 @@ case class ServiceDeploymentInformation(serviceName: String, deployments: Seq[De
 object ServiceDeploymentInformation {
   implicit val whatsRunningWhereFormat = Json.format[ServiceDeploymentInformation]
 }
-
-
 @Singleton
-class ServiceDeploymentsConnector @Inject()(http : HttpClient, override val runModeConfiguration:Configuration, environment : PlayEnvironment) extends ServicesConfig {
+class ServiceDeploymentsConnector @Inject()(
+  http: HttpClient,
+  override val runModeConfiguration: Configuration,
+  environment: PlayEnvironment)
+    extends ServicesConfig {
 
   def servicesDeploymentsBaseUrl: String = baseUrl("service-deployments") + "/api/deployments"
-  def whatIsRunningWhereBaseUrl: String = baseUrl("service-deployments") + "/api/whatsrunningwhere"
+  def whatIsRunningWhereBaseUrl: String  = baseUrl("service-deployments") + "/api/whatsrunningwhere"
 
   override protected def mode = environment.mode
 
@@ -90,56 +92,64 @@ class ServiceDeploymentsConnector @Inject()(http : HttpClient, override val runM
   import ServiceDeploymentInformation._
 
   implicit val deployerFormat = Json.format[Deployer]
-  
+
   implicit val deploymentsFormat = Json.reads[Release]
 
-
-
   def getDeployments(serviceNames: Iterable[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] = {
-    val url =  s"$servicesDeploymentsBaseUrl"
+    val url = s"$servicesDeploymentsBaseUrl"
 
-    http.POST[Seq[String],HttpResponse](url, serviceNames.toSeq).map { r =>
-      r.status match {
-        case 200 => r.json.as[Seq[Release]]
-        case 404 => Seq()
+    http
+      .POST[Seq[String], HttpResponse](url, serviceNames.toSeq)
+      .map { r =>
+        r.status match {
+          case 200 => r.json.as[Seq[Release]]
+          case 404 => Seq()
+        }
       }
-    }.recover {
-      case ex =>
-        Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
-        Seq.empty
-    }
+      .recover {
+        case ex =>
+          Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
+          Seq.empty
+      }
   }
 
   def getDeployments(serviceName: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[Release]] = {
     val url = serviceName.fold(servicesDeploymentsBaseUrl)(name => s"$servicesDeploymentsBaseUrl/$name")
 
-    http.GET[HttpResponse](url).map { r =>
-      r.status match {
-        case 200 => r.json.as[Seq[Release]]
-        case 404 => Seq()
+    http
+      .GET[HttpResponse](url)
+      .map { r =>
+        r.status match {
+          case 200 => r.json.as[Seq[Release]]
+          case 404 => Seq()
+        }
       }
-    }.recover {
-      case ex =>
-        Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
-        Seq.empty
-    }
+      .recover {
+        case ex =>
+          Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
+          Seq.empty
+      }
   }
 
-
-  def getWhatIsRunningWhere(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, ServiceDeploymentInformation]] = {
+  def getWhatIsRunningWhere(serviceName: String)(
+    implicit hc: HeaderCarrier): Future[Either[Throwable, ServiceDeploymentInformation]] = {
     val url = s"$whatIsRunningWhereBaseUrl/$serviceName"
 
-    http.GET[HttpResponse](url).map { r =>
-      r.status match {
-        case 200 =>
-          Try(r.json.as[ServiceDeploymentInformation]).transform(s => Success(Right(s)), f => Success(Left(f))).get
+    http
+      .GET[HttpResponse](url)
+      .map { r =>
+        r.status match {
+          case 200 =>
+            Try(r.json.as[ServiceDeploymentInformation]).transform(s => Success(Right(s)), f => Success(Left(f))).get
+        }
       }
-    }.recover {
-      case _: NotFoundException => Right(ServiceDeploymentInformation(serviceName, Nil)) // 404 if the service has had no deployments
-      case ex =>
-        Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-        Left(ex)
-    }
+      .recover {
+        case _: NotFoundException =>
+          Right(ServiceDeploymentInformation(serviceName, Nil)) // 404 if the service has had no deployments
+        case ex =>
+          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          Left(ex)
+      }
   }
 
 }

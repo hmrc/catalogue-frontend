@@ -24,7 +24,6 @@ import uk.gov.hmrc.cataloguefrontend.SearchFiltering._
 
 class RepositoryResultSpec extends WordSpec with Matchers {
 
-
   "RepositoryFiltering" should {
 
     "get repositories filtered by only repository name" in {
@@ -35,11 +34,13 @@ class RepositoryResultSpec extends WordSpec with Matchers {
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service))
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service)
+      )
 
-      repositories.filter(RepoListFilter(name = Some("serv1"))) shouldBe Seq(
+      repositories.filter(RepoListFilter(name       = Some("serv1"))) shouldBe Seq(
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other))
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other)
+      )
 
     }
 
@@ -51,12 +52,14 @@ class RepositoryResultSpec extends WordSpec with Matchers {
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("FOO", createdAt = now, lastUpdatedAt = now, RepoType.Service))
+        RepositoryDisplayDetails("FOO", createdAt   = now, lastUpdatedAt = now, RepoType.Service)
+      )
 
-      repositories.filter(RepoListFilter(name = Some("eRV"))) shouldBe Seq(
+      repositories.filter(RepoListFilter(name       = Some("eRV"))) shouldBe Seq(
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other))
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other)
+      )
 
     }
 
@@ -68,9 +71,10 @@ class RepositoryResultSpec extends WordSpec with Matchers {
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service))
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service)
+      )
 
-      repositories.filter(RepoListFilter(repoType = Some("Other"))) shouldBe Seq(
+      repositories.filter(RepoListFilter(repoType   = Some("Other"))) shouldBe Seq(
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other))
     }
 
@@ -82,9 +86,10 @@ class RepositoryResultSpec extends WordSpec with Matchers {
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
         RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other))
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other)
+      )
 
-      repositories.filter(RepoListFilter(repoType = Some("service"))) shouldBe Seq(
+      repositories.filter(RepoListFilter(repoType   = Some("service"))) shouldBe Seq(
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service))
     }
 
@@ -96,12 +101,12 @@ class RepositoryResultSpec extends WordSpec with Matchers {
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
         RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other))
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other)
+      )
 
-      repositories.filter(RepoListFilter(repoType = Some("Service"))) shouldBe Seq(
+      repositories.filter(RepoListFilter(repoType   = Some("Service"))) shouldBe Seq(
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service))
     }
-
 
     "get repositories filtered by both name and repository type" in {
 
@@ -112,10 +117,11 @@ class RepositoryResultSpec extends WordSpec with Matchers {
         RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
         RepositoryDisplayDetails("serv4", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service))
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service)
+      )
 
-      repositories.filter(RepoListFilter(name = Some("serv1"),repoType = Some("Other"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other))
+      repositories.filter(RepoListFilter(name       = Some("serv1"), repoType = Some("Other"))) shouldBe Seq(
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt      = now, RepoType.Other))
     }
 
     "get all repositories (no filter)" in {
@@ -126,7 +132,8 @@ class RepositoryResultSpec extends WordSpec with Matchers {
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
         RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service))
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service)
+      )
 
       repositories.filter(RepoListFilter()) shouldBe repositories
     }

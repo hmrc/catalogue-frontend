@@ -27,22 +27,28 @@ class DependencySpec extends FreeSpec with Matchers {
     }
 
     "should return MinorVersionOutOfDate if on patch version behind" in {
-      Dependency("library-abc", Version(1, 2, 2), Some(Version(1, 2, 3))).getVersionState shouldBe Some(MinorVersionOutOfDate)
+      Dependency("library-abc", Version(1, 2, 2), Some(Version(1, 2, 3))).getVersionState shouldBe Some(
+        MinorVersionOutOfDate)
     }
 
     "should return MinorVersionOutOfDate if on minor version behind" in {
-      Dependency("library-abc", Version(1, 1, 3), Some(Version(1, 2, 3))).getVersionState shouldBe Some(MinorVersionOutOfDate)
+      Dependency("library-abc", Version(1, 1, 3), Some(Version(1, 2, 3))).getVersionState shouldBe Some(
+        MinorVersionOutOfDate)
     }
 
     "should return MajorVersionOutOfDate if on minor version behind" in {
-      Dependency("library-abc", Version(1, 2, 3), Some(Version(2, 2, 3))).getVersionState shouldBe Some(MajorVersionOutOfDate)
+      Dependency("library-abc", Version(1, 2, 3), Some(Version(2, 2, 3))).getVersionState shouldBe Some(
+        MajorVersionOutOfDate)
     }
 
     "should return InvalidVersionState if current version is greater than the latest version " in {
 
-      Dependency("library-abc", Version(1, 0, 1), Some(Version(1, 0, 0))).getVersionState shouldBe Some(InvalidVersionState)
-      Dependency("library-abc", Version(1, 1, 0), Some(Version(1, 0, 0))).getVersionState shouldBe Some(InvalidVersionState)
-      Dependency("library-abc", Version(2, 0, 0), Some(Version(1, 0, 0))).getVersionState shouldBe Some(InvalidVersionState)
+      Dependency("library-abc", Version(1, 0, 1), Some(Version(1, 0, 0))).getVersionState shouldBe Some(
+        InvalidVersionState)
+      Dependency("library-abc", Version(1, 1, 0), Some(Version(1, 0, 0))).getVersionState shouldBe Some(
+        InvalidVersionState)
+      Dependency("library-abc", Version(2, 0, 0), Some(Version(1, 0, 0))).getVersionState shouldBe Some(
+        InvalidVersionState)
     }
 
   }

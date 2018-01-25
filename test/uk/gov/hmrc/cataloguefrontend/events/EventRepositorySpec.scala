@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
-
 /*
  * Copyright 2017 HM Revenue & Customs
  *
@@ -33,8 +32,6 @@ package uk.gov.hmrc.cataloguefrontend.events
  * limitations under the License.
  */
 
-
-
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
@@ -49,7 +46,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class EventRepositorySpec
-  extends UnitSpec
+    extends UnitSpec
     with LoneElement
     with MongoSpecSupport
     with ScalaFutures
@@ -57,7 +54,6 @@ class EventRepositorySpec
     with BeforeAndAfterEach
     with OneAppPerTest
     with MockitoSugar {
-
 
   val reactiveMongoComponent = new ReactiveMongoComponent() {
     override def mongoConnector = {
@@ -72,7 +68,6 @@ class EventRepositorySpec
     await(mongoEventRepository.drop)
   }
 
-
   private val timestamp = 1494625868
 
   "getAllEvents" should {
@@ -84,43 +79,62 @@ class EventRepositorySpec
       val events: Seq[Event] = await(mongoEventRepository.getAllEvents)
 
       events.size shouldBe 2
-      events should contain theSameElementsAs
+      events      should contain theSameElementsAs
         Seq(
-          Event(EventType.ServiceOwnerUpdated, timestamp = timestamp, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "joe.black")).as[JsObject]),
-          Event(EventType.ServiceOwnerUpdated, timestamp = timestamp + 1, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "joe.black")).as[JsObject])
+          Event(
+            EventType.ServiceOwnerUpdated,
+            timestamp = timestamp,
+            Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "joe.black")).as[JsObject]),
+          Event(
+            EventType.ServiceOwnerUpdated,
+            timestamp = timestamp + 1,
+            Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "joe.black")).as[JsObject])
         )
     }
   }
 
-  private def insertEvent(theTimestamp: Int) = {
-    await(mongoEventRepository.collection.insert(Json.obj(
-      "eventType" -> "ServiceOwnerUpdated",
-      "data" -> Json.obj(
-        "service" -> "Catalogue",
-        "username" -> "joe.black"
-      ),
-      "timestamp" -> theTimestamp,
-      "metadata" -> Json.obj()
-    )))
-  }
+  private def insertEvent(theTimestamp: Int) =
+    await(
+      mongoEventRepository.collection.insert(
+        Json.obj(
+          "eventType" -> "ServiceOwnerUpdated",
+          "data" -> Json.obj(
+            "service"  -> "Catalogue",
+            "username" -> "joe.black"
+          ),
+          "timestamp" -> theTimestamp,
+          "metadata"  -> Json.obj()
+        )))
 
   "getEventsByType" should {
     "return all the right events" in {
-      val serviceOwnerUpdateEvent = Event(EventType.ServiceOwnerUpdated, timestamp = timestamp, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
-      val otherEvent = Event(EventType.Other, timestamp = timestamp, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
+      val serviceOwnerUpdateEvent = Event(
+        EventType.ServiceOwnerUpdated,
+        timestamp = timestamp,
+        Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
+      val otherEvent = Event(
+        EventType.Other,
+        timestamp = timestamp,
+        Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
 
       await(mongoEventRepository.add(serviceOwnerUpdateEvent))
 
       val events: Seq[Event] = await(mongoEventRepository.getEventsByType(EventType.ServiceOwnerUpdated))
 
       events.size shouldBe 1
-      events.head shouldBe Event(EventType.ServiceOwnerUpdated, timestamp = timestamp, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
+      events.head shouldBe Event(
+        EventType.ServiceOwnerUpdated,
+        timestamp = timestamp,
+        Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
     }
   }
 
   "add" should {
     "be able to insert a new record and update it as well" in {
-      val event = Event(EventType.ServiceOwnerUpdated, timestamp = timestamp, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
+      val event = Event(
+        EventType.ServiceOwnerUpdated,
+        timestamp = timestamp,
+        Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
       await(mongoEventRepository.add(event))
       val all = await(mongoEventRepository.getAllEvents)
 

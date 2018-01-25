@@ -20,22 +20,21 @@ import java.util.Date
 
 import play.api.libs.json._
 
-
 sealed trait EventData
 case class ServiceOwnerUpdatedEventData(service: String, username: String) extends EventData
 case class SomeOtherEventData(something: String, somethingElse: Long) extends EventData // <--- this is an example event type showing how to add other EventData types
 
-
 object EventData extends EventData {
-  implicit val  serviceOwnerUpdatedEventDataFormat = Json.format[ServiceOwnerUpdatedEventData]
-  implicit val  someOtherEventDataFormat = Json.format[SomeOtherEventData]
+  implicit val serviceOwnerUpdatedEventDataFormat = Json.format[ServiceOwnerUpdatedEventData]
+  implicit val someOtherEventDataFormat           = Json.format[SomeOtherEventData]
 }
 
 // this gets persisted
-case class Event(eventType: EventType.Value,
-                 timestamp: Long = new Date().getTime,
-                 data: JsObject,
-                 metadata: JsObject = JsObject(Seq.empty))
+case class Event(
+  eventType: EventType.Value,
+  timestamp: Long = new Date().getTime,
+  data: JsObject,
+  metadata: JsObject = JsObject(Seq.empty))
 
 object Event {
   implicit val format = Json.format[Event]

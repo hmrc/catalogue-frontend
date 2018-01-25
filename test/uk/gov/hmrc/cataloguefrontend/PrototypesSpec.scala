@@ -42,9 +42,10 @@ class PrototypesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
           mock[ReadModelService],
           mock[play.api.Environment],
           Configuration(),
-          mock[MessagesApi]).allPrototypes(FakeRequest()).futureValue
+          mock[MessagesApi]
+        ).allPrototypes(FakeRequest()).futureValue
 
-      result.header.status shouldBe 303
+      result.header.status              shouldBe 303
       result.header.headers("Location") shouldBe "/repositories?name=&type=Prototype"
     }
   }

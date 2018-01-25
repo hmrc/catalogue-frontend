@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.scalatest.{Matchers, WordSpec, FunSuite}
+import org.scalatest.{FunSuite, Matchers, WordSpec}
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
 
@@ -26,7 +26,7 @@ class RepoTypeSpec extends WordSpec with Matchers {
     "be able to be read from a json string" in {
       Json.parse("""{"type":"Service"}""").as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Service)
       Json.parse("""{"type":"Library"}""").as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Library)
-      Json.parse("""{"type":"Other"}""").as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Other)
+      Json.parse("""{"type":"Other"}""").as[Map[String, RepoType]]   shouldBe Map("type" -> RepoType.Other)
     }
   }
 

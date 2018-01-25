@@ -24,12 +24,13 @@ import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
 
-
 class PrototypePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app = new GuiceApplicationBuilder().configure(
-    "microservice.services.teams-and-services.port" -> endpointPort,
-    "microservice.services.teams-and-services.host" -> host).build()
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(
+      "microservice.services.teams-and-services.port" -> endpointPort,
+      "microservice.services.teams-and-services.host" -> host)
+    .build()
 
   "A prototype page" should {
 
@@ -39,12 +40,12 @@ class PrototypePageSpec extends UnitSpec with OneServerPerSuite with WireMockEnd
 
       val response = await(WS.url(s"http://localhost:$port/prototype/2fa-prototype").get)
       response.status shouldBe 200
-      response.body should include("links on this page are automatically generated")
-      response.body should include("Designers")
-      response.body should include("CATO")
-      response.body should include("Github Enterprise")
-      response.body should include("https://github.gov.uk/HMRC/2fa-prototype")
-      response.body should include("some description")
+      response.body   should include("links on this page are automatically generated")
+      response.body   should include("Designers")
+      response.body   should include("CATO")
+      response.body   should include("Github Enterprise")
+      response.body   should include("https://github.gov.uk/HMRC/2fa-prototype")
+      response.body   should include("some description")
 
       response.body should include(createdAt.displayFormat)
       response.body should include(lastActiveAt.displayFormat)

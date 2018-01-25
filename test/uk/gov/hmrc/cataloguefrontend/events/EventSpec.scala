@@ -33,15 +33,20 @@ class EventSpec extends FunSpec with Matchers with MockitoSugar {
                          |    },
                          |  "metadata" : {},
                          |  "timestamp" : 123
-                         |}"""
-        .stripMargin
+                         |}""".stripMargin
 
       val event = Json.parse(jsonString).as[Event]
-      event shouldBe Event(EventType.ServiceOwnerUpdated, timestamp = 123l, JsObject(Seq("service" -> JsString("Catalogue"), "name" -> JsString("Armin Keyvanloo"))))
+      event shouldBe Event(
+        EventType.ServiceOwnerUpdated,
+        timestamp = 123l,
+        JsObject(Seq("service" -> JsString("Catalogue"), "name" -> JsString("Armin Keyvanloo"))))
     }
 
     it("should covert an Event to json and back correctly") {
-      val event = Event(EventType.ServiceOwnerUpdated, timestamp = 123l, JsObject(Seq("service" -> JsString("Catalogue"), "name" -> JsString("Armin Keyvanloo"))))
+      val event = Event(
+        EventType.ServiceOwnerUpdated,
+        timestamp = 123l,
+        JsObject(Seq("service" -> JsString("Catalogue"), "name" -> JsString("Armin Keyvanloo"))))
 
       val js = Json.toJson(event)
 

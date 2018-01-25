@@ -20,70 +20,75 @@ import java.net.ServerSocket
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.client.{ResponseDefinitionBuilder, MappingBuilder, WireMock}
+import com.github.tomakehurst.wiremock.client.{MappingBuilder, ResponseDefinitionBuilder, WireMock}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.http.RequestMethod
-import org.scalatest.{Suite, BeforeAndAfterEach, BeforeAndAfterAll}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
 import scala.util.Try
 import scala.collection.JavaConversions._
 
-trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfterEach{
+trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfterEach {
 
   val host: String = "localhost"
 
-  val endpointPort: Int = wireMockPort()
-  val endpointMock = new WireMock(host, endpointPort)
-  val endpointMockUrl = s"http://$host:$endpointPort"
+  val endpointPort: Int              = wireMockPort()
+  val endpointMock                   = new WireMock(host, endpointPort)
+  val endpointMockUrl                = s"http://$host:$endpointPort"
   val endpointServer: WireMockServer = new WireMockServer(wireMockConfig().port(endpointPort))
 
   def startWireMock() = endpointServer.start()
-  def stopWireMock() = endpointServer.stop()
+  def stopWireMock()  = endpointServer.stop()
 
-  def wireMockPort():Int = PortTester.findPort()
+  def wireMockPort(): Int = PortTester.findPort()
 
-  override def beforeEach():Unit={
+  override def beforeEach(): Unit = {
     endpointMock.resetMappings()
     endpointMock.resetScenarios()
   }
-  override def afterAll(): Unit ={
+  override def afterAll(): Unit =
     endpointServer.stop()
-  }
-  override def beforeAll(): Unit ={
+  override def beforeAll(): Unit = {
     println(s"starting endpoint server on $endpointPort")
     endpointServer.start()
   }
 
-  def printMappings(): Unit ={
+  def printMappings(): Unit = {
     println(s"endpointMockUrl = $endpointMockUrl")
     endpointMock.allStubMappings().getMappings.toList.foreach { s =>
       println(s)
     }
   }
 
-  def serviceEndpoint(method: RequestMethod,
-                       url: String,
-                       extraHeaders: Map[String, String] = Map(),
-                       requestHeaders: Map[String, String] = Map(),
-                       willRespondWith: (Int, Option[String]),
-                       givenJsonBody: Option[String] = None): Unit = {
+  def serviceEndpoint(
+    method: RequestMethod,
+    url: String,
+    extraHeaders: Map[String, String]   = Map(),
+    requestHeaders: Map[String, String] = Map(),
+    willRespondWith: (Int, Option[String]),
+    givenJsonBody: Option[String] = None): Unit = {
 
     val builder = new MappingBuilder(method, urlEqualTo(url))
     requestHeaders.map { case (k, v) => builder.withHeader(k, equalTo(v)) }
 
-    givenJsonBody.map { b =>
-      builder.withRequestBody(equalToJson(b))
-    }.getOrElse(builder)
+    givenJsonBody
+      .map { b =>
+        builder.withRequestBody(equalToJson(b))
+      }
+      .getOrElse(builder)
 
     val response: ResponseDefinitionBuilder = new ResponseDefinitionBuilder()
       .withStatus(willRespondWith._1)
 
-    val resp = willRespondWith._2.map { b =>
-      response.withBody(b)
-    }.getOrElse(response)
+    val resp = willRespondWith._2
+      .map { b =>
+        response.withBody(b)
+      }
+      .getOrElse(response)
 
-    extraHeaders.foreach { case (n, v) =>
-      resp.withHeader(n, v)
+    extraHeaders.foreach {
+      case (n, v) =>
+        resp.withHeader(n, v)
     }
 
     builder.willReturn(resp)
@@ -95,9 +100,8 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
 
 object PortTester {
 
-  def findPort(excluded: Int*): Int = {
+  def findPort(excluded: Int*): Int =
     (6001 to 7000).find(port => !excluded.contains(port) && isFree(port)).getOrElse(throw new Exception("No free port"))
-  }
 
   private def isFree(port: Int): Boolean = {
     val triedSocket = Try {

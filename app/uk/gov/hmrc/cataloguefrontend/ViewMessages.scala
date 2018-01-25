@@ -23,7 +23,6 @@ import play.api.Play
 import play.api.i18n.Messages
 import play.twirl.api.Html
 
-
 object ViewMessages {
   val noIndicatorsData = "<p>There's nothing here - this probably means you haven't released anything yet! Get shipping " +
     "to see your data. If you think you're seeing this message in error or have any other feedback, please let us know in " +
@@ -48,48 +47,54 @@ object ViewMessages {
       "<p>Each monthly measurement has a 3 month sample size. Trending towards lower success rate indicates instability in the build. Trending towards higher duration indicates that something is causing your build time to increase.</p>" +
       "<p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>"
 
-  val dependenciesText = """<p>This report shows the platform dependencies the code in your repository has, what version they are currently at, and highlights if any later versions are available. You should act quickly to rectify the issue when you see a minor version discrepancy, and immediately if you see a major version discrepancy.</p>
+  val dependenciesText =
+    """<p>This report shows the platform dependencies the code in your repository has, what version they are currently at, and highlights if any later versions are available. You should act quickly to rectify the issue when you see a minor version discrepancy, and immediately if you see a major version discrepancy.</p>
                             <p/>
                             <p>You should also monitor the <a href="https://hmrcdigital.slack.com/messages/C04RY81QK" target="_blank">#announcements<span class="glyphicon glyphicon-new-window"/></a> channel for details of any upgrades that may be more involved than simply bumping a version number</p>"""
 
-  val curatedLibsText = """<p>Click <a href="https://github.com/hmrc/service-dependencies/blob/master/conf/dependency-versions-config.json" target="_blank">here<span class="glyphicon glyphicon-new-window"/></a> to see the platform libraries that are included in the dependency analysis</p>"""
+  val curatedLibsText =
+    """<p>Click <a href="https://github.com/hmrc/service-dependencies/blob/master/conf/dependency-versions-config.json" target="_blank">here<span class="glyphicon glyphicon-new-window"/></a> to see the platform libraries that are included in the dependency analysis</p>"""
 
+  def noRepoOfTypeForTeam(item: String) =
+    s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
+      "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
+      "target=\"_blank\">#team-platops<span class=\"glyphicon glyphicon-new-window\"/></a> on Slack."
 
-  def noRepoOfTypeForTeam(item : String) = s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +
-    "improving. In case of the latter, let us know in <a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" " +
-    "target=\"_blank\">#team-platops<span class=\"glyphicon glyphicon-new-window\"/></a> on Slack."
-
-  def noRepoOfTypeForDigitalService(item : String) = s"""This digital service doesn't have any $item repositories assigned to it. The <a href=\" / \">home</a> page provides the necessary instructions to make it appear. Reach out in #team-platops on Slack for inquiries."""
+  def noRepoOfTypeForDigitalService(item: String) =
+    s"""This digital service doesn't have any $item repositories assigned to it. The <a href=\" / \">home</a> page provides the necessary instructions to make it appear. Reach out in #team-platops on Slack for inquiries."""
 
   val otherTeamsAre = "Other teams that also have a stake in this service are:"
 
-  val appConfigBaseUrl = Play.current.configuration.getString(s"urlTemplates.app-config-base").getOrElse(throw new IllegalArgumentException("didn't app config base URL configuration"))
+  val appConfigBaseUrl = Play.current.configuration
+    .getString(s"urlTemplates.app-config-base")
+    .getOrElse(throw new IllegalArgumentException("didn't app config base URL configuration"))
 
-  val informationalText = Play.current.configuration.getString(s"info-panel-text").getOrElse(throw new IllegalArgumentException("didn't find info panel configuration"))
+  val informationalText = Play.current.configuration
+    .getString(s"info-panel-text")
+    .getOrElse(throw new IllegalArgumentException("didn't find info panel configuration"))
 
-  def noDataToShow = {
+  def noDataToShow =
     Html("""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
-  }
 
   def noProductionDeploymentSinceDaysMessage(firstActiveDate: LocalDateTime) = {
     val daysSinceNoProdDeployment = firstActiveDate.until(LocalDateTime.now(), ChronoUnit.DAYS) + 1
-    Html(s"""<h2 class="chart-message text-center">No production deployments for $daysSinceNoProdDeployment days</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
+    Html(
+      s"""<h2 class="chart-message text-center">No production deployments for $daysSinceNoProdDeployment days</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
   }
 
-  def noJobExecutionTimeDataHtml = {
-    Html(s"""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>${ViewMessages.noJobExecutionData}</p>")
-  }
+  def noJobExecutionTimeDataHtml =
+    Html(
+      s"""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>${ViewMessages.noJobExecutionData}</p>")
 
-  def toTypeText(repoType: RepoType.RepoType) : String = {
+  def toTypeText(repoType: RepoType.RepoType): String =
     repoType match {
       case RepoType.Service => "Service"
-      case t => t.toString
+      case t                => t.toString
     }
-  }
 
-  def errorMessage = {
-    Html("""<h2 class="chart-message text-center">The catalogue encountered an error</h2>""" + s"<p>${ViewMessages.indicatorsServiceError}</p>")
-  }
+  def errorMessage =
+    Html(
+      """<h2 class="chart-message text-center">The catalogue encountered an error</h2>""" + s"<p>${ViewMessages.indicatorsServiceError}</p>")
 
   val notSpecifiedText = "Not specified"
 

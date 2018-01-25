@@ -26,16 +26,17 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app = new GuiceApplicationBuilder().configure (
-    "microservice.services.teams-and-services.host" -> host,
-    "microservice.services.teams-and-services.port" -> endpointPort,
-    "microservice.services.indicators.port" -> endpointPort,
-    "microservice.services.indicators.host" -> host,
-    "microservice.services.service-dependencies.host" -> host,
-    "microservice.services.service-dependencies.port" -> endpointPort,
-    "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
-
-
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(
+      "microservice.services.teams-and-services.host"   -> host,
+      "microservice.services.teams-and-services.port"   -> endpointPort,
+      "microservice.services.indicators.port"           -> endpointPort,
+      "microservice.services.indicators.host"           -> host,
+      "microservice.services.service-dependencies.host" -> host,
+      "microservice.services.service-dependencies.port" -> endpointPort,
+      "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler"
+    )
+    .build()
 
   "A library page" should {
 
@@ -59,24 +60,23 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
 
       val response = await(WS.url(s"http://localhost:$port/library/lib").get)
       response.status shouldBe 200
-      response.body should include(s"links on this page are automatically generated")
-      response.body should include(s"teamA")
-      response.body should include(s"teamB")
-      response.body should include(s"ci open 1")
-      response.body should include(s"ci open 2")
-      response.body should include(s"github.com")
-      response.body should include(s"http://ci.open1/lib")
-      response.body should include(s"http://ci.open2/lib")
-      response.body should not include "service1"
-      response.body should not include "service1"
-      response.body should not include "http://ser1/serv"
-      response.body should not include "http://ser2/serv"
+      response.body   should include(s"links on this page are automatically generated")
+      response.body   should include(s"teamA")
+      response.body   should include(s"teamB")
+      response.body   should include(s"ci open 1")
+      response.body   should include(s"ci open 2")
+      response.body   should include(s"github.com")
+      response.body   should include(s"http://ci.open1/lib")
+      response.body   should include(s"http://ci.open2/lib")
+      response.body   should not include "service1"
+      response.body   should not include "service1"
+      response.body   should not include "http://ser1/serv"
+      response.body   should not include "http://ser2/serv"
     }
-
 
     "Render dependencies with red, green, amber and grey colours" in {
 
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(libraryData)))
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                      = (200, Some(libraryData)))
       serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
 
       val response = await(WS.url(s"http://localhost:$port/library/service-name").get)
@@ -86,7 +86,6 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       document.select("#platform-dependencies").size() shouldBe 1
 
     }
-
 
   }
 

@@ -31,12 +31,16 @@ case class ChartDataRows(rows: Seq[Html]) {
 
 trait ChartData {
 
-  def deploymentThroughput(serviceName: String, dataPoints: Option[Seq[DeploymentThroughputDataPoint]]): Option[ChartDataRows] =
+  def deploymentThroughput(
+    serviceName: String,
+    dataPoints: Option[Seq[DeploymentThroughputDataPoint]]): Option[ChartDataRows] =
     dataPoints.map { points =>
       ChartDataRows(chartRowsThroughput(serviceName, points))
     }
 
-  def deploymentStability(serviceName: String, dataPoints: Option[Seq[DeploymentStabilityDataPoint]]): Option[ChartDataRows] =
+  def deploymentStability(
+    serviceName: String,
+    dataPoints: Option[Seq[DeploymentStabilityDataPoint]]): Option[ChartDataRows] =
     dataPoints.map { points =>
       ChartDataRows(chartRowsStability(serviceName, points))
     }
@@ -46,23 +50,23 @@ trait ChartData {
       ChartDataRows(chartRowsJobMetrics(repositoryName, points))
     }
 
-  protected def deploymentsSerachParameters(name: String, from: String, to: String) : Map[String,String]
+  protected def deploymentsSerachParameters(name: String, from: String, to: String): Map[String, String]
 
-  private def chartRowsThroughput(serviceName: String, points: Seq[DeploymentThroughputDataPoint]): Seq[Html] = {
+  private def chartRowsThroughput(serviceName: String, points: Seq[DeploymentThroughputDataPoint]): Seq[Html] =
     for {
       dp <- points
 
     } yield {
       val relasePageAnchor: Elem = getReleaseUrlAnchor(serviceName, dp.from, dp.to)
-      val tip = toolTip(dp.period, Some(relasePageAnchor)) _
-      val leadTimeToolTip = tip("Lead Time", dp.leadTime.map(_.median.toString))
-      val intervalToolTip = tip("Interval", dp.interval.map(_.median.toString))
+      val tip                    = toolTip(dp.period, Some(relasePageAnchor)) _
+      val leadTimeToolTip        = tip("Lead Time", dp.leadTime.map(_.median.toString))
+      val intervalToolTip        = tip("Interval", dp.interval.map(_.median.toString))
 
-      Html(s"""["${dp.period}", ${unwrapMedian(dp.leadTime)}, "$leadTimeToolTip", ${unwrapMedian(dp.interval)}, "$intervalToolTip"]""")
+      Html(
+        s"""["${dp.period}", ${unwrapMedian(dp.leadTime)}, "$leadTimeToolTip", ${unwrapMedian(dp.interval)}, "$intervalToolTip"]""")
     }
-  }
 
-  private def chartRowsStability(serviceName: String, points: Seq[DeploymentStabilityDataPoint]): Seq[Html] = {
+  private def chartRowsStability(serviceName: String, points: Seq[DeploymentStabilityDataPoint]): Seq[Html] =
     for {
       dp <- points
 
@@ -71,9 +75,9 @@ trait ChartData {
 
       val hotfixRateToolTip = tip("Hotfix Rate", dp.hotfixRate.map(r => s"${toPercent(r)}%"))
       val hotfixIntervalTip = tip("Hotfix Interval", dp.hotfixInterval.map(_.median.toString))
-      Html(s"""["${dp.period}", ${unwrap(dp.hotfixRate)}, "$hotfixRateToolTip", ${unwrapMedian(dp.hotfixInterval)}, "$hotfixIntervalTip"]""")
+      Html(
+        s"""["${dp.period}", ${unwrap(dp.hotfixRate)}, "$hotfixRateToolTip", ${unwrapMedian(dp.hotfixInterval)}, "$hotfixIntervalTip"]""")
     }
-  }
 
   private def formatTime(medianDataPoint: MedianDataPoint): String = {
     import scala.concurrent.duration._
@@ -87,7 +91,7 @@ trait ChartData {
 
         s"${minutes}min ${seconds}sec"
       case median =>
-        val hours = (median millis).toHours
+        val hours   = (median millis).toHours
         val minutes = (median millis).toMinutes - hours * 60
         val seconds = (median millis).toSeconds - hours * 3600 - minutes * 60
 
@@ -102,13 +106,10 @@ trait ChartData {
     for {
       dataPoint <- points
     } yield {
-      val timeData = dataPoint.duration.map(d =>
-        s"${(d.median millis).toMinutes}"
-      ).getOrElse("null")
+      val timeData = dataPoint.duration.map(d => s"${(d.median millis).toMinutes}").getOrElse("null")
 
       val jobExecutionTimeTooltip: Html =
         toolTip(dataPoint.period, None)("Job Execution Time", dataPoint.duration.map(formatTime))
-
 
       val successRateToolTip =
         toolTip(dataPoint.period, None)("Success Rate", dataPoint.successRate.map(r => s"${toPercent(r)}%"))
@@ -120,20 +121,25 @@ trait ChartData {
 
   private def toPercent(r: Double): Int = (r * 100).toInt
 
-  private def getReleaseUrlAnchor(serviceName: String, from: LocalDate, to: LocalDate) = <a href={deploymentsUrl(serviceName, dateToString(from), dateToString(to))}>View deployments</a>
+  private def getReleaseUrlAnchor(serviceName: String, from: LocalDate, to: LocalDate) =
+    <a href={deploymentsUrl(serviceName, dateToString(from), dateToString(to))}>View deployments</a>
 
   private def deploymentsUrl(serviceName: String, from: String, to: String) = {
-    val paramString: String = deploymentsSerachParameters(serviceName, from, to).toList.map(x => s"${x._1}=${x._2}").mkString("&")
+    val paramString: String =
+      deploymentsSerachParameters(serviceName, from, to).toList.map(x => s"${x._1}=${x._2}").mkString("&")
     s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.deploymentsPage().url}?$paramString"
   }
 
   private def dateToString(date: LocalDate) = date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
 
-  private def unwrapMedian(container: Option[MedianDataPoint]) = container.map(l => s"""${l.median}""").getOrElse("null")
+  private def unwrapMedian(container: Option[MedianDataPoint]) =
+    container.map(l => s"""${l.median}""").getOrElse("null")
 
   private def unwrap(container: Option[_]) = container.map(l => s"""$l""").getOrElse("null")
 
-  private def toolTip(period: String, additionalContent: Option[NodeSeq])(dataPointLabel: String, dataPointValue: Option[String]) = {
+  private def toolTip(period: String, additionalContent: Option[NodeSeq])(
+    dataPointLabel: String,
+    dataPointValue: Option[String]) = {
 
     val element: Elem =
       <div>
@@ -167,8 +173,8 @@ trait ChartData {
 object ServiceChartData extends ChartData {
   override protected def deploymentsSerachParameters(name: String, from: String, to: String): Map[String, String] = Map(
     "serviceName" -> name,
-    "from" -> from,
-    "to" -> to
+    "from"        -> from,
+    "to"          -> to
   )
 }
 
@@ -176,6 +182,6 @@ object TeamChartData extends ChartData {
   override protected def deploymentsSerachParameters(name: String, from: String, to: String): Map[String, String] = Map(
     "team" -> name,
     "from" -> from,
-    "to" -> to
+    "to"   -> to
   )
 }

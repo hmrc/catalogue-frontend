@@ -40,7 +40,17 @@ import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with BeforeAndAfter with ScalaFutures with OneServerPerSuite with WireMockEndpoints with TypeCheckedTripleEquals with OptionValues with EitherValues with MockitoSugar {
+class TeamsAndRepositoriesConnectorSpec
+    extends WordSpec
+    with Matchers
+    with BeforeAndAfter
+    with ScalaFutures
+    with OneServerPerSuite
+    with WireMockEndpoints
+    with TypeCheckedTripleEquals
+    with OptionValues
+    with EitherValues
+    with MockitoSugar {
 
   import uk.gov.hmrc.cataloguefrontend.JsonData._
 
@@ -50,8 +60,9 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
     .configure(
       "microservice.services.teams-and-services.host" -> host,
       "microservice.services.teams-and-services.port" -> endpointPort,
-      "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
-    ).build()
+      "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
+    )
+    .build()
 
   val teamsAndRepositoriesConnector = app.injector.instanceOf[TeamsAndRepositoriesConnector]
 
@@ -59,18 +70,27 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
 
     "return a list of team information for each given service" in {
 
-      serviceEndpoint(POST, "/api/services?teamDetails=true", willRespondWith = (200, Some(
-        """
+      serviceEndpoint(
+        POST,
+        "/api/services?teamDetails=true",
+        willRespondWith = (
+          200,
+          Some(
+            """
           |	{
           |		"serviceA": ["teamA","teamB"],
           |		"serviceB": ["teamA"]
           |	}
           | """.stripMargin
-      )), givenJsonBody = Some("[\"serviceA\",\"serviceB\"]"))
+          )),
+        givenJsonBody = Some("[\"serviceA\",\"serviceB\"]")
+      )
 
-      val response = teamsAndRepositoriesConnector.teamsByService(Seq("serviceA", "serviceB"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = teamsAndRepositoriesConnector
+        .teamsByService(Seq("serviceA", "serviceB"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .futureValue
 
-      response.size shouldBe 2
+      response.size        shouldBe 2
       response("serviceA") shouldBe Seq("teamA", "teamB")
       response("serviceB") shouldBe Seq("teamA")
 
@@ -87,33 +107,38 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
           .futureValue
           .value
 
-      responseData.name shouldBe "service-1"
+      responseData.name        shouldBe "service-1"
       responseData.description shouldBe "some description"
-      responseData.createdAt shouldBe createdAt
-      responseData.lastActive shouldBe lastActiveAt
-      responseData.teamNames should ===(Seq("teamA", "teamB"))
-      responseData.githubUrls should ===(Set(Link("github", "github.com", "https://github.com/hmrc/service-1")))
-      responseData.ci should ===(Seq(Link("open1", "open 1", "http://open1/service-1"), Link("open2", "open 2", "http://open2/service-2")))
-      responseData.environments should ===(Some(Seq(
-        Environment(
-          "Dev",
-          Seq(
-            Link("jenkins", "Jenkins", "https://deploy-dev.co.uk/job/deploy-microservice"),
-            Link("grafana", "Grafana", "https://grafana-dev.co.uk/#/dashboard")
-          )),
-        Environment(
-          "QA",
-          Seq(
-            Link("jenkins", "Jenkins", "https://deploy-qa.co.uk/job/deploy-microservice"),
-            Link("grafana", "Grafana", "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
-          )),
-        Environment(
-          "Production",
-          Seq(
-            Link("jenkins", "Jenkins", "https://deploy-prod.co.uk/job/deploy-microservice"),
-            Link("grafana", "Grafana", "https://grafana-prod.co.uk/#/dashboard")
+      responseData.createdAt   shouldBe createdAt
+      responseData.lastActive  shouldBe lastActiveAt
+      responseData.teamNames   should ===(Seq("teamA", "teamB"))
+      responseData.githubUrls  should ===(Set(Link("github", "github.com", "https://github.com/hmrc/service-1")))
+      responseData.ci should ===(
+        Seq(Link("open1", "open 1", "http://open1/service-1"), Link("open2", "open 2", "http://open2/service-2")))
+      responseData.environments should ===(
+        Some(Seq(
+          Environment(
+            "Dev",
+            Seq(
+              Link("jenkins", "Jenkins", "https://deploy-dev.co.uk/job/deploy-microservice"),
+              Link("grafana", "Grafana", "https://grafana-dev.co.uk/#/dashboard")
+            )
+          ),
+          Environment(
+            "QA",
+            Seq(
+              Link("jenkins", "Jenkins", "https://deploy-qa.co.uk/job/deploy-microservice"),
+              Link("grafana", "Grafana", "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
+            )
+          ),
+          Environment(
+            "Production",
+            Seq(
+              Link("jenkins", "Jenkins", "https://deploy-prod.co.uk/job/deploy-microservice"),
+              Link("grafana", "Grafana", "https://grafana-prod.co.uk/#/dashboard")
+            )
           )
-        ))))
+        )))
 
       responseData.repoType should ===(RepoType.Service)
     }
@@ -123,30 +148,34 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
     "return all the repositories returned by the api" in {
       serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(JsonData.repositoriesData)))
 
-      val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector.allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+      val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
+        .allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .futureValue
 
-      repositories(0).name shouldBe "teamA-serv"
-      repositories(0).createdAt shouldBe JsonData.createdAt
+      repositories(0).name          shouldBe "teamA-serv"
+      repositories(0).createdAt     shouldBe JsonData.createdAt
       repositories(0).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories(0).repoType shouldBe RepoType.Service
+      repositories(0).repoType      shouldBe RepoType.Service
 
-      repositories(1).name shouldBe "teamB-library"
-      repositories(1).createdAt shouldBe JsonData.createdAt
+      repositories(1).name          shouldBe "teamB-library"
+      repositories(1).createdAt     shouldBe JsonData.createdAt
       repositories(1).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories(1).repoType shouldBe RepoType.Library
+      repositories(1).repoType      shouldBe RepoType.Library
 
-      repositories(2).name shouldBe "teamB-other"
-      repositories(2).createdAt shouldBe JsonData.createdAt
+      repositories(2).name          shouldBe "teamB-other"
+      repositories(2).createdAt     shouldBe JsonData.createdAt
       repositories(2).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories(2).repoType shouldBe RepoType.Other
+      repositories(2).repoType      shouldBe RepoType.Other
 
     }
   }
 
-
   "digitalServiceInfo" should {
     "convert the json string to DigitalServiceDetails" in {
-      serviceEndpoint(GET, "/api/digital-services/service-1", willRespondWith = (200, Some(JsonData.digitalServiceData)))
+      serviceEndpoint(
+        GET,
+        "/api/digital-services/service-1",
+        willRespondWith = (200, Some(JsonData.digitalServiceData)))
 
       val responseData =
         teamsAndRepositoriesConnector
@@ -165,7 +194,9 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
       serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
 
       val digitalServiceNames: Seq[String] =
-        teamsAndRepositoriesConnector.allDigitalServices(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        teamsAndRepositoriesConnector
+          .allDigitalServices(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .futureValue
 
       digitalServiceNames shouldBe Seq("digital-service-1", "digital-service-2", "digital-service-3")
     }
@@ -176,29 +207,45 @@ class TeamsAndRepositoriesConnectorSpec extends WordSpec with Matchers with Befo
       serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
 
       val teams: Seq[Team] =
-        teamsAndRepositoriesConnector.teamsWithRepositories()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        teamsAndRepositoriesConnector
+          .teamsWithRepositories()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .futureValue
 
       teams.size shouldBe 2
-      teams should contain theSameElementsAs
+      teams      should contain theSameElementsAs
         Seq(
-          Team("team1", None, None, None, Some(Map(
-            "Service" -> Seq("service1", "service2"),
-            "Library" -> Seq("lib1", "lib2"),
-            "Prototype" -> Seq(),
-            "Other" -> Seq("other1", "other2")
-          ))),
-          Team("team2", None, None, None, Some(Map(
-            "Service" -> Seq("service3", "service4"),
-            "Library" -> Seq("lib3", "lib4"),
-            "Prototype" -> Seq("prototype1"),
-            "Other" -> Seq("other3", "other4")
-          )))
+          Team(
+            "team1",
+            None,
+            None,
+            None,
+            Some(
+              Map(
+                "Service"   -> Seq("service1", "service2"),
+                "Library"   -> Seq("lib1", "lib2"),
+                "Prototype" -> Seq(),
+                "Other"     -> Seq("other1", "other2")
+              ))
+          ),
+          Team(
+            "team2",
+            None,
+            None,
+            None,
+            Some(
+              Map(
+                "Service"   -> Seq("service3", "service4"),
+                "Library"   -> Seq("lib3", "lib4"),
+                "Prototype" -> Seq("prototype1"),
+                "Other"     -> Seq("other3", "other4")
+              ))
+          )
         )
     }
   }
 
-
-  def teamsAndRepositoriesWithMockedHttp(httpClient: HttpClient) = new TeamsAndRepositoriesConnector(httpClient, Configuration(), mock[api.Environment]) {
-    override def teamsAndServicesBaseUrl: String = "someUrl"
-  }
+  def teamsAndRepositoriesWithMockedHttp(httpClient: HttpClient) =
+    new TeamsAndRepositoriesConnector(httpClient, Configuration(), mock[api.Environment]) {
+      override def teamsAndServicesBaseUrl: String = "someUrl"
+    }
 }

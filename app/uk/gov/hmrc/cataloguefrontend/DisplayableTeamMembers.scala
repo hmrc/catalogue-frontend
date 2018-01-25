@@ -21,15 +21,15 @@ import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 
 object DisplayableTeamMembers {
 
-
   def apply(teamName: String, umpProfileBaseUrl: String, teamMembers: Seq[TeamMember]): Seq[DisplayableTeamMember] = {
 
-    val displayableTeamMembers = teamMembers.map(tm =>
-      DisplayableTeamMember(
-        displayName = tm.getDisplayName,
-        isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.toLowerCase)),
-        umpLink = tm.getUmpLink(umpProfileBaseUrl))
-    )
+    val displayableTeamMembers = teamMembers.map(
+      tm =>
+        DisplayableTeamMember(
+          displayName    = tm.getDisplayName,
+          isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.toLowerCase)),
+          umpLink        = tm.getUmpLink(umpProfileBaseUrl)
+      ))
 
     val (serviceOwners, others) = displayableTeamMembers.partition(_.isServiceOwner)
     serviceOwners.sortBy(_.displayName) ++ others.sortBy(_.displayName)
@@ -37,9 +37,7 @@ object DisplayableTeamMembers {
 
 }
 
-case class DisplayableTeamMember(displayName: String,
-                                 isServiceOwner: Boolean = false,
-                                 umpLink: String)
+case class DisplayableTeamMember(displayName: String, isServiceOwner: Boolean = false, umpLink: String)
 
 object DisplayableTeamMember {
 
@@ -47,6 +45,6 @@ object DisplayableTeamMember {
 
   def apply(tm: TeamMember, umpProfileBaseUrl: String): DisplayableTeamMember = DisplayableTeamMember(
     displayName = tm.getDisplayName,
-    umpLink = tm.getUmpLink(umpProfileBaseUrl)
+    umpLink     = tm.getUmpLink(umpProfileBaseUrl)
   )
 }

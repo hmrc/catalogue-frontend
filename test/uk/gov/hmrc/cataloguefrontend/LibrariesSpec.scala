@@ -42,11 +42,12 @@ class LibrariesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
           mock[ReadModelService],
           mock[play.api.Environment],
           Configuration(),
-          mock[MessagesApi]).allLibraries(FakeRequest()).futureValue
+          mock[MessagesApi]
+        ).allLibraries(FakeRequest()).futureValue
 
       println(result)
 
-      result.header.status shouldBe 303
+      result.header.status              shouldBe 303
       result.header.headers("Location") shouldBe "/repositories?name=&type=Library"
     }
   }

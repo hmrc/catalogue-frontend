@@ -29,10 +29,9 @@ class UpdateSchedulerSpec extends FunSpec with Matchers with MockitoSugar with O
   describe("event read model update") {
     it("should be scheduled for specified intervals") {
       val readModelService = mock[ReadModelService]
-      val scheduler = new UpdateScheduler(app.actorSystem, readModelService)
+      val scheduler        = new UpdateScheduler(app.actorSystem, readModelService)
 
       scheduler.startUpdatingEventsReadModel(100 milliseconds)
-
 
       verify(readModelService, Mockito.after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshEventsCache
       verify(readModelService, times(0)).refreshUmpCache
@@ -42,7 +41,7 @@ class UpdateSchedulerSpec extends FunSpec with Matchers with MockitoSugar with O
   describe("ump cache read model update") {
     it("should be scheduled for specified intervals") {
       val readModelService = mock[ReadModelService]
-      val scheduler = new UpdateScheduler(app.actorSystem, readModelService)
+      val scheduler        = new UpdateScheduler(app.actorSystem, readModelService)
 
       scheduler.startUpdatingUmpCacheReadModel(100 milliseconds)
 

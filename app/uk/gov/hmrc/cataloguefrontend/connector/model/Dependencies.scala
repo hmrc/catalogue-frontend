@@ -26,7 +26,11 @@ case object MinorVersionOutOfDate extends VersionState
 case object MajorVersionOutOfDate extends VersionState
 case object InvalidVersionState extends VersionState
 
-case class Dependency(name: String, currentVersion: Version, latestVersion: Option[Version], isExternal: Boolean = false) {
+case class Dependency(
+  name: String,
+  currentVersion: Version,
+  latestVersion: Option[Version],
+  isExternal: Boolean = false) {
 
   def getVersionState: Option[VersionState] =
     latestVersion.map { latestVersion =>

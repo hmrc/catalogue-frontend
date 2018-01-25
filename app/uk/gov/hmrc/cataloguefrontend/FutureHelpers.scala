@@ -23,13 +23,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-
 object FutureHelpers {
 
   lazy val metrics: Metrics = Play.current.injector.instanceOf[MetricsImpl]
-  lazy val defaultRegistry = metrics.defaultRegistry
+  lazy val defaultRegistry  = metrics.defaultRegistry
 
-  def withTimerAndCounter[T](name: String)(f: Future[T], mayBeAuxFailurePredicate:Option[T => Boolean] = None) = {
+  def withTimerAndCounter[T](name: String)(f: Future[T], mayBeAuxFailurePredicate: Option[T => Boolean] = None) = {
     val t = defaultRegistry.timer(s"$name.timer").time()
 
     def logFailure: Unit = {
@@ -42,13 +41,12 @@ object FutureHelpers {
       defaultRegistry.counter(s"$name.success").inc()
     }
 
-    def doAuxFailurePredicate(s: T): Unit = {
+    def doAuxFailurePredicate(s: T): Unit =
       mayBeAuxFailurePredicate.foreach { auxFailurePredicate =>
         if (auxFailurePredicate(s)) {
           logFailure
         }
       }
-    }
 
     f.andThen {
       case Success(s) =>
@@ -60,12 +58,11 @@ object FutureHelpers {
   }
 
   implicit class FutureExtender[A](f: Future[A]) {
-    def andAlso(fn: A => Unit): Future[A] = {
+    def andAlso(fn: A => Unit): Future[A] =
       f.flatMap { r =>
         fn(r)
         f
       }
-    }
   }
 
   implicit class FutureOfBoolean(f: Future[Boolean]) {
@@ -80,21 +77,21 @@ object FutureHelpers {
   }
 
   implicit class FutureIterable[A](futureList: Future[Iterable[A]]) {
-    def flatMap[B](fn: A => Future[Iterable[B]])(implicit ec: ExecutionContext) = {
-      futureList.flatMap { list =>
-        val listOfFutures = list.map { li =>
-          fn(li)
+    def flatMap[B](fn: A => Future[Iterable[B]])(implicit ec: ExecutionContext) =
+      futureList
+        .flatMap { list =>
+          val listOfFutures = list.map { li =>
+            fn(li)
+          }
+
+          Future.sequence(listOfFutures)
         }
+        .map(_.flatten)
 
-        Future.sequence(listOfFutures)
-      }.map(_.flatten)
-    }
-
-    def map[B](fn: A => B)(implicit ec: ExecutionContext): Future[Iterable[B]] = {
+    def map[B](fn: A => B)(implicit ec: ExecutionContext): Future[Iterable[B]] =
       futureList.map(_.map {
         fn
       })
-    }
 
     def filter[B](fn: A => Boolean)(implicit ec: ExecutionContext): Future[Iterable[A]] =
       futureList.map(_.filter(fn))

@@ -27,35 +27,44 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
 
-
-  implicit override lazy val app = new GuiceApplicationBuilder().configure (
-    Map(
-    "microservice.services.teams-and-services.port" -> endpointPort,
-    "microservice.services.teams-and-services.host" -> host,
-      "play.ws.ssl.loose.acceptAnyCertificate" -> true,
-      "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
-  )).build()
-
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(Map(
+      "microservice.services.teams-and-services.port" -> endpointPort,
+      "microservice.services.teams-and-services.host" -> host,
+      "play.ws.ssl.loose.acceptAnyCertificate"        -> true,
+      "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
+    ))
+    .build()
 
   "Teams list" should {
 
-    "show a list of teams" in  {
+    "show a list of teams" in {
       import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
       val now: LocalDateTime = LocalDateTime.now()
-      val firstactivityDate = now.minusYears(2)
-      val lastactivityDate = now.minusDays(2)
+      val firstactivityDate  = now.minusYears(2)
+      val lastactivityDate   = now.minusDays(2)
 
-      serviceEndpoint(GET, "/api/teams", willRespondWith = (200, Some(
-        s"""[{"name":"teamA", "firstActiveDate" :${firstactivityDate.toInstant(ZoneOffset.UTC).toEpochMilli} , "lastActiveDate": ${lastactivityDate.toInstant(ZoneOffset.UTC).toEpochMilli}, "repos":{}}]"""
-      )))
+      serviceEndpoint(
+        GET,
+        "/api/teams",
+        willRespondWith = (
+          200,
+          Some(
+            s"""[{"name":"teamA", "firstActiveDate" :${firstactivityDate
+              .toInstant(ZoneOffset.UTC)
+              .toEpochMilli} , "lastActiveDate": ${lastactivityDate
+              .toInstant(ZoneOffset.UTC)
+              .toEpochMilli}, "repos":{}}]"""
+          ))
+      )
 
       val response = await(WS.url(s"http://localhost:$port/teams").get)
 
       response.status shouldBe 200
-      response.body should include("""<a href="/teams/teamA">teamA</a>""")
-      response.body should include(firstactivityDate.asPattern("yyyy-MM-dd"))
-      response.body should include(lastactivityDate.asPattern("yyyy-MM-dd"))
+      response.body   should include("""<a href="/teams/teamA">teamA</a>""")
+      response.body   should include(firstactivityDate.asPattern("yyyy-MM-dd"))
+      response.body   should include(lastactivityDate.asPattern("yyyy-MM-dd"))
     }
   }
 }

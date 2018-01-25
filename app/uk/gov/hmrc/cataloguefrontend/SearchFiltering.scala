@@ -41,32 +41,30 @@ object SearchFiltering {
 
   implicit class RepositoryResult(repositories: Seq[RepositoryDisplayDetails]) {
 
-    def filter(q: RepoListFilter): Seq[RepositoryDisplayDetails] = {
-
+    def filter(q: RepoListFilter): Seq[RepositoryDisplayDetails] =
       repositories.toStream
         .filter(x => q.name.isEmpty || x.name.toLowerCase.contains(q.name.get.toLowerCase))
-        .filter(x => q.repoType.isEmpty || q.repoType.get.equalsIgnoreCase(x.repoType.toString) || ("service".equalsIgnoreCase(q.repoType.get) && x.repoType == RepoType.Service))
-    }
+        .filter(x =>
+          q.repoType.isEmpty || q.repoType.get.equalsIgnoreCase(x.repoType.toString) || ("service".equalsIgnoreCase(
+            q.repoType.get) && x.repoType == RepoType.Service))
 
   }
 
   implicit class TeamResult(teams: Seq[Team]) {
 
-    def filter(teamFilter: TeamFilter): Seq[Team] = {
-      teams.filter(team =>
-        teamFilter.name.isEmpty || team.name.toLowerCase.contains(teamFilter.name.get.toLowerCase))
-    }
+    def filter(teamFilter: TeamFilter): Seq[Team] =
+      teams.filter(team => teamFilter.name.isEmpty || team.name.toLowerCase.contains(teamFilter.name.get.toLowerCase))
 
   }
 
   implicit class DigitalServiceNameResult(digitalServiceNames: Seq[String]) {
 
-    def filter(digitalServiceNameFilter: DigitalServiceNameFilter): Seq[String] = {
-      digitalServiceNames.filter(digitalServiceName =>
-        digitalServiceNameFilter.value.isEmpty || digitalServiceName.toLowerCase.contains(digitalServiceNameFilter.value.get.toLowerCase))
-    }
+    def filter(digitalServiceNameFilter: DigitalServiceNameFilter): Seq[String] =
+      digitalServiceNames.filter(
+        digitalServiceName =>
+          digitalServiceNameFilter.value.isEmpty || digitalServiceName.toLowerCase.contains(
+            digitalServiceNameFilter.value.get.toLowerCase))
 
   }
-
 
 }

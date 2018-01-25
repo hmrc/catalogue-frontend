@@ -31,43 +31,48 @@ import play.api.i18n.Messages.Implicits._
 
 class DeploymentsListSpec extends WordSpec with Matchers with OneAppPerTest {
 
-
-
-  def asDocument(html: Html): Document = Jsoup.parse  (html.toString())
+  def asDocument(html: Html): Document = Jsoup.parse(html.toString())
 
   "deployments_list" should {
 
     "display data" in {
       val now = LocalDateTime.now()
 
-      val document = asDocument(views.html.deployments_list(
-        Seq(
-          TeamRelease("serv1",
-            Seq("teamA", "teamB"),
-            productionDate = now,
-            creationDate = Some(now.plusDays(2)),
-            interval = Some(2),
-            leadTime = Some(10), version = "1.0"),
-          TeamRelease("serv2",
-            Seq("teamA", "teamB"),
-            productionDate = now,
-            creationDate = Some(now.plusDays(2)),
-            interval = Some(2),
-            leadTime = Some(10), version = "2.0",
-            latestDeployer = Some(Deployer("xyz.abc", now))
-          )
-        ), "user-profile-base")(applicationMessages))
+      val document = asDocument(
+        views.html.deployments_list(
+          Seq(
+            TeamRelease(
+              "serv1",
+              Seq("teamA", "teamB"),
+              productionDate = now,
+              creationDate   = Some(now.plusDays(2)),
+              interval       = Some(2),
+              leadTime       = Some(10),
+              version        = "1.0"),
+            TeamRelease(
+              "serv2",
+              Seq("teamA", "teamB"),
+              productionDate = now,
+              creationDate   = Some(now.plusDays(2)),
+              interval       = Some(2),
+              leadTime       = Some(10),
+              version        = "2.0",
+              latestDeployer = Some(Deployer("xyz.abc", now))
+            )
+          ),
+          "user-profile-base"
+        )(applicationMessages))
 
-      document.select("#row0_team").text() shouldBe "teamA teamB"
-      document.select("#row0_name").text() shouldBe "serv1"
-      document.select("#row0_version").text() shouldBe "1.0"
+      document.select("#row0_team").text()       shouldBe "teamA teamB"
+      document.select("#row0_name").text()       shouldBe "serv1"
+      document.select("#row0_version").text()    shouldBe "1.0"
       document.select("#row0_production").text() shouldBe now.asString
-      document.select("#row0_deployer").text() shouldBe "N/A"
-      document.select("#row0_creation").text() shouldBe now.plusDays(2).asString
-      document.select("#row0_leadtime").text() shouldBe "10 days"
-      document.select("#row0_interval").text() shouldBe "2 days"
+      document.select("#row0_deployer").text()   shouldBe "N/A"
+      document.select("#row0_creation").text()   shouldBe now.plusDays(2).asString
+      document.select("#row0_leadtime").text()   shouldBe "10 days"
+      document.select("#row0_interval").text()   shouldBe "2 days"
 
-      document.select("#row1_deployer a").text() shouldBe "xyz.abc"
+      document.select("#row1_deployer a").text()       shouldBe "xyz.abc"
       document.select("#row1_deployer a").attr("href") shouldBe "user-profile-base/xyz.abc"
 
     }

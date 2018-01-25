@@ -20,13 +20,13 @@ import org.scalatest.{Matchers, WordSpec}
 
 class UrlHelperSpec extends WordSpec with Matchers {
 
-  "UrlHelper" should  {
+  "UrlHelper" should {
     "append a slash to the url if it doesn't end with one" in {
       "abc".appendSlash shouldBe "abc/"
     }
   }
 
-  "UrlHelper" should  {
+  "UrlHelper" should {
     "not append a slash to the url if it already ends with one" in {
       "abc/".appendSlash shouldBe "abc/"
     }

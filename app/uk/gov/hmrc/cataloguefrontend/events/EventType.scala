@@ -30,7 +30,9 @@ object EventType extends Enumeration {
         try {
           JsSuccess(EventType.withName(s))
         } catch {
-          case _: NoSuchElementException => JsError(s"Enumeration expected of type: '${EventType.getClass}', but it does not appear to contain the value: '$s'")
+          case _: NoSuchElementException =>
+            JsError(
+              s"Enumeration expected of type: '${EventType.getClass}', but it does not appear to contain the value: '$s'")
         }
       }
       case _ => JsError("String value expected")

@@ -27,25 +27,22 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
-
-
-
 @Singleton
-class EventRepository @Inject() (mongo: ReactiveMongoComponent)
-  extends ReactiveRepository[Event, BSONObjectID](
-    collectionName = "events",
-    mongo = mongo.mongoConnector.db,
-    domainFormat = Event.format) {
-
+class EventRepository @Inject()(mongo: ReactiveMongoComponent)
+    extends ReactiveRepository[Event, BSONObjectID](
+      collectionName = "events",
+      mongo          = mongo.mongoConnector.db,
+      domainFormat   = Event.format) {
 
   override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
     Future.sequence(
       Seq(
-        collection.indexesManager.ensure(Index(Seq("timestamp" -> IndexType.Descending), name = Some("eventTimestampIdx")))
+        collection.indexesManager.ensure(
+          Index(Seq("timestamp" -> IndexType.Descending), name = Some("eventTimestampIdx")))
       )
     )
 
-  def add(event: Event): Future[Boolean] = {
+  def add(event: Event): Future[Boolean] =
     withTimerAndCounter("mongo.write") {
       insert(event) map {
         case _ => true
@@ -53,18 +50,14 @@ class EventRepository @Inject() (mongo: ReactiveMongoComponent)
     } recover {
       case lastError => throw lastError
     }
-  }
 
-  def getEventsByType(eventType: EventType.Value): Future[Seq[Event]] = {
-
+  def getEventsByType(eventType: EventType.Value): Future[Seq[Event]] =
     withTimerAndCounter("mongo.read") {
       find("eventType" -> BSONDocument("$eq" -> eventType.toString)) map {
-        case Nil => Nil
+        case Nil  => Nil
         case data => data.sortBy(_.timestamp)
       }
     }
-  }
-
 
   def getAllEvents: Future[List[Event]] = findAll()
 

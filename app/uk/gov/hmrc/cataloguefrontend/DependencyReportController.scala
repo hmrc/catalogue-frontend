@@ -34,58 +34,59 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class DependencyReport(repository: String,
-                            team: String,
-                            digitalService: String,
-                            dependencyName: String,
-                            dependencyType: String,
-                            currentVersion: String,
-                            latestVersion: String,
-                            colour: String,
-                            timestamp: Long = new Date().getTime)
+case class DependencyReport(
+  repository: String,
+  team: String,
+  digitalService: String,
+  dependencyName: String,
+  dependencyType: String,
+  currentVersion: String,
+  latestVersion: String,
+  colour: String,
+  timestamp: Long = new Date().getTime)
 
 @Singleton
-class DependencyReportController @Inject()(http : HttpClient,
-                                           override val runModeConfiguration:Configuration,
-                                           environment : PlayEnvironment,
-                                           teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-                                           serviceDependencyConnector: ServiceDependenciesConnector
-                                          ) extends FrontendController with UserManagementPortalLink {
-
+class DependencyReportController @Inject()(
+  http: HttpClient,
+  override val runModeConfiguration: Configuration,
+  environment: PlayEnvironment,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  serviceDependencyConnector: ServiceDependenciesConnector)
+    extends FrontendController
+    with UserManagementPortalLink {
 
   override protected def mode = environment.mode
 
-
   implicit val drFormat = Json.format[DependencyReport]
 
-
-  private def getDependencies(digitalServices: Seq[DigitalService],
-                              allTeams: Seq[Team],
-                              dependencies: Dependencies) = {
+  private def getDependencies(digitalServices: Seq[DigitalService], allTeams: Seq[Team], dependencies: Dependencies) = {
 
     val repoName = dependencies.repositoryName
 
     val libraryDependencyReportLines = dependencies.libraryDependencies.map { d =>
-      DependencyReport(repository = repoName,
-        team = findTeamNames(repoName, allTeams).mkString(";"),
+      DependencyReport(
+        repository     = repoName,
+        team           = findTeamNames(repoName, allTeams).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
         dependencyName = d.name,
         dependencyType = "library",
         currentVersion = d.currentVersion.toString,
-        latestVersion = d.latestVersion.getOrElse("Unknown").toString,
-        colour = getColour(d.currentVersion, d.latestVersion))
+        latestVersion  = d.latestVersion.getOrElse("Unknown").toString,
+        colour         = getColour(d.currentVersion, d.latestVersion)
+      )
     }
 
     val sbtPluginDependencyReportLines = dependencies.sbtPluginsDependencies.map { d =>
-
-      DependencyReport(repository = repoName,
-        team = findTeamNames(repoName, allTeams).mkString(";"),
+      DependencyReport(
+        repository     = repoName,
+        team           = findTeamNames(repoName, allTeams).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
         dependencyName = d.name,
         dependencyType = "plugin",
         currentVersion = d.currentVersion.toString,
-        latestVersion = d.latestVersion.getOrElse("Unknown").toString,
-        colour = getColour(d.currentVersion, d.latestVersion))
+        latestVersion  = d.latestVersion.getOrElse("Unknown").toString,
+        colour         = getColour(d.currentVersion, d.latestVersion)
+      )
     }
 
     libraryDependencyReportLines ++ sbtPluginDependencyReportLines
@@ -95,7 +96,7 @@ class DependencyReportController @Inject()(http : HttpClient,
 
     def ccToMap(cc: AnyRef) =
       cc.getClass.getDeclaredFields.foldLeft(Map[String, Any]()) { (acc, field) =>
-        if(ignoreFields.contains(field.getName)) {
+        if (ignoreFields.contains(field.getName)) {
           acc
         } else {
           field.setAccessible(true)
@@ -104,47 +105,56 @@ class DependencyReportController @Inject()(http : HttpClient,
       }
 
     val dependencyDataMaps = deps.map(ccToMap)
-    val headers = dependencyDataMaps.headOption.map{row => row.keys.mkString(",")}
-    val dataRows = dependencyDataMaps.map{row => row.values.mkString(",")}
+    val headers = dependencyDataMaps.headOption.map { row =>
+      row.keys.mkString(",")
+    }
+    val dataRows = dependencyDataMaps.map { row =>
+      row.values.mkString(",")
+    }
 
     headers.map(x => (x +: dataRows).mkString("\n")).getOrElse("No data")
 
   }
 
   private def findTeamNames(repositoryName: String, teams: Seq[Team]): Seq[String] =
-    teams.filter(_.repos.isDefined).filter(team => team.repos.get.values.flatten.toSeq.contains(repositoryName)).map(_.name)
+    teams
+      .filter(_.repos.isDefined)
+      .filter(team => team.repos.get.values.flatten.toSeq.contains(repositoryName))
+      .map(_.name)
 
   private def findDigitalServiceName(repositoryName: String, errorsOrDigitalServices: Seq[DigitalService]): String =
     errorsOrDigitalServices
       .find(_.repositories.exists(_.name == repositoryName))
-      .map(_.name).getOrElse("Unknown")
+      .map(_.name)
+      .getOrElse("Unknown")
 
-  private def getColour(currentVersion: Version, mayBeLatestVersion: Option[Version]): String = {
+  private def getColour(currentVersion: Version, mayBeLatestVersion: Option[Version]): String =
     mayBeLatestVersion.fold("grey") { latestVersion =>
       latestVersion - currentVersion match {
-        case (0, 0, 0) => "green"
+        case (0, 0, 0)                                     => "green"
         case (0, minor, patch) if minor != 0 || patch != 0 => "amber"
-        case (major, _, _) if major >= 1 => "red"
-        case _ => "N/A"
+        case (major, _, _) if major >= 1                   => "red"
+        case _                                             => "N/A"
       }
     }
-  }
-
 
   def dependencyReport() = Action.async { implicit request =>
     type RepoName = String
 
     val allTeamsF = teamsAndRepositoriesConnector.teamsWithRepositories()
-    val digitalServicesF: Future[Seq[DigitalService]] = teamsAndRepositoriesConnector.allDigitalServices.flatMap { digitalServices =>
-      Future.sequence {
-        digitalServices.map(teamsAndRepositoriesConnector.digitalServiceInfo)
-      }.map(_.flatten)
+    val digitalServicesF: Future[Seq[DigitalService]] = teamsAndRepositoriesConnector.allDigitalServices.flatMap {
+      digitalServices =>
+        Future
+          .sequence {
+            digitalServices.map(teamsAndRepositoriesConnector.digitalServiceInfo)
+          }
+          .map(_.flatten)
     }
 
     val eventualDependencyReports = for {
       allTeams: Seq[Team] <- allTeamsF
-      digitalServices <- digitalServicesF
-      allDependencies <- serviceDependencyConnector.getAllDependencies
+      digitalServices     <- digitalServicesF
+      allDependencies     <- serviceDependencyConnector.getAllDependencies
     } yield {
       allDependencies.flatMap { dependencies =>
         getDependencies(digitalServices, allTeams, dependencies)
@@ -158,7 +168,7 @@ class DependencyReportController @Inject()(http : HttpClient,
       })
       Result(
         header = ResponseHeader(200, Map.empty),
-        body = HttpEntity.Streamed(source, None, Some("text/csv"))
+        body   = HttpEntity.Streamed(source, None, Some("text/csv"))
       )
     }
   }

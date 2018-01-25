@@ -25,15 +25,13 @@ import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
-
 @Singleton
 class ReadModelService @Inject()(eventService: EventService, userManagementConnector: UserManagementConnector) {
 
-  type ServiceName = String
+  type ServiceName          = String
   type ServiceOwnerUserName = String
 
-  private[events] var eventsCache = Map.empty[ServiceName, ServiceOwnerUserName]
+  private[events] var eventsCache     = Map.empty[ServiceName, ServiceOwnerUserName]
   protected[events] var umpUsersCache = Seq.empty[TeamMember]
 
   def getDigitalServiceOwner(digitalService: String): Option[TeamMember] =
@@ -42,25 +40,29 @@ class ReadModelService @Inject()(eventService: EventService, userManagementConne
   def getAllUsers = umpUsersCache
 
   def refreshEventsCache = {
-     val eventualEvents = eventService.getAllEvents
+    val eventualEvents = eventService.getAllEvents
 
     println("refreshEventsCache")
 
-     eventualEvents.map { events =>
-      eventsCache = events.toStream.filter(_.eventType == EventType.ServiceOwnerUpdated)
-        .sortBy(_.timestamp)
-        .map(_.data.as[ServiceOwnerUpdatedEventData]).groupBy(_.service)
-        .map { case (service, eventDataList) => (service, eventDataList.last.username) }
-      eventsCache
-    }.recover{
-       case e =>
-         Logger.logger.error("Unable to refresh event cache", e)
-         throw e
-     }
+    eventualEvents
+      .map { events =>
+        eventsCache = events.toStream
+          .filter(_.eventType == EventType.ServiceOwnerUpdated)
+          .sortBy(_.timestamp)
+          .map(_.data.as[ServiceOwnerUpdatedEventData])
+          .groupBy(_.service)
+          .map { case (service, eventDataList) => (service, eventDataList.last.username) }
+        eventsCache
+      }
+      .recover {
+        case e =>
+          Logger.logger.error("Unable to refresh event cache", e)
+          throw e
+      }
 
   }
 
-  def refreshUmpCache: Future[Seq[TeamMember]] = {
+  def refreshUmpCache: Future[Seq[TeamMember]] =
     userManagementConnector.getAllUsersFromUMP().map {
       case Right(tms) =>
         Logger.info(s"Got ${tms.length} set of UMP users")
@@ -70,6 +72,5 @@ class ReadModelService @Inject()(eventService: EventService, userManagementConne
         Logger.error(s"An error occurred getting users from ump: $error")
         Nil
     }
-    
-  }
+
 }

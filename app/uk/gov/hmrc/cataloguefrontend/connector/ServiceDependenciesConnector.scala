@@ -43,11 +43,12 @@ import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
-
-
-
 @Singleton
-class ServiceDependenciesConnector @Inject()(http : HttpClient, override val runModeConfiguration:Configuration, environment : PlayEnvironment) extends ServicesConfig {
+class ServiceDependenciesConnector @Inject()(
+  http: HttpClient,
+  override val runModeConfiguration: Configuration,
+  environment: PlayEnvironment)
+    extends ServicesConfig {
 
   def servicesDependenciesBaseUrl: String = baseUrl("service-dependencies") + "/api"
 
@@ -56,7 +57,8 @@ class ServiceDependenciesConnector @Inject()(http : HttpClient, override val run
   def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
     val url = s"$servicesDependenciesBaseUrl"
 
-    http.GET[Option[Dependencies]](s"${url.appendSlash}dependencies/$repositoryName")
+    http
+      .GET[Option[Dependencies]](s"${url.appendSlash}dependencies/$repositoryName")
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)
@@ -67,7 +69,8 @@ class ServiceDependenciesConnector @Inject()(http : HttpClient, override val run
   def getAllDependencies()(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
     val url = s"$servicesDependenciesBaseUrl"
 
-    http.GET[Seq[Dependencies]](s"${url.appendSlash}dependencies")
+    http
+      .GET[Seq[Dependencies]](s"${url.appendSlash}dependencies")
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)

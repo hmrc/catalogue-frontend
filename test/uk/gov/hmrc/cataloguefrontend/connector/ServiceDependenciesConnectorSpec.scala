@@ -34,7 +34,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.Future
 
 class ServiceDependenciesConnectorSpec
-  extends FreeSpec
+    extends FreeSpec
     with Matchers
     with BeforeAndAfter
     with OneServerPerSuite
@@ -47,12 +47,12 @@ class ServiceDependenciesConnectorSpec
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .disable(classOf[com.kenshoo.play.metrics.PlayModule])
-    .configure (
+    .configure(
       Map(
         "microservice.services.service-dependencies.port" -> endpointPort,
         "microservice.services.service-dependencies.host" -> host
-      )).build()
-
+      ))
+    .build()
 
   val serviceDependenciesConnector = app.injector.instanceOf[ServiceDependenciesConnector]
 
@@ -60,8 +60,13 @@ class ServiceDependenciesConnectorSpec
 
     "return a list of dependencies for a repository" in {
 
-      serviceEndpoint(GET, "/api/dependencies/repo1", willRespondWith = (200, Some(
-        """{
+      serviceEndpoint(
+        GET,
+        "/api/dependencies/repo1",
+        willRespondWith = (
+          200,
+          Some(
+            """{
           |  "repositoryName": "repo1",
           |  "libraryDependencies": [
           |    {
@@ -141,15 +146,17 @@ class ServiceDependenciesConnectorSpec
           |  ],
           |  "lastUpdated": "2017-11-08T16:31:38.975Z"
           |}""".stripMargin
-      )))
+          ))
+      )
 
-      val response = serviceDependenciesConnector.getDependencies("repo1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue.value
-
-
+      val response = serviceDependenciesConnector
+        .getDependencies("repo1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .futureValue
+        .value
 
       response.libraryDependencies.size shouldBe 2
 
-      response.repositoryName shouldBe "repo1"
+      response.repositoryName      shouldBe "repo1"
       response.libraryDependencies should contain theSameElementsAs
         Seq(
           Dependency("frontend-bootstrap", Version(7, 11, 0), Some(Version(8, 80, 0))),
@@ -172,7 +179,9 @@ class ServiceDependenciesConnectorSpec
 
       serviceEndpoint(GET, "/api/dependencies/non-existing-repo", willRespondWith = (404, None))
 
-      val response = serviceDependenciesConnector.getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = serviceDependenciesConnector
+        .getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .futureValue
 
       response shouldBe None
 
@@ -181,12 +190,17 @@ class ServiceDependenciesConnectorSpec
     "return a None for if a communication error occurs" in {
 
       val mockedHttpClient = mock[HttpClient]
-      Mockito.when(mockedHttpClient.GET(any())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("Boom!!")))
-      val failingServiceDependenciesConnector = new ServiceDependenciesConnector(mockedHttpClient, Configuration(), mock[Environment]) {
-        override def servicesDependenciesBaseUrl = "chicken.com"
-      }
+      Mockito
+        .when(mockedHttpClient.GET(any())(any(), any(), any()))
+        .thenReturn(Future.failed(new RuntimeException("Boom!!")))
+      val failingServiceDependenciesConnector =
+        new ServiceDependenciesConnector(mockedHttpClient, Configuration(), mock[Environment]) {
+          override def servicesDependenciesBaseUrl = "chicken.com"
+        }
 
-      val response = failingServiceDependenciesConnector.getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = failingServiceDependenciesConnector
+        .getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .futureValue
 
       response shouldBe None
     }
@@ -196,8 +210,13 @@ class ServiceDependenciesConnectorSpec
 
     "return dependencies for all repositories" in {
 
-      serviceEndpoint(GET, "/api/dependencies", willRespondWith = (200, Some(
-        """[
+      serviceEndpoint(
+        GET,
+        "/api/dependencies",
+        willRespondWith = (
+          200,
+          Some(
+            """[
           |  {
           |    "repositoryName": "repo1",
           |    "libraryDependencies": [
@@ -359,15 +378,18 @@ class ServiceDependenciesConnectorSpec
           |    "lastUpdated": "2017-11-08T16:31:38.975Z"
           |  }
           |]""".stripMargin
-      )))
+          ))
+      )
 
-      val response = serviceDependenciesConnector.getAllDependencies()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+      val response = serviceDependenciesConnector
+        .getAllDependencies()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .futureValue
 
       response.size shouldBe 2
 
       response.head.libraryDependencies.size shouldBe 2
 
-      response.head.repositoryName shouldBe "repo1"
+      response.head.repositoryName      shouldBe "repo1"
       response.head.libraryDependencies should contain theSameElementsAs
         Seq(
           Dependency("frontend-bootstrap", Version(7, 11, 0), Some(Version(8, 80, 0))),
@@ -385,11 +407,9 @@ class ServiceDependenciesConnectorSpec
           Dependency("sbt", Version(0, 13, 7), Some(Version(0, 13, 15)))
         )
 
-
-
       response.last.libraryDependencies.size shouldBe 2
 
-      response.last.repositoryName shouldBe "repo2"
+      response.last.repositoryName      shouldBe "repo2"
       response.last.libraryDependencies should contain theSameElementsAs
         Seq(
           Dependency("some-lib-1", Version(7, 77, 0), Some(Version(8, 80, 0))),

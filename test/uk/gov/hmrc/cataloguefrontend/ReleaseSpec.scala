@@ -22,20 +22,25 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
-
-class ReleaseSpec  extends WordSpec with Matchers with MockitoSugar with ScalaFutures {
+class ReleaseSpec extends WordSpec with Matchers with MockitoSugar with ScalaFutures {
 
   "Release.latestDeployer" should {
-    "give most recent deployer" in  {
+    "give most recent deployer" in {
       val now: LocalDateTime = LocalDateTime.now()
-      Release("r", now.minusDays(30),None,None,None,"1.1",
+      Release(
+        "r",
+        now.minusDays(30),
+        None,
+        None,
+        None,
+        "1.1",
         Seq(
-          Deployer("d",now.minusDays(5)),
-          Deployer("a",now.minusDays(10)),
-          Deployer("b",now.minusDays(30)),
-          Deployer("c",now.minusDays(20))
+          Deployer("d", now.minusDays(5)),
+          Deployer("a", now.minusDays(10)),
+          Deployer("b", now.minusDays(30)),
+          Deployer("c", now.minusDays(20))
         )
-      ).latestDeployer.get shouldBe Deployer("d",now.minusDays(5))
+      ).latestDeployer.get shouldBe Deployer("d", now.minusDays(5))
 
     }
   }

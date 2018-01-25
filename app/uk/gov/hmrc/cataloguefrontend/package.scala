@@ -19,8 +19,7 @@ package uk.gov.hmrc
 package object cataloguefrontend {
 
   implicit class UrlHelper(url: String) {
-    def appendSlash = {
-      if(url.endsWith("/")) url else url + "/"
-    }
+    def appendSlash =
+      if (url.endsWith("/")) url else url + "/"
   }
 }

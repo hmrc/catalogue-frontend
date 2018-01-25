@@ -26,20 +26,20 @@ class GithubBadgeTypeSpec extends WordSpec with Matchers {
   "Github Badge" should {
     "be Internal if repository is on github enterprise regardless if private/public" in {
       val repo1 = aRepo.copy(
-        isPrivate = true,
+        isPrivate  = true,
         githubUrls = Set(aLink.copy(url = "https://github.tools.tax.service.gov.uk/orgs/HMRC/name"))
       )
       githubBadgeType(repo1) shouldBe "Internal"
 
       val repo2 = aRepo.copy(
-        isPrivate = false,
+        isPrivate  = false,
         githubUrls = Set(aLink.copy(url = "https://github.tools.tax.service.gov.uk/orgs/HMRC/name"))
       )
       githubBadgeType(repo2) shouldBe "Internal"
     }
     "be Public if repository is not private and on github.com" in {
       val repo = aRepo.copy(
-        isPrivate = false,
+        isPrivate  = false,
         githubUrls = Set(aLink.copy(url = "https://github.com/hmrc/name"))
       )
 
@@ -47,7 +47,7 @@ class GithubBadgeTypeSpec extends WordSpec with Matchers {
     }
     "be Private if repository is private and on github.com" in {
       val repo = aRepo.copy(
-        isPrivate = true,
+        isPrivate  = true,
         githubUrls = Set(aLink.copy(url = "https://github.com/hmrc/name"))
       )
 
@@ -58,16 +58,16 @@ class GithubBadgeTypeSpec extends WordSpec with Matchers {
   val aLink = Link("name", "display-name", "url")
 
   val aRepo = RepositoryDetails(
-    name = "name",
-    description = "description",
-    createdAt = LocalDateTime.now,
-    lastActive = LocalDateTime.now,
-    teamNames = Nil,
-    githubUrls = Set.empty,
-    ci = Nil,
+    name         = "name",
+    description  = "description",
+    createdAt    = LocalDateTime.now,
+    lastActive   = LocalDateTime.now,
+    teamNames    = Nil,
+    githubUrls   = Set.empty,
+    ci           = Nil,
     environments = None,
-    repoType = RepoType.Other,
-    isPrivate = false
+    repoType     = RepoType.Other,
+    isPrivate    = false
   )
 
 }

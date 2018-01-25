@@ -41,25 +41,32 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
   val umpFrontPageUrl = "http://some.ump.fontpage.com"
 
-  implicit override lazy val app = new GuiceApplicationBuilder().configure (
-    "microservice.services.teams-and-services.host" -> host,
-    "microservice.services.teams-and-services.port" -> endpointPort,
-    "microservice.services.indicators.port" -> endpointPort,
-    "microservice.services.indicators.host" -> host,
-    "microservice.services.user-management.url" -> endpointMockUrl,
-    "usermanagement.portal.url" -> "http://usermanagement/link",
-    "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
-    "play.ws.ssl.loose.acceptAnyCertificate" -> true,
-    "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
-
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(
+      "microservice.services.teams-and-services.host"      -> host,
+      "microservice.services.teams-and-services.port"      -> endpointPort,
+      "microservice.services.indicators.port"              -> endpointPort,
+      "microservice.services.indicators.host"              -> host,
+      "microservice.services.user-management.url"          -> endpointMockUrl,
+      "usermanagement.portal.url"                          -> "http://usermanagement/link",
+      "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
+      "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
+      "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
+    )
+    .build()
 
   val teamName = "teamA"
 
   "Team services page" should {
 
     "show a list of libraries, services, prototypes and repositories" in {
-      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
-      """{
+      serviceEndpoint(
+        GET,
+        "/api/teams_with_details/teamA",
+        willRespondWith = (
+          200,
+          Some(
+            """{
         | "name": "teamA",
         | "firstActiveDate":1234560,
         | "lastActiveDate":1234561,
@@ -80,10 +87,10 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
         |    ]
         |}
         |}""".stripMargin
-      )))
+          ))
+      )
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
-
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -99,9 +106,14 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     }
 
     "show user management portal link" ignore {
-      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
-        """{"Library":[], "Service": []  }""".stripMargin
-      )))
+      serviceEndpoint(
+        GET,
+        "/api/teams_with_details/teamA",
+        willRespondWith = (
+          200,
+          Some(
+            """{"Library":[], "Service": []  }""".stripMargin
+          )))
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
@@ -109,41 +121,51 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       response.status shouldBe 200
 
-      response.body.toString should include("""<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
+      response.body.toString should include(
+        """<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
 
     }
 
-
     "show a message if no services are found" in {
 
-      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
-        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
-      )))
+      serviceEndpoint(
+        GET,
+        "/api/teams_with_details/teamA",
+        willRespondWith = (
+          200,
+          Some(
+            """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
+          ))
+      )
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body should include(ViewMessages.noRepoOfTypeForTeam("service"))
-      response.body should include(ViewMessages.noRepoOfTypeForTeam("library"))
+      response.body   should include(ViewMessages.noRepoOfTypeForTeam("service"))
+      response.body   should include(ViewMessages.noRepoOfTypeForTeam("library"))
     }
 
     "show team members correctly" in {
       val teamName = "CATO"
 
-      serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
-        """{"name":"CATO", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
-      )))
+      serviceEndpoint(
+        GET,
+        "/api/teams_with_details/" + teamName,
+        willRespondWith = (
+          200,
+          Some(
+            """{"name":"CATO", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
+          ))
+      )
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/large-user-management-response.json")
-
 
       val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
 
       response.status shouldBe 200
       val document = asDocument(response.body)
-
 
       verifyTeamMemberElementsText(document)
 
@@ -153,8 +175,13 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     }
 
     "show a First Active and Last Active fields in the Details box" in {
-      serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
-        s"""{
+      serviceEndpoint(
+        GET,
+        "/api/teams_with_details/" + teamName,
+        willRespondWith = (
+          200,
+          Some(
+            s"""{
           | "name": "teamA",
           | "firstActiveDate":${createdAt.toInstant(ZoneOffset.UTC).toEpochMilli},
           | "lastActiveDate":${lastActiveAt.toInstant(ZoneOffset.UTC).toEpochMilli},
@@ -166,9 +193,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
           |    ]
           |}
           |}""".stripMargin
-
-
-      )))
+          ))
+      )
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
       val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
@@ -179,29 +205,34 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       response.body should include(lastActiveAt.displayFormat)
     }
 
-
     "show link to UMP's front page when no members node returned" ignore {
 
-      def verifyForFile(fileName : String): Unit = {
+      def verifyForFile(fileName: String): Unit = {
 
         val teamName = "CATO"
 
-        serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
-          """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
-
-        )))
+        serviceEndpoint(
+          GET,
+          "/api/teams_with_details/" + teamName,
+          willRespondWith = (
+            200,
+            Some(
+              """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
+            ))
+        )
 
         mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", fileName)
-
 
         val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
 
         response.status shouldBe 200
-        response.body should include(umpFrontPageUrl)
+        response.body   should include(umpFrontPageUrl)
 
         val document = asDocument(response.body)
 
-        document.select("#linkToRectify").text() shouldBe s"Team $teamName is not defined in the User Management Portal, please add it here"
+        document
+          .select("#linkToRectify")
+          .text() shouldBe s"Team $teamName is not defined in the User Management Portal, please add it here"
 
       }
 
@@ -211,11 +242,20 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     }
 
     "show error message if UMP is not available" in {
-      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(
-        """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
-      )))
+      serviceEndpoint(
+        GET,
+        "/api/teams_with_details/teamA",
+        willRespondWith = (
+          200,
+          Some(
+            """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
+          ))
+      )
 
-      mockHttpApiCall(url = s"/v2/organisations/teams/$teamName/members", "/user-management-response.json", httpCodeToBeReturned = 404)
+      mockHttpApiCall(
+        url = s"/v2/organisations/teams/$teamName/members",
+        "/user-management-response.json",
+        httpCodeToBeReturned = 404)
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
@@ -227,10 +267,14 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show team details correctly" in {
       val teamName = "CATO"
 
-      serviceEndpoint(GET, "/api/teams_with_details/" + teamName, willRespondWith = (200, Some(
-
-      """{"name":"teamA", "repos":{"Library":[], "Service": [] }}""".stripMargin
-      )))
+      serviceEndpoint(
+        GET,
+        "/api/teams_with_details/" + teamName,
+        willRespondWith = (
+          200,
+          Some(
+            """{"name":"teamA", "repos":{"Library":[], "Service": [] }}""".stripMargin
+          )))
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName", "/user-management-team-details-response.json")
 
@@ -247,12 +291,14 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       teamDetailsElements(2).text() shouldBe "Description: TEAM-A is a great team"
       teamDetailsElements(3).text() shouldBe "Documentation: Go to Confluence space"
-      teamDetailsElements(3).toString() should include("""<a href="https://some.documentation.url" target="_blank">Go to Confluence space<span class="glyphicon glyphicon-new-window"""")
+      teamDetailsElements(3).toString() should include(
+        """<a href="https://some.documentation.url" target="_blank">Go to Confluence space<span class="glyphicon glyphicon-new-window"""")
 
       teamDetailsElements(4).text() shouldBe "Organisation: ORGA"
 
       teamDetailsElements(5).text() shouldBe "Slack: Go to team channel"
-      teamDetailsElements(5).toString() should include("""<a href="https://slack.host/messages/team-A" target="_blank">Go to team channel<span class="glyphicon glyphicon-new-window"""")
+      teamDetailsElements(5).toString() should include(
+        """<a href="https://slack.host/messages/team-A" target="_blank">Go to team channel<span class="glyphicon glyphicon-new-window"""")
 
       teamDetailsElements(6).text() shouldBe "Location: STLPD"
 
@@ -260,13 +306,16 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
     "Render the frequent production indicators graph with throughput" in {
       serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(teamDetailsData)))
-      serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (200, Some(deploymentThroughputData)))
+      serviceEndpoint(
+        GET,
+        "/api/indicators/team/teamA/deployments",
+        willRespondWith = (200, Some(deploymentThroughputData)))
 
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
       response.status shouldBe 200
-      response.body should include(s"""data.addColumn('string', 'Period');""")
-      response.body should include(s"""data.addColumn('number', 'Lead Time');""")
-      response.body should include(s"""data.addColumn('number', 'Interval');""")
+      response.body   should include(s"""data.addColumn('string', 'Period');""")
+      response.body   should include(s"""data.addColumn('number', 'Lead Time');""")
+      response.body   should include(s"""data.addColumn('number', 'Interval');""")
 
       response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
       response.body should include(s"""data.addColumn('number', 'Interval');""")
@@ -282,33 +331,33 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
   }
 
   "Render a message if the indicators service returns 404" in {
-    serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(teamDetailsData)))
+    serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith          = (200, Some(teamDetailsData)))
     serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (404, None))
 
     val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
     response.status shouldBe 200
-    response.body should include(s"""No data to show""")
-    response.body should include(ViewMessages.noIndicatorsData)
+    response.body   should include(s"""No data to show""")
+    response.body   should include(ViewMessages.noIndicatorsData)
 
     response.body shouldNot include(s"""chart.draw(data, options);""")
   }
 
   "Render a message if the indicators service encounters an error" in {
-    serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(teamDetailsData)))
+    serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith          = (200, Some(teamDetailsData)))
     serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (500, None))
 
     val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
     response.status shouldBe 200
-    response.body should include(s"""The catalogue encountered an error""")
-    response.body should include(ViewMessages.indicatorsServiceError)
+    response.body   should include(s"""The catalogue encountered an error""")
+    response.body   should include(ViewMessages.indicatorsServiceError)
 
     response.body shouldNot include(s"""chart.draw(data, options);""")
   }
 
   def verifyTeamOwnerIndicatorLabel(document: Document): Unit = {
     val serviceOwnersLiLabels = document.select("#team_members li .label-success")
-    serviceOwnersLiLabels.size() shouldBe 2
+    serviceOwnersLiLabels.size()                         shouldBe 2
     serviceOwnersLiLabels.iterator().toSeq.map(_.text()) shouldBe Seq("Service Owner", "Service Owner")
   }
 
@@ -339,24 +388,17 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
     val json = readFile(jsonResponseFile)
 
-    serviceEndpoint(
-      method = GET,
-      url = url,
-      willRespondWith = (httpCodeToBeReturned, Some(json)))
+    serviceEndpoint(method = GET, url = url, willRespondWith = (httpCodeToBeReturned, Some(json)))
 
     json
   }
 
-  def readFile(jsonFilePath: String): String = {
+  def readFile(jsonFilePath: String): String =
     Source.fromURL(getClass.getResource(jsonFilePath)).getLines().mkString("\n")
-  }
 
-  def extractMembers(jsonString: String):  Seq[TeamMember] = {
-    (Json.parse(jsonString) \\ "members")
-      .headOption
-      .map(js => js.as[Seq[TeamMember]]).getOrElse(throw new RuntimeException(s"not able to extract team members from json: $jsonString"))
-
-  }
-
+  def extractMembers(jsonString: String): Seq[TeamMember] =
+    (Json.parse(jsonString) \\ "members").headOption
+      .map(js => js.as[Seq[TeamMember]])
+      .getOrElse(throw new RuntimeException(s"not able to extract team members from json: $jsonString"))
 
 }

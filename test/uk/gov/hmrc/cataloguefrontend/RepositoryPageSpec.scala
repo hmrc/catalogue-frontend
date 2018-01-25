@@ -36,14 +36,17 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
     RepositoryDetails("Other", RepoType.Other)
   )
 
-  implicit override lazy val app = new GuiceApplicationBuilder().configure (
-    "microservice.services.teams-and-services.host" -> host,
-    "microservice.services.teams-and-services.port" -> endpointPort,
-    "microservice.services.service-dependencies.host" -> host,
-    "microservice.services.service-dependencies.port" -> endpointPort,
-    "microservice.services.indicators.port" -> endpointPort,
-    "microservice.services.indicators.host" -> host,
-    "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(
+      "microservice.services.teams-and-services.host"   -> host,
+      "microservice.services.teams-and-services.port"   -> endpointPort,
+      "microservice.services.service-dependencies.host" -> host,
+      "microservice.services.service-dependencies.port" -> endpointPort,
+      "microservice.services.indicators.port"           -> endpointPort,
+      "microservice.services.indicators.host"           -> host,
+      "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler"
+    )
+    .build()
 
   "A repository page" should {
 
@@ -57,20 +60,29 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
     "show the teams owning the repository with github links for a Service, Library and Other" in {
 
       repositoryDetails.foreach { repositoryDetails =>
-        serviceEndpoint(GET, s"/api/repositories/${repositoryDetails.repositoryName}", willRespondWith = (200, Some(repositoryData(repositoryDetails))))
+        serviceEndpoint(
+          GET,
+          s"/api/repositories/${repositoryDetails.repositoryName}",
+          willRespondWith = (200, Some(repositoryData(repositoryDetails))))
 
         val response = await(WS.url(s"http://localhost:$port/repositories/${repositoryDetails.repositoryName}").get)
         response.status shouldBe 200
-        response.body should include(s"links on this page are automatically generated")
-        response.body should include(s"teamA")
-        response.body should include(s"teamB")
-        response.body should include(s"github.com")
+        response.body   should include(s"links on this page are automatically generated")
+        response.body   should include(s"teamA")
+        response.body   should include(s"teamB")
+        response.body   should include(s"github.com")
       }
     }
 
     "Render the frequent production indicators graph with throughput and stability" in {
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
-      serviceEndpoint(GET, "/api/indicators/repository/service-name/builds", willRespondWith = (200, Some(JsonData.jobExecutionTimeData)))
+      serviceEndpoint(
+        GET,
+        "/api/repositories/service-name",
+        willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
+      serviceEndpoint(
+        GET,
+        "/api/indicators/repository/service-name/builds",
+        willRespondWith = (200, Some(JsonData.jobExecutionTimeData)))
 
       val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
       response.status shouldBe 200
@@ -83,7 +95,10 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
     }
 
     "Render a message if the indicators service returns 404" in {
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
+      serviceEndpoint(
+        GET,
+        "/api/repositories/service-name",
+        willRespondWith                                                                      = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
       serviceEndpoint(GET, "/api/indicators/repository/service-name/builds", willRespondWith = (404, None))
 
       val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
@@ -96,20 +111,26 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
     }
 
     "Render a message if the indicators service encounters an error" in {
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
+      serviceEndpoint(
+        GET,
+        "/api/repositories/service-name",
+        willRespondWith                                                                      = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
       serviceEndpoint(GET, "/api/indicators/repository/service-name/builds", willRespondWith = (500, None))
 
       val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
       response.status shouldBe 200
-      response.body should include(s"""The catalogue encountered an error""")
-      response.body should include(ViewMessages.indicatorsServiceError)
+      response.body   should include(s"""The catalogue encountered an error""")
+      response.body   should include(ViewMessages.indicatorsServiceError)
 
       response.body shouldNot include(s"""chart.draw(data, options);""")
     }
 
     "Render dependencies with red, green, amber and grey colours" in {
 
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
+      serviceEndpoint(
+        GET,
+        "/api/repositories/service-name",
+        willRespondWith                                                                           = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
       serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
 
       val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)

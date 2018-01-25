@@ -27,122 +27,122 @@ class DisplayableTeamMembersSpec extends FunSpec with Matchers with TypeCheckedT
 
     val teamName = "teamA"
 
-
     val teamMembers = Seq(
       TeamMember(
-        displayName =  Some("E Federer"),
-        familyName =  Some("Federer"),
-        givenName =  Some("E"),
-        primaryEmail =  Some("e.federer@digital.hmrc.gov.uk"),
-        username =  Some("e.federer"),
+        displayName     = Some("E Federer"),
+        familyName      = Some("Federer"),
+        givenName       = Some("E"),
+        primaryEmail    = Some("e.federer@digital.hmrc.gov.uk"),
+        username        = Some("e.federer"),
         serviceOwnerFor = Some(Seq("teamC"))
       ),
       TeamMember(
-        displayName =  Some("B Olapade"),
-        familyName =  Some("Olapade"),
-        givenName =  Some("B"),
-        primaryEmail =  Some("b.olapade@digital.hmrc.gov.uk"),
-        username =  Some("b.olapade"),
+        displayName     = Some("B Olapade"),
+        familyName      = Some("Olapade"),
+        givenName       = Some("B"),
+        primaryEmail    = Some("b.olapade@digital.hmrc.gov.uk"),
+        username        = Some("b.olapade"),
         serviceOwnerFor = Some(Seq("teamA", "teamB"))
       ),
       TeamMember(
-        displayName =  Some("D Doe"),
-        familyName =  Some("Doe"),
-        givenName =  Some("D"),
-        primaryEmail =  Some("d.doe@digital.hmrc.gov.uk"),
-        username =  Some("d.doe"),
+        displayName     = Some("D Doe"),
+        familyName      = Some("Doe"),
+        givenName       = Some("D"),
+        primaryEmail    = Some("d.doe@digital.hmrc.gov.uk"),
+        username        = Some("d.doe"),
         serviceOwnerFor = None
       ),
       TeamMember(
-        displayName =  Some("A Mouse"),
-        familyName =  Some("Mouse"),
-        givenName =  Some("A"),
-        primaryEmail =  Some("a.mouse@digital.hmrc.gov.uk"),
-        username =  Some("a.mouse"),
+        displayName     = Some("A Mouse"),
+        familyName      = Some("Mouse"),
+        givenName       = Some("A"),
+        primaryEmail    = Some("a.mouse@digital.hmrc.gov.uk"),
+        username        = Some("a.mouse"),
         serviceOwnerFor = Some(Seq("teamA"))
       ),
       TeamMember(
-        displayName =  Some("C Bourne"),
-        familyName =  Some("Bourne"),
-        givenName =  Some("C"),
-        primaryEmail =  Some("c.bourne@digital.hmrc.gov.uk"),
-        username =  Some("c.bourne"),
+        displayName     = Some("C Bourne"),
+        familyName      = Some("Bourne"),
+        givenName       = Some("C"),
+        primaryEmail    = Some("c.bourne@digital.hmrc.gov.uk"),
+        username        = Some("c.bourne"),
         serviceOwnerFor = None
       )
-      
     )
 
     val expectedDisplayTeamMembers = Seq(
       DisplayableTeamMember(
-        displayName =  "A Mouse",
+        displayName    = "A Mouse",
         isServiceOwner = true,
-        umpLink = "http://example.com/profile/a.mouse"
+        umpLink        = "http://example.com/profile/a.mouse"
       ),
       DisplayableTeamMember(
-        displayName =  "B Olapade",
+        displayName    = "B Olapade",
         isServiceOwner = true,
-        umpLink = "http://example.com/profile/b.olapade"
+        umpLink        = "http://example.com/profile/b.olapade"
       ),
       DisplayableTeamMember(
-        displayName =  "C Bourne",
+        displayName    = "C Bourne",
         isServiceOwner = false,
-        umpLink = "http://example.com/profile/c.bourne"
+        umpLink        = "http://example.com/profile/c.bourne"
       ),
       DisplayableTeamMember(
-        displayName =  "D Doe",
+        displayName    = "D Doe",
         isServiceOwner = false,
-        umpLink = "http://example.com/profile/d.doe"
+        umpLink        = "http://example.com/profile/d.doe"
       ),
       DisplayableTeamMember(
-        displayName =  "E Federer",
+        displayName    = "E Federer",
         isServiceOwner = false,
-        umpLink = "http://example.com/profile/e.federer"
+        umpLink        = "http://example.com/profile/e.federer"
       )
     )
 
-
-    val (expectedServiceOwners, expectedOthers)  = expectedDisplayTeamMembers.partition(_.isServiceOwner)
+    val (expectedServiceOwners, expectedOthers) = expectedDisplayTeamMembers.partition(_.isServiceOwner)
 
     it("transforms TeamMembers into DisplayableTeamMembers correctly") {
-      val displayableTeamMembers: Seq[DisplayableTeamMember] = DisplayableTeamMembers(teamName, "http://example.com/profile", teamMembers)
+      val displayableTeamMembers: Seq[DisplayableTeamMember] =
+        DisplayableTeamMembers(teamName, "http://example.com/profile", teamMembers)
 
       for (i <- 0 until 4) {
-        displayableTeamMembers should contain (expectedDisplayTeamMembers(i))
+        displayableTeamMembers should contain(expectedDisplayTeamMembers(i))
       }
 
     }
 
-
     it("finds service owners based on service name (non-casesensetive)") {
       val differentCasedOwnerTeamMembers = Seq(
         TeamMember(
-          displayName =  Some("E Federer"),
-          familyName =  Some("Federer"),
-          givenName =  Some("E"),
-          primaryEmail =  Some("e.federer@digital.hmrc.gov.uk"),
-          username =  Some("e.federer"),
+          displayName     = Some("E Federer"),
+          familyName      = Some("Federer"),
+          givenName       = Some("E"),
+          primaryEmail    = Some("e.federer@digital.hmrc.gov.uk"),
+          username        = Some("e.federer"),
           serviceOwnerFor = Some(Seq("TEAMa"))
         )
       )
-      val displatableServiceOwners = DisplayableTeamMembers(teamName, "http://example.com/profile", differentCasedOwnerTeamMembers)
+      val displatableServiceOwners =
+        DisplayableTeamMembers(teamName, "http://example.com/profile", differentCasedOwnerTeamMembers)
 
-      displatableServiceOwners.size shouldBe 1
+      displatableServiceOwners.size              shouldBe 1
       displatableServiceOwners(0).isServiceOwner shouldBe true
 
     }
 
     it("displays service owners and then non service owners") {
-      val (serviceOwners, others) = DisplayableTeamMembers(teamName, "http://example.com/profile", teamMembers).splitAt(2)
+      val (serviceOwners, others) =
+        DisplayableTeamMembers(teamName, "http://example.com/profile", teamMembers).splitAt(2)
 
       serviceOwners should contain only (expectedServiceOwners: _*)
-      others should contain only (expectedOthers: _*)
+      others        should contain only (expectedOthers: _*)
     }
 
     it("sorts service owners and non-service owners by display name") {
-      val (serviceOwners, others) = DisplayableTeamMembers(teamName, "http://example.com/profile", teamMembers).splitAt(2)
+      val (serviceOwners, others) =
+        DisplayableTeamMembers(teamName, "http://example.com/profile", teamMembers).splitAt(2)
 
-      serviceOwners should===(expectedServiceOwners)
-      others should===(expectedOthers)
+      serviceOwners should ===(expectedServiceOwners)
+      others        should ===(expectedOthers)
     }
 
   }

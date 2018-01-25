@@ -28,24 +28,34 @@ import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
-class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints with EitherValues {
+class ServiceDeploymentsConnectorSpec
+    extends UnitSpec
+    with BeforeAndAfter
+    with OneServerPerSuite
+    with WireMockEndpoints
+    with EitherValues {
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .disable(classOf[com.kenshoo.play.metrics.PlayModule])
-    .configure (
-    Map(
-    "microservice.services.service-deployments.port" -> endpointPort,
-    "microservice.services.service-deployments.host" -> host,
-     "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler"
-  )).build()
+    .configure(Map(
+      "microservice.services.service-deployments.port" -> endpointPort,
+      "microservice.services.service-deployments.host" -> host,
+      "play.http.requestHandler"                       -> "play.api.http.DefaultHttpRequestHandler"
+    ))
+    .build()
 
   val serviceDeploymentsConnector = app.injector.instanceOf[ServiceDeploymentsConnector]
 
   "getDeployments" should {
 
     "return all deployments if service name is none" in {
-      serviceEndpoint(GET, "/api/deployments", willRespondWith = (200, Some(
-        """
+      serviceEndpoint(
+        GET,
+        "/api/deployments",
+        willRespondWith = (
+          200,
+          Some(
+            """
           |[
           |	{
           |		"name": "serviceA",
@@ -64,19 +74,40 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
           |  "deployers":[]
           |	}]
         """.stripMargin
-      )))
+          ))
+      )
 
-      val response = await(serviceDeploymentsConnector.getDeployments()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
+      val response =
+        await(serviceDeploymentsConnector.getDeployments()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
-      response(0) shouldBe Release("serviceA", productionDate = toLocalDateTime(1453731429), creationDate = Some(toLocalDateTime(1452701233)), interval = Some(7), leadTime = Some(12), version = "8.96.0" ,deployers=Seq(Deployer("abcd.xyz",toLocalDateTime(1452701233))))
-      response(1) shouldBe Release("serviceB", productionDate = toLocalDateTime(1453713911), creationDate = None, interval = Some(5), leadTime = None, version = "2.38.0")
+      response(0) shouldBe Release(
+        "serviceA",
+        productionDate = toLocalDateTime(1453731429),
+        creationDate   = Some(toLocalDateTime(1452701233)),
+        interval       = Some(7),
+        leadTime       = Some(12),
+        version        = "8.96.0",
+        deployers      = Seq(Deployer("abcd.xyz", toLocalDateTime(1452701233)))
+      )
+      response(1) shouldBe Release(
+        "serviceB",
+        productionDate = toLocalDateTime(1453713911),
+        creationDate   = None,
+        interval       = Some(5),
+        leadTime       = None,
+        version        = "2.38.0")
     }
 
     "return all deployments for a  service if name is given" in {
       val serviceName = "serviceNameA"
-      serviceEndpoint(GET, s"/api/deployments/$serviceName", willRespondWith = (200, Some(
-        """
+      serviceEndpoint(
+        GET,
+        s"/api/deployments/$serviceName",
+        willRespondWith = (
+          200,
+          Some(
+            """
           |[
           |	{
           |		"name": "serviceA",
@@ -95,20 +126,41 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
           |  "deployers":[]
           |	}]
         """.stripMargin
-      )))
+          ))
+      )
 
-      val response = await(serviceDeploymentsConnector.getDeployments(Some("serviceNameA"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
+      val response = await(
+        serviceDeploymentsConnector.getDeployments(Some("serviceNameA"))(
+          HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
       response.size shouldBe 2
-      response(0) shouldBe Release("serviceA", productionDate = toLocalDateTime(1453731429), creationDate = Some(toLocalDateTime(1452701233)), interval = Some(7), leadTime = Some(12), version = "8.96.0")
-      response(1) shouldBe Release("serviceA", productionDate = toLocalDateTime(1453713911), creationDate = None, interval = Some(5), leadTime = None, version = "2.38.0")
+      response(0) shouldBe Release(
+        "serviceA",
+        productionDate = toLocalDateTime(1453731429),
+        creationDate   = Some(toLocalDateTime(1452701233)),
+        interval       = Some(7),
+        leadTime       = Some(12),
+        version        = "8.96.0"
+      )
+      response(1) shouldBe Release(
+        "serviceA",
+        productionDate = toLocalDateTime(1453713911),
+        creationDate   = None,
+        interval       = Some(5),
+        leadTime       = None,
+        version        = "2.38.0")
     }
 
     "return deployments for all services mentioned in the body" in {
       val serviceNames = Seq("serviceNameA", "serviceNameB")
 
-      serviceEndpoint(POST, s"/api/deployments", willRespondWith = (200, Some(
-        """
+      serviceEndpoint(
+        POST,
+        s"/api/deployments",
+        willRespondWith = (
+          200,
+          Some(
+            """
           |[
           |	{
           |		"name": "serviceNameA",
@@ -127,11 +179,15 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
           |  "deployers":[]
           |	}]
         """.stripMargin
-      )), givenJsonBody = Some("[\"serviceNameA\",\"serviceNameB\"]"))
+          )),
+        givenJsonBody = Some("[\"serviceNameA\",\"serviceNameB\"]")
+      )
 
-      val response = await(serviceDeploymentsConnector.getDeployments(serviceNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
+      val response = await(
+        serviceDeploymentsConnector.getDeployments(serviceNames)(
+          HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
-      response.size shouldBe 2
+      response.size    shouldBe 2
       response(0).name shouldBe "serviceNameA"
       response(1).name shouldBe "serviceNameB"
     }
@@ -140,12 +196,16 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
 
   }
 
-
   "getWhatIsRunningWhere" should {
     "return all whats running where for the given application name" in {
       val serviceName = "appNameA"
-      serviceEndpoint(GET, s"/api/whatsrunningwhere/$serviceName", willRespondWith = (200, Some(
-        s"""
+      serviceEndpoint(
+        GET,
+        s"/api/whatsrunningwhere/$serviceName",
+        willRespondWith = (
+          200,
+          Some(
+            s"""
            |  {
            |    "serviceName": "$serviceName",
            |    "deployments": [
@@ -159,10 +219,12 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
            |  }
            |
         """.stripMargin
-      )))
+          ))
+      )
 
-      val response = await(serviceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
-
+      val response = await(
+        serviceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(
+          HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
       response.right.get.deployments shouldEqual Seq(
         DeploymentVO(EnvironmentMapping("qa", "qa"), "datacentred-sal01", "0.0.1"),
@@ -170,18 +232,20 @@ class ServiceDeploymentsConnectorSpec extends UnitSpec with BeforeAndAfter with 
         DeploymentVO(EnvironmentMapping("staging", "staging"), "datacentred-sal01", "0.0.2"),
         DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"),
         DeploymentVO(EnvironmentMapping("production", "production"), "datacentred-sal01", "0.0.2"),
-        DeploymentVO(EnvironmentMapping("external test", "externaltest"), "datacentred-sal01", "0.0.1"))
+        DeploymentVO(EnvironmentMapping("external test", "externaltest"), "datacentred-sal01", "0.0.1")
+      )
     }
 
     "return an empty list of environments in WhatsRunningWhere when the service is not deployed to any environments " in {
       val serviceName = "appNameA"
       serviceEndpoint(GET, s"/api/whatsrunningwhere/$serviceName", willRespondWith = (404, None))
 
-      val response = await(serviceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
+      val response = await(
+        serviceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(
+          HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
       response.right.get.deployments shouldBe Seq()
       response.right.get.serviceName shouldBe serviceName
-
 
     }
 

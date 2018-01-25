@@ -28,18 +28,22 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-
 class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
 
-
-  val eventService = mock[EventService]
+  val eventService            = mock[EventService]
   val userManagementConnector = mock[UserManagementConnector]
-  val readModelService = new ReadModelService(eventService, userManagementConnector)
+  val readModelService        = new ReadModelService(eventService, userManagementConnector)
 
   describe("refreshEventsCache") {
 
     it("should update the eventsCache correctly (with the events returned from the Repository))") {
-      when(eventService.getAllEvents).thenReturn(Future.successful(List(Event(EventType.ServiceOwnerUpdated, 1, Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject]))))
+      when(eventService.getAllEvents).thenReturn(
+        Future.successful(
+          List(
+            Event(
+              EventType.ServiceOwnerUpdated,
+              1,
+              Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject]))))
 
       Await.result(readModelService.refreshEventsCache, 5 seconds)
 
@@ -50,7 +54,7 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
   }
 
   describe("refreshUmpCache") {
-    
+
     it("should update the umpUsersCache correctly (with the users returned from the UMP))") {
 
       val teamMember = TeamMember(Some("Jack Low"), None, None, None, None, None)
@@ -59,7 +63,7 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
       Await.result(readModelService.refreshUmpCache, 5 seconds)
 
       readModelService.umpUsersCache.size shouldBe 1
-      readModelService.umpUsersCache.head shouldBe(teamMember)
+      readModelService.umpUsersCache.head shouldBe (teamMember)
     }
   }
 }

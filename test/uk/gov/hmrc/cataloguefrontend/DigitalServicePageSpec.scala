@@ -41,35 +41,48 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.Source
 
-class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints with MockitoSugar with ScalaFutures {
+class DigitalServicePageSpec
+    extends UnitSpec
+    with BeforeAndAfter
+    with OneServerPerSuite
+    with WireMockEndpoints
+    with MockitoSugar
+    with ScalaFutures {
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
   val umpFrontPageUrl = "http://some.ump.fontpage.com"
 
-  implicit override lazy val app = new GuiceApplicationBuilder().configure (
-    "microservice.services.teams-and-services.host" -> host,
-    "microservice.services.teams-and-services.port" -> endpointPort,
-    "microservice.services.indicators.port" -> endpointPort,
-    "microservice.services.indicators.host" -> host,
-    "microservice.services.user-management.url" -> endpointMockUrl,
-    "usermanagement.portal.url" -> "http://usermanagement/link",
-    "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
-    "play.ws.ssl.loose.acceptAnyCertificate" -> true,
-    "play.http.requestHandler" -> "play.api.http.DefaultHttpRequestHandler").build()
-
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(
+      "microservice.services.teams-and-services.host"      -> host,
+      "microservice.services.teams-and-services.port"      -> endpointPort,
+      "microservice.services.indicators.port"              -> endpointPort,
+      "microservice.services.indicators.host"              -> host,
+      "microservice.services.user-management.url"          -> endpointMockUrl,
+      "usermanagement.portal.url"                          -> "http://usermanagement/link",
+      "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
+      "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
+      "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
+    )
+    .build()
 
   val digitalServiceName = "digital-service-a"
 
-  val serviceOwner = TeamMember(Some("Jack Low"), None, None, None, None, Some("jack.low"))
+  val serviceOwner       = TeamMember(Some("Jack Low"), None, None, None, None, Some("jack.low"))
   val mockedModelService = mock[ReadModelService]
   when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwner))
 
   "DigitalService page" should {
 
     "show a list of libraries, services, prototypes and repositories" in {
-      serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
-        s"""{
+      serviceEndpoint(
+        GET,
+        s"/api/digital-services/$digitalServiceName",
+        willRespondWith = (
+          200,
+          Some(
+            s"""{
            |  "name": "$digitalServiceName",
            |  "lastUpdatedAt": 1494240869000,
            |  "repositories": [
@@ -103,7 +116,8 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
            |    }
            |  ]
            |}""".stripMargin
-      )))
+          ))
+      )
 
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
@@ -116,61 +130,70 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
     }
 
-
     "show a message if no services are found" in {
 
-      serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
-        s"""{
+      serviceEndpoint(
+        GET,
+        s"/api/digital-services/$digitalServiceName",
+        willRespondWith = (
+          200,
+          Some(
+            s"""{
            |   "name":"$digitalServiceName",
            |   "lastUpdatedAt":12345,
            |   "repositories":[]
            | }""".stripMargin
-
-      )))
+          ))
+      )
 
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
-      response.body should include(ViewMessages.noRepoOfTypeForDigitalService("service"))
-      response.body should include(ViewMessages.noRepoOfTypeForDigitalService("library"))
-      response.body should include(ViewMessages.noRepoOfTypeForDigitalService("prototype"))
-      response.body should include(ViewMessages.noRepoOfTypeForDigitalService("other"))
+      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("service"))
+      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("library"))
+      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("prototype"))
+      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("other"))
     }
 
     "show 'Not specified' if service owner is not set" in {
 
-
       val digitalServiceName = "digital-service-123"
 
-      serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
-        s"""{
+      serviceEndpoint(
+        GET,
+        s"/api/digital-services/$digitalServiceName",
+        willRespondWith = (
+          200,
+          Some(
+            s"""{
            |   "name":"$digitalServiceName",
            |   "lastUpdatedAt":12345,
            |   "repositories":[]
            | }""".stripMargin
-
-      )))
+          ))
+      )
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       val document = asDocument(response.body)
 
       val serviceOwnerO = document.select("#service_owner_edit_input").iterator().toList.headOption
 
-      serviceOwnerO.isDefined shouldBe true
+      serviceOwnerO.isDefined         shouldBe true
       serviceOwnerO.get.attr("value") shouldBe "Not specified"
     }
 
     "show service owner" in {
 
       val digitalServiceName = "digital-service-123"
-      val mockedConnector = mock[TeamsAndRepositoriesConnector]
-      when(mockedConnector.digitalServiceInfo(any())(any())).thenReturn(Future(Some(DigitalService(digitalServiceName, 0L, Seq.empty))))
+      val mockedConnector    = mock[TeamsAndRepositoriesConnector]
+      when(mockedConnector.digitalServiceInfo(any())(any()))
+        .thenReturn(Future(Some(DigitalService(digitalServiceName, 0L, Seq.empty))))
 
       val userManagementConnector = mock[UserManagementConnector]
-      when(userManagementConnector.getTeamMembersForTeams(any())(any())).thenReturn(Future(Map.empty[String, Either[UMPError, Seq[TeamMember]]]))
+      when(userManagementConnector.getTeamMembersForTeams(any())(any()))
+        .thenReturn(Future(Map.empty[String, Either[UMPError, Seq[TeamMember]]]))
 
-
-      val catalogueController =         new CatalogueController(
+      val catalogueController = new CatalogueController(
         userManagementConnector,
         mockedConnector,
         mock[ServiceDependenciesConnector],
@@ -180,8 +203,8 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
         mockedModelService,
         mock[play.api.Environment],
         app.configuration,
-        mock[MessagesApi])
-
+        mock[MessagesApi]
+      )
 
       val responseF = catalogueController.digitalService(digitalServiceName)(FakeRequest())
 
@@ -192,18 +215,16 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
       val serviceOwnerO = document.select("#service_owner_edit_input").iterator().toList.headOption
 
-      serviceOwnerO.isDefined shouldBe true
+      serviceOwnerO.isDefined         shouldBe true
       serviceOwnerO.get.attr("value") shouldBe serviceOwner.getDisplayName
     }
-
 
     "show team members for teams correctly" in {
       val team1 = "Team1"
       val team2 = "Team2"
 
-      val teamNames = Seq(team1, team2)
+      val teamNames          = Seq(team1, team2)
       val digitalServiceName = "digital-service-123"
-
 
       val json =
         s"""
@@ -221,19 +242,22 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
            |  ]
            |}
         """.stripMargin
-      serviceEndpoint(GET, s"/api/digital-services/$digitalServiceName", willRespondWith = (200, Some(
-        json
-      )))
-
+      serviceEndpoint(
+        GET,
+        s"/api/digital-services/$digitalServiceName",
+        willRespondWith = (
+          200,
+          Some(
+            json
+          )))
 
       mockHttpApiCall(s"/v2/organisations/teams/$team1/members", "/user-management-response-team1.json")
       mockHttpApiCall(s"/v2/organisations/teams/$team2/members", "/user-management-response-team2.json")
 
-      val response = await(WS.url(s"http://localhost:$port/digital-service/${digitalServiceName}").get)
+      val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
       val document = asDocument(response.body)
-
 
       verifyTeamMemberElementsText(document)
 
@@ -246,9 +270,9 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val digitalServiceName = "digital-service-123"
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
-      val umpConnectorMock = mock[UserManagementConnector]
+      val umpConnectorMock                  = mock[UserManagementConnector]
 
-      val catalogueController =         new CatalogueController(
+      val catalogueController = new CatalogueController(
         umpConnectorMock,
         teamsAndRepositoriesConnectorMock,
         mock[ServiceDependenciesConnector],
@@ -258,18 +282,19 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
         mockedModelService,
         mock[play.api.Environment],
         app.configuration,
-        mock[MessagesApi])
+        mock[MessagesApi]
+      )
 
       val teamName = "Team1"
 
       val exception = new RuntimeException("Boooom!")
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
+        .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
           Map(teamName -> Left(UserManagementConnector.ConnectionError(exception)))
         )
       )
-
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
@@ -279,7 +304,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val document: Document = asDocument(contentAsString(response))
 
       println(contentAsString(response))
-      document.select(s"#ump-error-$teamName").text() should === ("Sorry, the User Management Portal is not available")
+      document.select(s"#ump-error-$teamName").text() should ===("Sorry, the User Management Portal is not available")
     }
 
     "show the right error message the ump send no data" in {
@@ -287,9 +312,9 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val digitalServiceName = "digital-service-123"
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
-      val umpConnectorMock = mock[UserManagementConnector]
+      val umpConnectorMock                  = mock[UserManagementConnector]
 
-      val catalogueController =         new CatalogueController(
+      val catalogueController = new CatalogueController(
         umpConnectorMock,
         teamsAndRepositoriesConnectorMock,
         mock[ServiceDependenciesConnector],
@@ -299,19 +324,20 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
         mockedModelService,
         mock[play.api.Environment],
         app.configuration,
-        mock[MessagesApi])
+        mock[MessagesApi]
+      )
 
       val teamName = "Team1"
 
       val exception = new RuntimeException("Boooom!")
 
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
+        .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
           Map(teamName -> Left(UserManagementConnector.NoData("https://some-link-to-rectify")))
         )
       )
-
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
@@ -321,7 +347,8 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val document: Document = asDocument(contentAsString(response))
 
       println(contentAsString(response))
-      document.select(s"#ump-error-$teamName").text() should === (s"$teamName is unknown to the User Management Portal. To add the team, please raise a TSR")
+      document.select(s"#ump-error-$teamName").text() should ===(
+        s"$teamName is unknown to the User Management Portal. To add the team, please raise a TSR")
     }
 
     "show the right error message the ump gives an Http error" in {
@@ -329,9 +356,9 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val digitalServiceName = "digital-service-123"
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
-      val umpConnectorMock = mock[UserManagementConnector]
+      val umpConnectorMock                  = mock[UserManagementConnector]
 
-      val catalogueController =         new CatalogueController(
+      val catalogueController = new CatalogueController(
         umpConnectorMock,
         teamsAndRepositoriesConnectorMock,
         mock[ServiceDependenciesConnector],
@@ -341,19 +368,20 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
         mockedModelService,
         mock[play.api.Environment],
         app.configuration,
-        mock[MessagesApi])
+        mock[MessagesApi]
+      )
 
       val teamName = "Team1"
 
       val exception = new RuntimeException("Boooom!")
 
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any())).thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
+        .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
           Map(teamName -> Left(UserManagementConnector.HTTPError(404)))
         )
       )
-
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
@@ -363,7 +391,7 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
       val document: Document = asDocument(contentAsString(response))
 
       println(contentAsString(response))
-      document.select(s"#ump-error-$teamName").text() should === (s"Sorry, the User Management Portal is not available")
+      document.select(s"#ump-error-$teamName").text() should ===(s"Sorry, the User Management Portal is not available")
     }
 
   }
@@ -372,17 +400,13 @@ class DigitalServicePageSpec extends UnitSpec with BeforeAndAfter with OneServer
 
     val json = readFile(jsonResponseFile)
 
-    serviceEndpoint(
-      method = GET,
-      url = url,
-      willRespondWith = (httpCodeToBeReturned, Some(json)))
+    serviceEndpoint(method = GET, url = url, willRespondWith = (httpCodeToBeReturned, Some(json)))
 
     json
   }
 
-  def readFile(jsonFilePath: String): String = {
+  def readFile(jsonFilePath: String): String =
     Source.fromURL(getClass.getResource(jsonFilePath)).getLines().mkString("\n")
-  }
 
   def verifyTeamMemberHrefLinks(document: Document): Boolean = {
     val hrefs = document.select("#team_members [href]").iterator().toList

@@ -44,101 +44,123 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 
 import scala.concurrent.Future
 
-
 case class MedianDataPoint(median: Int)
 
-case class DeploymentThroughputDataPoint(period: String, from: LocalDate, to: LocalDate, leadTime: Option[MedianDataPoint], interval: Option[MedianDataPoint])
+case class DeploymentThroughputDataPoint(
+  period: String,
+  from: LocalDate,
+  to: LocalDate,
+  leadTime: Option[MedianDataPoint],
+  interval: Option[MedianDataPoint])
 
-case class DeploymentStabilityDataPoint(period: String, from: LocalDate, to: LocalDate, hotfixRate: Option[Double], hotfixInterval: Option[MedianDataPoint])
+case class DeploymentStabilityDataPoint(
+  period: String,
+  from: LocalDate,
+  to: LocalDate,
+  hotfixRate: Option[Double],
+  hotfixInterval: Option[MedianDataPoint])
 
-case class JobMetricDataPoint(period: String, from: LocalDate, to: LocalDate, duration: Option[MedianDataPoint], successRate: Option[Double])
+case class JobMetricDataPoint(
+  period: String,
+  from: LocalDate,
+  to: LocalDate,
+  duration: Option[MedianDataPoint],
+  successRate: Option[Double])
 
-case class DeploymentIndicators(throughput: Seq[DeploymentThroughputDataPoint], stability: Seq[DeploymentStabilityDataPoint])
+case class DeploymentIndicators(
+  throughput: Seq[DeploymentThroughputDataPoint],
+  stability: Seq[DeploymentStabilityDataPoint])
 
-case class DeploymentsMetricResult(period: String,
-                                   from: LocalDate,
-                                   to: LocalDate,
-                                   throughput: Option[Throughput],
-                                   stability: Option[Stability])
-
+case class DeploymentsMetricResult(
+  period: String,
+  from: LocalDate,
+  to: LocalDate,
+  throughput: Option[Throughput],
+  stability: Option[Stability])
 
 case class Throughput(leadTime: Option[MeasureResult], interval: Option[MeasureResult])
 
 case class Stability(hotfixRate: Option[Double], hotfixInterval: Option[MeasureResult])
 
 case class MeasureResult(median: Int)
-
-
 @Singleton
-class IndicatorsConnector @Inject()(http: HttpClient,
-                                    override val runModeConfiguration: Configuration,
-                                    environment : Environment) extends ServicesConfig {
+class IndicatorsConnector @Inject()(
+  http: HttpClient,
+  override val runModeConfiguration: Configuration,
+  environment: Environment)
+    extends ServicesConfig {
   def indicatorsBaseUrl = baseUrl("indicators") + "/api/indicators"
 
   override protected def mode = environment.mode
 
-
-  implicit val mesureResultFormats = Json.reads[MeasureResult]
-  implicit val throughputFormats = Json.reads[Throughput]
-  implicit val stabilityFormats = Json.reads[Stability]
-  implicit val deploymentsMetricResultFormats = Json.reads[DeploymentsMetricResult]
-  implicit val medianDataPointFormats = Json.reads[MedianDataPoint]
+  implicit val mesureResultFormats              = Json.reads[MeasureResult]
+  implicit val throughputFormats                = Json.reads[Throughput]
+  implicit val stabilityFormats                 = Json.reads[Stability]
+  implicit val deploymentsMetricResultFormats   = Json.reads[DeploymentsMetricResult]
+  implicit val medianDataPointFormats           = Json.reads[MedianDataPoint]
   implicit val jobExecutionTimeDataPointFormats = Json.reads[JobMetricDataPoint]
 
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
-  def deploymentIndicatorsForTeam(teamName: String)(implicit hc: HeaderCarrier) = deploymentIndicators(s"/team/$teamName/deployments")
+  def deploymentIndicatorsForTeam(teamName: String)(implicit hc: HeaderCarrier) =
+    deploymentIndicators(s"/team/$teamName/deployments")
 
-  def deploymentIndicatorsForService(serviceName: String)(implicit hc: HeaderCarrier) = deploymentIndicators(s"/service/$serviceName/deployments")
+  def deploymentIndicatorsForService(serviceName: String)(implicit hc: HeaderCarrier) =
+    deploymentIndicators(s"/service/$serviceName/deployments")
 
   private def deploymentIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] = {
-    val url = indicatorsBaseUrl + path
+    val url                                    = indicatorsBaseUrl + path
     val eventualResponse: Future[HttpResponse] = http.GET[HttpResponse](url)
-    eventualResponse.map { r =>
-      r.status match {
-        case 404 => Some(DeploymentIndicators(Nil, Nil))
-        case 200 =>
+    eventualResponse
+      .map { r =>
+        r.status match {
+          case 404 => Some(DeploymentIndicators(Nil, Nil))
+          case 200 =>
+            val deploymentsMetricResults: Seq[DeploymentsMetricResult] = r.json.as[Seq[DeploymentsMetricResult]]
+            val (deploymentThroughputs, deploymentStabilities) =
+              deploymentsMetricResults.map { dmr =>
+                val leadTime   = dmr.throughput.flatMap(x => x.leadTime.map(y => MedianDataPoint.apply(y.median)))
+                val interval   = dmr.throughput.flatMap(x => x.interval.map(y => MedianDataPoint.apply(y.median)))
+                val hotfixRate = dmr.stability.flatMap(_.hotfixRate)
+                val hotfixLeadTime =
+                  dmr.stability.flatMap(x => x.hotfixInterval.map(y => MedianDataPoint.apply(y.median)))
 
-          val deploymentsMetricResults: Seq[DeploymentsMetricResult] = r.json.as[Seq[DeploymentsMetricResult]]
-          val (deploymentThroughputs, deploymentStabilities) =
-            deploymentsMetricResults.map { dmr =>
+                (
+                  DeploymentThroughputDataPoint(dmr.period, dmr.from, dmr.to, leadTime, interval),
+                  DeploymentStabilityDataPoint(dmr.period, dmr.from, dmr.to, hotfixRate, hotfixLeadTime))
 
-              val leadTime = dmr.throughput.flatMap(x => x.leadTime.map(y => MedianDataPoint.apply(y.median)))
-              val interval = dmr.throughput.flatMap(x => x.interval.map(y => MedianDataPoint.apply(y.median)))
-              val hotfixRate = dmr.stability.flatMap(_.hotfixRate)
-              val hotfixLeadTime = dmr.stability.flatMap(x => x.hotfixInterval.map(y => MedianDataPoint.apply(y.median)))
+              }.unzip
 
-              (DeploymentThroughputDataPoint(dmr.period, dmr.from, dmr.to, leadTime, interval),
-                DeploymentStabilityDataPoint(dmr.period, dmr.from, dmr.to, hotfixRate, hotfixLeadTime))
-
-            }.unzip
-
-          Some(DeploymentIndicators(deploymentThroughputs, deploymentStabilities))
+            Some(DeploymentIndicators(deploymentThroughputs, deploymentStabilities))
+        }
       }
-    }.recover {
-      case ex =>
-        Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-        None
-    }
+      .recover {
+        case ex =>
+          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          None
+      }
   }
 
-  def buildIndicatorsForRepository(repositoryName: String)(implicit hc: HeaderCarrier) = buildIndicators(s"/repository/$repositoryName/builds")
+  def buildIndicatorsForRepository(repositoryName: String)(implicit hc: HeaderCarrier) =
+    buildIndicators(s"/repository/$repositoryName/builds")
 
   private def buildIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[Seq[JobMetricDataPoint]]] = {
-    val url = indicatorsBaseUrl + path
+    val url                                    = indicatorsBaseUrl + path
     val eventualResponse: Future[HttpResponse] = http.GET[HttpResponse](url)
-    eventualResponse.map { r =>
-      r.status match {
-        case 404 => Some(Nil)
-        case 200 => Some(r.json.as[Seq[JobMetricDataPoint]])
+    eventualResponse
+      .map { r =>
+        r.status match {
+          case 404 => Some(Nil)
+          case 200 => Some(r.json.as[Seq[JobMetricDataPoint]])
+        }
       }
-    }.recover {
-      case ex =>
-        Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-        None
-    }
+      .recover {
+        case ex =>
+          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          None
+      }
   }
 
 }
