@@ -11946,8 +11946,11 @@ section span.other-teams-message {
   font-size: 13px; }
 
 .glyphicon-new-window {
-  padding-left: 2px;
-  font-size: 9px; }
+  padding-left: 4px;
+  font-size: 9px;
+  vertical-align: middle;
+  margin-top: -3px;
+}
 
 /*# sourceMappingURL=catalogue-frontend.css.map */
 
@@ -11962,10 +11965,13 @@ section span.other-teams-message {
   display: inline-block;
 }
 
-.header-with-github-badge p {
+.header-with-github-badge span {
   display: inline-block;
   border: 1px solid #008770;
   border-radius: 2px;
   padding: 4px;
-  margin-left: 5px
+  font-size: 22px;
+  margin-left: 15px;
+  font-weight: lighter;
+  vertical-align: middle;
 }
