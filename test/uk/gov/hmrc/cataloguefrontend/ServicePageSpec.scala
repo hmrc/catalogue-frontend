@@ -16,17 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import uk.gov.hmrc.cataloguefrontend.DateHelper._
-import java.time.{LocalDateTime, ZoneId}
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import org.jsoup.Jsoup
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.WS
+import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -42,9 +40,16 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       "microservice.services.service-dependencies.port" -> endpointPort,
       "microservice.services.service-deployments.port"  -> endpointPort,
       "microservice.services.service-deployments.host"  -> host,
+      "microservice.services.leak-detection.port"       -> endpointPort,
+      "microservice.services.leak-detection.host"       -> host,
       "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler"
     )
     .build()
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
+  }
 
   "A service page" should {
 
@@ -189,8 +194,6 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
       }
 
       "show show 'Not deployed' for envs in which the service is not deployed" in {
-        import ServiceDeploymentInformation._
-
         serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (404, None))
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith      = (200, Some(serviceDetailsData)))
         serviceEndpoint(

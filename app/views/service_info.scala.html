@@ -31,7 +31,8 @@
   throughputChartData: Option[ChartDataRows],
   stabilityChartData: Option[ChartDataRows],
   repositoryCreationDate: LocalDateTime,
-  deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]])(implicit messages: Messages)
+  deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
+  linkToLeakDetection: Option[String])(implicit messages: Messages)
 
 @datacentreMappings(datacentreLongName: String) = @{
     datacentreLongName.toLowerCase match {
@@ -49,6 +50,8 @@
 
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
+
+    @partials.leak_detection_banner(linkToLeakDetection)
 
     <div class="alert alert-success" role="alert" id="@service.name">
         <p>

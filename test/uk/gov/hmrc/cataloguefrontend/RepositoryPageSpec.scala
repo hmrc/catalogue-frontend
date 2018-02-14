@@ -22,11 +22,15 @@ import org.jsoup.nodes.Document
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.{WS, WSResponse}
-import play.twirl.api.Html
+import play.api.libs.ws.WS
 import uk.gov.hmrc.play.test.UnitSpec
 
-class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class RepositoryPageSpec
+    extends UnitSpec
+    with BeforeAndAfter
+    with OneServerPerSuite
+    with WireMockEndpoints
+    with BeforeAndAfterEach {
 
   case class RepositoryDetails(repositoryName: String, repositoryType: RepoType.RepoType)
 
@@ -44,9 +48,16 @@ class RepositoryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerS
       "microservice.services.service-dependencies.port" -> endpointPort,
       "microservice.services.indicators.port"           -> endpointPort,
       "microservice.services.indicators.host"           -> host,
+      "microservice.services.leak-detection.port"       -> endpointPort,
+      "microservice.services.leak-detection.host"       -> host,
       "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler"
     )
     .build()
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
+  }
 
   "A repository page" should {
 

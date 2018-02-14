@@ -22,7 +22,11 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import views.partials.githubBadgeType
 
-@(repository: RepositoryDetails, mayBeDependencies: Option[Dependencies], jobExecutionTimeChartData: Option[ChartDataRows])(implicit messages: Messages)
+@(repository: RepositoryDetails,
+mayBeDependencies: Option[Dependencies],
+jobExecutionTimeChartData: Option[ChartDataRows],
+linkToLeakDetection: Option[String]
+)(implicit messages: Messages)
 
 @standard_layout(repository.name, "repositories") {
 <header class="header-with-github-badge">
@@ -32,6 +36,8 @@
 
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 </header>
+
+@partials.leak_detection_banner(linkToLeakDetection)
 
 <div class="alert alert-success" role="alert" id="@repository.name">
     <p>

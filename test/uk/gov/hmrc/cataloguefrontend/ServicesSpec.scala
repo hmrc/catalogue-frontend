@@ -18,13 +18,13 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
+import play.api.Configuration
 import play.api.i18n.MessagesApi
-import play.api.{Configuration, Environment}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
+import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class ServicesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
@@ -37,6 +37,7 @@ class ServicesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
           mock[TeamsAndRepositoriesConnector],
           mock[ServiceDependenciesConnector],
           mock[IndicatorsConnector],
+          mock[LeakDetectionService],
           mock[DeploymentsService],
           mock[EventService],
           mock[ReadModelService],

@@ -18,24 +18,23 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.time.{LocalDateTime, ZoneOffset}
 import javax.inject.{Inject, Singleton}
-
 import play.api
 import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 import play.api.mvc._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events._
-import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
+import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 case class TeamActivityDates(
   firstActive: Option[LocalDateTime],
@@ -45,13 +44,15 @@ case class TeamActivityDates(
 case class DigitalServiceDetails(
   digitalServiceName: String,
   teamMembersLookUp: Map[String, Either[UMPError, Seq[DisplayableTeamMember]]],
-  repos: Map[String, Seq[String]])
+  repos: Map[String, Seq[String]]
+)
 @Singleton
 class CatalogueController @Inject()(
   userManagementConnector: UserManagementConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   serviceDependencyConnector: ServiceDependenciesConnector,
   indicatorsConnector: IndicatorsConnector,
+  leakDetectionService: LeakDetectionService,
   deploymentsService: DeploymentsService,
   eventService: EventService,
   readModelService: ReadModelService,
@@ -65,6 +66,8 @@ class CatalogueController @Inject()(
   import UserManagementConnector._
 
   val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
+
+  implicit val errorResponseFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
 
   override protected def mode = environment.mode
 
@@ -193,6 +196,7 @@ class CatalogueController @Inject()(
     val eventualTeamInfo           = teamsAndRepositoriesConnector.teamInfo(teamName)
     val eventualErrorOrMembers     = userManagementConnector.getTeamMembersFromUMP(teamName)
     val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
+    val eventualReposWithLeaks     = leakDetectionService.repositoriesWithLeaks
 
     val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
     for {
@@ -200,10 +204,16 @@ class CatalogueController @Inject()(
       teamMembers             <- eventualErrorOrMembers
       teamDetails             <- eventualErrorOrTeamDetails
       teamIndicators          <- eventualMaybeDeploymentIndicators
+      reposWithLeaks          <- eventualReposWithLeaks
     } yield
       (typeRepos, teamMembers, teamDetails, teamIndicators) match {
         case (Some(team), _, _, _) =>
           implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
+
+          val leaksFoundForTeam: Boolean = {
+            val teamRepos = team.repos.map(_.values.toList.flatten).getOrElse(Nil)
+            leakDetectionService.leaksFoundForTeam(reposWithLeaks, teamRepos)
+          }
 
           Ok(
             team_info(
@@ -215,7 +225,9 @@ class CatalogueController @Inject()(
               teamDetails,
               TeamChartData.deploymentThroughput(team.name, teamIndicators.map(_.throughput)),
               TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
-              umpMyTeamsPageUrl(team.name)
+              umpMyTeamsPageUrl(team.name),
+              leaksFoundForTeam,
+              leakDetectionService.hasLeaks(reposWithLeaks)
             ))
         case _ => NotFound
       }
@@ -250,10 +262,11 @@ class CatalogueController @Inject()(
     val dependenciesF = serviceDependencyConnector.getDependencies(name)
 
     for {
-      service                                                                       <- repositoryDetailsF
-      maybeDataPoints                                                               <- deploymentIndicatorsForServiceF
-      serviceDeploymentInformation: Either[Throwable, ServiceDeploymentInformation] <- serviceDeploymentInformationF
-      mayBeDependencies                                                             <- dependenciesF
+      service                      <- repositoryDetailsF
+      maybeDataPoints              <- deploymentIndicatorsForServiceF
+      serviceDeploymentInformation <- serviceDeploymentInformationF
+      mayBeDependencies            <- dependenciesF
+      urlIfLeaksFound              <- leakDetectionService.urlIfLeaksFound(name)
     } yield
       (service, serviceDeploymentInformation) match {
         case (_, Left(t)) =>
@@ -279,7 +292,8 @@ class CatalogueController @Inject()(
               ServiceChartData.deploymentThroughput(repositoryDetails.name, maybeDataPoints.map(_.throughput)),
               ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
               repositoryDetails.createdAt,
-              deploymentsByEnvironmentName
+              deploymentsByEnvironmentName,
+              urlIfLeaksFound
             ))
         case _ => NotFound
       }
@@ -289,34 +303,45 @@ class CatalogueController @Inject()(
     for {
       library           <- teamsAndRepositoriesConnector.repositoryDetails(name)
       mayBeDependencies <- serviceDependencyConnector.getDependencies(name)
+      urlIfLeaksFound   <- leakDetectionService.urlIfLeaksFound(name)
     } yield
       library match {
         case Some(s) if s.repoType == RepoType.Library =>
-          Ok(library_info(s, mayBeDependencies))
-        case _ => NotFound
+          Ok(library_info(s, mayBeDependencies, urlIfLeaksFound))
+        case _ => NotFound(Json.toJson(ErrorResponse(NOT_FOUND, s"Library: $name does not exist")))
       }
   }
 
   def prototype(name: String) = Action.async { implicit request =>
-    teamsAndRepositoriesConnector
-      .repositoryDetails(name)
-      .map {
+    for {
+      repository      <- teamsAndRepositoriesConnector.repositoryDetails(name)
+      urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
+    } yield {
+      repository match {
         case Some(s) if s.repoType == RepoType.Prototype =>
-          val result = Ok(prototype_info(s.copy(environments = None), s.createdAt))
-          result
-        case _ => NotFound
+          Ok(prototype_info(s.copy(environments = None), s.createdAt, urlIfLeaksFound))
+        case None => NotFound(Json.toJson(ErrorResponse(NOT_FOUND, s"Prototype: $name does not exist")))
       }
+    }
   }
 
   def repository(name: String) = Action.async { implicit request =>
     for {
-      repository        <- teamsAndRepositoriesConnector.repositoryDetails(name)
-      indicators        <- indicatorsConnector.buildIndicatorsForRepository(name)
-      mayBeDependencies <- serviceDependencyConnector.getDependencies(name)
+      repository           <- teamsAndRepositoriesConnector.repositoryDetails(name)
+      indicators           <- indicatorsConnector.buildIndicatorsForRepository(name)
+      mayBeDependencies    <- serviceDependencyConnector.getDependencies(name)
+      maybeUrlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
     } yield
       (repository, indicators) match {
         case (Some(s), maybeDataPoints) =>
-          Ok(repository_info(s, mayBeDependencies, ServiceChartData.jobExecutionTime(s.name, maybeDataPoints)))
+          Ok(
+            repository_info(
+              s,
+              mayBeDependencies,
+              ServiceChartData.jobExecutionTime(s.name, maybeDataPoints),
+              maybeUrlIfLeaksFound
+            )
+          )
         case _ => NotFound
       }
   }
