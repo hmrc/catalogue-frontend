@@ -35,5 +35,9 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers {
     }
   }
 
-  val configuration = Configuration("microservice.services.leak-detection.productionUrl" -> "")
+  val configuration =
+    Configuration(
+      "microservice.services.leak-detection.productionUrl" -> "",
+      "ldsIntegration.enabled"                             -> "false"
+    )
 }

@@ -50,8 +50,21 @@ class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnec
       )
   }
 
+  private val ldsIntegrationEnabled: Boolean = {
+    val key = "ldsIntegration.enabled"
+    configuration
+      .getBoolean(key)
+      .getOrElse(
+        throw new Exception(s"Failed reading from config, expected to find: $key")
+      )
+  }
+
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] =
-    leakDetectionConnector.repositoriesWithLeaks
+    if (ldsIntegrationEnabled) {
+      leakDetectionConnector.repositoriesWithLeaks
+    } else {
+      Future.successful(Nil)
+    }
 
   def hasLeaks(reposWithLeaks: Seq[RepositoryWithLeaks])(repoName: String): Boolean =
     reposWithLeaks.exists(_.name == repoName)
