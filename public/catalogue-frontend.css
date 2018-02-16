@@ -11975,3 +11975,8 @@ section span.other-teams-message {
   font-weight: lighter;
   vertical-align: middle;
 }
+
+.leak-detected {
+    color: #8B0000;
+    font-weight: bold;
+}

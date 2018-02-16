@@ -17,10 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import akka.stream.Materializer
-import akka.util.ByteString
 import com.github.tomakehurst.wiremock.http.RequestMethod.{GET => WIREMOCK_GET}
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import org.mockito.Matchers._
 import org.mockito.Mockito
 import org.mockito.Mockito.{verify, when}
@@ -28,26 +25,19 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
-import play.api.Configuration
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json}
-import play.api.libs.streams.Accumulator
-import play.api.libs.ws.WS
-import play.api.mvc.{Action, Result}
+import play.api.libs.json.Json
+import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.test.Helpers
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
-import uk.gov.hmrc.play.test.UnitSpec
-
-import scala.collection.JavaConversions._
-import scala.collection.immutable
-import scala.concurrent.Future
-import scala.io.Source
 import play.api.test.Helpers._
+import play.test.Helpers
+import scala.concurrent.Future
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
-import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
+import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
+import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.play.test.UnitSpec
 
 class CatalogueControllerSpec
     extends UnitSpec
@@ -90,6 +80,7 @@ class CatalogueControllerSpec
     mock[TeamsAndRepositoriesConnector],
     mock[ServiceDependenciesConnector],
     mock[IndicatorsConnector],
+    mock[LeakDetectionService],
     mock[DeploymentsService],
     mockedEventService,
     mockedModelService,

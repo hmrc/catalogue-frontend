@@ -34,9 +34,16 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       "microservice.services.indicators.host"           -> host,
       "microservice.services.service-dependencies.host" -> host,
       "microservice.services.service-dependencies.port" -> endpointPort,
+      "microservice.services.leak-detection.port"       -> endpointPort,
+      "microservice.services.leak-detection.host"       -> host,
       "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler"
     )
     .build()
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
+  }
 
   "A library page" should {
 

@@ -20,7 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import views.partials.githubBadgeType
 
-@(library: RepositoryDetails, mayBeDependencies: Option[Dependencies])
+@(library: RepositoryDetails, mayBeDependencies: Option[Dependencies], linkToLeakDetection: Option[String])
 
 @standard_layout(library.name,"libraries") {
 <header class="header-with-github-badge">
@@ -28,6 +28,8 @@
         <h1>Library: @library.name<span>@githubBadgeType(library)</span></h1>
     </div>
 </header>
+
+@partials.leak_detection_banner(linkToLeakDetection)
 
 <div class="alert alert-success" role="alert" id="@library.name">
     <p>

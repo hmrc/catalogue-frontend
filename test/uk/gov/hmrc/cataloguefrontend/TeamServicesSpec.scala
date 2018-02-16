@@ -19,10 +19,9 @@ package uk.gov.hmrc.cataloguefrontend
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import java.time.{ZoneId, ZoneOffset}
 import java.time.format.DateTimeFormatter
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
+import org.jsoup.nodes.{Document, Element}
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -31,7 +30,6 @@ import play.api.libs.ws.WS
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.JsonData._
-
 import scala.collection.JavaConversions._
 import scala.io.Source
 
@@ -47,6 +45,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       "microservice.services.teams-and-services.port"      -> endpointPort,
       "microservice.services.indicators.port"              -> endpointPort,
       "microservice.services.indicators.host"              -> host,
+      "microservice.services.leak-detection.port"          -> endpointPort,
+      "microservice.services.leak-detection.host"          -> host,
       "microservice.services.user-management.url"          -> endpointMockUrl,
       "usermanagement.portal.url"                          -> "http://usermanagement/link",
       "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
@@ -56,6 +56,11 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     .build()
 
   val teamName = "teamA"
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
+  }
 
   "Team services page" should {
 
@@ -96,12 +101,20 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       response.status shouldBe 200
 
-      response.body should include("""<a href="/library/teamA-lib">teamA-lib</a>""")
-      response.body should include("""<a href="/service/teamA-serv">teamA-serv</a>""")
-      response.body should include("""<a href="/service/teamA-frontend">teamA-frontend</a>""")
-      response.body should include("""<a href="/prototype/service1-prototype">service1-prototype</a>""")
-      response.body should include("""<a href="/prototype/service2-prototype">service2-prototype</a>""")
-      response.body should include("""<a href="/repositories/teamA-other">teamA-other</a>""")
+      val htmlDocument = asDocument(response.body)
+      val anchorTags   = htmlDocument.getElementsByTag("a").toList
+
+      def assertAnchor(href: String, text: String): Unit =
+        assert(anchorTags.exists { e =>
+          e.text == text && e.attr("href") == href
+        })
+
+      assertAnchor("/library/teamA-lib", "teamA-lib")
+      assertAnchor("/service/teamA-serv", "teamA-serv")
+      assertAnchor("/service/teamA-frontend", "teamA-frontend")
+      assertAnchor("/prototype/service1-prototype", "service1-prototype")
+      assertAnchor("/prototype/service2-prototype", "service2-prototype")
+      assertAnchor("/repositories/teamA-other", "teamA-other")
 
     }
 

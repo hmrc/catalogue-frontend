@@ -30,16 +30,15 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
-import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.service.DeploymentsService
-import uk.gov.hmrc.play.test.UnitSpec
-
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.Source
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
+import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.play.test.UnitSpec
 
 class DigitalServicePageSpec
     extends UnitSpec
@@ -198,6 +197,7 @@ class DigitalServicePageSpec
         mockedConnector,
         mock[ServiceDependenciesConnector],
         mock[IndicatorsConnector],
+        mock[LeakDetectionService],
         mock[DeploymentsService],
         mock[EventService],
         mockedModelService,
@@ -277,6 +277,7 @@ class DigitalServicePageSpec
         teamsAndRepositoriesConnectorMock,
         mock[ServiceDependenciesConnector],
         mock[IndicatorsConnector],
+        mock[LeakDetectionService],
         mock[DeploymentsService],
         mock[EventService],
         mockedModelService,
@@ -303,7 +304,6 @@ class DigitalServicePageSpec
 
       val document: Document = asDocument(contentAsString(response))
 
-      println(contentAsString(response))
       document.select(s"#ump-error-$teamName").text() should ===("Sorry, the User Management Portal is not available")
     }
 
@@ -319,6 +319,7 @@ class DigitalServicePageSpec
         teamsAndRepositoriesConnectorMock,
         mock[ServiceDependenciesConnector],
         mock[IndicatorsConnector],
+        mock[LeakDetectionService],
         mock[DeploymentsService],
         mock[EventService],
         mockedModelService,
@@ -346,7 +347,6 @@ class DigitalServicePageSpec
 
       val document: Document = asDocument(contentAsString(response))
 
-      println(contentAsString(response))
       document.select(s"#ump-error-$teamName").text() should ===(
         s"$teamName is unknown to the User Management Portal. To add the team, please raise a TSR")
     }
@@ -363,6 +363,7 @@ class DigitalServicePageSpec
         teamsAndRepositoriesConnectorMock,
         mock[ServiceDependenciesConnector],
         mock[IndicatorsConnector],
+        mock[LeakDetectionService],
         mock[DeploymentsService],
         mock[EventService],
         mockedModelService,
@@ -390,7 +391,6 @@ class DigitalServicePageSpec
 
       val document: Document = asDocument(contentAsString(response))
 
-      println(contentAsString(response))
       document.select(s"#ump-error-$teamName").text() should ===(s"Sorry, the User Management Portal is not available")
     }
 
