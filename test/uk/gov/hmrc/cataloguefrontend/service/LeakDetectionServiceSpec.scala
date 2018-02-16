@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import org.scalatest.{Matchers, WordSpec}
+import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.RepositoryWithLeaks
 
 class LeakDetectionServiceSpec extends WordSpec with Matchers {
@@ -25,7 +26,7 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers {
       val reposWithLeaks = List(RepositoryWithLeaks("repo1"), RepositoryWithLeaks("repo2"))
       val teamRepos1     = List("repo2")
 
-      val service = new LeakDetectionService(null)
+      val service = new LeakDetectionService(null, configuration)
 
       service.leaksFoundForTeam(reposWithLeaks, teamRepos1) shouldBe true
 
@@ -33,4 +34,6 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers {
       service.leaksFoundForTeam(reposWithLeaks, teamRepos2) shouldBe false
     }
   }
+
+  val configuration = Configuration("microservice.services.leak-detection.productionUrl" -> "")
 }

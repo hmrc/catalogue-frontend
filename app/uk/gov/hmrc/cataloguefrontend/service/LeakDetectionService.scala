@@ -17,13 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
+import play.api.Configuration
 import scala.concurrent.Future
 import uk.gov.hmrc.cataloguefrontend.connector.{LeakDetectionConnector, RepositoryWithLeaks}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 @Singleton
-class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnector) {
+class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnector, configuration: Configuration) {
   def urlIfLeaksFound(repoName: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
     repositoriesWithLeaks.map { reposWithLeaks =>
       if (hasLeaks(reposWithLeaks)(repoName)) {
@@ -33,7 +34,21 @@ class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnec
       }
     }
 
-  private def leakDetectionUrl: String = leakDetectionConnector.url
+  private def leakDetectionUrl: String =
+    if (leakDetectionConnector.url.contains("localhost")) {
+      leakDetectionConnector.url
+    } else {
+      productionLeakDetectionUrl
+    }
+
+  private val productionLeakDetectionUrl = {
+    val key = "microservice.services.leak-detection.productionUrl"
+    configuration
+      .getString(key)
+      .getOrElse(
+        throw new Exception(s"Failed reading from config, expected to find: $key")
+      )
+  }
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] =
     leakDetectionConnector.repositoriesWithLeaks
