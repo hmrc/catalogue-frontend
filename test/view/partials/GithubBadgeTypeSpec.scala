@@ -62,6 +62,7 @@ class GithubBadgeTypeSpec extends WordSpec with Matchers {
     description  = "description",
     createdAt    = LocalDateTime.now,
     lastActive   = LocalDateTime.now,
+    owningTeams  = Nil,
     teamNames    = Nil,
     githubUrls   = Set.empty,
     ci           = Nil,

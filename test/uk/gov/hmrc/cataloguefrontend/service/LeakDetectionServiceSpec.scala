@@ -16,22 +16,75 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
+import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Configuration
+import uk.gov.hmrc.cataloguefrontend.Team
 import uk.gov.hmrc.cataloguefrontend.connector.RepositoryWithLeaks
 
-class LeakDetectionServiceSpec extends WordSpec with Matchers {
+class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyChecks {
+
   "Service" should {
     "determine if at least one of team's repos has leaks" in {
-      val reposWithLeaks = List(RepositoryWithLeaks("repo1"), RepositoryWithLeaks("repo2"))
-      val teamRepos1     = List("repo2")
+      val reposWithLeaks = List(RepositoryWithLeaks("repo2"))
+      val allTeamsInfo =
+        List(
+          Team(
+            name                     = "team0",
+            firstActiveDate          = None,
+            lastActiveDate           = None,
+            firstServiceCreationDate = None,
+            repos                    = Some(Map("library" -> List("repo1", "repo2"))),
+            ownedRepos               = List("repo2")
+          ),
+          Team(
+            name                     = "team1",
+            firstActiveDate          = None,
+            lastActiveDate           = None,
+            firstServiceCreationDate = None,
+            repos                    = Some(Map("library" -> List("repo2"))),
+            ownedRepos               = Nil
+          ),
+          Team(
+            name                     = "team2",
+            firstActiveDate          = None,
+            lastActiveDate           = None,
+            firstServiceCreationDate = None,
+            repos                    = None,
+            ownedRepos               = List("repo3"))
+        )
 
       val service = new LeakDetectionService(null, configuration)
 
-      service.leaksFoundForTeam(reposWithLeaks, teamRepos1) shouldBe true
+      val (ownsDirectly :: contributesButOtherTeamOwns :: ownsButNoLeaks :: Nil) = allTeamsInfo
 
-      val teamRepos2 = List("repo3")
-      service.leaksFoundForTeam(reposWithLeaks, teamRepos2) shouldBe false
+      service.teamHasLeaks(ownsDirectly, allTeamsInfo, reposWithLeaks)                shouldBe true
+      service.teamHasLeaks(contributesButOtherTeamOwns, allTeamsInfo, reposWithLeaks) shouldBe false
+      service.teamHasLeaks(ownsButNoLeaks, allTeamsInfo, reposWithLeaks)              shouldBe false
+    }
+
+    "determine if a leak detection banner should be shown to a team for a given repo" in {
+      val service = new LeakDetectionService(null, configuration)
+
+      val leakDetectionBannerScenarios =
+        // format: off
+        Table(
+          ("contributes", "owns", "owned by others?", "show banner?"),
+          (false,         false,  false,              false         ),
+          (false,         false,  true,               false         ),
+          (false,         true,   false,              true          ),
+          (false,         true,   true,               true          ),
+          (true,          false,  false,              true          ),
+          (true,          false,  true,               false         ),
+          (true,          true,   false,              true          ),
+          (true,          true,   true,               true          )
+        )
+      // format: on
+
+      forAll(leakDetectionBannerScenarios) {
+        case (contributes, owns, ownedByOthers, showBanner) =>
+          service.isTeamResponsibleForRepo(contributes, owns, ownedByOthers) shouldBe showBanner
+      }
     }
   }
 

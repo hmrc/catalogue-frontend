@@ -51,11 +51,17 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with
         willRespondWith = (
           200,
           Some(
-            s"""[{"name":"teamA", "firstActiveDate" :${firstactivityDate
-              .toInstant(ZoneOffset.UTC)
-              .toEpochMilli} , "lastActiveDate": ${lastactivityDate
-              .toInstant(ZoneOffset.UTC)
-              .toEpochMilli}, "repos":{}}]"""
+            s"""
+                [
+                  {
+                    "name":"teamA",
+                    "firstActiveDate": ${firstactivityDate.toInstant(ZoneOffset.UTC).toEpochMilli},
+                    "lastActiveDate": ${lastactivityDate.toInstant(ZoneOffset.UTC).toEpochMilli},
+                    "repos": {},
+                    "ownedRepos": []
+                  }
+                ]
+            """
           ))
       )
 

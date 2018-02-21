@@ -161,6 +161,7 @@ class RepositoryPageSpec
       |	     "name": "${repositoryDetails.repositoryName}",
       |      "isPrivate": false,
       |      "repoType": "${repositoryDetails.repositoryType}",
+      |      "owningTeams": [ "The True Owners" ],
       |      "teamNames": ["teamA", "teamB"],
       |      "description": "some description",
       |      "createdAt": 1456326530000,

@@ -217,31 +217,31 @@ class SearchFilteringSpec extends WordSpec with Matchers {
 
   "TeamResult.filter" should {
     val teams = Seq(
-      Team("CATO", None, None, None, None),
-      Team("Auth", None, None, None, None),
-      Team("API Platform", None, None, None, None),
-      Team("API Services", None, None, None, None),
-      Team("ALA", None, None, None, None),
-      Team("ATED", None, None, None, None)
+      Team("CATO", None, None, None, None, Nil),
+      Team("Auth", None, None, None, None, Nil),
+      Team("API Platform", None, None, None, None, Nil),
+      Team("API Services", None, None, None, None, Nil),
+      Team("ALA", None, None, None, None, Nil),
+      Team("ATED", None, None, None, None, Nil)
     )
 
     "return the right team given an exact match on the team name" in {
-      teams.filter(TeamFilter(Some("Auth"))) shouldBe Seq(Team("Auth", None, None, None, None))
+      teams.filter(TeamFilter(Some("Auth"))) shouldBe Seq(Team("Auth", None, None, None, None, Nil))
     }
 
     "return the right sequence of teams given a partial match" in {
       teams.filter(TeamFilter(Some("API"))) shouldBe
         Seq(
-          Team("API Platform", None, None, None, None),
-          Team("API Services", None, None, None, None)
+          Team("API Platform", None, None, None, None, Nil),
+          Team("API Services", None, None, None, None, Nil)
         )
     }
 
     "return the right sequence of teams given a case insensitive partial match" in {
       teams.filter(TeamFilter(Some("api"))) shouldBe
         Seq(
-          Team("API Platform", None, None, None, None),
-          Team("API Services", None, None, None, None)
+          Team("API Platform", None, None, None, None, Nil),
+          Team("API Services", None, None, None, None, Nil)
         )
     }
   }

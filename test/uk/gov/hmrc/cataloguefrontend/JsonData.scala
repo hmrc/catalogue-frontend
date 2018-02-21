@@ -47,7 +47,8 @@ object JsonData {
       |        "other1",
       |        "other2"
       |      ]
-      |    }
+      |    },
+      |    "ownedRepos" : []
       |  },
       |  {
       |    "name": "team2",
@@ -62,7 +63,8 @@ object JsonData {
       |        "other3",
       |        "other4"
       |      ]
-      |    }
+      |    },
+      |    "ownedRepos" : []
       |  }
       |]
     """.stripMargin
@@ -88,6 +90,9 @@ object JsonData {
        |      "createdAt": ${createdAt.epochMillis},
        |      "lastActive": ${lastActiveAt.epochMillis},
        |      "repoType": "Service",
+       |      "owningTeams": [
+       |        "The True Owners"
+       |      ],
        |      "teamNames": ["teamA", "teamB"],
        |	     "githubUrls": [{
        |		     "name": "github",
@@ -149,21 +154,25 @@ object JsonData {
       |{
       |    "name" : "teamA",
       |    "repos": {
-      |    "Service": [
-      |            "service1",
-      |            "service2"
-      |    ],
-      |    "Library": [
-      |            "library1",
-      |            "library2"
-      |    ],
-      |    "Other": [
-      |            "other1",
-      |            "other2"
-      |    ]
-      |    }
+      |     "Service": [
+      |             "service1",
+      |             "service2"
+      |     ],
+      |     "Library": [
+      |             "library1",
+      |             "library2"
+      |     ],
+      |     "Other": [
+      |             "other1",
+      |             "other2"
+      |     ]
+      |    },
+      |    "ownedRepos": []
       |}
     """.stripMargin
+
+  val teamsAndRepositories =
+    s""" [$teamDetailsData] """
 
   val prototypeDetailsData =
     s"""
@@ -174,6 +183,9 @@ object JsonData {
        |  "createdAt": ${createdAt.epochMillis},
        |  "lastActive": ${lastActiveAt.epochMillis},
        |  "repoType": "Prototype",
+       |  "owningTeams": [
+       |    "The True Owners"
+       |  ],
        |  "teamNames": [
        |  "CATO",
        |  "Designers"
@@ -199,6 +211,9 @@ object JsonData {
       |      "createdAt": 1456326530000,
       |      "lastActive": 1478602555000,
       |      "repoType": "Library",
+      |      "owningTeams": [
+      |        "The True Owners"
+      |      ],
       |      "teamNames": ["teamA", "teamB"],
       |	     "githubUrls": [{
       |		     "name": "github",
