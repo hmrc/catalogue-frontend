@@ -27,7 +27,9 @@
                         <li class="list-item">
                             <a id="link-to-@{teamName.toLowerCase.replaceAll(" ", "-")}" href="/teams/@teamName">
                                 @if(repo.owningTeams.contains(teamName)) {
-                                    <strong>@teamName (OWNER)</strong>
+                                    <strong>
+                                        @teamName <span class="repo-owner">Owner</span>
+                                    </strong>
                                 } else {
                                     @teamName
                                 }

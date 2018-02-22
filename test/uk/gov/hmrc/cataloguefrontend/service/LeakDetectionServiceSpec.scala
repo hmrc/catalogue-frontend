@@ -63,13 +63,13 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyCheck
       service.teamHasLeaks(ownsButNoLeaks, allTeamsInfo, reposWithLeaks)              shouldBe false
     }
 
-    "determine if a leak detection banner should be shown to a team for a given repo" in {
+    "determine if a team is responsible for a repo" in {
       val service = new LeakDetectionService(null, configuration)
 
       val leakDetectionBannerScenarios =
         // format: off
         Table(
-          ("contributes", "owns", "owned by others?", "show banner?"),
+          ("contributes", "owns", "owned by others", "is responsible"),
           (false,         false,  false,              false         ),
           (false,         false,  true,               false         ),
           (false,         true,   false,              true          ),
@@ -82,8 +82,8 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyCheck
       // format: on
 
       forAll(leakDetectionBannerScenarios) {
-        case (contributes, owns, ownedByOthers, showBanner) =>
-          service.isTeamResponsibleForRepo(contributes, owns, ownedByOthers) shouldBe showBanner
+        case (contributes, owns, ownedByOthers, isResponsible) =>
+          service.isTeamResponsibleForRepo(contributes, owns, ownedByOthers) shouldBe isResponsible
       }
     }
   }

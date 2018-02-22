@@ -11980,3 +11980,13 @@ section span.other-teams-message {
     color: #8B0000;
     font-weight: bold;
 }
+
+.repo-owner {
+  display: inline-block;
+  border: 1px solid #008770;
+  border-radius: 2px;
+  padding: 2px;
+  margin-left: 5px;
+  font-weight: lighter;
+  vertical-align: middle;
+}
