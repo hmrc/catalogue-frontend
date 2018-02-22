@@ -42,6 +42,7 @@ private object AppDependencies {
           "uk.gov.hmrc"            %% "reactivemongo-test" % "2.0.0"             % scope,
           "org.scalatest"          %% "scalatest"          % "2.2.6"             % scope,
           "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0"             % scope,
+          "org.scalacheck"         %% "scalacheck"         % "1.12.6"            % scope,
           "org.pegdown"            % "pegdown"             % "1.4.2"             % scope,
           "com.typesafe.play"      %% "play-test"          % PlayVersion.current % scope,
           "com.github.tomakehurst" % "wiremock"            % "1.52"              % scope,

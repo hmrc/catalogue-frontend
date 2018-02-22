@@ -57,6 +57,7 @@ case class RepositoryDetails(
   description: String,
   createdAt: LocalDateTime,
   lastActive: LocalDateTime,
+  owningTeams: Seq[String],
   teamNames: Seq[String],
   githubUrls: Set[Link],
   ci: Seq[Link],
@@ -78,7 +79,10 @@ case class Team(
   firstActiveDate: Option[LocalDateTime],
   lastActiveDate: Option[LocalDateTime],
   firstServiceCreationDate: Option[LocalDateTime],
-  repos: Option[Map[String, Seq[String]]])
+  repos: Option[Map[String, Seq[String]]],
+  ownedRepos: Seq[String]
+)
+
 object Team {
   implicit val format = Json.format[Team]
 }

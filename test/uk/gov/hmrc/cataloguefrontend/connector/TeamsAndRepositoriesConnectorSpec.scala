@@ -225,7 +225,8 @@ class TeamsAndRepositoriesConnectorSpec
                 "Library"   -> Seq("lib1", "lib2"),
                 "Prototype" -> Seq(),
                 "Other"     -> Seq("other1", "other2")
-              ))
+              )),
+            Nil
           ),
           Team(
             "team2",
@@ -238,7 +239,8 @@ class TeamsAndRepositoriesConnectorSpec
                 "Library"   -> Seq("lib3", "lib4"),
                 "Prototype" -> Seq("prototype1"),
                 "Other"     -> Seq("other3", "other4")
-              ))
+              )),
+            Nil
           )
         )
     }

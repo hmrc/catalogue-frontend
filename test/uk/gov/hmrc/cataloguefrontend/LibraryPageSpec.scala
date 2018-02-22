@@ -102,6 +102,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       |	     "name": "serv",
       |      "isPrivate": false,
       |      "repoType": "Service",
+      |      "owningTeams": [ "The True Owners" ],
       |      "teamNames": ["teamA", "teamB"],
       |      "description": "some description",
       |      "createdAt": 1456326530000,
@@ -158,6 +159,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       |      "createdAt": 1456326530000,
       |      "lastActive": 1478602555000,
       |      "repoType": "Library",
+      |      "owningTeams": [ "The True Owners" ],
       |      "teamNames": ["teamA", "teamB"],
       |	     "githubUrls": [{
       |		     "name": "github",

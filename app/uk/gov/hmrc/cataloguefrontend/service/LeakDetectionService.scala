@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import scala.concurrent.Future
+import uk.gov.hmrc.cataloguefrontend.Team
 import uk.gov.hmrc.cataloguefrontend.connector.{LeakDetectionConnector, RepositoryWithLeaks}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
@@ -69,6 +70,23 @@ class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnec
   def hasLeaks(reposWithLeaks: Seq[RepositoryWithLeaks])(repoName: String): Boolean =
     reposWithLeaks.exists(_.name == repoName)
 
-  def leaksFoundForTeam(reposWithLeaks: Seq[RepositoryWithLeaks], teamRepos: Seq[String]): Boolean =
-    reposWithLeaks.map(_.name).intersect(teamRepos).nonEmpty
+  def isTeamResponsibleForRepo(contributes: Boolean, owns: Boolean, ownedByOthers: Boolean): Boolean =
+    owns || (contributes && !ownedByOthers)
+
+  def teamHasLeaks(team: Team, allTeamsInfo: Seq[Team], reposWithLeaks: Seq[RepositoryWithLeaks]): Boolean = {
+    val teamRepos                  = team.repos.map(_.values.toList.flatten).getOrElse(Nil)
+    val reposOwnDirectly           = team.ownedRepos
+    val reposOwnedBySomeone        = allTeamsInfo.flatMap(_.ownedRepos)
+    val reposToCheck: List[String] = (teamRepos ++ reposOwnDirectly).intersect(reposWithLeaks.map(_.name))
+
+    reposToCheck
+      .exists(
+        repo =>
+          isTeamResponsibleForRepo(
+            contributes   = teamRepos.contains(repo),
+            owns          = team.ownedRepos.contains(repo),
+            ownedByOthers = reposOwnedBySomeone.contains(repo)
+        ))
+  }
+
 }

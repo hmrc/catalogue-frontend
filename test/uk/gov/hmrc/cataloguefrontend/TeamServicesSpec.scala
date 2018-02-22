@@ -67,31 +67,36 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show a list of libraries, services, prototypes and repositories" in {
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/teamA",
+        "/api/teams_with_repositories",
         willRespondWith = (
           200,
           Some(
-            """{
-        | "name": "teamA",
-        | "firstActiveDate":1234560,
-        | "lastActiveDate":1234561,
-        | "repos":{
-        |    "Library": [
-        |        "teamA-lib"
-        |    ],
-        |    "Service": [
-        |        "teamA-serv",
-        |        "teamA-frontend"
-        |    ],
-        |    "Prototype": [
-        |        "service1-prototype",
-        |        "service2-prototype"
-        |    ],
-        |    "Other": [
-        |        "teamA-other"
-        |    ]
-        |}
-        |}""".stripMargin
+            """
+             [
+               {
+                 "name": "teamA",
+                 "firstActiveDate":1234560,
+                 "lastActiveDate":1234561,
+                 "repos":{
+                    "Library": [
+                        "teamA-lib"
+                    ],
+                    "Service": [
+                        "teamA-serv",
+                        "teamA-frontend"
+                    ],
+                    "Prototype": [
+                        "service1-prototype",
+                        "service2-prototype"
+                    ],
+                    "Other": [
+                        "teamA-other"
+                    ]
+                 },
+                 "ownedRepos": []
+               }
+             ]
+            """
           ))
       )
 
@@ -121,12 +126,20 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show user management portal link" ignore {
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/teamA",
+        "/api/teams_with_repositories",
         willRespondWith = (
           200,
           Some(
-            """{"Library":[], "Service": []  }""".stripMargin
-          )))
+            """
+              [
+                {
+                "repos": { "Library": [], "Service": [] }, 
+                "ownedRepos" = [] 
+                }
+              ]
+            """
+          ))
+      )
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
@@ -143,11 +156,21 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/teamA",
+        "/api/teams_with_repositories",
         willRespondWith = (
           200,
           Some(
-            """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
+            """
+              [
+                {
+                  "name":"teamA",
+                  "firstActiveDate":12345,
+                  "lastActiveDate":1234567,
+                  "repos": { "Library": [], "Service": [] },
+                  "ownedRepos" : []
+                }
+              ]
+            """
           ))
       )
 
@@ -165,11 +188,21 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/" + teamName,
+        "/api/teams_with_repositories",
         willRespondWith = (
           200,
           Some(
-            """{"name":"CATO", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
+            """
+              [
+                {
+                  "name":"CATO",
+                  "firstActiveDate":12345,
+                  "lastActiveDate":1234567,
+                  "repos": { "Library": [], "Service": [] },
+                  "ownedRepos": []
+                }
+              ]
+            """
           ))
       )
 
@@ -190,22 +223,27 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show a First Active and Last Active fields in the Details box" in {
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/" + teamName,
+        "/api/teams_with_repositories",
         willRespondWith = (
           200,
           Some(
-            s"""{
-          | "name": "teamA",
-          | "firstActiveDate":${createdAt.toInstant(ZoneOffset.UTC).toEpochMilli},
-          | "lastActiveDate":${lastActiveAt.toInstant(ZoneOffset.UTC).toEpochMilli},
-          | "repos":{
-          |    "Library": [
-          |    ],
-          |    "Service": [
-          |            "service1"
-          |    ]
-          |}
-          |}""".stripMargin
+            s"""
+              [
+               {
+                "name": "teamA",
+                "firstActiveDate":${createdAt.toInstant(ZoneOffset.UTC).toEpochMilli},
+                "lastActiveDate":${lastActiveAt.toInstant(ZoneOffset.UTC).toEpochMilli},
+                "repos":{
+                   "Library": [
+                   ],
+                   "Service": [
+                           "service1"
+                   ]
+                },
+                "ownedRepos": []
+               }
+              ]
+            """
           ))
       )
 
@@ -226,11 +264,21 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
         serviceEndpoint(
           GET,
-          "/api/teams_with_details/" + teamName,
+          "/api/teams_with_repositories",
           willRespondWith = (
             200,
             Some(
-              """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
+              """
+                [
+                  {
+                    "name": "teamA",
+                    "firstActiveDate": 12345,
+                    "lastActiveDate": 1234567,
+                    "repos": {"Library":[], "Service": [] },
+                    "ownedRepos": []
+                  }
+                ]
+              """
             ))
         )
 
@@ -257,11 +305,21 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     "show error message if UMP is not available" in {
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/teamA",
+        "/api/teams_with_repositories",
         willRespondWith = (
           200,
           Some(
-            """{"name":"teamA", "firstActiveDate":12345, "lastActiveDate":1234567, "repos":{"Library":[], "Service": [] }}""".stripMargin
+            """
+              [
+                {
+                  "name": "teamA",
+                  "firstActiveDate": 12345,
+                  "lastActiveDate": 1234567,
+                  "repos": {"Library":[], "Service": [] },
+                  "ownedRepos" : []
+                }
+              ]
+            """
           ))
       )
 
@@ -282,12 +340,21 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/" + teamName,
+        "/api/teams_with_repositories",
         willRespondWith = (
           200,
           Some(
-            """{"name":"teamA", "repos":{"Library":[], "Service": [] }}""".stripMargin
-          )))
+            s"""
+              [
+                {
+                  "name":"$teamName",
+                  "repos": { "Library": [], "Service": [] },
+                  "ownedRepos": []
+                }
+              ]
+            """
+          ))
+      )
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName", "/user-management-team-details-response.json")
 
@@ -318,7 +385,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
     }
 
     "Render the frequent production indicators graph with throughput" in {
-      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(teamDetailsData)))
+      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(teamsAndRepositories)))
       serviceEndpoint(
         GET,
         "/api/indicators/team/teamA/deployments",
@@ -344,7 +411,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
   }
 
   "Render a message if the indicators service returns 404" in {
-    serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith          = (200, Some(teamDetailsData)))
+    serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith           = (200, Some(teamsAndRepositories)))
     serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (404, None))
 
     val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
@@ -357,7 +424,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
   }
 
   "Render a message if the indicators service encounters an error" in {
-    serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith          = (200, Some(teamDetailsData)))
+    serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith           = (200, Some(teamsAndRepositories)))
     serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (500, None))
 
     val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)

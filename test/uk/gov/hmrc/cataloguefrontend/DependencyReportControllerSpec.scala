@@ -100,7 +100,9 @@ class DependencyReportControllerSpec
           None,
           None,
           None,
-          Some(Map("Service" -> Seq(), "Library" -> Seq(), "Prototype" -> Seq(), "Other" -> repositories)))
+          Some(Map("Service" -> Seq(), "Library" -> Seq(), "Prototype" -> Seq(), "Other" -> repositories)),
+          Nil
+        )
 
       when(mockedTeamsAndRepositoriesConnector.teamsWithRepositories()(any()))
         .thenReturn(Future.successful(Seq(team("team1", Seq("repo-1")), team("team2", Seq("repo-2")))))

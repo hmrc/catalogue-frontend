@@ -112,7 +112,7 @@ class DeploymentsServiceSpec
             Release("b-service", productionDate = productionDate, version = "0.2.0"))))
 
       when(teamsAndServicesConnector.teamInfo("b-team")).thenReturn(Future.successful(
-        Some(Team(name = "teamName", None, None, None, repos = Some(Map("Service" -> Seq("a-service", "b-service")))))))
+        Some(Team(name = "teamName", None, None, None, repos = Some(Map("Service" -> Seq("a-service", "b-service"))), Nil))))
 
       when(teamsAndServicesConnector.teamsByService(Seq("a-service", "b-service"))).thenReturn(
         Future.successful((Map("a-service" -> Seq("a-team", "b-team"), "b-service" -> Seq("b-team", "c-team")))))
@@ -135,19 +135,19 @@ class DeploymentsServiceSpec
         .thenReturn(Future.successful(Seq(Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
-        Future.successful(
-          Some(
-            RepositoryDetails(
-              "a-service",
-              "some description",
-              now,
-              now,
-              Seq("a-team", "b-team"),
-              Set(),
-              Seq(),
-              None,
-              RepoType.Service,
-              false))))
+        Future.successful(Some(RepositoryDetails(
+          name         = "a-service",
+          description  = "some description",
+          createdAt    = now,
+          lastActive   = now,
+          owningTeams  = Seq(),
+          teamNames    = Seq("a-team", "b-team"),
+          githubUrls   = Set(),
+          ci           = Seq(),
+          environments = None,
+          repoType     = RepoType.Service,
+          isPrivate    = false
+        ))))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
       val deployments = service.getDeployments(serviceName = Some("a-service")).futureValue
@@ -166,18 +166,19 @@ class DeploymentsServiceSpec
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
         Future.successful(
-          Some(
-            RepositoryDetails(
-              "a-service",
-              "some description",
-              now,
-              now,
-              Seq("a-team", "b-team"),
-              Set(),
-              Seq(),
-              None,
-              RepoType.Service,
-              false)))
+          Some(RepositoryDetails(
+            name         = "a-service",
+            description  = "some description",
+            createdAt    = now,
+            lastActive   = now,
+            owningTeams  = Seq(),
+            teamNames    = Seq("a-team", "b-team"),
+            githubUrls   = Set(),
+            ci           = Seq(),
+            environments = None,
+            repoType     = RepoType.Service,
+            isPrivate    = false
+          )))
       )
 
       val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)

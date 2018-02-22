@@ -193,27 +193,23 @@ class CatalogueController @Inject()(
   }
 
   def team(teamName: String) = Action.async { implicit request =>
-    val eventualTeamInfo           = teamsAndRepositoriesConnector.teamInfo(teamName)
     val eventualErrorOrMembers     = userManagementConnector.getTeamMembersFromUMP(teamName)
     val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
     val eventualReposWithLeaks     = leakDetectionService.repositoriesWithLeaks
+    val eventualInfoAboutAllTeams  = teamsAndRepositoriesConnector.teamsWithRepositories
 
     val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
     for {
-      typeRepos: Option[Team] <- eventualTeamInfo
-      teamMembers             <- eventualErrorOrMembers
-      teamDetails             <- eventualErrorOrTeamDetails
-      teamIndicators          <- eventualMaybeDeploymentIndicators
-      reposWithLeaks          <- eventualReposWithLeaks
+      allTeamsInfo <- eventualInfoAboutAllTeams
+      teamInfo = allTeamsInfo.find(_.name == teamName)
+      teamMembers    <- eventualErrorOrMembers
+      teamDetails    <- eventualErrorOrTeamDetails
+      teamIndicators <- eventualMaybeDeploymentIndicators
+      reposWithLeaks <- eventualReposWithLeaks
     } yield
-      (typeRepos, teamMembers, teamDetails, teamIndicators) match {
+      (teamInfo, teamMembers, teamDetails, teamIndicators) match {
         case (Some(team), _, _, _) =>
           implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
-
-          val leaksFoundForTeam: Boolean = {
-            val teamRepos = team.repos.map(_.values.toList.flatten).getOrElse(Nil)
-            leakDetectionService.leaksFoundForTeam(reposWithLeaks, teamRepos)
-          }
 
           Ok(
             team_info(
@@ -226,7 +222,7 @@ class CatalogueController @Inject()(
               TeamChartData.deploymentThroughput(team.name, teamIndicators.map(_.throughput)),
               TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
               umpMyTeamsPageUrl(team.name),
-              leaksFoundForTeam,
+              leakDetectionService.teamHasLeaks(team, allTeamsInfo, reposWithLeaks),
               leakDetectionService.hasLeaks(reposWithLeaks)
             ))
         case _ => NotFound
