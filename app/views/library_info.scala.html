@@ -31,11 +31,6 @@
 
 @partials.leak_detection_banner(linkToLeakDetection)
 
-<div class="alert alert-success" role="alert" id="@library.name">
-    <p>
-        @Html(ViewMessages.informationalText)
-    </p>
-</div>
 <section class="section-wrapper">
     @partials.details(library)
 
@@ -45,4 +40,10 @@
     </div>
     @partials.dependencies(mayBeDependencies)
 </section>
+
+<div class="alert alert-success" role="alert" id="@library.name">
+    <p>
+    @Html(ViewMessages.informationalText)
+    </p>
+</div>
 }

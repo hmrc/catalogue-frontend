@@ -23,27 +23,21 @@ import uk.gov.hmrc.cataloguefrontend.Team
 import uk.gov.hmrc.cataloguefrontend.connector.{LeakDetectionConnector, RepositoryWithLeaks}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+import scala.collection.JavaConverters._
 
 @Singleton
 class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnector, configuration: Configuration) {
   def urlIfLeaksFound(repoName: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
     repositoriesWithLeaks.map { reposWithLeaks =>
       if (hasLeaks(reposWithLeaks)(repoName)) {
-        Some(s"$leakDetectionUrl/reports/repositories/$repoName")
+        Some(s"$leakDetectionPublicUrl/reports/repositories/$repoName")
       } else {
         None
       }
     }
 
-  private def leakDetectionUrl: String =
-    if (leakDetectionConnector.url.contains("localhost")) {
-      leakDetectionConnector.url
-    } else {
-      productionLeakDetectionUrl
-    }
-
-  private val productionLeakDetectionUrl = {
-    val key = "microservice.services.leak-detection.productionUrl"
+  private val leakDetectionPublicUrl = {
+    val key = "lds.publicUrl"
     configuration
       .getString(key)
       .getOrElse(
@@ -52,13 +46,16 @@ class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnec
   }
 
   private val ldsIntegrationEnabled: Boolean = {
-    val key = "ldsIntegration.enabled"
+    val key = "lds.integrationEnabled"
     configuration
       .getBoolean(key)
       .getOrElse(
         throw new Exception(s"Failed reading from config, expected to find: $key")
       )
   }
+
+  val repositoriesToIgnore: List[String] =
+    configuration.getStringList("lds.noWarningsOn").fold(List.empty[String])(_.asScala.toList)
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] =
     if (ldsIntegrationEnabled) {
@@ -70,23 +67,12 @@ class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnec
   def hasLeaks(reposWithLeaks: Seq[RepositoryWithLeaks])(repoName: String): Boolean =
     reposWithLeaks.exists(_.name == repoName)
 
-  def isTeamResponsibleForRepo(contributes: Boolean, owns: Boolean, ownedByOthers: Boolean): Boolean =
-    owns || (contributes && !ownedByOthers)
-
-  def teamHasLeaks(team: Team, allTeamsInfo: Seq[Team], reposWithLeaks: Seq[RepositoryWithLeaks]): Boolean = {
-    val teamRepos                  = team.repos.map(_.values.toList.flatten).getOrElse(Nil)
-    val reposOwnDirectly           = team.ownedRepos
-    val reposOwnedBySomeone        = allTeamsInfo.flatMap(_.ownedRepos)
-    val reposToCheck: List[String] = (teamRepos ++ reposOwnDirectly).intersect(reposWithLeaks.map(_.name))
-
-    reposToCheck
-      .exists(
-        repo =>
-          isTeamResponsibleForRepo(
-            contributes   = teamRepos.contains(repo),
-            owns          = team.ownedRepos.contains(repo),
-            ownedByOthers = reposOwnedBySomeone.contains(repo)
-        ))
+  def teamHasLeaks(team: Team, reposWithLeaks: Seq[RepositoryWithLeaks]): Boolean = {
+    val teamRepos: Seq[String] = team.repos
+      .map(_.values.toList.flatten)
+      .getOrElse(Nil)
+      .filterNot(repositoriesToIgnore.contains(_))
+    teamRepos.intersect(reposWithLeaks.map(_.name)).nonEmpty
   }
 
 }

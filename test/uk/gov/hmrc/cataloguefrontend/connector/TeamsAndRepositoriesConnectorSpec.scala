@@ -17,8 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.mockito.Matchers.any
-import org.mockito.Mockito
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
@@ -28,15 +26,8 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api
 import play.api.Configuration
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Writes
 import play.api.test.FakeHeaders
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ConnectionError, HTTPError}
 import uk.gov.hmrc.cataloguefrontend.{Environment, JsonData, Link, RepoType, RepositoryDetails, RepositoryDisplayDetails, Team, TeamsAndRepositoriesConnector, WireMockEndpoints}
-import uk.gov.hmrc.play.http._
-
-import scala.concurrent.Future
-import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -225,8 +216,7 @@ class TeamsAndRepositoriesConnectorSpec
                 "Library"   -> Seq("lib1", "lib2"),
                 "Prototype" -> Seq(),
                 "Other"     -> Seq("other1", "other2")
-              )),
-            Nil
+              ))
           ),
           Team(
             "team2",
@@ -239,8 +229,7 @@ class TeamsAndRepositoriesConnectorSpec
                 "Library"   -> Seq("lib3", "lib4"),
                 "Prototype" -> Seq("prototype1"),
                 "Other"     -> Seq("other3", "other4")
-              )),
-            Nil
+              ))
           )
         )
     }

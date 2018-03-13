@@ -100,8 +100,7 @@ class DependencyReportControllerSpec
           None,
           None,
           None,
-          Some(Map("Service" -> Seq(), "Library" -> Seq(), "Prototype" -> Seq(), "Other" -> repositories)),
-          Nil
+          Some(Map("Service" -> Seq(), "Library" -> Seq(), "Prototype" -> Seq(), "Other" -> repositories))
         )
 
       when(mockedTeamsAndRepositoriesConnector.teamsWithRepositories()(any()))

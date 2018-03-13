@@ -79,8 +79,7 @@ case class Team(
   firstActiveDate: Option[LocalDateTime],
   lastActiveDate: Option[LocalDateTime],
   firstServiceCreationDate: Option[LocalDateTime],
-  repos: Option[Map[String, Seq[String]]],
-  ownedRepos: Seq[String]
+  repos: Option[Map[String, Seq[String]]]
 )
 
 object Team {

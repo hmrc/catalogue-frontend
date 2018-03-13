@@ -222,7 +222,7 @@ class CatalogueController @Inject()(
               TeamChartData.deploymentThroughput(team.name, teamIndicators.map(_.throughput)),
               TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
               umpMyTeamsPageUrl(team.name),
-              leakDetectionService.teamHasLeaks(team, allTeamsInfo, reposWithLeaks),
+              leakDetectionService.teamHasLeaks(team, reposWithLeaks),
               leakDetectionService.hasLeaks(reposWithLeaks)
             ))
         case _ => NotFound
