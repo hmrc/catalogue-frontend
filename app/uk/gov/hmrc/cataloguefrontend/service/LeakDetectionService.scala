@@ -71,7 +71,7 @@ class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnec
     val teamRepos: Seq[String] = team.repos
       .map(_.values.toList.flatten)
       .getOrElse(Nil)
-      .filterNot(repositoriesToIgnore.contains(_))
+      .filterNot(repositoriesToIgnore.contains)
     teamRepos.intersect(reposWithLeaks.map(_.name)).nonEmpty
   }
 

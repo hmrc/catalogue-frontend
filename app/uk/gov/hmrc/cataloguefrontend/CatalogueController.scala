@@ -193,15 +193,14 @@ class CatalogueController @Inject()(
   }
 
   def team(teamName: String) = Action.async { implicit request =>
+    val eventualTeamInfo           = teamsAndRepositoriesConnector.teamInfo(teamName)
     val eventualErrorOrMembers     = userManagementConnector.getTeamMembersFromUMP(teamName)
     val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
     val eventualReposWithLeaks     = leakDetectionService.repositoriesWithLeaks
-    val eventualInfoAboutAllTeams  = teamsAndRepositoriesConnector.teamsWithRepositories
 
     val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
     for {
-      allTeamsInfo <- eventualInfoAboutAllTeams
-      teamInfo = allTeamsInfo.find(_.name == teamName)
+      teamInfo       <- eventualTeamInfo
       teamMembers    <- eventualErrorOrMembers
       teamDetails    <- eventualErrorOrTeamDetails
       teamIndicators <- eventualMaybeDeploymentIndicators
