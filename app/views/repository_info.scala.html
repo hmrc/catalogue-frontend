@@ -39,11 +39,6 @@ linkToLeakDetection: Option[String]
 
 @partials.leak_detection_banner(linkToLeakDetection)
 
-<div class="alert alert-success" role="alert" id="@repository.name">
-    <p>
-        @Html(ViewMessages.informationalText)
-    </p>
-</div>
 <section class="section-wrapper">
     @partials.details(repository)
 
@@ -76,6 +71,14 @@ linkToLeakDetection: Option[String]
         </div>
     </div>
 </section>
+
+
+<div class="alert alert-success" role="alert" id="@repository.name">
+    <p>
+    @Html(ViewMessages.informationalText)
+    </p>
+</div>
+
 <script type="text/javascript">
 
     @if(jobExecutionTimeChartData.isDefined && !jobExecutionTimeChartData.get.isEmpty) {

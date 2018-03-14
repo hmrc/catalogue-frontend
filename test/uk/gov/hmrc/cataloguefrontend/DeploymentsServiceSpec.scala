@@ -112,7 +112,7 @@ class DeploymentsServiceSpec
             Release("b-service", productionDate = productionDate, version = "0.2.0"))))
 
       when(teamsAndServicesConnector.teamInfo("b-team")).thenReturn(Future.successful(
-        Some(Team(name = "teamName", None, None, None, repos = Some(Map("Service" -> Seq("a-service", "b-service"))), Nil))))
+        Some(Team(name = "teamName", None, None, None, repos = Some(Map("Service" -> Seq("a-service", "b-service")))))))
 
       when(teamsAndServicesConnector.teamsByService(Seq("a-service", "b-service"))).thenReturn(
         Future.successful((Map("a-service" -> Seq("a-team", "b-team"), "b-service" -> Seq("b-team", "c-team")))))

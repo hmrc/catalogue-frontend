@@ -53,11 +53,6 @@
 
     @partials.leak_detection_banner(linkToLeakDetection)
 
-    <div class="alert alert-success" role="alert" id="@service.name">
-        <p>
-        @Html(ViewMessages.informationalText)
-        </p>
-    </div>
     <section class="section-wrapper">
         @partials.details(service)
 
@@ -131,7 +126,11 @@
         </div>
         </div>
     </section>
-
+    <div class="alert alert-success" role="alert" id="@service.name">
+        <p>
+        @Html(ViewMessages.informationalText)
+        </p>
+    </div>
     <script type="text/javascript">
 
 

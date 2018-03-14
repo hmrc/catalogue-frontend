@@ -25,72 +25,57 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepositoryWithLeaks
 class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyChecks {
 
   "Service" should {
+
     "determine if at least one of team's repos has leaks" in {
-      val reposWithLeaks = List(RepositoryWithLeaks("repo2"))
-      val allTeamsInfo =
-        List(
-          Team(
-            name                     = "team0",
-            firstActiveDate          = None,
-            lastActiveDate           = None,
-            firstServiceCreationDate = None,
-            repos                    = Some(Map("library" -> List("repo1", "repo2"))),
-            ownedRepos               = List("repo2")
-          ),
-          Team(
-            name                     = "team1",
-            firstActiveDate          = None,
-            lastActiveDate           = None,
-            firstServiceCreationDate = None,
-            repos                    = Some(Map("library" -> List("repo2"))),
-            ownedRepos               = Nil
-          ),
-          Team(
-            name                     = "team2",
-            firstActiveDate          = None,
-            lastActiveDate           = None,
-            firstServiceCreationDate = None,
-            repos                    = None,
-            ownedRepos               = List("repo3"))
-        )
+      val team = Team(
+        name                     = "team0",
+        firstActiveDate          = None,
+        lastActiveDate           = None,
+        firstServiceCreationDate = None,
+        repos                    = Some(Map("library" -> List("repo1", "repo2")))
+      )
+
+      val repoWithLeak = RepositoryWithLeaks("repo1")
 
       val service = new LeakDetectionService(null, configuration)
-
-      val (ownsDirectly :: contributesButOtherTeamOwns :: ownsButNoLeaks :: Nil) = allTeamsInfo
-
-      service.teamHasLeaks(ownsDirectly, allTeamsInfo, reposWithLeaks)                shouldBe true
-      service.teamHasLeaks(contributesButOtherTeamOwns, allTeamsInfo, reposWithLeaks) shouldBe false
-      service.teamHasLeaks(ownsButNoLeaks, allTeamsInfo, reposWithLeaks)              shouldBe false
+      service.teamHasLeaks(team, Seq(repoWithLeak)) shouldBe true
     }
 
-    "determine if a team is responsible for a repo" in {
+    "determine if a team has no leaks" in {
+      val team = Team(
+        name                     = "team0",
+        firstActiveDate          = None,
+        lastActiveDate           = None,
+        firstServiceCreationDate = None,
+        repos                    = Some(Map("library" -> List("repo1", "repo2")))
+      )
+
+      val repoWithLeak = RepositoryWithLeaks("repo3")
+
       val service = new LeakDetectionService(null, configuration)
+      service.teamHasLeaks(team, Seq(repoWithLeak)) shouldBe false
+    }
 
-      val leakDetectionBannerScenarios =
-        // format: off
-        Table(
-          ("contributes", "owns", "owned by others", "is responsible"),
-          (false,         false,  false,              false         ),
-          (false,         false,  true,               false         ),
-          (false,         true,   false,              true          ),
-          (false,         true,   true,               true          ),
-          (true,          false,  false,              true          ),
-          (true,          false,  true,               false         ),
-          (true,          true,   false,              true          ),
-          (true,          true,   true,               true          )
-        )
-      // format: on
+    "filter repositories in the exclusion list" in {
+      val team = Team(
+        name                     = "team0",
+        firstActiveDate          = None,
+        lastActiveDate           = None,
+        firstServiceCreationDate = None,
+        repos                    = Some(Map("library" -> List("a-repo-to-ignore")))
+      )
 
-      forAll(leakDetectionBannerScenarios) {
-        case (contributes, owns, ownedByOthers, isResponsible) =>
-          service.isTeamResponsibleForRepo(contributes, owns, ownedByOthers) shouldBe isResponsible
-      }
+      val repoToIgnore = RepositoryWithLeaks("a-repo-to-ignore")
+
+      val service = new LeakDetectionService(null, configuration)
+      service.teamHasLeaks(team, Seq(repoToIgnore)) shouldBe false
     }
   }
 
   val configuration =
     Configuration(
-      "microservice.services.leak-detection.productionUrl" -> "",
-      "ldsIntegration.enabled"                             -> "false"
+      "lds.publicUrl"          -> "",
+      "lds.integrationEnabled" -> "true",
+      "lds.noWarningsOn.0"     -> "a-repo-to-ignore"
     )
 }
