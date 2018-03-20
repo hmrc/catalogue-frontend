@@ -10,11 +10,9 @@
 ### Setup
 
 You need to have:
-* `.credentials` (github.com) file
-* `.githubenterprise` file
-* place both in a `$HOME/.github` directory.
+* `$HOME/.github/.credentials` file
 
-These need to each include the following relevant information in both files:
+with following information:
 > Please ask a team mate for the api urls
 
 ```

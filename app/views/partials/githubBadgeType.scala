@@ -19,14 +19,10 @@ package views.partials
 import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
 
 object githubBadgeType extends (RepositoryDetails => String) {
-  def apply(rd: RepositoryDetails): String = {
-    val isOnGithubCom = rd.githubUrls.exists(_.url.contains("github.com/hmrc"))
-    if (isOnGithubCom && rd.isPrivate) {
+  def apply(rd: RepositoryDetails): String =
+    if (rd.isPrivate) {
       "Private"
-    } else if (isOnGithubCom) {
-      "Public"
     } else {
-      "Internal"
+      "Public"
     }
-  }
 }
