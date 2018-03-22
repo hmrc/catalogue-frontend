@@ -51,8 +51,8 @@ class PrototypePageSpec extends UnitSpec with OneServerPerSuite with WireMockEnd
       response.body   should include("links on this page are automatically generated")
       response.body   should include("Designers")
       response.body   should include("CATO")
-      response.body   should include("Github Enterprise")
-      response.body   should include("https://github.gov.uk/HMRC/2fa-prototype")
+      response.body   should include("Github.com")
+      response.body   should include("https://github.com/HMRC/2fa-prototype")
       response.body   should include("some description")
 
       response.body should include(createdAt.displayFormat)

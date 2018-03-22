@@ -24,20 +24,7 @@ import views.partials.githubBadgeType
 class GithubBadgeTypeSpec extends WordSpec with Matchers {
 
   "Github Badge" should {
-    "be Internal if repository is on github enterprise regardless if private/public" in {
-      val repo1 = aRepo.copy(
-        isPrivate  = true,
-        githubUrls = Set(aLink.copy(url = "https://github.tools.tax.service.gov.uk/orgs/HMRC/name"))
-      )
-      githubBadgeType(repo1) shouldBe "Internal"
-
-      val repo2 = aRepo.copy(
-        isPrivate  = false,
-        githubUrls = Set(aLink.copy(url = "https://github.tools.tax.service.gov.uk/orgs/HMRC/name"))
-      )
-      githubBadgeType(repo2) shouldBe "Internal"
-    }
-    "be Public if repository is not private and on github.com" in {
+    "be Public if repository is not private" in {
       val repo = aRepo.copy(
         isPrivate  = false,
         githubUrls = Set(aLink.copy(url = "https://github.com/hmrc/name"))
@@ -45,7 +32,7 @@ class GithubBadgeTypeSpec extends WordSpec with Matchers {
 
       githubBadgeType(repo) shouldBe "Public"
     }
-    "be Private if repository is private and on github.com" in {
+    "be Private if repository is private" in {
       val repo = aRepo.copy(
         isPrivate  = true,
         githubUrls = Set(aLink.copy(url = "https://github.com/hmrc/name"))

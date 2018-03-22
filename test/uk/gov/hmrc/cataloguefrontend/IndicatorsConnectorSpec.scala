@@ -17,33 +17,31 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import com.sun.jmx.snmp.defaults.DefaultPaths
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
-import org.scalatest.{FunSpec, Matchers, TestData}
-import org.scalatestplus.play.{OneAppPerSuite, OneAppPerTest, OneServerPerTest}
+import org.scalatest.{BeforeAndAfterEach, FunSpec, Matchers}
+import org.scalatestplus.play.OneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.{FakeApplication, FakeHeaders}
+import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.JsonData.{deploymentThroughputData, jobExecutionTimeData}
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, JobMetricDataPoint}
-
-import scala.concurrent.Future
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import scala.concurrent.Future
 
 class IndicatorsConnectorSpec
     extends FunSpec
     with WireMockEndpoints
-    with OneAppPerTest
+    with OneServerPerSuite
     with Matchers
     with TypeCheckedTripleEquals
-    with ScalaFutures {
+    with ScalaFutures
+    with BeforeAndAfterEach {
 
   implicit val defaultPatienceConfig = new PatienceConfig(Span(200, Millis), Span(15, Millis))
 
-  override def newAppForTest(testData: TestData): Application =
+  implicit override lazy val app: Application =
     new GuiceApplicationBuilder()
       .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(

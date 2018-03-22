@@ -192,9 +192,9 @@ object JsonData {
        |  ],
        |  "githubUrls": [
        |  {
-       |    "name": "github-enterprise",
-       |    "displayName": "Github Enterprise",
-       |    "url": "https://github.gov.uk/HMRC/2fa-prototype"
+       |    "name": "github",
+       |    "displayName": "Github.com",
+       |    "url": "https://github.com/HMRC/2fa-prototype"
        |  }
        |  ],
        |  "ci": [ ],

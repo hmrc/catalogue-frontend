@@ -98,4 +98,8 @@ object ViewMessages {
 
   val notSpecifiedText = "Not specified"
 
+  val prototypesBaseUrl: String = Play.current.configuration
+    .getString(s"prototypes-base-url")
+    .getOrElse(throw new IllegalArgumentException("didn't find prototypes base url"))
+
 }
