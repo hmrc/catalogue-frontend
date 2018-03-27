@@ -140,7 +140,7 @@ class CatalogueController @Inject()(
   def digitalService(digitalServiceName: String) = Action.async { implicit request =>
     teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName) flatMap {
       case Some(digitalService) =>
-        val teamNames = digitalService.repositories.flatMap(_.teamNames).map(_.distinct)
+        val teamNames = digitalService.repositories.flatMap(_.teamNames).distinct
         userManagementConnector
           .getTeamMembersForTeams(teamNames)
           .map(convertToDisplayableTeamMembers)
