@@ -23,6 +23,6 @@ object githubBadgeType extends (RepositoryDetails => String) {
     if (rd.isPrivate) {
       "Private"
     } else {
-      "Public"
+      "Open"
     }
 }
