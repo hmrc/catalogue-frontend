@@ -1,0 +1,49 @@
+@import views.html.helper.CSRF
+
+@()(implicit request: Request[_])
+
+
+@standard_layout("Sign-in", "sign-in") {
+<header>
+    <h1>Sign in to Catalogue</h1>
+</header>
+
+<p>
+    <strong>
+        To perform actions on the Catalogue please sign in using your LDAP credentials
+    </strong>
+</p>
+
+</br>
+
+<form action="/sign-in" method="post">
+
+    @{ play.filters.csrf.CSRF.getToken(request).map { token => CSRF.formField(request) } }
+
+    <div class="form-group row">
+        <div class="col-xs-1 padding-reset-right">
+            <label for="username">Username:</label>
+        </div>
+        <div class="col col-xs-3">
+            <input class="search form-control" id="username" type="text" name="username" autofocus>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-xs-1 padding-reset-right">
+            <label for="password">Password:</label>
+        </div>
+        <div class="col col-xs-3">
+            <input class="search form-control" id="password" type="password" name="password">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-xs-1 padding-reset-right">
+            <button class="btn btn-primary" type="submit">Submit</button>
+        </div>
+    </div>
+
+</form>
+
+}
