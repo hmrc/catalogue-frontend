@@ -17,22 +17,50 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.jsoup.Jsoup
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.i18n.MessagesApi
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import org.mockito.Matchers.{eq => is}
+import org.mockito.Matchers.any
+import org.mockito.Mockito._
+import uk.gov.hmrc.cataloguefrontend.service.AuthService
+import uk.gov.hmrc.cataloguefrontend.service.AuthService.{UmpToken, UmpUnauthorized}
 
-class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite {
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with MockitoSugar {
 
   "Authenticating" should {
 
-    "redirect to landing page if successful" in new Setup {
-      val request = FakeRequest().withFormUrlEncodedBody("username" -> "n/a", "password" -> "n/a")
+    "redirect to landing page if successful and UMP auth in session" in new Setup {
+      val username      = "n/a"
+      val password      = "n/a"
+      val request       = FakeRequest().withFormUrlEncodedBody("username" -> username, "password" -> password)
+      val expectedToken = UmpToken("ump-token")
+
+      when(authService.authenticate(is(username), is(password))(any())).thenReturn(Future(Right(expectedToken)))
 
       val result = controller.submit(request)
 
-      redirectLocation(result).get shouldBe routes.CatalogueController.landingPage().url
+      redirectLocation(result).get       shouldBe routes.CatalogueController.landingPage().url
+      session(result).apply("ump.token") shouldBe expectedToken.value
+    }
+
+    "show 400 BAD_REQUEST and error message when auth service does not recognize user credentials" in new Setup {
+      val username = "n/a"
+      val password = "n/a"
+      val request  = FakeRequest().withFormUrlEncodedBody("username" -> username, "password" -> password)
+
+      when(authService.authenticate(is(username), is(password))(any())).thenReturn(Future(Left(UmpUnauthorized)))
+
+      val result = controller.submit(request)
+
+      status(result)          shouldBe 400
+      contentAsString(result) should include(messagesApi("sign-in.wrong-credentials"))
     }
 
     "show 400 BAD_REQUEST and error message when no username or password are provided" in new Setup {
@@ -61,7 +89,8 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite {
 
   private trait Setup {
     val messagesApi = app.injector.instanceOf[MessagesApi]
-    val controller  = new AuthController(messagesApi)
+    val authService = mock[AuthService]
+    val controller  = new AuthController(messagesApi, authService)
   }
 
 }

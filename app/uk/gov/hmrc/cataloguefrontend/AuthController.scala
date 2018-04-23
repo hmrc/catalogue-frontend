@@ -19,26 +19,39 @@ package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.{I18nSupport, MessagesApi}
+import play.api.i18n.{I18nSupport, Messages, MessagesApi}
 import play.api.mvc.Action
+import uk.gov.hmrc.cataloguefrontend.AuthController.SignInData
+import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.sign_in
 
+import scala.concurrent.Future
+
 @Singleton
-class AuthController @Inject()(val messagesApi: MessagesApi) extends FrontendController with I18nSupport {
+class AuthController @Inject()(val messagesApi: MessagesApi, authService: AuthService)
+    extends FrontendController
+    with I18nSupport {
 
   import AuthController.signinForm
+  import AuthService.UmpToken
 
   val showSignInPage = Action { implicit request =>
     Ok(sign_in(signinForm))
   }
 
-  val submit = Action { implicit request =>
+  val submit = Action.async { implicit request =>
     signinForm
       .bindFromRequest()
       .fold(
-        formWithErrors => BadRequest(sign_in(formWithErrors)),
-        signInData => Redirect(routes.CatalogueController.landingPage())
+        formWithErrors => Future.successful(BadRequest(sign_in(formWithErrors))),
+        signInData =>
+          authService.authenticate(signInData.username, signInData.password).map {
+            case Right(UmpToken(token)) =>
+              Redirect(routes.CatalogueController.landingPage()).withSession("ump.token" -> token)
+            case Left(_) =>
+              BadRequest(sign_in(signinForm.withGlobalError(Messages("sign-in.wrong-credentials"))))
+        }
       )
   }
 }
