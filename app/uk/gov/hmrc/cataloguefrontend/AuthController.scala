@@ -17,6 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.{Inject, Singleton}
+import play.api.data.Form
+import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.Action
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
@@ -25,8 +27,39 @@ import views.html.sign_in
 @Singleton
 class AuthController @Inject()(val messagesApi: MessagesApi) extends FrontendController with I18nSupport {
 
-  def signInPage = Action { implicit request =>
-    Ok(sign_in())
+  import AuthController.signinForm
+
+  val showSignInPage = Action { implicit request =>
+    Ok(sign_in(signinForm))
   }
+
+  val submit = Action { implicit request =>
+    signinForm
+      .bindFromRequest()
+      .fold(
+        formWithErrors => BadRequest(sign_in(formWithErrors)),
+        signInData => Redirect(routes.CatalogueController.landingPage())
+      )
+  }
+}
+
+object AuthController {
+
+  final case class SignInData(
+    username: String,
+    password: String
+  )
+
+  private val signinForm =
+    Form(
+      mapping(
+        "username" -> text,
+        "password" -> text
+      )(SignInData.apply)(SignInData.unapply)
+        .verifying(
+          "sign-in.wrong-credentials",
+          signInData => signInData.username.nonEmpty && signInData.password.nonEmpty
+        )
+    )
 
 }

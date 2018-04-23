@@ -1,6 +1,7 @@
 @import views.html.helper.CSRF
+@import uk.gov.hmrc.cataloguefrontend.AuthController.SignInData
 
-@()(implicit request: Request[_])
+@(form: Form[SignInData])(implicit request: Request[_], messages: Messages)
 
 
 @standard_layout("Sign-in", "sign-in") {
@@ -15,6 +16,14 @@
 </p>
 
 </br>
+
+@if(form.hasErrors) {
+    <div class="alert alert-danger" role="alert">
+        @form.errors.map { error =>
+            <div class="alert-danger">@Messages(error.message, error.args: _*)</div>
+        }
+    </div>
+}
 
 <form action="/sign-in" method="post">
 
