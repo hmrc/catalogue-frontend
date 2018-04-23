@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import org.jsoup.Jsoup
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.i18n.MessagesApi
@@ -43,6 +44,18 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite {
 
       status(result)          shouldBe 400
       contentAsString(result) should include(messagesApi("sign-in.wrong-credentials"))
+    }
+
+  }
+
+  "Showing sign-in page" should {
+    "provide a link to help people who forgotten their password" in new Setup {
+      val result                = controller.showSignInPage(FakeRequest())
+      val signInPage            = Jsoup.parse(contentAsString(result))
+      val forgottenPasswordLink = signInPage.select("#forgotten-password")
+
+      forgottenPasswordLink.attr("href") shouldBe "https://selfservice.tools.tax.service.gov.uk"
+      forgottenPasswordLink.text         shouldBe "https://selfservice.tools.tax.service.gov.uk"
     }
   }
 
