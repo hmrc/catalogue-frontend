@@ -16,15 +16,20 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
+import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class AuthService {
+@Singleton
+class AuthService @Inject()(userManagementAuthConnector: UserManagementAuthConnector) {
+
   import AuthService._
 
   def authenticate(username: String, password: String)(
-    implicit hc: HeaderCarrier): Future[Either[UmpUnauthorized, UmpToken]] = ???
+    implicit hc: HeaderCarrier): Future[Either[UmpUnauthorized, UmpToken]] =
+    userManagementAuthConnector.authenticate(username, password)
 }
 
 object AuthService {

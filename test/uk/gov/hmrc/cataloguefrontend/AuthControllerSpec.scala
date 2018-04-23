@@ -17,15 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.jsoup.Jsoup
+import org.mockito.Matchers.{any, eq => is}
+import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.i18n.MessagesApi
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import org.mockito.Matchers.{eq => is}
-import org.mockito.Matchers.any
-import org.mockito.Mockito._
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.{UmpToken, UmpUnauthorized}
 
