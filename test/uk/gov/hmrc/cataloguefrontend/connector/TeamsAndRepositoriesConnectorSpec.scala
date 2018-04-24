@@ -103,7 +103,7 @@ class TeamsAndRepositoriesConnectorSpec
       responseData.createdAt   shouldBe createdAt
       responseData.lastActive  shouldBe lastActiveAt
       responseData.teamNames   should ===(Seq("teamA", "teamB"))
-      responseData.githubUrls  should ===(Set(Link("github", "github.com", "https://github.com/hmrc/service-1")))
+      responseData.githubUrl   should ===(Link("github", "github.com", "https://github.com/hmrc/service-1"))
       responseData.ci should ===(
         Seq(Link("open1", "open 1", "http://open1/service-1"), Link("open2", "open 2", "http://open2/service-2")))
       responseData.environments should ===(

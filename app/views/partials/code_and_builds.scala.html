@@ -23,9 +23,7 @@
         <h3 class="board__heading">Code and Build</h3>
         <div class="board__body">
             <ul class="list list--minimal">
-                @for(githubUrl <- repo.githubUrls) {
-                <li class="list-item"><a id="link-to-@{githubUrl.id}" href="@{githubUrl.url}" target="_blank">@{githubUrl.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
-                }
+                <li class="list-item"><a id="link-to-@{repo.githubUrl.id}" href="@{repo.githubUrl.url}" target="_blank">@{repo.githubUrl.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
                 @for(ciLink <- repo.ci) {
                 <li class="list-item"><a id="link-to-@{ciLink.id}" href="@{ciLink.url}" target="_blank">@{ciLink.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
                 }

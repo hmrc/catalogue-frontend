@@ -107,11 +107,11 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       |      "description": "some description",
       |      "createdAt": 1456326530000,
       |      "lastActive": 1478602555000,
-      |	     "githubUrls": [{
+      |	     "githubUrl": {
       |		     "name": "github",
       |        "displayName": "github.com",
       |		     "url": "https://github.com/hmrc/serv"
-      |	     }],
+      |	     },
       |	     "ci": [
       |		     {
       |		       "name": "open1",
@@ -161,11 +161,11 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       |      "repoType": "Library",
       |      "owningTeams": [ "The True Owners" ],
       |      "teamNames": ["teamA", "teamB"],
-      |	     "githubUrls": [{
+      |	     "githubUrl": {
       |		     "name": "github",
       |        "displayName": "github.com",
       |		     "url": "https://github.com/hmrc/lib"
-      |	     }],
+      |	     },
       |	     "ci": [
       |		     {
       |		       "name": "open1",
