@@ -22,6 +22,7 @@ import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.OneAppPerSuite
+import play.api.Configuration
 import play.api.i18n.MessagesApi
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -81,15 +82,17 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with
       val signInPage            = Jsoup.parse(contentAsString(result))
       val forgottenPasswordLink = signInPage.select("#forgotten-password")
 
-      forgottenPasswordLink.attr("href") shouldBe "https://selfservice.tools.tax.service.gov.uk"
-      forgottenPasswordLink.text         shouldBe "https://selfservice.tools.tax.service.gov.uk"
+      forgottenPasswordLink.attr("href") shouldBe selfServiceUrl
+      forgottenPasswordLink.text         shouldBe selfServiceUrl
     }
   }
 
   private trait Setup {
-    val messagesApi = app.injector.instanceOf[MessagesApi]
-    val authService = mock[AuthService]
-    val controller  = new AuthController(messagesApi, authService)
+    val messagesApi    = app.injector.instanceOf[MessagesApi]
+    val authService    = mock[AuthService]
+    val selfServiceUrl = "self-service-url"
+    val config         = Configuration("self-service-url" -> selfServiceUrl)
+    val controller     = new AuthController(messagesApi, authService, config)
   }
 
 }

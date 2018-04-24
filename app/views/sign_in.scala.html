@@ -1,7 +1,7 @@
 @import views.html.helper.CSRF
 @import uk.gov.hmrc.cataloguefrontend.AuthController.SignInData
 
-@(form: Form[SignInData])(implicit request: Request[_], messages: Messages)
+@(form: Form[SignInData], selfServiceUrl: String)(implicit request: Request[_], messages: Messages)
 
 
 @standard_layout("Sign-in", "sign-in") {
@@ -57,8 +57,8 @@
 
 <p>
     You can reset your password at
-    <a id="forgotten-password" href="https://selfservice.tools.tax.service.gov.uk" target="_blank">
-        https://selfservice.tools.tax.service.gov.uk <span class="glyphicon glyphicon-new-window"></span>
+    <a id="forgotten-password" href="@selfServiceUrl" target="_blank">
+        @selfServiceUrl <span class="glyphicon glyphicon-new-window"></span>
     </a>
 </p>
 
