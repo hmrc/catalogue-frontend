@@ -19,15 +19,15 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import cats.data.OptionT
 import cats.implicits._
 import org.scalatest.Matchers._
-import play.api.libs.json.{JsObject, JsValue, Writes}
+import play.api.libs.json.{JsValue, Writes}
 import uk.gov.hmrc.http.hooks.HttpHook
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.ws.WSHttp
 
 import scala.collection.immutable.Queue
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 trait HttpClientStub {
@@ -36,26 +36,14 @@ trait HttpClientStub {
 
   private sealed trait Verb
   private object Verb {
+    type GET = GET.type
     case object GET extends Verb {
       override val toString: String = "GET"
     }
-    type GET = GET.type
+    type POST = POST.type
     case object POST extends Verb {
       override val toString: String = "POST"
     }
-    type POST = POST.type
-    case object PATCH extends Verb {
-      override val toString: String = "PATCH"
-    }
-    type PATCH = PATCH.type
-    case object PUT extends Verb {
-      override val toString: String = "PUT"
-    }
-    type PUT = PUT.type
-    case object DELETE extends Verb {
-      override val toString: String = "DELETE"
-    }
-    type DELETE = DELETE.type
   }
 
   private sealed trait ResponseExpectation {
@@ -132,38 +120,6 @@ trait HttpClientStub {
         responseBuilder)
       responseBuilder
     }
-
-    def PATCH(to: String, payload: JsValue)(implicit headerCarrier: HeaderCarrier): ResponseBuilder = {
-      val responseBuilder = new ResponseBuilder
-      self.expectationsUnderBuilt = expectationsUnderBuilt enqueue PayloadResponseExpectation(
-        Verb.PATCH,
-        to,
-        headerCarrier,
-        payload,
-        responseBuilder)
-      responseBuilder
-    }
-
-    def PUT(to: String, payload: JsValue)(implicit headerCarrier: HeaderCarrier): ResponseBuilder = {
-      val responseBuilder = new ResponseBuilder
-      self.expectationsUnderBuilt = expectationsUnderBuilt enqueue PayloadResponseExpectation(
-        Verb.PUT,
-        to,
-        headerCarrier,
-        payload,
-        responseBuilder)
-      responseBuilder
-    }
-
-    def DELETE(to: String)(implicit headerCarrier: HeaderCarrier): ResponseBuilder = {
-      val responseBuilder = new ResponseBuilder
-      self.expectationsUnderBuilt = expectationsUnderBuilt enqueue NoPayloadResponseExpectation(
-        Verb.DELETE,
-        to,
-        headerCarrier,
-        responseBuilder)
-      responseBuilder
-    }
   }
 
   class ResponseBuilder {
@@ -176,30 +132,14 @@ trait HttpClientStub {
     def returning(status: Int): Unit =
       returning(HttpResponse(status, responseJson = None))
 
-    def returning(status: Int, headers: (String, String)*): Unit =
-      returning(
-        HttpResponse(
-          status,
-          responseJson    = None,
-          responseHeaders = headers.toMap.mapValues(Seq(_))
-        ))
-
-    def returning(status: Int, body: String): Unit =
-      returning(HttpResponse(status, responseString = Some(body)))
-
     def returning(response: HttpResponse): Unit =
       httpResponse = OptionT.pure[Future](response)
 
-    def throwing(exception: Exception): Unit =
-      httpResponse = OptionT[Future, HttpResponse](Future.failed(exception))
   }
 
   class ClientStub private[HttpClientStub] (verbStubbing: VerbStubbing) extends HttpClient with WSHttp {
 
     override val hooks: Seq[HttpHook] = Nil
-
-    private[HttpClientStub] var postStubbing: (String, JsObject) => Future[HttpResponse] =
-      (_, _) => throw new IllegalStateException("HttpClientStub not configured")
 
     override def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
       val expectation = verbStubbing.popExpectation[NoPayloadResponseExpectation](Verb.GET)
@@ -222,34 +162,28 @@ trait HttpClientStub {
       expectation.httpResponse
     }
 
-    override def doPatch[A](url: String, body: A)(implicit wts: Writes[A], hc: HeaderCarrier): Future[HttpResponse] = {
-      val expectation = verbStubbing.popExpectation[PayloadResponseExpectation](Verb.PATCH)
+    override def POSTString[O](url: String, body: String, headers: Seq[(String, String)])(
+      implicit rds: HttpReads[O],
+      hc: HeaderCarrier,
+      ec: ExecutionContext): Future[O] = ???
 
-      url              shouldBe expectation.url
-      hc               shouldBe expectation.headerCarrier
-      wts.writes(body) shouldBe expectation.payload
+    override def POSTForm[O](
+      url: String,
+      body: Map[String, Seq[String]])(implicit rds: HttpReads[O], hc: HeaderCarrier, ec: ExecutionContext): Future[O] =
+      ???
 
-      expectation.httpResponse
-    }
+    override def POSTEmpty[O](
+      url: String)(implicit rds: HttpReads[O], hc: HeaderCarrier, ec: ExecutionContext): Future[O] =
+      ???
 
-    override def doPut[A](url: String, body: A)(implicit wts: Writes[A], hc: HeaderCarrier): Future[HttpResponse] = {
-      val expectation = verbStubbing.popExpectation[PayloadResponseExpectation](Verb.PUT)
+    override def doPatch[A](url: String, body: A)(implicit wts: Writes[A], hc: HeaderCarrier): Future[HttpResponse] =
+      ???
 
-      url              shouldBe expectation.url
-      hc               shouldBe expectation.headerCarrier
-      wts.writes(body) shouldBe expectation.payload
+    override def doPut[A](url: String, body: A)(implicit wts: Writes[A], hc: HeaderCarrier): Future[HttpResponse] =
+      ???
 
-      expectation.httpResponse
-    }
-
-    override def doDelete(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-      val expectation = verbStubbing.popExpectation[NoPayloadResponseExpectation](Verb.DELETE)
-
-      url shouldBe expectation.url
-      hc  shouldBe expectation.headerCarrier
-
-      expectation.httpResponse
-    }
+    override def doDelete(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+      ???
   }
 
   val httpClient: ClientStub = new ClientStub(expect)

@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import java.util.UUID
 
+import org.mockito.Matchers.{any, anyString, eq => is}
 import org.mockito.Mockito._
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
