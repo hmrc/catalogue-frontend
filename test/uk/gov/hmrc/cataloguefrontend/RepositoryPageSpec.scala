@@ -166,11 +166,11 @@ class RepositoryPageSpec
       |      "description": "some description",
       |      "createdAt": 1456326530000,
       |      "lastActive": 1478602555000,
-      |	     "githubUrls": [{
+      |	     "githubUrl": {
       |		     "name": "github",
       |        "displayName": "github.com",
       |		     "url": "https://github.com/hmrc/${repositoryDetails.repositoryName}"
-      |	     }],
+      |	     },
       |	     "ci": [
       |		     {
       |		       "name": "open1",

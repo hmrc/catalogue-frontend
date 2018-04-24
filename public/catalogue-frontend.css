@@ -11840,6 +11840,14 @@ section span.other-teams-message {
 .list--minimal {
   list-style: none; }
 
+.single-item {
+  overflow: hidden;
+  padding-left: 1.2em;
+  list-style: disc;
+  color: #6f777b;
+  margin-bottom: 1em;
+}
+
 .last-updated {
   color: #6f777b; }
 

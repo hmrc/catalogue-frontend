@@ -94,11 +94,11 @@ object JsonData {
        |        "The True Owners"
        |      ],
        |      "teamNames": ["teamA", "teamB"],
-       |	     "githubUrls": [{
+       |	     "githubUrl": {
        |		     "name": "github",
-       |        "displayName": "github.com",
+       |         "displayName": "github.com",
        |		     "url": "https://github.com/hmrc/service-1"
-       |	     }],
+       |	     },
        |	     "ci": [
        |		     {
        |		       "name": "open1",
@@ -190,13 +190,12 @@ object JsonData {
        |  "CATO",
        |  "Designers"
        |  ],
-       |  "githubUrls": [
+       |  "githubUrl":
        |  {
        |    "name": "github",
        |    "displayName": "Github.com",
        |    "url": "https://github.com/HMRC/2fa-prototype"
-       |  }
-       |  ],
+       |  },
        |  "ci": [ ],
        |  "environments": [ ]
        |}
@@ -215,11 +214,11 @@ object JsonData {
       |        "The True Owners"
       |      ],
       |      "teamNames": ["teamA", "teamB"],
-      |	     "githubUrls": [{
+      |	     "githubUrl": {
       |		     "name": "github",
       |        "displayName": "github.com",
       |		     "url": "https://github.com/hmrc/serv"
-      |	     }],
+      |	     },
       |	     "ci": [
       |		     {
       |		       "name": "open1",

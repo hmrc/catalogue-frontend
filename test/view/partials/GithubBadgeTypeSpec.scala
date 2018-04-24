@@ -26,16 +26,16 @@ class GithubBadgeTypeSpec extends WordSpec with Matchers {
   "Github Badge" should {
     "be Open if repository is not private" in {
       val repo = aRepo.copy(
-        isPrivate  = false,
-        githubUrls = Set(aLink.copy(url = "https://github.com/hmrc/name"))
+        isPrivate = false,
+        githubUrl = aLink.copy(url = "https://github.com/hmrc/name")
       )
 
       githubBadgeType(repo) shouldBe "Open"
     }
     "be Private if repository is private" in {
       val repo = aRepo.copy(
-        isPrivate  = true,
-        githubUrls = Set(aLink.copy(url = "https://github.com/hmrc/name"))
+        isPrivate = true,
+        githubUrl = aLink.copy(url = "https://github.com/hmrc/name")
       )
 
       githubBadgeType(repo) shouldBe "Private"
@@ -51,7 +51,7 @@ class GithubBadgeTypeSpec extends WordSpec with Matchers {
     lastActive   = LocalDateTime.now,
     owningTeams  = Nil,
     teamNames    = Nil,
-    githubUrls   = Set.empty,
+    githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/name"),
     ci           = Nil,
     environments = None,
     repoType     = RepoType.Other,
