@@ -24,9 +24,8 @@ import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import play.api.libs.json.Json
-import org.mockito.Matchers.{any, anyString, eq => is}
 import play.api.test.Helpers._
-import play.api.{Configuration, Environment}
+import uk.gov.hmrc.cataloguefrontend.config.ServicesConfig
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.{UmpToken, UmpUnauthorized}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 
@@ -83,13 +82,9 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
     val username = "username"
     val password = "password"
 
-    val configuration = mock[Configuration]
-    when(configuration.getString(is("microservice.services.user-management-auth.protocol"), any()))
-      .thenReturn(Some("http"))
-    when(configuration.getString(is("microservice.services.user-management-auth.host"), any()))
-      .thenReturn(Some("usermgt-auth"))
-    when(configuration.getInt(anyString)).thenReturn(Some(9999))
+    val servicesConfig = mock[ServicesConfig]
+    when(servicesConfig.baseUrl("user-management-auth")).thenReturn("http://usermgt-auth:9999")
 
-    val connector = new UserManagementAuthConnector(httpClient, configuration, mock[Environment])
+    val connector = new UserManagementAuthConnector(httpClient, servicesConfig)
   }
 }

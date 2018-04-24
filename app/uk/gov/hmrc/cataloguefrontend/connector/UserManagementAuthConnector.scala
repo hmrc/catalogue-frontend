@@ -17,27 +17,22 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
-import play.api.Mode.Mode
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
-import play.api.{Configuration, Environment}
+import uk.gov.hmrc.cataloguefrontend.config.ServicesConfig
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.{UmpToken, UmpUnauthorized}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class UserManagementAuthConnector @Inject()(
-  http: HttpClient,
-  override val runModeConfiguration: Configuration,
-  environment: Environment)
-    extends ServicesConfig {
+class UserManagementAuthConnector @Inject()(http: HttpClient, servicesConfig: ServicesConfig) {
 
-  private val serviceUrl                 = baseUrl("user-management-auth")
-  override protected lazy val mode: Mode = environment.mode
+  import servicesConfig._
+
+  private val serviceUrl = baseUrl("user-management-auth")
 
   def authenticate(username: String, password: String)(
     implicit headerCarrier: HeaderCarrier): Future[Either[UmpUnauthorized, UmpToken]] =

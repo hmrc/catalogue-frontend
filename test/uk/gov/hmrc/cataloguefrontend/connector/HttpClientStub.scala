@@ -194,7 +194,7 @@ trait HttpClientStub {
       httpResponse = OptionT[Future, HttpResponse](Future.failed(exception))
   }
 
-  class ClientStub(verbStubbing: VerbStubbing) extends HttpClient with WSHttp {
+  class ClientStub private[HttpClientStub] (verbStubbing: VerbStubbing) extends HttpClient with WSHttp {
 
     override val hooks: Seq[HttpHook] = Nil
 
