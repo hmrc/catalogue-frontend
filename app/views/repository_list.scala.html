@@ -18,7 +18,11 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.RepositoryDisplayDetails
 
-@(cacheTimestampFormatted: String, repositories: Seq[RepositoryDisplayDetails], pageTitle: String, activeTab : String, detailsUrl: String => Call)
+@(cacheTimestampFormatted: String,
+  repositories: Seq[RepositoryDisplayDetails],
+  pageTitle: String,
+  activeTab: String,
+  detailsUrl: String => Call)(implicit request: Request[_])
 
 @standard_layout(pageTitle, activeTab) {
     <header>

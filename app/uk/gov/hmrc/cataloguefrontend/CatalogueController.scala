@@ -78,7 +78,7 @@ class CatalogueController @Inject()(
     RepoType.Prototype -> routes.CatalogueController.prototype _
   )
 
-  def landingPage() = Action { request =>
+  def landingPage() = Action { implicit request =>
     Ok(landing_page())
   }
 

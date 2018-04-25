@@ -13,14 +13,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
+
 @import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{NoData, UMPError}
 @import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, RepoType, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
-@(timestampedRepos: DigitalServiceDetails, digitalServiceOwner: Option[DisplayableTeamMember] )(implicit messages: Messages)
 
+@(timestampedRepos: DigitalServiceDetails,
+  digitalServiceOwner: Option[DisplayableTeamMember]
+)(implicit messages: Messages, request: Request[_])
 
 @standard_layout(timestampedRepos.digitalServiceName, "digital-services") {
     <header>

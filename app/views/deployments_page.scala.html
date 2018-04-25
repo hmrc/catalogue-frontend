@@ -14,7 +14,7 @@
 * limitations under the License.
 *@
 
-@(form: Form[_], userProfileBaseUrl : String)(implicit messages: Messages)
+@(form: Form[_], userProfileBaseUrl: String)(implicit messages: Messages, request: Request[_])
 
 @standard_layout("Deployments", "deployments") {
 <header>

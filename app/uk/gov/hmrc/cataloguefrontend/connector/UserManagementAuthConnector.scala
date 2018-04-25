@@ -27,17 +27,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class UserManagementAuthConnector @Inject()(http: HttpClient, servicesConfig: ServicesConfig) {
+class UserManagementAuthConnector @Inject()(http: HttpClient, userManagementAuthConfig: UserManagementAuthConfig) {
 
   import UserManagementAuthConnector._
-  import servicesConfig._
-
-  private val serviceUrl = baseUrl("user-management-auth")
+  import userManagementAuthConfig._
 
   def authenticate(username: String, password: String)(
     implicit headerCarrier: HeaderCarrier): Future[Either[UmpUnauthorized, TokenAndUserId]] =
     http.POST[JsObject, Either[UmpUnauthorized, TokenAndUserId]](
-      url  = s"$serviceUrl/v1/login",
+      url  = s"$baseUrl/v1/login",
       body = Json.obj("username" -> username, "password" -> password)
     )
 
@@ -54,6 +52,14 @@ class UserManagementAuthConnector @Inject()(http: HttpClient, servicesConfig: Se
           case other        => throw new BadGatewayException(s"Received $other from $method to $url")
         }
     }
+}
+
+@Singleton
+class UserManagementAuthConfig @Inject()(servicesConfig: ServicesConfig) {
+  def baseUrl(): String = {
+    val key = "user-management-auth.url"
+    servicesConfig.getConfString(key, throw new Exception(s"Expected to find $key in configuration"))
+  }
 }
 
 object UserManagementAuthConnector {

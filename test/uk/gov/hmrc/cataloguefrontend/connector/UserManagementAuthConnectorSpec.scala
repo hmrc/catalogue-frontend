@@ -25,7 +25,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.cataloguefrontend.config.ServicesConfig
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 
@@ -39,7 +38,7 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
 
       expect
         .POST(
-          to      = "http://usermgt-auth:9999/v1/login",
+          to      = s"$userMgtAuthUrl/v1/login",
           payload = Json.obj("username" -> username, "password" -> password)
         )
         .returning(
@@ -54,7 +53,7 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
     "return unauthorized when POST to usermgt/v1/login returns UNAUTHORIZED" in new Setup {
       expect
         .POST(
-          to      = "http://usermgt-auth:9999/v1/login",
+          to      = s"$userMgtAuthUrl/v1/login",
           payload = Json.obj("username" -> username, "password" -> password)
         )
         .returning(UNAUTHORIZED)
@@ -66,7 +65,7 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
       s"throw BadGatewayException for unrecognized $status status" in new Setup {
         expect
           .POST(
-            to      = "http://usermgt-auth:9999/v1/login",
+            to      = s"$userMgtAuthUrl/v1/login",
             payload = Json.obj("username" -> username, "password" -> password)
           )
           .returning(status)
@@ -80,13 +79,13 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
 
   private trait Setup {
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+    val username                              = "username"
+    val password                              = "password"
+    val userManagementAuthConfig              = mock[UserManagementAuthConfig]
+    val userMgtAuthUrl                        = "http://usermgt-auth:9999"
 
-    val username = "username"
-    val password = "password"
+    when(userManagementAuthConfig.baseUrl()).thenReturn(userMgtAuthUrl)
 
-    val servicesConfig = mock[ServicesConfig]
-    when(servicesConfig.baseUrl("user-management-auth")).thenReturn("http://usermgt-auth:9999")
-
-    val connector = new UserManagementAuthConnector(httpClient, servicesConfig)
+    val connector = new UserManagementAuthConnector(httpClient, userManagementAuthConfig)
   }
 }

@@ -225,6 +225,8 @@ object UserManagementConnector {
 
   final case class DisplayName(value: String) {
     require(value.nonEmpty)
+
+    override def toString: String = value
   }
 
 }

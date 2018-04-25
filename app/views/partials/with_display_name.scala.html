@@ -1,0 +1,10 @@
+@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
+
+@(ifLoggedIn: DisplayName => Html)(ifNotLoggedIn: => Html)(implicit request: Request[_])
+
+@{
+    request
+        .session
+        .get("ump.displayName")
+        .fold(ifNotLoggedIn)(rawDisplayName => ifLoggedIn(DisplayName(rawDisplayName)))
+}
