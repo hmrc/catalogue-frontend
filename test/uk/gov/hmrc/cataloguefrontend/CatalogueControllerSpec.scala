@@ -85,6 +85,7 @@ class CatalogueControllerSpec
     mockedEventService,
     mockedModelService,
     mock[play.api.Environment],
+    mock[UmpAuthenticatedAction],
     app.configuration,
     mock[MessagesApi]
   ) {

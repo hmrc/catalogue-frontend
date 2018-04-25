@@ -21,6 +21,8 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.mockito.Matchers._
 import org.mockito.Mockito.when
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
@@ -28,8 +30,9 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
-import play.api.mvc.Result
+import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
+
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -183,14 +186,24 @@ class DigitalServicePageSpec
 
     "show service owner" in {
 
-      val digitalServiceName = "digital-service-123"
-      val mockedConnector    = mock[TeamsAndRepositoriesConnector]
+      val digitalServiceName      = "digital-service-123"
+      val mockedConnector         = mock[TeamsAndRepositoriesConnector]
+      val umpAuthenticatedAction  = mock[UmpAuthenticatedAction]
+      val userManagementConnector = mock[UserManagementConnector]
+
       when(mockedConnector.digitalServiceInfo(any())(any()))
         .thenReturn(Future(Some(DigitalService(digitalServiceName, 0L, Seq.empty))))
 
-      val userManagementConnector = mock[UserManagementConnector]
       when(userManagementConnector.getTeamMembersForTeams(any())(any()))
         .thenReturn(Future(Map.empty[String, Either[UMPError, Seq[TeamMember]]]))
+
+      when(umpAuthenticatedAction.invokeBlock(any(), any())).thenAnswer(new Answer[Future[Result]] {
+        def answer(invocation: InvocationOnMock): Future[Result] = {
+          val req   = invocation.getArgumentAt(0, classOf[Request[_]])
+          val block = invocation.getArgumentAt(1, classOf[UmpAuthRequest[_] => Future[Result]])
+          block(UmpAuthRequest(req, isSignedIn = true))
+        }
+      })
 
       val catalogueController = new CatalogueController(
         userManagementConnector,
@@ -202,6 +215,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
+        umpAuthenticatedAction,
         app.configuration,
         mock[MessagesApi]
       )
@@ -271,6 +285,7 @@ class DigitalServicePageSpec
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock                  = mock[UserManagementConnector]
+      val umpAuthenticatedAction            = mock[UmpAuthenticatedAction]
 
       val catalogueController = new CatalogueController(
         umpConnectorMock,
@@ -282,6 +297,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
+        umpAuthenticatedAction,
         app.configuration,
         mock[MessagesApi]
       )
@@ -296,6 +312,14 @@ class DigitalServicePageSpec
           Map(teamName -> Left(UserManagementConnector.ConnectionError(exception)))
         )
       )
+
+      when(umpAuthenticatedAction.invokeBlock(any(), any())).thenAnswer(new Answer[Future[Result]] {
+        def answer(invocation: InvocationOnMock): Future[Result] = {
+          val req   = invocation.getArgumentAt(0, classOf[Request[_]])
+          val block = invocation.getArgumentAt(1, classOf[UmpAuthRequest[_] => Future[Result]])
+          block(UmpAuthRequest(req, isSignedIn = true))
+        }
+      })
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
@@ -313,6 +337,7 @@ class DigitalServicePageSpec
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock                  = mock[UserManagementConnector]
+      val umpAuthenticatedAction            = mock[UmpAuthenticatedAction]
 
       val catalogueController = new CatalogueController(
         umpConnectorMock,
@@ -324,6 +349,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
+        umpAuthenticatedAction,
         app.configuration,
         mock[MessagesApi]
       )
@@ -339,6 +365,14 @@ class DigitalServicePageSpec
           Map(teamName -> Left(UserManagementConnector.NoData("https://some-link-to-rectify")))
         )
       )
+
+      when(umpAuthenticatedAction.invokeBlock(any(), any())).thenAnswer(new Answer[Future[Result]] {
+        def answer(invocation: InvocationOnMock): Future[Result] = {
+          val req   = invocation.getArgumentAt(0, classOf[Request[_]])
+          val block = invocation.getArgumentAt(1, classOf[UmpAuthRequest[_] => Future[Result]])
+          block(UmpAuthRequest(req, isSignedIn = true))
+        }
+      })
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
@@ -357,6 +391,7 @@ class DigitalServicePageSpec
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock                  = mock[UserManagementConnector]
+      val umpAuthenticatedAction            = mock[UmpAuthenticatedAction]
 
       val catalogueController = new CatalogueController(
         umpConnectorMock,
@@ -368,13 +403,12 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
+        umpAuthenticatedAction,
         app.configuration,
         mock[MessagesApi]
       )
 
       val teamName = "Team1"
-
-      val exception = new RuntimeException("Boooom!")
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
@@ -383,6 +417,14 @@ class DigitalServicePageSpec
           Map(teamName -> Left(UserManagementConnector.HTTPError(404)))
         )
       )
+
+      when(umpAuthenticatedAction.invokeBlock(any(), any())).thenAnswer(new Answer[Future[Result]] {
+        def answer(invocation: InvocationOnMock): Future[Result] = {
+          val req   = invocation.getArgumentAt(0, classOf[Request[_]])
+          val block = invocation.getArgumentAt(1, classOf[UmpAuthRequest[_] => Future[Result]])
+          block(UmpAuthRequest(req, isSignedIn = true))
+        }
+      })
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200

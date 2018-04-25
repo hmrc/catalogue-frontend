@@ -42,6 +42,7 @@ class PrototypesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
           mock[EventService],
           mock[ReadModelService],
           mock[play.api.Environment],
+          mock[UmpAuthenticatedAction],
           Configuration(),
           mock[MessagesApi]
         ).allPrototypes(FakeRequest()).futureValue

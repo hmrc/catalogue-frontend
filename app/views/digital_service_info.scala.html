@@ -20,10 +20,11 @@
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
+@import uk.gov.hmrc.cataloguefrontend.UmpAuthRequest
 
 @(timestampedRepos: DigitalServiceDetails,
   digitalServiceOwner: Option[DisplayableTeamMember]
-)(implicit messages: Messages, request: Request[_])
+)(implicit messages: Messages, request: UmpAuthRequest[_])
 
 @standard_layout(timestampedRepos.digitalServiceName, "digital-services") {
     <header>

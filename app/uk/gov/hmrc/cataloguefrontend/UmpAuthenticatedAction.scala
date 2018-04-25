@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.Inject
-import play.api.mvc.{ActionRefiner, Request, Result, WrappedRequest}
+import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -25,22 +25,24 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 
 import scala.concurrent.Future
 
-final case class UmpAuthRequest[A](request: Request[A], isSignedIn: Boolean) extends WrappedRequest[A](request)
+final case class UmpAuthRequest[A](
+  request: Request[A],
+  isSignedIn: Boolean
+) extends WrappedRequest[A](request)
 
 class UmpAuthenticatedAction @Inject()(userManagementAuthConnector: UserManagementAuthConnector)
-    extends ActionRefiner[Request, UmpAuthRequest] {
+    extends ActionFunction[Request, UmpAuthRequest] {
 
-  protected def refine[A](request: Request[A]): Future[Either[Result, UmpAuthRequest[A]]] = {
+  def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
 
     request.session.get("ump.token") match {
       case Some(token) =>
-        userManagementAuthConnector.isValid(UmpToken(token)).map { isValid =>
-          Right(UmpAuthRequest(request, isValid))
+        userManagementAuthConnector.isValid(UmpToken(token)).flatMap { isValid =>
+          block(UmpAuthRequest(request, isValid))
         }
       case None =>
-        Future.successful(Right(UmpAuthRequest(request, isSignedIn = false)))
+        block(UmpAuthRequest(request, isSignedIn = false))
     }
   }
-
 }
