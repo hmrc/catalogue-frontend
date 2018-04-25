@@ -28,6 +28,8 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 
+import scala.util.Random
+
 class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with MockitoSugar with ScalaFutures {
 
   "authenticate" should {
@@ -72,8 +74,49 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
 
         intercept[BadGatewayException] {
           await(connector.authenticate(username, password))
-        }.message shouldBe s"Received $status from POST to http://usermgt-auth:9999/v1/login"
+        }.message shouldBe s"Received $status from POST to $userMgtAuthUrl/v1/login"
       }
+    }
+  }
+
+  "isValid" should {
+    "return true if UMP Auth service returns 200 OK" in new Setup {
+      val umpToken = UmpToken("value")
+      expect
+        .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
+        .returning(OK)
+
+      connector.isValid(umpToken).futureValue shouldBe true
+    }
+
+    UNAUTHORIZED :: FORBIDDEN :: Nil foreach { status =>
+      s"return false if UMP returns $status status" in new Setup {
+        val umpToken = UmpToken("value")
+        expect
+          .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
+          .returning(status)
+
+        connector.isValid(umpToken).futureValue shouldBe false
+      }
+    }
+
+    "throw BadGatewayException if UMP Auth Service returns other unexpected status" in new Setup {
+      val umpToken = UmpToken("value")
+      val unsupportedStatusCodes =
+        Random
+          .shuffle((201 to 599).filterNot(s => s == UNAUTHORIZED || s == FORBIDDEN))
+          .take(10)
+
+      unsupportedStatusCodes.foreach { unsupportedStatus =>
+        expect
+          .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
+          .returning(unsupportedStatus)
+
+        intercept[BadGatewayException] {
+          await(connector.isValid(umpToken))
+        }.message shouldBe s"Received $unsupportedStatus from GET to $userMgtAuthUrl/v1/login"
+      }
+
     }
   }
 
@@ -84,7 +127,7 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
     val userManagementAuthConfig              = mock[UserManagementAuthConfig]
     val userMgtAuthUrl                        = "http://usermgt-auth:9999"
 
-    when(userManagementAuthConfig.baseUrl()).thenReturn(userMgtAuthUrl)
+    when(userManagementAuthConfig.baseUrl).thenReturn(userMgtAuthUrl)
 
     val connector = new UserManagementAuthConnector(httpClient, userManagementAuthConfig)
   }
