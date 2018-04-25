@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import java.util.UUID
 
-import org.mockito.Matchers.{any, anyString, eq => is}
+import org.mockito.Matchers.{eq => is}
 import org.mockito.Mockito._
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
@@ -27,7 +27,7 @@ import org.scalatest.mock.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.config.ServicesConfig
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.{UmpToken, UmpUnauthorized}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpAuthData, UmpToken, UmpUnauthorized, UmpUserId}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 
 class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with MockitoSugar with ScalaFutures {
@@ -35,7 +35,8 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
   "authenticate" should {
 
     "return authorization token when POST to usermgt/v1/login returns OK containing it" in new Setup {
-      val token = UUID.randomUUID().toString
+      val token  = UUID.randomUUID().toString
+      val userId = "john.smith"
 
       expect
         .POST(
@@ -44,10 +45,11 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
         )
         .returning(
           status = OK,
-          body   = Json.obj("token" -> token)
+          body   = Json.obj("Token" -> token, "uid" -> userId)
         )
 
-      connector.authenticate(username, password).futureValue shouldBe Right(UmpToken(token))
+      connector.authenticate(username, password).futureValue shouldBe Right(
+        UmpAuthData(UmpToken(token), UmpUserId(userId)))
     }
 
     "return unauthorized when POST to usermgt/v1/login returns UNAUTHORIZED" in new Setup {

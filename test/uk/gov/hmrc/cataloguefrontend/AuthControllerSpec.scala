@@ -26,8 +26,9 @@ import play.api.Configuration
 import play.api.i18n.MessagesApi
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized}
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.{UmpToken, UmpUnauthorized}
+import uk.gov.hmrc.cataloguefrontend.service.AuthService.{DisplayName, UmpData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -37,17 +38,20 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with
   "Authenticating" should {
 
     "redirect to landing page if successful and UMP auth in session" in new Setup {
-      val username      = "n/a"
-      val password      = "n/a"
-      val request       = FakeRequest().withFormUrlEncodedBody("username" -> username, "password" -> password)
-      val expectedToken = UmpToken("ump-token")
+      val username            = "n/a"
+      val password            = "n/a"
+      val request             = FakeRequest().withFormUrlEncodedBody("username" -> username, "password" -> password)
+      val expectedToken       = UmpToken("ump-token")
+      val expectedDisplayName = DisplayName("John Smith")
 
-      when(authService.authenticate(is(username), is(password))(any())).thenReturn(Future(Right(expectedToken)))
+      when(authService.authenticate(is(username), is(password))(any()))
+        .thenReturn(Future(Right(UmpData(expectedToken, expectedDisplayName))))
 
       val result = controller.submit(request)
 
-      redirectLocation(result).get       shouldBe routes.CatalogueController.landingPage().url
-      session(result).apply("ump.token") shouldBe expectedToken.value
+      redirectLocation(result).get             shouldBe routes.CatalogueController.landingPage().url
+      session(result).apply("ump.token")       shouldBe expectedToken.value
+      session(result).apply("ump.displayName") shouldBe expectedDisplayName.value
     }
 
     "show 400 BAD_REQUEST and error message when auth service does not recognize user credentials" in new Setup {

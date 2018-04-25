@@ -22,7 +22,9 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, Messages, MessagesApi}
 import play.api.mvc.Action
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
+import uk.gov.hmrc.cataloguefrontend.service.AuthService.{DisplayName, UmpData}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.sign_in
 
@@ -34,7 +36,6 @@ class AuthController @Inject()(val messagesApi: MessagesApi, authService: AuthSe
     with I18nSupport {
 
   import AuthController.signinForm
-  import AuthService.UmpToken
 
   private val selfServiceUrl = {
     val key = "self-service-url"
@@ -52,8 +53,9 @@ class AuthController @Inject()(val messagesApi: MessagesApi, authService: AuthSe
         formWithErrors => Future.successful(BadRequest(sign_in(formWithErrors, selfServiceUrl))),
         signInData =>
           authService.authenticate(signInData.username, signInData.password).map {
-            case Right(UmpToken(token)) =>
-              Redirect(routes.CatalogueController.landingPage()).withSession("ump.token" -> token)
+            case Right(UmpData(UmpToken(token), DisplayName(displayName))) =>
+              Redirect(routes.CatalogueController.landingPage())
+                .withSession("ump.token" -> token, "ump.displayName" -> displayName)
             case Left(_) =>
               BadRequest(sign_in(signinForm.withGlobalError(Messages("sign-in.wrong-credentials")), selfServiceUrl))
         }

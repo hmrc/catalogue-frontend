@@ -23,22 +23,53 @@ import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.time.{Millis, Span}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.UmpToken
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpAuthData, UmpToken, UmpUnauthorized, UmpUserId}
+import uk.gov.hmrc.cataloguefrontend.service.AuthService.{DisplayName, UmpData}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
 class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
 
+  implicit val defaultPatienceConfig = new PatienceConfig(Span(500, Millis), Span(15, Millis))
+
   "authenticate" should {
 
-    "return token if user management auth service returns one" in new Setup {
-      val token = UmpToken(UUID.randomUUID().toString)
-      when(userManagementAuthConnector.authenticate(username, password))
-        .thenReturn(Future.successful(Right(token)))
+    "return token and display name" in new Setup {
+      val token       = UmpToken(UUID.randomUUID().toString)
+      val userId      = UmpUserId("john.smith")
+      val displayName = DisplayName("John Smith")
 
-      service.authenticate(username, password).futureValue shouldBe Right(token)
+      when(userManagementAuthConnector.authenticate(username, password))
+        .thenReturn(Future.successful(Right(UmpAuthData(token, userId))))
+
+      when(userManagementConnector.getDisplayName(userId))
+        .thenReturn(Future.successful(Some(displayName)))
+
+      service.authenticate(username, password).futureValue shouldBe Right(UmpData(token, displayName))
+    }
+
+    "return token and userId if UMP doesn't return display name" in new Setup {
+      val token  = UmpToken(UUID.randomUUID().toString)
+      val userId = UmpUserId("john.smith")
+
+      when(userManagementAuthConnector.authenticate(username, password))
+        .thenReturn(Future.successful(Right(UmpAuthData(token, userId))))
+
+      when(userManagementConnector.getDisplayName(userId))
+        .thenReturn(Future.successful(None))
+
+      service.authenticate(username, password).futureValue shouldBe Right(UmpData(token, DisplayName(userId.value)))
+    }
+
+    "return an error if credentials invalid" in new Setup {
+      when(userManagementAuthConnector.authenticate(username, password))
+        .thenReturn(Future.successful(Left(UmpUnauthorized)))
+
+      service.authenticate(username, password).futureValue shouldBe Left(UmpUnauthorized)
     }
   }
 
@@ -49,6 +80,7 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
     val password = "password"
 
     val userManagementAuthConnector = mock[UserManagementAuthConnector]
-    val service                     = new AuthService(userManagementAuthConnector)
+    val userManagementConnector     = mock[UserManagementConnector]
+    val service                     = new AuthService(userManagementAuthConnector, userManagementConnector)
   }
 }

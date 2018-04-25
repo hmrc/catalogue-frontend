@@ -20,8 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.cataloguefrontend.config.ServicesConfig
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.{UmpToken, UmpUnauthorized}
-import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse, UserId}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -30,24 +29,51 @@ import scala.concurrent.Future
 @Singleton
 class UserManagementAuthConnector @Inject()(http: HttpClient, servicesConfig: ServicesConfig) {
 
+  import UserManagementAuthConnector._
   import servicesConfig._
 
   private val serviceUrl = baseUrl("user-management-auth")
 
   def authenticate(username: String, password: String)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[UmpUnauthorized, UmpToken]] =
-    http.POST[JsObject, Either[UmpUnauthorized, UmpToken]](
+    implicit headerCarrier: HeaderCarrier): Future[Either[UmpUnauthorized, UmpAuthData]] =
+    http.POST[JsObject, Either[UmpUnauthorized, UmpAuthData]](
       url  = s"$serviceUrl/v1/login",
       body = Json.obj("username" -> username, "password" -> password)
     )
 
-  private implicit val umpTokenReads: HttpReads[Either[UmpUnauthorized, UmpToken]] =
-    new HttpReads[Either[UmpUnauthorized, UmpToken]] {
-      override def read(method: String, url: String, response: HttpResponse): Either[UmpUnauthorized, UmpToken] =
+  private implicit val umpTokenReads: HttpReads[Either[UmpUnauthorized, UmpAuthData]] =
+    new HttpReads[Either[UmpUnauthorized, UmpAuthData]] {
+      override def read(method: String, url: String, response: HttpResponse): Either[UmpUnauthorized, UmpAuthData] =
         response.status match {
-          case OK           => Right(UmpToken((response.json \ "token").as[String]))
+          case OK => {
+            val token  = UmpToken((response.json \ "Token").as[String])
+            val userId = UmpUserId((response.json \ "uid").as[String])
+            Right(UmpAuthData(token, userId))
+          }
+
           case UNAUTHORIZED => Left(UmpUnauthorized)
           case other        => throw new BadGatewayException(s"Received $other from $method to $url")
         }
     }
+}
+
+object UserManagementAuthConnector {
+
+  final case class UmpAuthData(
+    token: UmpToken,
+    userId: UmpUserId
+  )
+
+  final case class UmpUserId(value: String) {
+    require(value.nonEmpty)
+    override def toString = value
+  }
+
+  final case class UmpToken(value: String) {
+    require(value.nonEmpty)
+  }
+
+  type UmpUnauthorized = UmpUnauthorized.type
+  case object UmpUnauthorized
+
 }

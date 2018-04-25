@@ -16,24 +16,52 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
+import cats.data.{EitherT, OptionT}
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpAuthData, UmpToken, UmpUnauthorized, UmpUserId}
+import uk.gov.hmrc.cataloguefrontend.service.AuthService.{DisplayName, UmpData}
 import uk.gov.hmrc.http.HeaderCarrier
+import cats.implicits._
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class AuthService @Inject()(userManagementAuthConnector: UserManagementAuthConnector) {
-
-  import AuthService._
+class AuthService @Inject()(
+  userManagementAuthConnector: UserManagementAuthConnector,
+  userManagementConnector: UserManagementConnector) {
 
   def authenticate(username: String, password: String)(
-    implicit hc: HeaderCarrier): Future[Either[UmpUnauthorized, UmpToken]] =
-    userManagementAuthConnector.authenticate(username, password)
+    implicit hc: HeaderCarrier): Future[Either[UmpUnauthorized, UmpData]] = {
+
+    def getDisplayNameOrDefaultToUserId(userId: UmpUserId): Future[Either[UmpUnauthorized, DisplayName]] =
+      userManagementConnector.getDisplayName(userId).map {
+        case Some(displayName) => Right(displayName)
+        case None              => Right(DisplayName(userId.value))
+      }
+
+    (for {
+      umpAuthData <- EitherT(userManagementAuthConnector.authenticate(username, password))
+      displayName <- EitherT(getDisplayNameOrDefaultToUserId(umpAuthData.userId))
+    } yield {
+      UmpData(umpAuthData.token, displayName)
+    }).value
+
+  }
+
 }
 
 object AuthService {
-  final case class UmpToken(value: String) extends AnyVal
-  type UmpUnauthorized = UmpUnauthorized.type
-  case object UmpUnauthorized
+
+  final case class UmpData(
+    token: UmpToken,
+    displayName: DisplayName
+  )
+
+  final case class DisplayName(value: String) {
+    require(value.nonEmpty)
+  }
+
 }

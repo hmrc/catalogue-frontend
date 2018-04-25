@@ -25,17 +25,19 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
-import play.api.{Configuration, Environment}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
+import play.api.{Configuration, Environment}
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, HTTPError, NoData, TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
+import uk.gov.hmrc.cataloguefrontend.service.AuthService.DisplayName
 import uk.gov.hmrc.cataloguefrontend.{UserManagementConnector, WireMockEndpoints}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.Future
 import scala.io.Source
-import uk.gov.hmrc.http.{HeaderCarrier, HttpGet}
-import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 class UserManagementConnectorSpec
     extends FunSpec
@@ -348,7 +350,35 @@ class UserManagementConnectorSpec
           "anand.manand@gov.uk")
 
       }
+    }
+  }
 
+  describe("getDisplayName") {
+
+    implicit val hc = HeaderCarrier()
+    val userId      = UmpUserId("ricky.micky")
+
+    it("should return user's displayName if exists in UMP") {
+      stubUserManagementEndPoint(
+        url             = s"/v2/organisations/users/$userId",
+        jsonFileNameOpt = Some("/single-user.json")
+      )
+
+      val displayName = userManagementConnector.getDisplayName(userId).futureValue
+
+      displayName shouldBe Some(DisplayName("Ricky Micky"))
+    }
+
+    it("should return None if UMP doesn't know about a given user") {
+      stubUserManagementEndPoint(
+        httpCode        = 404,
+        url             = s"/v2/organisations/users/$userId",
+        jsonFileNameOpt = None
+      )
+
+      val displayName = userManagementConnector.getDisplayName(userId).futureValue
+
+      displayName shouldBe None
     }
   }
 
