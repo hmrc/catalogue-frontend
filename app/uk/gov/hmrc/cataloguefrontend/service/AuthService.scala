@@ -16,17 +16,18 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import cats.data.{EitherT, OptionT}
+import cats.data.EitherT
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpAuthData, UmpToken, UmpUnauthorized, UmpUserId}
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.{DisplayName, UmpData}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized, UmpUserId}
+import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import uk.gov.hmrc.http.HeaderCarrier
-import cats.implicits._
 
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class AuthService @Inject()(
@@ -34,7 +35,7 @@ class AuthService @Inject()(
   userManagementConnector: UserManagementConnector) {
 
   def authenticate(username: String, password: String)(
-    implicit hc: HeaderCarrier): Future[Either[UmpUnauthorized, UmpData]] = {
+    implicit hc: HeaderCarrier): Future[Either[UmpUnauthorized, TokenAndDisplayName]] = {
 
     def getDisplayNameOrDefaultToUserId(userId: UmpUserId): Future[Either[UmpUnauthorized, DisplayName]] =
       userManagementConnector.getDisplayName(userId).map {
@@ -46,7 +47,7 @@ class AuthService @Inject()(
       umpAuthData <- EitherT(userManagementAuthConnector.authenticate(username, password))
       displayName <- EitherT(getDisplayNameOrDefaultToUserId(umpAuthData.userId))
     } yield {
-      UmpData(umpAuthData.token, displayName)
+      TokenAndDisplayName(umpAuthData.token, displayName)
     }).value
 
   }
@@ -55,13 +56,9 @@ class AuthService @Inject()(
 
 object AuthService {
 
-  final case class UmpData(
+  final case class TokenAndDisplayName(
     token: UmpToken,
     displayName: DisplayName
   )
-
-  final case class DisplayName(value: String) {
-    require(value.nonEmpty)
-  }
 
 }

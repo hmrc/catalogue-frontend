@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import java.util.UUID
 
-import org.mockito.Matchers.{eq => is}
 import org.mockito.Mockito._
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
@@ -27,7 +26,7 @@ import org.scalatest.mock.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.config.ServicesConfig
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpAuthData, UmpToken, UmpUnauthorized, UmpUserId}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 
 class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with MockitoSugar with ScalaFutures {
@@ -49,7 +48,7 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
         )
 
       connector.authenticate(username, password).futureValue shouldBe Right(
-        UmpAuthData(UmpToken(token), UmpUserId(userId)))
+        TokenAndUserId(UmpToken(token), UmpUserId(userId)))
     }
 
     "return unauthorized when POST to usermgt/v1/login returns UNAUTHORIZED" in new Setup {

@@ -37,13 +37,13 @@ import play.api.libs.json._
 import play.api.{Configuration, Logger, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.DisplayName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
 @Singleton
 case class UserManagementConnector @Inject()(
   http: HttpClient,
@@ -222,5 +222,9 @@ object UserManagementConnector {
 
   implicit val teamMemberFormat: OFormat[TeamMember] = Json.format[TeamMember]
   implicit val teamDetailsReads: Reads[TeamDetails]  = Json.reads[TeamDetails]
+
+  final case class DisplayName(value: String) {
+    require(value.nonEmpty)
+  }
 
 }

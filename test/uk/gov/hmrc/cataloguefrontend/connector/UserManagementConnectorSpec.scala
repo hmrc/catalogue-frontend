@@ -28,9 +28,8 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, HTTPError, NoData, TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, DisplayName, HTTPError, NoData, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.DisplayName
 import uk.gov.hmrc.cataloguefrontend.{UserManagementConnector, WireMockEndpoints}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter

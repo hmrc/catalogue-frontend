@@ -26,9 +26,10 @@ import play.api.Configuration
 import play.api.i18n.MessagesApi
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized}
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.{DisplayName, UmpData}
+import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -45,7 +46,7 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with
       val expectedDisplayName = DisplayName("John Smith")
 
       when(authService.authenticate(is(username), is(password))(any()))
-        .thenReturn(Future(Right(UmpData(expectedToken, expectedDisplayName))))
+        .thenReturn(Future(Right(TokenAndDisplayName(expectedToken, expectedDisplayName))))
 
       val result = controller.submit(request)
 

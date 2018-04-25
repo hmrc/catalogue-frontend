@@ -35,21 +35,20 @@ class UserManagementAuthConnector @Inject()(http: HttpClient, servicesConfig: Se
   private val serviceUrl = baseUrl("user-management-auth")
 
   def authenticate(username: String, password: String)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[UmpUnauthorized, UmpAuthData]] =
-    http.POST[JsObject, Either[UmpUnauthorized, UmpAuthData]](
+    implicit headerCarrier: HeaderCarrier): Future[Either[UmpUnauthorized, TokenAndUserId]] =
+    http.POST[JsObject, Either[UmpUnauthorized, TokenAndUserId]](
       url  = s"$serviceUrl/v1/login",
       body = Json.obj("username" -> username, "password" -> password)
     )
 
-  private implicit val umpTokenReads: HttpReads[Either[UmpUnauthorized, UmpAuthData]] =
-    new HttpReads[Either[UmpUnauthorized, UmpAuthData]] {
-      override def read(method: String, url: String, response: HttpResponse): Either[UmpUnauthorized, UmpAuthData] =
+  private implicit val tokenAndUserIdReads: HttpReads[Either[UmpUnauthorized, TokenAndUserId]] =
+    new HttpReads[Either[UmpUnauthorized, TokenAndUserId]] {
+      override def read(method: String, url: String, response: HttpResponse): Either[UmpUnauthorized, TokenAndUserId] =
         response.status match {
-          case OK => {
+          case OK =>
             val token  = UmpToken((response.json \ "Token").as[String])
             val userId = UmpUserId((response.json \ "uid").as[String])
-            Right(UmpAuthData(token, userId))
-          }
+            Right(TokenAndUserId(token, userId))
 
           case UNAUTHORIZED => Left(UmpUnauthorized)
           case other        => throw new BadGatewayException(s"Received $other from $method to $url")
@@ -59,14 +58,14 @@ class UserManagementAuthConnector @Inject()(http: HttpClient, servicesConfig: Se
 
 object UserManagementAuthConnector {
 
-  final case class UmpAuthData(
+  final case class TokenAndUserId(
     token: UmpToken,
     userId: UmpUserId
   )
 
   final case class UmpUserId(value: String) {
     require(value.nonEmpty)
-    override def toString = value
+    override def toString: String = value
   }
 
   final case class UmpToken(value: String) {

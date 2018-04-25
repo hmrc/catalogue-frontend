@@ -25,9 +25,10 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
+import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpAuthData, UmpToken, UmpUnauthorized, UmpUserId}
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.{DisplayName, UmpData}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId}
+import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -44,12 +45,12 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
       val displayName = DisplayName("John Smith")
 
       when(userManagementAuthConnector.authenticate(username, password))
-        .thenReturn(Future.successful(Right(UmpAuthData(token, userId))))
+        .thenReturn(Future.successful(Right(TokenAndUserId(token, userId))))
 
       when(userManagementConnector.getDisplayName(userId))
         .thenReturn(Future.successful(Some(displayName)))
 
-      service.authenticate(username, password).futureValue shouldBe Right(UmpData(token, displayName))
+      service.authenticate(username, password).futureValue shouldBe Right(TokenAndDisplayName(token, displayName))
     }
 
     "return token and userId if UMP doesn't return display name" in new Setup {
@@ -57,12 +58,13 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
       val userId = UmpUserId("john.smith")
 
       when(userManagementAuthConnector.authenticate(username, password))
-        .thenReturn(Future.successful(Right(UmpAuthData(token, userId))))
+        .thenReturn(Future.successful(Right(TokenAndUserId(token, userId))))
 
       when(userManagementConnector.getDisplayName(userId))
         .thenReturn(Future.successful(None))
 
-      service.authenticate(username, password).futureValue shouldBe Right(UmpData(token, DisplayName(userId.value)))
+      service.authenticate(username, password).futureValue shouldBe Right(
+        TokenAndDisplayName(token, DisplayName(userId.value)))
     }
 
     "return an error if credentials invalid" in new Setup {
