@@ -30,7 +30,7 @@ final case class UmpAuthRequest[A](
   isSignedIn: Boolean
 ) extends WrappedRequest[A](request)
 
-class UmpAuthenticatedAction @Inject()(userManagementAuthConnector: UserManagementAuthConnector)
+class VerifySignInStatus @Inject()(userManagementAuthConnector: UserManagementAuthConnector)
     extends ActionFunction[Request, UmpAuthRequest] {
 
   def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] = {
@@ -45,4 +45,7 @@ class UmpAuthenticatedAction @Inject()(userManagementAuthConnector: UserManageme
         block(UmpAuthRequest(request, isSignedIn = false))
     }
   }
+
+  def async(block: UmpAuthRequest[AnyContent] => Future[Result]): Action[AnyContent] =
+    Action.andThen(this).async(block)
 }

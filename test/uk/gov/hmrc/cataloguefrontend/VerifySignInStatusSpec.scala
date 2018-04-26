@@ -31,7 +31,7 @@ import org.mockito.Matchers.{eq => is, _}
 
 import scala.concurrent.Future
 
-class UmpAuthenticatedActionSpec extends WordSpec with MockitoSugar with ScalaFutures with OneAppPerSuite {
+class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFutures with OneAppPerSuite {
 
   "Action" should {
 
@@ -58,7 +58,7 @@ class UmpAuthenticatedActionSpec extends WordSpec with MockitoSugar with ScalaFu
   private trait Setup {
     val expectedStatus              = Ok
     val userManagementAuthConnector = mock[UserManagementAuthConnector]
-    val action                      = new UmpAuthenticatedAction(userManagementAuthConnector)
+    val action                      = new VerifySignInStatus(userManagementAuthConnector)
 
     def actionBodyExpecting(isValid: Boolean): UmpAuthRequest[_] => Future[Result] = authRequest => {
       authRequest.isSignedIn shouldBe isValid

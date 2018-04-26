@@ -30,7 +30,7 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
-import play.api.mvc.{Request, Result}
+import play.api.mvc.{Action, ActionBuilder, AnyContent, Request, Result}
 import play.api.test.FakeRequest
 
 import scala.collection.JavaConversions._
@@ -189,7 +189,7 @@ class DigitalServicePageSpec
 
       val digitalServiceName      = "digital-service-123"
       val mockedConnector         = mock[TeamsAndRepositoriesConnector]
-      val umpAuthenticatedAction  = mock[UmpAuthenticatedAction]
+      val verifySignInStatus      = mock[VerifySignInStatus]
       val userManagementConnector = mock[UserManagementConnector]
 
       when(mockedConnector.digitalServiceInfo(any())(any()))
@@ -198,11 +198,15 @@ class DigitalServicePageSpec
       when(userManagementConnector.getTeamMembersForTeams(any())(any()))
         .thenReturn(Future(Map.empty[String, Either[UMPError, Seq[TeamMember]]]))
 
-      when(umpAuthenticatedAction.invokeBlock(any(), any())).thenAnswer(new Answer[Future[Result]] {
-        def answer(invocation: InvocationOnMock): Future[Result] = {
-          val req   = invocation.getArgumentAt(0, classOf[Request[_]])
-          val block = invocation.getArgumentAt(1, classOf[UmpAuthRequest[_] => Future[Result]])
-          block(UmpAuthRequest(req, isSignedIn = true))
+      object UmpActionBuilder extends ActionBuilder[UmpAuthRequest] {
+        def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] =
+          block(UmpAuthRequest(request, isSignedIn = true))
+      }
+
+      when(verifySignInStatus.async(any())).thenAnswer(new Answer[Action[AnyContent]] {
+        def answer(invocation: InvocationOnMock): Action[AnyContent] = {
+          val block = invocation.getArgumentAt(0, classOf[UmpAuthRequest[AnyContent] => Future[Result]])
+          UmpActionBuilder.async(block)
         }
       })
 
@@ -216,7 +220,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
-        umpAuthenticatedAction,
+        verifySignInStatus,
         app.configuration,
         mock[MessagesApi]
       )
@@ -304,7 +308,7 @@ class DigitalServicePageSpec
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock                  = mock[UserManagementConnector]
-      val umpAuthenticatedAction            = mock[UmpAuthenticatedAction]
+      val verifySignInStatus                = mock[VerifySignInStatus]
 
       val catalogueController = new CatalogueController(
         umpConnectorMock,
@@ -316,7 +320,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
-        umpAuthenticatedAction,
+        verifySignInStatus,
         app.configuration,
         mock[MessagesApi]
       )
@@ -332,11 +336,15 @@ class DigitalServicePageSpec
         )
       )
 
-      when(umpAuthenticatedAction.invokeBlock(any(), any())).thenAnswer(new Answer[Future[Result]] {
-        def answer(invocation: InvocationOnMock): Future[Result] = {
-          val req   = invocation.getArgumentAt(0, classOf[Request[_]])
-          val block = invocation.getArgumentAt(1, classOf[UmpAuthRequest[_] => Future[Result]])
-          block(UmpAuthRequest(req, isSignedIn = true))
+      object UmpActionBuilder extends ActionBuilder[UmpAuthRequest] {
+        def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] =
+          block(UmpAuthRequest(request, isSignedIn = true))
+      }
+
+      when(verifySignInStatus.async(any())).thenAnswer(new Answer[Action[AnyContent]] {
+        def answer(invocation: InvocationOnMock): Action[AnyContent] = {
+          val block = invocation.getArgumentAt(0, classOf[UmpAuthRequest[AnyContent] => Future[Result]])
+          UmpActionBuilder.async(block)
         }
       })
 
@@ -356,7 +364,7 @@ class DigitalServicePageSpec
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock                  = mock[UserManagementConnector]
-      val umpAuthenticatedAction            = mock[UmpAuthenticatedAction]
+      val verifySignInStatus                = mock[VerifySignInStatus]
 
       val catalogueController = new CatalogueController(
         umpConnectorMock,
@@ -368,7 +376,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
-        umpAuthenticatedAction,
+        verifySignInStatus,
         app.configuration,
         mock[MessagesApi]
       )
@@ -385,11 +393,15 @@ class DigitalServicePageSpec
         )
       )
 
-      when(umpAuthenticatedAction.invokeBlock(any(), any())).thenAnswer(new Answer[Future[Result]] {
-        def answer(invocation: InvocationOnMock): Future[Result] = {
-          val req   = invocation.getArgumentAt(0, classOf[Request[_]])
-          val block = invocation.getArgumentAt(1, classOf[UmpAuthRequest[_] => Future[Result]])
-          block(UmpAuthRequest(req, isSignedIn = true))
+      object UmpActionBuilder extends ActionBuilder[UmpAuthRequest] {
+        def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] =
+          block(UmpAuthRequest(request, isSignedIn = true))
+      }
+
+      when(verifySignInStatus.async(any())).thenAnswer(new Answer[Action[AnyContent]] {
+        def answer(invocation: InvocationOnMock): Action[AnyContent] = {
+          val block = invocation.getArgumentAt(0, classOf[UmpAuthRequest[AnyContent] => Future[Result]])
+          UmpActionBuilder.async(block)
         }
       })
 
@@ -410,7 +422,7 @@ class DigitalServicePageSpec
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock                  = mock[UserManagementConnector]
-      val umpAuthenticatedAction            = mock[UmpAuthenticatedAction]
+      val verifySignInStatus                = mock[VerifySignInStatus]
 
       val catalogueController = new CatalogueController(
         umpConnectorMock,
@@ -422,7 +434,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
-        umpAuthenticatedAction,
+        verifySignInStatus,
         app.configuration,
         mock[MessagesApi]
       )
@@ -437,11 +449,14 @@ class DigitalServicePageSpec
         )
       )
 
-      when(umpAuthenticatedAction.invokeBlock(any(), any())).thenAnswer(new Answer[Future[Result]] {
-        def answer(invocation: InvocationOnMock): Future[Result] = {
-          val req   = invocation.getArgumentAt(0, classOf[Request[_]])
-          val block = invocation.getArgumentAt(1, classOf[UmpAuthRequest[_] => Future[Result]])
-          block(UmpAuthRequest(req, isSignedIn = true))
+      when(verifySignInStatus.async(any())).thenAnswer(new Answer[Action[AnyContent]] {
+        object UmpActionBuilder extends ActionBuilder[UmpAuthRequest] {
+          def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] =
+            block(UmpAuthRequest(request, isSignedIn = true))
+        }
+        def answer(invocation: InvocationOnMock): Action[AnyContent] = {
+          val block = invocation.getArgumentAt(0, classOf[UmpAuthRequest[AnyContent] => Future[Result]])
+          UmpActionBuilder.async(block)
         }
       })
 

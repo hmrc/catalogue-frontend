@@ -57,7 +57,7 @@ class CatalogueController @Inject()(
   eventService: EventService,
   readModelService: ReadModelService,
   environment: api.Environment,
-  umpAuthenticatedAction: UmpAuthenticatedAction,
+  verifySignInStatus: VerifySignInStatus,
   override val runModeConfiguration: Configuration,
   val messagesApi: MessagesApi)
     extends FrontendController
@@ -138,24 +138,23 @@ class CatalogueController @Inject()(
     }
   }
 
-  def digitalService(digitalServiceName: String) =
-    Action.andThen(umpAuthenticatedAction).async { implicit request =>
-      teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName) flatMap {
-        case Some(digitalService) =>
-          val teamNames = digitalService.repositories.flatMap(_.teamNames).distinct
-          userManagementConnector
-            .getTeamMembersForTeams(teamNames)
-            .map(convertToDisplayableTeamMembers)
-            .map(teamMembers =>
-              Ok(digital_service_info(
-                DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)),
-                readModelService
-                  .getDigitalServiceOwner(digitalServiceName)
-                  .map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))
-              )))
-        case None => Future.successful(NotFound)
-      }
+  def digitalService(digitalServiceName: String) = verifySignInStatus.async { implicit request =>
+    teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName) flatMap {
+      case Some(digitalService) =>
+        val teamNames = digitalService.repositories.flatMap(_.teamNames).distinct
+        userManagementConnector
+          .getTeamMembersForTeams(teamNames)
+          .map(convertToDisplayableTeamMembers)
+          .map(teamMembers =>
+            Ok(digital_service_info(
+              DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)),
+              readModelService
+                .getDigitalServiceOwner(digitalServiceName)
+                .map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))
+            )))
+      case None => Future.successful(NotFound)
     }
+  }
 
   def allUsers = Action { implicit request =>
     val filterTerm = request.getQueryString("term").getOrElse("")

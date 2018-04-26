@@ -42,7 +42,7 @@ class ServicesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
           mock[EventService],
           mock[ReadModelService],
           mock[play.api.Environment],
-          mock[UmpAuthenticatedAction],
+          mock[VerifySignInStatus],
           Configuration(),
           mock[MessagesApi]
         ).allServices(FakeRequest()).futureValue
