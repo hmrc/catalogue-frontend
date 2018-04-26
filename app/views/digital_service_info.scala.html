@@ -32,8 +32,6 @@
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
-
-
     <div class="row">
         <div class="col-md-12">
             <div class="board">
@@ -176,7 +174,7 @@
             };
 
             $.ajax({
-                url: 'owner',
+                url: '@{ play.filters.csrf.CSRF.getToken(request).map { token => "owner?csrfToken=" + token.value } }',
                 type: 'post',
                 dataType: 'json',
                 headers: { 'Content-Type': 'application/json' },
@@ -189,7 +187,6 @@
                     debugger;
                     $("#service_owner_view_field").text("");
                     $("#service_owner_view_field").append("<a href='"+ umpLink +"' target='_blank'>"+ displayName +"</a>");
-//                    $("#service_owner_view_field").attr("href", umpLink);
                     showSnackBar("Service Owner saved: '" + displayName + "'");
                 },
                 error: function(xhr,status,error){

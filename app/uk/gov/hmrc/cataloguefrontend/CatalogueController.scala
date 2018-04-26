@@ -102,7 +102,7 @@ class CatalogueController @Inject()(
           readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
 
         maybeTeamMember.fold {
-          Future(NotAcceptable(Json.toJson(s"Invalid user: $serviceOwnerDisplayName")))
+          Future.successful(NotAcceptable(Json.toJson(s"Invalid user: $serviceOwnerDisplayName")))
         } { member =>
           member.username.fold(
             Future.successful(ExpectationFailed(Json.toJson(s"Username was not set (by UMP) for $member!")))) {
@@ -162,7 +162,6 @@ class CatalogueController @Inject()(
 
   def allUsers = Action { implicit request =>
     val filterTerm = request.getQueryString("term").getOrElse("")
-    println(s"getting users: $filterTerm")
     val filteredUsers: Seq[Option[String]] = readModelService.getAllUsers
       .map(_.displayName)
       .filter(displayName => displayName.getOrElse("").toLowerCase.contains(filterTerm.toLowerCase))
