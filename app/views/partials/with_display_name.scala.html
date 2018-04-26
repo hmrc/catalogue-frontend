@@ -5,6 +5,6 @@
 @{
     request
         .session
-        .get("ump.displayName")
+        .get(DisplayName.SESSION_KEY_NAME)
         .fold(ifNotLoggedIn)(rawDisplayName => ifLoggedIn(DisplayName(rawDisplayName)))
 }

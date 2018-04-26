@@ -37,7 +37,7 @@ import play.api.libs.json._
 import play.api.{Configuration, Logger, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
@@ -152,8 +152,9 @@ case class UserManagementConnector @Inject()(
     withTimerAndCounter("ump-userdetails") {
       http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>
         response.status match {
-          case 200 => (response.json \ "displayName").asOpt[String].map(DisplayName.apply)
-          case 404 => None
+          case 200   => (response.json \ "displayName").asOpt[String].map(DisplayName.apply)
+          case 404   => None
+          case other => throw new BadGatewayException(s"Received status: $other from GET to $url")
         }
       }
     }
@@ -227,6 +228,10 @@ object UserManagementConnector {
     require(value.nonEmpty)
 
     override def toString: String = value
+  }
+
+  object DisplayName {
+    val SESSION_KEY_NAME = "ump.displayName"
   }
 
 }

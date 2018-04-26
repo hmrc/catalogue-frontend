@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.actions
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
@@ -30,13 +30,14 @@ final case class UmpAuthRequest[A](
   isSignedIn: Boolean
 ) extends WrappedRequest[A](request)
 
+@Singleton
 class VerifySignInStatus @Inject()(userManagementAuthConnector: UserManagementAuthConnector)
     extends ActionFunction[Request, UmpAuthRequest] {
 
   def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
 
-    request.session.get("ump.token") match {
+    request.session.get(UmpToken.SESSION_KEY_NAME) match {
       case Some(token) =>
         userManagementAuthConnector.isValid(UmpToken(token)).flatMap { isValid =>
           block(UmpAuthRequest(request, isValid))

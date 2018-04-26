@@ -31,9 +31,10 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, DisplayName, HTTPError, NoData, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.cataloguefrontend.{UserManagementConnector, WireMockEndpoints}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import scala.concurrent.Future
 import scala.io.Source
@@ -378,6 +379,21 @@ class UserManagementConnectorSpec
       val displayName = userManagementConnector.getDisplayName(userId).futureValue
 
       displayName shouldBe None
+    }
+
+    it("should throw BadGatewayException if UMP returns sth different than 200 or 404") {
+      val unexpectedStatusCode = 500
+      val relativeUrl          = s"/v2/organisations/users/$userId"
+      stubUserManagementEndPoint(
+        httpCode        = unexpectedStatusCode,
+        url             = relativeUrl,
+        jsonFileNameOpt = None
+      )
+
+      intercept[BadGatewayException] {
+        await(userManagementConnector.getDisplayName(userId))
+      }.message shouldBe s"Received status: $unexpectedStatusCode from GET to $endpointMockUrl$relativeUrl"
+
     }
   }
 

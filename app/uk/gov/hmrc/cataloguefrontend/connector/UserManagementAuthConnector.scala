@@ -97,6 +97,10 @@ object UserManagementAuthConnector {
     require(value.nonEmpty)
   }
 
+  object UmpToken {
+    val SESSION_KEY_NAME = "ump.token"
+  }
+
   type UmpUnauthorized = UmpUnauthorized.type
   case object UmpUnauthorized
 
