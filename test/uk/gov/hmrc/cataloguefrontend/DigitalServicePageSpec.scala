@@ -21,8 +21,6 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.mockito.Matchers._
 import org.mockito.Mockito.when
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
@@ -30,10 +28,10 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WS
-import play.api.mvc.{Action, ActionBuilder, AnyContent, Request, Result}
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthRequest, VerifySignInStatus}
+import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthRequest, UmpAuthenticated, VerifySignInStatus, VerifySignInStatusSupport}
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
@@ -51,7 +49,8 @@ class DigitalServicePageSpec
     with OneServerPerSuite
     with WireMockEndpoints
     with MockitoSugar
-    with ScalaFutures {
+    with ScalaFutures
+    with VerifySignInStatusSupport {
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
@@ -199,17 +198,7 @@ class DigitalServicePageSpec
       when(userManagementConnector.getTeamMembersForTeams(any())(any()))
         .thenReturn(Future(Map.empty[String, Either[UMPError, Seq[TeamMember]]]))
 
-      object UmpActionBuilder extends ActionBuilder[UmpAuthRequest] {
-        def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] =
-          block(UmpAuthRequest(request, isSignedIn = true))
-      }
-
-      when(verifySignInStatus.async(any())).thenAnswer(new Answer[Action[AnyContent]] {
-        def answer(invocation: InvocationOnMock): Action[AnyContent] = {
-          val block = invocation.getArgumentAt(0, classOf[UmpAuthRequest[AnyContent] => Future[Result]])
-          UmpActionBuilder.async(block)
-        }
-      })
+      mockPassThrough(verifySignInStatus)
 
       val catalogueController = new CatalogueController(
         userManagementConnector,
@@ -222,6 +211,7 @@ class DigitalServicePageSpec
         mockedModelService,
         mock[play.api.Environment],
         verifySignInStatus,
+        mock[UmpAuthenticated],
         app.configuration,
         mock[MessagesApi]
       )
@@ -322,6 +312,7 @@ class DigitalServicePageSpec
         mockedModelService,
         mock[play.api.Environment],
         verifySignInStatus,
+        mock[UmpAuthenticated],
         app.configuration,
         mock[MessagesApi]
       )
@@ -337,17 +328,7 @@ class DigitalServicePageSpec
         )
       )
 
-      object UmpActionBuilder extends ActionBuilder[UmpAuthRequest] {
-        def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] =
-          block(UmpAuthRequest(request, isSignedIn = true))
-      }
-
-      when(verifySignInStatus.async(any())).thenAnswer(new Answer[Action[AnyContent]] {
-        def answer(invocation: InvocationOnMock): Action[AnyContent] = {
-          val block = invocation.getArgumentAt(0, classOf[UmpAuthRequest[AnyContent] => Future[Result]])
-          UmpActionBuilder.async(block)
-        }
-      })
+      mockPassThrough(verifySignInStatus)
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
@@ -378,13 +359,12 @@ class DigitalServicePageSpec
         mockedModelService,
         mock[play.api.Environment],
         verifySignInStatus,
+        mock[UmpAuthenticated],
         app.configuration,
         mock[MessagesApi]
       )
 
       val teamName = "Team1"
-
-      val exception = new RuntimeException("Boooom!")
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
@@ -394,17 +374,7 @@ class DigitalServicePageSpec
         )
       )
 
-      object UmpActionBuilder extends ActionBuilder[UmpAuthRequest] {
-        def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] =
-          block(UmpAuthRequest(request, isSignedIn = true))
-      }
-
-      when(verifySignInStatus.async(any())).thenAnswer(new Answer[Action[AnyContent]] {
-        def answer(invocation: InvocationOnMock): Action[AnyContent] = {
-          val block = invocation.getArgumentAt(0, classOf[UmpAuthRequest[AnyContent] => Future[Result]])
-          UmpActionBuilder.async(block)
-        }
-      })
+      mockPassThrough(verifySignInStatus)
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
@@ -436,6 +406,7 @@ class DigitalServicePageSpec
         mockedModelService,
         mock[play.api.Environment],
         verifySignInStatus,
+        mock[UmpAuthenticated],
         app.configuration,
         mock[MessagesApi]
       )
@@ -450,16 +421,7 @@ class DigitalServicePageSpec
         )
       )
 
-      when(verifySignInStatus.async(any())).thenAnswer(new Answer[Action[AnyContent]] {
-        object UmpActionBuilder extends ActionBuilder[UmpAuthRequest] {
-          def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] =
-            block(UmpAuthRequest(request, isSignedIn = true))
-        }
-        def answer(invocation: InvocationOnMock): Action[AnyContent] = {
-          val block = invocation.getArgumentAt(0, classOf[UmpAuthRequest[AnyContent] => Future[Result]])
-          UmpActionBuilder.async(block)
-        }
-      })
+      mockPassThrough(verifySignInStatus)
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200

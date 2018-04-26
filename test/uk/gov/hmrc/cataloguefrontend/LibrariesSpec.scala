@@ -22,7 +22,7 @@ import play.api.Configuration
 import play.api.i18n.MessagesApi
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
+import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
@@ -44,6 +44,7 @@ class LibrariesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
           mock[ReadModelService],
           mock[play.api.Environment],
           mock[VerifySignInStatus],
+          mock[UmpAuthenticated],
           Configuration(),
           mock[MessagesApi]
         ).allLibraries(FakeRequest()).futureValue

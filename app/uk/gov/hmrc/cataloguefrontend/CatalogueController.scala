@@ -28,7 +28,7 @@ import play.api.libs.json.{Format, Json}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.UMPError
-import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
+import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
@@ -61,6 +61,7 @@ class CatalogueController @Inject()(
   readModelService: ReadModelService,
   environment: api.Environment,
   verifySignInStatus: VerifySignInStatus,
+  umpAuthenticated: UmpAuthenticated,
   override val runModeConfiguration: Configuration,
   val messagesApi: MessagesApi)
     extends FrontendController
@@ -92,7 +93,7 @@ class CatalogueController @Inject()(
       .fold(NotFound(Json.toJson(s"owner for $digitalService not found")))(ds => Ok(Json.toJson(ds)))
   }
 
-  def saveServiceOwner() = Action.async { implicit request =>
+  def saveServiceOwner() = umpAuthenticated.async { implicit request =>
     request.body.asJson
       .map { payload =>
         val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
