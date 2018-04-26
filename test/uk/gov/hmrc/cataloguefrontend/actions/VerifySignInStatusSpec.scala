@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.actions
 
+import org.mockito.Matchers.{eq => is, _}
 import org.mockito.Mockito._
-import org.scalatest.WordSpec
-import org.scalatest.mock.MockitoSugar
 import org.scalatest.Matchers._
+import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.mvc.Result
+import play.api.mvc.Results._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
-import play.api.mvc.Results._
-import org.mockito.Matchers.{eq => is, _}
 
 import scala.concurrent.Future
 
