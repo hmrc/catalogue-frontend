@@ -42,6 +42,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDepe
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.test.UnitSpec
+import views.html.digital_service_info
 
 class DigitalServicePageSpec
     extends UnitSpec
@@ -231,6 +232,24 @@ class DigitalServicePageSpec
 
       serviceOwnerO.isDefined         shouldBe true
       serviceOwnerO.get.attr("value") shouldBe serviceOwner.getDisplayName
+    }
+
+    "show edit button if user is singed-in" in {
+      val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
+      val request               = UmpAuthRequest(FakeRequest(), isSignedIn = true)
+
+      val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None)(request).toString)
+
+      document.select("#edit-button").isEmpty shouldBe false
+    }
+
+    "don't show edit button if user is NOT singed-in" in {
+      val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
+      val request               = UmpAuthRequest(FakeRequest(), isSignedIn = false)
+
+      val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None)(request).toString)
+
+      document.select("#edit-button").isEmpty shouldBe true
     }
 
     "show team members for teams correctly" in {

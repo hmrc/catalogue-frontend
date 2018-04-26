@@ -24,7 +24,7 @@
 
 @(timestampedRepos: DigitalServiceDetails,
   digitalServiceOwner: Option[DisplayableTeamMember]
-)(implicit messages: Messages, request: UmpAuthRequest[_])
+)(implicit request: UmpAuthRequest[_])
 
 @standard_layout(timestampedRepos.digitalServiceName, "digital-services") {
     <header>
@@ -53,9 +53,11 @@
                                         }
                                 </span>
                                 <div class="input-group-btn">
-                                    <button type="button" class="btn btn-primary" onclick="enterServiceOwnerEditMode()">
-                                        <span aria-hidden="true"></span> Edit
-                                    </button>
+                                    @if(request.isSignedIn) {
+                                        <button id="edit-button" type="button" class="btn btn-primary" onclick="enterServiceOwnerEditMode()">
+                                            <span aria-hidden="true"></span> Edit
+                                        </button>
+                                    }
                                 </div>
 
                             </div>
