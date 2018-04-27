@@ -24,5 +24,6 @@ GET        /admin/metrics                               @com.kenshoo.play.metric
 
 GET        /dependencyReport                            uk.gov.hmrc.cataloguefrontend.DependencyReportController.dependencyReport()
 
-GET        /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.showSignInPage()
-POST       /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.submit()
+GET        /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.showSignInPage
+POST       /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.submit
+GET        /sign-out                                    @uk.gov.hmrc.cataloguefrontend.AuthController.signOut
