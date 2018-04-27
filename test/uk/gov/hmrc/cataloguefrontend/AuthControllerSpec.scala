@@ -24,6 +24,7 @@ import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.Configuration
 import play.api.i18n.MessagesApi
+import play.api.mvc.{Cookie, Cookies, Session}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
@@ -89,6 +90,20 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with
 
       forgottenPasswordLink.attr("href") shouldBe selfServiceUrl
       forgottenPasswordLink.text         shouldBe selfServiceUrl
+    }
+  }
+
+  "Signing out" should {
+    "redirect to landing page and clear session" in new Setup {
+      val requestWithUmpData = FakeRequest()
+
+      val result = controller.signOut(requestWithUmpData)
+
+      val setCookie = Cookies.decodeSetCookieHeader(headers(result).get(SET_COOKIE).get).head
+
+      setCookie.name               shouldBe Session.COOKIE_NAME
+      setCookie.maxAge.get         should be < 0
+      redirectLocation(result).get shouldBe routes.CatalogueController.landingPage().url
     }
   }
 
