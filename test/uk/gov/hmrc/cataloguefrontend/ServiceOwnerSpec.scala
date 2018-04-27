@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import akka.stream.Materializer
-import com.github.tomakehurst.wiremock.http.RequestMethod.{GET => WIREMOCK_GET}
 import org.mockito.Matchers._
 import org.mockito.Mockito
 import org.mockito.Mockito.{verify, when}
@@ -41,7 +39,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
 
-class CatalogueControllerSpec
+class ServiceOwnerSpec
     extends UnitSpec
     with BeforeAndAfterEach
     with OneServerPerSuite
@@ -49,56 +47,6 @@ class CatalogueControllerSpec
     with MockitoSugar
     with ScalaFutures
     with ActionsSupport {
-
-  val umpFrontPageUrl = "http://some.ump.fontpage.com"
-  val umpBaseUrl      = "http://things.things.com"
-
-  implicit override lazy val app = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-services.host"      -> host,
-      "microservice.services.teams-and-services.port"      -> endpointPort,
-      "microservice.services.indicators.port"              -> endpointPort,
-      "microservice.services.indicators.host"              -> host,
-      "microservice.services.user-management.url"          -> endpointMockUrl,
-      "usermanagement.portal.url"                          -> "http://usermanagement/link",
-      "user-management.profileBaseUrl"                     -> "http://usermanagement/linkBase",
-      "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
-      "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-      "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
-
-  implicit val materializer = app.injector.instanceOf[Materializer]
-
-  private trait Setup {
-
-    val mockedModelService = mock[ReadModelService]
-    val mockedEventService = mock[EventService]
-
-    val catalogueController = new CatalogueController(
-      mock[UserManagementConnector],
-      mock[TeamsAndRepositoriesConnector],
-      mock[ServiceDependenciesConnector],
-      mock[IndicatorsConnector],
-      mock[LeakDetectionService],
-      mock[DeploymentsService],
-      mockedEventService,
-      mockedModelService,
-      mock[play.api.Environment],
-      mock[VerifySignInStatus],
-      umpAuthenticatedPassThrough,
-      app.configuration,
-      mock[MessagesApi]
-    ) {
-
-      override def getConfString(key: String, defString: => String): String =
-        key match {
-          case "user-management.profileBaseUrl" => umpBaseUrl
-          case _                                => super.getConfString(key, defString)
-        }
-
-    }
-  }
 
   "serviceOwner" should {
 
@@ -216,5 +164,50 @@ class CatalogueControllerSpec
 
   private def teamMember(displayName: String, userName: String) =
     TeamMember(Some(displayName), None, None, None, None, Some(userName))
+
+  private trait Setup {
+    val umpBaseUrl         = "http://things.things.com"
+    val mockedModelService = mock[ReadModelService]
+    val mockedEventService = mock[EventService]
+
+    val catalogueController = new CatalogueController(
+      mock[UserManagementConnector],
+      mock[TeamsAndRepositoriesConnector],
+      mock[ServiceDependenciesConnector],
+      mock[IndicatorsConnector],
+      mock[LeakDetectionService],
+      mock[DeploymentsService],
+      mockedEventService,
+      mockedModelService,
+      mock[play.api.Environment],
+      mock[VerifySignInStatus],
+      umpAuthenticatedPassThrough,
+      app.configuration,
+      mock[MessagesApi]
+    ) {
+
+      override def getConfString(key: String, defString: => String): String =
+        key match {
+          case "user-management.profileBaseUrl" => umpBaseUrl
+          case _                                => super.getConfString(key, defString)
+        }
+
+    }
+  }
+
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(
+      "microservice.services.teams-and-services.host"      -> host,
+      "microservice.services.teams-and-services.port"      -> endpointPort,
+      "microservice.services.indicators.port"              -> endpointPort,
+      "microservice.services.indicators.host"              -> host,
+      "microservice.services.user-management.url"          -> endpointMockUrl,
+      "usermanagement.portal.url"                          -> "http://usermanagement/link",
+      "user-management.profileBaseUrl"                     -> "http://usermanagement/linkBase",
+      "microservice.services.user-management.frontPageUrl" -> "http://some.ump.fontpage.com",
+      "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
+      "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
+    )
+    .build()
 
 }
