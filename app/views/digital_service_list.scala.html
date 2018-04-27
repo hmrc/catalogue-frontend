@@ -13,8 +13,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
+
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@(digitalServices: Seq[String], form: Form[_])(implicit messages: Messages)
+
+@(digitalServices: Seq[String],
+  form: Form[_]
+)(implicit messages: Messages, request: Request[_])
 
     @standard_layout("Digital Service list", "digital-services") {
         <header>

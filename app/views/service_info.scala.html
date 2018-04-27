@@ -13,6 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *@
+
 @import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages._
@@ -25,14 +26,13 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import views.partials.githubBadgeType
 
-@(
-  service: RepositoryDetails,
+@(service: RepositoryDetails,
   mayBeDependencies: Option[Dependencies],
   throughputChartData: Option[ChartDataRows],
   stabilityChartData: Option[ChartDataRows],
   repositoryCreationDate: LocalDateTime,
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
-  linkToLeakDetection: Option[String])(implicit messages: Messages)
+  linkToLeakDetection: Option[String])(implicit messages: Messages, request: Request[_])
 
 @datacentreMappings(datacentreLongName: String) = @{
     datacentreLongName.toLowerCase match {

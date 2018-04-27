@@ -1,4 +1,4 @@
-@(title: String = "Home", active: String = "")(content: Html)
+@(title: String = "Home", active: String = "")(content: Html)(implicit request: Request[_])
 <html>
     <head>
         <title>Tax Platform Catalogue - @title</title>
@@ -59,6 +59,15 @@
                     </li>
                     <li>
                         <a id="link-to-deoloyments" href="/deployments" class="@if(active=="deployments") {active}">Deployments</a>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        @partials.with_display_name { displayName =>
+                          <a>@displayName</a>
+                        }{
+                          <a id="sign-in" href="/sign-in" class="@if(active=="sign-in") {active}">Sign in</a>
+                        }
                     </li>
                 </ul>
             </div>

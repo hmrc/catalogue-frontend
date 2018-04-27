@@ -22,9 +22,11 @@ trait MicroService {
     .settings(publishingSettings: _*)
     .settings(
       scalaVersion := "2.11.11",
+      scalacOptions += "-Ypartial-unification",
       libraryDependencies ++= appDependencies,
       retrieveManaged := true,
       forceSourceHeader := true,
-      routesGenerator := InjectedRoutesGenerator)
+      routesGenerator := InjectedRoutesGenerator
+    )
     .settings(resolvers ++= Seq(Resolver.bintrayRepo("hmrc", "releases"), Resolver.jcenterRepo))
 }

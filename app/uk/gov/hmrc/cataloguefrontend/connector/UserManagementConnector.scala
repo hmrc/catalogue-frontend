@@ -33,16 +33,17 @@ package uk.gov.hmrc.cataloguefrontend
  */
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.libs.json._
 import play.api.{Configuration, Logger, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
+import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
 @Singleton
 case class UserManagementConnector @Inject()(
   http: HttpClient,
@@ -145,6 +146,20 @@ case class UserManagementConnector @Inject()(
 
   }
 
+  def getDisplayName(userId: UmpUserId)(implicit hc: HeaderCarrier): Future[Option[DisplayName]] = {
+    val url              = s"$userManagementBaseUrl/v2/organisations/users/$userId"
+    val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
+    withTimerAndCounter("ump-userdetails") {
+      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>
+        response.status match {
+          case 200   => (response.json \ "displayName").asOpt[String].map(DisplayName.apply)
+          case 404   => None
+          case other => throw new BadGatewayException(s"Received status: $other from GET to $url")
+        }
+      }
+    }
+  }
+
   def extractData[T](team: String, response: HttpResponse)(implicit rd: Reads[T]): Either[UMPError, T] =
     Option(response.json).flatMap { js =>
       js.asOpt[T]
@@ -206,7 +221,17 @@ object UserManagementConnector {
     slack: Option[String],
     team: String)
 
-  implicit val teamMemberFormat = Json.format[TeamMember]
-  implicit val teamDetailsReads = Json.reads[TeamDetails]
+  implicit val teamMemberFormat: OFormat[TeamMember] = Json.format[TeamMember]
+  implicit val teamDetailsReads: Reads[TeamDetails]  = Json.reads[TeamDetails]
+
+  final case class DisplayName(value: String) {
+    require(value.nonEmpty)
+
+    override def toString: String = value
+  }
+
+  object DisplayName {
+    val SESSION_KEY_NAME = "ump.displayName"
+  }
 
 }

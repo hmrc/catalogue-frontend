@@ -22,7 +22,10 @@
 @import helper._
 @import uk.gov.hmrc.cataloguefrontend.RepoType
 
-@(repositories: Seq[RepositoryDisplayDetails], repotypeToDetailsUrl: Map[RepoType.Value, (String) => Call], form: Form[_])(implicit messages: Messages)
+@(repositories: Seq[RepositoryDisplayDetails],
+  repotypeToDetailsUrl: Map[RepoType.Value, (String) => Call],
+  form: Form[_]
+)(implicit messages: Messages, request: Request[_])
 
 @standard_layout("Repositories", "repositories") {
     <header>

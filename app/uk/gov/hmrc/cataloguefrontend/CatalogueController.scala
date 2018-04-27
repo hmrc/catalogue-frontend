@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import java.time.{LocalDateTime, ZoneOffset}
+
 import javax.inject.{Inject, Singleton}
 import play.api
 import play.api.Configuration
@@ -25,16 +26,18 @@ import play.api.data.{Form, Mapping}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.{Format, Json}
 import play.api.mvc._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.UMPError
+import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 case class TeamActivityDates(
   firstActive: Option[LocalDateTime],
@@ -57,6 +60,8 @@ class CatalogueController @Inject()(
   eventService: EventService,
   readModelService: ReadModelService,
   environment: api.Environment,
+  verifySignInStatus: VerifySignInStatus,
+  umpAuthenticated: UmpAuthenticated,
   override val runModeConfiguration: Configuration,
   val messagesApi: MessagesApi)
     extends FrontendController
@@ -78,7 +83,7 @@ class CatalogueController @Inject()(
     RepoType.Prototype -> routes.CatalogueController.prototype _
   )
 
-  def landingPage() = Action { request =>
+  def landingPage() = Action { implicit request =>
     Ok(landing_page())
   }
 
@@ -88,7 +93,7 @@ class CatalogueController @Inject()(
       .fold(NotFound(Json.toJson(s"owner for $digitalService not found")))(ds => Ok(Json.toJson(ds)))
   }
 
-  def saveServiceOwner() = Action.async { implicit request =>
+  def saveServiceOwner() = umpAuthenticated.async { implicit request =>
     request.body.asJson
       .map { payload =>
         val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
@@ -97,7 +102,7 @@ class CatalogueController @Inject()(
           readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
 
         maybeTeamMember.fold {
-          Future(NotAcceptable(Json.toJson(s"Invalid user: $serviceOwnerDisplayName")))
+          Future.successful(NotAcceptable(Json.toJson(s"Invalid user: $serviceOwnerDisplayName")))
         } { member =>
           member.username.fold(
             Future.successful(ExpectationFailed(Json.toJson(s"Username was not set (by UMP) for $member!")))) {
@@ -137,7 +142,7 @@ class CatalogueController @Inject()(
     }
   }
 
-  def digitalService(digitalServiceName: String) = Action.async { implicit request =>
+  def digitalService(digitalServiceName: String) = verifySignInStatus.async { implicit request =>
     teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName) flatMap {
       case Some(digitalService) =>
         val teamNames = digitalService.repositories.flatMap(_.teamNames).distinct
@@ -157,7 +162,6 @@ class CatalogueController @Inject()(
 
   def allUsers = Action { implicit request =>
     val filterTerm = request.getQueryString("term").getOrElse("")
-    println(s"getting users: $filterTerm")
     val filteredUsers: Seq[Option[String]] = readModelService.getAllUsers
       .map(_.displayName)
       .filter(displayName => displayName.getOrElse("").toLowerCase.contains(filterTerm.toLowerCase))
