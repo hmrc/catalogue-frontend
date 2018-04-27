@@ -52,15 +52,17 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
         TokenAndUserId(UmpToken(token), UmpUserId(userId)))
     }
 
-    "return unauthorized when UMP auth service returns UNAUTHORIZED" in new Setup {
-      expect
-        .POST(
-          to      = s"$userMgtAuthUrl/v1/login",
-          payload = Json.obj("username" -> username, "password" -> password)
-        )
-        .returning(UNAUTHORIZED)
+    UNAUTHORIZED :: FORBIDDEN :: Nil foreach { status =>
+      s"return unauthorized when UMP auth service returns $status" in new Setup {
+        expect
+          .POST(
+            to      = s"$userMgtAuthUrl/v1/login",
+            payload = Json.obj("username" -> username, "password" -> password)
+          )
+          .returning(status)
 
-      connector.authenticate(username, password).futureValue shouldBe Left(UmpUnauthorized)
+        connector.authenticate(username, password).futureValue shouldBe Left(UmpUnauthorized)
+      }
     }
 
     CREATED +: NOT_FOUND +: INTERNAL_SERVER_ERROR +: Nil foreach { status =>

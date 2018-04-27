@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.cataloguefrontend.config.ServicesConfig
@@ -46,8 +47,12 @@ class UserManagementAuthConnector @Inject()(http: HttpClient, userManagementAuth
               val userId = UmpUserId((response.json \ "uid").as[String])
               Right(TokenAndUserId(token, userId))
 
-            case UNAUTHORIZED => Left(UmpUnauthorized)
-            case other        => throw new BadGatewayException(s"Received $other from $method to $url")
+            case UNAUTHORIZED | FORBIDDEN =>
+              Logger.info(
+                s"Failed to authenticate for username: $username, response was: ${response.status} ${response.body}")
+              Left(UmpUnauthorized)
+
+            case other => throw new BadGatewayException(s"Received $other from $method to $url")
           }
       }
 
