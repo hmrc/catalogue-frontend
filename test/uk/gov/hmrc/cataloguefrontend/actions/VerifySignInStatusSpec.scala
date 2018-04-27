@@ -63,7 +63,7 @@ class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFuture
     val userManagementAuthConnector = mock[UserManagementAuthConnector]
     val action                      = new VerifySignInStatus(userManagementAuthConnector)
 
-    def actionBodyExpecting(isValid: Boolean): UmpAuthRequest[_] => Future[Result] = authRequest => {
+    def actionBodyExpecting(isValid: Boolean): UmpVerifiedRequest[_] => Future[Result] = authRequest => {
       authRequest.isSignedIn shouldBe isValid
       Future.successful(expectedStatus)
     }

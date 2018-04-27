@@ -31,7 +31,7 @@ import play.api.libs.ws.WS
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthRequest, UmpAuthenticated, VerifySignInStatus}
+import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthenticated, UmpVerifiedRequest, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
@@ -228,7 +228,7 @@ class DigitalServicePageSpec
 
     "show edit button if user is singed-in" in {
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
-      val request               = UmpAuthRequest(FakeRequest(), isSignedIn = true)
+      val request               = UmpVerifiedRequest(FakeRequest(), isSignedIn = true)
 
       val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None)(request).toString)
 
@@ -237,7 +237,7 @@ class DigitalServicePageSpec
 
     "don't show edit button if user is NOT singed-in" in {
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
-      val request               = UmpAuthRequest(FakeRequest(), isSignedIn = false)
+      val request               = UmpVerifiedRequest(FakeRequest(), isSignedIn = false)
 
       val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None)(request).toString)
 

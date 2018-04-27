@@ -25,25 +25,25 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 
 import scala.concurrent.Future
 
-final case class UmpAuthRequest[A](
+final case class UmpVerifiedRequest[A](
   request: Request[A],
   isSignedIn: Boolean
 ) extends WrappedRequest[A](request)
 
 @Singleton
 class VerifySignInStatus @Inject()(userManagementAuthConnector: UserManagementAuthConnector)
-    extends ActionBuilder[UmpAuthRequest] {
+    extends ActionBuilder[UmpVerifiedRequest] {
 
-  def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] = {
+  def invokeBlock[A](request: Request[A], block: UmpVerifiedRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
 
     request.session.get(UmpToken.SESSION_KEY_NAME) match {
       case Some(token) =>
         userManagementAuthConnector.isValid(UmpToken(token)).flatMap { isValid =>
-          block(UmpAuthRequest(request, isValid))
+          block(UmpVerifiedRequest(request, isValid))
         }
       case None =>
-        block(UmpAuthRequest(request, isSignedIn = false))
+        block(UmpVerifiedRequest(request, isSignedIn = false))
     }
   }
 

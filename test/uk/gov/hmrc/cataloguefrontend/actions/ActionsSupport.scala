@@ -28,8 +28,8 @@ trait ActionsSupport {
   }
 
   object verifySignInStatusPassThrough extends VerifySignInStatus(null) {
-    override def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] =
-      block(UmpAuthRequest(request, isSignedIn = true))
+    override def invokeBlock[A](request: Request[A], block: UmpVerifiedRequest[A] => Future[Result]): Future[Result] =
+      block(UmpVerifiedRequest(request, isSignedIn = true))
   }
 
 }
