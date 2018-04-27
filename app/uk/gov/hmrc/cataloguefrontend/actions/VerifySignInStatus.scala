@@ -32,7 +32,7 @@ final case class UmpAuthRequest[A](
 
 @Singleton
 class VerifySignInStatus @Inject()(userManagementAuthConnector: UserManagementAuthConnector)
-    extends ActionFunction[Request, UmpAuthRequest] {
+    extends ActionBuilder[UmpAuthRequest] {
 
   def invokeBlock[A](request: Request[A], block: UmpAuthRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
@@ -47,6 +47,4 @@ class VerifySignInStatus @Inject()(userManagementAuthConnector: UserManagementAu
     }
   }
 
-  def async(block: UmpAuthRequest[AnyContent] => Future[Result]): Action[AnyContent] =
-    Action.andThen(this).async(block)
 }

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.actions
 
 import javax.inject.{Inject, Singleton}
-import play.api.mvc.{Action, ActionFunction, AnyContent, Request, Result}
+import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -28,7 +28,7 @@ import scala.concurrent.Future
 
 @Singleton
 class UmpAuthenticated @Inject()(userManagementAuthConnector: UserManagementAuthConnector)
-    extends ActionFunction[Request, Request] {
+    extends ActionBuilder[Request] {
 
   def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
     implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
@@ -45,6 +45,4 @@ class UmpAuthenticated @Inject()(userManagementAuthConnector: UserManagementAuth
     }
   }
 
-  def async(block: Request[AnyContent] => Future[Result]): Action[AnyContent] =
-    Action.andThen(this).async(block)
 }

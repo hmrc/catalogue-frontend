@@ -31,7 +31,7 @@ import play.api.libs.ws.WS
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthRequest, UmpAuthenticated, VerifySignInStatus, VerifySignInStatusSupport}
+import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthRequest, UmpAuthenticated, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
@@ -50,7 +50,7 @@ class DigitalServicePageSpec
     with WireMockEndpoints
     with MockitoSugar
     with ScalaFutures
-    with VerifySignInStatusSupport {
+    with ActionsSupport {
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
@@ -189,7 +189,6 @@ class DigitalServicePageSpec
 
       val digitalServiceName      = "digital-service-123"
       val mockedConnector         = mock[TeamsAndRepositoriesConnector]
-      val verifySignInStatus      = mock[VerifySignInStatus]
       val userManagementConnector = mock[UserManagementConnector]
 
       when(mockedConnector.digitalServiceInfo(any())(any()))
@@ -197,8 +196,6 @@ class DigitalServicePageSpec
 
       when(userManagementConnector.getTeamMembersForTeams(any())(any()))
         .thenReturn(Future(Map.empty[String, Either[UMPError, Seq[TeamMember]]]))
-
-      mockPassThrough(verifySignInStatus)
 
       val catalogueController = new CatalogueController(
         userManagementConnector,
@@ -210,7 +207,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
-        verifySignInStatus,
+        verifySignInStatusPassThrough,
         mock[UmpAuthenticated],
         app.configuration,
         mock[MessagesApi]
@@ -299,7 +296,6 @@ class DigitalServicePageSpec
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock                  = mock[UserManagementConnector]
-      val verifySignInStatus                = mock[VerifySignInStatus]
 
       val catalogueController = new CatalogueController(
         umpConnectorMock,
@@ -311,7 +307,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
-        verifySignInStatus,
+        verifySignInStatusPassThrough,
         mock[UmpAuthenticated],
         app.configuration,
         mock[MessagesApi]
@@ -327,8 +323,6 @@ class DigitalServicePageSpec
           Map(teamName -> Left(UserManagementConnector.ConnectionError(exception)))
         )
       )
-
-      mockPassThrough(verifySignInStatus)
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
@@ -346,7 +340,6 @@ class DigitalServicePageSpec
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock                  = mock[UserManagementConnector]
-      val verifySignInStatus                = mock[VerifySignInStatus]
 
       val catalogueController = new CatalogueController(
         umpConnectorMock,
@@ -358,7 +351,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
-        verifySignInStatus,
+        verifySignInStatusPassThrough,
         mock[UmpAuthenticated],
         app.configuration,
         mock[MessagesApi]
@@ -373,8 +366,6 @@ class DigitalServicePageSpec
           Map(teamName -> Left(UserManagementConnector.NoData("https://some-link-to-rectify")))
         )
       )
-
-      mockPassThrough(verifySignInStatus)
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
@@ -393,7 +384,6 @@ class DigitalServicePageSpec
 
       val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
       val umpConnectorMock                  = mock[UserManagementConnector]
-      val verifySignInStatus                = mock[VerifySignInStatus]
 
       val catalogueController = new CatalogueController(
         umpConnectorMock,
@@ -405,7 +395,7 @@ class DigitalServicePageSpec
         mock[EventService],
         mockedModelService,
         mock[play.api.Environment],
-        verifySignInStatus,
+        verifySignInStatusPassThrough,
         mock[UmpAuthenticated],
         app.configuration,
         mock[MessagesApi]
@@ -420,8 +410,6 @@ class DigitalServicePageSpec
           Map(teamName -> Left(UserManagementConnector.HTTPError(404)))
         )
       )
-
-      mockPassThrough(verifySignInStatus)
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200

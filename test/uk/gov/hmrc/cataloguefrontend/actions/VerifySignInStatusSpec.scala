@@ -48,11 +48,14 @@ class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFuture
       }
     }
 
-    "indicate that user is not signed-in if token is not present in the session (without calling UMP auth service)" in new Setup {
+    "indicate that user is not signed-in if token is not present in the session " +
+      "(without calling UMP auth service)" in new Setup {
+
       action
         .invokeBlock(FakeRequest(), actionBodyExpecting(isValid = false))
         .futureValue shouldBe expectedStatus
     }
+
   }
 
   private trait Setup {

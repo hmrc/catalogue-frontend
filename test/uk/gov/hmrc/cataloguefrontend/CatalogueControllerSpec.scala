@@ -32,14 +32,14 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.test.Helpers
-
-import scala.concurrent.Future
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, UmpAuthenticatedSupport, VerifySignInStatus}
+import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.test.UnitSpec
+
+import scala.concurrent.Future
 
 class CatalogueControllerSpec
     extends UnitSpec
@@ -48,7 +48,7 @@ class CatalogueControllerSpec
     with WireMockEndpoints
     with MockitoSugar
     with ScalaFutures
-    with UmpAuthenticatedSupport {
+    with ActionsSupport {
 
   val umpFrontPageUrl = "http://some.ump.fontpage.com"
   val umpBaseUrl      = "http://things.things.com"
@@ -74,7 +74,6 @@ class CatalogueControllerSpec
 
     val mockedModelService = mock[ReadModelService]
     val mockedEventService = mock[EventService]
-    val umpAuthenticated   = mock[UmpAuthenticated]
 
     val catalogueController = new CatalogueController(
       mock[UserManagementConnector],
@@ -87,7 +86,7 @@ class CatalogueControllerSpec
       mockedModelService,
       mock[play.api.Environment],
       mock[VerifySignInStatus],
-      umpAuthenticated,
+      umpAuthenticatedPassThrough,
       app.configuration,
       mock[MessagesApi]
     ) {
@@ -139,7 +138,6 @@ class CatalogueControllerSpec
     "save the username of the service owner and return the his/her full DisplayableTeamMember object" in new Setup {
       when(mockedModelService.getAllUsers).thenReturn(teamMembers)
       when(mockedEventService.saveServiceOwnerUpdatedEvent(any())).thenReturn(Future.successful(true))
-      mockPassThrough(umpAuthenticated)
 
       val serviceOwnerSaveEventData = ServiceOwnerSaveEventData("service-abc", "member 1")
       val response = catalogueController
@@ -163,7 +161,6 @@ class CatalogueControllerSpec
       val member = TeamMember(Some("member 1"), None, None, None, None, None)
       when(mockedModelService.getAllUsers).thenReturn(Seq(member))
       when(mockedEventService.saveServiceOwnerUpdatedEvent(any())).thenReturn(Future.successful(true))
-      mockPassThrough(umpAuthenticated)
 
       val serviceOwnerSaveEventData = ServiceOwnerSaveEventData("service-abc", "member 1")
       val response = catalogueController
@@ -182,7 +179,6 @@ class CatalogueControllerSpec
 
     "not save the user if he/she is not a valid user (from UMP)" in new Setup {
       when(mockedModelService.getAllUsers).thenReturn(teamMembers)
-      mockPassThrough(umpAuthenticated)
 
       val ownerUpdatedEventData = ServiceOwnerSaveEventData("service-abc", "Mrs Invalid Person")
       val response = catalogueController
@@ -201,7 +197,6 @@ class CatalogueControllerSpec
 
     "return a BadRequest error if the sent json is valid" in new Setup {
       when(mockedModelService.getAllUsers).thenReturn(teamMembers)
-      mockPassThrough(umpAuthenticated)
 
       val ownerUpdatedEventData = ServiceOwnerUpdatedEventData("service-abc", "Mrs Invalid Person")
       val response = catalogueController
