@@ -34,7 +34,7 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
 
   "authenticate" should {
 
-    "return authorization token when POST to usermgt/v1/login returns OK containing it" in new Setup {
+    "return authorization token when UMP auth service returns OK containing it" in new Setup {
       val token  = UUID.randomUUID().toString
       val userId = "john.smith"
 
@@ -52,7 +52,7 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
         TokenAndUserId(UmpToken(token), UmpUserId(userId)))
     }
 
-    "return unauthorized when POST to usermgt/v1/login returns UNAUTHORIZED" in new Setup {
+    "return unauthorized when UMP auth service returns UNAUTHORIZED" in new Setup {
       expect
         .POST(
           to      = s"$userMgtAuthUrl/v1/login",
