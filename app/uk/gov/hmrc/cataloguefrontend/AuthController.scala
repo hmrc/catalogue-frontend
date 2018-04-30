@@ -64,7 +64,7 @@ class AuthController @Inject()(val messagesApi: MessagesApi, authService: AuthSe
   }
 
   val signOut = Action {
-    Redirect(routes.CatalogueController.landingPage()).withNewSession
+    Redirect(routes.AuthController.showSignInPage()).withNewSession
   }
 }
 

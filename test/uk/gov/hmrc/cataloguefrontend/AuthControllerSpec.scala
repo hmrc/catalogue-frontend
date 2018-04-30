@@ -103,7 +103,7 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with
 
       setCookie.name               shouldBe Session.COOKIE_NAME
       setCookie.maxAge.get         should be < 0
-      redirectLocation(result).get shouldBe routes.CatalogueController.landingPage().url
+      redirectLocation(result).get shouldBe routes.AuthController.showSignInPage().url
     }
   }
 
