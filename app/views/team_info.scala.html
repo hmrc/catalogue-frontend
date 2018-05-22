@@ -1,18 +1,18 @@
 @*
-* Copyright 2016 HM Revenue & Customs
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*@
+ * Copyright 2018 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{UMPError, NoData, TeamDetails}
@@ -67,37 +67,43 @@
                     <div class="board__body">
 
                         <ul class="list list--minimal" id="team_details">
-                            <li>
+                            <li id="team-first-active">
                                 <label>First Active: </label>
                                 @activityDates.firstActive.map(_.displayFormat).getOrElse("None")
                             </li>
-                            <li>
+                            <li id="team-last-active">
                                 <label>Last Active: </label>
                                 @activityDates.lastActive.map(_.displayFormat).getOrElse("None")
                             </li>
                             @if(errorOrTeamDetails.isRight) {
                                 @for(teamDetails <- errorOrTeamDetails.right.toOption) {
-                                    <li>
+                                    <li id="team-description">
                                         <label>Description: </label>
                                         @teamDetails.description
                                     </li>
-                                    <li>
+                                    <li id="team-documentation">
                                         <label>Documentation: </label>
                                         @teamDetails.documentation.map { d =>
                                             <a href="@d" target="_blank">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
                                         }
                                     </li>
-                                    <li>
+                                    <li id="team-organisation">
                                         <label>Organisation: </label>
                                         @teamDetails.organisation
                                     </li>
-                                    <li>
+                                    <li id="team-slack-channels">
                                         <label>Slack: </label>
-                                        @teamDetails.slack.map { d =>
-                                            <a href="@d" target="_blank">Go to team channel<span class="glyphicon glyphicon-new-window"/></a>
-                                        }
+
+                                        <ul id="slack-channels" class="list list--minimal">
+                                            @teamDetails.slack.map { d =>
+                                                <li class="list-item"><a href="@d" target="_blank">Go to team channel<span class="glyphicon glyphicon-new-window"/></a></li>
+                                            }
+                                            @teamDetails.slackNotification.map { d =>
+                                            <li class="list-item"><a href="@d" target="_blank">Go to notification channel<span class="glyphicon glyphicon-new-window"/></a></li>
+                                            }
+                                        </ul>
                                     </li>
-                                    <li>
+                                    <li id="team-location">
                                         <label>Location: </label>
                                         @teamDetails.location
                                     </li>

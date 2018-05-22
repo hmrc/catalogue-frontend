@@ -140,11 +140,12 @@ class UserManagementConnectorSpec
         .right
         .value
 
-      teamDetails.description.value   shouldBe "TEAM-A is a great team"
-      teamDetails.location.value      shouldBe "STLPD"
-      teamDetails.organisation.value  shouldBe "ORGA"
-      teamDetails.slack.value         shouldBe "https://slack.host/messages/team-A"
-      teamDetails.documentation.value shouldBe "https://some.documentation.url"
+      teamDetails.description.value       shouldBe "TEAM-A is a great team"
+      teamDetails.location.value          shouldBe "STLPD"
+      teamDetails.organisation.value      shouldBe "ORGA"
+      teamDetails.slack.value             shouldBe "https://slack.host/messages/team-A"
+      teamDetails.slackNotification.value shouldBe "https://slack.host/messages/team-A-NOTIFICATION"
+      teamDetails.documentation.value     shouldBe "https://some.documentation.url"
     }
 
     it("no organization/data field in json for team details") {

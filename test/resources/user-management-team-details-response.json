@@ -3,6 +3,7 @@
   "location": "STLPD",
   "organisation": "ORGA",
   "slack": "https://slack.host/messages/team-A",
+  "slackNotification": "https://slack.host/messages/team-A-NOTIFICATION",
   "team": "TEAM-A",
   "documentation" : "https://some.documentation.url"
 }
