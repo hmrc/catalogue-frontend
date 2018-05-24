@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
 
 import play.api.libs.json._
-import play.api.{Configuration, Logger, Environment => PlayEnvironment}
+import play.api.{Configuration, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -110,8 +110,6 @@ class TeamsAndRepositoriesConnector @Inject()(
   type ServiceName = String
   type TeamName    = String
 
-  import TeamsAndRepositoriesConnector._
-
   override protected def mode = environment.mode
 
   def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
@@ -137,9 +135,7 @@ class TeamsAndRepositoriesConnector @Inject()(
     http
       .GET[Option[Team]](url)
       .recover {
-        case ex =>
-          Logger.error(s"An error occurred getting teamInfo when connecting to $url: ${ex.getMessage}", ex)
-          None
+        case _ => None
       }
   }
 
