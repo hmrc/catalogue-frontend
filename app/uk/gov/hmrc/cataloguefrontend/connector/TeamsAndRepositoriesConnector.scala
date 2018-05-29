@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
 
 import play.api.libs.json._
-import play.api.{Configuration, Logger, Environment => PlayEnvironment}
+import play.api.{Configuration, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -110,8 +110,6 @@ class TeamsAndRepositoriesConnector @Inject()(
   type ServiceName = String
   type TeamName    = String
 
-  import TeamsAndRepositoriesConnector._
-
   override protected def mode = environment.mode
 
   def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
@@ -126,30 +124,18 @@ class TeamsAndRepositoriesConnector @Inject()(
   }
 
   def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/teams").map {
-      toJson[Seq[Team]]
-    }
+    http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams")
 
   def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] =
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/digital-services").map {
-      toJson[Seq[String]]
-    }
+    http.GET[Seq[String]](teamsAndServicesBaseUrl + s"/api/digital-services")
 
   def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[Team]] = {
     val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${URLEncoder.encode(teamName, "UTF-8")}"
 
     http
-      .GET[HttpResponse](url)
-      .map { response =>
-        response.status match {
-          case 404 => None
-          case 200 => Some(toJson[Team](response))
-        }
-      }
+      .GET[Option[Team]](url)
       .recover {
-        case ex =>
-          Logger.error(s"An error occurred getting teamInfo when connecting to $url: ${ex.getMessage}", ex)
-          None
+        case _ => None
       }
   }
 
@@ -162,32 +148,19 @@ class TeamsAndRepositoriesConnector @Inject()(
   }
 
   def allRepositories(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories").map {
-      toJson[Seq[RepositoryDisplayDetails]]
-    }
+    http.GET[Seq[RepositoryDisplayDetails]](teamsAndServicesBaseUrl + s"/api/repositories")
 
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] =
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/repositories/$name").map { response =>
-      response.status match {
-        case 404 => None
-        case 200 => Some(toJson[RepositoryDetails](response))
-      }
-    }
+    http.GET[Option[RepositoryDetails]](teamsAndServicesBaseUrl + s"/api/repositories/$name")
 
   def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http
-      .POST[Seq[String], HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true", serviceNames)
-      .map {
-        toJson[Map[ServiceName, Seq[TeamName]]]
-      }
+      .POST[Seq[String], Map[ServiceName, Seq[TeamName]]](
+        teamsAndServicesBaseUrl + s"/api/services?teamDetails=true",
+        serviceNames)
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
-    http.GET[HttpResponse](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true").map {
-      toJson[Map[ServiceName, Seq[TeamName]]]
-    }
-
-  def toJson[T](r: HttpResponse)(implicit fjs: play.api.libs.json.Reads[T]): T =
-    r.json.as[T]
+    http.GET[Map[ServiceName, Seq[TeamName]]](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true")
 
 }
 

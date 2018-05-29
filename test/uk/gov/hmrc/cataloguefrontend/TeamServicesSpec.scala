@@ -347,24 +347,23 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
       response.status shouldBe 200
       val document = asDocument(response.body)
 
-      val teamDetailsElements = document.select("#team_details li")
-      teamDetailsElements.size() shouldBe 7
+      document.select("#team-first-active").text() shouldBe "First Active: None"
+      document.select("#team-last-active").text()  shouldBe "Last Active: None"
 
-      teamDetailsElements(0).text() shouldBe "First Active: None"
-      teamDetailsElements(1).text() shouldBe "Last Active: None"
-
-      teamDetailsElements(2).text() shouldBe "Description: TEAM-A is a great team"
-      teamDetailsElements(3).text() shouldBe "Documentation: Go to Confluence space"
-      teamDetailsElements(3).toString() should include(
+      document.select("#team-description").head.text()   shouldBe "Description: TEAM-A is a great team"
+      document.select("#team-documentation").head.text() shouldBe "Documentation: Go to Confluence space"
+      document.select("#team-documentation").head.toString() should include(
         """<a href="https://some.documentation.url" target="_blank">Go to Confluence space<span class="glyphicon glyphicon-new-window"""")
 
-      teamDetailsElements(4).text() shouldBe "Organisation: ORGA"
+      document.select("#team-organisation").text() shouldBe "Organisation: ORGA"
 
-      teamDetailsElements(5).text() shouldBe "Slack: Go to team channel"
-      teamDetailsElements(5).toString() should include(
+      document.select("#team-slack-channels").toString() should include(
         """<a href="https://slack.host/messages/team-A" target="_blank">Go to team channel<span class="glyphicon glyphicon-new-window"""")
 
-      teamDetailsElements(6).text() shouldBe "Location: STLPD"
+      document.select("#team-slack-channels").toString() should include(
+        """<a href="https://slack.host/messages/team-A-NOTIFICATION" target="_blank">Go to notification channel<span class="glyphicon glyphicon-new-window"""")
+
+      document.select("#team-location").text() shouldBe "Location: STLPD"
 
     }
 

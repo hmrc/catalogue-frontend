@@ -219,6 +219,7 @@ object UserManagementConnector {
     organisation: Option[String],
     documentation: Option[String],
     slack: Option[String],
+    slackNotification: Option[String],
     team: String)
 
   implicit val teamMemberFormat: OFormat[TeamMember] = Json.format[TeamMember]
