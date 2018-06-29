@@ -9,11 +9,10 @@ lazy val microservice = Project(appName, file("."))
   .enablePlugins(Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin): _*)
   .settings(publishingSettings: _*)
   .settings(
-    playDefaultPort                               := 9017,
-    libraryDependencies                           ++= compile ++ test,
-    retrieveManaged                               := true,
-    evictionWarningOptions in update              := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    resolvers                                     += Resolver.jcenterRepo
+    playDefaultPort                  := 9017,
+    libraryDependencies              ++= compile ++ test,
+    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
+    resolvers                        += Resolver.jcenterRepo
   )
 
 
