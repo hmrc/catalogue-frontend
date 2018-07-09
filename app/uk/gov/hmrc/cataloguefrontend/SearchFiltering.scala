@@ -34,9 +34,7 @@ object SearchFiltering {
         .filter(x => q.serviceName.isEmpty || x.name.toLowerCase.contains(q.serviceName.get.toLowerCase))
         .filter(x => q.from.isEmpty || x.productionDate.epochSeconds >= q.from.get.epochSeconds)
         .filter(x => q.to.isEmpty || x.productionDate.epochSeconds < q.to.get.plusDays(1).epochSeconds)
-
     }
-
   }
 
   implicit class RepositoryResult(repositories: Seq[RepositoryDisplayDetails]) {

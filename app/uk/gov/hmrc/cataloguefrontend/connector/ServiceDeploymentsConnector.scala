@@ -75,6 +75,7 @@ case class ServiceDeploymentInformation(serviceName: String, deployments: Seq[De
 object ServiceDeploymentInformation {
   implicit val whatsRunningWhereFormat = Json.format[ServiceDeploymentInformation]
 }
+
 @Singleton
 class ServiceDeploymentsConnector @Inject()(
   http: HttpClient,

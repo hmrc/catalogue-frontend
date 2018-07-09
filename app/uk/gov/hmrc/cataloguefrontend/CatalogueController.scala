@@ -49,6 +49,7 @@ case class DigitalServiceDetails(
   teamMembersLookUp: Map[String, Either[UMPError, Seq[DisplayableTeamMember]]],
   repos: Map[String, Seq[String]]
 )
+
 @Singleton
 class CatalogueController @Inject()(
   userManagementConnector: UserManagementConnector,
@@ -375,21 +376,23 @@ class CatalogueController @Inject()(
     Future.successful(Ok(deployments_page(form, umpProfileUrl)))
   }
 
-  def deploymentsList() = Action.async { implicit request =>
+  def deploymentsList(teamName: Option[String], serviceName: Option[String]) = Action.async { implicit request =>
     import SearchFiltering._
     val umpProfileUrl = getConfString(profileBaseUrlConfigKey, "#")
 
-    deploymentsService.getDeployments().map { rs =>
-      val form: Form[DeploymentsFilter] = DeploymentsFilter.form.bindFromRequest()
-      form.fold(
-        errors => {
-          Ok(deployments_list(Nil, umpProfileUrl))
-        },
-        query => Ok(deployments_list(rs.filter(query), umpProfileUrl))
-      )
-
+    deploymentsService.getDeployments(teamName.blankToNone, serviceName.blankToNone) map { teamReleases =>
+      DeploymentsFilter.form
+        .bindFromRequest()
+        .fold(
+          _ => Ok(deployments_list(Nil, umpProfileUrl)),
+          deploymentsFilter => Ok(deployments_list(teamReleases filter deploymentsFilter, umpProfileUrl))
+        )
     }
+  }
 
+  private implicit class OptionOps(maybeString: Option[String]) {
+    lazy val blankToNone: Option[String] =
+      maybeString.map(_.trim).filterNot(_.isEmpty)
   }
 
   private def convertToDisplayableTeamMembers(

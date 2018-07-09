@@ -83,6 +83,7 @@ case class Throughput(leadTime: Option[MeasureResult], interval: Option[MeasureR
 case class Stability(hotfixRate: Option[Double], hotfixInterval: Option[MeasureResult])
 
 case class MeasureResult(median: Int)
+
 @Singleton
 class IndicatorsConnector @Inject()(
   http: HttpClient,

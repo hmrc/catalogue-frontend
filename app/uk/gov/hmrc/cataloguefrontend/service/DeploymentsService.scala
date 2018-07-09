@@ -47,12 +47,12 @@ class DeploymentsService @Inject()(
   final case class All(serviceTeams: ServiceTeamMappings) extends ReleaseFilter
   case object NotFound extends ReleaseFilter { val serviceTeams: ServiceTeamMappings = Map() }
 
-  def getDeployments(teamName: Option[TeamName] = None, serviceName: Option[ServiceName] = None)(
+  def getDeployments(teamName: Option[TeamName], serviceName: Option[ServiceName])(
     implicit hc: HeaderCarrier): Future[Seq[TeamRelease]] =
     for {
       query <- buildFilter(teamName, serviceName)
       deployments <- query match {
-                      case All(st) => serviceDeploymentsConnector.getDeployments()
+                      case All(_) => serviceDeploymentsConnector.getDeployments()
                       case ServiceTeams(st) =>
                         serviceDeploymentsConnector.getDeployments(st.keys.toSeq)
                       case NotFound => Future.successful(Seq())

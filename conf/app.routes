@@ -17,7 +17,7 @@ GET        /repositories/:name                          uk.gov.hmrc.cataloguefro
 GET        /prototypes                                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allPrototypes
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
 GET        /deployments                                 uk.gov.hmrc.cataloguefrontend.CatalogueController.deploymentsPage()
-GET        /deployments/list                            uk.gov.hmrc.cataloguefrontend.CatalogueController.deploymentsList()
+GET        /deployments/list                            uk.gov.hmrc.cataloguefrontend.CatalogueController.deploymentsList(team: Option[String], serviceName: Option[String])
 GET        /assets/*file                                controllers.Assets.at(path="/public", file)
 GET        /                                            uk.gov.hmrc.cataloguefrontend.CatalogueController.landingPage
 GET        /admin/metrics                               @com.kenshoo.play.metrics.MetricsController.metrics

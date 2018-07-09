@@ -69,7 +69,7 @@ class DeploymentsServiceSpec
         ))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
-      val deployments = service.getDeployments().futureValue
+      val deployments = service.getDeployments(teamName = None, serviceName = None).futureValue
 
       deployments should contain(
         TeamRelease(
@@ -94,7 +94,7 @@ class DeploymentsServiceSpec
         .thenReturn(Future.successful(Map.empty[ServiceName, Seq[TeamName]]))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
-      val deployments = service.getDeployments().futureValue
+      val deployments = service.getDeployments(teamName = None, serviceName = None).futureValue
 
       deployments should contain(
         TeamRelease("a-service", teams = Seq(), productionDate = productionDate, version = "0.1.0"))
@@ -115,10 +115,10 @@ class DeploymentsServiceSpec
         Some(Team(name = "teamName", None, None, None, repos = Some(Map("Service" -> Seq("a-service", "b-service")))))))
 
       when(teamsAndServicesConnector.teamsByService(Seq("a-service", "b-service"))).thenReturn(
-        Future.successful((Map("a-service" -> Seq("a-team", "b-team"), "b-service" -> Seq("b-team", "c-team")))))
+        Future.successful(Map("a-service" -> Seq("a-team", "b-team"), "b-service" -> Seq("b-team", "c-team"))))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
-      val deployments = service.getDeployments(teamName = Some("b-team")).futureValue
+      val deployments = service.getDeployments(teamName = Some("b-team"), serviceName = None).futureValue
 
       deployments should contain(
         TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
@@ -150,7 +150,7 @@ class DeploymentsServiceSpec
         ))))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
-      val deployments = service.getDeployments(serviceName = Some("a-service")).futureValue
+      val deployments = service.getDeployments(serviceName = Some("a-service"), teamName = None).futureValue
 
       deployments should contain(
         TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
@@ -196,7 +196,7 @@ class DeploymentsServiceSpec
       when(teamsAndServicesConnector.teamInfo("a-team")).thenReturn(Future.successful(None))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
-      val deployments = service.getDeployments(teamName = Some("a-team")).futureValue
+      val deployments = service.getDeployments(serviceName = None, teamName = Some("a-team")).futureValue
 
       deployments shouldBe empty
     }
@@ -208,7 +208,7 @@ class DeploymentsServiceSpec
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(Future.successful(None))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
-      val deployments = service.getDeployments(serviceName = Some("a-service")).futureValue
+      val deployments = service.getDeployments(serviceName = Some("a-service"), teamName = None).futureValue
 
       deployments shouldBe empty
     }
