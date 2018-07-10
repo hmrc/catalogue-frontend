@@ -25,8 +25,8 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.http.RequestMethod
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
-import scala.util.Try
 import scala.collection.JavaConversions._
+import scala.util.Try
 
 trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfterEach {
 
@@ -63,19 +63,23 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
   def serviceEndpoint(
     method: RequestMethod,
     url: String,
-    extraHeaders: Map[String, String]   = Map(),
-    requestHeaders: Map[String, String] = Map(),
+    extraHeaders: Map[String, String]      = Map(),
+    requestHeaders: Map[String, String]    = Map(),
+    queryParameters: Seq[(String, String)] = Nil,
     willRespondWith: (Int, Option[String]),
     givenJsonBody: Option[String] = None): Unit = {
 
-    val builder = new MappingBuilder(method, urlEqualTo(url))
+    val queryParamsAsString = queryParameters match {
+      case Nil    => ""
+      case params => params.map { case (k, v) => s"$k=$v" }.mkString("?", "&", "")
+    }
+
+    val builder = new MappingBuilder(method, urlEqualTo(s"$url$queryParamsAsString"))
     requestHeaders.map { case (k, v) => builder.withHeader(k, equalTo(v)) }
 
-    givenJsonBody
-      .map { b =>
-        builder.withRequestBody(equalToJson(b))
-      }
-      .getOrElse(builder)
+    givenJsonBody foreach { b =>
+      builder.withRequestBody(equalToJson(b))
+    }
 
     val response: ResponseDefinitionBuilder = new ResponseDefinitionBuilder()
       .withStatus(willRespondWith._1)

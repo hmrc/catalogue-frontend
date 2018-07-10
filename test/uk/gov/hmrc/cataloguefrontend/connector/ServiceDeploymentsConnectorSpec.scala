@@ -24,9 +24,8 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.{Deployer, DeploymentVO, EnvironmentMapping, Release, ServiceDeploymentsConnector, WireMockEndpoints}
-import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.test.UnitSpec
 
 class ServiceDeploymentsConnectorSpec
     extends UnitSpec
@@ -44,7 +43,7 @@ class ServiceDeploymentsConnectorSpec
     ))
     .build()
 
-  val serviceDeploymentsConnector = app.injector.instanceOf[ServiceDeploymentsConnector]
+  private val serviceDeploymentsConnector = app.injector.instanceOf[ServiceDeploymentsConnector]
 
   "getDeployments" should {
 
@@ -80,23 +79,25 @@ class ServiceDeploymentsConnectorSpec
       val response =
         await(serviceDeploymentsConnector.getDeployments()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
-      response.size shouldBe 2
-      response(0) shouldBe Release(
-        "serviceA",
-        productionDate = toLocalDateTime(1453731429),
-        creationDate   = Some(toLocalDateTime(1452701233)),
-        interval       = Some(7),
-        leadTime       = Some(12),
-        version        = "8.96.0",
-        deployers      = Seq(Deployer("abcd.xyz", toLocalDateTime(1452701233)))
+      response should contain theSameElementsAs Seq(
+        Release(
+          "serviceA",
+          productionDate = toLocalDateTime(1453731429),
+          creationDate   = Some(toLocalDateTime(1452701233)),
+          interval       = Some(7),
+          leadTime       = Some(12),
+          version        = "8.96.0",
+          deployers      = Seq(Deployer("abcd.xyz", toLocalDateTime(1452701233)))
+        ),
+        Release(
+          "serviceB",
+          productionDate = toLocalDateTime(1453713911),
+          creationDate   = None,
+          interval       = Some(5),
+          leadTime       = None,
+          version        = "2.38.0"
+        )
       )
-      response(1) shouldBe Release(
-        "serviceB",
-        productionDate = toLocalDateTime(1453713911),
-        creationDate   = None,
-        interval       = Some(5),
-        leadTime       = None,
-        version        = "2.38.0")
     }
 
     "return all deployments for a  service if name is given" in {
@@ -133,30 +134,33 @@ class ServiceDeploymentsConnectorSpec
         serviceDeploymentsConnector.getDeployments(Some("serviceNameA"))(
           HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
-      response.size shouldBe 2
-      response(0) shouldBe Release(
-        "serviceA",
-        productionDate = toLocalDateTime(1453731429),
-        creationDate   = Some(toLocalDateTime(1452701233)),
-        interval       = Some(7),
-        leadTime       = Some(12),
-        version        = "8.96.0"
+      response should contain theSameElementsAs Seq(
+        Release(
+          "serviceA",
+          productionDate = toLocalDateTime(1453731429),
+          creationDate   = Some(toLocalDateTime(1452701233)),
+          interval       = Some(7),
+          leadTime       = Some(12),
+          version        = "8.96.0"
+        ),
+        Release(
+          "serviceA",
+          productionDate = toLocalDateTime(1453713911),
+          creationDate   = None,
+          interval       = Some(5),
+          leadTime       = None,
+          version        = "2.38.0"
+        )
       )
-      response(1) shouldBe Release(
-        "serviceA",
-        productionDate = toLocalDateTime(1453713911),
-        creationDate   = None,
-        interval       = Some(5),
-        leadTime       = None,
-        version        = "2.38.0")
     }
 
     "return deployments for all services mentioned in the body" in {
       val serviceNames = Seq("serviceNameA", "serviceNameB")
 
       serviceEndpoint(
-        POST,
+        GET,
         s"/api/deployments",
+        queryParameters = Seq("serviceName" -> "serviceNameA", "serviceName" -> "serviceNameB"),
         willRespondWith = (
           200,
           Some(
@@ -180,20 +184,20 @@ class ServiceDeploymentsConnectorSpec
           |	}]
         """.stripMargin
           )),
-        givenJsonBody = Some("[\"serviceNameA\",\"serviceNameB\"]")
+        givenJsonBody = None
       )
 
       val response = await(
         serviceDeploymentsConnector.getDeployments(serviceNames)(
           HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
-      response.size    shouldBe 2
-      response(0).name shouldBe "serviceNameA"
-      response(1).name shouldBe "serviceNameB"
+      response.map(_.name) should contain theSameElementsAs Seq(
+        "serviceNameA",
+        "serviceNameB"
+      )
     }
 
     def toLocalDateTime(millis: Long): LocalDateTime = LocalDateTime.ofEpochSecond(millis, 0, ZoneOffset.UTC)
-
   }
 
   "getWhatIsRunningWhere" should {
@@ -246,9 +250,6 @@ class ServiceDeploymentsConnectorSpec
 
       response.right.get.deployments shouldBe Seq()
       response.right.get.serviceName shouldBe serviceName
-
     }
-
   }
-
 }

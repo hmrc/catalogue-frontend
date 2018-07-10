@@ -96,11 +96,9 @@ class ServiceDeploymentsConnector @Inject()(
 
   implicit val deploymentsFormat = Json.reads[Release]
 
-  def getDeployments(serviceNames: Iterable[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] = {
-    val url = s"$servicesDeploymentsBaseUrl"
-
+  def getDeployments(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] =
     http
-      .POST[Seq[String], HttpResponse](url, serviceNames.toSeq)
+      .GET[HttpResponse](servicesDeploymentsBaseUrl, serviceNames map ("serviceName" -> _))
       .map { r =>
         r.status match {
           case 200 => r.json.as[Seq[Release]]
@@ -112,13 +110,10 @@ class ServiceDeploymentsConnector @Inject()(
           Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
           Seq.empty
       }
-  }
 
-  def getDeployments(serviceName: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[Release]] = {
-    val url = serviceName.fold(servicesDeploymentsBaseUrl)(name => s"$servicesDeploymentsBaseUrl/$name")
-
+  def getDeployments(serviceName: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[Release]] =
     http
-      .GET[HttpResponse](url)
+      .GET[HttpResponse](serviceName.fold(servicesDeploymentsBaseUrl)(name => s"$servicesDeploymentsBaseUrl/$name"))
       .map { r =>
         r.status match {
           case 200 => r.json.as[Seq[Release]]
@@ -130,7 +125,6 @@ class ServiceDeploymentsConnector @Inject()(
           Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
           Seq.empty
       }
-  }
 
   def getWhatIsRunningWhere(serviceName: String)(
     implicit hc: HeaderCarrier): Future[Either[Throwable, ServiceDeploymentInformation]] = {
