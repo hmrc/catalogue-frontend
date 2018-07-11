@@ -96,9 +96,9 @@ class ServiceDeploymentsConnector @Inject()(
 
   implicit val deploymentsFormat = Json.reads[Release]
 
-  def getDeployments(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] =
+  def getDeployments(serviceNames: Set[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] =
     http
-      .GET[HttpResponse](servicesDeploymentsBaseUrl, serviceNames map ("serviceName" -> _))
+      .GET[HttpResponse](servicesDeploymentsBaseUrl, (serviceNames map ("serviceName" -> _)).toSeq)
       .map { r =>
         r.status match {
           case 200 => r.json.as[Seq[Release]]

@@ -18,10 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
-
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
-import uk.gov.hmrc.cataloguefrontend.{Deployer, Release, ServiceDeploymentInformation, ServiceDeploymentsConnector, TeamsAndRepositoriesConnector}
-
+import uk.gov.hmrc.cataloguefrontend.{Deployer, Release, RepoType, ServiceDeploymentInformation, ServiceDeploymentsConnector, TeamsAndRepositoriesConnector}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
@@ -52,10 +50,12 @@ class DeploymentsService @Inject()(
     for {
       query <- buildFilter(teamName, serviceName)
       deployments <- query match {
-                      case All(_) => serviceDeploymentsConnector.getDeployments()
+                      case All(_) =>
+                        serviceDeploymentsConnector.getDeployments()
                       case ServiceTeams(st) =>
-                        serviceDeploymentsConnector.getDeployments(st.keys.toSeq)
-                      case NotFound => Future.successful(Seq())
+                        serviceDeploymentsConnector.getDeployments(st.keySet)
+                      case NotFound =>
+                        Future.successful(Seq())
                     }
     } yield deployments map teamRelease(query)
 
@@ -93,8 +93,8 @@ class DeploymentsService @Inject()(
   def buildFilterFromTeam(teamName: Option[TeamName])(implicit hc: HeaderCarrier): Option[Future[ReleaseFilter]] =
     teamName map { t =>
       teamsAndServicesConnector.teamInfo(t).flatMap {
-        case Some(x) =>
-          val teamServiceNames = x.repos.getOrElse(Map())("Service")
+        case Some(team) =>
+          val teamServiceNames = team.repos.getOrElse(Map())(RepoType.Service.toString)
           teamsAndServicesConnector.teamsByService(teamServiceNames).map { st =>
             ServiceTeams(st)
           }

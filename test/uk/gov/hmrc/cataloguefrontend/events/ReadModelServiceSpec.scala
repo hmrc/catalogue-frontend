@@ -16,17 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
-import org.mockito.Mockito
 import org.mockito.Mockito._
-import org.scalatest.{FunSpec, Matchers}
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.{FunSpec, Matchers}
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-
-import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+import scala.language.postfixOps
 
 class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
 
@@ -43,7 +41,11 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
             Event(
               EventType.ServiceOwnerUpdated,
               1,
-              Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject]))))
+              Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject]
+            )
+          )
+        )
+      )
 
       Await.result(readModelService.refreshEventsCache, 5 seconds)
 
@@ -63,7 +65,7 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
       Await.result(readModelService.refreshUmpCache, 5 seconds)
 
       readModelService.umpUsersCache.size shouldBe 1
-      readModelService.umpUsersCache.head shouldBe (teamMember)
+      readModelService.umpUsersCache.head shouldBe teamMember
     }
   }
 }
