@@ -155,7 +155,7 @@ class ServiceDeploymentsConnectorSpec
     }
 
     "return deployments for all services mentioned in the body" in {
-      val serviceNames = Seq("serviceNameA", "serviceNameB")
+      val serviceNames = Set("serviceNameA", "serviceNameB")
 
       serviceEndpoint(
         GET,

@@ -156,8 +156,8 @@ class TeamsAndRepositoriesConnector @Inject()(
   def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http
       .GET[Map[ServiceName, Seq[TeamName]]](
-        url         = teamsAndServicesBaseUrl + s"/api/services?teamDetails=true",
-        queryParams = serviceNames map ("serviceName" -> _)
+        url         = teamsAndServicesBaseUrl + s"/api/services",
+        queryParams = ("teamDetails" -> "true") +: serviceNames.map("serviceName" -> _)
       )
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =

@@ -105,7 +105,7 @@ class DeploymentsServiceSpec
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
-      when(deploymentsConnector.getDeployments(Seq("a-service", "b-service"))).thenReturn(
+      when(deploymentsConnector.getDeployments(Set("a-service", "b-service"))).thenReturn(
         Future.successful(
           Seq(
             Release("a-service", productionDate = productionDate, version = "0.1.0"),
@@ -131,7 +131,7 @@ class DeploymentsServiceSpec
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
-      when(deploymentsConnector.getDeployments(Seq("a-service")))
+      when(deploymentsConnector.getDeployments(Set("a-service")))
         .thenReturn(Future.successful(Seq(Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
@@ -161,7 +161,7 @@ class DeploymentsServiceSpec
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
       val productionDate = LocalDateTime.ofEpochSecond(1453731429, 0, ZoneOffset.UTC)
-      when(deploymentsConnector.getDeployments(Seq("a-service")))
+      when(deploymentsConnector.getDeployments(Set("a-service")))
         .thenReturn(Future.successful(Seq(Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(

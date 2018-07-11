@@ -62,8 +62,9 @@ class TeamsAndRepositoriesConnectorSpec
     "return a list of team information for each given service" in {
 
       serviceEndpoint(
-        POST,
-        "/api/services?teamDetails=true",
+        GET,
+        "/api/services",
+        queryParameters = Seq("teamDetails" -> "true", "serviceName" -> "serviceA", "serviceName" -> "serviceB"),
         willRespondWith = (
           200,
           Some(
@@ -73,12 +74,40 @@ class TeamsAndRepositoriesConnectorSpec
           |		"serviceB": ["teamA"]
           |	}
           | """.stripMargin
-          )),
-        givenJsonBody = Some("[\"serviceA\",\"serviceB\"]")
+          )
+        )
       )
 
       val response = teamsAndRepositoriesConnector
         .teamsByService(Seq("serviceA", "serviceB"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .futureValue
+
+      response.size        shouldBe 2
+      response("serviceA") shouldBe Seq("teamA", "teamB")
+      response("serviceB") shouldBe Seq("teamA")
+    }
+
+    "return a list of team information without filtering by service names when not specified" in {
+
+      serviceEndpoint(
+        GET,
+        "/api/services",
+        queryParameters = Seq("teamDetails" -> "true"),
+        willRespondWith = (
+          200,
+          Some(
+            """
+          |	{
+          |		"serviceA": ["teamA","teamB"],
+          |		"serviceB": ["teamA"]
+          |	}
+          | """.stripMargin
+          )
+        )
+      )
+
+      val response = teamsAndRepositoriesConnector
+        .teamsByService(Seq.empty)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
 
       response.size        shouldBe 2
