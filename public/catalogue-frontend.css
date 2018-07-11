@@ -11998,3 +11998,34 @@ section span.other-teams-message {
   font-weight: lighter;
   vertical-align: middle;
 }
+
+
+#error_content {
+  padding: 0;
+  margin: 0;
+}
+
+#error_video {
+  position:relative;
+}
+
+#error_video .overlay {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index:1;
+  width: 100%;
+  text-align: center;
+  padding: 0
+}
+
+#error_video h3 {
+  color: #fff;
+  font-size: 48px;
+}
+
+#error_video video {
+  position:relative;
+  z-index:0;
+  width: 100%;
+}

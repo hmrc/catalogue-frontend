@@ -157,7 +157,7 @@ class CatalogueController @Inject()(
                 .getDigitalServiceOwner(digitalServiceName)
                 .map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))
             )))
-      case None => Future.successful(NotFound)
+      case None => Future.successful(NotFound(views.html.error_404_template()))
     }
   }
 
@@ -229,7 +229,7 @@ class CatalogueController @Inject()(
               leakDetectionService.teamHasLeaks(team, reposWithLeaks),
               leakDetectionService.hasLeaks(reposWithLeaks)
             ))
-        case _ => NotFound
+        case _ => NotFound(views.html.error_404_template())
       }
   }
 
@@ -295,7 +295,7 @@ class CatalogueController @Inject()(
               deploymentsByEnvironmentName,
               urlIfLeaksFound
             ))
-        case _ => NotFound
+        case _ => NotFound(views.html.error_404_template())
       }
   }
 
@@ -308,7 +308,7 @@ class CatalogueController @Inject()(
       library match {
         case Some(s) if s.repoType == RepoType.Library =>
           Ok(library_info(s, mayBeDependencies, urlIfLeaksFound))
-        case _ => NotFound(Json.toJson(ErrorResponse(NOT_FOUND, s"Library: $name does not exist")))
+        case _ => NotFound(views.html.error_404_template())
       }
   }
 
@@ -320,7 +320,7 @@ class CatalogueController @Inject()(
       repository match {
         case Some(s) if s.repoType == RepoType.Prototype =>
           Ok(prototype_info(s.copy(environments = None), s.createdAt, urlIfLeaksFound))
-        case None => NotFound(Json.toJson(ErrorResponse(NOT_FOUND, s"Prototype: $name does not exist")))
+        case None => NotFound(views.html.error_404_template())
       }
     }
   }
@@ -342,7 +342,7 @@ class CatalogueController @Inject()(
               maybeUrlIfLeaksFound
             )
           )
-        case _ => NotFound
+        case _ => NotFound(views.html.error_404_template())
       }
   }
 
