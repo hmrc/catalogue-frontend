@@ -27,6 +27,7 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
+
 @Singleton
 class EventRepository @Inject()(mongo: ReactiveMongoComponent)
     extends ReactiveRepository[Event, BSONObjectID](

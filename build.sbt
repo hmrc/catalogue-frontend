@@ -1,14 +1,17 @@
 import play.core.PlayVersion
 import play.sbt.PlayImport.PlayKeys.playDefaultPort
+import uk.gov.hmrc.SbtArtifactory
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
+import uk.gov.hmrc.versioning.SbtGitVersioning.majorVersion
 
 val appName: String = "catalogue-frontend"
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin): _*)
+  .enablePlugins(Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory): _*)
   .settings(publishingSettings: _*)
   .settings(
+    majorVersion                     := 4,
     playDefaultPort                  := 9017,
     libraryDependencies              ++= compile ++ test,
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
