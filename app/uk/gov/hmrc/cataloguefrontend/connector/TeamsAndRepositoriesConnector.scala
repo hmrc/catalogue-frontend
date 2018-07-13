@@ -18,8 +18,9 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.net.URLEncoder
 import java.time.LocalDateTime
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import play.api.{Configuration, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.DigitalService.DigitalServiceRepository
@@ -154,11 +155,10 @@ class TeamsAndRepositoriesConnector @Inject()(
     http.GET[Option[RepositoryDetails]](teamsAndServicesBaseUrl + s"/api/repositories/$name")
 
   def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
-    http
-      .GET[Map[ServiceName, Seq[TeamName]]](
-        url         = teamsAndServicesBaseUrl + s"/api/services",
-        queryParams = ("teamDetails" -> "true") +: serviceNames.map("serviceName" -> _)
-      )
+    http.POST[JsValue, Map[ServiceName, Seq[TeamName]]](
+      teamsAndServicesBaseUrl + s"/api/services?teamDetails=true",
+      Json.arr(serviceNames.map(toJsFieldJsValueWrapper(_)): _*)
+    )
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http.GET[Map[ServiceName, Seq[TeamName]]](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true")

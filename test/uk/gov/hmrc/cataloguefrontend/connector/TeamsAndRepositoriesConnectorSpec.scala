@@ -26,6 +26,7 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api
 import play.api.Configuration
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.{Environment, JsonData, Link, RepoType, RepositoryDetails, RepositoryDisplayDetails, Team, TeamsAndRepositoriesConnector, WireMockEndpoints}
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -62,9 +63,9 @@ class TeamsAndRepositoriesConnectorSpec
     "return a list of team information for each given service" in {
 
       serviceEndpoint(
-        GET,
-        "/api/services",
-        queryParameters = Seq("teamDetails" -> "true", "serviceName" -> "serviceA", "serviceName" -> "serviceB"),
+        POST,
+        "/api/services?teamDetails=true",
+        givenJsonBody = Some(Json.arr("serviceA", "serviceB").toString()),
         willRespondWith = (
           200,
           Some(
@@ -85,35 +86,6 @@ class TeamsAndRepositoriesConnectorSpec
       response.size        shouldBe 2
       response("serviceA") shouldBe Seq("teamA", "teamB")
       response("serviceB") shouldBe Seq("teamA")
-    }
-
-    "return a list of team information without filtering by service names when not specified" in {
-
-      serviceEndpoint(
-        GET,
-        "/api/services",
-        queryParameters = Seq("teamDetails" -> "true"),
-        willRespondWith = (
-          200,
-          Some(
-            """
-          |	{
-          |		"serviceA": ["teamA","teamB"],
-          |		"serviceB": ["teamA"]
-          |	}
-          | """.stripMargin
-          )
-        )
-      )
-
-      val response = teamsAndRepositoriesConnector
-        .teamsByService(Seq.empty)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-        .futureValue
-
-      response.size        shouldBe 2
-      response("serviceA") shouldBe Seq("teamA", "teamB")
-      response("serviceB") shouldBe Seq("teamA")
-
     }
   }
 

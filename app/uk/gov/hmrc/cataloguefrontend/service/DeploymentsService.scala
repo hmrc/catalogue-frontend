@@ -77,8 +77,9 @@ class DeploymentsService @Inject()(
 
   private def buildFilter(teamName: Option[TeamName], serviceName: Option[ServiceName])(
     implicit hc: HeaderCarrier): Future[ReleaseFilter] =
-    buildFilterFromService(serviceName) getOrElse (buildFilterFromTeam(teamName) getOrElse
-      emptyFilter)
+    buildFilterFromService(serviceName)
+      .orElse(buildFilterFromTeam(teamName))
+      .getOrElse(emptyFilter)
 
   def buildFilterFromService(serviceName: Option[ServiceName])(
     implicit hc: HeaderCarrier): Option[Future[ReleaseFilter]] =

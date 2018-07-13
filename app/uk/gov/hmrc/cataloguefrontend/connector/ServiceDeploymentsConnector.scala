@@ -33,9 +33,10 @@ package uk.gov.hmrc.cataloguefrontend
  */
 
 import java.time.LocalDateTime
-import javax.inject.{Inject, Singleton}
 
-import play.api.libs.json.Json
+import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json.toJsFieldJsValueWrapper
+import play.api.libs.json.{JsValue, Json}
 import play.api.{Configuration, Logger, Environment => PlayEnvironment}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -98,7 +99,9 @@ class ServiceDeploymentsConnector @Inject()(
 
   def getDeployments(serviceNames: Set[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] =
     http
-      .GET[HttpResponse](servicesDeploymentsBaseUrl, (serviceNames map ("serviceName" -> _)).toSeq)
+      .POST[JsValue, HttpResponse](
+        servicesDeploymentsBaseUrl,
+        Json.arr(serviceNames.toSeq.map(toJsFieldJsValueWrapper(_)): _*))
       .map { r =>
         r.status match {
           case 200 => r.json.as[Seq[Release]]

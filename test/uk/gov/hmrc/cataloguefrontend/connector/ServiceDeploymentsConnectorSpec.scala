@@ -22,6 +22,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.{Deployer, DeploymentVO, EnvironmentMapping, Release, ServiceDeploymentsConnector, WireMockEndpoints}
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -158,9 +159,9 @@ class ServiceDeploymentsConnectorSpec
       val serviceNames = Set("serviceNameA", "serviceNameB")
 
       serviceEndpoint(
-        GET,
+        POST,
         s"/api/deployments",
-        queryParameters = Seq("serviceName" -> "serviceNameA", "serviceName" -> "serviceNameB"),
+        givenJsonBody = Some(Json.arr("serviceNameA", "serviceNameB").toString()),
         willRespondWith = (
           200,
           Some(
@@ -183,8 +184,8 @@ class ServiceDeploymentsConnectorSpec
           |  "deployers":[]
           |	}]
         """.stripMargin
-          )),
-        givenJsonBody = None
+          )
+        )
       )
 
       val response = await(
