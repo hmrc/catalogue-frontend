@@ -128,10 +128,6 @@ class ServiceDeploymentsConnector @Inject()(
           Logger.error(s"An error occurred when connecting to $servicesDeploymentsBaseUrl: ${ex.getMessage}", ex)
           Seq.empty
       }
-      .map { deployments =>
-        Logger.info(s"Found deployments: $deployments")
-        deployments
-      }
 
   def getWhatIsRunningWhere(serviceName: String)(
     implicit hc: HeaderCarrier): Future[Either[Throwable, ServiceDeploymentInformation]] = {

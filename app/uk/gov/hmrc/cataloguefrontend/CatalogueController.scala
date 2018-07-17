@@ -20,7 +20,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import javax.inject.{Inject, Singleton}
 import play.api
-import play.api.{Configuration, Logger}
+import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
 import play.api.i18n.{I18nSupport, MessagesApi}
@@ -384,15 +384,8 @@ class CatalogueController @Inject()(
       DeploymentsFilter.form
         .bindFromRequest()
         .fold(
-          formErrors => {
-            Logger.error(s"Could not bind deployments filter: ${formErrors.errors}")
-            Ok(deployments_list(Nil, umpProfileUrl))
-          },
-          deploymentsFilter => {
-            Logger.info(s"Team releases: $teamReleases")
-            Logger.info(s"Filtered releases: ${teamReleases filter deploymentsFilter}")
-            Ok(deployments_list(teamReleases filter deploymentsFilter, umpProfileUrl))
-          }
+          _ => Ok(deployments_list(Nil, umpProfileUrl)),
+          deploymentsFilter => Ok(deployments_list(teamReleases filter deploymentsFilter, umpProfileUrl))
         )
     }
   }
