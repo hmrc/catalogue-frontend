@@ -17,9 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import java.time.LocalDateTime
+
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.{Deployer, Release, RepoType, ServiceDeploymentInformation, ServiceDeploymentsConnector, TeamsAndRepositoriesConnector}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
@@ -105,6 +108,7 @@ class DeploymentsService @Inject()(
 
   def emptyFilter(implicit hc: HeaderCarrier): Future[ReleaseFilter] =
     teamsAndServicesConnector.allTeamsByService().map { cached =>
+      Logger.info(s"Found teams and services: $cached")
       All(cached)
     }
 }
