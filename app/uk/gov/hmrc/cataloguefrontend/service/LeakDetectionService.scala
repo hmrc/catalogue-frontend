@@ -15,8 +15,6 @@
  */
 
 package uk.gov.hmrc.cataloguefrontend.service
-import scala.collection.JavaConverters._
-
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import scala.concurrent.Future

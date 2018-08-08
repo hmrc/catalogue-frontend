@@ -63,7 +63,7 @@ class ReadModelService @Inject()(eventService: EventService, userManagementConne
   }
 
   def refreshUmpCache: Future[Seq[TeamMember]] =
-    userManagementConnector.getAllUsersFromUMP().map {
+    userManagementConnector.getAllUsersFromUMP.map {
       case Right(tms) =>
         Logger.info(s"Got ${tms.length} set of UMP users")
         umpUsersCache = tms
