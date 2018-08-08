@@ -19,7 +19,7 @@ lazy val microservice = Project(appName, file("."))
 
 
 val compile = Seq(
-  "uk.gov.hmrc"               %% "bootstrap-play-25"  % "1.7.0",
+  "uk.gov.hmrc"               %% "bootstrap-play-26"  % "1.7.0",
   "uk.gov.hmrc"               %% "url-builder"        % "1.1.0",
   "uk.gov.hmrc"               %% "play-reactivemongo" % "6.2.0",
   "org.typelevel"             %% "cats-core"          % "1.1.0",
@@ -31,14 +31,14 @@ val compile = Seq(
 )
 
 val test  = Seq(
-  "uk.gov.hmrc"            %% "hmrctest"           % "2.3.0"             % Test,
-  "uk.gov.hmrc"            %% "reactivemongo-test" % "2.0.0"             % Test,
-  "org.scalatest"          %% "scalatest"          % "2.2.6"             % Test,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0"             % Test,
-  "org.scalacheck"         %% "scalacheck"         % "1.12.6"            % Test,
-  "org.pegdown"            % "pegdown"             % "1.4.2"             % Test,
-  "com.typesafe.play"      %% "play-test"          % PlayVersion.current % Test,
-  "com.github.tomakehurst" % "wiremock"            % "1.52"              % Test,
-  "org.jsoup"              % "jsoup"               % "1.9.2"             % Test,
-  "org.mockito"            % "mockito-all"         % "1.10.19"           % Test
+  "uk.gov.hmrc"            %% "hmrctest"              % "2.3.0"             % Test,
+  "uk.gov.hmrc"            %% "reactivemongo-test-26" % "0.3.0"             % Test,
+  "org.scalatest"          %% "scalatest"             % "3.0.4"             % Test,
+  "org.scalatestplus.play" %% "scalatestplus-play"    % "3.1.2"             % Test,
+  "org.scalacheck"         %% "scalacheck"            % "1.13.4"            % Test,
+  "org.pegdown"            % "pegdown"                % "1.4.2"             % Test,
+  "com.typesafe.play"      %% "play-test"             % PlayVersion.current % Test,
+  "com.github.tomakehurst" % "wiremock"               % "1.52"              % Test,
+  "org.jsoup"              % "jsoup"                  % "1.9.2"             % Test,
+  "org.mockito"            % "mockito-all"            % "1.10.19"           % Test
 )
