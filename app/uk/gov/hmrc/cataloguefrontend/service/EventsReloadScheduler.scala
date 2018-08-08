@@ -43,29 +43,18 @@ class EventsReloadScheduler @Inject()(
   scheduleEventsReloadSchedule(appLifecycle, configuration)
   scheduleUmpCacheReloadSchedule(appLifecycle, configuration)
 
-  private def scheduleEventsReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration) = {
-
-    lazy val maybeReloadInterval = configuration.getMilliseconds(eventReloadIntervalKey).map(_.millisecond)
-
-    maybeReloadInterval.fold {
-      Logger.warn(s"$eventReloadIntervalKey is missing. Event cache reload will be disabled")
-    } { reloadInterval =>
-      Logger.warn(s"EventReloadInterval set to ${reloadInterval.toSeconds} seconds")
-      val cancellable = updateScheduler.startUpdatingEventsReadModel(reloadInterval)
-      appLifecycle.addStopHook(() => Future(cancellable.cancel()))
-    }
+  private def scheduleEventsReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration): Unit = {
+    val reloadInterval = configuration.getMillis(eventReloadIntervalKey).millis
+    val cancellable = updateScheduler.startUpdatingEventsReadModel(reloadInterval)
+    appLifecycle.addStopHook(() => Future(cancellable.cancel()))
   }
 
   private def scheduleUmpCacheReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration) = {
-    lazy val maybeUmpCacheReloadInterval = configuration.getMilliseconds(umpCacheReloadIntervalKey).map(_.milliseconds)
+    lazy val umpCacheReloadInterval = configuration.getMillis(umpCacheReloadIntervalKey).milliseconds
 
-    maybeUmpCacheReloadInterval.fold {
-      Logger.warn(s"$umpCacheReloadIntervalKey is missing. Ump cache reload will be disabled")
-    } { reloadInterval =>
-      Logger.warn(s"UMP cache reload interval set to ${reloadInterval.toSeconds} seconds")
-      val cancellable = updateScheduler.startUpdatingUmpCacheReadModel(reloadInterval)
-      appLifecycle.addStopHook(() => Future(cancellable.cancel()))
-    }
+    Logger.warn(s"UMP cache reload interval set to $umpCacheReloadInterval milliseconds")
+    val cancellable = updateScheduler.startUpdatingUmpCacheReadModel(umpCacheReloadInterval)
+    appLifecycle.addStopHook(() => Future(cancellable.cancel()))
   }
 
 }
