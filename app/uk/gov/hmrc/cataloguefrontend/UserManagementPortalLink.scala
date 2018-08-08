@@ -16,22 +16,27 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import uk.gov.hmrc.play.config.ServicesConfig
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-trait UserManagementPortalLink extends ServicesConfig {
+
+trait UserManagementPortalLink {
+
+  def serviceConfig: ServicesConfig
+
   val serviceName = "user-management"
 
   def umpMyTeamsPageUrl(teamName: String): String = {
-
     val frontPageUrlConfigKey = s"$serviceName.myTeamsUrl"
     val myTeamsUrl =
-      getConfString(frontPageUrlConfigKey, throw new RuntimeException(s"Could not find config $frontPageUrlConfigKey"))
+      serviceConfig.getConfString(frontPageUrlConfigKey, throw new RuntimeException(s"Could not find config $frontPageUrlConfigKey"))
 
     s"""${myTeamsUrl.appendSlash}$teamName?edit"""
-
   }
 
-  def userManagementBaseUrl: String =
-    getConfString(s"$serviceName.url", throw new RuntimeException(s"Could not find config $serviceName.url"))
+  def userManagementBaseUrl: String = {
+    serviceConfig.getConfString(
+      confKey = s"$serviceName.url",
+      defString = throw new RuntimeException(s"Could not find config $serviceName.url"))
+  }
 
 }

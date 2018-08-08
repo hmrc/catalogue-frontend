@@ -32,6 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStat
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
@@ -63,19 +64,14 @@ class CatalogueController @Inject()(
   environment: api.Environment,
   verifySignInStatus: VerifySignInStatus,
   umpAuthenticated: UmpAuthenticated,
-  override val runModeConfiguration: Configuration,
-  val messagesApi: MessagesApi)
-    extends FrontendController
-    with UserManagementPortalLink
-    with I18nSupport {
+  val serviceConfig: ServicesConfig
+) extends FrontendController with UserManagementPortalLink {
 
   import UserManagementConnector._
 
   val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
 
   implicit val errorResponseFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
-
-  override protected def mode = environment.mode
 
   val repotypeToDetailsUrl = Map(
     RepoType.Service   -> routes.CatalogueController.service _,

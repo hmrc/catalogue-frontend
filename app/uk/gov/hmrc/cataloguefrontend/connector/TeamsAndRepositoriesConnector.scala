@@ -26,7 +26,6 @@ import play.api.{Configuration, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -37,7 +36,7 @@ object RepoType extends Enumeration {
 
   val Service, Library, Prototype, Other = Value
 
-  implicit val repoType = new Reads[RepoType] {
+  implicit val repoType: Reads[RepoType] = new Reads[RepoType] {
     override def reads(json: JsValue): JsResult[RepoType] = json match {
       case JsString(s) => JsSuccess(RepoType.withName(s))
     }

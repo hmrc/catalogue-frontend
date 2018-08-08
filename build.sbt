@@ -19,7 +19,7 @@ lazy val microservice = Project(appName, file("."))
 
 
 val compile = Seq(
-  "uk.gov.hmrc"               %% "bootstrap-play-26"  % "1.7.0",
+  "uk.gov.hmrc"               %% "bootstrap-play-26"  % "0.7.0",
   "uk.gov.hmrc"               %% "url-builder"        % "1.1.0",
   "uk.gov.hmrc"               %% "play-reactivemongo" % "6.2.0",
   "org.typelevel"             %% "cats-core"          % "1.1.0",
@@ -31,7 +31,7 @@ val compile = Seq(
 )
 
 val test  = Seq(
-  "uk.gov.hmrc"            %% "hmrctest"              % "2.3.0"             % Test,
+  "uk.gov.hmrc"            %% "hmrctest"              % "3.0.0"             % Test,
   "uk.gov.hmrc"            %% "reactivemongo-test-26" % "0.3.0"             % Test,
   "org.scalatest"          %% "scalatest"             % "3.0.4"             % Test,
   "org.scalatestplus.play" %% "scalatestplus-play"    % "3.1.2"             % Test,
