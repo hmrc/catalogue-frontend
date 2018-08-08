@@ -18,12 +18,13 @@
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{NoData, UMPError}
 @import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, RepoType, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @import uk.gov.hmrc.cataloguefrontend.actions.UmpVerifiedRequest
 
-@(timestampedRepos: DigitalServiceDetails,
-  digitalServiceOwner: Option[DisplayableTeamMember]
+@(
+        timestampedRepos: DigitalServiceDetails,
+        digitalServiceOwner: Option[DisplayableTeamMember],
+        viewMessages: ViewMessages
 )(implicit request: UmpVerifiedRequest[_])
 
 @standard_layout(timestampedRepos.digitalServiceName, "digital-services") {
@@ -46,7 +47,7 @@
                                             <a href="@{so.umpLink}" target="_blank" id="service_owner_view_field">@{so.displayName}<span class="glyphicon glyphicon-new-window"/></a>
                                     }.getOrElse {
                                             <span id="service_owner_view_field">
-                                                @notSpecifiedText
+                                                @{viewMessages.notSpecifiedText}
                                             </span>
                                         }
                                 </span>
@@ -131,7 +132,7 @@
 
         function enterServiceOwnerEditMode() {
             var currentServiceOwnerValue = $('#service_owner_view_field').text().trim();
-            if(currentServiceOwnerValue === '@notSpecifiedText') {
+            if(currentServiceOwnerValue === '@{viewMessages.notSpecifiedText}') {
                 currentServiceOwnerValue = '';
             }
             $('#service_owner_edit_input').val(currentServiceOwnerValue);
@@ -145,14 +146,15 @@
             $('#service_owner_edit_component').hide();
         }
 
+        var serviceOwnerInput = $("#service_owner_edit_input");
 
-        $("#service_owner_edit_input").keyup(function(e) {
+        serviceOwnerInput.keyup(function(e) {
             if (e.keyCode == 27) { // escape key maps to keycode `27`
                 endServiceOwnerEditMode();
             }
         });
 
-        $("#service_owner_edit_input").keyup(function(e) {
+        serviceOwnerInput.keyup(function(e) {
             if (e.keyCode == 13) { // enter key maps to keycode `13`
                 saveServiceOwner();
             }
@@ -185,8 +187,7 @@
                     var umpLink = result.umpLink;
 
                     debugger;
-                    $("#service_owner_view_field").text("");
-                    $("#service_owner_view_field").append("<a href='"+ umpLink +"' target='_blank'>"+ displayName +"</a>");
+                    $("#service_owner_view_field").text("").append("<a href='"+ umpLink +"' target='_blank'>"+ displayName +"</a>");
                     showSnackBar("Service Owner saved: '" + displayName + "'");
                 },
                 error: function(xhr,status,error){
@@ -209,7 +210,7 @@
                 x.style.color = "";
             }
 
-            x.innerHTML = message
+            x.innerHTML = message;
             // Add the "show" class to DIV
             x.className = "show";
 //            debugger;
@@ -235,14 +236,14 @@
 
 
 @showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {
-    @repos.get(repoType.toString).map { repositories =>
+    @repos.get(repoType.toString).foreach { repositories =>
         <div class="col-md-3">
             <div id="@headerName" class="board">
                 <h3 class="board__heading">@headerName</h3>
 
                 <div class="board__body">
                     @if(repositories.isEmpty) {
-                        <p>@Html(ViewMessages.noRepoOfTypeForDigitalService(typeName))</p>
+                        <p>@Html(viewMessages.noRepoOfTypeForDigitalService(typeName))</p>
 
                     } else {
                         <ul class="list list--minimal">

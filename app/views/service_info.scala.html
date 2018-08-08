@@ -16,13 +16,11 @@
 
 @import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages._
 @import play.twirl.api.Html
 @import java.time.LocalDateTime
 
 @import uk.gov.hmrc.cataloguefrontend.DeploymentVO
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
-@import uk.gov.hmrc.cataloguefrontend.connector.DeploymentThroughputDataPoint
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import views.partials.githubBadgeType
 
@@ -32,7 +30,9 @@
   stabilityChartData: Option[ChartDataRows],
   repositoryCreationDate: LocalDateTime,
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
-  linkToLeakDetection: Option[String])(implicit messages: Messages, request: Request[_])
+  linkToLeakDetection: Option[String],
+ viewMessages: ViewMessages
+)(implicit messages: Messages, request: Request[_])
 
 @datacentreMappings(datacentreLongName: String) = @{
     datacentreLongName.toLowerCase match {
@@ -114,9 +114,9 @@
 
                         @{
                             if(throughputChartData.isEmpty) {
-                                {ViewMessages.errorMessage}
+                                {viewMessages.errorMessage}
                             } else if(throughputChartData.get.isEmpty) {
-                                {ViewMessages.noProductionDeploymentSinceDaysMessage(repositoryCreationDate)}
+                                {viewMessages.noProductionDeploymentSinceDaysMessage(repositoryCreationDate)}
                             }
                         }
 
@@ -128,7 +128,7 @@
     </section>
     <div class="alert alert-success" role="alert" id="@service.name">
         <p>
-        @Html(ViewMessages.informationalText)
+        @Html(viewMessages.informationalText)
         </p>
     </div>
     <script type="text/javascript">
@@ -168,7 +168,7 @@
 
 
 @renderGraphText = {
-    @{Html(ViewMessages.deploymentThroughputAndStabilityGraphText)}
+    @{Html(viewMessages.deploymentThroughputAndStabilityGraphText)}
 }
 
 @renderStabilityGraph = {
