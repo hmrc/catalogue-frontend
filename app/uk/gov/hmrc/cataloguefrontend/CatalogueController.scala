@@ -63,7 +63,8 @@ class CatalogueController @Inject()(
   environment: api.Environment,
   verifySignInStatus: VerifySignInStatus,
   umpAuthenticated: UmpAuthenticated,
-  val serviceConfig: ServicesConfig
+  val serviceConfig: ServicesConfig,
+  viewMessages: ViewMessages
 ) extends FrontendController with InjectedController with UserManagementPortalLink with I18nSupport {
 
   import UserManagementConnector._
@@ -150,7 +151,8 @@ class CatalogueController @Inject()(
               DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)),
               readModelService
                 .getDigitalServiceOwner(digitalServiceName)
-                .map(DisplayableTeamMember(_, serviceConfig.getConfString(profileBaseUrlConfigKey, "#")))
+                .map(DisplayableTeamMember(_, serviceConfig.getConfString(profileBaseUrlConfigKey, "#"))),
+              viewMessages
             )))
       case None => Future.successful(NotFound(views.html.error_404_template()))
     }
@@ -288,7 +290,8 @@ class CatalogueController @Inject()(
               ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
               repositoryDetails.createdAt,
               deploymentsByEnvironmentName,
-              urlIfLeaksFound
+              urlIfLeaksFound,
+              viewMessages
             ))
         case _ => NotFound(views.html.error_404_template())
       }
@@ -302,7 +305,7 @@ class CatalogueController @Inject()(
     } yield
       library match {
         case Some(s) if s.repoType == RepoType.Library =>
-          Ok(library_info(s, mayBeDependencies, urlIfLeaksFound))
+          Ok(library_info(s, mayBeDependencies, urlIfLeaksFound, viewMessages))
         case _ => NotFound(views.html.error_404_template())
       }
   }
