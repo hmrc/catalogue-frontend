@@ -22,6 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
+import play.api.i18n.I18nSupport
 import play.api.libs.json.{Format, Json}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
@@ -63,7 +64,7 @@ class CatalogueController @Inject()(
   verifySignInStatus: VerifySignInStatus,
   umpAuthenticated: UmpAuthenticated,
   val serviceConfig: ServicesConfig
-) extends FrontendController with UserManagementPortalLink {
+) extends FrontendController with InjectedController with UserManagementPortalLink with I18nSupport {
 
   import UserManagementConnector._
 

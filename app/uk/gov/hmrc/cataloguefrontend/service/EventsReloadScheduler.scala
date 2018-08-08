@@ -30,15 +30,14 @@ import scala.concurrent.duration._
 @Singleton
 class EventsReloadScheduler @Inject()(
   appLifecycle: ApplicationLifecycle,
-  override val configuration: Configuration,
+  val configuration: Configuration,
   environment: Environment,
-  updateScheduler: UpdateScheduler)
-    extends AppName {
+  updateScheduler: UpdateScheduler) {
 
   val eventReloadIntervalKey    = "event.reload.interval"
   val umpCacheReloadIntervalKey = "ump.cache.reload.interval"
 
-  Logger.info(s"Starting : $appName : in mode : ${environment.mode}")
+  Logger.info(s"Starting : ${environment.rootPath} : in mode : ${environment.mode}")
   Logger.debug("[Catalogue-frontend] - Starting... ")
 
   scheduleEventsReloadSchedule(appLifecycle, configuration)
