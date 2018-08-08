@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import java.util.Date
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
 import akka.stream.scaladsl._
 import org.apache.commons.io.IOUtils
 import play.api.http.HttpEntity
@@ -28,6 +28,7 @@ import play.api.{Configuration, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -48,14 +49,11 @@ case class DependencyReport(
 @Singleton
 class DependencyReportController @Inject()(
   http: HttpClient,
-  override val runModeConfiguration: Configuration,
   environment: PlayEnvironment,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  serviceDependencyConnector: ServiceDependenciesConnector)
-    extends FrontendController
-    with UserManagementPortalLink {
-
-  override protected def mode = environment.mode
+  serviceDependencyConnector: ServiceDependenciesConnector,
+  val serviceConfig: ServicesConfig
+) extends FrontendController with UserManagementPortalLink with InjectedController {
 
   implicit val drFormat = Json.format[DependencyReport]
 

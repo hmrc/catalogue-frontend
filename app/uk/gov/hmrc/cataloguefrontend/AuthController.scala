@@ -21,7 +21,7 @@ import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, Messages, MessagesApi}
-import play.api.mvc.Action
+import play.api.mvc.{Action, AnyContent, InjectedController}
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
@@ -32,21 +32,20 @@ import views.html.sign_in
 import scala.concurrent.Future
 
 @Singleton
-class AuthController @Inject()(val messagesApi: MessagesApi, authService: AuthService, configuration: Configuration)
-    extends FrontendController {
+class AuthController @Inject()(
+  authService: AuthService,
+  configuration: Configuration
+) extends FrontendController with InjectedController with I18nSupport {
 
   import AuthController.signinForm
 
-  private val selfServiceUrl = {
-    val key = "self-service-url"
-    configuration.getString(key).getOrElse(throw new Exception(s"Expected to find $key"))
-  }
+  private[this] val selfServiceUrl = configuration.get[String]("self-service-url")
 
-  val showSignInPage = Action { implicit request =>
+  val showSignInPage: Action[AnyContent] = Action { implicit request =>
     Ok(sign_in(signinForm, selfServiceUrl))
   }
 
-  val submit = Action.async { implicit request =>
+  val submit: Action[AnyContent] = Action.async { implicit request =>
     signinForm
       .bindFromRequest()
       .fold(
