@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.cataloguefrontend.service
+import scala.collection.JavaConverters._
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
@@ -36,26 +37,12 @@ class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnec
       }
     }
 
-  private val leakDetectionPublicUrl = {
-    val key = "lds.publicUrl"
-    configuration
-      .getString(key)
-      .getOrElse(
-        throw new Exception(s"Failed reading from config, expected to find: $key")
-      )
-  }
+  private val leakDetectionPublicUrl: String = configuration.get[String]("lds.publicUrl")
 
-  private val ldsIntegrationEnabled: Boolean = {
-    val key = "lds.integrationEnabled"
-    configuration
-      .getBoolean(key)
-      .getOrElse(
-        throw new Exception(s"Failed reading from config, expected to find: $key")
-      )
-  }
+  private val ldsIntegrationEnabled: Boolean = configuration.get[Boolean]("lds.integrationEnabled")
 
   val repositoriesToIgnore: List[String] =
-    configuration.getStringList("lds.noWarningsOn").fold(List.empty[String])(_.asScala.toList)
+    configuration.underlying.getStringList("lds.noWarningsOn").asScala.toList
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] =
     if (ldsIntegrationEnabled) {

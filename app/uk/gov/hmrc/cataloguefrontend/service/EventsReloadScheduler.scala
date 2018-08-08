@@ -46,15 +46,15 @@ class EventsReloadScheduler @Inject()(
   private def scheduleEventsReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration): Unit = {
     val reloadInterval = configuration.getMillis(eventReloadIntervalKey).millis
     val cancellable = updateScheduler.startUpdatingEventsReadModel(reloadInterval)
-    appLifecycle.addStopHook(() => Future(cancellable.cancel()))
+    appLifecycle.addStopHook(() => Future.successful(cancellable.cancel()))
   }
 
-  private def scheduleUmpCacheReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration) = {
+  private def scheduleUmpCacheReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration): Unit = {
     lazy val umpCacheReloadInterval = configuration.getMillis(umpCacheReloadIntervalKey).milliseconds
 
     Logger.warn(s"UMP cache reload interval set to $umpCacheReloadInterval milliseconds")
     val cancellable = updateScheduler.startUpdatingUmpCacheReadModel(umpCacheReloadInterval)
-    appLifecycle.addStopHook(() => Future(cancellable.cancel()))
+    appLifecycle.addStopHook(() => Future.successful(cancellable.cancel()))
   }
 
 }
