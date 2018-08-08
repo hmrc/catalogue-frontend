@@ -24,6 +24,7 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import play.api.{Configuration, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.DigitalService.DigitalServiceRepository
+import uk.gov.hmrc.cataloguefrontend.config.ServicesConfig
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -104,15 +105,13 @@ object DigitalService {
 @Singleton
 class TeamsAndRepositoriesConnector @Inject()(
   http: HttpClient,
-  override val runModeConfiguration: Configuration,
-  environment: PlayEnvironment)
-    extends ServicesConfig {
+  environment: PlayEnvironment,
+  val servicesConfig: ServicesConfig
+) {
   type ServiceName = String
   type TeamName    = String
 
-  override protected def mode = environment.mode
-
-  def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
+  def teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-services")
 
   implicit val linkFormats         = Json.format[Link]
   implicit val environmentsFormats = Json.format[Environment]

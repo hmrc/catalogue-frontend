@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 final case class UmpVerifiedRequest[A](
   request: Request[A],
@@ -31,8 +31,10 @@ final case class UmpVerifiedRequest[A](
 ) extends WrappedRequest[A](request)
 
 @Singleton
-class VerifySignInStatus @Inject()(userManagementAuthConnector: UserManagementAuthConnector)
-    extends ActionBuilder[UmpVerifiedRequest] {
+class VerifySignInStatus @Inject()(
+  userManagementAuthConnector: UserManagementAuthConnector,
+  cc: ControllerComponents
+) extends ActionBuilder[UmpVerifiedRequest, AnyContent] {
 
   def invokeBlock[A](request: Request[A], block: UmpVerifiedRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
@@ -47,4 +49,7 @@ class VerifySignInStatus @Inject()(userManagementAuthConnector: UserManagementAu
     }
   }
 
+  override def parser: BodyParser[AnyContent] = cc.parsers.anyContent
+
+  override protected def executionContext: ExecutionContext = cc.executionContext
 }

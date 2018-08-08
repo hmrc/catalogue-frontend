@@ -20,10 +20,8 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import javax.inject.{Inject, Singleton}
 import play.api
-import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
-import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.{Format, Json}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
@@ -80,17 +78,17 @@ class CatalogueController @Inject()(
     RepoType.Prototype -> routes.CatalogueController.prototype _
   )
 
-  def landingPage() = Action { implicit request =>
+  def landingPage(): Action[AnyContent] = Action { implicit request =>
     Ok(landing_page())
   }
 
-  def serviceOwner(digitalService: String) = Action {
+  def serviceOwner(digitalService: String): Action[AnyContent] = Action {
     readModelService
       .getDigitalServiceOwner(digitalService)
       .fold(NotFound(Json.toJson(s"owner for $digitalService not found")))(ds => Ok(Json.toJson(ds)))
   }
 
-  def saveServiceOwner() = umpAuthenticated.async { implicit request =>
+  def saveServiceOwner(): Action[AnyContent] = umpAuthenticated.async { implicit request =>
     request.body.asJson
       .map { payload =>
         val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
@@ -108,7 +106,7 @@ class CatalogueController @Inject()(
                 .saveServiceOwnerUpdatedEvent(
                   ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
                 .map(_ => {
-                  val string = getConfString(profileBaseUrlConfigKey, "#")
+                  val string = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
                   Ok(Json.toJson(DisplayableTeamMember(member, string)))
                 })
           }
@@ -119,14 +117,14 @@ class CatalogueController @Inject()(
 
   }
 
-  def allTeams() = Action.async { implicit request =>
+  def allTeams(): Action[AnyContent] = Action.async { implicit request =>
     import SearchFiltering._
 
     teamsAndRepositoriesConnector.allTeams.map { response =>
       val form: Form[TeamFilter] = TeamFilter.form.bindFromRequest()
 
       form.fold(
-        error => Ok(teams_list(teams = Seq.empty, form)),
+        _ => Ok(teams_list(teams = Seq.empty, form)),
         query => {
           Ok(
             teams_list(
@@ -139,7 +137,7 @@ class CatalogueController @Inject()(
     }
   }
 
-  def digitalService(digitalServiceName: String) = verifySignInStatus.async { implicit request =>
+  def digitalService(digitalServiceName: String): Action[AnyContent] = verifySignInStatus.async { implicit request =>
     teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName) flatMap {
       case Some(digitalService) =>
         val teamNames = digitalService.repositories.flatMap(_.teamNames).distinct
@@ -151,13 +149,13 @@ class CatalogueController @Inject()(
               DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)),
               readModelService
                 .getDigitalServiceOwner(digitalServiceName)
-                .map(DisplayableTeamMember(_, getConfString(profileBaseUrlConfigKey, "#")))
+                .map(DisplayableTeamMember(_, serviceConfig.getConfString(profileBaseUrlConfigKey, "#")))
             )))
       case None => Future.successful(NotFound(views.html.error_404_template()))
     }
   }
 
-  def allUsers = Action { implicit request =>
+  def allUsers: Action[AnyContent] = Action { implicit request =>
     val filterTerm = request.getQueryString("term").getOrElse("")
     val filteredUsers: Seq[Option[String]] = readModelService.getAllUsers
       .map(_.displayName)
@@ -166,14 +164,14 @@ class CatalogueController @Inject()(
     Ok(Json.toJson(filteredUsers))
   }
 
-  def getRepos(data: DigitalService) = {
+  def getRepos(data: DigitalService): Map[String, Seq[String]] = {
     val emptyMapOfRepoTypes = RepoType.values.map(v => v.toString -> List.empty[String]).toMap
     val mapOfRepoTypes      = data.repositories.groupBy(_.repoType).map { case (k, v) => k.toString -> v.map(_.name) }
 
     emptyMapOfRepoTypes ++ mapOfRepoTypes
   }
 
-  def allDigitalServices = Action.async { implicit request =>
+  def allDigitalServices: Action[AnyContent] = Action.async { implicit request =>
     import SearchFiltering._
 
     teamsAndRepositoriesConnector.allDigitalServices.map { response =>
@@ -193,7 +191,7 @@ class CatalogueController @Inject()(
     }
   }
 
-  def team(teamName: String) = Action.async { implicit request =>
+  def team(teamName: String): Action[AnyContent] = Action.async { implicit request =>
     val eventualTeamInfo           = teamsAndRepositoriesConnector.teamInfo(teamName)
     val eventualErrorOrMembers     = userManagementConnector.getTeamMembersFromUMP(teamName)
     val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
@@ -229,7 +227,7 @@ class CatalogueController @Inject()(
       }
   }
 
-  def service(name: String) = Action.async { implicit request =>
+  def service(name: String): Action[AnyContent] = Action.async { implicit request =>
     def getDeployedEnvs(
       deployedToEnvs: Seq[DeploymentVO],
       maybeRefEnvironments: Option[Seq[Environment]]): Option[Seq[Environment]] = {
@@ -295,7 +293,7 @@ class CatalogueController @Inject()(
       }
   }
 
-  def library(name: String) = Action.async { implicit request =>
+  def library(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
       library           <- teamsAndRepositoriesConnector.repositoryDetails(name)
       mayBeDependencies <- serviceDependencyConnector.getDependencies(name)
@@ -308,7 +306,7 @@ class CatalogueController @Inject()(
       }
   }
 
-  def prototype(name: String) = Action.async { implicit request =>
+  def prototype(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
       repository      <- teamsAndRepositoriesConnector.repositoryDetails(name)
       urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
@@ -321,7 +319,7 @@ class CatalogueController @Inject()(
     }
   }
 
-  def repository(name: String) = Action.async { implicit request =>
+  def repository(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
       repository           <- teamsAndRepositoriesConnector.repositoryDetails(name)
       indicators           <- indicatorsConnector.buildIndicatorsForRepository(name)
@@ -367,14 +365,14 @@ class CatalogueController @Inject()(
   }
 
   def deploymentsPage() = Action.async { implicit request =>
-    val umpProfileUrl                 = getConfString(profileBaseUrlConfigKey, "#")
+    val umpProfileUrl                 = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
     val form: Form[DeploymentsFilter] = DeploymentsFilter.form.bindFromRequest()
     Future.successful(Ok(deployments_page(form, umpProfileUrl)))
   }
 
   def deploymentsList(teamName: Option[String], serviceName: Option[String]) = Action.async { implicit request =>
     import SearchFiltering._
-    val umpProfileUrl = getConfString(profileBaseUrlConfigKey, "#")
+    val umpProfileUrl = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
 
     deploymentsService.getDeployments(teamName.blankToNone, serviceName.blankToNone) map { teamReleases =>
       DeploymentsFilter.form
@@ -397,7 +395,7 @@ class CatalogueController @Inject()(
     errorOrTeamMembers match {
       case Left(err) => Left(err)
       case Right(tms) =>
-        Right(DisplayableTeamMembers(teamName, getConfString(profileBaseUrlConfigKey, "#"), tms))
+        Right(DisplayableTeamMembers(teamName, serviceConfig.getConfString(profileBaseUrlConfigKey, "#"), tms))
     }
 
   private def convertToDisplayableTeamMembers(teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]])

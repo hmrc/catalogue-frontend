@@ -33,13 +33,13 @@ package uk.gov.hmrc.cataloguefrontend.connector
  */
 
 import java.time.LocalDate
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.{Configuration, Environment, Logger}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
@@ -87,12 +87,10 @@ case class MeasureResult(median: Int)
 @Singleton
 class IndicatorsConnector @Inject()(
   http: HttpClient,
-  override val runModeConfiguration: Configuration,
-  environment: Environment)
-    extends ServicesConfig {
-  def indicatorsBaseUrl = baseUrl("indicators") + "/api/indicators"
-
-  override protected def mode = environment.mode
+  environment: Environment,
+  servicesConfig: ServicesConfig
+) {
+  def indicatorsBaseUrl: String = servicesConfig.baseUrl("indicators") + "/api/indicators"
 
   implicit val mesureResultFormats              = Json.reads[MeasureResult]
   implicit val throughputFormats                = Json.reads[Throughput]
