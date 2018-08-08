@@ -20,8 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.{I18nSupport, Messages, MessagesApi}
-import play.api.mvc.{Action, AnyContent, InjectedController}
+import play.api.i18n.{I18nSupport, Messages}
+import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
@@ -35,7 +35,7 @@ import scala.concurrent.Future
 class AuthController @Inject()(
   authService: AuthService,
   configuration: Configuration
-) extends FrontendController with InjectedController with I18nSupport {
+) extends FrontendController {
 
   import AuthController.signinForm
 

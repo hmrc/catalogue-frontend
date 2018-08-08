@@ -53,7 +53,7 @@ class DependencyReportController @Inject()(
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   serviceDependencyConnector: ServiceDependenciesConnector,
   val serviceConfig: ServicesConfig
-) extends FrontendController with UserManagementPortalLink with InjectedController {
+) extends FrontendController with UserManagementPortalLink {
 
   implicit val drFormat = Json.format[DependencyReport]
 
@@ -170,4 +170,6 @@ class DependencyReportController @Inject()(
       )
     }
   }
+
+  override protected def controllerComponents: MessagesControllerComponents = ???
 }
