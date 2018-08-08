@@ -19,30 +19,30 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-import play.api.Play
-import play.api.i18n.Messages
+import javax.inject.Inject
+import play.api.Configuration
 import play.twirl.api.Html
 
-object ViewMessages {
-  val noIndicatorsData = "<p>There's nothing here - this probably means you haven't released anything yet! Get shipping " +
+class ViewMessages @Inject()(configuration: Configuration) {
+  val noIndicatorsData: String = "<p>There's nothing here - this probably means you haven't released anything yet! Get shipping " +
     "to see your data. If you think you're seeing this message in error or have any other feedback, please let us know in " +
     """<a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops<span class="glyphicon glyphicon-new-window"/></a></p>"""
 
-  val noJobExecutionData = "<p>It's possible that there is no Jenkins job set up for this repository, or a job exists " +
+  val noJobExecutionData: String = "<p>It's possible that there is no Jenkins job set up for this repository, or a job exists " +
     "but there is no past build data available. If you think you're seeing this message in error or have any other feedback, " +
     "please let us know in " +
     """<a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops<span class="glyphicon glyphicon-new-window"/></a></p>"""
 
-  val indicatorsServiceError = "Sorry about that, there was a problem fetching the indicator data. This will " +
+  val indicatorsServiceError: String = "Sorry about that, there was a problem fetching the indicator data. This will " +
     "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
     "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" target=\"_blank\">#team-platops<span class=\"glyphicon glyphicon-new-window\"/></a>"
 
-  val deploymentThroughputAndStabilityGraphText =
+  val deploymentThroughputAndStabilityGraphText: String =
     "<p>These indicators show the frequency and stability of your production deployments</p>" +
       "<p>Each monthly measurement has a 3 month sample size. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>" +
       "<p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>"
 
-  val repositoryBuildDetailsGraphText =
+  val repositoryBuildDetailsGraphText: String =
     "<p>These indicators show the duration and stability of your build.</p> " +
       "<p>Each monthly measurement has a 3 month sample size. Trending towards lower success rate indicates instability in the build. Trending towards higher duration indicates that something is causing your build time to increase.</p>" +
       "<p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>"
@@ -65,26 +65,22 @@ object ViewMessages {
 
   val otherTeamsAre = "Other teams that also have a stake in this service are:"
 
-  val appConfigBaseUrl = Play.current.configuration
-    .getString(s"urlTemplates.app-config-base")
-    .getOrElse(throw new IllegalArgumentException("didn't app config base URL configuration"))
+  val appConfigBaseUrl: String = configuration.get[String](s"urlTemplates.app-config-base")
 
-  val informationalText = Play.current.configuration
-    .getString(s"info-panel-text")
-    .getOrElse(throw new IllegalArgumentException("didn't find info panel configuration"))
+  val informationalText: String = configuration.get[String](s"info-panel-text")
 
   def noDataToShow =
-    Html("""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
+    Html("""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>$noIndicatorsData</p>")
 
-  def noProductionDeploymentSinceDaysMessage(firstActiveDate: LocalDateTime) = {
+  def noProductionDeploymentSinceDaysMessage(firstActiveDate: LocalDateTime): Html = {
     val daysSinceNoProdDeployment = firstActiveDate.until(LocalDateTime.now(), ChronoUnit.DAYS) + 1
     Html(
-      s"""<h2 class="chart-message text-center">No production deployments for $daysSinceNoProdDeployment days</h2>""" + s"<p>${ViewMessages.noIndicatorsData}</p>")
+      s"""<h2 class="chart-message text-center">No production deployments for $daysSinceNoProdDeployment days</h2>""" + s"<p>$noIndicatorsData</p>")
   }
 
   def noJobExecutionTimeDataHtml =
     Html(
-      s"""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>${ViewMessages.noJobExecutionData}</p>")
+      s"""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>$noJobExecutionData</p>")
 
   def toTypeText(repoType: RepoType.RepoType): String =
     repoType match {
@@ -94,12 +90,10 @@ object ViewMessages {
 
   def errorMessage =
     Html(
-      """<h2 class="chart-message text-center">The catalogue encountered an error</h2>""" + s"<p>${ViewMessages.indicatorsServiceError}</p>")
+      """<h2 class="chart-message text-center">The catalogue encountered an error</h2>""" + s"<p>$indicatorsServiceError</p>")
 
   val notSpecifiedText = "Not specified"
 
-  val prototypesBaseUrl: String = Play.current.configuration
-    .getString(s"prototypes-base-url")
-    .getOrElse(throw new IllegalArgumentException("didn't find prototypes base url"))
+  val prototypesBaseUrl: String = configuration.get[String](s"prototypes-base-url")
 
 }
