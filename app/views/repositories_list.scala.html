@@ -24,7 +24,7 @@
 
 @(repositories: Seq[RepositoryDisplayDetails],
   repotypeToDetailsUrl: Map[RepoType.Value, (String) => Call],
-  form: Form[_]
+  form: Form[_],viewMessages: ViewMessages
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("Repositories", "repositories") {
@@ -89,7 +89,7 @@
                     <a href="@repotypeToDetailsUrl(repo.repoType)(repo.name)">@repo.name</a>
                 </td>
                 <td class="repo-type monospaced" id="row@{i}_repotype">
-                    @ViewMessages.toTypeText(repo.repoType)
+                    @viewMessages.toTypeText(repo.repoType)
                 </td>
                 <td class="created monospaced" id="row@{i}_created">
                     @repo.createdAt.asPattern("yyyy-MM-dd")

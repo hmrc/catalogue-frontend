@@ -18,15 +18,15 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model._
 
 
-@(mayBeDependencies: Option[Dependencies])
+@(mayBeDependencies: Option[Dependencies], viewMessages: ViewMessages)
 
 
 <div id="platform-dependencies" class="board">
     <h3 class="board__heading">Platform Dependencies</h3>
     <div class="board__body">
         @if(dependencyDataAvailable()) {
-            @{Html(ViewMessages.dependenciesText)}
-            @{Html(ViewMessages.curatedLibsText)}
+            @{Html(viewMessages.dependenciesText)}
+            @{Html(viewMessages.curatedLibsText)}
 
         }
     <div class="col-xs-8">

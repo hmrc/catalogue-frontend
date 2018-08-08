@@ -22,7 +22,8 @@
 
 @(prototype: RepositoryDetails,
   repositoryCreationDate: LocalDateTime,
-  linkToLeakDetection: Option[String]
+  linkToLeakDetection: Option[String],
+  viewMessages: ViewMessages
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(prototype.name, "prototypes") {
@@ -36,7 +37,7 @@
     @partials.leak_detection_banner(linkToLeakDetection)
 
     <section class="section-wrapper">
-        @partials.prototype_details(prototype)
+        @partials.prototype_details(prototype, viewMessages)
 
         <div class="row">
             @partials.repo_owning_teams(prototype)
@@ -47,7 +48,7 @@
 
     <div class="alert alert-success" role="alert" id="@prototype.name">
         <p>
-        @Html(ViewMessages.informationalText)
+        @Html(viewMessages.informationalText)
         </p>
     </div>
 }

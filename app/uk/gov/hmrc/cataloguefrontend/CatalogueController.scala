@@ -81,7 +81,7 @@ class CatalogueController @Inject()(
   )
 
   def landingPage(): Action[AnyContent] = Action { implicit request =>
-    Ok(landing_page())
+    Ok(landing_page(viewMessages))
   }
 
   def serviceOwner(digitalService: String): Action[AnyContent] = Action {
@@ -224,7 +224,8 @@ class CatalogueController @Inject()(
               TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
               umpMyTeamsPageUrl(team.name),
               leakDetectionService.teamHasLeaks(team, reposWithLeaks),
-              leakDetectionService.hasLeaks(reposWithLeaks)
+              leakDetectionService.hasLeaks(reposWithLeaks),
+              viewMessages
             ))
         case _ => NotFound(views.html.error_404_template())
       }
@@ -317,7 +318,7 @@ class CatalogueController @Inject()(
     } yield {
       repository match {
         case Some(s) if s.repoType == RepoType.Prototype =>
-          Ok(prototype_info(s.copy(environments = None), s.createdAt, urlIfLeaksFound))
+          Ok(prototype_info(s.copy(environments = None), s.createdAt, urlIfLeaksFound, viewMessages))
         case None => NotFound(views.html.error_404_template())
       }
     }
@@ -337,7 +338,8 @@ class CatalogueController @Inject()(
               s,
               mayBeDependencies,
               ServiceChartData.jobExecutionTime(s.name, maybeDataPoints),
-              maybeUrlIfLeaksFound
+              maybeUrlIfLeaksFound,
+              viewMessages
             )
           )
         case _ => NotFound(views.html.error_404_template())
@@ -362,8 +364,8 @@ class CatalogueController @Inject()(
     teamsAndRepositoriesConnector.allRepositories.map { repositories =>
       val form: Form[RepoListFilter] = RepoListFilter.form.bindFromRequest()
       form.fold(
-        error => Ok(repositories_list(repositories = Seq.empty, repotypeToDetailsUrl, error)),
-        query => Ok(repositories_list(repositories = repositories.filter(query), repotypeToDetailsUrl, form))
+        error => Ok(repositories_list(repositories = Seq.empty, repotypeToDetailsUrl, error, viewMessages)),
+        query => Ok(repositories_list(repositories = repositories.filter(query), repotypeToDetailsUrl, form, viewMessages))
       )
     }
   }
