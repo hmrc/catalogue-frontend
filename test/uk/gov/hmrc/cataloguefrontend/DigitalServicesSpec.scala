@@ -23,7 +23,7 @@ import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WS
+import play.api.libs.ws._
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import uk.gov.hmrc.play.test.UnitSpec

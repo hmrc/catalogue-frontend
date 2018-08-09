@@ -26,7 +26,7 @@ import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.libs.ws.WS
+import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.JsonData._

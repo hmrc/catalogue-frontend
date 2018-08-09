@@ -87,7 +87,7 @@ case class MeasureResult(median: Int)
 @Singleton
 class IndicatorsConnector @Inject()(
   http: HttpClient,
-  environment: Environment,
+  environment: TargetEnvironment,
   servicesConfig: ServicesConfig
 ) {
   def indicatorsBaseUrl: String = servicesConfig.baseUrl("indicators") + "/api/indicators"

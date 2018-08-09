@@ -28,7 +28,7 @@ import scala.concurrent.Future
 @Singleton
 class LeakDetectionConnector @Inject()(
   http: HttpClient,
-  environment: Environment,
+  environment: TargetEnvironment,
   servicesConfig: ServicesConfig
 ) {
 

@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.events
 
 import org.mockito.Mockito
 import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
 import org.scalatestplus.play.OneAppPerSuite
 

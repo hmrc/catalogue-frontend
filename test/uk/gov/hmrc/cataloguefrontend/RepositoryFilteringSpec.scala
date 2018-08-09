@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{LocalDateTime, ZoneId}
-import java.util.Date
+import java.time.LocalDateTime
 
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.cataloguefrontend.SearchFiltering._
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, RepositoryDisplayDetails}
 
-class RepositoryResultSpec extends WordSpec with Matchers {
+class RepositoryFilteringSpec extends WordSpec with Matchers {
 
   "RepositoryFiltering" should {
 

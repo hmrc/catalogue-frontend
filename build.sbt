@@ -40,5 +40,6 @@ val test  = Seq(
   "com.typesafe.play"      %% "play-test"             % PlayVersion.current % Test,
   "com.github.tomakehurst" % "wiremock"               % "1.52"              % Test,
   "org.jsoup"              % "jsoup"                  % "1.9.2"             % Test,
-  "org.mockito"            % "mockito-all"            % "1.10.19"           % Test
+  "org.mockito"            % "mockito-all"            % "1.10.19"           % Test,
+  ws
 )

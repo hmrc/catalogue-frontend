@@ -19,23 +19,26 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.LocalDateTime
 
 import akka.stream.Materializer
-import com.github.tomakehurst.wiremock.http.RequestMethod.{GET => WIREMOCK_GET}
 import org.mockito.Matchers.{eq => eqTo, _}
 import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.Result
+import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeHeaders, FakeRequest}
-import uk.gov.hmrc.cataloguefrontend.DigitalService.DigitalServiceRepository
-import uk.gov.hmrc.cataloguefrontend.RepoType._
+import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.time.DateTimeUtils
@@ -45,16 +48,16 @@ import scala.concurrent.Future
 class DependencyReportControllerSpec
     extends UnitSpec
     with BeforeAndAfterEach
-    with OneServerPerSuite
+    with GuiceOneServerPerSuite
     with WireMockEndpoints
     with MockitoSugar
     with ScalaFutures {
 
-  val now = LocalDateTime.now()
+  val now: LocalDateTime = LocalDateTime.now()
 
-  implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
+  implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
+  implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-services.host" -> host,
       "microservice.services.teams-and-services.port" -> endpointPort,
@@ -63,17 +66,20 @@ class DependencyReportControllerSpec
     )
     .build()
 
-  implicit val materializer = app.injector.instanceOf[Materializer]
+  implicit val materializer: Materializer = app.injector.instanceOf[Materializer]
 
-  val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
-  val mockedDependenciesConnector         = mock[ServiceDependenciesConnector]
+  val mockedTeamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
+  val mockedDependenciesConnector: ServiceDependenciesConnector = mock[ServiceDependenciesConnector]
+  val mcc = mock[MessagesControllerComponents]
 
   val dependencyReportController = new DependencyReportController(
     mock[HttpClient],
-    app.configuration,
     mock[play.api.Environment],
     mockedTeamsAndRepositoriesConnector,
-    mockedDependenciesConnector)
+    mockedDependenciesConnector,
+    mock[ServicesConfig],
+    mcc
+  )
 
   "dependencyReport" should {
 
@@ -93,7 +99,7 @@ class DependencyReportControllerSpec
           Future.successful(Some(DigitalService(digitalService2, 1, Seq(digitalServiceRepository("repo-2"))))))
     }
 
-    def mockTeamsAndTheirRepositories() = {
+    def mockTeamsAndTheirRepositories(): OngoingStubbing[Future[Seq[Team]]] = {
       def team(teamName: String, repositories: Seq[String]) =
         Team(
           teamName,
@@ -180,11 +186,4 @@ class DependencyReportControllerSpec
 
   private def digitalServiceRepository(repoName: String) =
     DigitalServiceRepository(repoName, now, now, Service, Nil)
-
-  private def repositoryDetails(repoName: String) =
-    RepositoryDisplayDetails(repoName, now, now, Service)
-
-  private def teamMember(displayName: String, userName: String) =
-    TeamMember(Some(displayName), None, None, None, None, Some(userName))
-
 }

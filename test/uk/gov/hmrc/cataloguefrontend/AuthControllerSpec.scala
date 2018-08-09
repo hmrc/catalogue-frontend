@@ -19,12 +19,12 @@ package uk.gov.hmrc.cataloguefrontend
 import org.jsoup.Jsoup
 import org.mockito.Matchers.{any, eq => is}
 import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.play.OneAppPerSuite
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.i18n.MessagesApi
-import play.api.mvc.{Cookie, Cookies, Session}
+import play.api.mvc._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
@@ -35,7 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with MockitoSugar {
+class AuthControllerSpec extends WordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 
   "Authenticating" should {
 
@@ -97,22 +97,24 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with
     "redirect to landing page and clear session" in new Setup {
       val requestWithUmpData = FakeRequest()
 
+      val sessionInjector = app.injector.instanceOf[SessionCookieBaker]
       val result = controller.signOut(requestWithUmpData)
 
-      val setCookie = Cookies.decodeSetCookieHeader(headers(result).get(SET_COOKIE).get).head
+      val setCookie: Cookie = Cookies.decodeSetCookieHeader(headers(result).apply(SET_COOKIE)).head
 
-      setCookie.name               shouldBe Session.COOKIE_NAME
+      setCookie.name               shouldBe sessionInjector.COOKIE_NAME
       setCookie.maxAge.get         should be < 0
       redirectLocation(result).get shouldBe routes.AuthController.showSignInPage().url
     }
   }
 
-  private trait Setup {
+  private[this] trait Setup {
     val messagesApi    = app.injector.instanceOf[MessagesApi]
+    val mcc            = app.injector.instanceOf[MessagesControllerComponents]
     val authService    = mock[AuthService]
     val selfServiceUrl = "self-service-url"
     val config         = Configuration("self-service-url" -> selfServiceUrl)
-    val controller     = new AuthController(messagesApi, authService, config)
+    val controller     = new AuthController(authService, config, mcc)
   }
 
 }

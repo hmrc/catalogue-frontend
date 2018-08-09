@@ -20,7 +20,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.play.OneServerPerSuite
 import play.api
@@ -109,21 +109,21 @@ class TeamsAndRepositoriesConnectorSpec
         Seq(Link("open1", "open 1", "http://open1/service-1"), Link("open2", "open 2", "http://open2/service-2")))
       responseData.environments should ===(
         Some(Seq(
-          Environment(
+          TargetEnvironment(
             "Dev",
             Seq(
               Link("jenkins", "Jenkins", "https://deploy-dev.co.uk/job/deploy-microservice"),
               Link("grafana", "Grafana", "https://grafana-dev.co.uk/#/dashboard")
             )
           ),
-          Environment(
+          TargetEnvironment(
             "QA",
             Seq(
               Link("jenkins", "Jenkins", "https://deploy-qa.co.uk/job/deploy-microservice"),
               Link("grafana", "Grafana", "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
             )
           ),
-          Environment(
+          TargetEnvironment(
             "Production",
             Seq(
               Link("jenkins", "Jenkins", "https://deploy-prod.co.uk/job/deploy-microservice"),

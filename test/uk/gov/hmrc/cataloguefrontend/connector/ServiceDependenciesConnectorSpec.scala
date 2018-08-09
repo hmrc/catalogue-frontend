@@ -21,14 +21,15 @@ import org.mockito.Matchers.any
 import org.mockito.Mockito
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.{Application, Environment}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
-import play.api.{Configuration, Environment}
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.Future
@@ -37,7 +38,7 @@ class ServiceDependenciesConnectorSpec
     extends FreeSpec
     with Matchers
     with BeforeAndAfter
-    with OneServerPerSuite
+    with GuiceOneAppPerSuite
     with WireMockEndpoints
     with EitherValues
     with OptionValues
@@ -45,7 +46,7 @@ class ServiceDependenciesConnectorSpec
     with MockitoSugar
     with IntegrationPatience {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
+  implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .disable(classOf[com.kenshoo.play.metrics.PlayModule])
     .configure(
       Map(
@@ -194,7 +195,7 @@ class ServiceDependenciesConnectorSpec
         .when(mockedHttpClient.GET(any())(any(), any(), any()))
         .thenReturn(Future.failed(new RuntimeException("Boom!!")))
       val failingServiceDependenciesConnector =
-        new ServiceDependenciesConnector(mockedHttpClient, Configuration(), mock[Environment]) {
+        new ServiceDependenciesConnector(mockedHttpClient, mock[Environment], mock[ServicesConfig]) {
           override def servicesDependenciesBaseUrl = "chicken.com"
         }
 
@@ -398,8 +399,8 @@ class ServiceDependenciesConnectorSpec
 
       response.head.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
-          Dependency("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
+          Dependency("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), isExternal = true),
+          Dependency("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)), isExternal = false)
         )
 
       response.head.otherDependencies should contain theSameElementsAs
@@ -418,8 +419,8 @@ class ServiceDependenciesConnectorSpec
 
       response.last.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-3", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
-          Dependency("plugin-4", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
+          Dependency("plugin-3", Version(1, 0, 0), Some(Version(1, 1, 0)), isExternal = true),
+          Dependency("plugin-4", Version(2, 0, 0), Some(Version(2, 1, 0)), isExternal = false)
         )
 
       response.last.otherDependencies should contain theSameElementsAs

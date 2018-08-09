@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.events
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
 import play.api.libs.json.{JsObject, JsString}
 

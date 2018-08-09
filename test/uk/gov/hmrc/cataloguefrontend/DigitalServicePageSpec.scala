@@ -23,11 +23,11 @@ import org.mockito.Matchers._
 import org.mockito.Mockito.when
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WS
+import play.api.libs.ws._
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}

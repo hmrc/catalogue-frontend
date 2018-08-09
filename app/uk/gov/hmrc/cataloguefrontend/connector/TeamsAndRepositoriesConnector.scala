@@ -50,7 +50,7 @@ case class Link(name: String, displayName: String, url: String) {
   val id: String = displayName.toLowerCase.replaceAll(" ", "-")
 }
 
-case class Environment(name: String, services: Seq[Link]) {
+case class TargetEnvironment(name: String, services: Seq[Link]) {
   val id: String = name.toLowerCase.replaceAll(" ", "-")
 }
 
@@ -63,7 +63,7 @@ case class RepositoryDetails(
   teamNames: Seq[String],
   githubUrl: Link,
   ci: Seq[Link],
-  environments: Option[Seq[Environment]],
+  environments: Option[Seq[TargetEnvironment]],
   repoType: RepoType.RepoType,
   isPrivate: Boolean)
 
@@ -115,7 +115,7 @@ class TeamsAndRepositoriesConnector @Inject()(
   def teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-services")
 
   implicit val linkFormats: OFormat[Link] = Json.format[Link]
-  implicit val environmentsFormats: OFormat[Environment] = Json.format[Environment]
+  implicit val environmentsFormats: OFormat[TargetEnvironment] = Json.format[TargetEnvironment]
   implicit val serviceFormats: OFormat[RepositoryDetails] = Json.format[RepositoryDetails]
 
   val CacheTimestampHeaderName = "X-Cache-Timestamp"

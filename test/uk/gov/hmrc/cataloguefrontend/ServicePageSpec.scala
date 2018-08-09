@@ -23,7 +23,7 @@ import org.jsoup.Jsoup
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.libs.ws.WS
+import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec

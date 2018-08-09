@@ -237,7 +237,7 @@ class CatalogueController @Inject()(
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>
     def getDeployedEnvs(
       deployedToEnvs: Seq[DeploymentVO],
-      maybeRefEnvironments: Option[Seq[Environment]]): Option[Seq[Environment]] = {
+      maybeRefEnvironments: Option[Seq[TargetEnvironment]]): Option[Seq[TargetEnvironment]] = {
 
       val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
 

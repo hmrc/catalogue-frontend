@@ -23,7 +23,7 @@ import org.mockito.Mockito.when
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
@@ -112,7 +112,7 @@ class UserManagementConnectorSpec
 
       val mockedHttpGet = mock[HttpClient]
 
-      val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[Environment]) {
+      val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[TargetEnvironment]) {
         override val userManagementBaseUrl = "http://some.non.existing.url.com"
       }
 
@@ -182,7 +182,7 @@ class UserManagementConnectorSpec
 
       val mockedHttpGet = mock[HttpClient]
 
-      val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[Environment]) {
+      val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[TargetEnvironment]) {
         override val userManagementBaseUrl = "http://some.non.existing.url.com"
       }
 
@@ -269,7 +269,7 @@ class UserManagementConnectorSpec
 
         val mockedHttpGet = mock[HttpClient]
 
-        val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[Environment]) {
+        val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[TargetEnvironment]) {
           override val userManagementBaseUrl = "http://some.non.existing.url.com"
           override val http                  = mockedHttpGet
         }

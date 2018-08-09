@@ -21,7 +21,7 @@ import org.jsoup.Jsoup
 import org.scalatest._
 import org.scalatestplus.play.OneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WS
+import play.api.libs.ws._
 import uk.gov.hmrc.play.test.UnitSpec
 
 class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
