@@ -22,6 +22,7 @@ import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import play.api.Configuration
 import play.twirl.api.Html
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 class ViewMessages @Inject()(configuration: Configuration) {
   val noIndicatorsData: String = "<p>There's nothing here - this probably means you haven't released anything yet! Get shipping " +
