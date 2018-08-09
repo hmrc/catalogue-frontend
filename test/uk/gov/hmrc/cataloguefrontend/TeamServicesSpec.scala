@@ -33,11 +33,13 @@ import uk.gov.hmrc.cataloguefrontend.JsonData._
 import scala.collection.JavaConversions._
 import scala.io.Source
 
-class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
   val umpFrontPageUrl = "http://some.ump.fontpage.com"
+
+  private[this] val WS = app.injector.instanceOf[WSClient]
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(

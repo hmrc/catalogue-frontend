@@ -25,7 +25,7 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.i18n.MessagesApi
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import play.api.mvc.{MessagesControllerComponents, Result}
@@ -53,14 +53,7 @@ class DigitalServicePageSpec
     with ScalaFutures
     with ActionsSupport {
 
-  private[this] val WS = app.injector.instanceOf[WSClient]
-  private[this] val viewMessages = app.injector.instanceOf[ViewMessages]
-
-  def asDocument(html: String): Document = Jsoup.parse(html)
-
-  val umpFrontPageUrl = "http://some.ump.fontpage.com"
-
-  implicit override lazy val app = new GuiceApplicationBuilder()
+  implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-services.host"      -> host,
       "microservice.services.teams-and-services.port"      -> endpointPort,
@@ -73,6 +66,13 @@ class DigitalServicePageSpec
       "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
     )
     .build()
+
+  private[this] val WS = app.injector.instanceOf[WSClient]
+  private[this] val viewMessages = app.injector.instanceOf[ViewMessages]
+
+  def asDocument(html: String): Document = Jsoup.parse(html)
+
+  val umpFrontPageUrl = "http://some.ump.fontpage.com"
 
   val digitalServiceName = "digital-service-a"
 

@@ -60,7 +60,7 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
     it("should update the umpUsersCache correctly (with the users returned from the UMP))") {
 
       val teamMember = TeamMember(Some("Jack Low"), None, None, None, None, None)
-      when(userManagementConnector.getAllUsersFromUMP()).thenReturn(Future.successful(Right(Seq(teamMember))))
+      when(userManagementConnector.getAllUsersFromUMP).thenReturn(Future.successful(Right(Seq(teamMember))))
 
       Await.result(readModelService.refreshUmpCache, 5 seconds)
 

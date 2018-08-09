@@ -33,13 +33,13 @@ import scala.concurrent.Future
 class IndicatorsConnectorSpec
     extends FunSpec
     with WireMockEndpoints
-    with OneServerPerSuite
+    with GuiceOneServerPerSuite
     with Matchers
     with TypeCheckedTripleEquals
     with ScalaFutures
     with BeforeAndAfterEach {
 
-  implicit val defaultPatienceConfig = new PatienceConfig(Span(200, Millis), Span(15, Millis))
+  implicit val defaultPatienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
   implicit override lazy val app: Application =
     new GuiceApplicationBuilder()
@@ -50,7 +50,7 @@ class IndicatorsConnectorSpec
       )
       .build()
 
-  lazy val indicatorsConnector = app.injector.instanceOf[IndicatorsConnector]
+  lazy val indicatorsConnector: IndicatorsConnector = app.injector.instanceOf[IndicatorsConnector]
 
   describe("IndicatorsConnector") {
     it("should convert the DeploymentsMetricResult to DeploymentIndicators for a service") {

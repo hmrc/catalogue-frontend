@@ -37,9 +37,11 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, LoneElement, OptionValues}
 import org.scalatestplus.play.OneAppPerTest
+import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.cataloguefrontend.FutureHelpers
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -52,17 +54,19 @@ class EventRepositorySpec
     with ScalaFutures
     with OptionValues
     with BeforeAndAfterEach
-    with OneAppPerTest
+    with GuiceOneAppPerTest
     with MockitoSugar {
 
-  val reactiveMongoComponent = new ReactiveMongoComponent() {
-    override def mongoConnector = {
+  val reactiveMongoComponent: ReactiveMongoComponent = new ReactiveMongoComponent() {
+    override def mongoConnector: MongoConnector = {
       val connector = mock[MongoConnector]
       when(connector.db).thenReturn(mongo)
       connector
     }
   }
-  val mongoEventRepository = new EventRepository(reactiveMongoComponent)
+  val futureHelpers: FutureHelpers = mock[FutureHelpers]
+
+  val mongoEventRepository = new EventRepository(reactiveMongoComponent, futureHelpers)
 
   override def beforeEach() {
     await(mongoEventRepository.drop)

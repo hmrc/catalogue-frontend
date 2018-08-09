@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class PrototypePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpoints {
+class PrototypePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(
@@ -34,6 +34,8 @@ class PrototypePageSpec extends UnitSpec with OneServerPerSuite with WireMockEnd
       "microservice.services.leak-detection.host"     -> host
     )
     .build()
+
+  private[this] val WS = app.injector.instanceOf[WSClient]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
