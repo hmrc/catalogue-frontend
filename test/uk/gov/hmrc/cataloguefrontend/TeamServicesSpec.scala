@@ -16,20 +16,22 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import uk.gov.hmrc.cataloguefrontend.DateHelper._
-import java.time.{ZoneId, ZoneOffset}
-import java.time.format.DateTimeFormatter
+import java.time.ZoneOffset
+
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.jsoup.nodes.{Document, Element}
+import org.jsoup.nodes.Document
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws._
+import uk.gov.hmrc.cataloguefrontend.DateHelper._
+import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.cataloguefrontend.JsonData._
+
 import scala.collection.JavaConversions._
 import scala.io.Source
 
@@ -39,9 +41,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
   val umpFrontPageUrl = "http://some.ump.fontpage.com"
 
-  private[this] val WS = app.injector.instanceOf[WSClient]
-
-  implicit override lazy val app = new GuiceApplicationBuilder()
+  implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-services.host"      -> host,
       "microservice.services.teams-and-services.port"      -> endpointPort,
@@ -56,6 +56,9 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
     )
     .build()
+
+  private[this] val WS = app.injector.instanceOf[WSClient]
+  private[this] val viewMessages = app.injector.instanceOf[ViewMessages]
 
   val teamName = "teamA"
 
@@ -175,8 +178,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
 
       response.status shouldBe 200
-      response.body   should include(ViewMessages.noRepoOfTypeForTeam("service"))
-      response.body   should include(ViewMessages.noRepoOfTypeForTeam("library"))
+      response.body   should include(viewMessages.noRepoOfTypeForTeam("service"))
+      response.body   should include(viewMessages.noRepoOfTypeForTeam("library"))
     }
 
     "show team members correctly" in {
@@ -403,7 +406,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
     response.status shouldBe 200
     response.body   should include(s"""No data to show""")
-    response.body   should include(ViewMessages.noIndicatorsData)
+    response.body   should include(viewMessages.noIndicatorsData)
 
     response.body shouldNot include(s"""chart.draw(data, options);""")
   }
@@ -415,7 +418,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
     val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
     response.status shouldBe 200
     response.body   should include(s"""The catalogue encountered an error""")
-    response.body   should include(ViewMessages.indicatorsServiceError)
+    response.body   should include(viewMessages.indicatorsServiceError)
 
     response.body shouldNot include(s"""chart.draw(data, options);""")
   }

@@ -18,14 +18,13 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import play.api.Configuration
-import play.api.i18n.MessagesApi
-import play.api.mvc.Result
+import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
 
 class ServicesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
@@ -45,8 +44,9 @@ class ServicesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
           mock[play.api.Environment],
           mock[VerifySignInStatus],
           mock[UmpAuthenticated],
-          Configuration(),
-          mock[MessagesApi]
+          mock[ServicesConfig],
+          mock[ViewMessages],
+          mock[MessagesControllerComponents]
         ).allServices(FakeRequest()).futureValue
 
       result.header.status              shouldBe 303

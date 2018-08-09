@@ -21,6 +21,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeHeaders
@@ -31,11 +32,11 @@ import uk.gov.hmrc.play.test.UnitSpec
 class ServiceDeploymentsConnectorSpec
     extends UnitSpec
     with BeforeAndAfter
-    with OneServerPerSuite
+    with GuiceOneServerPerSuite
     with WireMockEndpoints
     with EitherValues {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
+  implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .disable(classOf[com.kenshoo.play.metrics.PlayModule])
     .configure(Map(
       "microservice.services.service-deployments.port" -> endpointPort,

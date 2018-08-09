@@ -24,7 +24,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.mvc.Results._
-import play.api.mvc.{AnyContent, Request}
+import play.api.mvc.{AnyContent, ControllerComponents, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
@@ -69,6 +69,7 @@ class UmpAuthenticatedSpec extends WordSpec with MockitoSugar with ScalaFutures 
 
   private trait Setup {
     val userManagementAuthConnector = mock[UserManagementAuthConnector]
-    val action                      = new UmpAuthenticated(userManagementAuthConnector)
+    val cc = mock[ControllerComponents]
+    val action                      = new UmpAuthenticated(userManagementAuthConnector, cc)
   }
 }

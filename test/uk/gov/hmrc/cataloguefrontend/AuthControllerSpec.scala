@@ -35,6 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+
 class AuthControllerSpec extends WordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 
   "Authenticating" should {
@@ -66,6 +67,7 @@ class AuthControllerSpec extends WordSpec with Matchers with GuiceOneAppPerSuite
       val result = controller.submit(request)
 
       status(result)          shouldBe 400
+
       contentAsString(result) should include(messagesApi("sign-in.wrong-credentials"))
     }
 

@@ -18,14 +18,13 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import play.api.Configuration
-import play.api.i18n.MessagesApi
-import play.api.mvc.Result
+import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
 
 class LibrariesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
@@ -34,19 +33,20 @@ class LibrariesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
 
       val result: Result =
         new CatalogueController(
-          mock[UserManagementConnector],
-          mock[TeamsAndRepositoriesConnector],
-          mock[ServiceDependenciesConnector],
-          mock[IndicatorsConnector],
-          mock[LeakDetectionService],
-          mock[DeploymentsService],
-          mock[EventService],
-          mock[ReadModelService],
-          mock[play.api.Environment],
-          mock[VerifySignInStatus],
-          mock[UmpAuthenticated],
-          Configuration(),
-          mock[MessagesApi]
+          userManagementConnector = mock[UserManagementConnector],
+          teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
+          serviceDependencyConnector = mock[ServiceDependenciesConnector],
+          indicatorsConnector = mock[IndicatorsConnector],
+          leakDetectionService = mock[LeakDetectionService],
+          deploymentsService = mock[DeploymentsService],
+          eventService = mock[EventService],
+          readModelService = mock[ReadModelService],
+          environment = mock[play.api.Environment],
+          verifySignInStatus = mock[VerifySignInStatus],
+          umpAuthenticated = mock[UmpAuthenticated],
+          serviceConfig = mock[ServicesConfig],
+          viewMessages = mock[ViewMessages],
+          mcc = mock[MessagesControllerComponents]
         ).allLibraries(FakeRequest()).futureValue
 
       result.header.status              shouldBe 303

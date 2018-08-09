@@ -22,12 +22,12 @@ import scala.concurrent.Future
 
 trait ActionsSupport {
 
-  object umpAuthenticatedPassThrough extends UmpAuthenticated(null) {
+  object umpAuthenticatedPassThrough extends UmpAuthenticated(null, null) {
     override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] =
       block(request)
   }
 
-  object verifySignInStatusPassThrough extends VerifySignInStatus(null) {
+  object verifySignInStatusPassThrough extends VerifySignInStatus(null, null) {
     override def invokeBlock[A](request: Request[A], block: UmpVerifiedRequest[A] => Future[Result]): Future[Result] =
       block(UmpVerifiedRequest(request, isSignedIn = true))
   }

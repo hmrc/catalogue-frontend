@@ -21,13 +21,14 @@ import java.time.{LocalDateTime, ZoneOffset}
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class TeamsSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
+  implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(Map(
       "microservice.services.teams-and-services.port" -> endpointPort,
       "microservice.services.teams-and-services.host" -> host,
@@ -35,6 +36,8 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with
       "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
     ))
     .build()
+
+  private[this] val WS = app.injector.instanceOf[WSClient]
 
   "Teams list" should {
 
