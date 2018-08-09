@@ -18,7 +18,7 @@ package view.partials
 
 import java.time.LocalDateTime
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.cataloguefrontend.{Link, RepoType, RepositoryDetails}
+import uk.gov.hmrc.cataloguefrontend.connector.{Link, RepoType, RepositoryDetails}
 import views.partials.githubBadgeType
 
 class GithubBadgeTypeSpec extends WordSpec with Matchers {

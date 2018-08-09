@@ -28,7 +28,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import uk.gov.hmrc.play.test.UnitSpec
 
-class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(
@@ -39,6 +39,8 @@ class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPer
       )
     )
     .build()
+
+  private[this] val WS = app.injector.instanceOf[WSClient]
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 

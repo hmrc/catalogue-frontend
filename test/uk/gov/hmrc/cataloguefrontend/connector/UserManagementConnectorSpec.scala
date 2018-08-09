@@ -27,14 +27,15 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
-import play.api.{Configuration, Environment}
+import play.api.{Application, Configuration, Environment}
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, DisplayName, HTTPError, NoData, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
-import uk.gov.hmrc.cataloguefrontend.{UserManagementConnector, WireMockEndpoints}
+import uk.gov.hmrc.cataloguefrontend.{FutureHelpers, UserManagementConnector, WireMockEndpoints}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.Future
 import scala.io.Source
@@ -44,14 +45,14 @@ class UserManagementConnectorSpec
     with Matchers
     with TypeCheckedTripleEquals
     with BeforeAndAfter
-    with OneServerPerSuite
+    with GuiceOneServerPerSuite
     with WireMockEndpoints
     with ScalaFutures
     with EitherValues
     with MockitoSugar
     with OptionValues {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
+  implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.user-management.url"        -> endpointMockUrl,
       "microservice.services.user-management.myTeamsUrl" -> "http://some.ump.com/myTeams",
@@ -59,7 +60,7 @@ class UserManagementConnectorSpec
     )
     .build()
 
-  val userManagementConnector = app.injector.instanceOf[UserManagementConnector]
+  val userManagementConnector: UserManagementConnector = app.injector.instanceOf[UserManagementConnector]
 
   describe("User management connector") {
     it("should get the team members from the user-management service") {
@@ -68,7 +69,7 @@ class UserManagementConnectorSpec
 
       teamMembers should have length 2
 
-      teamMembers(0) shouldBe TeamMember(
+      teamMembers.headOption.value shouldBe TeamMember(
         displayName     = Some("Jim Willman"),
         familyName      = Some("Willman"),
         givenName       = Some("Jim"),
@@ -112,7 +113,12 @@ class UserManagementConnectorSpec
 
       val mockedHttpGet = mock[HttpClient]
 
-      val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[TargetEnvironment]) {
+      val userManagementConnector = new UserManagementConnector(
+        mockedHttpGet,
+        mock[Environment],
+        mock[ServicesConfig],
+        mock[FutureHelpers]
+      ) {
         override val userManagementBaseUrl = "http://some.non.existing.url.com"
       }
 
@@ -182,7 +188,12 @@ class UserManagementConnectorSpec
 
       val mockedHttpGet = mock[HttpClient]
 
-      val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[TargetEnvironment]) {
+      val userManagementConnector = new UserManagementConnector(
+        mockedHttpGet,
+        mock[Environment],
+        mock[ServicesConfig],
+        mock[FutureHelpers]
+      ) {
         override val userManagementBaseUrl = "http://some.non.existing.url.com"
       }
 
@@ -269,9 +280,14 @@ class UserManagementConnectorSpec
 
         val mockedHttpGet = mock[HttpClient]
 
-        val userManagementConnector = new UserManagementConnector(mockedHttpGet, Configuration(), mock[TargetEnvironment]) {
-          override val userManagementBaseUrl = "http://some.non.existing.url.com"
-          override val http                  = mockedHttpGet
+        val userManagementConnector = new UserManagementConnector(
+          mockedHttpGet,
+          mock[Environment],
+          mock[ServicesConfig],
+          mock[FutureHelpers]
+        ) {
+          override val userManagementBaseUrl: String = "http://some.non.existing.url.com"
+          override val http: HttpClient = mockedHttpGet
         }
 
         val teamNames = Seq("Team1", "Team2")
@@ -336,7 +352,7 @@ class UserManagementConnectorSpec
           jsonFileNameOpt = Some("/all-users.json")
         )
 
-        val allUsers = userManagementConnector.getAllUsersFromUMP().futureValue
+        val allUsers = userManagementConnector.getAllUsersFromUMP.futureValue
 
         allUsers.right.value.size shouldBe 3
 
@@ -356,7 +372,7 @@ class UserManagementConnectorSpec
 
   describe("getDisplayName") {
 
-    implicit val hc = HeaderCarrier()
+    implicit val hc: HeaderCarrier = HeaderCarrier()
     val userId      = UmpUserId("ricky.micky")
 
     it("should return user's displayName if exists in UMP") {
@@ -416,7 +432,9 @@ class UserManagementConnectorSpec
     method: RequestMethod = GET,
     httpCode: Int         = 200,
     url: String,
-    jsonFileNameOpt: Option[String]): Unit = {
+    jsonFileNameOpt: Option[String]
+  ): Unit = {
+
     val json: Option[String] =
       jsonFileNameOpt.map(x => Source.fromURL(getClass.getResource(x)).getLines().mkString("\n"))
 
