@@ -28,7 +28,7 @@ import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentIndicators, IndicatorsConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -358,7 +358,7 @@ class CatalogueController @Inject()(
     Redirect("/repositories?name=&type=Prototype")
   }
 
-  def allRepositories() = Action.async { implicit request =>
+  def allRepositories(): Action[AnyContent] = Action.async { implicit request =>
     import SearchFiltering._
 
     teamsAndRepositoriesConnector.allRepositories.map { repositories =>
@@ -370,13 +370,13 @@ class CatalogueController @Inject()(
     }
   }
 
-  def deploymentsPage() = Action.async { implicit request =>
+  def deploymentsPage(): Action[AnyContent] = Action.async { implicit request =>
     val umpProfileUrl                 = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
     val form: Form[DeploymentsFilter] = DeploymentsFilter.form.bindFromRequest()
     Future.successful(Ok(deployments_page(form, umpProfileUrl)))
   }
 
-  def deploymentsList(teamName: Option[String], serviceName: Option[String]) = Action.async { implicit request =>
+  def deploymentsList(teamName: Option[String], serviceName: Option[String]): Action[AnyContent] = Action.async { implicit request =>
     import SearchFiltering._
     val umpProfileUrl = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
 
@@ -413,7 +413,7 @@ class CatalogueController @Inject()(
 }
 
 case class TeamFilter(name: Option[String] = None) {
-  def isEmpty = name.isEmpty
+  def isEmpty: Boolean = name.isEmpty
 }
 
 object TeamFilter {
@@ -425,7 +425,7 @@ object TeamFilter {
 }
 
 case class DigitalServiceNameFilter(value: Option[String] = None) {
-  def isEmpty = value.isEmpty
+  def isEmpty: Boolean = value.isEmpty
 }
 
 object DigitalServiceNameFilter {

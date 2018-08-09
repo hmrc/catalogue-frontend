@@ -17,11 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+
 import scala.concurrent.Future
-import uk.gov.hmrc.cataloguefrontend.Team
-import uk.gov.hmrc.cataloguefrontend.connector.{LeakDetectionConnector, RepositoryWithLeaks}
+import uk.gov.hmrc.cataloguefrontend.connector.{LeakDetectionConnector, RepositoryWithLeaks, Team}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+
 import scala.collection.JavaConverters._
 
 @Singleton

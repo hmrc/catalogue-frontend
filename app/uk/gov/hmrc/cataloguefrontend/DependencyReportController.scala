@@ -18,16 +18,15 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.util.Date
 
-import javax.inject.{Inject, Singleton}
 import akka.stream.scaladsl._
+import javax.inject.{Inject, Singleton}
 import org.apache.commons.io.IOUtils
 import play.api.http.HttpEntity
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import play.api.mvc._
-import play.api.{Configuration, Environment => PlayEnvironment}
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.TeamsAndRepositoriesError
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import play.api.{Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, ServiceDependenciesConnector, Team, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -55,9 +54,13 @@ class DependencyReportController @Inject()(
   val serviceConfig: ServicesConfig
 ) extends FrontendController with UserManagementPortalLink {
 
-  implicit val drFormat = Json.format[DependencyReport]
+  implicit val drFormat: OFormat[DependencyReport] = Json.format[DependencyReport]
 
-  private def getDependencies(digitalServices: Seq[DigitalService], allTeams: Seq[Team], dependencies: Dependencies) = {
+  private def getDependencies(
+    digitalServices: Seq[DigitalService],
+    allTeams: Seq[Team],
+    dependencies: Dependencies
+  ): Seq[DependencyReport] = {
 
     val repoName = dependencies.repositoryName
 
@@ -92,8 +95,8 @@ class DependencyReportController @Inject()(
 
   private def toCsv(deps: Seq[DependencyReport], ignoreFields: Seq[String]): String = {
 
-    def ccToMap(cc: AnyRef) =
-      cc.getClass.getDeclaredFields.foldLeft(Map[String, Any]()) { (acc, field) =>
+    def ccToMap(cc: AnyRef): Map[String, Any] =
+      cc.getClass.getDeclaredFields.foldLeft(Map.empty[String, Any]) { (acc, field) =>
         if (ignoreFields.contains(field.getName)) {
           acc
         } else {
@@ -136,7 +139,7 @@ class DependencyReportController @Inject()(
       }
     }
 
-  def dependencyReport() = Action.async { implicit request =>
+  def dependencyReport(): Action[AnyContent] = Action.async { implicit request =>
     type RepoName = String
 
     val allTeamsF = teamsAndRepositoriesConnector.teamsWithRepositories()
@@ -170,6 +173,4 @@ class DependencyReportController @Inject()(
       )
     }
   }
-
-  override protected def controllerComponents: MessagesControllerComponents = ???
 }

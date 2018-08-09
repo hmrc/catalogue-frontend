@@ -14,10 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{NoData, UMPError}
-@import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, RepoType, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+@import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @import uk.gov.hmrc.cataloguefrontend.actions.UmpVerifiedRequest
 
@@ -190,7 +190,7 @@
                     $("#service_owner_view_field").text("").append("<a href='"+ umpLink +"' target='_blank'>"+ displayName +"</a>");
                     showSnackBar("Service Owner saved: '" + displayName + "'");
                 },
-                error: function(xhr,status,error){
+                error: function(xhr, status, error){
                     showSnackBar(xhr.responseJSON, true);
                 }
             });

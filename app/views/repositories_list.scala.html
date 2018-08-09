@@ -16,11 +16,10 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.RepositoryDisplayDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.RepoType
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import helper._
-@import uk.gov.hmrc.cataloguefrontend.RepoType
 
 @(repositories: Seq[RepositoryDisplayDetails],
   repotypeToDetailsUrl: Map[RepoType.Value, (String) => Call],

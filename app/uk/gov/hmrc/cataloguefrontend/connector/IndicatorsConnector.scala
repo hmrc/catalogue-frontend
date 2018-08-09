@@ -35,8 +35,8 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.libs.json.Json
-import play.api.{Configuration, Environment, Logger}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -100,13 +100,13 @@ class IndicatorsConnector @Inject()(
   implicit val jobExecutionTimeDataPointFormats = Json.reads[JobMetricDataPoint]
 
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
-    override def read(method: String, url: String, response: HttpResponse) = response
+    override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
 
-  def deploymentIndicatorsForTeam(teamName: String)(implicit hc: HeaderCarrier) =
+  def deploymentIndicatorsForTeam(teamName: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] =
     deploymentIndicators(s"/team/$teamName/deployments")
 
-  def deploymentIndicatorsForService(serviceName: String)(implicit hc: HeaderCarrier) =
+  def deploymentIndicatorsForService(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] =
     deploymentIndicators(s"/service/$serviceName/deployments")
 
   private def deploymentIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] = {
@@ -142,7 +142,7 @@ class IndicatorsConnector @Inject()(
       }
   }
 
-  def buildIndicatorsForRepository(repositoryName: String)(implicit hc: HeaderCarrier) =
+  def buildIndicatorsForRepository(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Seq[JobMetricDataPoint]]] =
     buildIndicators(s"/repository/$repositoryName/builds")
 
   private def buildIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[Seq[JobMetricDataPoint]]] = {
