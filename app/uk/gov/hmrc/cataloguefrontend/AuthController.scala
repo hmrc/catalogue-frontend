@@ -34,8 +34,9 @@ import scala.concurrent.Future
 @Singleton
 class AuthController @Inject()(
   authService: AuthService,
-  configuration: Configuration
-) extends FrontendController {
+  configuration: Configuration,
+  mcc: MessagesControllerComponents
+) extends MessagesAbstractController(mcc) with FrontendController {
 
   import AuthController.signinForm
 

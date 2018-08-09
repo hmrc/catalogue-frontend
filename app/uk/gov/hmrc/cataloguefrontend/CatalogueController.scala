@@ -64,8 +64,11 @@ class CatalogueController @Inject()(
   verifySignInStatus: VerifySignInStatus,
   umpAuthenticated: UmpAuthenticated,
   val serviceConfig: ServicesConfig,
-  viewMessages: ViewMessages
-) extends FrontendController with InjectedController with UserManagementPortalLink with I18nSupport {
+  viewMessages: ViewMessages,
+  mcc: MessagesControllerComponents
+) extends MessagesAbstractController(mcc) with FrontendController with UserManagementPortalLink with I18nSupport {
+
+
 
   import UserManagementConnector._
 
@@ -445,7 +448,7 @@ case class DeploymentsFilter(
 }
 
 case class RepoListFilter(name: Option[String] = None, repoType: Option[String] = None) {
-  def isEmpty = name.isEmpty && repoType.isEmpty
+  def isEmpty: Boolean = name.isEmpty && repoType.isEmpty
 }
 
 object RepoListFilter {

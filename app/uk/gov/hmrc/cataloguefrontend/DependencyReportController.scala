@@ -51,8 +51,9 @@ class DependencyReportController @Inject()(
   environment: PlayEnvironment,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   serviceDependencyConnector: ServiceDependenciesConnector,
-  val serviceConfig: ServicesConfig
-) extends FrontendController with UserManagementPortalLink {
+  val serviceConfig: ServicesConfig,
+  mcc: MessagesControllerComponents
+) extends MessagesAbstractController(mcc) with FrontendController with UserManagementPortalLink {
 
   implicit val drFormat: OFormat[DependencyReport] = Json.format[DependencyReport]
 

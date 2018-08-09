@@ -37,16 +37,24 @@ case class TeamRelease(
   version: String,
   latestDeployer: Option[Deployer] = None)
 
-@Singleton
-class DeploymentsService @Inject()(
-  serviceDeploymentsConnector: ServiceDeploymentsConnector,
-  teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
+
+sealed trait ReleaseFilter { def serviceTeams: Map[ServiceName, Seq[TeamName]] }
+
+object ReleaseFilter {
   type ServiceTeamMappings = Map[ServiceName, Seq[TeamName]]
 
-  sealed trait ReleaseFilter { def serviceTeams: ServiceTeamMappings }
   final case class ServiceTeams(serviceTeams: ServiceTeamMappings) extends ReleaseFilter
   final case class All(serviceTeams: ServiceTeamMappings) extends ReleaseFilter
   case object NotFound extends ReleaseFilter { val serviceTeams: ServiceTeamMappings = Map.empty }
+}
+
+@Singleton
+class DeploymentsService @Inject()(
+  serviceDeploymentsConnector: ServiceDeploymentsConnector,
+  teamsAndServicesConnector: TeamsAndRepositoriesConnector
+) {
+
+  import ReleaseFilter._
 
   def getDeployments(teamName: Option[TeamName], serviceName: Option[ServiceName])(
     implicit hc: HeaderCarrier): Future[Seq[TeamRelease]] =
