@@ -24,7 +24,7 @@ import org.mockito.Mockito.when
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
@@ -32,11 +32,10 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthenticated, UmpVerifiedRequest, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.test.UnitSpec
-import views.html.digital_service_info
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -46,11 +45,14 @@ import scala.io.Source
 class DigitalServicePageSpec
     extends UnitSpec
     with BeforeAndAfter
-    with OneServerPerSuite
+    with GuiceOneServerPerSuite
     with WireMockEndpoints
     with MockitoSugar
     with ScalaFutures
     with ActionsSupport {
+
+  private[this] val WS = app.injector.instanceOf[WSClient]
+  private[this] val viewMessages = app.injector.instanceOf[ViewMessages]
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 

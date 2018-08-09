@@ -19,8 +19,10 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+
 import org.jsoup.Jsoup
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws._
@@ -28,9 +30,9 @@ import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpoints {
+class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
+  implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-services.port"   -> endpointPort,
       "microservice.services.teams-and-services.host"   -> host,
@@ -46,6 +48,9 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     )
     .build()
 
+  private[this] val ws = app.injector.instanceOf[WSClient]
+  private[this] val viewMessages = app.injector.instanceOf[ViewMessages]
+
   override def beforeEach(): Unit = {
     super.beforeEach()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
@@ -56,7 +61,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
     "return a 404 when teams and services returns a 404" in {
       serviceEndpoint(GET, "/api/services/serv", willRespondWith = (404, None))
 
-      val response = await(WS.url(s"http://localhost:$port/repositories/serv").get)
+      val response = await(ws.url(s"http://localhost:$port/repositories/serv").get)
       response.status shouldBe 404
     }
 
@@ -67,7 +72,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
         "/api/whatsrunningwhere/serv",
         willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("serv", Nil))).toString())))
 
-      val response = await(WS.url(s"http://localhost:$port/service/serv").get)
+      val response = await(ws.url(s"http://localhost:$port/service/serv").get)
       response.status shouldBe 404
     }
 
@@ -95,7 +100,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
               .toString()))
       )
 
-      val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
+      val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
       response.status shouldBe 200
       response.body   should include("links on this page are automatically generated")
       response.body   should include("teamA")
@@ -138,7 +143,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
                 .toString()))
         )
 
-        val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
+        val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
         response.status shouldBe 200
         response.body   should include("links on this page are automatically generated")
         response.body   should include("teamA")
@@ -186,7 +191,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
           "/api/indicators/service/service-1/throughput",
           willRespondWith = (200, Some(deploymentThroughputData)))
 
-        val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
+        val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
 
         response.body should include("https://deploy-dev.co.uk/job/deploy-microservice")
         response.body should include("https://grafana-dev.co.uk/#/dashboard")
@@ -201,7 +206,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
           "/api/indicators/service/service-1/throughput",
           willRespondWith = (200, Some(deploymentThroughputData)))
 
-        val response = await(WS.url(s"http://localhost:$port/service/service-1").get)
+        val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
 
         // Dev links should always be present
         response.body should include regex """https:\/\/(deploy-dev).*\/job\/deploy-microservice.*"""
@@ -230,7 +235,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
         "/api/whatsrunningwhere/service-name",
         willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("serv", Nil))).toString())))
 
-      val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
+      val response = await(ws.url(s"http://localhost:$port/service/service-name").get)
       response.status shouldBe 200
       response.body   should include(s"""data.addColumn('string', 'Period');""")
       response.body   should include(s"""data.addColumn('number', 'Lead Time');""")
@@ -258,10 +263,10 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
         willRespondWith                                                                        = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("xyz", Nil))).toString())))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (404, None))
 
-      val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
+      val response = await(ws.url(s"http://localhost:$port/service/service-name").get)
       response.status shouldBe 200
       response.body   should include(s"""No production deployments for $dayInterval days""")
-      response.body   should include(ViewMessages.noIndicatorsData)
+      response.body   should include(viewMessages.noIndicatorsData)
 
       response.body shouldNot include(s"""chart.draw(data, options);""")
     }
@@ -274,10 +279,10 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
         "/api/whatsrunningwhere/service-name",
         willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("xyz", Nil))).toString())))
 
-      val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
+      val response = await(ws.url(s"http://localhost:$port/service/service-name").get)
       response.status shouldBe 200
       response.body   should include(s"""The catalogue encountered an error""")
-      response.body   should include(ViewMessages.indicatorsServiceError)
+      response.body   should include(viewMessages.indicatorsServiceError)
 
       response.body shouldNot include(s"""chart.draw(data, options);""")
     }
@@ -293,7 +298,7 @@ class ServicePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpo
 
       serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
 
-      val response = await(WS.url(s"http://localhost:$port/service/service-name").get)
+      val response = await(ws.url(s"http://localhost:$port/service/service-name").get)
 
       val document = Jsoup.parse(response.body)
 

@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.scalatest._
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.play.test.UnitSpec

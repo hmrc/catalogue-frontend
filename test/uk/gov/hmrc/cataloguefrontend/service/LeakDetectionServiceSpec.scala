@@ -19,8 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.Team
-import uk.gov.hmrc.cataloguefrontend.connector.RepositoryWithLeaks
+import uk.gov.hmrc.cataloguefrontend.connector.{RepositoryWithLeaks, Team}
 
 class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyChecks {
 
