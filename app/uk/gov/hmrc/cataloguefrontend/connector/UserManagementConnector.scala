@@ -35,7 +35,6 @@ package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.{Logger, Environment => PlayEnvironment}
-import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -49,9 +48,9 @@ import scala.concurrent.Future
 case class UserManagementConnector @Inject()(
   http: HttpClient,
   environment: PlayEnvironment,
-  serviceConfig: ServicesConfig
-)
-    extends UserManagementPortalLink {
+  serviceConfig: ServicesConfig,
+  futureHelpers: FutureHelpers
+) extends UserManagementPortalLink {
 
   import UserManagementConnector._
 
@@ -89,7 +88,7 @@ case class UserManagementConnector @Inject()(
         }
       }
 
-    withTimerAndCounter("ump")(eventualConnectorErrorOrTeamMembers, isHttpCodeFailure)
+    futureHelpers.withTimerAndCounter("ump")(eventualConnectorErrorOrTeamMembers, isHttpCodeFailure)
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
@@ -119,7 +118,7 @@ case class UserManagementConnector @Inject()(
         }
       }
 
-    withTimerAndCounter("ump")(eventualErrorOrTeamMembers, isHttpCodeFailure)
+    futureHelpers.withTimerAndCounter("ump")(eventualErrorOrTeamMembers, isHttpCodeFailure)
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
@@ -130,7 +129,7 @@ case class UserManagementConnector @Inject()(
   def getTeamDetails(team: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, TeamDetails]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
     val url              = s"$userManagementBaseUrl/v2/organisations/teams/$team"
-    withTimerAndCounter("ump-teamdetails") {
+    futureHelpers.withTimerAndCounter("ump-teamdetails") {
       http
         .GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier))
         .map { response =>
@@ -151,7 +150,7 @@ case class UserManagementConnector @Inject()(
   def getDisplayName(userId: UmpUserId)(implicit hc: HeaderCarrier): Future[Option[DisplayName]] = {
     val url              = s"$userManagementBaseUrl/v2/organisations/users/$userId"
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    withTimerAndCounter("ump-userdetails") {
+    futureHelpers.withTimerAndCounter("ump-userdetails") {
       http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>
         response.status match {
           case 200   => (response.json \ "displayName").asOpt[String].map(DisplayName.apply)

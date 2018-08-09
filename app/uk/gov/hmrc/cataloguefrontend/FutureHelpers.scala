@@ -16,17 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import play.api.Play
-import com.kenshoo.play.metrics.{Metrics, MetricsImpl}
+import com.codahale.metrics.MetricRegistry
+import com.kenshoo.play.metrics.Metrics
+import javax.inject.Inject
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-object FutureHelpers {
+class FutureHelpers @Inject()(metrics: Metrics) {
 
-  lazy val metrics: Metrics = Play.current.injector.instanceOf[MetricsImpl]
-  lazy val defaultRegistry  = metrics.defaultRegistry
+  lazy val defaultRegistry: MetricRegistry = metrics.defaultRegistry
 
   def withTimerAndCounter[T](name: String)(f: Future[T], mayBeAuxFailurePredicate: Option[T => Boolean] = None): Future[T] = {
     val t = defaultRegistry.timer(s"$name.timer").time()
@@ -59,27 +59,6 @@ object FutureHelpers {
 
   object FutureIterable {
     def apply[A](listFuture: Iterable[Future[A]]): Future[Iterable[A]] = Future.sequence(listFuture)
-  }
-
-  implicit class FutureIterable[A](futureList: Future[Iterable[A]]) {
-    def flatMap[B](fn: A => Future[Iterable[B]])(implicit ec: ExecutionContext) =
-      futureList
-        .flatMap { list =>
-          val listOfFutures = list.map { li =>
-            fn(li)
-          }
-
-          Future.sequence(listOfFutures)
-        }
-        .map(_.flatten)
-
-    def map[B](fn: A => B)(implicit ec: ExecutionContext): Future[Iterable[B]] =
-      futureList.map(_.map {
-        fn
-      })
-
-    def filter[B](fn: A => Boolean)(implicit ec: ExecutionContext): Future[Iterable[A]] =
-      futureList.map(_.filter(fn))
   }
 
   def continueOnError[A](f: Future[A]): Future[Try[A] with Product with Serializable] =
