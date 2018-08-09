@@ -20,13 +20,14 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class LibraryPageSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
+  implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-services.host"   -> host,
       "microservice.services.teams-and-services.port"   -> endpointPort,
@@ -39,6 +40,8 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler"
     )
     .build()
+
+  private[this] val WS = app.injector.instanceOf[WSClient]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -96,7 +99,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
 
   }
 
-  val serviceData =
+  val serviceData: String =
     """
       |    {
       |	     "name": "serv",
@@ -150,7 +153,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       |     }
     """.stripMargin
 
-  val libraryData =
+  val libraryData: String =
     """
       |    {
       |	     "name": "lib",
@@ -181,7 +184,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       |     }
     """.stripMargin
 
-  val indicatorData =
+  val indicatorData: String =
     """
       |[
       |  {

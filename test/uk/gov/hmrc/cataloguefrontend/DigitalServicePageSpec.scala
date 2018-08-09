@@ -28,14 +28,16 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
-import play.api.mvc.Result
+import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthenticated, UmpVerifiedRequest, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
+import views.html.digital_service_info
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -154,10 +156,10 @@ class DigitalServicePageSpec
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
-      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("service"))
-      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("library"))
-      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("prototype"))
-      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("other"))
+      response.body   should include(viewMessages.noRepoOfTypeForDigitalService("service"))
+      response.body   should include(viewMessages.noRepoOfTypeForDigitalService("library"))
+      response.body   should include(viewMessages.noRepoOfTypeForDigitalService("prototype"))
+      response.body   should include(viewMessages.noRepoOfTypeForDigitalService("other"))
     }
 
     "show 'Not specified' if service owner is not set" in {
@@ -211,8 +213,9 @@ class DigitalServicePageSpec
         mock[play.api.Environment],
         verifySignInStatusPassThrough,
         mock[UmpAuthenticated],
-        app.configuration,
-        mock[MessagesApi]
+        mock[ServicesConfig],
+        viewMessages,
+        mock[MessagesControllerComponents]
       )
 
       val responseF = catalogueController.digitalService(digitalServiceName)(FakeRequest())
@@ -232,7 +235,7 @@ class DigitalServicePageSpec
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
       val request               = UmpVerifiedRequest(FakeRequest(), isSignedIn = true)
 
-      val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None)(request).toString)
+      val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None, viewMessages)(request).toString)
 
       document.select("#edit-button").isEmpty shouldBe false
     }
@@ -241,7 +244,7 @@ class DigitalServicePageSpec
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
       val request               = UmpVerifiedRequest(FakeRequest(), isSignedIn = false)
 
-      val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None)(request).toString)
+      val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None, viewMessages)(request).toString)
 
       document.select("#edit-button").isEmpty shouldBe true
     }
@@ -311,8 +314,9 @@ class DigitalServicePageSpec
         mock[play.api.Environment],
         verifySignInStatusPassThrough,
         mock[UmpAuthenticated],
-        app.configuration,
-        mock[MessagesApi]
+        mock[ServicesConfig],
+        mock[ViewMessages],
+        mock[MessagesControllerComponents]
       )
 
       val teamName = "Team1"
@@ -355,8 +359,9 @@ class DigitalServicePageSpec
         mock[play.api.Environment],
         verifySignInStatusPassThrough,
         mock[UmpAuthenticated],
-        app.configuration,
-        mock[MessagesApi]
+        mock[ServicesConfig],
+        viewMessages,
+        mock[MessagesControllerComponents]
       )
 
       val teamName = "Team1"
@@ -399,8 +404,9 @@ class DigitalServicePageSpec
         mock[play.api.Environment],
         verifySignInStatusPassThrough,
         mock[UmpAuthenticated],
-        app.configuration,
-        mock[MessagesApi]
+        mock[ServicesConfig],
+        viewMessages,
+        mock[MessagesControllerComponents]
       )
 
       val teamName = "Team1"
