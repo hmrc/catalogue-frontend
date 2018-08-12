@@ -50,7 +50,7 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
       Await.result(readModelService.refreshEventsCache, 5 seconds)
 
       readModelService.eventsCache.size shouldBe 1
-      readModelService.eventsCache.head shouldBe ("Catalogue", "Joe Black")
+      readModelService.eventsCache.head shouldBe "Catalogue" -> "Joe Black"
     }
 
   }

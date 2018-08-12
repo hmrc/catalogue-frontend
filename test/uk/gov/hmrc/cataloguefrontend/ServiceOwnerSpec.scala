@@ -23,7 +23,7 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
+import play.api.{Application, Configuration, Mode}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{MessagesControllerComponents, Result}
@@ -37,6 +37,7 @@ import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, Ser
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.play.bootstrap.config.RunMode
 
 import scala.concurrent.Future
 
@@ -188,6 +189,17 @@ class ServiceOwnerSpec
     val mockedModelService = mock[ReadModelService]
     val mockedEventService = mock[EventService]
 
+    val customConf = new ServicesConfig(
+      Configuration.empty,
+      new RunMode(Configuration.empty, Mode.Test)
+    ){
+        override def getConfString(key: String, defString: => String): String =
+          key match {
+            case "user-management.profileBaseUrl" => umpBaseUrl
+            case _                                => serviceConfig.getConfString(key, defString)
+          }
+    }
+
     val catalogueController: CatalogueController = new CatalogueController(
       mock[UserManagementConnector],
       mock[TeamsAndRepositoriesConnector],
@@ -203,17 +215,6 @@ class ServiceOwnerSpec
       mock[ServicesConfig],
       mock[ViewMessages],
       mock[MessagesControllerComponents]
-    ) {
-
-      override def getConfString(key: String, defString: => String): String =
-        key match {
-          case "user-management.profileBaseUrl" => umpBaseUrl
-          case _                                => serviceConfig.getConfString(key, defString)
-        }
-
-    }
+    )
   }
-
-
-
 }
