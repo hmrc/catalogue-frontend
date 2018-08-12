@@ -20,18 +20,18 @@ import org.mockito.Mockito
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
-import org.scalatestplus.play.OneAppPerSuite
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import scala.concurrent.duration._
 
-class UpdateSchedulerSpec extends FunSpec with Matchers with MockitoSugar with OneAppPerSuite {
+class UpdateSchedulerSpec extends FunSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite {
 
   describe("event read model update") {
     it("should be scheduled for specified intervals") {
       val readModelService = mock[ReadModelService]
       val scheduler        = new UpdateScheduler(app.actorSystem, readModelService)
 
-      scheduler.startUpdatingEventsReadModel(100 milliseconds)
+      scheduler.startUpdatingEventsReadModel(100.milliseconds)
 
       verify(readModelService, Mockito.after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshEventsCache
       verify(readModelService, times(0)).refreshUmpCache
@@ -43,7 +43,7 @@ class UpdateSchedulerSpec extends FunSpec with Matchers with MockitoSugar with O
       val readModelService = mock[ReadModelService]
       val scheduler        = new UpdateScheduler(app.actorSystem, readModelService)
 
-      scheduler.startUpdatingUmpCacheReadModel(100 milliseconds)
+      scheduler.startUpdatingUmpCacheReadModel(100.milliseconds)
 
       verify(readModelService, Mockito.after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshUmpCache
       verify(readModelService, times(0)).refreshEventsCache

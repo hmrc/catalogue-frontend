@@ -22,7 +22,7 @@ import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.OneAppPerSuite
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{ControllerComponents, Result}
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
@@ -31,7 +31,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 
 import scala.concurrent.Future
 
-class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFutures with OneAppPerSuite {
+class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFutures with GuiceOneAppPerSuite {
 
   "Action" should {
 
