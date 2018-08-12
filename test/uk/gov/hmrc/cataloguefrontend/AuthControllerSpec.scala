@@ -23,7 +23,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
-import play.api.i18n.MessagesApi
+import play.api.i18n.{Lang, MessagesApi}
 import play.api.mvc._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -37,6 +37,7 @@ import scala.concurrent.Future
 
 
 class AuthControllerSpec extends WordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
+  implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
 
   "Authenticating" should {
 

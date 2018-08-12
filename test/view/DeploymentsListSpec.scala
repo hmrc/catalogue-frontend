@@ -21,15 +21,17 @@ import java.time.LocalDateTime
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.play.OneAppPerTest
-
+import org.scalatestplus.play.guice.GuiceOneAppPerTest
+import play.api.i18n.Lang
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.Deployer
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
 import play.api.i18n.Messages.Implicits._
 
-class DeploymentsListSpec extends WordSpec with Matchers with OneAppPerTest {
+class DeploymentsListSpec extends WordSpec with Matchers with GuiceOneAppPerTest {
+
+  implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
 
   def asDocument(html: Html): Document = Jsoup.parse(html.toString())
 

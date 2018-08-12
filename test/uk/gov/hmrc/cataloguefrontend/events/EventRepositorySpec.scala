@@ -36,7 +36,6 @@ import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, LoneElement, OptionValues}
-import org.scalatestplus.play.OneAppPerTest
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
