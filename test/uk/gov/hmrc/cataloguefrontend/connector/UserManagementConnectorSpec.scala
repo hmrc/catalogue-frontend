@@ -115,9 +115,9 @@ class UserManagementConnectorSpec
 
       val userManagementConnector = new UserManagementConnector(
         mockedHttpGet,
-        mock[Environment],
-        mock[ServicesConfig],
-        mock[FutureHelpers]
+        app.environment,
+        app.injector.instanceOf[ServicesConfig],
+        app.injector.instanceOf[FutureHelpers]
       ) {
         override val userManagementBaseUrl = "http://some.non.existing.url.com"
       }
@@ -190,9 +190,9 @@ class UserManagementConnectorSpec
 
       val userManagementConnector = new UserManagementConnector(
         mockedHttpGet,
-        mock[Environment],
-        mock[ServicesConfig],
-        mock[FutureHelpers]
+        app.environment,
+        app.injector.instanceOf[ServicesConfig],
+        app.injector.instanceOf[FutureHelpers]
       ) {
         override val userManagementBaseUrl = "http://some.non.existing.url.com"
       }
@@ -282,9 +282,9 @@ class UserManagementConnectorSpec
 
         val userManagementConnector = new UserManagementConnector(
           mockedHttpGet,
-          mock[Environment],
-          mock[ServicesConfig],
-          mock[FutureHelpers]
+          app.environment,
+          app.injector.instanceOf[ServicesConfig],
+          app.injector.instanceOf[FutureHelpers]
         ) {
           override val userManagementBaseUrl: String = "http://some.non.existing.url.com"
           override val http: HttpClient = mockedHttpGet
