@@ -215,10 +215,10 @@ class DigitalServicePageSpec
         mock[DeploymentsService],
         mock[EventService],
         mockedModelService,
-        mock[play.api.Environment],
+        app.environment,
         verifySignInStatusPassThrough,
-        mock[UmpAuthenticated],
-        mock[ServicesConfig],
+        app.injector.instanceOf[UmpAuthenticated],
+        app.injector.instanceOf[ServicesConfig],
         viewMessages,
         app.injector.instanceOf[MessagesControllerComponents]
       )
@@ -316,11 +316,11 @@ class DigitalServicePageSpec
         mock[DeploymentsService],
         mock[EventService],
         mockedModelService,
-        mock[play.api.Environment],
+        app.environment,
         verifySignInStatusPassThrough,
-        mock[UmpAuthenticated],
-        mock[ServicesConfig],
-        mock[ViewMessages],
+        app.injector.instanceOf[UmpAuthenticated],
+        app.injector.instanceOf[ServicesConfig],
+        app.injector.instanceOf[ViewMessages],
         app.injector.instanceOf[MessagesControllerComponents]
       )
 
@@ -361,10 +361,10 @@ class DigitalServicePageSpec
         mock[DeploymentsService],
         mock[EventService],
         mockedModelService,
-        mock[play.api.Environment],
+        app.environment,
         verifySignInStatusPassThrough,
         mock[UmpAuthenticated],
-        mock[ServicesConfig],
+        app.injector.instanceOf[ServicesConfig],
         viewMessages,
         app.injector.instanceOf[MessagesControllerComponents]
       )

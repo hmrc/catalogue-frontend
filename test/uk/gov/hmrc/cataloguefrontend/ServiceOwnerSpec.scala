@@ -216,7 +216,7 @@ class ServiceOwnerSpec
       app.environment,
       verifySignInStatusPassThrough,
       umpAuthenticatedPassThrough,
-      app.injector.instanceOf[ServicesConfig],
+      customConf,
       app.injector.instanceOf[ViewMessages],
       mcc
     )

@@ -25,6 +25,7 @@ import org.mockito.Matchers.{eq => is, _}
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.i18n.MessagesApi
 import play.api.mvc.{MessagesControllerComponents, Result}
@@ -39,7 +40,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.Future
 
-class CatalogueControllerSpec extends WordSpec with MockitoSugar {
+class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAppPerSuite {
 
   "deploymentsList" should {
 
@@ -156,12 +157,12 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar {
       deploymentsService,
       mock[EventService],
       mock[ReadModelService],
-      mock[play.api.Environment],
+      app.environment,
       mock[VerifySignInStatus],
       mock[UmpAuthenticated],
       configuration,
-      mock[ViewMessages],
-      mcc
+      app.injector.instanceOf[ViewMessages],
+      app.injector.instanceOf[MessagesControllerComponents]
     )
   }
 

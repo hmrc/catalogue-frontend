@@ -20,7 +20,7 @@ import org.jsoup.Jsoup
 import org.mockito.Matchers.{any, eq => is}
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{Matchers, OptionValues, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.i18n.{Lang, MessagesApi}
@@ -36,7 +36,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class AuthControllerSpec extends WordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
+class AuthControllerSpec extends WordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with OptionValues {
   implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
 
   "Authenticating" should {
@@ -103,7 +103,8 @@ class AuthControllerSpec extends WordSpec with Matchers with GuiceOneAppPerSuite
       val sessionInjector = app.injector.instanceOf[SessionCookieBaker]
       val result = controller.signOut(requestWithUmpData)
 
-      val setCookie: Cookie = Cookies.decodeSetCookieHeader(headers(result).apply(SET_COOKIE)).head
+      Console.println(headers(result))
+      val setCookie: Cookie = Cookies.decodeSetCookieHeader(headers(result).apply(sessionInjector.COOKIE_NAME)).headOption.value
 
       setCookie.name               shouldBe sessionInjector.COOKIE_NAME
       setCookie.maxAge.get         should be < 0

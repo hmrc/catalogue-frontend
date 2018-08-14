@@ -70,14 +70,14 @@ class DependencyReportControllerSpec
 
   val mockedTeamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
   val mockedDependenciesConnector: ServiceDependenciesConnector = mock[ServiceDependenciesConnector]
-  val mcc = mock[MessagesControllerComponents]
+  val mcc = app.injector.instanceOf[MessagesControllerComponents]
 
   val dependencyReportController = new DependencyReportController(
     mock[HttpClient],
-    mock[play.api.Environment],
+    app.environment,
     mockedTeamsAndRepositoriesConnector,
     mockedDependenciesConnector,
-    mock[ServicesConfig],
+    app.injector.instanceOf[ServicesConfig],
     mcc
   )
 
