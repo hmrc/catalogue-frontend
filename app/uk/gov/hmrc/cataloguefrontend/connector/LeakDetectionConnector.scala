@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
+import play.api.Environment
 import play.api.libs.json.Reads
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -28,7 +29,7 @@ import scala.concurrent.Future
 @Singleton
 class LeakDetectionConnector @Inject()(
   http: HttpClient,
-  environment: TargetEnvironment,
+  environment: Environment,
   servicesConfig: ServicesConfig
 ) {
 
