@@ -19,13 +19,13 @@ package view
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest.{Assertion, Matchers, WordSpec}
-import org.scalatestplus.play.guice.GuiceOneAppPerTest
+import org.scalatestplus.play.guice.{GuiceOneAppPerSuite, GuiceOneAppPerTest}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.time.DateTimeUtils
 
-class DependenciesSpec extends WordSpec with Matchers with GuiceOneAppPerTest {
+class DependenciesSpec extends WordSpec with Matchers with GuiceOneAppPerSuite {
 
   def asDocument(html: Html): Document = Jsoup.parse(html.toString())
 
