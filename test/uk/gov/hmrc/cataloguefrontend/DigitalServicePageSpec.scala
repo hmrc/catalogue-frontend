@@ -321,7 +321,7 @@ class DigitalServicePageSpec
         mock[UmpAuthenticated],
         mock[ServicesConfig],
         mock[ViewMessages],
-        mock[MessagesControllerComponents]
+        app.injector.instanceOf[MessagesControllerComponents]
       )
 
       val teamName = "Team1"

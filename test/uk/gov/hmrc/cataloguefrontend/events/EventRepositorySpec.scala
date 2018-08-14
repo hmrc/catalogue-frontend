@@ -63,7 +63,7 @@ class EventRepositorySpec
       connector
     }
   }
-  val futureHelpers: FutureHelpers = mock[FutureHelpers]
+  val futureHelpers: FutureHelpers = app.injector.instanceOf[FutureHelpers]
 
   val mongoEventRepository = new EventRepository(reactiveMongoComponent, futureHelpers)
 
