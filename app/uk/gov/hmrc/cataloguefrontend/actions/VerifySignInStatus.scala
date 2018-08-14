@@ -33,7 +33,7 @@ final case class UmpVerifiedRequest[A](
 @Singleton
 class VerifySignInStatus @Inject()(
   userManagementAuthConnector: UserManagementAuthConnector,
-  cc: ControllerComponents
+  cc: MessagesControllerComponents
 ) extends ActionBuilder[UmpVerifiedRequest, AnyContent] {
 
   def invokeBlock[A](request: Request[A], block: UmpVerifiedRequest[A] => Future[Result]): Future[Result] = {

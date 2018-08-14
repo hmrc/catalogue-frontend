@@ -32,7 +32,7 @@ import play.api.test.Helpers._
 import play.test.Helpers
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementAuthConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -66,6 +66,10 @@ class ServiceOwnerSpec
     .build()
 
   val serviceConfig: ServicesConfig = app.injector.instanceOf[ServicesConfig]
+  val umac = app.injector.instanceOf[UserManagementAuthConnector]
+  val mcc = app.injector.instanceOf[MessagesControllerComponents]
+  val verifySignInStatusPassThrough = new VerifySignInStatusPassThrough(umac, mcc)
+  val umpAuthenticatedPassThrough = new UmpAuthenticatedPassThrough(umac, mcc)
 
   "serviceOwner" should {
 
@@ -201,7 +205,7 @@ class ServiceOwnerSpec
     }
 
     val catalogueController: CatalogueController = new CatalogueController(
-      mock[UserManagementConnector],
+      mock[uk.gov.hmrc.cataloguefrontend.UserManagementConnector],
       mock[TeamsAndRepositoriesConnector],
       mock[ServiceDependenciesConnector],
       mock[IndicatorsConnector],
@@ -209,12 +213,12 @@ class ServiceOwnerSpec
       mock[DeploymentsService],
       mockedEventService,
       mockedModelService,
-      mock[play.api.Environment],
-      mock[VerifySignInStatus],
+      app.environment,
+      verifySignInStatusPassThrough,
       umpAuthenticatedPassThrough,
-      mock[ServicesConfig],
-      mock[ViewMessages],
-      mock[MessagesControllerComponents]
+      app.injector.instanceOf[ServicesConfig],
+      app.injector.instanceOf[ViewMessages],
+      mcc
     )
   }
 }

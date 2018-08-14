@@ -30,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class UmpAuthenticated @Inject()(
   userManagementAuthConnector: UserManagementAuthConnector,
-  cc: ControllerComponents
+  cc: MessagesControllerComponents
 ) extends ActionBuilder[Request, AnyContent] {
 
   def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {

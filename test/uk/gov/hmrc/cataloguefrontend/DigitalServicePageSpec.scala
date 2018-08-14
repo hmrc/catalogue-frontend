@@ -32,7 +32,7 @@ import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthenticated, UmpVerifiedRequest, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -69,6 +69,11 @@ class DigitalServicePageSpec
 
   private[this] val WS = app.injector.instanceOf[WSClient]
   private[this] val viewMessages = app.injector.instanceOf[ViewMessages]
+
+  val umac = app.injector.instanceOf[UserManagementAuthConnector]
+  val mcc = app.injector.instanceOf[MessagesControllerComponents]
+
+  val verifySignInStatusPassThrough = new VerifySignInStatusPassThrough(umac, mcc)
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
@@ -215,7 +220,7 @@ class DigitalServicePageSpec
         mock[UmpAuthenticated],
         mock[ServicesConfig],
         viewMessages,
-        mock[MessagesControllerComponents]
+        app.injector.instanceOf[MessagesControllerComponents]
       )
 
       val responseF = catalogueController.digitalService(digitalServiceName)(FakeRequest())
@@ -361,7 +366,7 @@ class DigitalServicePageSpec
         mock[UmpAuthenticated],
         mock[ServicesConfig],
         viewMessages,
-        mock[MessagesControllerComponents]
+        app.injector.instanceOf[MessagesControllerComponents]
       )
 
       val teamName = "Team1"
@@ -401,12 +406,12 @@ class DigitalServicePageSpec
         mock[DeploymentsService],
         mock[EventService],
         mockedModelService,
-        mock[play.api.Environment],
+        app.environment,
         verifySignInStatusPassThrough,
         mock[UmpAuthenticated],
-        mock[ServicesConfig],
+        app.injector.instanceOf[ServicesConfig],
         viewMessages,
-        mock[MessagesControllerComponents]
+        app.injector.instanceOf[MessagesControllerComponents]
       )
 
       val teamName = "Team1"

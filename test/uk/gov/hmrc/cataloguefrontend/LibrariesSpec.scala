@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
@@ -27,7 +28,8 @@ import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionS
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
 
-class LibrariesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
+class LibrariesSpec extends UnitSpec with ScalaFutures with MockitoSugar with GuiceOneAppPerTest {
+
   "/libraries" should {
     "redirect to the repositories page with the appropriate filters" in {
 
@@ -45,8 +47,8 @@ class LibrariesSpec extends UnitSpec with ScalaFutures with MockitoSugar {
           verifySignInStatus = mock[VerifySignInStatus],
           umpAuthenticated = mock[UmpAuthenticated],
           serviceConfig = mock[ServicesConfig],
-          viewMessages = mock[ViewMessages],
-          mcc = mock[MessagesControllerComponents]
+          viewMessages = app.injector.instanceOf[ViewMessages],
+          mcc = app.injector.instanceOf[MessagesControllerComponents]
         ).allLibraries(FakeRequest()).futureValue
 
       result.header.status              shouldBe 303

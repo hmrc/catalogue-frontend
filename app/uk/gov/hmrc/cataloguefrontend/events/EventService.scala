@@ -17,17 +17,18 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.libs.json.{JsObject, Json}
+
+import scala.concurrent.Future
 @Singleton
 class EventService @Inject()(eventRepository: EventRepository) {
 
-  def saveServiceOwnerUpdatedEvent(serviceOwnerUpdatedEventData: ServiceOwnerUpdatedEventData) =
+  def saveServiceOwnerUpdatedEvent(serviceOwnerUpdatedEventData: ServiceOwnerUpdatedEventData): Future[Boolean] =
     eventRepository.add(
       Event(EventType.ServiceOwnerUpdated, data = Json.toJson(serviceOwnerUpdatedEventData).as[JsObject]))
 
-  def getAllEvents = eventRepository.getAllEvents
+  def getAllEvents: Future[List[Event]] = eventRepository.getAllEvents
 
-  def deleteAllEvents = eventRepository.clearAllData
+  def deleteAllEvents(): Future[Boolean] = eventRepository.clearAllData
 
 }
