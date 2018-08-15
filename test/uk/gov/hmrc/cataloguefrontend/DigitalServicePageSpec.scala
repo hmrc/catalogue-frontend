@@ -162,6 +162,7 @@ class DigitalServicePageSpec
 
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
+      Console.println(response.body)
       response.status shouldBe 200
       response.body   should include(viewMessages.noRepoOfTypeForDigitalService("service"))
       response.body   should include(viewMessages.noRepoOfTypeForDigitalService("library"))
