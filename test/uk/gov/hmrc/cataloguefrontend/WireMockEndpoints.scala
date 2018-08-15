@@ -63,11 +63,12 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
   def serviceEndpoint(
     method: RequestMethod,
     url: String,
-    extraHeaders: Map[String, String]      = Map(),
-    requestHeaders: Map[String, String]    = Map(),
+    extraHeaders: Map[String, String] = Map.empty,
+    requestHeaders: Map[String, String] = Map.empty,
     queryParameters: Seq[(String, String)] = Nil,
     willRespondWith: (Int, Option[String]),
-    givenJsonBody: Option[String] = None): Unit = {
+    givenJsonBody: Option[String] = None
+  ): Unit = {
 
     val queryParamsAsString = queryParameters match {
       case Nil    => ""
@@ -84,16 +85,9 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
     val response: ResponseDefinitionBuilder = new ResponseDefinitionBuilder()
       .withStatus(willRespondWith._1)
 
-    val resp = willRespondWith._2
-      .map { b =>
-        response.withBody(b)
-      }
-      .getOrElse(response)
+    val resp = willRespondWith._2.map(response.withBody).getOrElse(response)
 
-    extraHeaders.foreach {
-      case (n, v) =>
-        resp.withHeader(n, v)
-    }
+    extraHeaders.foreach { case (n, v) => resp.withHeader(n, v) }
 
     builder.willReturn(resp)
 
