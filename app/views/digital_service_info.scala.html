@@ -236,7 +236,7 @@
 
 
 @showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {
-    @repos.get(repoType.toString).foreach { repositories =>
+    @repos.get(repoType.toString).map { repositories =>
         <div class="col-md-3">
             <div id="@headerName" class="board">
                 <h3 class="board__heading">@headerName</h3>
