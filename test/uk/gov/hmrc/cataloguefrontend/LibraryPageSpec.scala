@@ -28,8 +28,8 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(
-      "microservice.services.teams-and-services.host"   -> host,
-      "microservice.services.teams-and-services.port"   -> endpointPort,
+      "microservice.services.teams-and-repositories.host"   -> host,
+      "microservice.services.teams-and-repositories.port"   -> endpointPort,
       "microservice.services.indicators.port"           -> endpointPort,
       "microservice.services.indicators.host"           -> host,
       "microservice.services.service-dependencies.host" -> host,

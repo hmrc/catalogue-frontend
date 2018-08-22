@@ -113,7 +113,7 @@ class TeamsAndRepositoriesConnector @Inject()(
 
   override protected def mode = environment.mode
 
-  def teamsAndServicesBaseUrl: String = baseUrl("teams-and-services")
+  def teamsAndServicesBaseUrl: String = baseUrl("teams-and-repositories")
 
   implicit val linkFormats         = Json.format[Link]
   implicit val environmentsFormats = Json.format[Environment]

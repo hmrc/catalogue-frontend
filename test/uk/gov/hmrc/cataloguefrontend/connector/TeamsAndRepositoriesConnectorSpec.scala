@@ -50,8 +50,8 @@ class TeamsAndRepositoriesConnectorSpec
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(
-      "microservice.services.teams-and-services.host" -> host,
-      "microservice.services.teams-and-services.port" -> endpointPort,
+      "microservice.services.teams-and-repositories.host" -> host,
+      "microservice.services.teams-and-repositories.port" -> endpointPort,
       "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
     )
     .build()

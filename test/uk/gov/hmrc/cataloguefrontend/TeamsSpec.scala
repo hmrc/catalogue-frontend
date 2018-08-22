@@ -29,8 +29,8 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(Map(
-      "microservice.services.teams-and-services.port" -> endpointPort,
-      "microservice.services.teams-and-services.host" -> host,
+      "microservice.services.teams-and-repositories.port" -> endpointPort,
+      "microservice.services.teams-and-repositories.host" -> host,
       "play.ws.ssl.loose.acceptAnyCertificate"        -> true,
       "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
     ))

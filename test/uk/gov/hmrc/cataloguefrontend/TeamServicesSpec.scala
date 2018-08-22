@@ -41,8 +41,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSui
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(
-      "microservice.services.teams-and-services.host"      -> host,
-      "microservice.services.teams-and-services.port"      -> endpointPort,
+      "microservice.services.teams-and-repositories.host"      -> host,
+      "microservice.services.teams-and-repositories.port"      -> endpointPort,
       "microservice.services.indicators.port"              -> endpointPort,
       "microservice.services.indicators.host"              -> host,
       "microservice.services.leak-detection.port"          -> endpointPort,

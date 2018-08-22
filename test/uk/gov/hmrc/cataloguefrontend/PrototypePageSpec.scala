@@ -28,8 +28,8 @@ class PrototypePageSpec extends UnitSpec with OneServerPerSuite with WireMockEnd
 
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(
-      "microservice.services.teams-and-services.port" -> endpointPort,
-      "microservice.services.teams-and-services.host" -> host,
+      "microservice.services.teams-and-repositories.port" -> endpointPort,
+      "microservice.services.teams-and-repositories.host" -> host,
       "microservice.services.leak-detection.port"     -> endpointPort,
       "microservice.services.leak-detection.host"     -> host
     )
