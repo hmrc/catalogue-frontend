@@ -8,7 +8,7 @@ resolvers += "HMRC Releases" at "https://dl.bintray.com/hmrc/releases"
 
 addSbtPlugin("uk.gov.hmrc" % "sbt-auto-build" % "1.12.0")
 
-addSbtPlugin("uk.gov.hmrc" % "sbt-git-versioning" % "1.12.0")
+addSbtPlugin("uk.gov.hmrc" % "sbt-git-versioning" % "1.14.0")
 
 addSbtPlugin("uk.gov.hmrc" % "sbt-distributables" % "1.1.0")
 
