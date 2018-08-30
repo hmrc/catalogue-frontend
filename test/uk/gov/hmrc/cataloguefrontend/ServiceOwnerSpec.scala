@@ -23,21 +23,20 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.{Application, Configuration, Mode}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.{Application, Configuration, Mode}
 import play.test.Helpers
 import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
-import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, VerifySignInStatus}
+import uk.gov.hmrc.cataloguefrontend.actions.ActionsSupport
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementAuthConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.play.bootstrap.config.RunMode
 
 import scala.concurrent.Future
 
@@ -216,32 +215,17 @@ class ServiceOwnerSpec
       app.environment,
       verifySignInStatusPassThrough,
       umpAuthenticatedPassThrough,
-      app.configuration,
-      mock[MessagesApi]
+      app.injector.instanceOf[ServicesConfig],
+      app.injector.instanceOf[ViewMessages],
+      app.injector.instanceOf[MessagesControllerComponents]
     ) {
 
-      override def getConfString(key: String, defString: => String): String =
+      def getConfString(key: String, defString: => String): String =
         key match {
           case "user-management.profileBaseUrl" => umpBaseUrl
-          case _                                => super.getConfString(key, defString)
+          case _                                => serviceConfig.getConfString(key, defString)
         }
 
     }
   }
-
-  implicit override lazy val app = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.host"      -> host,
-      "microservice.services.teams-and-repositories.port"      -> endpointPort,
-      "microservice.services.indicators.port"              -> endpointPort,
-      "microservice.services.indicators.host"              -> host,
-      "microservice.services.user-management.url"          -> endpointMockUrl,
-      "usermanagement.portal.url"                          -> "http://usermanagement/link",
-      "user-management.profileBaseUrl"                     -> "http://usermanagement/linkBase",
-      "microservice.services.user-management.frontPageUrl" -> "http://some.ump.fontpage.com",
-      "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-      "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
-
 }

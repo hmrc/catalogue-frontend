@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-
 trait UserManagementPortalLink {
 
   def serviceConfig: ServicesConfig
