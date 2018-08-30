@@ -239,7 +239,7 @@ class TeamsAndRepositoriesConnectorSpec
   }
 
   def teamsAndRepositoriesWithMockedHttp(httpClient: HttpClient): TeamsAndRepositoriesConnector =
-    new TeamsAndRepositoriesConnector(httpClient, mock[api.Environment], mock[ServicesConfig]) {
+    new TeamsAndRepositoriesConnector(httpClient, mock[ServicesConfig]) {
       override def teamsAndServicesBaseUrl: String = "someUrl"
     }
 }

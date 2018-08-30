@@ -36,7 +36,7 @@ class AuthController @Inject()(
   authService: AuthService,
   configuration: Configuration,
   mcc: MessagesControllerComponents
-) extends MessagesAbstractController(mcc) with FrontendController {
+) extends FrontendController(mcc) {
 
   import AuthController.signinForm
 

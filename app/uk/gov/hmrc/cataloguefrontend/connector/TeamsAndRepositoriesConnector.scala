@@ -22,7 +22,6 @@ import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
-import play.api.{Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -106,7 +105,6 @@ object DigitalService {
 @Singleton
 class TeamsAndRepositoriesConnector @Inject()(
   http: HttpClient,
-  environment: PlayEnvironment,
   val servicesConfig: ServicesConfig
 ) {
   type ServiceName = String

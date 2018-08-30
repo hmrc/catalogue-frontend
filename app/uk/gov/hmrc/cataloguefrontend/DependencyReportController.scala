@@ -53,7 +53,7 @@ class DependencyReportController @Inject()(
   serviceDependencyConnector: ServiceDependenciesConnector,
   val serviceConfig: ServicesConfig,
   mcc: MessagesControllerComponents
-) extends MessagesAbstractController(mcc) with FrontendController with UserManagementPortalLink {
+) extends FrontendController(mcc) with UserManagementPortalLink {
 
   implicit val drFormat: OFormat[DependencyReport] = Json.format[DependencyReport]
 

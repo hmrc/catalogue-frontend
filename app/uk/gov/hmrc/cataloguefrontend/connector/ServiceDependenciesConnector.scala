@@ -33,7 +33,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
  */
 
 import javax.inject.{Inject, Singleton}
-import play.api.{Logger, Environment => PlayEnvironment}
+import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.UrlHelper
 import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 import uk.gov.hmrc.http.HeaderCarrier
@@ -45,7 +45,6 @@ import scala.concurrent.Future
 @Singleton
 class ServiceDependenciesConnector @Inject()(
   http: HttpClient,
-  environment: PlayEnvironment,
   servicesConfig: ServicesConfig
 ) {
 

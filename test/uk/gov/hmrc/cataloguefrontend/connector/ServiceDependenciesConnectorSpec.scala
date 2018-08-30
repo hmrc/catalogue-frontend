@@ -195,7 +195,7 @@ class ServiceDependenciesConnectorSpec
         .when(mockedHttpClient.GET(any())(any(), any(), any()))
         .thenReturn(Future.failed(new RuntimeException("Boom!!")))
       val failingServiceDependenciesConnector =
-        new ServiceDependenciesConnector(mockedHttpClient, mock[Environment], mock[ServicesConfig]) {
+        new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig]) {
           override def servicesDependenciesBaseUrl = "chicken.com"
         }
 

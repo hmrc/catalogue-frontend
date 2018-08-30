@@ -37,7 +37,7 @@ import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json.{JsValue, Json}
-import play.api.{Configuration, Logger, Environment => PlayEnvironment}
+import play.api.Logger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -80,16 +80,14 @@ object ServiceDeploymentInformation {
 @Singleton
 class ServiceDeploymentsConnector @Inject()(
   http: HttpClient,
-  environment: PlayEnvironment,
   servicesConfig: ServicesConfig
 ) {
 
   def servicesDeploymentsBaseUrl: String = servicesConfig.baseUrl("service-deployments") + "/api/deployments"
   def whatIsRunningWhereBaseUrl: String  = servicesConfig.baseUrl("service-deployments") + "/api/whatsrunningwhere"
 
-  import _root_.uk.gov.hmrc.http.HttpReads._
-  import JavaDateTimeJsonFormatter._
   import ServiceDeploymentInformation._
+  import _root_.uk.gov.hmrc.http.HttpReads._
 
   implicit val deployerFormat = Json.format[Deployer]
 

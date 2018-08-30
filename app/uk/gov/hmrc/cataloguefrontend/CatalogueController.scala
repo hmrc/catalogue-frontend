@@ -66,9 +66,7 @@ class CatalogueController @Inject()(
   val serviceConfig: ServicesConfig,
   viewMessages: ViewMessages,
   mcc: MessagesControllerComponents
-) extends MessagesAbstractController(mcc) with FrontendController with UserManagementPortalLink with I18nSupport {
-
-
+) extends FrontendController(mcc) with UserManagementPortalLink with I18nSupport {
 
   import UserManagementConnector._
 

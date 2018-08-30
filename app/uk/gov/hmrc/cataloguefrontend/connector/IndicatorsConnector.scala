@@ -35,7 +35,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
-import play.api.{Environment, Logger}
+import play.api.Logger
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -87,7 +87,6 @@ case class MeasureResult(median: Int)
 @Singleton
 class IndicatorsConnector @Inject()(
   http: HttpClient,
-  environment: Environment,
   servicesConfig: ServicesConfig
 ) {
   def indicatorsBaseUrl: String = servicesConfig.baseUrl("indicators") + "/api/indicators"
