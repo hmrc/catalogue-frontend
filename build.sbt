@@ -20,7 +20,7 @@ lazy val microservice = Project(appName, file("."))
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "simple-reactivemongo-26" % "0.9.0",
-  "uk.gov.hmrc"               %% "bootstrap-play-26"       % "0.10.0-1-ga877b3a",
+  "uk.gov.hmrc"               %% "bootstrap-play-26"       % "0.11.0",
   "uk.gov.hmrc"               %% "url-builder"             % "1.1.0",
   "org.typelevel"             %% "cats-core"               % "1.1.0",
   "org.apache.httpcomponents" % "httpcore"                 % "4.3.2",
