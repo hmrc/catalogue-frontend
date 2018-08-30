@@ -112,9 +112,11 @@ class TeamsAndRepositoriesConnector @Inject()(
 
   def teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-services")
 
-  implicit val linkFormats: OFormat[Link] = Json.format[Link]
-  implicit val environmentsFormats: OFormat[TargetEnvironment] = Json.format[TargetEnvironment]
-  implicit val serviceFormats: OFormat[RepositoryDetails] = Json.format[RepositoryDetails]
+  def teamsAndServicesBaseUrl: String = baseUrl("teams-and-repositories")
+
+  implicit val linkFormats         = Json.format[Link]
+  implicit val environmentsFormats = Json.format[Environment]
+  implicit val serviceFormats      = Json.format[RepositoryDetails]
 
   val CacheTimestampHeaderName = "X-Cache-Timestamp"
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {

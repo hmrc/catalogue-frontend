@@ -216,9 +216,32 @@ class ServiceOwnerSpec
       app.environment,
       verifySignInStatusPassThrough,
       umpAuthenticatedPassThrough,
-      customConf,
-      app.injector.instanceOf[ViewMessages],
-      mcc
-    )
+      app.configuration,
+      mock[MessagesApi]
+    ) {
+
+      override def getConfString(key: String, defString: => String): String =
+        key match {
+          case "user-management.profileBaseUrl" => umpBaseUrl
+          case _                                => super.getConfString(key, defString)
+        }
+
+    }
   }
+
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(
+      "microservice.services.teams-and-repositories.host"      -> host,
+      "microservice.services.teams-and-repositories.port"      -> endpointPort,
+      "microservice.services.indicators.port"              -> endpointPort,
+      "microservice.services.indicators.host"              -> host,
+      "microservice.services.user-management.url"          -> endpointMockUrl,
+      "usermanagement.portal.url"                          -> "http://usermanagement/link",
+      "user-management.profileBaseUrl"                     -> "http://usermanagement/linkBase",
+      "microservice.services.user-management.frontPageUrl" -> "http://some.ump.fontpage.com",
+      "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
+      "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
+    )
+    .build()
+
 }

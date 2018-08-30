@@ -44,8 +44,8 @@ class RepositoryPageSpec
 
   implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
-      "microservice.services.teams-and-services.host"   -> host,
-      "microservice.services.teams-and-services.port"   -> endpointPort,
+      "microservice.services.teams-and-repositories.host"   -> host,
+      "microservice.services.teams-and-repositories.port"   -> endpointPort,
       "microservice.services.service-dependencies.host" -> host,
       "microservice.services.service-dependencies.port" -> endpointPort,
       "microservice.services.indicators.port"           -> endpointPort,

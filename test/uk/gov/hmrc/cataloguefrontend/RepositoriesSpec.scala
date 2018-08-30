@@ -32,8 +32,8 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
   implicit override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
       Map(
-        "microservice.services.teams-and-services.port" -> endpointPort,
-        "microservice.services.teams-and-services.host" -> host,
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "microservice.services.teams-and-repositories.host" -> host,
         "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
       )
     )
