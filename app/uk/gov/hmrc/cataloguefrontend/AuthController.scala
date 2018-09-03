@@ -63,7 +63,9 @@ class AuthController @Inject()(
   }
 
   val signOut = Action {
-    Redirect(routes.AuthController.showSignInPage()).withNewSession
+    Redirect(
+      routes.AuthController.showSignInPage()
+    ).withNewSession
   }
 }
 

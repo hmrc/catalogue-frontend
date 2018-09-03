@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import org.jsoup.Jsoup
 import org.mockito.Matchers.{any, eq => is}
 import org.mockito.Mockito._
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, OptionValues, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -35,8 +36,14 @@ import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+class AuthControllerSpec
+    extends WordSpec
+    with Matchers
+    with GuiceOneAppPerSuite
+    with MockitoSugar
+    with OptionValues
+    with ScalaFutures {
 
-class AuthControllerSpec extends WordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with OptionValues {
   implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
 
   "Authenticating" should {
@@ -67,7 +74,7 @@ class AuthControllerSpec extends WordSpec with Matchers with GuiceOneAppPerSuite
 
       val result = controller.submit(request)
 
-      status(result)          shouldBe 400
+      status(result) shouldBe 400
 
       contentAsString(result) should include(messagesApi("sign-in.wrong-credentials"))
     }
@@ -98,16 +105,12 @@ class AuthControllerSpec extends WordSpec with Matchers with GuiceOneAppPerSuite
 
   "Signing out" should {
     "redirect to landing page and clear session" in new Setup {
-      val requestWithUmpData = FakeRequest()
+      val request = FakeRequest()
 
-      val sessionInjector: SessionCookieBaker = app.injector.instanceOf[SessionCookieBaker]
-      val result = controller.signOut(requestWithUmpData)
+      val result = controller.signOut(request)
 
-      //val setCookie: Cookie = Cookies.decodeSetCookieHeader(headers(result).apply(SET_COOKIE)).headOption.value
-
-      //setCookie.name               shouldBe sessionInjector.COOKIE_NAME
-      //setCookie.maxAge.get         should be < 0
-      redirectLocation(result).get shouldBe routes.AuthController.showSignInPage().url
+      redirectLocation(result)      shouldBe Some(routes.AuthController.showSignInPage().url)
+      result.futureValue.newSession shouldBe Some(Session())
     }
   }
 
