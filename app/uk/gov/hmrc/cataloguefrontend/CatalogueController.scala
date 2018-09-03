@@ -75,9 +75,9 @@ class CatalogueController @Inject()(
 
   private val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
 
-  implicit val errorResponseFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
+  private implicit val errorResponseFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
 
-  val repotypeToDetailsUrl = Map(
+  private val repotypeToDetailsUrl = Map(
     RepoType.Service   -> routes.CatalogueController.service _,
     RepoType.Other     -> routes.CatalogueController.repository _,
     RepoType.Library   -> routes.CatalogueController.library _,
@@ -171,7 +171,7 @@ class CatalogueController @Inject()(
     Ok(Json.toJson(filteredUsers))
   }
 
-  def getRepos(data: DigitalService): Map[String, Seq[String]] = {
+  private def getRepos(data: DigitalService): Map[String, Seq[String]] = {
     val emptyMapOfRepoTypes = RepoType.values.map(v => v.toString -> List.empty[String]).toMap
     val mapOfRepoTypes      = data.repositories.groupBy(_.repoType).map { case (k, v) => k.toString -> v.map(_.name) }
 
