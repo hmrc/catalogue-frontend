@@ -27,21 +27,22 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class LibraryPageSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  override def fakeApplication: Application = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.host"   -> host,
-      "microservice.services.teams-and-repositories.port"   -> endpointPort,
-      "microservice.services.indicators.port"           -> endpointPort,
-      "microservice.services.indicators.host"           -> host,
-      "microservice.services.service-dependencies.host" -> host,
-      "microservice.services.service-dependencies.port" -> endpointPort,
-      "microservice.services.leak-detection.port"       -> endpointPort,
-      "microservice.services.leak-detection.host"       -> host,
-      "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.host" -> host,
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "microservice.services.indicators.port"             -> endpointPort,
+        "microservice.services.indicators.host"             -> host,
+        "microservice.services.service-dependencies.host"   -> host,
+        "microservice.services.service-dependencies.port"   -> endpointPort,
+        "microservice.services.leak-detection.port"         -> endpointPort,
+        "microservice.services.leak-detection.host"         -> host,
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
 
-  private[this] val WS = app.injector.instanceOf[WSClient]
+  private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

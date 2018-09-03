@@ -27,16 +27,17 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class PrototypePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  override def fakeApplication: Application = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.port" -> endpointPort,
-      "microservice.services.teams-and-repositories.host" -> host,
-      "microservice.services.leak-detection.port"     -> endpointPort,
-      "microservice.services.leak-detection.host"     -> host
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "microservice.services.teams-and-repositories.host" -> host,
+        "microservice.services.leak-detection.port"         -> endpointPort,
+        "microservice.services.leak-detection.host"         -> host
+      )
+      .build()
 
-  private[this] val WS = app.injector.instanceOf[WSClient]
+  private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

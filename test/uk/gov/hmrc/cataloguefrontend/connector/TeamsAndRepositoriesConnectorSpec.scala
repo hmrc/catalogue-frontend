@@ -46,15 +46,17 @@ class TeamsAndRepositoriesConnectorSpec
 
   implicit val defaultPatienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
-  override def fakeApplication: Application = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.host" -> host,
-      "microservice.services.teams-and-repositories.port" -> endpointPort,
-      "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.host" -> host,
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
 
-  val teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = app.injector.instanceOf[TeamsAndRepositoriesConnector]
+  private lazy val teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector =
+    app.injector.instanceOf[TeamsAndRepositoriesConnector]
 
   "teamsByService" should {
 

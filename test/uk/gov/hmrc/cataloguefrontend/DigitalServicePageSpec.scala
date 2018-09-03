@@ -53,28 +53,29 @@ class DigitalServicePageSpec
     with ScalaFutures
     with ActionsSupport {
 
-  override def fakeApplication: Application = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.host"      -> host,
-      "microservice.services.teams-and-repositories.port"      -> endpointPort,
-      "microservice.services.indicators.port"              -> endpointPort,
-      "microservice.services.indicators.host"              -> host,
-      "microservice.services.user-management.url"          -> endpointMockUrl,
-      "usermanagement.portal.url"                          -> "http://usermanagement/link",
-      "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
-      "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-      "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.host"  -> host,
+        "microservice.services.teams-and-repositories.port"  -> endpointPort,
+        "microservice.services.indicators.port"              -> endpointPort,
+        "microservice.services.indicators.host"              -> host,
+        "microservice.services.user-management.url"          -> endpointMockUrl,
+        "usermanagement.portal.url"                          -> "http://usermanagement/link",
+        "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
+        "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
+        "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
 
-  private[this] val WS = app.injector.instanceOf[WSClient]
-  private[this] val viewMessages = app.injector.instanceOf[ViewMessages]
+  private[this] lazy val WS           = app.injector.instanceOf[WSClient]
+  private[this] lazy val viewMessages = app.injector.instanceOf[ViewMessages]
 
-  val umac = app.injector.instanceOf[UserManagementAuthConnector]
-  val mcc = app.injector.instanceOf[MessagesControllerComponents]
+  private[this] lazy val umac = app.injector.instanceOf[UserManagementAuthConnector]
+  private[this] lazy val mcc  = app.injector.instanceOf[MessagesControllerComponents]
 
-  val verifySignInStatusPassThrough = new VerifySignInStatusPassThrough(umac, mcc)
-  val umpAuthenticatedPassThrough = new UmpAuthenticatedPassThrough(umac, mcc)
+  private[this] lazy val verifySignInStatusPassThrough = new VerifySignInStatusPassThrough(umac, mcc)
+  private[this] lazy val umpAuthenticatedPassThrough   = new UmpAuthenticatedPassThrough(umac, mcc)
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 

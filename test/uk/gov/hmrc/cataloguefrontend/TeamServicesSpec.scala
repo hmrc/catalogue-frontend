@@ -41,24 +41,25 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
   val umpFrontPageUrl = "http://some.ump.fontpage.com"
 
-  override def fakeApplication: Application = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.host"      -> host,
-      "microservice.services.teams-and-repositories.port"      -> endpointPort,
-      "microservice.services.indicators.port"              -> endpointPort,
-      "microservice.services.indicators.host"              -> host,
-      "microservice.services.leak-detection.port"          -> endpointPort,
-      "microservice.services.leak-detection.host"          -> host,
-      "microservice.services.user-management.url"          -> endpointMockUrl,
-      "usermanagement.portal.url"                          -> "http://usermanagement/link",
-      "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
-      "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-      "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.host"  -> host,
+        "microservice.services.teams-and-repositories.port"  -> endpointPort,
+        "microservice.services.indicators.port"              -> endpointPort,
+        "microservice.services.indicators.host"              -> host,
+        "microservice.services.leak-detection.port"          -> endpointPort,
+        "microservice.services.leak-detection.host"          -> host,
+        "microservice.services.user-management.url"          -> endpointMockUrl,
+        "usermanagement.portal.url"                          -> "http://usermanagement/link",
+        "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
+        "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
+        "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
 
-  private[this] val WS = app.injector.instanceOf[WSClient]
-  private[this] val viewMessages = app.injector.instanceOf[ViewMessages]
+  private[this] lazy val WS           = app.injector.instanceOf[WSClient]
+  private[this] lazy val viewMessages = app.injector.instanceOf[ViewMessages]
 
   val teamName = "teamA"
 

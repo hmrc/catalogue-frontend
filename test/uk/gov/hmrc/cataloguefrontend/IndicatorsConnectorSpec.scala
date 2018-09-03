@@ -50,7 +50,7 @@ class IndicatorsConnectorSpec
       )
       .build()
 
-  lazy val indicatorsConnector: IndicatorsConnector = app.injector.instanceOf[IndicatorsConnector]
+  private lazy val indicatorsConnector: IndicatorsConnector = app.injector.instanceOf[IndicatorsConnector]
 
   describe("IndicatorsConnector") {
     it("should convert the DeploymentsMetricResult to DeploymentIndicators for a service") {

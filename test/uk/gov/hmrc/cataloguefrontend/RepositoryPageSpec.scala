@@ -28,11 +28,11 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.play.test.UnitSpec
 
 class RepositoryPageSpec
-  extends UnitSpec
-  with BeforeAndAfter
-  with GuiceOneServerPerSuite
-  with WireMockEndpoints
-  with BeforeAndAfterEach {
+    extends UnitSpec
+    with BeforeAndAfter
+    with GuiceOneServerPerSuite
+    with WireMockEndpoints
+    with BeforeAndAfterEach {
 
   case class RepositoryDetails(repositoryName: String, repositoryType: RepoType.RepoType)
 
@@ -42,22 +42,23 @@ class RepositoryPageSpec
     RepositoryDetails("Other", RepoType.Other)
   )
 
-  override def fakeApplication: Application = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.host"   -> host,
-      "microservice.services.teams-and-repositories.port"   -> endpointPort,
-      "microservice.services.service-dependencies.host" -> host,
-      "microservice.services.service-dependencies.port" -> endpointPort,
-      "microservice.services.indicators.port"           -> endpointPort,
-      "microservice.services.indicators.host"           -> host,
-      "microservice.services.leak-detection.port"       -> endpointPort,
-      "microservice.services.leak-detection.host"       -> host,
-      "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.host" -> host,
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "microservice.services.service-dependencies.host"   -> host,
+        "microservice.services.service-dependencies.port"   -> endpointPort,
+        "microservice.services.indicators.port"             -> endpointPort,
+        "microservice.services.indicators.host"             -> host,
+        "microservice.services.leak-detection.port"         -> endpointPort,
+        "microservice.services.leak-detection.host"         -> host,
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
 
-  private[this] val WS = app.injector.instanceOf[WSClient]
-  private[this] val viewMessages = app.injector.instanceOf[ViewMessages]
+  private[this] lazy val WS           = app.injector.instanceOf[WSClient]
+  private[this] lazy val viewMessages = app.injector.instanceOf[ViewMessages]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -79,9 +80,11 @@ class RepositoryPageSpec
         serviceEndpoint(
           GET,
           s"/api/repositories/${repositoryDetails.repositoryName}",
-          willRespondWith = (200, Some(repositoryData(repositoryDetails))))
+          willRespondWith = (200, Some(repositoryData(repositoryDetails)))
+        )
 
         val response = await(WS.url(s"http://localhost:$port/repositories/${repositoryDetails.repositoryName}").get)
+
         response.status shouldBe 200
         response.body   should include(s"links on this page are automatically generated")
         response.body   should include(s"teamA")
@@ -94,13 +97,17 @@ class RepositoryPageSpec
       serviceEndpoint(
         GET,
         "/api/repositories/service-name",
-        willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
+        willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other))))
+      )
+
       serviceEndpoint(
         GET,
         "/api/indicators/repository/service-name/builds",
-        willRespondWith = (200, Some(JsonData.jobExecutionTimeData)))
+        willRespondWith = (200, Some(JsonData.jobExecutionTimeData))
+      )
 
       val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
+
       response.status shouldBe 200
 
       response.body should include(s"""data.addColumn('string', 'Period');""")
@@ -114,10 +121,17 @@ class RepositoryPageSpec
       serviceEndpoint(
         GET,
         "/api/repositories/service-name",
-        willRespondWith                                                                      = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
-      serviceEndpoint(GET, "/api/indicators/repository/service-name/builds", willRespondWith = (404, None))
+        willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other))))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/indicators/repository/service-name/builds",
+        willRespondWith = (404, None)
+      )
 
       val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
+
       response.status shouldBe 200
 
       response.body should include(s"""No data to show""")
@@ -130,8 +144,14 @@ class RepositoryPageSpec
       serviceEndpoint(
         GET,
         "/api/repositories/service-name",
-        willRespondWith                                                                      = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
-      serviceEndpoint(GET, "/api/indicators/repository/service-name/builds", willRespondWith = (500, None))
+        willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other))))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/indicators/repository/service-name/builds",
+        willRespondWith = (500, None)
+      )
 
       val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
       response.status shouldBe 200
@@ -146,8 +166,14 @@ class RepositoryPageSpec
       serviceEndpoint(
         GET,
         "/api/repositories/service-name",
-        willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other)))))
-      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
+        willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other))))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/service-dependencies/dependencies/service-name",
+        willRespondWith = (200, None)
+      )
 
       val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
 

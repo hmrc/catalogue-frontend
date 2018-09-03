@@ -55,22 +55,24 @@ class DependencyReportControllerSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
 
-  override def fakeApplication: Application = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.host" -> host,
-      "microservice.services.teams-and-repositories.port" -> endpointPort,
-      "play.ws.ssl.loose.acceptAnyCertificate"        -> true,
-      "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.host" -> host,
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "play.ws.ssl.loose.acceptAnyCertificate"            -> true,
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
 
-  implicit val materializer: Materializer = app.injector.instanceOf[Materializer]
+  private implicit lazy val materializer: Materializer = app.injector.instanceOf[Materializer]
 
-  val mockedTeamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
-  val mockedDependenciesConnector: ServiceDependenciesConnector = mock[ServiceDependenciesConnector]
-  val mcc = app.injector.instanceOf[MessagesControllerComponents]
+  private lazy val mockedTeamsAndRepositoriesConnector: TeamsAndRepositoriesConnector =
+    mock[TeamsAndRepositoriesConnector]
+  private lazy val mockedDependenciesConnector: ServiceDependenciesConnector = mock[ServiceDependenciesConnector]
+  private lazy val mcc                                                       = app.injector.instanceOf[MessagesControllerComponents]
 
-  val dependencyReportController = new DependencyReportController(
+  private lazy val dependencyReportController = new DependencyReportController(
     mock[HttpClient],
     app.environment,
     mockedTeamsAndRepositoriesConnector,

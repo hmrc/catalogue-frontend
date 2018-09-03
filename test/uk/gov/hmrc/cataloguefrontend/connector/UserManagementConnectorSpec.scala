@@ -60,7 +60,7 @@ class UserManagementConnectorSpec
       )
       .build()
 
-  val userManagementConnector: UserManagementConnector = app.injector.instanceOf[UserManagementConnector]
+  private lazy val userManagementConnector: UserManagementConnector = app.injector.instanceOf[UserManagementConnector]
 
   describe("User management connector") {
     it("should get the team members from the user-management service") {

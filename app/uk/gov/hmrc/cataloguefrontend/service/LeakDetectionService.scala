@@ -17,13 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-
-import scala.concurrent.Future
 import uk.gov.hmrc.cataloguefrontend.connector.{LeakDetectionConnector, RepositoryWithLeaks, Team}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.collection.JavaConverters._
+import scala.concurrent.Future
 
 @Singleton
 class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnector, configuration: Configuration) {
@@ -36,12 +34,9 @@ class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnec
       }
     }
 
-  private val leakDetectionPublicUrl: String = configuration.get[String]("lds.publicUrl")
-
-  private val ldsIntegrationEnabled: Boolean = configuration.get[Boolean]("lds.integrationEnabled")
-
-  val repositoriesToIgnore: List[String] =
-    configuration.underlying.getStringList("lds.noWarningsOn").asScala.toList
+  private val leakDetectionPublicUrl: String    = configuration.get[String]("lds.publicUrl")
+  private val ldsIntegrationEnabled: Boolean    = configuration.get[Boolean]("lds.integrationEnabled")
+  private val repositoriesToIgnore: Seq[String] = configuration.get[Seq[String]]("lds.noWarningsOn")
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] =
     if (ldsIntegrationEnabled) {
@@ -60,5 +55,4 @@ class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnec
       .filterNot(repositoriesToIgnore.contains)
     teamRepos.intersect(reposWithLeaks.map(_.name)).nonEmpty
   }
-
 }

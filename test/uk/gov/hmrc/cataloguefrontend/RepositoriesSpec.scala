@@ -29,17 +29,18 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class RepositoriesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  override def fakeApplication: Application = new GuiceApplicationBuilder()
-    .configure(
-      Map(
-        "microservice.services.teams-and-repositories.port" -> endpointPort,
-        "microservice.services.teams-and-repositories.host" -> host,
-        "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        Map(
+          "microservice.services.teams-and-repositories.port" -> endpointPort,
+          "microservice.services.teams-and-repositories.host" -> host,
+          "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+        )
       )
-    )
-    .build()
+      .build()
 
-  private[this] val WS = app.injector.instanceOf[WSClient]
+  private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
