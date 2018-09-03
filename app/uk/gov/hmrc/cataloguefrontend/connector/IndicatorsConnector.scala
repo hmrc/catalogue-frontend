@@ -89,23 +89,24 @@ class IndicatorsConnector @Inject()(
   http: HttpClient,
   servicesConfig: ServicesConfig
 ) {
-  def indicatorsBaseUrl: String = servicesConfig.baseUrl("indicators") + "/api/indicators"
+  private val indicatorsBaseUrl: String = servicesConfig.baseUrl("indicators") + "/api/indicators"
 
-  implicit val mesureResultFormats              = Json.reads[MeasureResult]
-  implicit val throughputFormats                = Json.reads[Throughput]
-  implicit val stabilityFormats                 = Json.reads[Stability]
-  implicit val deploymentsMetricResultFormats   = Json.reads[DeploymentsMetricResult]
-  implicit val medianDataPointFormats           = Json.reads[MedianDataPoint]
-  implicit val jobExecutionTimeDataPointFormats = Json.reads[JobMetricDataPoint]
+  private implicit val mesureResultFormats              = Json.reads[MeasureResult]
+  private implicit val throughputFormats                = Json.reads[Throughput]
+  private implicit val stabilityFormats                 = Json.reads[Stability]
+  private implicit val deploymentsMetricResultFormats   = Json.reads[DeploymentsMetricResult]
+  private implicit val medianDataPointFormats           = Json.reads[MedianDataPoint]
+  private implicit val jobExecutionTimeDataPointFormats = Json.reads[JobMetricDataPoint]
 
-  implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
+  private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
 
   def deploymentIndicatorsForTeam(teamName: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] =
     deploymentIndicators(s"/team/$teamName/deployments")
 
-  def deploymentIndicatorsForService(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] =
+  def deploymentIndicatorsForService(serviceName: String)(
+    implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] =
     deploymentIndicators(s"/service/$serviceName/deployments")
 
   private def deploymentIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] = {
@@ -141,7 +142,8 @@ class IndicatorsConnector @Inject()(
       }
   }
 
-  def buildIndicatorsForRepository(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Seq[JobMetricDataPoint]]] =
+  def buildIndicatorsForRepository(repositoryName: String)(
+    implicit hc: HeaderCarrier): Future[Option[Seq[JobMetricDataPoint]]] =
     buildIndicators(s"/repository/$repositoryName/builds")
 
   private def buildIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[Seq[JobMetricDataPoint]]] = {
@@ -160,5 +162,4 @@ class IndicatorsConnector @Inject()(
           None
       }
   }
-
 }
