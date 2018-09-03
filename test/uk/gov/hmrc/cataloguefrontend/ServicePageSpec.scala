@@ -32,7 +32,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
+  override def fakeApplication: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-repositories.port"   -> endpointPort,
       "microservice.services.teams-and-repositories.host"   -> host,
@@ -48,8 +48,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     )
     .build()
 
-  private[this] val ws = app.injector.instanceOf[WSClient]
-  private[this] val viewMessages = app.injector.instanceOf[ViewMessages]
+  private[this] lazy val ws = app.injector.instanceOf[WSClient]
+  private[this] lazy val viewMessages = app.injector.instanceOf[ViewMessages]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

@@ -42,7 +42,7 @@ class RepositoryPageSpec
     RepositoryDetails("Other", RepoType.Other)
   )
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
+  override def fakeApplication: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-repositories.host"   -> host,
       "microservice.services.teams-and-repositories.port"   -> endpointPort,

@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.cataloguefrontend
+package connector
 
 /*
  * Copyright 2016 HM Revenue & Customs
@@ -37,7 +38,6 @@ import play.api.libs.json._
 import play.api.{Logger, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
@@ -48,11 +48,12 @@ import scala.concurrent.Future
 case class UserManagementConnector @Inject()(
   http: HttpClient,
   environment: PlayEnvironment,
-  serviceConfig: ServicesConfig,
+  userManagementPortalConfig: UserManagementPortalConfig,
   futureHelpers: FutureHelpers
-) extends UserManagementPortalLink {
+) {
 
   import UserManagementConnector._
+  import userManagementPortalConfig._
 
   implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
@@ -72,7 +73,7 @@ case class UserManagementConnector @Inject()(
 
     val url = s"$userManagementBaseUrl/v2/organisations/teams/$team/members"
 
-    def isHttpCodeFailure: Option[(Either[UMPError, _]) => Boolean] =
+    def isHttpCodeFailure: Option[Either[UMPError, _] => Boolean] =
       Some { errorOrMembers: Either[UMPError, _] =>
         errorOrMembers match {
           case Left(HTTPError(code)) if code != 200 => true
@@ -102,7 +103,7 @@ case class UserManagementConnector @Inject()(
 
     val url = s"$userManagementBaseUrl/v2/organisations/users"
 
-    def isHttpCodeFailure: Option[(Either[UMPError, _]) => Boolean] =
+    def isHttpCodeFailure: Option[Either[UMPError, _] => Boolean] =
       Some { errorOrMembers: Either[UMPError, _] =>
         errorOrMembers match {
           case Left(HTTPError(code)) if code != 200 => true

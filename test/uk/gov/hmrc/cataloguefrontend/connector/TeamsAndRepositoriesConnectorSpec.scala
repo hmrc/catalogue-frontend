@@ -23,16 +23,12 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api
-import play.api.{Application, Configuration}
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
-import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 class TeamsAndRepositoriesConnectorSpec
     extends WordSpec
@@ -50,7 +46,7 @@ class TeamsAndRepositoriesConnectorSpec
 
   implicit val defaultPatienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
+  override def fakeApplication: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-repositories.host" -> host,
       "microservice.services.teams-and-repositories.port" -> endpointPort,
@@ -237,9 +233,4 @@ class TeamsAndRepositoriesConnectorSpec
         )
     }
   }
-
-  def teamsAndRepositoriesWithMockedHttp(httpClient: HttpClient): TeamsAndRepositoriesConnector =
-    new TeamsAndRepositoriesConnector(httpClient, mock[ServicesConfig]) {
-      override def teamsAndServicesBaseUrl: String = "someUrl"
-    }
 }

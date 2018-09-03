@@ -22,7 +22,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -47,6 +47,7 @@ class LibrariesSpec extends UnitSpec with ScalaFutures with MockitoSugar with Gu
           verifySignInStatus = mock[VerifySignInStatus],
           umpAuthenticated = mock[UmpAuthenticated],
           serviceConfig = mock[ServicesConfig],
+          mock[UserManagementPortalConfig],
           viewMessages = app.injector.instanceOf[ViewMessages],
           mcc = app.injector.instanceOf[MessagesControllerComponents]
         ).allLibraries(FakeRequest()).futureValue

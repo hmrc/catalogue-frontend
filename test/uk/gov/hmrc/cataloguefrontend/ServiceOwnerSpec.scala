@@ -23,19 +23,19 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import play.api.{Application, Configuration, Mode}
 import play.test.Helpers
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.actions.ActionsSupport
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementAuthConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
-import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
@@ -49,26 +49,26 @@ class ServiceOwnerSpec
     with ScalaFutures
     with ActionsSupport {
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-services.host"      -> host,
-      "microservice.services.teams-and-services.port"      -> endpointPort,
-      "microservice.services.indicators.port"              -> endpointPort,
-      "microservice.services.indicators.host"              -> host,
-      "microservice.services.user-management.url"          -> endpointMockUrl,
-      "usermanagement.portal.url"                          -> "http://usermanagement/link",
-      "user-management.profileBaseUrl"                     -> "http://usermanagement/linkBase",
-      "microservice.services.user-management.frontPageUrl" -> "http://some.ump.fontpage.com",
-      "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-      "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
+  private val profileBaseUrl = "http://things.things.com"
 
-  val serviceConfig: ServicesConfig = app.injector.instanceOf[ServicesConfig]
-  val umac = app.injector.instanceOf[UserManagementAuthConnector]
-  val mcc = app.injector.instanceOf[MessagesControllerComponents]
-  val verifySignInStatusPassThrough = new VerifySignInStatusPassThrough(umac, mcc)
-  val umpAuthenticatedPassThrough = new UmpAuthenticatedPassThrough(umac, mcc)
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.host"    -> host,
+        "microservice.services.teams-and-repositories.port"    -> endpointPort,
+        "microservice.services.indicators.port"                -> endpointPort,
+        "microservice.services.indicators.host"                -> host,
+        "microservice.services.user-management.url"            -> endpointMockUrl,
+        "microservice.services.user-management.frontPageUrl"   -> "http://some.ump.fontpage.com",
+        "microservice.services.user-management.profileBaseUrl" -> profileBaseUrl,
+        "usermanagement.portal.url"                            -> "http://usermanagement/link",
+        "play.ws.ssl.loose.acceptAnyCertificate"               -> true,
+        "play.http.requestHandler"                             -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
+
+  private lazy val umac: UserManagementAuthConnector = app.injector.instanceOf[UserManagementAuthConnector]
+  private lazy val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
 
   "serviceOwner" should {
 
@@ -124,7 +124,7 @@ class ServiceOwnerSpec
       contentAsJson(response).as[DisplayableTeamMember] shouldBe DisplayableTeamMember(
         teamMember1.getDisplayName,
         isServiceOwner = false,
-        s"$umpBaseUrl/${teamMember1.username.get}")
+        s"$profileBaseUrl/${teamMember1.username.get}")
     }
 
     "not save the service owner if it doesn't contain a username" in new Setup {
@@ -188,23 +188,11 @@ class ServiceOwnerSpec
     TeamMember(Some(displayName), None, None, None, None, Some(userName))
 
   private trait Setup {
-    val umpBaseUrl         = "http://things.things.com"
     val mockedModelService = mock[ReadModelService]
     val mockedEventService = mock[EventService]
 
-    val customConf = new ServicesConfig(
-      Configuration.empty,
-      new RunMode(Configuration.empty, Mode.Test)
-    ){
-        override def getConfString(key: String, defString: => String): String =
-          key match {
-            case "user-management.profileBaseUrl" => umpBaseUrl
-            case _                                => serviceConfig.getConfString(key, defString)
-          }
-    }
-
     val catalogueController: CatalogueController = new CatalogueController(
-      mock[uk.gov.hmrc.cataloguefrontend.UserManagementConnector],
+      mock[UserManagementConnector],
       mock[TeamsAndRepositoriesConnector],
       mock[ServiceDependenciesConnector],
       mock[IndicatorsConnector],
@@ -213,19 +201,12 @@ class ServiceOwnerSpec
       mockedEventService,
       mockedModelService,
       app.environment,
-      verifySignInStatusPassThrough,
-      umpAuthenticatedPassThrough,
+      new VerifySignInStatusPassThrough(umac, mcc),
+      new UmpAuthenticatedPassThrough(umac, mcc),
       app.injector.instanceOf[ServicesConfig],
+      mock[UserManagementPortalConfig],
       app.injector.instanceOf[ViewMessages],
       app.injector.instanceOf[MessagesControllerComponents]
-    ) {
-
-      def getConfString(key: String, defString: => String): String =
-        key match {
-          case "user-management.profileBaseUrl" => umpBaseUrl
-          case _                                => serviceConfig.getConfString(key, defString)
-        }
-
-    }
+    )
   }
 }

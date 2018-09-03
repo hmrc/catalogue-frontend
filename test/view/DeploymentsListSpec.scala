@@ -63,7 +63,7 @@ class DeploymentsListSpec extends WordSpec with Matchers with GuiceOneAppPerTest
             )
           ),
           "user-profile-base"
-        )(applicationMessages))
+        ))
 
       document.select("#row0_team").text()       shouldBe "teamA teamB"
       document.select("#row0_name").text()       shouldBe "serv1"

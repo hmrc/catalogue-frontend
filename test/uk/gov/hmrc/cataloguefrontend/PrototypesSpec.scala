@@ -22,13 +22,14 @@ import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
 
 class PrototypesSpec extends UnitSpec with ScalaFutures with MockitoSugar with GuiceOneAppPerTest {
+
   "/prototypes" should {
     "redirect to the repositories page with a filter showing only prototypes" in {
 
@@ -46,6 +47,7 @@ class PrototypesSpec extends UnitSpec with ScalaFutures with MockitoSugar with G
           mock[VerifySignInStatus],
           mock[UmpAuthenticated],
           app.injector.instanceOf[ServicesConfig],
+          mock[UserManagementPortalConfig],
           app.injector.instanceOf[ViewMessages],
           app.injector.instanceOf[MessagesControllerComponents]
         ).allPrototypes(FakeRequest()).futureValue

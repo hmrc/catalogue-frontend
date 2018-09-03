@@ -29,7 +29,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.collection.JavaConversions._
@@ -41,7 +41,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
   val umpFrontPageUrl = "http://some.ump.fontpage.com"
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
+  override def fakeApplication: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-repositories.host"      -> host,
       "microservice.services.teams-and-repositories.port"      -> endpointPort,

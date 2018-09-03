@@ -26,8 +26,8 @@ import play.api.i18n.I18nSupport
 import play.api.libs.json.{Format, Json}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
@@ -63,14 +63,16 @@ class CatalogueController @Inject()(
   environment: api.Environment,
   verifySignInStatus: VerifySignInStatus,
   umpAuthenticated: UmpAuthenticated,
-  val serviceConfig: ServicesConfig,
+  serviceConfig: ServicesConfig,
+  userManagementPortalConfig: UserManagementPortalConfig,
   viewMessages: ViewMessages,
   mcc: MessagesControllerComponents
-) extends FrontendController(mcc) with UserManagementPortalLink with I18nSupport {
+) extends FrontendController(mcc) with I18nSupport {
 
   import UserManagementConnector._
+  import userManagementPortalConfig._
 
-  val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
+  private val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
 
   implicit val errorResponseFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
 

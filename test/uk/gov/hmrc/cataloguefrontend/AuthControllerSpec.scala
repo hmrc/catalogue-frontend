@@ -27,8 +27,8 @@ import play.api.i18n.{Lang, MessagesApi}
 import play.api.mvc._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 

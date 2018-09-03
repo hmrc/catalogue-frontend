@@ -25,17 +25,16 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
-import play.api.{Application, Configuration, Environment}
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{ConnectionError, DisplayName, HTTPError, NoData, TeamMember, UMPError}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
-import uk.gov.hmrc.cataloguefrontend.{FutureHelpers, UserManagementConnector, WireMockEndpoints}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{ConnectionError, DisplayName, HTTPError, NoData, TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.{FutureHelpers, UserManagementPortalConfig, WireMockEndpoints}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.Future
 import scala.io.Source
@@ -52,13 +51,14 @@ class UserManagementConnectorSpec
     with MockitoSugar
     with OptionValues {
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.user-management.url"        -> endpointMockUrl,
-      "microservice.services.user-management.myTeamsUrl" -> "http://some.ump.com/myTeams",
-      "play.http.requestHandler"                         -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.user-management.url"        -> endpointMockUrl,
+        "microservice.services.user-management.myTeamsUrl" -> "http://some.ump.com/myTeams",
+        "play.http.requestHandler"                         -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
 
   val userManagementConnector: UserManagementConnector = app.injector.instanceOf[UserManagementConnector]
 
@@ -116,11 +116,9 @@ class UserManagementConnectorSpec
       val userManagementConnector = new UserManagementConnector(
         mockedHttpGet,
         app.environment,
-        app.injector.instanceOf[ServicesConfig],
+        mock[UserManagementPortalConfig],
         app.injector.instanceOf[FutureHelpers]
-      ) {
-        override val userManagementBaseUrl = "http://some.non.existing.url.com"
-      }
+      )
 
       val expectedException = new RuntimeException("some error")
 
@@ -191,11 +189,9 @@ class UserManagementConnectorSpec
       val userManagementConnector = new UserManagementConnector(
         mockedHttpGet,
         app.environment,
-        app.injector.instanceOf[ServicesConfig],
+        mock[UserManagementPortalConfig],
         app.injector.instanceOf[FutureHelpers]
-      ) {
-        override val userManagementBaseUrl = "http://some.non.existing.url.com"
-      }
+      )
 
       val expectedException = new RuntimeException("some error")
 
@@ -266,7 +262,7 @@ class UserManagementConnectorSpec
 
         team2Result should ===(Left(HTTPError(404)))
 
-        def getMembersDetails(extractor: (TeamMember) => String): Iterable[String] =
+        def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           team1Result.right.value.map(extractor)
 
         getMembersDetails(_.displayName.value) shouldBe Seq("Joe Black", "James Roger")
@@ -283,12 +279,9 @@ class UserManagementConnectorSpec
         val userManagementConnector = new UserManagementConnector(
           mockedHttpGet,
           app.environment,
-          app.injector.instanceOf[ServicesConfig],
+          mock[UserManagementPortalConfig],
           app.injector.instanceOf[FutureHelpers]
-        ) {
-          override val userManagementBaseUrl: String = "http://some.non.existing.url.com"
-          override val http: HttpClient = mockedHttpGet
-        }
+        )
 
         val teamNames = Seq("Team1", "Team2")
 
@@ -332,7 +325,7 @@ class UserManagementConnectorSpec
 
         team2Result should ===(Left(NoData("http://some.ump.com/myTeams/Team2?edit")))
 
-        def getMembersDetails(extractor: (TeamMember) => String): Iterable[String] =
+        def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           team1Result.right.value.map(extractor)
 
         getMembersDetails(_.displayName.value) shouldBe Seq("Joe Black", "James Roger")
@@ -356,7 +349,7 @@ class UserManagementConnectorSpec
 
         allUsers.right.value.size shouldBe 3
 
-        def getMembersDetails(extractor: (TeamMember) => String): Iterable[String] =
+        def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           allUsers.right.value.map(extractor)
 
         getMembersDetails(_.displayName.value) shouldBe Seq("Ricky Micky", "Aleks Malkes", "Anand Manand")
@@ -373,7 +366,7 @@ class UserManagementConnectorSpec
   describe("getDisplayName") {
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    val userId      = UmpUserId("ricky.micky")
+    val userId                     = UmpUserId("ricky.micky")
 
     it("should return user's displayName if exists in UMP") {
       stubUserManagementEndPoint(

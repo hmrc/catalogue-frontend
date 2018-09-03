@@ -50,8 +50,8 @@ case class Deployer(name: String, deploymentDate: LocalDateTime)
 
 case class Release(
   name: String,
-  productionDate: java.time.LocalDateTime,
-  creationDate: Option[java.time.LocalDateTime] = None,
+  productionDate: LocalDateTime,
+  creationDate: Option[LocalDateTime] = None,
   interval: Option[Long]                        = None,
   leadTime: Option[Long]                        = None,
   version: String,
@@ -87,7 +87,8 @@ class ServiceDeploymentsConnector @Inject()(
   def whatIsRunningWhereBaseUrl: String  = servicesConfig.baseUrl("service-deployments") + "/api/whatsrunningwhere"
 
   import ServiceDeploymentInformation._
-  import _root_.uk.gov.hmrc.http.HttpReads._
+  import uk.gov.hmrc.http.HttpReads._
+  import uk.gov.hmrc.cataloguefrontend.JavaDateTimeJsonFormatter._
 
   implicit val deployerFormat = Json.format[Deployer]
 

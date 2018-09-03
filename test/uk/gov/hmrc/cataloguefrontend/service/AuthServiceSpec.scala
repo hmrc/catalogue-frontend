@@ -24,8 +24,8 @@ import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId}
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
@@ -35,7 +35,7 @@ import scala.concurrent.Future
 
 class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
 
-  implicit val defaultPatienceConfig = new PatienceConfig(Span(500, Millis), Span(15, Millis))
+  implicit val defaultPatienceConfig = PatienceConfig(Span(500, Millis), Span(15, Millis))
 
   "authenticate" should {
 

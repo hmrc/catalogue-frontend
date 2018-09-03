@@ -16,23 +16,21 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
-import javax.inject.{Inject, Singleton}
-
 import akka.actor.{ActorSystem, Cancellable}
+import javax.inject.{Inject, Singleton}
 import play.Logger
-import play.libs.Akka
-import play.modules.reactivemongo.MongoDbConnection
-import uk.gov.hmrc.cataloguefrontend.CatalogueController
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
 @Singleton
 class UpdateScheduler @Inject()(actorSystem: ActorSystem, readModelService: ReadModelService) {
 
-  def updateEventsReadModel: Future[Map[String, String]] = readModelService.refreshEventsCache
-  def updateUmpCacheReadModel: Future[Seq[TeamMember]]   = readModelService.refreshUmpCache
+  private def updateEventsReadModel: Future[Map[String, String]] = readModelService.refreshEventsCache
+  private def updateUmpCacheReadModel: Future[Seq[TeamMember]]   = readModelService.refreshUmpCache
 
   val initialDelay: FiniteDuration = 1 second
 

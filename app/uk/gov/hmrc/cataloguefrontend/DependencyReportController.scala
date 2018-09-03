@@ -27,7 +27,6 @@ import play.api.mvc._
 import play.api.{Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, ServiceDependenciesConnector, Team, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -51,9 +50,8 @@ class DependencyReportController @Inject()(
   environment: PlayEnvironment,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   serviceDependencyConnector: ServiceDependenciesConnector,
-  val serviceConfig: ServicesConfig,
   mcc: MessagesControllerComponents
-) extends FrontendController(mcc) with UserManagementPortalLink {
+) extends FrontendController(mcc) {
 
   implicit val drFormat: OFormat[DependencyReport] = Json.format[DependencyReport]
 

@@ -20,8 +20,8 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
 import play.api.libs.json.{JsObject, Json}
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.postfixOps

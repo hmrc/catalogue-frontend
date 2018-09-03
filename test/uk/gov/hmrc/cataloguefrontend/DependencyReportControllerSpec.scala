@@ -33,12 +33,10 @@ import play.api.test.Helpers._
 import play.api.test.{FakeHeaders, FakeRequest}
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType._
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.time.DateTimeUtils
@@ -57,7 +55,7 @@ class DependencyReportControllerSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
+  override def fakeApplication: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-repositories.host" -> host,
       "microservice.services.teams-and-repositories.port" -> endpointPort,
@@ -77,7 +75,6 @@ class DependencyReportControllerSpec
     app.environment,
     mockedTeamsAndRepositoriesConnector,
     mockedDependenciesConnector,
-    app.injector.instanceOf[ServicesConfig],
     mcc
   )
 

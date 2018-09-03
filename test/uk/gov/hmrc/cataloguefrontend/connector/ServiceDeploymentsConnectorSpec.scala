@@ -31,12 +31,11 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class ServiceDeploymentsConnectorSpec
     extends UnitSpec
-    with BeforeAndAfter
     with GuiceOneServerPerSuite
     with WireMockEndpoints
     with EitherValues {
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
+  override def fakeApplication: Application = new GuiceApplicationBuilder()
     .disable(classOf[com.kenshoo.play.metrics.PlayModule])
     .configure(Map(
       "microservice.services.service-deployments.port" -> endpointPort,
@@ -45,7 +44,7 @@ class ServiceDeploymentsConnectorSpec
     ))
     .build()
 
-  private val serviceDeploymentsConnector = app.injector.instanceOf[ServiceDeploymentsConnector]
+  private lazy val serviceDeploymentsConnector = app.injector.instanceOf[ServiceDeploymentsConnector]
 
   "getDeployments" should {
 
@@ -78,8 +77,9 @@ class ServiceDeploymentsConnectorSpec
           ))
       )
 
-      val response =
-        await(serviceDeploymentsConnector.getDeployments()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
+      val response = await(
+        serviceDeploymentsConnector.getDeployments()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+      )
 
       response should contain theSameElementsAs Seq(
         Release(

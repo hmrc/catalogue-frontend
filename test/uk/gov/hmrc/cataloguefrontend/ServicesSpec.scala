@@ -22,7 +22,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -46,6 +46,7 @@ class ServicesSpec extends UnitSpec with ScalaFutures with MockitoSugar with Gui
           mock[VerifySignInStatus],
           mock[UmpAuthenticated],
           app.injector.instanceOf[ServicesConfig],
+          mock[UserManagementPortalConfig],
           app.injector.instanceOf[ViewMessages],
           app.injector.instanceOf[MessagesControllerComponents]
         ).allServices(FakeRequest()).futureValue

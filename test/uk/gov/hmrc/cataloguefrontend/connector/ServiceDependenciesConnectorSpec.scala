@@ -46,7 +46,7 @@ class ServiceDependenciesConnectorSpec
     with MockitoSugar
     with IntegrationPatience {
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
+  override def fakeApplication: Application = new GuiceApplicationBuilder()
     .disable(classOf[com.kenshoo.play.metrics.PlayModule])
     .configure(
       Map(

@@ -16,26 +16,26 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-trait UserManagementPortalLink {
+@Singleton
+class UserManagementPortalConfig @Inject()(serviceConfig: ServicesConfig) {
 
-  def serviceConfig: ServicesConfig
-
-  val serviceName = "user-management"
+  private val serviceName = "user-management"
 
   def umpMyTeamsPageUrl(teamName: String): String = {
     val frontPageUrlConfigKey = s"$serviceName.myTeamsUrl"
-    val myTeamsUrl =
-      serviceConfig.getConfString(frontPageUrlConfigKey, throw new RuntimeException(s"Could not find config $frontPageUrlConfigKey"))
+    val myTeamsUrl = serviceConfig.getConfString(
+      confKey = frontPageUrlConfigKey,
+      defString = throw new RuntimeException(s"Could not find config $frontPageUrlConfigKey")
+    )
 
     s"""${myTeamsUrl.appendSlash}$teamName?edit"""
   }
 
-  def userManagementBaseUrl: String = {
-    serviceConfig.getConfString(
-      confKey = s"$serviceName.url",
-      defString = throw new RuntimeException(s"Could not find config $serviceName.url"))
-  }
-
+  def userManagementBaseUrl: String = serviceConfig.getConfString(
+    confKey = s"$serviceName.url",
+    defString = throw new RuntimeException(s"Could not find config $serviceName.url")
+  )
 }

@@ -105,12 +105,12 @@ object DigitalService {
 @Singleton
 class TeamsAndRepositoriesConnector @Inject()(
   http: HttpClient,
-  val servicesConfig: ServicesConfig
+  servicesConfig: ServicesConfig
 ) {
   type ServiceName = String
   type TeamName    = String
 
-  def teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-services")
+  def teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
 
   implicit val linkFormats         = Json.format[Link]
   implicit val environmentsFormats = Json.format[TargetEnvironment]

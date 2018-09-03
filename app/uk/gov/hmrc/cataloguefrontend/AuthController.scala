@@ -22,7 +22,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.mvc._
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName

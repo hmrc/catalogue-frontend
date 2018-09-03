@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FunSpec, Matchers}
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 
 class DisplayableTeamMembersSpec extends FunSpec with Matchers with TypeCheckedTripleEquals {
 

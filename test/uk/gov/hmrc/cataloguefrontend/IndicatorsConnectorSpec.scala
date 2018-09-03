@@ -41,7 +41,7 @@ class IndicatorsConnectorSpec
 
   implicit val defaultPatienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
-  implicit override lazy val app: Application =
+  override def fakeApplication: Application =
     new GuiceApplicationBuilder()
       .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(

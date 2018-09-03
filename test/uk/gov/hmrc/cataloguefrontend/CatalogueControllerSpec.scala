@@ -20,19 +20,17 @@ import java.time.LocalDateTime
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mockito.Mockito.when
 import org.mockito.Matchers.{eq => is, _}
+import org.mockito.Mockito.when
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Configuration
-import play.api.i18n.MessagesApi
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService, TeamRelease}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -161,6 +159,7 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAp
       mock[VerifySignInStatus],
       mock[UmpAuthenticated],
       configuration,
+      mock[UserManagementPortalConfig],
       app.injector.instanceOf[ViewMessages],
       app.injector.instanceOf[MessagesControllerComponents]
     )

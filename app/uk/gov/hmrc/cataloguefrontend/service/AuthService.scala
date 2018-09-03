@@ -19,14 +19,13 @@ package uk.gov.hmrc.cataloguefrontend.service
 import cats.data.EitherT
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized, UmpUserId}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
+import uk.gov.hmrc.cataloguefrontend.connector.{UserManagementAuthConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import uk.gov.hmrc.http.HeaderCarrier
-
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+
 import scala.concurrent.Future
 
 @Singleton

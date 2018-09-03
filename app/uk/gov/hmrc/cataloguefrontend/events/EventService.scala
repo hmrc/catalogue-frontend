@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsObject, Json}
 
 import scala.concurrent.Future
+
 @Singleton
 class EventService @Inject()(eventRepository: EventRepository) {
 

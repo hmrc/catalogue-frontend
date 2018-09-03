@@ -30,7 +30,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthenticated, UmpVerifiedRequest, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
@@ -53,7 +53,7 @@ class DigitalServicePageSpec
     with ScalaFutures
     with ActionsSupport {
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
+  override def fakeApplication: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-repositories.host"      -> host,
       "microservice.services.teams-and-repositories.port"      -> endpointPort,
@@ -222,6 +222,7 @@ class DigitalServicePageSpec
         verifySignInStatusPassThrough,
         umpAuthenticatedPassThrough,
         app.injector.instanceOf[ServicesConfig],
+        mock[UserManagementPortalConfig],
         viewMessages,
         app.injector.instanceOf[MessagesControllerComponents]
       )
@@ -323,6 +324,7 @@ class DigitalServicePageSpec
         verifySignInStatusPassThrough,
         app.injector.instanceOf[UmpAuthenticated],
         app.injector.instanceOf[ServicesConfig],
+        mock[UserManagementPortalConfig],
         app.injector.instanceOf[ViewMessages],
         app.injector.instanceOf[MessagesControllerComponents]
       )
@@ -368,6 +370,7 @@ class DigitalServicePageSpec
         verifySignInStatusPassThrough,
         umpAuthenticatedPassThrough,
         app.injector.instanceOf[ServicesConfig],
+        mock[UserManagementPortalConfig],
         viewMessages,
         app.injector.instanceOf[MessagesControllerComponents]
       )
@@ -413,6 +416,7 @@ class DigitalServicePageSpec
         verifySignInStatusPassThrough,
         umpAuthenticatedPassThrough,
         app.injector.instanceOf[ServicesConfig],
+        mock[UserManagementPortalConfig],
         viewMessages,
         app.injector.instanceOf[MessagesControllerComponents]
       )

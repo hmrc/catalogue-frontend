@@ -27,7 +27,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class LibraryPageSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app: Application = new GuiceApplicationBuilder()
+  override def fakeApplication: Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.teams-and-repositories.host"   -> host,
       "microservice.services.teams-and-repositories.port"   -> endpointPort,
