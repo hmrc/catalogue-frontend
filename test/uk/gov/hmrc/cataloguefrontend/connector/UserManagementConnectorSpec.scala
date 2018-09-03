@@ -115,7 +115,6 @@ class UserManagementConnectorSpec
 
       val userManagementConnector = new UserManagementConnector(
         mockedHttpGet,
-        app.environment,
         mock[UserManagementPortalConfig],
         app.injector.instanceOf[FutureHelpers]
       )
@@ -188,7 +187,6 @@ class UserManagementConnectorSpec
 
       val userManagementConnector = new UserManagementConnector(
         mockedHttpGet,
-        app.environment,
         mock[UserManagementPortalConfig],
         app.injector.instanceOf[FutureHelpers]
       )
@@ -225,7 +223,7 @@ class UserManagementConnectorSpec
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
 
-        def getMembersDetails(extractor: (TeamMember) => String): Iterable[String] =
+        def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           teamsAndMembers.values.flatMap(_.right.value).map(extractor)
 
         getMembersDetails(_.displayName.value) shouldBe Seq("Joe Black", "James Roger", "Casey Binge", "Marc Palazzo")
@@ -278,7 +276,6 @@ class UserManagementConnectorSpec
 
         val userManagementConnector = new UserManagementConnector(
           mockedHttpGet,
-          app.environment,
           mock[UserManagementPortalConfig],
           app.injector.instanceOf[FutureHelpers]
         )

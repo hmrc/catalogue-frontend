@@ -39,7 +39,10 @@ object RepoType extends Enumeration {
   implicit val repoTypeReads: Reads[RepoType] = new Reads[RepoType] {
     override def reads(json: JsValue): JsResult[RepoType] = json match {
       case JsString(s) => JsSuccess(RepoType.withName(s))
-      case _ => JsError(__, JsonValidationError(s"Expected value to be a String contained within ${RepoType.values}, got $json instead."))
+      case _ =>
+        JsError(
+          __,
+          JsonValidationError(s"Expected value to be a String contained within ${RepoType.values}, got $json instead."))
     }
   }
 
@@ -107,17 +110,16 @@ class TeamsAndRepositoriesConnector @Inject()(
   http: HttpClient,
   servicesConfig: ServicesConfig
 ) {
-  type ServiceName = String
-  type TeamName    = String
 
-  def teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
+  import TeamsAndRepositoriesConnector._
 
-  implicit val linkFormats         = Json.format[Link]
-  implicit val environmentsFormats = Json.format[TargetEnvironment]
-  implicit val serviceFormats      = Json.format[RepositoryDetails]
+  private val teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
 
-  val CacheTimestampHeaderName = "X-Cache-Timestamp"
-  implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
+  private implicit val linkFormats         = Json.format[Link]
+  private implicit val environmentsFormats = Json.format[TargetEnvironment]
+  private implicit val serviceFormats      = Json.format[RepositoryDetails]
+
+  private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
 
@@ -159,7 +161,6 @@ class TeamsAndRepositoriesConnector @Inject()(
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http.GET[Map[ServiceName, Seq[TeamName]]](teamsAndServicesBaseUrl + s"/api/services?teamDetails=true")
-
 }
 
 object TeamsAndRepositoriesConnector {

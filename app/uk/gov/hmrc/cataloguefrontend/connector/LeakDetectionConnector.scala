@@ -31,13 +31,12 @@ class LeakDetectionConnector @Inject()(
   servicesConfig: ServicesConfig
 ) {
 
-  def url: String = servicesConfig.baseUrl("leak-detection")
+  private val url: String = servicesConfig.baseUrl("leak-detection")
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] = {
     val hcAcceptingJson = hc.withExtraHeaders("Accept" -> "application/json")
     http.GET[Seq[RepositoryWithLeaks]](s"$url/reports/repositories")(implicitly, hcAcceptingJson, implicitly)
   }
-
 }
 
 final case class RepositoryWithLeaks(name: String) extends AnyVal

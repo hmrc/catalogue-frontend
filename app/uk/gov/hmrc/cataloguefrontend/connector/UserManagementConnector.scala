@@ -34,20 +34,18 @@ package connector
  */
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.libs.json._
-import play.api.{Logger, Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
 case class UserManagementConnector @Inject()(
   http: HttpClient,
-  environment: PlayEnvironment,
   userManagementPortalConfig: UserManagementPortalConfig,
   futureHelpers: FutureHelpers
 ) {
@@ -55,7 +53,7 @@ case class UserManagementConnector @Inject()(
   import UserManagementConnector._
   import userManagementPortalConfig._
 
-  implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
+  private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
 
@@ -89,7 +87,8 @@ case class UserManagementConnector @Inject()(
         }
       }
 
-    futureHelpers.withTimerAndCounter("ump")(eventualConnectorErrorOrTeamMembers, isHttpCodeFailure)
+    futureHelpers
+      .withTimerAndCounter("ump")(eventualConnectorErrorOrTeamMembers, isHttpCodeFailure)
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
@@ -98,6 +97,8 @@ case class UserManagementConnector @Inject()(
   }
 
   def getAllUsersFromUMP: Future[Either[UMPError, Seq[TeamMember]]] = {
+
+    import scala.concurrent.ExecutionContext.Implicits.global
 
     val newHeaderCarrier = HeaderCarrier().withExtraHeaders("requester" -> "None", "Token" -> "None")
 
@@ -119,7 +120,8 @@ case class UserManagementConnector @Inject()(
         }
       }
 
-    futureHelpers.withTimerAndCounter("ump")(eventualErrorOrTeamMembers, isHttpCodeFailure)
+    futureHelpers
+      .withTimerAndCounter("ump")(eventualErrorOrTeamMembers, isHttpCodeFailure)
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
@@ -162,7 +164,7 @@ case class UserManagementConnector @Inject()(
     }
   }
 
-  def extractData[T](team: String, response: HttpResponse)(implicit rd: Reads[T]): Either[UMPError, T] =
+  private def extractData[T](team: String, response: HttpResponse)(implicit rd: Reads[T]): Either[UMPError, T] =
     Option(response.json).flatMap { js =>
       js.asOpt[T]
     } match {
@@ -181,11 +183,10 @@ case class UserManagementConnector @Inject()(
     if (errorOrTeamMembers.isRight && errorOrTeamMembers.right.get.isEmpty) left else errorOrTeamMembers
   }
 
-  def extractUsers(response: HttpResponse): Seq[TeamMember] =
+  private def extractUsers(response: HttpResponse): Seq[TeamMember] =
     (response.json \\ "users").headOption
       .map(js => js.as[Seq[TeamMember]])
       .getOrElse(throw new RuntimeException(s"Unable to parse or extract UMP users: ${response.json}"))
-
 
 }
 
@@ -235,5 +236,4 @@ object UserManagementConnector {
   object DisplayName {
     val SESSION_KEY_NAME = "ump.displayName"
   }
-
 }

@@ -34,7 +34,6 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.cataloguefrontend.UrlHelper
 import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -42,36 +41,30 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
+
 @Singleton
 class ServiceDependenciesConnector @Inject()(
   http: HttpClient,
   servicesConfig: ServicesConfig
 ) {
 
-  def servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies") + "/api"
+  private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies") + "/api"
 
-  def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
-    val url = s"$servicesDependenciesBaseUrl"
-
+  def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] =
     http
-      .GET[Option[Dependencies]](s"${url.appendSlash}dependencies/$repositoryName")
+      .GET[Option[Dependencies]](s"$servicesDependenciesBaseUrl/dependencies/$repositoryName")
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)
           None
       }
-  }
 
-  def getAllDependencies()(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
-    val url = s"$servicesDependenciesBaseUrl"
-
+  def getAllDependencies()(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] =
     http
-      .GET[Seq[Dependencies]](s"${url.appendSlash}dependencies")
+      .GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/dependencies")
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)
           Nil
       }
-  }
-
 }
