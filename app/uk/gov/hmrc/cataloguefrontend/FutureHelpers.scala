@@ -28,7 +28,8 @@ class FutureHelpers @Inject()(metrics: Metrics) {
 
   lazy val defaultRegistry: MetricRegistry = metrics.defaultRegistry
 
-  def withTimerAndCounter[T](name: String)(f: Future[T], mayBeAuxFailurePredicate: Option[T => Boolean] = None): Future[T] = {
+  def withTimerAndCounter[T](
+    name: String)(f: Future[T], mayBeAuxFailurePredicate: Option[T => Boolean] = None): Future[T] = {
     val t = defaultRegistry.timer(s"$name.timer").time()
 
     def logFailure(): Unit = {
@@ -61,6 +62,6 @@ class FutureHelpers @Inject()(metrics: Metrics) {
     def apply[A](listFuture: Iterable[Future[A]]): Future[Iterable[A]] = Future.sequence(listFuture)
   }
 
-  def continueOnError[A](f: Future[A]): Future[Try[A] with Product with Serializable] =
+  def continueOnError[A](f: Future[A]): Future[Try[A]] =
     f.map(Success(_)).recover { case x => Failure(x) }
 }

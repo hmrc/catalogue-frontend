@@ -67,7 +67,8 @@ class CatalogueController @Inject()(
   userManagementPortalConfig: UserManagementPortalConfig,
   viewMessages: ViewMessages,
   mcc: MessagesControllerComponents
-) extends FrontendController(mcc) with I18nSupport {
+) extends FrontendController(mcc)
+    with I18nSupport {
 
   import UserManagementConnector._
   import userManagementPortalConfig._
@@ -368,7 +369,8 @@ class CatalogueController @Inject()(
       val form: Form[RepoListFilter] = RepoListFilter.form.bindFromRequest()
       form.fold(
         error => Ok(repositories_list(repositories = Seq.empty, repotypeToDetailsUrl, error, viewMessages)),
-        query => Ok(repositories_list(repositories = repositories.filter(query), repotypeToDetailsUrl, form, viewMessages))
+        query =>
+          Ok(repositories_list(repositories = repositories.filter(query), repotypeToDetailsUrl, form, viewMessages))
       )
     }
   }
@@ -379,18 +381,19 @@ class CatalogueController @Inject()(
     Future.successful(Ok(deployments_page(form, umpProfileUrl)))
   }
 
-  def deploymentsList(teamName: Option[String], serviceName: Option[String]): Action[AnyContent] = Action.async { implicit request =>
-    import SearchFiltering._
-    val umpProfileUrl = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
+  def deploymentsList(teamName: Option[String], serviceName: Option[String]): Action[AnyContent] = Action.async {
+    implicit request =>
+      import SearchFiltering._
+      val umpProfileUrl = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
 
-    deploymentsService.getDeployments(teamName.blankToNone, serviceName.blankToNone) map { teamReleases =>
-      DeploymentsFilter.form
-        .bindFromRequest()
-        .fold(
-          _ => Ok(deployments_list(Nil, umpProfileUrl)),
-          deploymentsFilter => Ok(deployments_list(teamReleases filter deploymentsFilter, umpProfileUrl))
-        )
-    }
+      deploymentsService.getDeployments(teamName.blankToNone, serviceName.blankToNone) map { teamReleases =>
+        DeploymentsFilter.form
+          .bindFromRequest()
+          .fold(
+            _ => Ok(deployments_list(Nil, umpProfileUrl)),
+            deploymentsFilter => Ok(deployments_list(teamReleases filter deploymentsFilter, umpProfileUrl))
+          )
+      }
   }
 
   private implicit class OptionOps(maybeString: Option[String]) {
