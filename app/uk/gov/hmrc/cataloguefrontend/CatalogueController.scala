@@ -27,6 +27,7 @@ import play.api.libs.json.{Format, Json}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events._
@@ -70,7 +71,8 @@ class CatalogueController @Inject()(
   digitalServiceInfoPage: DigitalServiceInfoPage,
   indexPage: IndexPage,
   teamInfoPage: TeamInfoPage,
-  serviceInfoPage: ServiceInfoPage
+  serviceInfoPage: ServiceInfoPage,
+  libraryInfoPage: LibraryInfoPage
 ) extends FrontendController(mcc) {
 
   import UserManagementConnector._
@@ -161,7 +163,7 @@ class CatalogueController @Inject()(
                 .getDigitalServiceOwner(digitalServiceName)
                 .map(DisplayableTeamMember(_, serviceConfig.getConfString(profileBaseUrlConfigKey, "#")))
             )))
-      case None => Future.successful(NotFound(views.html.error_404_template()))
+      case None => Future.successful(NotFound(error_404_template()))
     }
   }
 
@@ -314,9 +316,10 @@ class CatalogueController @Inject()(
       urlIfLeaksFound   <- leakDetectionService.urlIfLeaksFound(name)
     } yield
       library match {
-        case Some(s) if s.repoType == RepoType.Library =>
-          Ok(library_info(s, mayBeDependencies, urlIfLeaksFound, viewMessages))
-        case _ => NotFound(views.html.error_404_template())
+        case Some(s) if s.repoType == Library =>
+          Ok(libraryInfoPage(s, mayBeDependencies, urlIfLeaksFound))
+        case _ =>
+          NotFound(error_404_template())
       }
   }
 
@@ -328,7 +331,7 @@ class CatalogueController @Inject()(
       repository match {
         case Some(s) if s.repoType == RepoType.Prototype =>
           Ok(prototype_info(s.copy(environments = None), s.createdAt, urlIfLeaksFound, viewMessages))
-        case None => NotFound(views.html.error_404_template())
+        case None => NotFound(error_404_template())
       }
     }
   }
@@ -351,7 +354,7 @@ class CatalogueController @Inject()(
               viewMessages
             )
           )
-        case _ => NotFound(views.html.error_404_template())
+        case _ => NotFound(error_404_template())
       }
   }
 

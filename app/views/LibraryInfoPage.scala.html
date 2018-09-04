@@ -19,10 +19,11 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import views.partials.githubBadgeType
 
+@this(viewMessages: ViewMessages)
+
 @(library: RepositoryDetails,
   mayBeDependencies: Option[Dependencies],
-  linkToLeakDetection: Option[String],
-  viewMessages: ViewMessages
+  linkToLeakDetection: Option[String]
 )(implicit request: Request[_])
 
 @standard_layout(library.name,"libraries") {
