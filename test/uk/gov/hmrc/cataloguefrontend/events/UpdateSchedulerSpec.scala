@@ -16,38 +16,41 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
-import org.mockito.Mockito
+import akka.actor.ActorSystem
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FunSpec, Matchers}
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import org.scalatest.{BeforeAndAfterAll, FunSpec}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
-class UpdateSchedulerSpec extends FunSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite {
+class UpdateSchedulerSpec extends FunSpec with MockitoSugar with BeforeAndAfterAll {
+
+  private val actorSystem           = ActorSystem()
+  override protected def afterAll() = Await.ready(actorSystem.terminate(), 5 seconds)
 
   describe("event read model update") {
     it("should be scheduled for specified intervals") {
       val readModelService = mock[ReadModelService]
-      val scheduler        = new UpdateScheduler(app.actorSystem, readModelService)
+      val scheduler        = new UpdateScheduler(actorSystem, readModelService)
 
-      scheduler.startUpdatingEventsReadModel(100.milliseconds)
+      scheduler.startUpdatingEventsReadModel(100 milliseconds)
 
-      verify(readModelService, Mockito.after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshEventsCache
-      verify(readModelService, times(0)).refreshUmpCache
+      verify(readModelService, after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshEventsCache
+      verify(readModelService, never()).refreshUmpCache
     }
   }
 
   describe("ump cache read model update") {
     it("should be scheduled for specified intervals") {
       val readModelService = mock[ReadModelService]
-      val scheduler        = new UpdateScheduler(app.actorSystem, readModelService)
+      val scheduler        = new UpdateScheduler(actorSystem, readModelService)
 
-      scheduler.startUpdatingUmpCacheReadModel(100.milliseconds)
+      scheduler.startUpdatingUmpCacheReadModel(100 milliseconds)
 
-      verify(readModelService, Mockito.after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshUmpCache
-      verify(readModelService, times(0)).refreshEventsCache
+      verify(readModelService, after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshUmpCache
+      verify(readModelService, never()).refreshEventsCache
     }
   }
-
 }
