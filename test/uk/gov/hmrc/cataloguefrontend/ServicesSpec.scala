@@ -62,6 +62,7 @@ class ServicesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
     mock[TeamInfoPage],
     mock[ServiceInfoPage],
     mock[LibraryInfoPage],
-    mock[PrototypeInfoPage]
+    mock[PrototypeInfoPage],
+    mock[RepositoryInfoPage]
   )
 }

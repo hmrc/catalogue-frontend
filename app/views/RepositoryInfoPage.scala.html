@@ -19,13 +19,14 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.JobMetricDataPoint
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import views.partials.githubBadgeType
-
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+
+@this(viewMessages: ViewMessages)
+
 @(repository: RepositoryDetails,
   mayBeDependencies: Option[Dependencies],
   jobExecutionTimeChartData: Option[ChartDataRows],
-  linkToLeakDetection: Option[String],
-        viewMessages: ViewMessages
+  linkToLeakDetection: Option[String]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(repository.name, "repositories") {

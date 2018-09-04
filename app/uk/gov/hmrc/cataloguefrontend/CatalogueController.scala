@@ -73,7 +73,8 @@ class CatalogueController @Inject()(
   teamInfoPage: TeamInfoPage,
   serviceInfoPage: ServiceInfoPage,
   libraryInfoPage: LibraryInfoPage,
-  prototypeInfoPage: PrototypeInfoPage
+  prototypeInfoPage: PrototypeInfoPage,
+  repositoryInfoPage: RepositoryInfoPage
 ) extends FrontendController(mcc) {
 
   import UserManagementConnector._
@@ -345,14 +346,13 @@ class CatalogueController @Inject()(
       maybeUrlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
     } yield
       (repository, indicators) match {
-        case (Some(s), maybeDataPoints) =>
+        case (Some(repositoryDetails), maybeDataPoints) =>
           Ok(
-            repository_info(
-              s,
+            repositoryInfoPage(
+              repositoryDetails,
               mayBeDependencies,
-              ServiceChartData.jobExecutionTime(s.name, maybeDataPoints),
-              maybeUrlIfLeaksFound,
-              viewMessages
+              ServiceChartData.jobExecutionTime(repositoryDetails.name, maybeDataPoints),
+              maybeUrlIfLeaksFound
             )
           )
         case _ => NotFound(error_404_template())

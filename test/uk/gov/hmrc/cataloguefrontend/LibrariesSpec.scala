@@ -63,6 +63,7 @@ class LibrariesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerTest {
     teamInfoPage                  = mock[TeamInfoPage],
     serviceInfoPage               = mock[ServiceInfoPage],
     libraryInfoPage               = mock[LibraryInfoPage],
-    prototypeInfoPage             = mock[PrototypeInfoPage]
+    prototypeInfoPage             = mock[PrototypeInfoPage],
+    repositoryInfoPage            = mock[RepositoryInfoPage]
   )
 }
