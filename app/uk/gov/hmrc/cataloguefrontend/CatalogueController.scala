@@ -22,6 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
+import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Format, Json}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
@@ -89,7 +90,7 @@ class CatalogueController @Inject()(
   def serviceOwner(digitalService: String): Action[AnyContent] = Action {
     readModelService
       .getDigitalServiceOwner(digitalService)
-      .fold(NotFound(Json.toJson(s"owner for $digitalService not found")))(ds => Ok(Json.toJson(ds)))
+      .fold(NotFound(toJson(s"owner for $digitalService not found")))(ds => Ok(toJson(ds)))
   }
 
   def saveServiceOwner(): Action[AnyContent] = umpAuthenticated.async { implicit request =>
@@ -101,22 +102,22 @@ class CatalogueController @Inject()(
           readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
 
         maybeTeamMember.fold {
-          Future.successful(NotAcceptable(Json.toJson(s"Invalid user: $serviceOwnerDisplayName")))
+          Future.successful(NotAcceptable(toJson(s"Invalid user: $serviceOwnerDisplayName")))
         } { member =>
           member.username.fold(
-            Future.successful(ExpectationFailed(Json.toJson(s"Username was not set (by UMP) for $member!")))) {
+            Future.successful(ExpectationFailed(toJson(s"Username was not set (by UMP) for $member!")))) {
             serviceOwnerUsername =>
               eventService
                 .saveServiceOwnerUpdatedEvent(
                   ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
                 .map(_ => {
                   val string = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
-                  Ok(Json.toJson(DisplayableTeamMember(member, string)))
+                  Ok(toJson(DisplayableTeamMember(member, string)))
                 })
           }
         }
       }
-      .getOrElse(Future.successful(BadRequest(Json.toJson(s"""Unable to parse json: "${request.body.asText
+      .getOrElse(Future.successful(BadRequest(toJson(s"""Unable to parse json: "${request.body.asText
         .getOrElse("No text in request body!")}""""))))
 
   }
@@ -166,7 +167,7 @@ class CatalogueController @Inject()(
       .map(_.displayName)
       .filter(displayName => displayName.getOrElse("").toLowerCase.contains(filterTerm.toLowerCase))
 
-    Ok(Json.toJson(filteredUsers))
+    Ok(toJson(filteredUsers))
   }
 
   private def getRepos(data: DigitalService): Map[String, Seq[String]] = {
