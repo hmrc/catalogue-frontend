@@ -22,6 +22,8 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 
+@this(viewMessages: ViewMessages)
+
 @(teamName: String,
   repos: Map[String, Seq[String]],
   activityDates: TeamActivityDates,
@@ -31,8 +33,7 @@
   stabilityChartData: Option[ChartDataRows],
   umpMyTeamsUrl: String,
   leaksFoundForTeam: Boolean,
-  hasLeaks: String => Boolean,
-  viewMessages: ViewMessages
+  hasLeaks: String => Boolean
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(teamName, "teams") {

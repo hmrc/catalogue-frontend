@@ -68,7 +68,8 @@ class CatalogueController @Inject()(
   viewMessages: ViewMessages,
   mcc: MessagesControllerComponents,
   digitalServiceInfoPage: DigitalServiceInfoPage,
-  indexPage: IndexPage
+  indexPage: IndexPage,
+  teamInfoPage: TeamInfoPage
 ) extends FrontendController(mcc) {
 
   import UserManagementConnector._
@@ -186,14 +187,16 @@ class CatalogueController @Inject()(
       val form: Form[DigitalServiceNameFilter] = DigitalServiceNameFilter.form.bindFromRequest()
 
       form.fold(
-        error => Ok(digital_service_list(digitalServices = Seq.empty, form)),
+        _ => Ok(digital_service_list(digitalServices = Seq.empty, form)),
         query => {
           Ok(
             digital_service_list(
-              response
+              digitalServices = response
                 .filter(query)
                 .sortBy(_.toUpperCase),
-              form))
+              form = form
+            )
+          )
         }
       )
     }
@@ -218,7 +221,7 @@ class CatalogueController @Inject()(
           implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
 
           Ok(
-            team_info(
+            teamInfoPage(
               team.name,
               repos = team.repos.getOrElse(Map()),
               activityDates =
@@ -229,10 +232,10 @@ class CatalogueController @Inject()(
               TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
               umpMyTeamsPageUrl(team.name),
               leakDetectionService.teamHasLeaks(team, reposWithLeaks),
-              leakDetectionService.hasLeaks(reposWithLeaks),
-              viewMessages
-            ))
-        case _ => NotFound(views.html.error_404_template())
+              leakDetectionService.hasLeaks(reposWithLeaks)
+            )
+          )
+        case _ => NotFound(error_404_template())
       }
   }
 
