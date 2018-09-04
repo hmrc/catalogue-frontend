@@ -26,12 +26,13 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
+import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
+import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthenticated, UmpVerifiedRequest}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthenticated, UmpVerifiedRequest, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
@@ -70,6 +71,7 @@ class DigitalServicePageSpec
 
   private[this] lazy val WS           = app.injector.instanceOf[WSClient]
   private[this] lazy val viewMessages = app.injector.instanceOf[ViewMessages]
+  private[this] lazy val messagesApi  = app.injector.instanceOf[MessagesApi]
 
   private[this] lazy val umac = app.injector.instanceOf[UserManagementAuthConnector]
   private[this] lazy val mcc  = app.injector.instanceOf[MessagesControllerComponents]
@@ -137,12 +139,9 @@ class DigitalServicePageSpec
 
       response.status shouldBe 200
 
-      Console.println(response.body)
-      //response.body should include("""<a href="/service/A">A</a>""")
       response.body should include("""<a href="/prototype/B">B</a>""")
       response.body should include("""<a href="/library/C">C</a>""")
       response.body should include("""<a href="/repositories/D">D</a>""")
-
     }
 
     "show a message if no services are found" in {
@@ -243,7 +242,7 @@ class DigitalServicePageSpec
 
     "show edit button if user is singed-in" in {
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
-      val request               = UmpVerifiedRequest(FakeRequest(), isSignedIn = true)
+      val request               = UmpVerifiedRequest(FakeRequest(), messagesApi, isSignedIn = true)
 
       val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None, viewMessages)(request).toString)
 
@@ -252,7 +251,7 @@ class DigitalServicePageSpec
 
     "don't show edit button if user is NOT singed-in" in {
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
-      val request               = UmpVerifiedRequest(FakeRequest(), isSignedIn = false)
+      val request               = UmpVerifiedRequest(FakeRequest(), messagesApi, isSignedIn = false)
 
       val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None, viewMessages)(request).toString)
 

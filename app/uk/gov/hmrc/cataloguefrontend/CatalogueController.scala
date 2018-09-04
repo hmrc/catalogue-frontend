@@ -22,7 +22,6 @@ import javax.inject.{Inject, Singleton}
 import play.api
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
-import play.api.i18n.I18nSupport
 import play.api.libs.json.{Format, Json}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
@@ -67,8 +66,7 @@ class CatalogueController @Inject()(
   userManagementPortalConfig: UserManagementPortalConfig,
   viewMessages: ViewMessages,
   mcc: MessagesControllerComponents
-) extends FrontendController(mcc)
-    with I18nSupport {
+) extends FrontendController(mcc) {
 
   import UserManagementConnector._
   import userManagementPortalConfig._
@@ -77,7 +75,7 @@ class CatalogueController @Inject()(
 
   private implicit val errorResponseFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
 
-  private val repotypeToDetailsUrl = Map(
+  private val repoTypeToDetailsUrl = Map(
     RepoType.Service   -> routes.CatalogueController.service _,
     RepoType.Other     -> routes.CatalogueController.repository _,
     RepoType.Library   -> routes.CatalogueController.library _,
@@ -368,9 +366,9 @@ class CatalogueController @Inject()(
     teamsAndRepositoriesConnector.allRepositories.map { repositories =>
       val form: Form[RepoListFilter] = RepoListFilter.form.bindFromRequest()
       form.fold(
-        error => Ok(repositories_list(repositories = Seq.empty, repotypeToDetailsUrl, error, viewMessages)),
+        error => Ok(repositories_list(repositories = Seq.empty, repoTypeToDetailsUrl, error, viewMessages)),
         query =>
-          Ok(repositories_list(repositories = repositories.filter(query), repotypeToDetailsUrl, form, viewMessages))
+          Ok(repositories_list(repositories = repositories.filter(query), repoTypeToDetailsUrl, form, viewMessages))
       )
     }
   }

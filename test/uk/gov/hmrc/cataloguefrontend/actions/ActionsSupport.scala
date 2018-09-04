@@ -36,7 +36,7 @@ trait ActionsSupport {
     cc: MessagesControllerComponents
   ) extends VerifySignInStatus(umac, cc) {
     override def invokeBlock[A](request: Request[A], block: UmpVerifiedRequest[A] => Future[Result]): Future[Result] =
-      block(UmpVerifiedRequest(request, isSignedIn = true))
+      block(UmpVerifiedRequest(request, cc.messagesApi, isSignedIn = true))
   }
 
 }
