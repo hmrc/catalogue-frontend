@@ -31,6 +31,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{GET => _, _}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthenticated, UmpVerifiedRequest}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector._
@@ -38,7 +39,7 @@ import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
-import views.html.digital_service_info
+import views.html.DigitalServiceInfoPage
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -69,9 +70,10 @@ class DigitalServicePageSpec
       )
       .build()
 
-  private[this] lazy val WS           = app.injector.instanceOf[WSClient]
-  private[this] lazy val viewMessages = app.injector.instanceOf[ViewMessages]
-  private[this] lazy val messagesApi  = app.injector.instanceOf[MessagesApi]
+  private[this] lazy val WS                     = app.injector.instanceOf[WSClient]
+  private[this] lazy val viewMessages           = app.injector.instanceOf[ViewMessages]
+  private[this] lazy val messagesApi            = app.injector.instanceOf[MessagesApi]
+  private[this] lazy val digitalServiceInfoPage = app.injector.instanceOf[DigitalServiceInfoPage]
 
   private[this] lazy val umac = app.injector.instanceOf[UserManagementAuthConnector]
   private[this] lazy val mcc  = app.injector.instanceOf[MessagesControllerComponents]
@@ -79,14 +81,13 @@ class DigitalServicePageSpec
   private[this] lazy val verifySignInStatusPassThrough = new VerifySignInStatusPassThrough(umac, mcc)
   private[this] lazy val umpAuthenticatedPassThrough   = new UmpAuthenticatedPassThrough(umac, mcc)
 
-  def asDocument(html: String): Document = Jsoup.parse(html)
+  private[this] def asDocument(html: String): Document = Jsoup.parse(html)
 
-  val umpFrontPageUrl = "http://some.ump.fontpage.com"
+  private[this] val umpFrontPageUrl    = "http://some.ump.fontpage.com"
+  private[this] val digitalServiceName = "digital-service-a"
 
-  val digitalServiceName = "digital-service-a"
-
-  val serviceOwner       = TeamMember(Some("Jack Low"), None, None, None, None, Some("jack.low"))
-  val mockedModelService = mock[ReadModelService]
+  private[this] val serviceOwner       = TeamMember(Some("Jack Low"), None, None, None, None, Some("jack.low"))
+  private[this] val mockedModelService = mock[ReadModelService]
   when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwner))
 
   "DigitalService page" should {
@@ -224,14 +225,11 @@ class DigitalServicePageSpec
         app.injector.instanceOf[ServicesConfig],
         mock[UserManagementPortalConfig],
         viewMessages,
-        app.injector.instanceOf[MessagesControllerComponents]
+        app.injector.instanceOf[MessagesControllerComponents],
+        digitalServiceInfoPage
       )
 
-      val responseF = catalogueController.digitalService(digitalServiceName)(FakeRequest())
-
-      val response = responseF.futureValue
-
-      import play.api.test.Helpers._
+      val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
       val document = asDocument(contentAsString(response))
 
       val serviceOwnerO = document.select("#service_owner_edit_input").iterator().toList.headOption
@@ -244,7 +242,8 @@ class DigitalServicePageSpec
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
       val request               = UmpVerifiedRequest(FakeRequest(), messagesApi, isSignedIn = true)
 
-      val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None, viewMessages)(request).toString)
+      val document =
+        Jsoup.parse(new DigitalServiceInfoPage(viewMessages)(digitalServiceDetails, None)(request).toString)
 
       document.select("#edit-button").isEmpty shouldBe false
     }
@@ -253,7 +252,8 @@ class DigitalServicePageSpec
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
       val request               = UmpVerifiedRequest(FakeRequest(), messagesApi, isSignedIn = false)
 
-      val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None, viewMessages)(request).toString)
+      val document =
+        Jsoup.parse(new DigitalServiceInfoPage(viewMessages)(digitalServiceDetails, None)(request).toString)
 
       document.select("#edit-button").isEmpty shouldBe true
     }
@@ -326,24 +326,22 @@ class DigitalServicePageSpec
         app.injector.instanceOf[ServicesConfig],
         mock[UserManagementPortalConfig],
         app.injector.instanceOf[ViewMessages],
-        app.injector.instanceOf[MessagesControllerComponents]
+        app.injector.instanceOf[MessagesControllerComponents],
+        digitalServiceInfoPage
       )
 
       val teamName = "Team1"
 
-      val exception = new RuntimeException("Boooom!")
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
-          Map(teamName -> Left(UserManagementConnector.ConnectionError(exception)))
+          Map(teamName -> Left(UserManagementConnector.ConnectionError(new RuntimeException("Boooom!"))))
         )
       )
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
-
-      import play.api.test.Helpers._
 
       val document: Document = asDocument(contentAsString(response))
 
@@ -372,7 +370,8 @@ class DigitalServicePageSpec
         app.injector.instanceOf[ServicesConfig],
         mock[UserManagementPortalConfig],
         viewMessages,
-        app.injector.instanceOf[MessagesControllerComponents]
+        app.injector.instanceOf[MessagesControllerComponents],
+        digitalServiceInfoPage
       )
 
       val teamName = "Team1"
@@ -387,8 +386,6 @@ class DigitalServicePageSpec
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
-
-      import play.api.test.Helpers._
 
       val document: Document = asDocument(contentAsString(response))
 
@@ -418,7 +415,8 @@ class DigitalServicePageSpec
         app.injector.instanceOf[ServicesConfig],
         mock[UserManagementPortalConfig],
         viewMessages,
-        app.injector.instanceOf[MessagesControllerComponents]
+        app.injector.instanceOf[MessagesControllerComponents],
+        digitalServiceInfoPage
       )
 
       val teamName = "Team1"
@@ -433,8 +431,6 @@ class DigitalServicePageSpec
 
       val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
       response.header.status shouldBe 200
-
-      import play.api.test.Helpers._
 
       val document: Document = asDocument(contentAsString(response))
 
@@ -475,5 +471,4 @@ class DigitalServicePageSpec
     teamMembersLiElements(2).text() should include("Casey Binge")
     teamMembersLiElements(3).text() should include("Marc Palazzo")
   }
-
 }

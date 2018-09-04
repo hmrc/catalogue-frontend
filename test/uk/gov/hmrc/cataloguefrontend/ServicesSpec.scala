@@ -16,43 +16,47 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.mvc.{MessagesControllerComponents, Result}
+import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
+import views.html.DigitalServiceInfoPage
 
-class ServicesSpec extends UnitSpec with ScalaFutures with MockitoSugar with GuiceOneAppPerSuite {
+class ServicesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
+
   "/services" should {
     "redirect to the repositories page with the appropriate filters" in {
 
-      val result: Result =
-        new CatalogueController(
-          mock[UserManagementConnector],
-          mock[TeamsAndRepositoriesConnector],
-          mock[ServiceDependenciesConnector],
-          mock[IndicatorsConnector],
-          mock[LeakDetectionService],
-          mock[DeploymentsService],
-          mock[EventService],
-          mock[ReadModelService],
-          app.environment,
-          mock[VerifySignInStatus],
-          mock[UmpAuthenticated],
-          app.injector.instanceOf[ServicesConfig],
-          mock[UserManagementPortalConfig],
-          app.injector.instanceOf[ViewMessages],
-          app.injector.instanceOf[MessagesControllerComponents]
-        ).allServices(FakeRequest()).futureValue
+      val result = catalogueController.allServices(FakeRequest())
 
-      result.header.status              shouldBe 303
-      result.header.headers("Location") shouldBe "/repositories?name=&type=Service"
+      status(result)           shouldBe 303
+      redirectLocation(result) shouldBe Some("/repositories?name=&type=Service")
     }
   }
+
+  private val catalogueController = new CatalogueController(
+    mock[UserManagementConnector],
+    mock[TeamsAndRepositoriesConnector],
+    mock[ServiceDependenciesConnector],
+    mock[IndicatorsConnector],
+    mock[LeakDetectionService],
+    mock[DeploymentsService],
+    mock[EventService],
+    mock[ReadModelService],
+    app.environment,
+    mock[VerifySignInStatus],
+    mock[UmpAuthenticated],
+    app.injector.instanceOf[ServicesConfig],
+    mock[UserManagementPortalConfig],
+    app.injector.instanceOf[ViewMessages],
+    app.injector.instanceOf[MessagesControllerComponents],
+    mock[DigitalServiceInfoPage]
+  )
 }

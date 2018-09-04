@@ -66,7 +66,8 @@ class CatalogueController @Inject()(
   serviceConfig: ServicesConfig,
   userManagementPortalConfig: UserManagementPortalConfig,
   viewMessages: ViewMessages,
-  mcc: MessagesControllerComponents
+  mcc: MessagesControllerComponents,
+  digitalServiceInfoPage: DigitalServiceInfoPage
 ) extends FrontendController(mcc) {
 
   import UserManagementConnector._
@@ -133,10 +134,11 @@ class CatalogueController @Inject()(
         query => {
           Ok(
             teams_list(
-              response
+              teams = response
                 .filter(query)
                 .sortBy(_.name.toUpperCase),
-              form))
+              form = form)
+          )
         }
       )
     }
@@ -150,12 +152,11 @@ class CatalogueController @Inject()(
           .getTeamMembersForTeams(teamNames)
           .map(convertToDisplayableTeamMembers)
           .map(teamMembers =>
-            Ok(digital_service_info(
+            Ok(digitalServiceInfoPage(
               DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)),
               readModelService
                 .getDigitalServiceOwner(digitalServiceName)
-                .map(DisplayableTeamMember(_, serviceConfig.getConfString(profileBaseUrlConfigKey, "#"))),
-              viewMessages
+                .map(DisplayableTeamMember(_, serviceConfig.getConfString(profileBaseUrlConfigKey, "#")))
             )))
       case None => Future.successful(NotFound(views.html.error_404_template()))
     }

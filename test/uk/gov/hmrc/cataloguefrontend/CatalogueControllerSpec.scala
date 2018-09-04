@@ -35,6 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService, TeamRelease}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import views.html.DigitalServiceInfoPage
 
 import scala.concurrent.Future
 
@@ -141,7 +142,7 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAp
 
     val deploymentsService = mock[DeploymentsService]
     val configuration      = mock[ServicesConfig]
-    val mcc = mock[MessagesControllerComponents]
+    val mcc                = mock[MessagesControllerComponents]
 
     when(configuration.getConfString("microservice.services.user-management.profileBaseUrl", ""))
       .thenReturn("profile-base-url")
@@ -161,7 +162,8 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAp
       configuration,
       mock[UserManagementPortalConfig],
       app.injector.instanceOf[ViewMessages],
-      app.injector.instanceOf[MessagesControllerComponents]
+      app.injector.instanceOf[MessagesControllerComponents],
+      mock[DigitalServiceInfoPage]
     )
   }
 

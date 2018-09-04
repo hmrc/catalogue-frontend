@@ -37,6 +37,7 @@ import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, Ser
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
+import views.html.DigitalServiceInfoPage
 
 import scala.concurrent.Future
 
@@ -206,7 +207,8 @@ class ServiceOwnerSpec
       app.injector.instanceOf[ServicesConfig],
       mock[UserManagementPortalConfig],
       app.injector.instanceOf[ViewMessages],
-      app.injector.instanceOf[MessagesControllerComponents]
+      app.injector.instanceOf[MessagesControllerComponents],
+      mock[DigitalServiceInfoPage]
     )
   }
 }

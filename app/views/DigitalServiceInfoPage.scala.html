@@ -21,10 +21,10 @@
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @import uk.gov.hmrc.cataloguefrontend.actions.UmpVerifiedRequest
 
-@(
-        timestampedRepos: DigitalServiceDetails,
-        digitalServiceOwner: Option[DisplayableTeamMember],
-        viewMessages: ViewMessages
+@this(viewMessages: ViewMessages)
+
+@(timestampedRepos: DigitalServiceDetails,
+  digitalServiceOwner: Option[DisplayableTeamMember]
 )(implicit request: UmpVerifiedRequest[_])
 
 @standard_layout(timestampedRepos.digitalServiceName, "digital-services") {

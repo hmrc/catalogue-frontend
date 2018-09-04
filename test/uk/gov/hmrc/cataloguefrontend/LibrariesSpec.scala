@@ -16,44 +16,48 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
-import play.api.mvc.{MessagesControllerComponents, Result}
+import play.api.Environment
+import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
+import views.html.DigitalServiceInfoPage
 
-class LibrariesSpec extends UnitSpec with ScalaFutures with MockitoSugar with GuiceOneAppPerTest {
+class LibrariesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerTest {
 
   "/libraries" should {
     "redirect to the repositories page with the appropriate filters" in {
 
-      val result: Result =
-        new CatalogueController(
-          userManagementConnector = mock[UserManagementConnector],
-          teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
-          serviceDependencyConnector = mock[ServiceDependenciesConnector],
-          indicatorsConnector = mock[IndicatorsConnector],
-          leakDetectionService = mock[LeakDetectionService],
-          deploymentsService = mock[DeploymentsService],
-          eventService = mock[EventService],
-          readModelService = mock[ReadModelService],
-          environment = mock[play.api.Environment],
-          verifySignInStatus = mock[VerifySignInStatus],
-          umpAuthenticated = mock[UmpAuthenticated],
-          serviceConfig = mock[ServicesConfig],
-          mock[UserManagementPortalConfig],
-          viewMessages = app.injector.instanceOf[ViewMessages],
-          mcc = app.injector.instanceOf[MessagesControllerComponents]
-        ).allLibraries(FakeRequest()).futureValue
+      val result = catalogueController.allLibraries(FakeRequest())
 
-      result.header.status              shouldBe 303
-      result.header.headers("Location") shouldBe "/repositories?name=&type=Library"
+      status(result)           shouldBe 303
+      redirectLocation(result) shouldBe Some("/repositories?name=&type=Library")
     }
   }
+
+  private lazy val catalogueController = new CatalogueController(
+    userManagementConnector       = mock[UserManagementConnector],
+    teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
+    serviceDependencyConnector    = mock[ServiceDependenciesConnector],
+    indicatorsConnector           = mock[IndicatorsConnector],
+    leakDetectionService          = mock[LeakDetectionService],
+    deploymentsService            = mock[DeploymentsService],
+    eventService                  = mock[EventService],
+    readModelService              = mock[ReadModelService],
+    environment                   = mock[Environment],
+    verifySignInStatus            = mock[VerifySignInStatus],
+    umpAuthenticated              = mock[UmpAuthenticated],
+    serviceConfig                 = mock[ServicesConfig],
+    userManagementPortalConfig    = mock[UserManagementPortalConfig],
+    viewMessages                  = app.injector.instanceOf[ViewMessages],
+    mcc                           = app.injector.instanceOf[MessagesControllerComponents],
+    digitalServiceInfoPage        = mock[DigitalServiceInfoPage]
+  )
 }
