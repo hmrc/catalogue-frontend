@@ -61,6 +61,7 @@ class PrototypesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerTest 
     mock[IndexPage],
     mock[TeamInfoPage],
     mock[ServiceInfoPage],
-    mock[LibraryInfoPage]
+    mock[LibraryInfoPage],
+    mock[PrototypeInfoPage]
   )
 }

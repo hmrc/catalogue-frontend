@@ -72,7 +72,8 @@ class CatalogueController @Inject()(
   indexPage: IndexPage,
   teamInfoPage: TeamInfoPage,
   serviceInfoPage: ServiceInfoPage,
-  libraryInfoPage: LibraryInfoPage
+  libraryInfoPage: LibraryInfoPage,
+  prototypeInfoPage: PrototypeInfoPage
 ) extends FrontendController(mcc) {
 
   import UserManagementConnector._
@@ -330,7 +331,7 @@ class CatalogueController @Inject()(
     } yield {
       repository match {
         case Some(s) if s.repoType == RepoType.Prototype =>
-          Ok(prototype_info(s.copy(environments = None), s.createdAt, urlIfLeaksFound, viewMessages))
+          Ok(prototypeInfoPage(s.copy(environments = None), s.createdAt, urlIfLeaksFound))
         case None => NotFound(error_404_template())
       }
     }
