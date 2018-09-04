@@ -35,7 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService, TeamRelease}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import views.html.DigitalServiceInfoPage
+import views.html._
 
 import scala.concurrent.Future
 
@@ -163,7 +163,8 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAp
       mock[UserManagementPortalConfig],
       app.injector.instanceOf[ViewMessages],
       app.injector.instanceOf[MessagesControllerComponents],
-      mock[DigitalServiceInfoPage]
+      mock[DigitalServiceInfoPage],
+      mock[IndexPage]
     )
   }
 

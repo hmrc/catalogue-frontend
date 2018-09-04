@@ -60,7 +60,7 @@ class AuthControllerSpec
 
       val result = controller.submit(request)
 
-      redirectLocation(result).get             shouldBe routes.CatalogueController.landingPage().url
+      redirectLocation(result).get             shouldBe routes.CatalogueController.index().url
       session(result).apply("ump.token")       shouldBe expectedToken.value
       session(result).apply("ump.displayName") shouldBe expectedDisplayName.value
     }

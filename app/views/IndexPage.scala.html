@@ -16,7 +16,8 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 
-@(viewMessages: ViewMessages)(implicit request: Request[_])
+@this(viewMessages: ViewMessages)
+@()(implicit request: Request[_])
 
 @standard_layout() {
     <section class="section-wrapper">

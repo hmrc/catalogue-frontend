@@ -54,8 +54,11 @@ class AuthController @Inject()(
         signInData =>
           authService.authenticate(signInData.username, signInData.password).map {
             case Right(TokenAndDisplayName(UmpToken(token), DisplayName(displayName))) =>
-              Redirect(routes.CatalogueController.landingPage())
-                .withSession(UmpToken.SESSION_KEY_NAME -> token, DisplayName.SESSION_KEY_NAME -> displayName)
+              Redirect(routes.CatalogueController.index())
+                .withSession(
+                  UmpToken.SESSION_KEY_NAME    -> token,
+                  DisplayName.SESSION_KEY_NAME -> displayName
+                )
             case Left(_) =>
               BadRequest(sign_in(signinForm.withGlobalError(Messages("sign-in.wrong-credentials")), selfServiceUrl))
         }

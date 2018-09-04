@@ -67,7 +67,8 @@ class CatalogueController @Inject()(
   userManagementPortalConfig: UserManagementPortalConfig,
   viewMessages: ViewMessages,
   mcc: MessagesControllerComponents,
-  digitalServiceInfoPage: DigitalServiceInfoPage
+  digitalServiceInfoPage: DigitalServiceInfoPage,
+  indexPage: IndexPage
 ) extends FrontendController(mcc) {
 
   import UserManagementConnector._
@@ -84,8 +85,8 @@ class CatalogueController @Inject()(
     RepoType.Prototype -> routes.CatalogueController.prototype _
   )
 
-  def landingPage(): Action[AnyContent] = Action { implicit request =>
-    Ok(landing_page(viewMessages))
+  def index(): Action[AnyContent] = Action { implicit request =>
+    Ok(indexPage())
   }
 
   def serviceOwner(digitalService: String): Action[AnyContent] = Action {
