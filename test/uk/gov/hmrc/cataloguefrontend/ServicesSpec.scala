@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
-import views.html.{DigitalServiceInfoPage, IndexPage, TeamInfoPage}
+import views.html.{DigitalServiceInfoPage, IndexPage, ServiceInfoPage, TeamInfoPage}
 
 class ServicesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
 
@@ -59,6 +59,7 @@ class ServicesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
     app.injector.instanceOf[MessagesControllerComponents],
     mock[DigitalServiceInfoPage],
     mock[IndexPage],
-    mock[TeamInfoPage]
+    mock[TeamInfoPage],
+    mock[ServiceInfoPage]
   )
 }

@@ -69,7 +69,8 @@ class CatalogueController @Inject()(
   mcc: MessagesControllerComponents,
   digitalServiceInfoPage: DigitalServiceInfoPage,
   indexPage: IndexPage,
-  teamInfoPage: TeamInfoPage
+  teamInfoPage: TeamInfoPage,
+  serviceInfoPage: ServiceInfoPage
 ) extends FrontendController(mcc) {
 
   import UserManagementConnector._
@@ -292,17 +293,17 @@ class CatalogueController @Inject()(
               .toMap
 
           Ok(
-            service_info(
+            serviceInfoPage(
               repositoryDetails.copy(environments = maybeDeployedEnvironments),
               mayBeDependencies,
               ServiceChartData.deploymentThroughput(repositoryDetails.name, maybeDataPoints.map(_.throughput)),
               ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
               repositoryDetails.createdAt,
               deploymentsByEnvironmentName,
-              urlIfLeaksFound,
-              viewMessages
-            ))
-        case _ => NotFound(views.html.error_404_template())
+              urlIfLeaksFound
+            )
+          )
+        case _ => NotFound(error_404_template())
       }
   }
 

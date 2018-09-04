@@ -39,7 +39,7 @@ import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
-import views.html.{DigitalServiceInfoPage, IndexPage, TeamInfoPage}
+import views.html.{DigitalServiceInfoPage, IndexPage, ServiceInfoPage, TeamInfoPage}
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -228,7 +228,8 @@ class DigitalServicePageSpec
         app.injector.instanceOf[MessagesControllerComponents],
         digitalServiceInfoPage,
         mock[IndexPage],
-        mock[TeamInfoPage]
+        mock[TeamInfoPage],
+        mock[ServiceInfoPage]
       )
 
       val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
@@ -331,7 +332,8 @@ class DigitalServicePageSpec
         app.injector.instanceOf[MessagesControllerComponents],
         digitalServiceInfoPage,
         mock[IndexPage],
-        mock[TeamInfoPage]
+        mock[TeamInfoPage],
+        mock[ServiceInfoPage]
       )
 
       val teamName = "Team1"
@@ -377,7 +379,8 @@ class DigitalServicePageSpec
         app.injector.instanceOf[MessagesControllerComponents],
         digitalServiceInfoPage,
         mock[IndexPage],
-        mock[TeamInfoPage]
+        mock[TeamInfoPage],
+        mock[ServiceInfoPage]
       )
 
       val teamName = "Team1"
@@ -424,7 +427,8 @@ class DigitalServicePageSpec
         app.injector.instanceOf[MessagesControllerComponents],
         digitalServiceInfoPage,
         mock[IndexPage],
-        mock[TeamInfoPage]
+        mock[TeamInfoPage],
+        mock[ServiceInfoPage]
       )
 
       val teamName = "Team1"

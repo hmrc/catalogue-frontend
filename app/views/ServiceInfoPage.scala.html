@@ -24,14 +24,15 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import views.partials.githubBadgeType
 
+@this(viewMessages: ViewMessages)
+
 @(service: RepositoryDetails,
   mayBeDependencies: Option[Dependencies],
   throughputChartData: Option[ChartDataRows],
   stabilityChartData: Option[ChartDataRows],
   repositoryCreationDate: LocalDateTime,
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
-  linkToLeakDetection: Option[String],
- viewMessages: ViewMessages
+  linkToLeakDetection: Option[String]
 )(implicit messages: Messages, request: Request[_])
 
 @datacentreMappings(datacentreLongName: String) = @{
