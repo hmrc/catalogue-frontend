@@ -23,8 +23,9 @@
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import views.partials.githubBadgeType
+@import partials.DependenciesPartial
 
-@this(viewMessages: ViewMessages)
+@this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 
 @(service: RepositoryDetails,
   mayBeDependencies: Option[Dependencies],
@@ -101,7 +102,7 @@
             </div>
         }
         </div>
-            @partials.dependencies(mayBeDependencies, viewMessages)
+            @dependenciesPartial(mayBeDependencies)
         <div class="row">
             <div class="col-md-12">
                 <div class="board">

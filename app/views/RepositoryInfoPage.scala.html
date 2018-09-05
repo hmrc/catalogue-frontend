@@ -20,8 +20,9 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import views.partials.githubBadgeType
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import partials.DependenciesPartial
 
-@this(viewMessages: ViewMessages)
+@this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 
 @(repository: RepositoryDetails,
   mayBeDependencies: Option[Dependencies],
@@ -48,7 +49,7 @@
         @partials.code(repository)
     </div>
 
-    @partials.dependencies(mayBeDependencies, viewMessages)
+    @dependenciesPartial(mayBeDependencies)
 
     <div class="row">
         <div class="col-md-12">
