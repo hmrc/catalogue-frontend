@@ -156,7 +156,6 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAp
       deploymentsService,
       mock[EventService],
       mock[ReadModelService],
-      app.environment,
       mock[VerifySignInStatus],
       mock[UmpAuthenticated],
       configuration,

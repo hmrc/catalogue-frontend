@@ -22,62 +22,32 @@ import akka.stream.Materializer
 import org.mockito.Matchers.{eq => eqTo, _}
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
-import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.{MessagesControllerComponents, Result}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import play.api.test.{FakeHeaders, FakeRequest}
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType._
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.Future
 
-class DependencyReportControllerSpec
-    extends UnitSpec
-    with BeforeAndAfterEach
-    with GuiceOneServerPerSuite
-    with WireMockEndpoints
-    with MockitoSugar
-    with ScalaFutures {
+class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
 
-  val now: LocalDateTime = LocalDateTime.now()
+  private val now: LocalDateTime = LocalDateTime.now()
 
-  implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        "microservice.services.teams-and-repositories.host" -> host,
-        "microservice.services.teams-and-repositories.port" -> endpointPort,
-        "play.ws.ssl.loose.acceptAnyCertificate"            -> true,
-        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
-      )
-      .build()
-
-  private implicit lazy val materializer: Materializer = app.injector.instanceOf[Materializer]
-
-  private lazy val mockedTeamsAndRepositoriesConnector: TeamsAndRepositoriesConnector =
-    mock[TeamsAndRepositoriesConnector]
-  private lazy val mockedDependenciesConnector: ServiceDependenciesConnector = mock[ServiceDependenciesConnector]
-  private lazy val mcc                                                       = app.injector.instanceOf[MessagesControllerComponents]
+  private implicit lazy val materializer: Materializer = app.materializer
+  private lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
+  private lazy val mockedDependenciesConnector         = mock[ServiceDependenciesConnector]
 
   private lazy val dependencyReportController = new DependencyReportController(
-    mock[HttpClient],
-    app.environment,
     mockedTeamsAndRepositoriesConnector,
     mockedDependenciesConnector,
-    mcc
+    stubMessagesControllerComponents()
   )
 
   "dependencyReport" should {
@@ -147,9 +117,9 @@ class DependencyReportControllerSpec
       mockTeamsAndTheirRepositories()
       mockAllDependencies()
 
-      val response: Result = dependencyReportController.dependencyReport()(FakeRequest()).futureValue
+      val response = dependencyReportController.dependencyReport()(FakeRequest())
 
-      response.header.status shouldBe 200
+      status(response) shouldBe 200
 
       val csvLines = contentAsString(response).lines.toList
 
@@ -163,7 +133,6 @@ class DependencyReportControllerSpec
       csvLines    should contain("repo-2,LIBRARY-3,digital-service-2,green,library,team2,3.0.0,3.0.0")
       csvLines    should contain("repo-2,PLUGIN-3,digital-service-2,red,plugin,team2,4.0.0,3.0.0")
     }
-
   }
 
   def latestVersion(currentVersion: Version, colour: String): Option[Version] =

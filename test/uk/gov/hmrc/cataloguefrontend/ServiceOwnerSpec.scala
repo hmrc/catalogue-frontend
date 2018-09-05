@@ -201,7 +201,6 @@ class ServiceOwnerSpec
       mock[DeploymentsService],
       mockedEventService,
       mockedModelService,
-      app.environment,
       new VerifySignInStatusPassThrough(umac, mcc),
       new UmpAuthenticatedPassThrough(umac, mcc),
       app.injector.instanceOf[ServicesConfig],

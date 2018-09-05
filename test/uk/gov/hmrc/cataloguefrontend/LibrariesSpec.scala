@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatest.mockito.MockitoSugar
-import play.api.Environment
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
@@ -50,7 +49,6 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
     mock[DeploymentsService],
     mock[EventService],
     mock[ReadModelService],
-    mock[Environment],
     mock[VerifySignInStatus],
     mock[UmpAuthenticated],
     mock[ServicesConfig],

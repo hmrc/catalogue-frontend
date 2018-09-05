@@ -61,7 +61,6 @@ class CatalogueController @Inject()(
   deploymentsService: DeploymentsService,
   eventService: EventService,
   readModelService: ReadModelService,
-  environment: api.Environment,
   verifySignInStatus: VerifySignInStatus,
   umpAuthenticated: UmpAuthenticated,
   serviceConfig: ServicesConfig,

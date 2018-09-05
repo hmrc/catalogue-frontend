@@ -24,11 +24,9 @@ import org.apache.commons.io.IOUtils
 import play.api.http.HttpEntity
 import play.api.libs.json.{Json, OFormat}
 import play.api.mvc._
-import play.api.{Environment => PlayEnvironment}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, ServiceDependenciesConnector, Team, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -46,8 +44,6 @@ case class DependencyReport(
 
 @Singleton
 class DependencyReportController @Inject()(
-  http: HttpClient,
-  environment: PlayEnvironment,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   serviceDependencyConnector: ServiceDependenciesConnector,
   mcc: MessagesControllerComponents
