@@ -138,7 +138,7 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAp
   }
 
   private trait Setup {
-    implicit val headerCarrrier: HeaderCarrier = HeaderCarrier()
+    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
     val deploymentsService = mock[DeploymentsService]
     val configuration      = mock[ServicesConfig]
@@ -161,7 +161,6 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAp
       mock[UmpAuthenticated],
       configuration,
       mock[UserManagementPortalConfig],
-      app.injector.instanceOf[ViewMessages],
       app.injector.instanceOf[MessagesControllerComponents],
       mock[DigitalServiceInfoPage],
       mock[IndexPage],

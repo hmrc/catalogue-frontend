@@ -55,7 +55,6 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     mock[UmpAuthenticated],
     mock[ServicesConfig],
     mock[UserManagementPortalConfig],
-    mock[ViewMessages],
     stubMessagesControllerComponents(),
     mock[DigitalServiceInfoPage],
     mock[IndexPage],

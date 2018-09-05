@@ -20,20 +20,18 @@ import java.time.LocalDateTime
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.play.guice.GuiceOneAppPerTest
-import play.api.i18n.Lang
+import org.scalatest.Matchers._
+import org.scalatest.WordSpec
+import play.api.i18n.Messages
+import play.api.test.Helpers
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.Deployer
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
+import uk.gov.hmrc.cataloguefrontend.Deployer
 import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
-import play.api.i18n.Messages.Implicits._
 
-class DeploymentsListSpec extends WordSpec with Matchers with GuiceOneAppPerTest {
+class DeploymentsListSpec extends WordSpec {
 
-  implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
-
-  def asDocument(html: Html): Document = Jsoup.parse(html.toString())
+  private implicit val messages: Messages = Helpers.stubMessages()
 
   "deployments_list" should {
 
@@ -76,8 +74,8 @@ class DeploymentsListSpec extends WordSpec with Matchers with GuiceOneAppPerTest
 
       document.select("#row1_deployer a").text()       shouldBe "xyz.abc"
       document.select("#row1_deployer a").attr("href") shouldBe "user-profile-base/xyz.abc"
-
     }
   }
 
+  private def asDocument(html: Html): Document = Jsoup.parse(html.toString())
 }

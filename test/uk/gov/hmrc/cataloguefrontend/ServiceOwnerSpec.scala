@@ -206,7 +206,6 @@ class ServiceOwnerSpec
       new UmpAuthenticatedPassThrough(umac, mcc),
       app.injector.instanceOf[ServicesConfig],
       mock[UserManagementPortalConfig],
-      app.injector.instanceOf[ViewMessages],
       app.injector.instanceOf[MessagesControllerComponents],
       mock[DigitalServiceInfoPage],
       mock[IndexPage],

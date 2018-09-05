@@ -66,7 +66,6 @@ class CatalogueController @Inject()(
   umpAuthenticated: UmpAuthenticated,
   serviceConfig: ServicesConfig,
   userManagementPortalConfig: UserManagementPortalConfig,
-  viewMessages: ViewMessages,
   mcc: MessagesControllerComponents,
   digitalServiceInfoPage: DigitalServiceInfoPage,
   indexPage: IndexPage,
@@ -408,7 +407,13 @@ class CatalogueController @Inject()(
           .bindFromRequest()
           .fold(
             _ => Ok(deployments_list(Nil, umpProfileUrl)),
-            deploymentsFilter => Ok(deployments_list(teamReleases filter deploymentsFilter, umpProfileUrl))
+            deploymentsFilter =>
+              Ok(
+                deployments_list(
+                  deployments        = teamReleases filter deploymentsFilter,
+                  userProfileBaseUrl = umpProfileUrl
+                )
+            )
           )
       }
   }
@@ -432,7 +437,6 @@ class CatalogueController @Inject()(
     teamsAndMembers.map {
       case (teamName, errorOrMembers) => (teamName, convertToDisplayableTeamMembers(teamName, errorOrMembers))
     }
-
 }
 
 case class TeamFilter(name: Option[String] = None) {

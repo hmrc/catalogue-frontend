@@ -224,7 +224,6 @@ class DigitalServicePageSpec
         umpAuthenticatedPassThrough,
         app.injector.instanceOf[ServicesConfig],
         mock[UserManagementPortalConfig],
-        viewMessages,
         app.injector.instanceOf[MessagesControllerComponents],
         digitalServiceInfoPage,
         mock[IndexPage],
@@ -250,7 +249,7 @@ class DigitalServicePageSpec
       val request               = UmpVerifiedRequest(FakeRequest(), messagesApi, isSignedIn = true)
 
       val document =
-        Jsoup.parse(new DigitalServiceInfoPage(viewMessages)(digitalServiceDetails, None)(request).toString)
+        Jsoup.parse(new DigitalServiceInfoPage(mock[ViewMessages])(digitalServiceDetails, None)(request).toString)
 
       document.select("#edit-button").isEmpty shouldBe false
     }
@@ -260,17 +259,16 @@ class DigitalServicePageSpec
       val request               = UmpVerifiedRequest(FakeRequest(), messagesApi, isSignedIn = false)
 
       val document =
-        Jsoup.parse(new DigitalServiceInfoPage(viewMessages)(digitalServiceDetails, None)(request).toString)
+        Jsoup.parse(new DigitalServiceInfoPage(mock[ViewMessages])(digitalServiceDetails, None)(request).toString)
 
       document.select("#edit-button").isEmpty shouldBe true
     }
 
     "show team members for teams correctly" in {
-      val team1 = "Team1"
-      val team2 = "Team2"
 
-      val teamNames          = Seq(team1, team2)
       val digitalServiceName = "digital-service-123"
+      val team1              = "Team1"
+      val team2              = "Team2"
 
       val json =
         s"""
@@ -288,6 +286,7 @@ class DigitalServicePageSpec
            |  ]
            |}
         """.stripMargin
+
       serviceEndpoint(
         GET,
         s"/api/digital-services/$digitalServiceName",
@@ -332,7 +331,6 @@ class DigitalServicePageSpec
         app.injector.instanceOf[UmpAuthenticated],
         app.injector.instanceOf[ServicesConfig],
         mock[UserManagementPortalConfig],
-        app.injector.instanceOf[ViewMessages],
         app.injector.instanceOf[MessagesControllerComponents],
         digitalServiceInfoPage,
         mock[IndexPage],
@@ -383,7 +381,6 @@ class DigitalServicePageSpec
         umpAuthenticatedPassThrough,
         app.injector.instanceOf[ServicesConfig],
         mock[UserManagementPortalConfig],
-        viewMessages,
         app.injector.instanceOf[MessagesControllerComponents],
         digitalServiceInfoPage,
         mock[IndexPage],
@@ -435,7 +432,6 @@ class DigitalServicePageSpec
         umpAuthenticatedPassThrough,
         app.injector.instanceOf[ServicesConfig],
         mock[UserManagementPortalConfig],
-        viewMessages,
         app.injector.instanceOf[MessagesControllerComponents],
         digitalServiceInfoPage,
         mock[IndexPage],
