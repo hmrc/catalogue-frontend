@@ -19,7 +19,6 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.{LocalDateTime, ZoneOffset}
 
 import javax.inject.{Inject, Singleton}
-import play.api
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
 import play.api.libs.json.Json.toJson
@@ -32,7 +31,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
@@ -63,7 +61,6 @@ class CatalogueController @Inject()(
   readModelService: ReadModelService,
   verifySignInStatus: VerifySignInStatus,
   umpAuthenticated: UmpAuthenticated,
-  serviceConfig: ServicesConfig,
   userManagementPortalConfig: UserManagementPortalConfig,
   mcc: MessagesControllerComponents,
   digitalServiceInfoPage: DigitalServiceInfoPage,
@@ -78,8 +75,6 @@ class CatalogueController @Inject()(
 
   import UserManagementConnector._
   import userManagementPortalConfig._
-
-  private val profileBaseUrlConfigKey = "user-management.profileBaseUrl"
 
   private implicit val errorResponseFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
 
@@ -117,10 +112,7 @@ class CatalogueController @Inject()(
               eventService
                 .saveServiceOwnerUpdatedEvent(
                   ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
-                .map(_ => {
-                  val string = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
-                  Ok(toJson(DisplayableTeamMember(member, string)))
-                })
+                .map(_ => Ok(toJson(DisplayableTeamMember(member, userManagementProfileBaseUrl))))
           }
         }
       }
@@ -162,7 +154,7 @@ class CatalogueController @Inject()(
               DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)),
               readModelService
                 .getDigitalServiceOwner(digitalServiceName)
-                .map(DisplayableTeamMember(_, serviceConfig.getConfString(profileBaseUrlConfigKey, "#")))
+                .map(DisplayableTeamMember(_, userManagementProfileBaseUrl))
             )))
       case None => Future.successful(NotFound(error_404_template()))
     }
@@ -391,26 +383,29 @@ class CatalogueController @Inject()(
   }
 
   def deploymentsPage(): Action[AnyContent] = Action.async { implicit request =>
-    val umpProfileUrl                 = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
-    val form: Form[DeploymentsFilter] = DeploymentsFilter.form.bindFromRequest()
-    Future.successful(Ok(deployments_page(form, umpProfileUrl)))
+    Future.successful {
+      Ok(
+        deployments_page(
+          form               = DeploymentsFilter.form.bindFromRequest(),
+          userProfileBaseUrl = userManagementProfileBaseUrl
+        )
+      )
+    }
   }
 
   def deploymentsList(teamName: Option[String], serviceName: Option[String]): Action[AnyContent] = Action.async {
     implicit request =>
       import SearchFiltering._
-      val umpProfileUrl = serviceConfig.getConfString(profileBaseUrlConfigKey, "#")
-
       deploymentsService.getDeployments(teamName.blankToNone, serviceName.blankToNone) map { teamReleases =>
         DeploymentsFilter.form
           .bindFromRequest()
           .fold(
-            _ => Ok(deployments_list(Nil, umpProfileUrl)),
+            _ => Ok(deployments_list(Nil, userManagementProfileBaseUrl)),
             deploymentsFilter =>
               Ok(
                 deployments_list(
                   deployments        = teamReleases filter deploymentsFilter,
-                  userProfileBaseUrl = umpProfileUrl
+                  userProfileBaseUrl = userManagementProfileBaseUrl
                 )
             )
           )
@@ -428,7 +423,7 @@ class CatalogueController @Inject()(
     errorOrTeamMembers match {
       case Left(err) => Left(err)
       case Right(tms) =>
-        Right(DisplayableTeamMembers(teamName, serviceConfig.getConfString(profileBaseUrlConfigKey, "#"), tms))
+        Right(DisplayableTeamMembers(teamName, userManagementProfileBaseUrl, tms))
     }
 
   private def convertToDisplayableTeamMembers(teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]])

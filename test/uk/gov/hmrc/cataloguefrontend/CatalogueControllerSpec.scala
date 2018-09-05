@@ -25,8 +25,7 @@ import org.mockito.Mockito.when
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.mvc.{MessagesControllerComponents, Result}
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
@@ -34,12 +33,12 @@ import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDepe
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService, TeamRelease}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import views.html._
 
 import scala.concurrent.Future
 
-class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAppPerSuite {
+class CatalogueControllerSpec extends WordSpec with MockitoSugar {
 
   "deploymentsList" should {
 
@@ -140,12 +139,10 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAp
   private trait Setup {
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-    val deploymentsService = mock[DeploymentsService]
-    val configuration      = mock[ServicesConfig]
-    val mcc                = mock[MessagesControllerComponents]
+    val deploymentsService         = mock[DeploymentsService]
+    val userManagementPortalConfig = mock[UserManagementPortalConfig]
 
-    when(configuration.getConfString("microservice.services.user-management.profileBaseUrl", ""))
-      .thenReturn("profile-base-url")
+    when(userManagementPortalConfig.userManagementProfileBaseUrl).thenReturn("profile-base-url")
 
     val controller = new CatalogueController(
       mock[UserManagementConnector],
@@ -158,9 +155,8 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAp
       mock[ReadModelService],
       mock[VerifySignInStatus],
       mock[UmpAuthenticated],
-      configuration,
-      mock[UserManagementPortalConfig],
-      app.injector.instanceOf[MessagesControllerComponents],
+      userManagementPortalConfig,
+      stubMessagesControllerComponents(),
       mock[DigitalServiceInfoPage],
       mock[IndexPage],
       mock[TeamInfoPage],

@@ -20,22 +20,27 @@ import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class UserManagementPortalConfig @Inject()(serviceConfig: ServicesConfig) {
+class UserManagementPortalConfig @Inject()(servicesConfig: ServicesConfig) {
 
   private val serviceName = "user-management"
 
   def umpMyTeamsPageUrl(teamName: String): String = {
     val frontPageUrlConfigKey = s"$serviceName.myTeamsUrl"
-    val myTeamsUrl = serviceConfig.getConfString(
-      confKey = frontPageUrlConfigKey,
+    val myTeamsUrl = servicesConfig.getConfString(
+      confKey   = frontPageUrlConfigKey,
       defString = throw new RuntimeException(s"Could not find config $frontPageUrlConfigKey")
     )
 
     s"""${myTeamsUrl.appendSlash}$teamName?edit"""
   }
 
-  def userManagementBaseUrl: String = serviceConfig.getConfString(
-    confKey = s"$serviceName.url",
+  def userManagementBaseUrl: String = servicesConfig.getConfString(
+    confKey   = s"$serviceName.url",
     defString = throw new RuntimeException(s"Could not find config $serviceName.url")
+  )
+
+  lazy val userManagementProfileBaseUrl: String = servicesConfig.getConfString(
+    confKey   = s"$serviceName.profileBaseUrl",
+    defString = "#"
   )
 }

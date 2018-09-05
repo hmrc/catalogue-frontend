@@ -23,7 +23,6 @@ import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStat
 import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -51,7 +50,6 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     mock[ReadModelService],
     mock[VerifySignInStatus],
     mock[UmpAuthenticated],
-    mock[ServicesConfig],
     mock[UserManagementPortalConfig],
     stubMessagesControllerComponents(),
     mock[DigitalServiceInfoPage],
