@@ -169,7 +169,8 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with GuiceOneAp
       mock[ServiceInfoPage],
       mock[LibraryInfoPage],
       mock[PrototypeInfoPage],
-      mock[RepositoryInfoPage]
+      mock[RepositoryInfoPage],
+      mock[RepositoriesListPage]
     )
   }
 

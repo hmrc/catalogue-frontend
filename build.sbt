@@ -17,10 +17,11 @@ lazy val microservice = Project(appName, file("."))
     resolvers                        += Resolver.jcenterRepo
   )
 
+val bootstrapPlayVersion = "0.14.0"
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "simple-reactivemongo-26" % "0.9.0",
-  "uk.gov.hmrc"               %% "bootstrap-play-26"       % "0.11.0",
+  "uk.gov.hmrc"               %% "bootstrap-play-26"       % bootstrapPlayVersion,
   "uk.gov.hmrc"               %% "url-builder"             % "1.1.0",
   "org.typelevel"             %% "cats-core"               % "1.1.0",
   "org.apache.httpcomponents" % "httpcore"                 % "4.3.2",
@@ -31,15 +32,16 @@ val compile = Seq(
 )
 
 val test  = Seq(
-  "uk.gov.hmrc"            %% "hmrctest"                   % "3.0.0"             % Test,
-  "uk.gov.hmrc"            %% "reactivemongo-test-26"      % "0.3.0"             % Test,
-  "org.scalatest"          %% "scalatest"                  % "3.0.4"             % Test,
-  "org.scalatestplus.play" %% "scalatestplus-play"         % "3.1.2"             % Test,
-  "org.scalacheck"         %% "scalacheck"                 % "1.13.4"            % Test,
-  "org.pegdown"            % "pegdown"                     % "1.4.2"             % Test,
-  "com.typesafe.play"      %% "play-test"                  % PlayVersion.current % Test,
-  "com.github.tomakehurst" % "wiremock"                    % "1.52"              % Test,
-  "org.jsoup"              % "jsoup"                       % "1.9.2"             % Test,
-  "org.mockito"            % "mockito-all"                 % "1.10.19"           % Test,
+  "uk.gov.hmrc"            %% "bootstrap-play-26"          % bootstrapPlayVersion % Test classifier "tests",
+  "uk.gov.hmrc"            %% "hmrctest"                   % "3.0.0"              % Test,
+  "uk.gov.hmrc"            %% "reactivemongo-test-26"      % "0.3.0"              % Test,
+  "org.scalatest"          %% "scalatest"                  % "3.0.4"              % Test,
+  "org.scalatestplus.play" %% "scalatestplus-play"         % "3.1.2"              % Test,
+  "org.scalacheck"         %% "scalacheck"                 % "1.13.4"             % Test,
+  "org.pegdown"            % "pegdown"                     % "1.4.2"              % Test,
+  "com.typesafe.play"      %% "play-test"                  % PlayVersion.current  % Test,
+  "com.github.tomakehurst" % "wiremock"                    % "1.52"               % Test,
+  "org.jsoup"              % "jsoup"                       % "1.9.2"              % Test,
+  "org.mockito"            % "mockito-all"                 % "1.10.19"            % Test,
   ws
 )

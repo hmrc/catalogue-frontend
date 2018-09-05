@@ -21,9 +21,11 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import helper._
 
+@this(viewMessages: ViewMessages)
+
 @(repositories: Seq[RepositoryDisplayDetails],
-  repotypeToDetailsUrl: Map[RepoType.Value, (String) => Call],
-  form: Form[_],viewMessages: ViewMessages
+  repotypeToDetailsUrl: Map[RepoType.Value, String => Call],
+  form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("Repositories", "repositories") {

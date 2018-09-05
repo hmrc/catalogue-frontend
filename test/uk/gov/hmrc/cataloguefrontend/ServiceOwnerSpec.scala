@@ -214,7 +214,8 @@ class ServiceOwnerSpec
       mock[ServiceInfoPage],
       mock[LibraryInfoPage],
       mock[PrototypeInfoPage],
-      mock[RepositoryInfoPage]
+      mock[RepositoryInfoPage],
+      mock[RepositoriesListPage]
     )
   }
 }

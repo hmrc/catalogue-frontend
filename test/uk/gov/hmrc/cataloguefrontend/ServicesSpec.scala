@@ -17,8 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.mvc.MessagesControllerComponents
+import play.api.Environment
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
@@ -26,10 +25,11 @@ import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDepe
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.play.bootstrap.tools.Stubs._
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
 
-class ServicesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
+class ServicesSpec extends UnitSpec with MockitoSugar {
 
   "/services" should {
     "redirect to the repositories page with the appropriate filters" in {
@@ -50,19 +50,20 @@ class ServicesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
     mock[DeploymentsService],
     mock[EventService],
     mock[ReadModelService],
-    app.environment,
+    mock[Environment],
     mock[VerifySignInStatus],
     mock[UmpAuthenticated],
-    app.injector.instanceOf[ServicesConfig],
+    mock[ServicesConfig],
     mock[UserManagementPortalConfig],
-    app.injector.instanceOf[ViewMessages],
-    app.injector.instanceOf[MessagesControllerComponents],
+    mock[ViewMessages],
+    stubMessagesControllerComponents(),
     mock[DigitalServiceInfoPage],
     mock[IndexPage],
     mock[TeamInfoPage],
     mock[ServiceInfoPage],
     mock[LibraryInfoPage],
     mock[PrototypeInfoPage],
-    mock[RepositoryInfoPage]
+    mock[RepositoryInfoPage],
+    mock[RepositoriesListPage]
   )
 }

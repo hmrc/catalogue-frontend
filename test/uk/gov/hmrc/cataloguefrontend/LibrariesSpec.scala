@@ -17,9 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.Environment
-import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
@@ -27,10 +25,11 @@ import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDepe
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
 
-class LibrariesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerTest {
+class LibrariesSpec extends UnitSpec with MockitoSugar {
 
   "/libraries" should {
     "redirect to the repositories page with the appropriate filters" in {
@@ -43,27 +42,28 @@ class LibrariesSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerTest {
   }
 
   private lazy val catalogueController = new CatalogueController(
-    userManagementConnector       = mock[UserManagementConnector],
-    teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
-    serviceDependencyConnector    = mock[ServiceDependenciesConnector],
-    indicatorsConnector           = mock[IndicatorsConnector],
-    leakDetectionService          = mock[LeakDetectionService],
-    deploymentsService            = mock[DeploymentsService],
-    eventService                  = mock[EventService],
-    readModelService              = mock[ReadModelService],
-    environment                   = mock[Environment],
-    verifySignInStatus            = mock[VerifySignInStatus],
-    umpAuthenticated              = mock[UmpAuthenticated],
-    serviceConfig                 = mock[ServicesConfig],
-    userManagementPortalConfig    = mock[UserManagementPortalConfig],
-    viewMessages                  = app.injector.instanceOf[ViewMessages],
-    mcc                           = app.injector.instanceOf[MessagesControllerComponents],
-    digitalServiceInfoPage        = mock[DigitalServiceInfoPage],
-    indexPage                     = mock[IndexPage],
-    teamInfoPage                  = mock[TeamInfoPage],
-    serviceInfoPage               = mock[ServiceInfoPage],
-    libraryInfoPage               = mock[LibraryInfoPage],
-    prototypeInfoPage             = mock[PrototypeInfoPage],
-    repositoryInfoPage            = mock[RepositoryInfoPage]
+    mock[UserManagementConnector],
+    mock[TeamsAndRepositoriesConnector],
+    mock[ServiceDependenciesConnector],
+    mock[IndicatorsConnector],
+    mock[LeakDetectionService],
+    mock[DeploymentsService],
+    mock[EventService],
+    mock[ReadModelService],
+    mock[Environment],
+    mock[VerifySignInStatus],
+    mock[UmpAuthenticated],
+    mock[ServicesConfig],
+    mock[UserManagementPortalConfig],
+    mock[ViewMessages],
+    stubMessagesControllerComponents(),
+    mock[DigitalServiceInfoPage],
+    mock[IndexPage],
+    mock[TeamInfoPage],
+    mock[ServiceInfoPage],
+    mock[LibraryInfoPage],
+    mock[PrototypeInfoPage],
+    mock[RepositoryInfoPage],
+    mock[RepositoriesListPage]
   )
 }

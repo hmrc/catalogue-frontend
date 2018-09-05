@@ -232,7 +232,8 @@ class DigitalServicePageSpec
         mock[ServiceInfoPage],
         mock[LibraryInfoPage],
         mock[PrototypeInfoPage],
-        mock[RepositoryInfoPage]
+        mock[RepositoryInfoPage],
+        mock[RepositoriesListPage]
       )
 
       val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
@@ -339,7 +340,8 @@ class DigitalServicePageSpec
         mock[ServiceInfoPage],
         mock[LibraryInfoPage],
         mock[PrototypeInfoPage],
-        mock[RepositoryInfoPage]
+        mock[RepositoryInfoPage],
+        mock[RepositoriesListPage]
       )
 
       val teamName = "Team1"
@@ -389,7 +391,8 @@ class DigitalServicePageSpec
         mock[ServiceInfoPage],
         mock[LibraryInfoPage],
         mock[PrototypeInfoPage],
-        mock[RepositoryInfoPage]
+        mock[RepositoryInfoPage],
+        mock[RepositoriesListPage]
       )
 
       val teamName = "Team1"
@@ -440,7 +443,8 @@ class DigitalServicePageSpec
         mock[ServiceInfoPage],
         mock[LibraryInfoPage],
         mock[PrototypeInfoPage],
-        mock[RepositoryInfoPage]
+        mock[RepositoryInfoPage],
+        mock[RepositoriesListPage]
       )
 
       val teamName = "Team1"

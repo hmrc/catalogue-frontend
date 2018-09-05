@@ -74,7 +74,8 @@ class CatalogueController @Inject()(
   serviceInfoPage: ServiceInfoPage,
   libraryInfoPage: LibraryInfoPage,
   prototypeInfoPage: PrototypeInfoPage,
-  repositoryInfoPage: RepositoryInfoPage
+  repositoryInfoPage: RepositoryInfoPage,
+  repositoriesListPage: RepositoriesListPage
 ) extends FrontendController(mcc) {
 
   import UserManagementConnector._
@@ -375,12 +376,19 @@ class CatalogueController @Inject()(
     import SearchFiltering._
 
     teamsAndRepositoriesConnector.allRepositories.map { repositories =>
-      val form: Form[RepoListFilter] = RepoListFilter.form.bindFromRequest()
-      form.fold(
-        error => Ok(repositories_list(repositories = Seq.empty, repoTypeToDetailsUrl, error, viewMessages)),
-        query =>
-          Ok(repositories_list(repositories = repositories.filter(query), repoTypeToDetailsUrl, form, viewMessages))
-      )
+      RepoListFilter.form
+        .bindFromRequest()
+        .fold(
+          formWithErrors => Ok(repositoriesListPage(repositories = Seq.empty, repoTypeToDetailsUrl, formWithErrors)),
+          query =>
+            Ok(
+              repositoriesListPage(
+                repositories = repositories.filter(query),
+                repoTypeToDetailsUrl,
+                RepoListFilter.form.bindFromRequest()
+              )
+          )
+        )
     }
   }
 
