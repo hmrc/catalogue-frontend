@@ -20,21 +20,21 @@ import java.time.LocalDateTime
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mockito.Mockito.when
 import org.mockito.Matchers.{eq => is, _}
+import org.mockito.Mockito.when
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
-import org.scalatest.mock.MockitoSugar
-import play.api.Configuration
-import play.api.i18n.MessagesApi
+import org.scalatest.mockito.MockitoSugar
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService, TeamRelease}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
+import views.html._
 
 import scala.concurrent.Future
 
@@ -137,13 +137,12 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar {
   }
 
   private trait Setup {
-    implicit val headerCarrrier: HeaderCarrier = HeaderCarrier()
+    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-    val deploymentsService = mock[DeploymentsService]
-    val configuration      = mock[Configuration]
+    val deploymentsService         = mock[DeploymentsService]
+    val userManagementPortalConfig = mock[UserManagementPortalConfig]
 
-    when(configuration.getString("microservice.services.user-management.profileBaseUrl"))
-      .thenReturn(Some("profile-base-url"))
+    when(userManagementPortalConfig.userManagementProfileBaseUrl).thenReturn("profile-base-url")
 
     val controller = new CatalogueController(
       mock[UserManagementConnector],
@@ -154,11 +153,18 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar {
       deploymentsService,
       mock[EventService],
       mock[ReadModelService],
-      mock[play.api.Environment],
       mock[VerifySignInStatus],
       mock[UmpAuthenticated],
-      configuration,
-      mock[MessagesApi]
+      userManagementPortalConfig,
+      stubMessagesControllerComponents(),
+      mock[DigitalServiceInfoPage],
+      mock[IndexPage],
+      mock[TeamInfoPage],
+      mock[ServiceInfoPage],
+      mock[LibraryInfoPage],
+      mock[PrototypeInfoPage],
+      mock[RepositoryInfoPage],
+      mock[RepositoriesListPage]
     )
   }
 

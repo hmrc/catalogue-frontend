@@ -19,26 +19,30 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.scalatest._
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WS
+import play.api.libs.ws._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class LibraryPageSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.host"   -> host,
-      "microservice.services.teams-and-repositories.port"   -> endpointPort,
-      "microservice.services.indicators.port"           -> endpointPort,
-      "microservice.services.indicators.host"           -> host,
-      "microservice.services.service-dependencies.host" -> host,
-      "microservice.services.service-dependencies.port" -> endpointPort,
-      "microservice.services.leak-detection.port"       -> endpointPort,
-      "microservice.services.leak-detection.host"       -> host,
-      "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.host" -> host,
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "microservice.services.indicators.port"             -> endpointPort,
+        "microservice.services.indicators.host"             -> host,
+        "microservice.services.service-dependencies.host"   -> host,
+        "microservice.services.service-dependencies.port"   -> endpointPort,
+        "microservice.services.leak-detection.port"         -> endpointPort,
+        "microservice.services.leak-detection.host"         -> host,
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
+
+  private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -96,7 +100,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
 
   }
 
-  val serviceData =
+  val serviceData: String =
     """
       |    {
       |	     "name": "serv",
@@ -150,7 +154,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       |     }
     """.stripMargin
 
-  val libraryData =
+  val libraryData: String =
     """
       |    {
       |	     "name": "lib",
@@ -181,7 +185,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuit
       |     }
     """.stripMargin
 
-  val indicatorData =
+  val indicatorData: String =
     """
       |[
       |  {

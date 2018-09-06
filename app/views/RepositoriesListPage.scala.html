@@ -16,14 +16,15 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.RepositoryDisplayDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.RepoType
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import helper._
-@import uk.gov.hmrc.cataloguefrontend.RepoType
+
+@this(viewMessages: ViewMessages)
 
 @(repositories: Seq[RepositoryDisplayDetails],
-  repotypeToDetailsUrl: Map[RepoType.Value, (String) => Call],
+  repotypeToDetailsUrl: Map[RepoType.Value, String => Call],
   form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
@@ -89,7 +90,7 @@
                     <a href="@repotypeToDetailsUrl(repo.repoType)(repo.name)">@repo.name</a>
                 </td>
                 <td class="repo-type monospaced" id="row@{i}_repotype">
-                    @ViewMessages.toTypeText(repo.repoType)
+                    @viewMessages.toTypeText(repo.repoType)
                 </td>
                 <td class="created monospaced" id="row@{i}_created">
                     @repo.createdAt.asPattern("yyyy-MM-dd")

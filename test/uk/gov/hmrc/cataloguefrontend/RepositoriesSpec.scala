@@ -16,29 +16,31 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.util.Date
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest._
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WS
+import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class RepositoriesSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class RepositoriesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
-    .configure(
-      Map(
-        "microservice.services.teams-and-repositories.port" -> endpointPort,
-        "microservice.services.teams-and-repositories.host" -> host,
-        "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        Map(
+          "microservice.services.teams-and-repositories.port" -> endpointPort,
+          "microservice.services.teams-and-repositories.host" -> host,
+          "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+        )
       )
-    )
-    .build()
+      .build()
+
+  private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 

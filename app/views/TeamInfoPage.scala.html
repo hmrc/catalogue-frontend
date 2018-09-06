@@ -15,12 +15,14 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{UMPError, NoData, TeamDetails}
+@import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, NoData, TeamDetails}
 @import uk.gov.hmrc.cataloguefrontend.{ChartDataRows, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.TeamActivityDates
-@import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
-@import uk.gov.hmrc.cataloguefrontend.RepoType
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
+
+@this(viewMessages: ViewMessages)
 
 @(teamName: String,
   repos: Map[String, Seq[String]],
@@ -174,12 +176,12 @@
                         @{
                             if(throughputChartData.isEmpty) {
                                 {
-                                    ViewMessages.errorMessage
+                                    viewMessages.errorMessage
                                 }
                             } else if(throughputChartData.get.isEmpty) {
                                 {
-                                    activityDates.firstServiceCreationDate.fold(ViewMessages.noDataToShow) { d =>
-                                        ViewMessages.noProductionDeploymentSinceDaysMessage(d)
+                                    activityDates.firstServiceCreationDate.fold(viewMessages.noDataToShow) { d =>
+                                        viewMessages.noProductionDeploymentSinceDaysMessage(d)
                                     }
                                 }
                             }
@@ -246,7 +248,7 @@
 }
 
 @renderGraphText = @{
-    Html(ViewMessages.deploymentThroughputAndStabilityGraphText)
+    Html(viewMessages.deploymentThroughputAndStabilityGraphText)
 }
 
 @umpUpdateLink(isMemberBox: Boolean) = {
@@ -278,7 +280,7 @@
 
                 <div class="board__body">
                     @if(repositories.isEmpty) {
-                        <p>@Html(ViewMessages.noRepoOfTypeForTeam(typeName))</p>
+                        <p>@Html(viewMessages.noRepoOfTypeForTeam(typeName))</p>
 
                     } else {
                         <ul class="list list--minimal">

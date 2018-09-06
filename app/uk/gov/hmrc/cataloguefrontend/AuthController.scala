@@ -20,9 +20,9 @@ import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.{I18nSupport, Messages, MessagesApi}
-import play.api.mvc.Action
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
+import play.api.i18n.Messages
+import play.api.mvc._
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
@@ -32,22 +32,21 @@ import views.html.sign_in
 import scala.concurrent.Future
 
 @Singleton
-class AuthController @Inject()(val messagesApi: MessagesApi, authService: AuthService, configuration: Configuration)
-    extends FrontendController
-    with I18nSupport {
+class AuthController @Inject()(
+  authService: AuthService,
+  configuration: Configuration,
+  mcc: MessagesControllerComponents
+) extends FrontendController(mcc) {
 
   import AuthController.signinForm
 
-  private val selfServiceUrl = {
-    val key = "self-service-url"
-    configuration.getString(key).getOrElse(throw new Exception(s"Expected to find $key"))
-  }
+  private[this] val selfServiceUrl = configuration.get[String]("self-service-url")
 
-  val showSignInPage = Action { implicit request =>
+  val showSignInPage: Action[AnyContent] = Action { implicit request =>
     Ok(sign_in(signinForm, selfServiceUrl))
   }
 
-  val submit = Action.async { implicit request =>
+  val submit: Action[AnyContent] = Action.async { implicit request =>
     signinForm
       .bindFromRequest()
       .fold(
@@ -55,8 +54,11 @@ class AuthController @Inject()(val messagesApi: MessagesApi, authService: AuthSe
         signInData =>
           authService.authenticate(signInData.username, signInData.password).map {
             case Right(TokenAndDisplayName(UmpToken(token), DisplayName(displayName))) =>
-              Redirect(routes.CatalogueController.landingPage())
-                .withSession(UmpToken.SESSION_KEY_NAME -> token, DisplayName.SESSION_KEY_NAME -> displayName)
+              Redirect(routes.CatalogueController.index())
+                .withSession(
+                  UmpToken.SESSION_KEY_NAME    -> token,
+                  DisplayName.SESSION_KEY_NAME -> displayName
+                )
             case Left(_) =>
               BadRequest(sign_in(signinForm.withGlobalError(Messages("sign-in.wrong-credentials")), selfServiceUrl))
         }
@@ -64,7 +66,9 @@ class AuthController @Inject()(val messagesApi: MessagesApi, authService: AuthSe
   }
 
   val signOut = Action {
-    Redirect(routes.AuthController.showSignInPage()).withNewSession
+    Redirect(
+      routes.AuthController.showSignInPage()
+    ).withNewSession
   }
 }
 

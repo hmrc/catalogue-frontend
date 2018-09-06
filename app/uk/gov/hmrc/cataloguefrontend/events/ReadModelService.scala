@@ -17,14 +17,13 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.Logger
-import play.api.libs.json.{JsObject, Json}
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
 @Singleton
 class ReadModelService @Inject()(eventService: EventService, userManagementConnector: UserManagementConnector) {
 
@@ -63,7 +62,7 @@ class ReadModelService @Inject()(eventService: EventService, userManagementConne
   }
 
   def refreshUmpCache: Future[Seq[TeamMember]] =
-    userManagementConnector.getAllUsersFromUMP().map {
+    userManagementConnector.getAllUsersFromUMP.map {
       case Right(tms) =>
         Logger.info(s"Got ${tms.length} set of UMP users")
         umpUsersCache = tms

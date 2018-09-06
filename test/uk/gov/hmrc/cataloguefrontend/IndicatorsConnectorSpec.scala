@@ -21,7 +21,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.{BeforeAndAfterEach, FunSpec, Matchers}
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
@@ -33,15 +33,15 @@ import scala.concurrent.Future
 class IndicatorsConnectorSpec
     extends FunSpec
     with WireMockEndpoints
-    with OneServerPerSuite
+    with GuiceOneServerPerSuite
     with Matchers
     with TypeCheckedTripleEquals
     with ScalaFutures
     with BeforeAndAfterEach {
 
-  implicit val defaultPatienceConfig = new PatienceConfig(Span(200, Millis), Span(15, Millis))
+  implicit val defaultPatienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
-  implicit override lazy val app: Application =
+  override def fakeApplication: Application =
     new GuiceApplicationBuilder()
       .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(
@@ -50,7 +50,7 @@ class IndicatorsConnectorSpec
       )
       .build()
 
-  lazy val indicatorsConnector = app.injector.instanceOf[IndicatorsConnector]
+  private lazy val indicatorsConnector: IndicatorsConnector = app.injector.instanceOf[IndicatorsConnector]
 
   describe("IndicatorsConnector") {
     it("should convert the DeploymentsMetricResult to DeploymentIndicators for a service") {

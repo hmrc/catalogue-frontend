@@ -17,56 +17,41 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
-
 import play.api._
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.cataloguefrontend.events.UpdateScheduler
-import uk.gov.hmrc.play.bootstrap.config.AppName
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 @Singleton
 class EventsReloadScheduler @Inject()(
   appLifecycle: ApplicationLifecycle,
-  override val configuration: Configuration,
+  val configuration: Configuration,
   environment: Environment,
-  updateScheduler: UpdateScheduler)
-    extends AppName {
+  updateScheduler: UpdateScheduler) {
 
   val eventReloadIntervalKey    = "event.reload.interval"
   val umpCacheReloadIntervalKey = "ump.cache.reload.interval"
 
-  Logger.info(s"Starting : $appName : in mode : ${environment.mode}")
+  Logger.info(s"Starting : ${environment.rootPath} : in mode : ${environment.mode}")
   Logger.debug("[Catalogue-frontend] - Starting... ")
 
   scheduleEventsReloadSchedule(appLifecycle, configuration)
   scheduleUmpCacheReloadSchedule(appLifecycle, configuration)
 
-  private def scheduleEventsReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration) = {
-
-    lazy val maybeReloadInterval = configuration.getMilliseconds(eventReloadIntervalKey).map(_.millisecond)
-
-    maybeReloadInterval.fold {
-      Logger.warn(s"$eventReloadIntervalKey is missing. Event cache reload will be disabled")
-    } { reloadInterval =>
-      Logger.warn(s"EventReloadInterval set to ${reloadInterval.toSeconds} seconds")
-      val cancellable = updateScheduler.startUpdatingEventsReadModel(reloadInterval)
-      appLifecycle.addStopHook(() => Future(cancellable.cancel()))
-    }
+  private def scheduleEventsReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration): Unit = {
+    val reloadInterval = configuration.getMillis(eventReloadIntervalKey).millis
+    val cancellable    = updateScheduler.startUpdatingEventsReadModel(reloadInterval)
+    appLifecycle.addStopHook(() => Future.successful(cancellable.cancel()))
   }
 
-  private def scheduleUmpCacheReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration) = {
-    lazy val maybeUmpCacheReloadInterval = configuration.getMilliseconds(umpCacheReloadIntervalKey).map(_.milliseconds)
+  private def scheduleUmpCacheReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration): Unit = {
+    lazy val umpCacheReloadInterval = configuration.getMillis(umpCacheReloadIntervalKey).milliseconds
 
-    maybeUmpCacheReloadInterval.fold {
-      Logger.warn(s"$umpCacheReloadIntervalKey is missing. Ump cache reload will be disabled")
-    } { reloadInterval =>
-      Logger.warn(s"UMP cache reload interval set to ${reloadInterval.toSeconds} seconds")
-      val cancellable = updateScheduler.startUpdatingUmpCacheReadModel(reloadInterval)
-      appLifecycle.addStopHook(() => Future(cancellable.cancel()))
-    }
+    Logger.warn(s"UMP cache reload interval set to $umpCacheReloadInterval milliseconds")
+    val cancellable = updateScheduler.startUpdatingUmpCacheReadModel(umpCacheReloadInterval)
+    appLifecycle.addStopHook(() => Future.successful(cancellable.cancel()))
   }
 
 }

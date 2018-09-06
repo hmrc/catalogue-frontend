@@ -21,9 +21,9 @@ import org.mockito.Mockito._
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneAppPerSuite
-import play.api.mvc.Result
+import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.mvc.{ControllerComponents, MessagesControllerComponents, Result}
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
@@ -31,7 +31,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 
 import scala.concurrent.Future
 
-class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFutures with OneAppPerSuite {
+class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFutures with GuiceOneAppPerSuite {
 
   "Action" should {
 
@@ -61,7 +61,8 @@ class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFuture
   private trait Setup {
     val expectedStatus              = Ok
     val userManagementAuthConnector = mock[UserManagementAuthConnector]
-    val action                      = new VerifySignInStatus(userManagementAuthConnector)
+    val mcc = app.injector.instanceOf[MessagesControllerComponents]
+    val action                      = new VerifySignInStatus(userManagementAuthConnector, mcc)
 
     def actionBodyExpecting(isValid: Boolean): UmpVerifiedRequest[_] => Future[Result] = authRequest => {
       authRequest.isSignedIn shouldBe isValid

@@ -16,21 +16,20 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.{LocalDateTime, ZoneOffset}
 
-import TeamsAndRepositoriesConnector._
-import org.mockito
-import org.mockito.Mockito._
 import org.mockito.Matchers._
+import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{EitherValues, Matchers, OptionValues, WordSpec}
 import play.api.test.FakeHeaders
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, TeamRelease}
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent.Future
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class DeploymentsServiceSpec
     extends WordSpec
@@ -40,7 +39,7 @@ class DeploymentsServiceSpec
     with OptionValues
     with EitherValues {
 
-  val now = LocalDateTime.now()
+  val now: LocalDateTime = LocalDateTime.now()
 
   "Deployments service" should {
 
@@ -140,10 +139,10 @@ class DeploymentsServiceSpec
           description  = "some description",
           createdAt    = now,
           lastActive   = now,
-          owningTeams  = Seq(),
+          owningTeams  = Seq.empty,
           teamNames    = Seq("a-team", "b-team"),
           githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/a-service"),
-          ci           = Seq(),
+          ci           = Seq.empty,
           environments = None,
           repoType     = RepoType.Service,
           isPrivate    = false

@@ -19,11 +19,11 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time._
 import java.time.format.DateTimeFormatter
 
-import _root_.play.api.libs.json._
+import play.api.libs.json._
 
 object JavaDateTimeJsonFormatter {
 
-  implicit val localDateTimeReads = new Reads[LocalDateTime] {
+  implicit val localDateTimeReads: Reads[LocalDateTime] = new Reads[LocalDateTime] {
     override def reads(json: JsValue): JsResult[LocalDateTime] = json match {
       case JsNumber(v) =>
         JsSuccess(
@@ -33,7 +33,7 @@ object JavaDateTimeJsonFormatter {
     }
   }
 
-  implicit val localDateReads = new Reads[LocalDate] {
+  implicit val localDateReads: Reads[LocalDate] = new Reads[LocalDate] {
     override def reads(json: JsValue): JsResult[LocalDate] = json match {
       case JsString(v) =>
         JsSuccess(

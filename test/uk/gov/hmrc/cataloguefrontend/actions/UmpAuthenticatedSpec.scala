@@ -21,10 +21,10 @@ import org.mockito.Mockito._
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneAppPerSuite
+import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.Results._
-import play.api.mvc.{AnyContent, Request}
+import play.api.mvc.{AnyContent, ControllerComponents, MessagesControllerComponents, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
@@ -33,7 +33,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UmpAuthenticatedSpec extends WordSpec with MockitoSugar with ScalaFutures with OneAppPerSuite {
+class UmpAuthenticatedSpec extends WordSpec with MockitoSugar with ScalaFutures with GuiceOneAppPerSuite {
 
   "Action" should {
 
@@ -69,6 +69,7 @@ class UmpAuthenticatedSpec extends WordSpec with MockitoSugar with ScalaFutures 
 
   private trait Setup {
     val userManagementAuthConnector = mock[UserManagementAuthConnector]
-    val action                      = new UmpAuthenticated(userManagementAuthConnector)
+    val cc = app.injector.instanceOf[MessagesControllerComponents]
+    val action                      = new UmpAuthenticated(userManagementAuthConnector, cc)
   }
 }

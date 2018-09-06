@@ -37,10 +37,10 @@ import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json.{JsValue, Json}
-import play.api.{Configuration, Logger, Environment => PlayEnvironment}
+import play.api.Logger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
@@ -50,15 +50,17 @@ case class Deployer(name: String, deploymentDate: LocalDateTime)
 
 case class Release(
   name: String,
-  productionDate: java.time.LocalDateTime,
-  creationDate: Option[java.time.LocalDateTime] = None,
-  interval: Option[Long]                        = None,
-  leadTime: Option[Long]                        = None,
+  productionDate: LocalDateTime,
+  creationDate: Option[LocalDateTime] = None,
+  interval: Option[Long]              = None,
+  leadTime: Option[Long]              = None,
   version: String,
   deployers: Seq[Deployer] = Seq.empty) {
 
-  import DateHelper._
-  val latestDeployer = deployers.sortBy(_.deploymentDate.epochSeconds).lastOption
+  lazy val latestDeployer: Option[Deployer] = {
+    import DateHelper._
+    deployers.sortBy(_.deploymentDate.epochSeconds).lastOption
+  }
 }
 
 final case class EnvironmentMapping(name: String, releasesAppId: String)
@@ -80,22 +82,18 @@ object ServiceDeploymentInformation {
 @Singleton
 class ServiceDeploymentsConnector @Inject()(
   http: HttpClient,
-  override val runModeConfiguration: Configuration,
-  environment: PlayEnvironment)
-    extends ServicesConfig {
+  servicesConfig: ServicesConfig
+) {
 
-  def servicesDeploymentsBaseUrl: String = baseUrl("service-deployments") + "/api/deployments"
-  def whatIsRunningWhereBaseUrl: String  = baseUrl("service-deployments") + "/api/whatsrunningwhere"
+  private val serviceUrl: String                 = servicesConfig.baseUrl("service-deployments")
+  private val servicesDeploymentsBaseUrl: String = s"$serviceUrl/api/deployments"
 
-  override protected def mode = environment.mode
-
-  import _root_.uk.gov.hmrc.http.HttpReads._
-  import JavaDateTimeJsonFormatter._
   import ServiceDeploymentInformation._
+  import uk.gov.hmrc.http.HttpReads._
+  import uk.gov.hmrc.cataloguefrontend.JavaDateTimeJsonFormatter._
 
-  implicit val deployerFormat = Json.format[Deployer]
-
-  implicit val deploymentsFormat = Json.reads[Release]
+  private implicit val deployerFormat    = Json.format[Deployer]
+  private implicit val deploymentsFormat = Json.reads[Release]
 
   def getDeployments(serviceNames: Set[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] =
     http
@@ -131,7 +129,7 @@ class ServiceDeploymentsConnector @Inject()(
 
   def getWhatIsRunningWhere(serviceName: String)(
     implicit hc: HeaderCarrier): Future[Either[Throwable, ServiceDeploymentInformation]] = {
-    val url = s"$whatIsRunningWhereBaseUrl/$serviceName"
+    val url = s"$serviceUrl/api/whatsrunningwhere/$serviceName"
 
     http
       .GET[HttpResponse](url)
@@ -149,5 +147,4 @@ class ServiceDeploymentsConnector @Inject()(
           Left(ex)
       }
   }
-
 }

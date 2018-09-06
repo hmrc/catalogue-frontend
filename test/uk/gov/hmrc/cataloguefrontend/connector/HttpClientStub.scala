@@ -18,8 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import cats.data.OptionT
 import cats.implicits._
+import com.typesafe.config.Config
 import org.scalatest.Matchers._
 import play.api.libs.json.{JsValue, Writes}
+import play.api.libs.ws.WSClient
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -184,6 +186,10 @@ trait HttpClientStub {
 
     override def doDelete(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
       ???
+
+    override protected def configuration: Option[Config] = ???
+
+    override def wsClient: WSClient = ???
   }
 
   val httpClient: ClientStub = new ClientStub(expect)

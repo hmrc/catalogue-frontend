@@ -18,17 +18,17 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.mockito.Matchers.any
-import org.mockito.Mockito
+import org.mockito.Mockito.when
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.FakeHeaders
-import play.api.{Configuration, Environment}
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.Future
@@ -37,7 +37,7 @@ class ServiceDependenciesConnectorSpec
     extends FreeSpec
     with Matchers
     with BeforeAndAfter
-    with OneServerPerSuite
+    with GuiceOneAppPerSuite
     with WireMockEndpoints
     with EitherValues
     with OptionValues
@@ -45,20 +45,21 @@ class ServiceDependenciesConnectorSpec
     with MockitoSugar
     with IntegrationPatience {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
-    .disable(classOf[com.kenshoo.play.metrics.PlayModule])
-    .configure(
-      Map(
-        "microservice.services.service-dependencies.port" -> endpointPort,
-        "microservice.services.service-dependencies.host" -> host
-      ))
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
+      .configure(
+        Map(
+          "microservice.services.service-dependencies.port" -> endpointPort,
+          "microservice.services.service-dependencies.host" -> host
+        ))
+      .build()
 
-  val serviceDependenciesConnector = app.injector.instanceOf[ServiceDependenciesConnector]
+  private lazy val serviceDependenciesConnector = app.injector.instanceOf[ServiceDependenciesConnector]
 
   "GET Dependencies" - {
 
-    "return a list of dependencies for a repository" in {
+    "return a list of dependencies for a repository" in new Setup {
 
       serviceEndpoint(
         GET,
@@ -150,7 +151,7 @@ class ServiceDependenciesConnectorSpec
       )
 
       val response = serviceDependenciesConnector
-        .getDependencies("repo1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getDependencies("repo1")
         .futureValue
         .value
 
@@ -175,40 +176,35 @@ class ServiceDependenciesConnectorSpec
 
     }
 
-    "return a None for non existing repository" in {
+    "return a None for non existing repository" in new Setup {
 
       serviceEndpoint(GET, "/api/dependencies/non-existing-repo", willRespondWith = (404, None))
 
       val response = serviceDependenciesConnector
-        .getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getDependencies("non-existing-repo")
         .futureValue
 
       response shouldBe None
 
     }
 
-    "return a None for if a communication error occurs" in {
+    "return a None for if a communication error occurs" in new Setup {
 
       val mockedHttpClient = mock[HttpClient]
-      Mockito
-        .when(mockedHttpClient.GET(any())(any(), any(), any()))
+      when(mockedHttpClient.GET(any())(any(), any(), any()))
         .thenReturn(Future.failed(new RuntimeException("Boom!!")))
-      val failingServiceDependenciesConnector =
-        new ServiceDependenciesConnector(mockedHttpClient, Configuration(), mock[Environment]) {
-          override def servicesDependenciesBaseUrl = "chicken.com"
-        }
 
-      val response = failingServiceDependenciesConnector
-        .getDependencies("non-existing-repo")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-        .futureValue
+      val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig])
 
-      response shouldBe None
+      connector
+        .getDependencies("non-existing-repo")
+        .futureValue shouldBe None
     }
   }
 
   "GET all dependencies for report" - {
 
-    "return dependencies for all repositories" in {
+    "return dependencies for all repositories" in new Setup {
 
       serviceEndpoint(
         GET,
@@ -382,7 +378,7 @@ class ServiceDependenciesConnectorSpec
       )
 
       val response = serviceDependenciesConnector
-        .getAllDependencies()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getAllDependencies()
         .futureValue
 
       response.size shouldBe 2
@@ -398,8 +394,8 @@ class ServiceDependenciesConnectorSpec
 
       response.head.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
-          Dependency("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
+          Dependency("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), isExternal = true),
+          Dependency("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)), isExternal = false)
         )
 
       response.head.otherDependencies should contain theSameElementsAs
@@ -418,8 +414,8 @@ class ServiceDependenciesConnectorSpec
 
       response.last.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-3", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
-          Dependency("plugin-4", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
+          Dependency("plugin-3", Version(1, 0, 0), Some(Version(1, 1, 0)), isExternal = true),
+          Dependency("plugin-4", Version(2, 0, 0), Some(Version(2, 1, 0)), isExternal = false)
         )
 
       response.last.otherDependencies should contain theSameElementsAs
@@ -429,4 +425,7 @@ class ServiceDependenciesConnectorSpec
     }
   }
 
+  private trait Setup {
+    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+  }
 }

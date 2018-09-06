@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import play.api.libs.json.Json
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 
 object DisplayableTeamMembers {
 
@@ -41,7 +41,7 @@ case class DisplayableTeamMember(displayName: String, isServiceOwner: Boolean = 
 
 object DisplayableTeamMember {
 
-  implicit val displayableTeamMemberFormat = Json.format[DisplayableTeamMember]
+  implicit val displayableTeamMemberFormat: OFormat[DisplayableTeamMember] = Json.format[DisplayableTeamMember]
 
   def apply(tm: TeamMember, umpProfileBaseUrl: String): DisplayableTeamMember = DisplayableTeamMember(
     displayName = tm.getDisplayName,

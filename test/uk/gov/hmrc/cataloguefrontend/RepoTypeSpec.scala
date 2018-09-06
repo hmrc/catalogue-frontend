@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.scalatest.{FunSuite, Matchers, WordSpec}
+import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json.Json
-import uk.gov.hmrc.cataloguefrontend.RepoType.RepoType
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 
 class RepoTypeSpec extends WordSpec with Matchers {
 

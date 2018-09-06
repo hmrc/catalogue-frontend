@@ -20,7 +20,8 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeHeaders
@@ -30,12 +31,11 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class ServiceDeploymentsConnectorSpec
     extends UnitSpec
-    with BeforeAndAfter
-    with OneServerPerSuite
+    with GuiceOneServerPerSuite
     with WireMockEndpoints
     with EitherValues {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
+  override def fakeApplication: Application = new GuiceApplicationBuilder()
     .disable(classOf[com.kenshoo.play.metrics.PlayModule])
     .configure(Map(
       "microservice.services.service-deployments.port" -> endpointPort,
@@ -44,7 +44,7 @@ class ServiceDeploymentsConnectorSpec
     ))
     .build()
 
-  private val serviceDeploymentsConnector = app.injector.instanceOf[ServiceDeploymentsConnector]
+  private lazy val serviceDeploymentsConnector = app.injector.instanceOf[ServiceDeploymentsConnector]
 
   "getDeployments" should {
 
@@ -77,8 +77,9 @@ class ServiceDeploymentsConnectorSpec
           ))
       )
 
-      val response =
-        await(serviceDeploymentsConnector.getDeployments()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
+      val response = await(
+        serviceDeploymentsConnector.getDeployments()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+      )
 
       response should contain theSameElementsAs Seq(
         Release(

@@ -33,13 +33,13 @@ package uk.gov.hmrc.cataloguefrontend.connector
  */
 
 import java.time.LocalDate
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.libs.json.Json
-import play.api.{Configuration, Environment, Logger}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
@@ -87,28 +87,26 @@ case class MeasureResult(median: Int)
 @Singleton
 class IndicatorsConnector @Inject()(
   http: HttpClient,
-  override val runModeConfiguration: Configuration,
-  environment: Environment)
-    extends ServicesConfig {
-  def indicatorsBaseUrl = baseUrl("indicators") + "/api/indicators"
+  servicesConfig: ServicesConfig
+) {
+  private val indicatorsBaseUrl: String = servicesConfig.baseUrl("indicators") + "/api/indicators"
 
-  override protected def mode = environment.mode
+  private implicit val mesureResultFormats              = Json.reads[MeasureResult]
+  private implicit val throughputFormats                = Json.reads[Throughput]
+  private implicit val stabilityFormats                 = Json.reads[Stability]
+  private implicit val deploymentsMetricResultFormats   = Json.reads[DeploymentsMetricResult]
+  private implicit val medianDataPointFormats           = Json.reads[MedianDataPoint]
+  private implicit val jobExecutionTimeDataPointFormats = Json.reads[JobMetricDataPoint]
 
-  implicit val mesureResultFormats              = Json.reads[MeasureResult]
-  implicit val throughputFormats                = Json.reads[Throughput]
-  implicit val stabilityFormats                 = Json.reads[Stability]
-  implicit val deploymentsMetricResultFormats   = Json.reads[DeploymentsMetricResult]
-  implicit val medianDataPointFormats           = Json.reads[MedianDataPoint]
-  implicit val jobExecutionTimeDataPointFormats = Json.reads[JobMetricDataPoint]
-
-  implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
-    override def read(method: String, url: String, response: HttpResponse) = response
+  private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
+    override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
 
-  def deploymentIndicatorsForTeam(teamName: String)(implicit hc: HeaderCarrier) =
+  def deploymentIndicatorsForTeam(teamName: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] =
     deploymentIndicators(s"/team/$teamName/deployments")
 
-  def deploymentIndicatorsForService(serviceName: String)(implicit hc: HeaderCarrier) =
+  def deploymentIndicatorsForService(serviceName: String)(
+    implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] =
     deploymentIndicators(s"/service/$serviceName/deployments")
 
   private def deploymentIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentIndicators]] = {
@@ -144,7 +142,8 @@ class IndicatorsConnector @Inject()(
       }
   }
 
-  def buildIndicatorsForRepository(repositoryName: String)(implicit hc: HeaderCarrier) =
+  def buildIndicatorsForRepository(repositoryName: String)(
+    implicit hc: HeaderCarrier): Future[Option[Seq[JobMetricDataPoint]]] =
     buildIndicators(s"/repository/$repositoryName/builds")
 
   private def buildIndicators(path: String)(implicit hc: HeaderCarrier): Future[Option[Seq[JobMetricDataPoint]]] = {
@@ -163,5 +162,4 @@ class IndicatorsConnector @Inject()(
           None
       }
   }
-
 }

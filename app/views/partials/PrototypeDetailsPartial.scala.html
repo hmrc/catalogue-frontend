@@ -14,9 +14,12 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages.prototypesBaseUrl
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+
+@this(viewMessages: ViewMessages)
 
 @(repo: RepositoryDetails)
 
@@ -36,7 +39,7 @@
                 </li>
                 <li id="description-url" class="col-xs-6">
                     <label>Url: </label>
-                    <a id="link-to-prototype" href="@prototypesBaseUrl/@{repo.name}" target="_blank">@prototypesBaseUrl/@{repo.name}<span class="glyphicon glyphicon-new-window"/></a>
+                    <a id="link-to-prototype" href="@{viewMessages.prototypesBaseUrl}/@{repo.name}" target="_blank">@{viewMessages.prototypesBaseUrl}/@{repo.name}<span class="glyphicon glyphicon-new-window"/></a>
                 </li>
                 <li id="last-active" class="col-xs-6">
                     <label>Last Active: </label>

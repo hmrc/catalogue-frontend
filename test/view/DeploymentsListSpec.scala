@@ -20,18 +20,18 @@ import java.time.LocalDateTime
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.play.OneAppPerTest
-
+import org.scalatest.Matchers._
+import org.scalatest.WordSpec
+import play.api.i18n.Messages
+import play.api.test.Helpers
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.Deployer
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
+import uk.gov.hmrc.cataloguefrontend.Deployer
 import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
-import play.api.i18n.Messages.Implicits._
 
-class DeploymentsListSpec extends WordSpec with Matchers with OneAppPerTest {
+class DeploymentsListSpec extends WordSpec {
 
-  def asDocument(html: Html): Document = Jsoup.parse(html.toString())
+  private implicit val messages: Messages = Helpers.stubMessages()
 
   "deployments_list" should {
 
@@ -61,7 +61,7 @@ class DeploymentsListSpec extends WordSpec with Matchers with OneAppPerTest {
             )
           ),
           "user-profile-base"
-        )(applicationMessages))
+        ))
 
       document.select("#row0_team").text()       shouldBe "teamA teamB"
       document.select("#row0_name").text()       shouldBe "serv1"
@@ -74,8 +74,8 @@ class DeploymentsListSpec extends WordSpec with Matchers with OneAppPerTest {
 
       document.select("#row1_deployer a").text()       shouldBe "xyz.abc"
       document.select("#row1_deployer a").attr("href") shouldBe "user-profile-base/xyz.abc"
-
     }
   }
 
+  private def asDocument(html: Html): Document = Jsoup.parse(html.toString())
 }

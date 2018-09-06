@@ -17,30 +17,26 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{Reads, _}
-import play.api.{Configuration, Environment}
-import scala.concurrent.Future
+import play.api.libs.json.Reads
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+
+import scala.concurrent.Future
 
 @Singleton
 class LeakDetectionConnector @Inject()(
   http: HttpClient,
-  override val runModeConfiguration: Configuration,
-  environment: Environment)
-    extends ServicesConfig {
+  servicesConfig: ServicesConfig
+) {
 
-  override protected def mode = environment.mode
-
-  def url: String = baseUrl("leak-detection")
+  private val url: String = servicesConfig.baseUrl("leak-detection")
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] = {
     val hcAcceptingJson = hc.withExtraHeaders("Accept" -> "application/json")
     http.GET[Seq[RepositoryWithLeaks]](s"$url/reports/repositories")(implicitly, hcAcceptingJson, implicitly)
   }
-
 }
 
 final case class RepositoryWithLeaks(name: String) extends AnyVal

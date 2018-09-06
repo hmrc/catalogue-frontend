@@ -19,14 +19,13 @@ package uk.gov.hmrc.cataloguefrontend.service
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.Team
-import uk.gov.hmrc.cataloguefrontend.connector.RepositoryWithLeaks
+import uk.gov.hmrc.cataloguefrontend.connector.{RepositoryWithLeaks, Team}
 
 class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyChecks {
 
   "Service" should {
 
-    "determine if at least one of team's repos has leaks" in {
+    "determine if at least one of team's repos has leaks" in new Setup {
       val team = Team(
         name                     = "team0",
         firstActiveDate          = None,
@@ -37,11 +36,10 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyCheck
 
       val repoWithLeak = RepositoryWithLeaks("repo1")
 
-      val service = new LeakDetectionService(null, configuration)
       service.teamHasLeaks(team, Seq(repoWithLeak)) shouldBe true
     }
 
-    "determine if a team has no leaks" in {
+    "determine if a team has no leaks" in new Setup {
       val team = Team(
         name                     = "team0",
         firstActiveDate          = None,
@@ -52,11 +50,10 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyCheck
 
       val repoWithLeak = RepositoryWithLeaks("repo3")
 
-      val service = new LeakDetectionService(null, configuration)
       service.teamHasLeaks(team, Seq(repoWithLeak)) shouldBe false
     }
 
-    "filter repositories in the exclusion list" in {
+    "filter repositories in the exclusion list" in new Setup {
       val team = Team(
         name                     = "team0",
         firstActiveDate          = None,
@@ -67,15 +64,19 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyCheck
 
       val repoToIgnore = RepositoryWithLeaks("a-repo-to-ignore")
 
-      val service = new LeakDetectionService(null, configuration)
       service.teamHasLeaks(team, Seq(repoToIgnore)) shouldBe false
     }
   }
 
-  val configuration =
-    Configuration(
-      "lds.publicUrl"          -> "",
-      "lds.integrationEnabled" -> "true",
-      "lds.noWarningsOn.0"     -> "a-repo-to-ignore"
-    )
+  private trait Setup {
+
+    private val configuration =
+      Configuration(
+        "lds.publicUrl"          -> "",
+        "lds.integrationEnabled" -> "true",
+        "lds.noWarningsOn.0"     -> "a-repo-to-ignore"
+      )
+
+    val service = new LeakDetectionService(null, configuration)
+  }
 }

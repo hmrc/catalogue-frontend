@@ -23,15 +23,18 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import play.api.mvc.Results._
+import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UmpAuthenticated @Inject()(userManagementAuthConnector: UserManagementAuthConnector)
-    extends ActionBuilder[Request] {
+class UmpAuthenticated @Inject()(
+  userManagementAuthConnector: UserManagementAuthConnector,
+  cc: MessagesControllerComponents
+) extends ActionBuilder[Request, AnyContent] {
 
   def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
-    implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
 
     request.session.get(UmpToken.SESSION_KEY_NAME) match {
       case Some(token) =>
@@ -45,4 +48,7 @@ class UmpAuthenticated @Inject()(userManagementAuthConnector: UserManagementAuth
     }
   }
 
+  override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
+
+  override protected def executionContext: ExecutionContext = cc.executionContext
 }

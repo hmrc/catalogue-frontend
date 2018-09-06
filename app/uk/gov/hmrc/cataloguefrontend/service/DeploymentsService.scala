@@ -19,8 +19,9 @@ package uk.gov.hmrc.cataloguefrontend.service
 import java.time.LocalDateTime
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cataloguefrontend.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
-import uk.gov.hmrc.cataloguefrontend.{Deployer, Release, RepoType, ServiceDeploymentInformation, ServiceDeploymentsConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.{Deployer, Release, ServiceDeploymentInformation, ServiceDeploymentsConnector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -36,16 +37,24 @@ case class TeamRelease(
   version: String,
   latestDeployer: Option[Deployer] = None)
 
+
+sealed trait ReleaseFilter { def serviceTeams: Map[ServiceName, Seq[TeamName]] }
+
+object ReleaseFilter {
+  type ServiceTeamMappings = Map[ServiceName, Seq[TeamName]]
+
+  final case class ServiceTeams(serviceTeams: ServiceTeamMappings) extends ReleaseFilter
+  final case class All(serviceTeams: ServiceTeamMappings) extends ReleaseFilter
+  case object NotFound extends ReleaseFilter { val serviceTeams: ServiceTeamMappings = Map.empty }
+}
+
 @Singleton
 class DeploymentsService @Inject()(
   serviceDeploymentsConnector: ServiceDeploymentsConnector,
-  teamsAndServicesConnector: TeamsAndRepositoriesConnector) {
-  type ServiceTeamMappings = Map[ServiceName, Seq[TeamName]]
+  teamsAndServicesConnector: TeamsAndRepositoriesConnector
+) {
 
-  sealed trait ReleaseFilter { def serviceTeams: ServiceTeamMappings }
-  final case class ServiceTeams(serviceTeams: ServiceTeamMappings) extends ReleaseFilter
-  final case class All(serviceTeams: ServiceTeamMappings) extends ReleaseFilter
-  case object NotFound extends ReleaseFilter { val serviceTeams: ServiceTeamMappings = Map() }
+  import ReleaseFilter._
 
   def getDeployments(teamName: Option[TeamName], serviceName: Option[ServiceName])(
     implicit hc: HeaderCarrier): Future[Seq[TeamRelease]] =
@@ -57,7 +66,7 @@ class DeploymentsService @Inject()(
                       case ServiceTeams(st) =>
                         serviceDeploymentsConnector.getDeployments(st.keySet)
                       case NotFound =>
-                        Future.successful(Seq())
+                        Future.successful(Seq.empty)
                     }
     } yield deployments map teamRelease(query)
 
@@ -68,7 +77,7 @@ class DeploymentsService @Inject()(
   private def teamRelease(rq: ReleaseFilter)(r: Release) =
     TeamRelease(
       r.name,
-      rq.serviceTeams.getOrElse(r.name, Seq()),
+      rq.serviceTeams.getOrElse(r.name, Seq.empty),
       productionDate = r.productionDate,
       creationDate   = r.creationDate,
       interval       = r.interval,
@@ -97,7 +106,7 @@ class DeploymentsService @Inject()(
     teamName map { t =>
       teamsAndServicesConnector.teamInfo(t).flatMap {
         case Some(team) =>
-          val teamServiceNames = team.repos.getOrElse(Map())(RepoType.Service.toString)
+          val teamServiceNames = team.repos.getOrElse(Map.empty)(RepoType.Service.toString)
           teamsAndServicesConnector.teamsByService(teamServiceNames).map { st =>
             ServiceTeams(st)
           }

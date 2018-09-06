@@ -16,27 +16,28 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import play.api.Play
-import com.kenshoo.play.metrics.{Metrics, MetricsImpl}
+import com.codahale.metrics.MetricRegistry
+import com.kenshoo.play.metrics.Metrics
+import javax.inject.Inject
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
-object FutureHelpers {
+class FutureHelpers @Inject()(metrics: Metrics) {
 
-  lazy val metrics: Metrics = Play.current.injector.instanceOf[MetricsImpl]
-  lazy val defaultRegistry  = metrics.defaultRegistry
+  lazy val defaultRegistry: MetricRegistry = metrics.defaultRegistry
 
-  def withTimerAndCounter[T](name: String)(f: Future[T], mayBeAuxFailurePredicate: Option[T => Boolean] = None) = {
+  def withTimerAndCounter[T](
+    name: String)(f: Future[T], mayBeAuxFailurePredicate: Option[T => Boolean] = None): Future[T] = {
     val t = defaultRegistry.timer(s"$name.timer").time()
 
-    def logFailure: Unit = {
+    def logFailure(): Unit = {
       t.stop()
       defaultRegistry.counter(s"$name.failure").inc()
     }
 
-    def logSuccess: Unit = {
+    def logSuccess(): Unit = {
       t.stop()
       defaultRegistry.counter(s"$name.success").inc()
     }
@@ -44,59 +45,23 @@ object FutureHelpers {
     def doAuxFailurePredicate(s: T): Unit =
       mayBeAuxFailurePredicate.foreach { auxFailurePredicate =>
         if (auxFailurePredicate(s)) {
-          logFailure
+          logFailure()
         }
       }
 
     f.andThen {
       case Success(s) =>
-        logSuccess
+        logSuccess()
         doAuxFailurePredicate(s)
       case Failure(_) =>
-        logFailure
-    }
-  }
-
-  implicit class FutureExtender[A](f: Future[A]) {
-    def andAlso(fn: A => Unit): Future[A] =
-      f.flatMap { r =>
-        fn(r)
-        f
-      }
-  }
-
-  implicit class FutureOfBoolean(f: Future[Boolean]) {
-    def &&(f1: => Future[Boolean]): Future[Boolean] = f.flatMap { bv =>
-      if (!bv) Future.successful(false)
-      else f1
+        logFailure()
     }
   }
 
   object FutureIterable {
-    def apply[A](listFuture: Iterable[Future[A]]) = Future.sequence(listFuture)
+    def apply[A](listFuture: Iterable[Future[A]]): Future[Iterable[A]] = Future.sequence(listFuture)
   }
 
-  implicit class FutureIterable[A](futureList: Future[Iterable[A]]) {
-    def flatMap[B](fn: A => Future[Iterable[B]])(implicit ec: ExecutionContext) =
-      futureList
-        .flatMap { list =>
-          val listOfFutures = list.map { li =>
-            fn(li)
-          }
-
-          Future.sequence(listOfFutures)
-        }
-        .map(_.flatten)
-
-    def map[B](fn: A => B)(implicit ec: ExecutionContext): Future[Iterable[B]] =
-      futureList.map(_.map {
-        fn
-      })
-
-    def filter[B](fn: A => Boolean)(implicit ec: ExecutionContext): Future[Iterable[A]] =
-      futureList.map(_.filter(fn))
-  }
-
-  def continueOnError[A](f: Future[A]) =
+  def continueOnError[A](f: Future[A]): Future[Try[A]] =
     f.map(Success(_)).recover { case x => Failure(x) }
 }

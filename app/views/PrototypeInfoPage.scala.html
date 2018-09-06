@@ -14,11 +14,14 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import play.twirl.api.Html
 @import java.time.LocalDateTime
 @import views.partials.githubBadgeType
+@import partials.PrototypeDetailsPartial
+
+@this(prototypeDetailsPartial: PrototypeDetailsPartial, viewMessages: ViewMessages)
 
 @(prototype: RepositoryDetails,
   repositoryCreationDate: LocalDateTime,
@@ -36,7 +39,7 @@
     @partials.leak_detection_banner(linkToLeakDetection)
 
     <section class="section-wrapper">
-        @partials.prototype_details(prototype)
+        @prototypeDetailsPartial(prototype)
 
         <div class="row">
             @partials.repo_owning_teams(prototype)
@@ -47,7 +50,7 @@
 
     <div class="alert alert-success" role="alert" id="@prototype.name">
         <p>
-        @Html(ViewMessages.informationalText)
+        @Html(viewMessages.informationalText)
         </p>
     </div>
 }

@@ -18,12 +18,12 @@ package view
 
 import org.jsoup.Jsoup
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.play.OneAppPerSuite
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import play.twirl.api.Html
 import views.html.standard_layout
 
-class StandardLayoutSpec extends WordSpec with Matchers with OneAppPerSuite {
+class StandardLayoutSpec extends WordSpec with Matchers with GuiceOneAppPerSuite {
 
   "standard layout" should {
 

@@ -14,7 +14,8 @@
  * limitations under the License.
  *@
 
-@()(implicit request: Request[_], msg: play.api.i18n.Messages)
+@()(implicit request: Request[_], messages: Messages)
+
 @standard_layout(Messages("global.error.pageNotFound404.title")) {
     <div id="error_content">
         <div id="error_video">
@@ -27,6 +28,5 @@
                 <h3>we are looking for your page... but we can't find it</h3>
             </div>
         </div>
-
     </div>
 }

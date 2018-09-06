@@ -19,23 +19,32 @@ package uk.gov.hmrc.cataloguefrontend
 import org.jsoup.Jsoup
 import org.mockito.Matchers.{any, eq => is}
 import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.play.OneAppPerSuite
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{Matchers, OptionValues, WordSpec}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
-import play.api.i18n.MessagesApi
-import play.api.mvc.{Cookie, Cookies, Session}
+import play.api.i18n.{Lang, MessagesApi}
+import play.api.mvc._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with MockitoSugar {
+class AuthControllerSpec
+    extends WordSpec
+    with Matchers
+    with GuiceOneAppPerSuite
+    with MockitoSugar
+    with OptionValues
+    with ScalaFutures {
+
+  implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
 
   "Authenticating" should {
 
@@ -51,7 +60,7 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with
 
       val result = controller.submit(request)
 
-      redirectLocation(result).get             shouldBe routes.CatalogueController.landingPage().url
+      redirectLocation(result).get             shouldBe routes.CatalogueController.index().url
       session(result).apply("ump.token")       shouldBe expectedToken.value
       session(result).apply("ump.displayName") shouldBe expectedDisplayName.value
     }
@@ -65,7 +74,8 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with
 
       val result = controller.submit(request)
 
-      status(result)          shouldBe 400
+      status(result) shouldBe 400
+
       contentAsString(result) should include(messagesApi("sign-in.wrong-credentials"))
     }
 
@@ -95,24 +105,22 @@ class AuthControllerSpec extends WordSpec with Matchers with OneAppPerSuite with
 
   "Signing out" should {
     "redirect to landing page and clear session" in new Setup {
-      val requestWithUmpData = FakeRequest()
+      val request = FakeRequest()
 
-      val result = controller.signOut(requestWithUmpData)
+      val result = controller.signOut(request)
 
-      val setCookie = Cookies.decodeSetCookieHeader(headers(result).get(SET_COOKIE).get).head
-
-      setCookie.name               shouldBe Session.COOKIE_NAME
-      setCookie.maxAge.get         should be < 0
-      redirectLocation(result).get shouldBe routes.AuthController.showSignInPage().url
+      redirectLocation(result)      shouldBe Some(routes.AuthController.showSignInPage().url)
+      result.futureValue.newSession shouldBe Some(Session())
     }
   }
 
-  private trait Setup {
+  private[this] trait Setup {
     val messagesApi    = app.injector.instanceOf[MessagesApi]
+    val mcc            = app.injector.instanceOf[MessagesControllerComponents]
     val authService    = mock[AuthService]
     val selfServiceUrl = "self-service-url"
     val config         = Configuration("self-service-url" -> selfServiceUrl)
-    val controller     = new AuthController(messagesApi, authService, config)
+    val controller     = new AuthController(authService, config, mcc)
   }
 
 }

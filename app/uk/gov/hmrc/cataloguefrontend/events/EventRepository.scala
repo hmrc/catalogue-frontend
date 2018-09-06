@@ -17,20 +17,21 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 import javax.inject.{Inject, Singleton}
-
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.cataloguefrontend.FutureHelpers.withTimerAndCounter
+import uk.gov.hmrc.cataloguefrontend.FutureHelpers
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EventRepository @Inject()(mongo: ReactiveMongoComponent)
-    extends ReactiveRepository[Event, BSONObjectID](
+class EventRepository @Inject()(
+  mongo: ReactiveMongoComponent,
+  futureHelpers: FutureHelpers
+) extends ReactiveRepository[Event, BSONObjectID](
       collectionName = "events",
       mongo          = mongo.mongoConnector.db,
       domainFormat   = Event.format) {
@@ -44,16 +45,14 @@ class EventRepository @Inject()(mongo: ReactiveMongoComponent)
     )
 
   def add(event: Event): Future[Boolean] =
-    withTimerAndCounter("mongo.write") {
-      insert(event) map {
-        case _ => true
-      }
+    futureHelpers.withTimerAndCounter("mongo.write") {
+      insert(event) map (_ => true)
     } recover {
       case lastError => throw lastError
     }
 
   def getEventsByType(eventType: EventType.Value): Future[Seq[Event]] =
-    withTimerAndCounter("mongo.read") {
+    futureHelpers.withTimerAndCounter("mongo.read") {
       find("eventType" -> BSONDocument("$eq" -> eventType.toString)) map {
         case Nil  => Nil
         case data => data.sortBy(_.timestamp)

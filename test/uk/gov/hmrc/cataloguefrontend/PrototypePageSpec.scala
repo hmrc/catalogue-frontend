@@ -17,23 +17,27 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WS
+import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class PrototypePageSpec extends UnitSpec with OneServerPerSuite with WireMockEndpoints {
+class PrototypePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.port" -> endpointPort,
-      "microservice.services.teams-and-repositories.host" -> host,
-      "microservice.services.leak-detection.port"     -> endpointPort,
-      "microservice.services.leak-detection.host"     -> host
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "microservice.services.teams-and-repositories.host" -> host,
+        "microservice.services.leak-detection.port"         -> endpointPort,
+        "microservice.services.leak-detection.host"         -> host
+      )
+      .build()
+
+  private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

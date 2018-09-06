@@ -21,22 +21,21 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.mockito.Matchers._
 import org.mockito.Mockito.when
-import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneServerPerSuite
-import play.api.i18n.MessagesApi
+import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WS
-import play.api.mvc.Result
+import play.api.libs.ws._
 import play.api.test.FakeRequest
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.{TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpAuthenticated, UmpVerifiedRequest, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector}
+import play.api.test.Helpers.{GET => _, _}
+import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
-import views.html.digital_service_info
+import views.html._
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,36 +44,31 @@ import scala.io.Source
 
 class DigitalServicePageSpec
     extends UnitSpec
-    with BeforeAndAfter
-    with OneServerPerSuite
+    with GuiceOneServerPerSuite
     with WireMockEndpoints
     with MockitoSugar
-    with ScalaFutures
     with ActionsSupport {
 
-  def asDocument(html: String): Document = Jsoup.parse(html)
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.host"  -> host,
+        "microservice.services.teams-and-repositories.port"  -> endpointPort,
+        "microservice.services.indicators.port"              -> endpointPort,
+        "microservice.services.indicators.host"              -> host,
+        "microservice.services.user-management.url"          -> endpointMockUrl,
+        "usermanagement.portal.url"                          -> "http://usermanagement/link",
+        "microservice.services.user-management.frontPageUrl" -> "http://some.ump.fontpage.com",
+        "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
+        "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
 
-  val umpFrontPageUrl = "http://some.ump.fontpage.com"
+  private[this] lazy val WS                     = app.injector.instanceOf[WSClient]
+  private[this] lazy val viewMessages           = app.injector.instanceOf[ViewMessages]
+  private[this] lazy val digitalServiceInfoPage = app.injector.instanceOf[DigitalServiceInfoPage]
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.host"      -> host,
-      "microservice.services.teams-and-repositories.port"      -> endpointPort,
-      "microservice.services.indicators.port"              -> endpointPort,
-      "microservice.services.indicators.host"              -> host,
-      "microservice.services.user-management.url"          -> endpointMockUrl,
-      "usermanagement.portal.url"                          -> "http://usermanagement/link",
-      "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
-      "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-      "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
-
-  val digitalServiceName = "digital-service-a"
-
-  val serviceOwner       = TeamMember(Some("Jack Low"), None, None, None, None, Some("jack.low"))
-  val mockedModelService = mock[ReadModelService]
-  when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwner))
+  private[this] val digitalServiceName = "digital-service-a"
 
   "DigitalService page" should {
 
@@ -126,11 +120,9 @@ class DigitalServicePageSpec
 
       response.status shouldBe 200
 
-      response.body should include("""<a href="/service/A">A</a>""")
       response.body should include("""<a href="/prototype/B">B</a>""")
       response.body should include("""<a href="/library/C">C</a>""")
       response.body should include("""<a href="/repositories/D">D</a>""")
-
     }
 
     "show a message if no services are found" in {
@@ -152,10 +144,10 @@ class DigitalServicePageSpec
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
-      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("service"))
-      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("library"))
-      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("prototype"))
-      response.body   should include(ViewMessages.noRepoOfTypeForDigitalService("other"))
+      response.body   should include(viewMessages.noRepoOfTypeForDigitalService("service"))
+      response.body   should include(viewMessages.noRepoOfTypeForDigitalService("library"))
+      response.body   should include(viewMessages.noRepoOfTypeForDigitalService("prototype"))
+      response.body   should include(viewMessages.noRepoOfTypeForDigitalService("other"))
     }
 
     "show 'Not specified' if service owner is not set" in {
@@ -185,39 +177,16 @@ class DigitalServicePageSpec
       serviceOwnerO.get.attr("value") shouldBe "Not specified"
     }
 
-    "show service owner" in {
+    "show service owner" in new MockedCatalogueFrontendSetup {
 
-      val digitalServiceName      = "digital-service-123"
-      val mockedConnector         = mock[TeamsAndRepositoriesConnector]
-      val userManagementConnector = mock[UserManagementConnector]
-
-      when(mockedConnector.digitalServiceInfo(any())(any()))
+      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future(Some(DigitalService(digitalServiceName, 0L, Seq.empty))))
 
-      when(userManagementConnector.getTeamMembersForTeams(any())(any()))
+      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any()))
         .thenReturn(Future(Map.empty[String, Either[UMPError, Seq[TeamMember]]]))
 
-      val catalogueController = new CatalogueController(
-        userManagementConnector,
-        mockedConnector,
-        mock[ServiceDependenciesConnector],
-        mock[IndicatorsConnector],
-        mock[LeakDetectionService],
-        mock[DeploymentsService],
-        mock[EventService],
-        mockedModelService,
-        mock[play.api.Environment],
-        verifySignInStatusPassThrough,
-        mock[UmpAuthenticated],
-        app.configuration,
-        mock[MessagesApi]
-      )
+      val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
 
-      val responseF = catalogueController.digitalService(digitalServiceName)(FakeRequest())
-
-      val response = responseF.futureValue
-
-      import play.api.test.Helpers._
       val document = asDocument(contentAsString(response))
 
       val serviceOwnerO = document.select("#service_owner_edit_input").iterator().toList.headOption
@@ -228,28 +197,29 @@ class DigitalServicePageSpec
 
     "show edit button if user is singed-in" in {
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
-      val request               = UmpVerifiedRequest(FakeRequest(), isSignedIn = true)
+      val request               = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), isSignedIn = true)
 
-      val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None)(request).toString)
+      val document =
+        Jsoup.parse(new DigitalServiceInfoPage(mock[ViewMessages])(digitalServiceDetails, None)(request).toString)
 
       document.select("#edit-button").isEmpty shouldBe false
     }
 
     "don't show edit button if user is NOT singed-in" in {
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
-      val request               = UmpVerifiedRequest(FakeRequest(), isSignedIn = false)
+      val request               = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), isSignedIn = false)
 
-      val document = Jsoup.parse(digital_service_info(digitalServiceDetails, None)(request).toString)
+      val document =
+        Jsoup.parse(new DigitalServiceInfoPage(mock[ViewMessages])(digitalServiceDetails, None)(request).toString)
 
       document.select("#edit-button").isEmpty shouldBe true
     }
 
     "show team members for teams correctly" in {
-      val team1 = "Team1"
-      val team2 = "Team2"
 
-      val teamNames          = Seq(team1, team2)
       val digitalServiceName = "digital-service-123"
+      val team1              = "Team1"
+      val team2              = "Team2"
 
       val json =
         s"""
@@ -267,6 +237,7 @@ class DigitalServicePageSpec
            |  ]
            |}
         """.stripMargin
+
       serviceEndpoint(
         GET,
         s"/api/digital-services/$digitalServiceName",
@@ -282,148 +253,123 @@ class DigitalServicePageSpec
       val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
 
       response.status shouldBe 200
+
       val document = asDocument(response.body)
-
       verifyTeamMemberElementsText(document)
-
       verifyTeamMemberHrefLinks(document)
-
     }
 
-    "show the right error message when unable to connect to ump" in {
-
-      val digitalServiceName = "digital-service-123"
-
-      val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
-      val umpConnectorMock                  = mock[UserManagementConnector]
-
-      val catalogueController = new CatalogueController(
-        umpConnectorMock,
-        teamsAndRepositoriesConnectorMock,
-        mock[ServiceDependenciesConnector],
-        mock[IndicatorsConnector],
-        mock[LeakDetectionService],
-        mock[DeploymentsService],
-        mock[EventService],
-        mockedModelService,
-        mock[play.api.Environment],
-        verifySignInStatusPassThrough,
-        mock[UmpAuthenticated],
-        app.configuration,
-        mock[MessagesApi]
-      )
+    "show the right error message when unable to connect to ump" in new MockedCatalogueFrontendSetup {
 
       val teamName = "Team1"
 
-      val exception = new RuntimeException("Boooom!")
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
-      when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
+      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
-          Map(teamName -> Left(UserManagementConnector.ConnectionError(exception)))
+          Map(teamName -> Left(UserManagementConnector.ConnectionError(new RuntimeException("Boooom!"))))
         )
       )
 
-      val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
-      response.header.status shouldBe 200
+      val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
 
-      import play.api.test.Helpers._
+      status(response) shouldBe 200
 
-      val document: Document = asDocument(contentAsString(response))
+      val document = asDocument(contentAsString(response))
 
       document.select(s"#ump-error-$teamName").text() should ===("Sorry, the User Management Portal is not available")
     }
 
-    "show the right error message the ump send no data" in {
-
-      val digitalServiceName = "digital-service-123"
-
-      val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
-      val umpConnectorMock                  = mock[UserManagementConnector]
-
-      val catalogueController = new CatalogueController(
-        umpConnectorMock,
-        teamsAndRepositoriesConnectorMock,
-        mock[ServiceDependenciesConnector],
-        mock[IndicatorsConnector],
-        mock[LeakDetectionService],
-        mock[DeploymentsService],
-        mock[EventService],
-        mockedModelService,
-        mock[play.api.Environment],
-        verifySignInStatusPassThrough,
-        mock[UmpAuthenticated],
-        app.configuration,
-        mock[MessagesApi]
-      )
+    "show the right error message the ump send no data" in new MockedCatalogueFrontendSetup {
 
       val teamName = "Team1"
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
-      when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
+      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
           Map(teamName -> Left(UserManagementConnector.NoData("https://some-link-to-rectify")))
         )
       )
 
-      val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
-      response.header.status shouldBe 200
+      val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
 
-      import play.api.test.Helpers._
+      status(response) shouldBe 200
 
-      val document: Document = asDocument(contentAsString(response))
+      val document = asDocument(contentAsString(response))
 
       document.select(s"#ump-error-$teamName").text() should ===(
         s"$teamName is unknown to the User Management Portal. To add the team, please raise a TSR")
     }
 
-    "show the right error message the ump gives an Http error" in {
-
-      val digitalServiceName = "digital-service-123"
-
-      val teamsAndRepositoriesConnectorMock = mock[TeamsAndRepositoriesConnector]
-      val umpConnectorMock                  = mock[UserManagementConnector]
-
-      val catalogueController = new CatalogueController(
-        umpConnectorMock,
-        teamsAndRepositoriesConnectorMock,
-        mock[ServiceDependenciesConnector],
-        mock[IndicatorsConnector],
-        mock[LeakDetectionService],
-        mock[DeploymentsService],
-        mock[EventService],
-        mockedModelService,
-        mock[play.api.Environment],
-        verifySignInStatusPassThrough,
-        mock[UmpAuthenticated],
-        app.configuration,
-        mock[MessagesApi]
-      )
+    "show the right error message the ump gives an Http error" in new MockedCatalogueFrontendSetup {
 
       val teamName = "Team1"
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
-      when(umpConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
+      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
           Map(teamName -> Left(UserManagementConnector.HTTPError(404)))
         )
       )
 
-      val response: Result = catalogueController.digitalService(digitalServiceName)(FakeRequest()).futureValue
-      response.header.status shouldBe 200
+      val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
 
-      import play.api.test.Helpers._
+      status(response) shouldBe 200
 
-      val document: Document = asDocument(contentAsString(response))
+      val document = asDocument(contentAsString(response))
 
       document.select(s"#ump-error-$teamName").text() should ===(s"Sorry, the User Management Portal is not available")
     }
-
   }
 
-  def mockHttpApiCall(url: String, jsonResponseFile: String, httpCodeToBeReturned: Int = 200): String = {
+  private trait MockedCatalogueFrontendSetup {
+    val digitalServiceName = "digital-service-123"
+    val serviceOwner       = TeamMember(Some("Jack Low"), None, None, None, None, Some("jack.low"))
+
+    val teamsAndRepositoriesConnectorMock   = mock[TeamsAndRepositoriesConnector]
+    val userManagementConnectorMock         = mock[UserManagementConnector]
+    private val userManagementPortalConfig  = mock[UserManagementPortalConfig]
+    private val mockedModelService          = mock[ReadModelService]
+    private val userManagementAuthConnector = mock[UserManagementAuthConnector]
+    private val controllerComponents        = stubMessagesControllerComponents()
+    private val verifySignInStatusPassThrough =
+      new VerifySignInStatusPassThrough(userManagementAuthConnector, controllerComponents)
+    private val umpAuthenticatedPassThrough =
+      new UmpAuthenticatedPassThrough(userManagementAuthConnector, controllerComponents)
+
+    when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwner))
+    when(userManagementPortalConfig.userManagementProfileBaseUrl) thenReturn "http://things.things.com"
+
+    val catalogueController = new CatalogueController(
+      userManagementConnectorMock,
+      teamsAndRepositoriesConnectorMock,
+      mock[ServiceDependenciesConnector],
+      mock[IndicatorsConnector],
+      mock[LeakDetectionService],
+      mock[DeploymentsService],
+      mock[EventService],
+      mockedModelService,
+      verifySignInStatusPassThrough,
+      umpAuthenticatedPassThrough,
+      userManagementPortalConfig,
+      stubMessagesControllerComponents(),
+      digitalServiceInfoPage,
+      mock[IndexPage],
+      mock[TeamInfoPage],
+      mock[ServiceInfoPage],
+      mock[LibraryInfoPage],
+      mock[PrototypeInfoPage],
+      mock[RepositoryInfoPage],
+      mock[RepositoriesListPage]
+    )
+  }
+
+  private def asDocument(html: String): Document =
+    Jsoup.parse(html)
+
+  private def mockHttpApiCall(url: String, jsonResponseFile: String, httpCodeToBeReturned: Int = 200): String = {
 
     val json = readFile(jsonResponseFile)
 
@@ -432,10 +378,10 @@ class DigitalServicePageSpec
     json
   }
 
-  def readFile(jsonFilePath: String): String =
+  private def readFile(jsonFilePath: String): String =
     Source.fromURL(getClass.getResource(jsonFilePath)).getLines().mkString("\n")
 
-  def verifyTeamMemberHrefLinks(document: Document): Boolean = {
+  private def verifyTeamMemberHrefLinks(document: Document): Boolean = {
     val hrefs = document.select("#team_members [href]").iterator().toList
 
     hrefs.size shouldBe 4
@@ -445,7 +391,7 @@ class DigitalServicePageSpec
     hrefs(3).attributes().get("href") == "http://example.com/profile/marc.pallazo"
   }
 
-  def verifyTeamMemberElementsText(document: Document): Unit = {
+  private def verifyTeamMemberElementsText(document: Document): Unit = {
     val teamMembersLiElements = document.select("#team_members li").iterator().toList
 
     teamMembersLiElements.length shouldBe 4
@@ -455,5 +401,4 @@ class DigitalServicePageSpec
     teamMembersLiElements(2).text() should include("Casey Binge")
     teamMembersLiElements(3).text() should include("Marc Palazzo")
   }
-
 }

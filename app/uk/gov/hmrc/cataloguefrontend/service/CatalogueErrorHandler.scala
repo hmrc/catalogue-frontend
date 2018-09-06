@@ -17,12 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.Configuration
-import play.api.i18n.{Messages, MessagesApi}
+import play.api.i18n.MessagesApi
 import play.api.mvc.Request
 import play.twirl.api.Html
 import uk.gov.hmrc.play.bootstrap.http.FrontendErrorHandler
+import views.html._
 
 @Singleton
 class CatalogueErrorHandler @Inject()(val messagesApi: MessagesApi, val configuration: Configuration)
@@ -30,9 +30,9 @@ class CatalogueErrorHandler @Inject()(val messagesApi: MessagesApi, val configur
 
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(
     implicit request: Request[_]) =
-    views.html.error_template(pageTitle, heading, message)
+    error_template(pageTitle, heading, message)
 
   override def notFoundTemplate(implicit request: Request[_]): Html =
-    views.html.error_404_template()
+    error_404_template()
 
 }

@@ -20,24 +20,22 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
-import org.scalatestplus.play.OneServerPerSuite
-import play.api
-import play.api.Configuration
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeHeaders
-import uk.gov.hmrc.cataloguefrontend.{Environment, JsonData, Link, RepoType, RepositoryDetails, RepositoryDisplayDetails, Team, TeamsAndRepositoriesConnector, WireMockEndpoints}
+import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
 import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 class TeamsAndRepositoriesConnectorSpec
     extends WordSpec
     with Matchers
     with BeforeAndAfter
     with ScalaFutures
-    with OneServerPerSuite
+    with GuiceOneServerPerSuite
     with WireMockEndpoints
     with TypeCheckedTripleEquals
     with OptionValues
@@ -46,17 +44,19 @@ class TeamsAndRepositoriesConnectorSpec
 
   import uk.gov.hmrc.cataloguefrontend.JsonData._
 
-  implicit val defaultPatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
+  implicit val defaultPatienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
-    .configure(
-      "microservice.services.teams-and-repositories.host" -> host,
-      "microservice.services.teams-and-repositories.port" -> endpointPort,
-      "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
-    )
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.teams-and-repositories.host" -> host,
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+      )
+      .build()
 
-  val teamsAndRepositoriesConnector = app.injector.instanceOf[TeamsAndRepositoriesConnector]
+  private lazy val teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector =
+    app.injector.instanceOf[TeamsAndRepositoriesConnector]
 
   "teamsByService" should {
 
@@ -109,21 +109,21 @@ class TeamsAndRepositoriesConnectorSpec
         Seq(Link("open1", "open 1", "http://open1/service-1"), Link("open2", "open 2", "http://open2/service-2")))
       responseData.environments should ===(
         Some(Seq(
-          Environment(
+          TargetEnvironment(
             "Dev",
             Seq(
               Link("jenkins", "Jenkins", "https://deploy-dev.co.uk/job/deploy-microservice"),
               Link("grafana", "Grafana", "https://grafana-dev.co.uk/#/dashboard")
             )
           ),
-          Environment(
+          TargetEnvironment(
             "QA",
             Seq(
               Link("jenkins", "Jenkins", "https://deploy-qa.co.uk/job/deploy-microservice"),
               Link("grafana", "Grafana", "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
             )
           ),
-          Environment(
+          TargetEnvironment(
             "Production",
             Seq(
               Link("jenkins", "Jenkins", "https://deploy-prod.co.uk/job/deploy-microservice"),
@@ -138,16 +138,16 @@ class TeamsAndRepositoriesConnectorSpec
 
   "allRepositories" should {
     "return all the repositories returned by the api" in {
-      serviceEndpoint(GET, "/api/repositories", willRespondWith = (200, Some(JsonData.repositoriesData)))
+      serviceEndpoint(GET, "/api/repositories", willRespondWith = 200 -> Some(JsonData.repositoriesData))
 
       val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
         .allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
 
-      repositories(0).name          shouldBe "teamA-serv"
-      repositories(0).createdAt     shouldBe JsonData.createdAt
-      repositories(0).lastUpdatedAt shouldBe JsonData.lastActiveAt
-      repositories(0).repoType      shouldBe RepoType.Service
+      repositories.headOption.value.name          shouldBe "teamA-serv"
+      repositories.headOption.value.createdAt     shouldBe JsonData.createdAt
+      repositories.headOption.value.lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories.headOption.value.repoType      shouldBe RepoType.Service
 
       repositories(1).name          shouldBe "teamB-library"
       repositories(1).createdAt     shouldBe JsonData.createdAt
@@ -235,9 +235,4 @@ class TeamsAndRepositoriesConnectorSpec
         )
     }
   }
-
-  def teamsAndRepositoriesWithMockedHttp(httpClient: HttpClient) =
-    new TeamsAndRepositoriesConnector(httpClient, Configuration(), mock[api.Environment]) {
-      override def teamsAndServicesBaseUrl: String = "someUrl"
-    }
 }

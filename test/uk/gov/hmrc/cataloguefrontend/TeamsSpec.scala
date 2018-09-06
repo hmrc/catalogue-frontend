@@ -20,21 +20,25 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
-import org.scalatestplus.play.OneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WS
+import play.api.libs.ws._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class TeamsSpec extends UnitSpec with BeforeAndAfter with OneServerPerSuite with WireMockEndpoints {
+class TeamsSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
-  implicit override lazy val app = new GuiceApplicationBuilder()
-    .configure(Map(
-      "microservice.services.teams-and-repositories.port" -> endpointPort,
-      "microservice.services.teams-and-repositories.host" -> host,
-      "play.ws.ssl.loose.acceptAnyCertificate"        -> true,
-      "play.http.requestHandler"                      -> "play.api.http.DefaultHttpRequestHandler"
-    ))
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(Map(
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "microservice.services.teams-and-repositories.host" -> host,
+        "play.ws.ssl.loose.acceptAnyCertificate"            -> true,
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+      ))
+      .build()
+
+  private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
   "Teams list" should {
 

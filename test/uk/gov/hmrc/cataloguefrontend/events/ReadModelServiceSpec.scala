@@ -17,11 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
 import play.api.libs.json.{JsObject, Json}
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector
-import uk.gov.hmrc.cataloguefrontend.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
@@ -50,7 +50,7 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
       Await.result(readModelService.refreshEventsCache, 5 seconds)
 
       readModelService.eventsCache.size shouldBe 1
-      readModelService.eventsCache.head shouldBe ("Catalogue", "Joe Black")
+      readModelService.eventsCache.head shouldBe "Catalogue" -> "Joe Black"
     }
 
   }
@@ -60,7 +60,7 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
     it("should update the umpUsersCache correctly (with the users returned from the UMP))") {
 
       val teamMember = TeamMember(Some("Jack Low"), None, None, None, None, None)
-      when(userManagementConnector.getAllUsersFromUMP()).thenReturn(Future.successful(Right(Seq(teamMember))))
+      when(userManagementConnector.getAllUsersFromUMP).thenReturn(Future.successful(Right(Seq(teamMember))))
 
       Await.result(readModelService.refreshUmpCache, 5 seconds)
 
