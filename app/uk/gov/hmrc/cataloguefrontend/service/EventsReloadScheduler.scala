@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import play.api._
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.cataloguefrontend.events.UpdateScheduler
@@ -27,14 +27,15 @@ import scala.concurrent.duration._
 @Singleton
 class EventsReloadScheduler @Inject()(
   appLifecycle: ApplicationLifecycle,
-  val configuration: Configuration,
+  configuration: Configuration,
   environment: Environment,
+  @Named("appName") appName: String,
   updateScheduler: UpdateScheduler) {
 
   val eventReloadIntervalKey    = "event.reload.interval"
   val umpCacheReloadIntervalKey = "ump.cache.reload.interval"
 
-  Logger.info(s"Starting : ${environment.rootPath} : in mode : ${environment.mode}")
+  Logger.info(s"Starting : $appName : in mode : ${environment.mode}")
   Logger.debug("[Catalogue-frontend] - Starting... ")
 
   scheduleEventsReloadSchedule(appLifecycle, configuration)
