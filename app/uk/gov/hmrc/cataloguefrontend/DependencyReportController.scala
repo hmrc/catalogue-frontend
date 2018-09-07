@@ -26,7 +26,7 @@ import play.api.libs.json.{Json, OFormat}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, ServiceDependenciesConnector, Team, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -46,8 +46,8 @@ case class DependencyReport(
 class DependencyReportController @Inject()(
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   serviceDependencyConnector: ServiceDependenciesConnector,
-  mcc: MessagesControllerComponents
-) extends FrontendController(mcc) {
+  cc: ControllerComponents
+) extends BackendController(cc) {
 
   implicit val drFormat: OFormat[DependencyReport] = Json.format[DependencyReport]
 
