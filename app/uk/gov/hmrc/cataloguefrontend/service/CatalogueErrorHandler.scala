@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
 import play.api.i18n.MessagesApi
 import play.api.mvc.Request
 import play.twirl.api.Html
@@ -25,8 +24,7 @@ import uk.gov.hmrc.play.bootstrap.http.FrontendErrorHandler
 import views.html._
 
 @Singleton
-class CatalogueErrorHandler @Inject()(val messagesApi: MessagesApi, val configuration: Configuration)
-    extends FrontendErrorHandler {
+class CatalogueErrorHandler @Inject()(val messagesApi: MessagesApi) extends FrontendErrorHandler {
 
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(
     implicit request: Request[_]) =
