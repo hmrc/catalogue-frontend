@@ -32,11 +32,11 @@ package uk.gov.hmrc.cataloguefrontend
  * limitations under the License.
  */
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsValue, Json, OFormat, Reads}
 import play.api.Logger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -90,10 +90,11 @@ class ServiceDeploymentsConnector @Inject()(
 
   import ServiceDeploymentInformation._
   import uk.gov.hmrc.http.HttpReads._
-  import uk.gov.hmrc.cataloguefrontend.JavaDateTimeJsonFormatter._
 
-  private implicit val deployerFormat    = Json.format[Deployer]
-  private implicit val deploymentsFormat = Json.reads[Release]
+  private implicit val dateTimeReads: Reads[LocalDateTime] = JavaDateTimeJsonFormatter.localDateTimeReads
+  private implicit val dateReads: Reads[LocalDate]         = JavaDateTimeJsonFormatter.localDateReads
+  private implicit val deployerFormat: OFormat[Deployer]   = Json.format[Deployer]
+  private implicit val deploymentsFormat: Reads[Release]   = Json.reads[Release]
 
   def getDeployments(serviceNames: Set[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] =
     http
