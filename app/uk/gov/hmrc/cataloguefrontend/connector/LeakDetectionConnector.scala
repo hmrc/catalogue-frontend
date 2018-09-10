@@ -17,13 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.libs.json.Reads
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 
 @Singleton
 class LeakDetectionConnector @Inject()(
@@ -35,7 +36,13 @@ class LeakDetectionConnector @Inject()(
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] = {
     val hcAcceptingJson = hc.withExtraHeaders("Accept" -> "application/json")
-    http.GET[Seq[RepositoryWithLeaks]](s"$url/reports/repositories")(implicitly, hcAcceptingJson, implicitly)
+    http
+      .GET[Seq[RepositoryWithLeaks]](s"$url/reports/repositories")(implicitly, hcAcceptingJson, implicitly)
+      .recover {
+        case NonFatal(ex) =>
+          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          Seq.empty
+      }
   }
 }
 
