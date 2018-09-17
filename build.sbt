@@ -17,7 +17,7 @@ lazy val microservice = Project(appName, file("."))
     resolvers                        += Resolver.jcenterRepo
   )
 
-val bootstrapPlayVersion = "0.17.0"
+val bootstrapPlayVersion = "0.18.0"
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "simple-reactivemongo-26" % "0.9.0",
