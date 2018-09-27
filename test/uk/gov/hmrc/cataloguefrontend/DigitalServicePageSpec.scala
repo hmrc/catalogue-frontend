@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -345,6 +345,7 @@ class DigitalServicePageSpec
     val catalogueController = new CatalogueController(
       userManagementConnectorMock,
       teamsAndRepositoriesConnectorMock,
+      mock[ConfigService],
       mock[ServiceDependenciesConnector],
       mock[IndicatorsConnector],
       mock[LeakDetectionService],
@@ -359,6 +360,7 @@ class DigitalServicePageSpec
       mock[IndexPage],
       mock[TeamInfoPage],
       mock[ServiceInfoPage],
+      mock[ServiceConfigPage],
       mock[LibraryInfoPage],
       mock[PrototypeInfoPage],
       mock[RepositoryInfoPage],

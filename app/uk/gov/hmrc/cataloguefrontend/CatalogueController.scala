@@ -34,6 +34,7 @@ import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionS
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
+import uk.gov.hmrc.cataloguefrontend.service.ConfigService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -53,6 +54,7 @@ case class DigitalServiceDetails(
 class CatalogueController @Inject()(
   userManagementConnector: UserManagementConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  configService: ConfigService,
   serviceDependencyConnector: ServiceDependenciesConnector,
   indicatorsConnector: IndicatorsConnector,
   leakDetectionService: LeakDetectionService,
@@ -67,6 +69,7 @@ class CatalogueController @Inject()(
   indexPage: IndexPage,
   teamInfoPage: TeamInfoPage,
   serviceInfoPage: ServiceInfoPage,
+  serviceConfigPage: ServiceConfigPage,
   libraryInfoPage: LibraryInfoPage,
   prototypeInfoPage: PrototypeInfoPage,
   repositoryInfoPage: RepositoryInfoPage,
@@ -234,6 +237,34 @@ class CatalogueController @Inject()(
         case _ => NotFound(error_404_template())
       }
   }
+
+  def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request => {
+
+    for {
+
+      developmentConfig <- configService.serviceConfigYaml("development", serviceName)
+      qaConfig <- configService.serviceConfigYaml("qa", serviceName)
+      stagingConfig <- configService.serviceConfigYaml("staging", serviceName)
+
+    } yield () match {
+      case _ => {
+
+        val resultMap = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, Object]](
+          "development" -> configService.loadYamlResponseToMap(developmentConfig),
+          "qa" -> configService.loadYamlResponseToMap(qaConfig),
+          "staging" -> configService.loadYamlResponseToMap(stagingConfig)
+        )
+
+        val dedupedResultMap = configService.checkDuplicates(resultMap)
+
+        Ok(serviceConfigPage(serviceName, configService.convertAllMapsToImmutable(dedupedResultMap)))
+      }
+    }
+  }
+  }
+
+
+
 
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>
     def getDeployedEnvs(
@@ -496,3 +527,5 @@ object DeploymentsFilter {
     optional(text.verifying(errorCode, x => stringToLocalDateTimeOpt(x).isDefined))
       .transform[Option[LocalDateTime]](_.flatMap(stringToLocalDateTimeOpt), _.map(_.format(`yyyy-MM-dd`)))
 }
+
+

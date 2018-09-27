@@ -1,0 +1,112 @@
+@*
+ * Copyright 2018 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import play.twirl.api.Html
+@import java.time.LocalDateTime
+
+@import uk.gov.hmrc.cataloguefrontend.DeploymentVO
+@import uk.gov.hmrc.cataloguefrontend.ChartDataRows
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+@import views.partials.githubBadgeType
+@import partials.DependenciesPartial
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigEntry
+
+@this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
+@(serviceName: String, configList: Map[String, Map[String, Object]])(implicit messages: Messages, request: Request[_])
+
+<style type="text/css" media="screen">
+    td .configTable {
+        display: inline-block;
+        vertical-align: top;
+        width: 100%;
+    }
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+    .repeat {
+        color: #8B0000;
+    }
+
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    /* Tooltip text */
+    .tooltip .tooltiptext {
+        visibility: hidden;
+
+        width: 120px;
+        top: 100%;
+        left: 50%;
+        margin-left: -60px;
+        background-color: black;
+
+        color: #fff;
+        text-align: center;
+        padding: 5px 0;
+        border-radius: 6px;
+
+        /* Position the tooltip text - see examples below! */
+        position: absolute;
+        z-index: 1;
+    }
+
+    /* Show the tooltip text when you mouse over the tooltip container */
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+    }
+
+</style>
+
+@repeatText(v: List[String]) = @{
+    v.fold("Repeated in "){ (s, t) => s + t + " "}
+}
+
+@printMap(map: Map[String, Object]) = {
+    @for((k: String, v: ConfigEntry) <- map) {
+        @if(v.repeats.nonEmpty) {
+            <tr>
+                <td class="configTable repeat">
+                    <div class="tooltip">
+                        <span class="tooltiptext">@{repeatText(v.repeats)}</span>
+                        @k
+                    </div>
+                </td><td class="repeat">@v.asInstanceOf[ConfigEntry].value</td>
+            </tr>
+        } else {
+            <tr><td>@k</td><td>@v.value</td></tr>
+        }
+    }
+}
+
+
+<h3>Config for @serviceName Service</h3>
+<div>
+    <table class="configTable">
+        @for((k, v) <- configList) {
+            <tr><td><h3>@k config</h3></td></tr>
+            @printMap(v)
+            <tr><td><h3><hr/></h3></td><td><h3><hr/></h3></td></tr>
+        }
+    </table>
+</div>
+
+
+
+
