@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import java.net.URLEncoder
-
 import javax.inject.{Inject, Singleton}
 import play.Logger
-import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -28,6 +25,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import uk.gov.hmrc.githubclient.GitApiConfig
 
 
 @Singleton
@@ -35,8 +33,6 @@ class ConfigConnector @Inject()(
   http: HttpClient,
   servicesConfig: ServicesConfig
 ) {
-
-//  import TeamsAndRepositoriesConnector._
 
   private val teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
 
@@ -49,7 +45,9 @@ class ConfigConnector @Inject()(
   }
 
   def serviceConfigYaml(env: String, service: String)(implicit hc: HeaderCarrier): Future[String] = {
-    val newHc = hc.withExtraHeaders(("Authorization", "token 17c0a664b862e4eb7c702259d314216b47c776e5"))
+    // TODO - where does this belong?
+    val gitConf = GitApiConfig.fromFile(s"${System.getProperty("user.home")}/.github/.credentials")
+    val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
     doCall(env, service, newHc)
   }
 
