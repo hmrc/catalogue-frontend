@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
+import java.io.File
+
 import javax.inject.{Inject, Singleton}
 import play.Logger
 import play.api.libs.json._
@@ -44,8 +46,14 @@ class ConfigConnector @Inject()(
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
 
-  // TODO - where does this belong?
-  val gitConf = GitApiConfig.fromFile(s"${System.getProperty("user.home")}/.github/.credentials")
+  // TODO - where does this belong and how should it really be initiated?
+  val gitConf = {
+    if(new File(s"${System.getProperty("user.home")}/.github/.credentials").exists()) {
+      GitApiConfig.fromFile(s"${System.getProperty("user.home")}/.github/.credentials")
+    } else {
+      GitApiConfig("key-not-set", "token-not-set", "api-url-not-set")
+    }
+  }
 
   def serviceConfigYaml(env: String, service: String)(implicit hc: HeaderCarrier): Future[String] = {
     val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
