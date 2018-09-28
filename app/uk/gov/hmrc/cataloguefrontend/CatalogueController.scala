@@ -243,7 +243,6 @@ class CatalogueController @Inject()(
     for {
 
       // app-config-common
-
       baseConfig <- configService.serviceConfigConf("base", serviceName)
 
       developmentConfig <- configService.serviceConfigYaml("development", serviceName)
@@ -253,21 +252,9 @@ class CatalogueController @Inject()(
       // app-config-externaltest
       // app-config-production
 
-
     } yield () match {
       case _ => {
-
-        // TODO - move all this into the service class
-        val resultMap = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, Object]](
-          "base" -> configService.loadConfResponseToMap(baseConfig),
-          "development" -> configService.loadYamlResponseToMap(developmentConfig),
-          "qa" -> configService.loadYamlResponseToMap(qaConfig),
-          "staging" -> configService.loadYamlResponseToMap(stagingConfig)
-        )
-
-        val dedupedResultMap = configService.checkDuplicates(resultMap)
-
-        Ok(serviceConfigPage(serviceName, configService.convertAllMapsToImmutable(dedupedResultMap)))
+        Ok(serviceConfigPage(serviceName, configService.buildConfigMap(baseConfig, developmentConfig, qaConfig, stagingConfig)))
       }
     }
   }

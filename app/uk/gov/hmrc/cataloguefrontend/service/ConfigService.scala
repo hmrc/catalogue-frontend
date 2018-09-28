@@ -29,10 +29,23 @@ import scala.collection.mutable
 
 @Singleton
 class ConfigService @Inject()(configConnector: ConfigConnector) {
+
   def serviceConfigYaml(str: String, serviceName: String)(implicit hc: HeaderCarrier) = configConnector.serviceConfigYaml(str, serviceName)
 
   def serviceConfigConf(str: String, serviceName: String)(implicit hc: HeaderCarrier) = configConnector.serviceConfigConf(str, serviceName)
 
+
+  def buildConfigMap(baseConfig: String, devConfig: String, qaConfig: String, stagingConfig: String) = {
+
+    val resultMap = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, Object]](
+      "base" -> loadConfResponseToMap(baseConfig),
+      "development" -> loadYamlResponseToMap(devConfig),
+      "qa" -> loadYamlResponseToMap(qaConfig),
+      "staging" -> loadYamlResponseToMap(stagingConfig)
+    )
+
+    convertAllMapsToImmutable(checkDuplicates(resultMap))
+  }
 
   def loadConfResponseToMap(responseString: String): scala.collection.mutable.Map[String, Object] = {
     import scala.collection.mutable.Map
@@ -89,20 +102,29 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
   def flattenConfigToDotNotation(start: mutable.Map[String, Object], input: Config, prefix: String = ""): mutable.Map[String, Object] = {
     import scala.collection.JavaConversions._
     input.entrySet().toArray().foreach {
-        case e: java.util.AbstractMap.SimpleImmutableEntry[Object, Object] => start.put(e.getKey.toString, ConfigEntry(e.getValue.toString))
+        case e: java.util.AbstractMap.SimpleImmutableEntry[Object, Object] => start.put(s"hmrc_config.${e.getKey.toString}", ConfigEntry(e.getValue.toString))
         case e =>
       }
     start
   }
 
-  def flattenYamlToDotNotation(start: mutable.Map[String, Object], input: mutable.Map[String, Object], prefix: String = ""): mutable.Map[String, Object] = {
+  def flattenYamlToDotNotation(start: mutable.Map[String, Object], input: mutable.Map[String, Object], currentPrefix: String = ""): mutable.Map[String, Object] = {
     import scala.collection.JavaConversions.mapAsScalaMap
     input foreach {
-      case (k: String, v: mutable.Map[String, Object]) => flattenYamlToDotNotation(start, v, if(prefix.isEmpty) {k} else {s"$prefix.$k"})
-      case (k: String, v: java.util.LinkedHashMap[String, Object]) => flattenYamlToDotNotation(start, v, if(prefix.isEmpty) {k} else {s"$prefix.$k"})
-      case (k: String, v: Object) => start.put(if(prefix.isEmpty) {k} else {s"$prefix.$k"}, ConfigEntry(v.toString))
+      case (k: String, v: mutable.Map[String, Object]) => flattenYamlToDotNotation(start, v, buildPrefix(currentPrefix, k))
+      case (k: String, v: java.util.LinkedHashMap[String, Object]) => flattenYamlToDotNotation(start, v, buildPrefix(currentPrefix, k))
+      case (k: String, v: Object) => start.put(buildPrefix(currentPrefix, k), ConfigEntry(v.toString))
     }
     start
+  }
+
+
+  private def buildPrefix(currentPrefix: String, key: String) = {
+    (currentPrefix, key) match {
+      case ("", "0.0.0") => currentPrefix  // filter out the (unused) config version numbering
+      case (cp, _) if cp.isEmpty => key
+      case _ => s"$currentPrefix.$key"
+    }
   }
 
   def convertAllMapsToImmutable(input: mutable.Map[String, mutable.Map[String, Object]]): Map[String, Map[String, Object]] = {
