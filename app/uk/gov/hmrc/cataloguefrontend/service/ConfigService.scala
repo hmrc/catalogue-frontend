@@ -18,10 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import java.util
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
+import com.typesafe.config._
 import javax.inject.{Inject, Singleton}
 import org.yaml.snakeyaml.Yaml
-import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.collection.immutable.ListMap
@@ -50,9 +50,21 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
   def loadConfResponseToMap(responseString: String): scala.collection.mutable.Map[String, Object] = {
     import scala.collection.mutable.Map
     import scala.collection.JavaConversions.mapAsScalaMap
+
+    val fallbackIncluder = ConfigParseOptions.defaults().getIncluder()
+
+    val includer = new ConfigIncluder() {
+      override def withFallback(fallback: ConfigIncluder): ConfigIncluder = this
+      override def include(context: ConfigIncludeContext, what: String): ConfigObject = {
+//        ConfigFactory.parseString(what).root()
+        ConfigFactory.empty.root()
+      }
+    }
+
+    val options: ConfigParseOptions = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF).setAllowMissing(false).setIncluder(includer)
     responseString match {
       case s: String if s.nonEmpty => {
-        val conf: Config = ConfigFactory.parseString(responseString)
+        val conf: Config = ConfigFactory.parseString(responseString, options)
         flattenConfigToDotNotation(Map(), conf)
       }
       case _ => Map()
@@ -102,10 +114,18 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
   def flattenConfigToDotNotation(start: mutable.Map[String, Object], input: Config, prefix: String = ""): mutable.Map[String, Object] = {
     import scala.collection.JavaConversions._
     input.entrySet().toArray().foreach {
-        case e: java.util.AbstractMap.SimpleImmutableEntry[Object, Object] => start.put(s"hmrc_config.${e.getKey.toString}", ConfigEntry(e.getValue.toString))
-        case e =>
+        case e: java.util.AbstractMap.SimpleImmutableEntry[Object, com.typesafe.config.ConfigValue] => start.put(s"hmrc_config.${e.getKey.toString}", ConfigEntry(removeQuotes(e.getValue.render)))
+        case e => println("Can't do that!")
       }
     start
+  }
+
+  def removeQuotes(input: String) = {
+    if(input.charAt(0).equals('"') && input.charAt(input.length - 1).equals('"')) {
+      input.substring(1, input.length - 1)
+    } else {
+      input
+    }
   }
 
   def flattenYamlToDotNotation(start: mutable.Map[String, Object], input: mutable.Map[String, Object], currentPrefix: String = ""): mutable.Map[String, Object] = {
