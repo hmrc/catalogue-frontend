@@ -242,15 +242,22 @@ class CatalogueController @Inject()(
 
     for {
 
+      // app-config-common
+
       baseConfig <- configService.serviceConfigConf("base", serviceName)
 
       developmentConfig <- configService.serviceConfigYaml("development", serviceName)
       qaConfig <- configService.serviceConfigYaml("qa", serviceName)
       stagingConfig <- configService.serviceConfigYaml("staging", serviceName)
+      // app-config-integration
+      // app-config-externaltest
+      // app-config-production
+
 
     } yield () match {
       case _ => {
 
+        // TODO - move all this into the service class
         val resultMap = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, Object]](
           "base" -> configService.loadConfResponseToMap(baseConfig),
           "development" -> configService.loadYamlResponseToMap(developmentConfig),

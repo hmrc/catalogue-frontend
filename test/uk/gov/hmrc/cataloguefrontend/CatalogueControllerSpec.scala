@@ -136,64 +136,6 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
     }
   }
 
-//  "Dot notation converter" should {
-//    "flatten map" in {
-//      val input = Map[String, Object]("A" -> "1", "B" -> "2", "C" -> Map("D" -> "4", "E" -> "5"))
-//      val output = flattenToDotNotation(scala.collection.mutable.Map[String, String](), input)
-//      output.size shouldBe 4
-//      output("C.E") shouldBe "5"
-//    }
-//  }
-
-
-
-
-//  "Check single map for duplicates" should {
-//    "find duplicates" in {
-//      import scala.collection.mutable.Map
-//
-//      val input1 = scala.collection.mutable.Map[String, Object](  "A" -> ConfigEntry("1"), "B" -> ConfigEntry("2"), "C" -> ConfigEntry("3"))
-//
-//      val input1Expected = Map[String, Object]("A" -> ConfigEntry("1"), "B" -> ConfigEntry("2", Some("repeat")), "C" -> ConfigEntry("3"))
-//
-//      checkSingleMapForValue("B", "2", input1).toSeq shouldBe (input1Expected.toSeq)
-//    }
-//
-//
-//    "not find duplicates" in {
-//      import scala.collection.mutable.Map
-//
-//      val input1 = scala.collection.mutable.Map[String, Object](  "A" -> ConfigEntry("1"), "B" -> ConfigEntry("2"), "C" -> ConfigEntry("3"))
-//
-//      val expectedResult = input1.toMap  // copy of original mutable map
-//
-//      val result = checkSingleMapForValue("B", "NO_MATCH", input1)
-//      result shouldBe (expectedResult)
-//    }
-//  }
-//
-//
-//
-//  "Check duplicates" should {
-//    "find duplicates" in {
-//      import scala.collection.mutable.Map
-//
-//
-//      val input1 = scala.collection.mutable.Map[String, Object](  "A" -> ConfigEntry("1"), "B" -> ConfigEntry("2"), "C" ->  ConfigEntry("3"))
-//      val input2 = scala.collection.mutable.Map[String, Object](  "A" -> ConfigEntry("11"), "B" -> ConfigEntry("2"), "C" -> ConfigEntry("3"))
-//
-//      val input1Expected = Map[String, Object]("A" -> ConfigEntry("1"), "B" -> ConfigEntry("2", Some("repeat")), "C" -> ConfigEntry("3", Some("repeat")))
-//      val input2Expected = Map[String, Object]("A" -> ConfigEntry("11"), "B" -> ConfigEntry("2", Some("repeat")), "C" -> ConfigEntry("3", Some("repeat")))
-//
-//      val input = Map("map1" -> input1, "map2" -> input2)
-//      val expectedMultiResult = Map("map1" -> input1Expected, "map2" -> input2Expected)
-//
-//      val multiResult = checkDuplicates(input)
-//      multiResult shouldBe expectedMultiResult
-//    }
-//  }
-
-
 
   private trait Setup {
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()

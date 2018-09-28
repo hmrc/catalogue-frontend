@@ -75,7 +75,7 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
   }
 
 
-  private def checkSingleMapForValue(key: String, value: String, toCheck: mutable.Map[String, Object], mapName: String) = {
+  def checkSingleMapForValue(key: String, value: String, toCheck: mutable.Map[String, Object], mapName: String) = {
     toCheck.get(key) match {
       case Some(ev: ConfigEntry) if ev.value.toString == value => {
         val newValue = ev.copy(repeats = ev.repeats :+ mapName)
@@ -113,7 +113,7 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
     ListMap(result.toSeq.sortWith(_._1 < _._1):_*)
   }
 
-  private def convertSingleMapToImmutable(input: mutable.Map[String, Object]): Map[String, Object] = {
+  def convertSingleMapToImmutable(input: mutable.Map[String, Object]): Map[String, Object] = {
     import scala.collection.JavaConversions.mapAsScalaMap
 
     var result = Map[String, Object]()
