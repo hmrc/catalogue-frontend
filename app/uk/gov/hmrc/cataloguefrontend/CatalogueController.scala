@@ -242,6 +242,8 @@ class CatalogueController @Inject()(
 
     for {
 
+      baseConfig <- configService.serviceConfigConf("base", serviceName)
+
       developmentConfig <- configService.serviceConfigYaml("development", serviceName)
       qaConfig <- configService.serviceConfigYaml("qa", serviceName)
       stagingConfig <- configService.serviceConfigYaml("staging", serviceName)
@@ -250,6 +252,7 @@ class CatalogueController @Inject()(
       case _ => {
 
         val resultMap = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, Object]](
+          "base" -> configService.loadConfResponseToMap(baseConfig),
           "development" -> configService.loadYamlResponseToMap(developmentConfig),
           "qa" -> configService.loadYamlResponseToMap(qaConfig),
           "staging" -> configService.loadYamlResponseToMap(stagingConfig)

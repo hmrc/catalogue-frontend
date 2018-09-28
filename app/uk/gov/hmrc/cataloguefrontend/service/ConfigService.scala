@@ -18,9 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import java.util
 
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
 import javax.inject.{Inject, Singleton}
 import org.yaml.snakeyaml.Yaml
-import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.collection.immutable.ListMap
@@ -30,6 +31,20 @@ import scala.collection.mutable
 class ConfigService @Inject()(configConnector: ConfigConnector) {
   def serviceConfigYaml(str: String, serviceName: String)(implicit hc: HeaderCarrier) = configConnector.serviceConfigYaml(str, serviceName)
 
+  def serviceConfigConf(str: String, serviceName: String)(implicit hc: HeaderCarrier) = configConnector.serviceConfigConf(str, serviceName)
+
+
+  def loadConfResponseToMap(responseString: String): scala.collection.mutable.Map[String, Object] = {
+    import scala.collection.mutable.Map
+    import scala.collection.JavaConversions.mapAsScalaMap
+    responseString match {
+      case s: String if s.nonEmpty => {
+        val conf: Config = ConfigFactory.parseString(responseString)
+        flattenConfigToDotNotation(Map(), conf)
+      }
+      case _ => Map()
+    }
+  }
 
   def loadYamlResponseToMap(responseString: String): scala.collection.mutable.Map[String, Object] = {
     import scala.collection.mutable.Map
@@ -37,7 +52,7 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
     responseString match {
       case s: String if s.nonEmpty => {
         val yamlMap: Map[String, Object] = new Yaml().load(responseString).asInstanceOf[util.LinkedHashMap[String, Object]]
-        flattenToDotNotation(Map(), yamlMap)
+        flattenYamlToDotNotation(Map(), yamlMap)
       }
       case _ => Map()
     }
@@ -49,11 +64,10 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
         valueMap foreach {
           case (ke: String, ce: ConfigEntry) => {
             mapOfMaps.filter(_._1 != mapName).map { m =>
-              println(s"Checking ${m._1} for key $ke with value ${ce.value} in map $mapName ....")
               checkSingleMapForValue(ke, ce.value, m._2, mapName)
             }
           }
-          case _ => println("Ooooppss!")
+          case _ => println("Ooooppss! That shouldn't happen!")
         }
       }
     }
@@ -64,22 +78,28 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
   private def checkSingleMapForValue(key: String, value: String, toCheck: mutable.Map[String, Object], mapName: String) = {
     toCheck.get(key) match {
       case Some(ev: ConfigEntry) if ev.value.toString == value => {
-        println(s"Match found: $key with value ${ev.value}")
         val newValue = ev.copy(repeats = ev.repeats :+ mapName)
         toCheck.put(key, newValue)
       }
-      case Some(ev: ConfigEntry) => println(s"Key $key found but values differ")
-      case _ => println(s"Key $key Not found")
+      case _ =>
     }
     toCheck
   }
 
+  def flattenConfigToDotNotation(start: mutable.Map[String, Object], input: Config, prefix: String = ""): mutable.Map[String, Object] = {
+    import scala.collection.JavaConversions._
+    input.entrySet().toArray().foreach {
+        case e: java.util.AbstractMap.SimpleImmutableEntry[Object, Object] => start.put(e.getKey.toString, ConfigEntry(e.getValue.toString))
+        case e =>
+      }
+    start
+  }
 
-  def flattenToDotNotation(start: mutable.Map[String, Object], input: mutable.Map[String, Object], prefix: String = ""): mutable.Map[String, Object] = {
+  def flattenYamlToDotNotation(start: mutable.Map[String, Object], input: mutable.Map[String, Object], prefix: String = ""): mutable.Map[String, Object] = {
     import scala.collection.JavaConversions.mapAsScalaMap
     input foreach {
-      case (k: String, v: mutable.Map[String, Object]) => flattenToDotNotation(start, v, if(prefix.isEmpty) {k} else {s"$prefix.$k"})
-      case (k: String, v: java.util.LinkedHashMap[String, Object]) => flattenToDotNotation(start, v, if(prefix.isEmpty) {k} else {s"$prefix.$k"})
+      case (k: String, v: mutable.Map[String, Object]) => flattenYamlToDotNotation(start, v, if(prefix.isEmpty) {k} else {s"$prefix.$k"})
+      case (k: String, v: java.util.LinkedHashMap[String, Object]) => flattenYamlToDotNotation(start, v, if(prefix.isEmpty) {k} else {s"$prefix.$k"})
       case (k: String, v: Object) => start.put(if(prefix.isEmpty) {k} else {s"$prefix.$k"}, ConfigEntry(v.toString))
     }
     start

@@ -44,19 +44,26 @@ class ConfigConnector @Inject()(
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
 
+  // TODO - where does this belong?
+  val gitConf = GitApiConfig.fromFile(s"${System.getProperty("user.home")}/.github/.credentials")
+
   def serviceConfigYaml(env: String, service: String)(implicit hc: HeaderCarrier): Future[String] = {
-    // TODO - where does this belong?
-    val gitConf = GitApiConfig.fromFile(s"${System.getProperty("user.home")}/.github/.credentials")
     val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
-    doCall(env, service, newHc)
+    val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-$env/master/$service.yaml"
+    doCall(requestUrl, newHc)
   }
 
-  private def doCall(env: String, service: String, newHc: HeaderCarrier) = {
+  def serviceConfigConf(env: String, service: String)(implicit hc: HeaderCarrier): Future[String] = {
+    val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
+    val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-$env/master/$service.conf"
+    doCall(requestUrl, newHc)
+  }
+
+  private def doCall(url: String, newHc: HeaderCarrier) = {
     implicit val hc: HeaderCarrier = newHc
-    val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-$env/master/$service.yaml"
-    http.GET(requestUrl).map {
+    http.GET(url).map {
       case response: HttpResponse if response.status != 200 => {
-        Logger.warn(s"Failed to download config yaml for service $service in env $env" )
+        Logger.warn(s"Failed to download config file from $url" )
         ""
       }
       case response: HttpResponse => {
