@@ -30,11 +30,10 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events._
-import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigEntry, ConfigService, DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
-import uk.gov.hmrc.cataloguefrontend.service.ConfigService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -242,19 +241,48 @@ class CatalogueController @Inject()(
 
     for {
 
-      // app-config-common
-      baseConfig <- configService.serviceConfigConf("base", serviceName)
+      internalConfig <- configService.internalConfigFromConfFile(serviceName)
 
-      developmentConfig <- configService.serviceConfigYaml("development", serviceName)
-      qaConfig <- configService.serviceConfigYaml("qa", serviceName)
-      stagingConfig <- configService.serviceConfigYaml("staging", serviceName)
-      // app-config-integration
-      // app-config-externaltest
-      // app-config-production
+      baseConfig <- configService.configFromConfFile("base", serviceName)
+
+      developmentConfig <- configService.configFromYaml("development", serviceName)
+      qaConfig <- configService.configFromYaml("qa", serviceName)
+      stagingConfig <- configService.configFromYaml("staging", serviceName)
+      integrationConfig <- configService.configFromYaml("integration", serviceName)
+      externalTestConfig <- configService.configFromYaml("externaltest", serviceName)
+      productionConfig <- configService.configFromYaml("production", serviceName)
+
+      // assuming here that the service type is the same in all environments despite being defined separately
+      serviceType = configService.loadYamlResponseToMap(qaConfig).getOrElse("type",
+        throw new RuntimeException("failed to find service type setting in config")).asInstanceOf[ConfigEntry].value
+
+      // common config (per service type and environment)
+      developmentCommonConfig <- configService.commonConfigFromYaml("development", serviceType)
+      qaCommonConfig <- configService.commonConfigFromYaml("qa", serviceType)
+      stagingCommonConfig <- configService.commonConfigFromYaml("staging", serviceType)
+      integrationCommonConfig <- configService.commonConfigFromYaml("staging", serviceType)
+      externalTestCommonConfig <- configService.commonConfigFromYaml("staging", serviceType)
+      productionCommonConfig <- configService.commonConfigFromYaml("staging", serviceType)
 
     } yield () match {
       case _ => {
-        Ok(serviceConfigPage(serviceName, configService.buildConfigMap(baseConfig, developmentConfig, qaConfig, stagingConfig)))
+//        println(devYamlMap)
+        println(s"$serviceType")
+//        val serviceType = devYamlMap("development")("type")
+        Ok(serviceConfigPage(serviceName, configService.buildConfigMap( internalConfig,
+                                                                        baseConfig,
+                                                                        developmentConfig,
+                                                                        developmentCommonConfig,
+                                                                        qaConfig,
+                                                                        qaCommonConfig,
+                                                                        stagingConfig,
+                                                                        stagingCommonConfig,
+                                                                        integrationConfig,
+                                                                        integrationCommonConfig,
+                                                                        externalTestConfig,
+                                                                        externalTestCommonConfig,
+                                                                        productionConfig,
+                                                                        productionCommonConfig)))
       }
     }
   }

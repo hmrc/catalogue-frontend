@@ -14,30 +14,38 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import play.twirl.api.Html
-@import java.time.LocalDateTime
-
-@import uk.gov.hmrc.cataloguefrontend.DeploymentVO
-@import uk.gov.hmrc.cataloguefrontend.ChartDataRows
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
-@import views.partials.githubBadgeType
 @import partials.DependenciesPartial
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigEntry
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 @(serviceName: String, configList: Map[String, Map[String, Object]])(implicit messages: Messages, request: Request[_])
 
 <style type="text/css" media="screen">
-    td .configTable {
+
+    table.configTable {
+        padding-left:50px;
+    }
+
+    td.configTable {
         display: inline-block;
         vertical-align: top;
         width: 100%;
     }
+
     tr:nth-child(even) {
         background-color: #f2f2f2;
     }
+
+    .envHeading {
+        background-color: #ACDDE7;
+    }
+
+    .envSubHeading {
+        background-color: #ADB9E3;
+        margin-left:50px;
+    }
+
     .repeat {
         color: #8B0000;
     }
@@ -74,17 +82,19 @@
 
 </style>
 
-@repeatText(v: List[String]) = @{
-    v.fold("Repeated in "){ (s, t) => s + t + " "}
-}
+    @repeatText(v: List[String]) = @{
+        v.fold("Repeated in ") { (s, t) => s + t + " " }
+    }
 
-@printMap(map: Map[String, Object]) = {
+    @printMap(map: Map[String, Object]) = {
     @for((k: String, v: ConfigEntry) <- map) {
         @if(v.repeats.nonEmpty) {
             <tr>
                 <td class="configTable repeat">
                     <div class="tooltip">
-                        <span class="tooltiptext">@{repeatText(v.repeats)}</span>
+                        <span class="tooltiptext">@{
+                            repeatText(v.repeats)
+                        }</span>
                         @k
                     </div>
                 </td><td class="repeat">@v.asInstanceOf[ConfigEntry].value</td>
@@ -93,20 +103,36 @@
             <tr><td>@k</td><td>@v.value</td></tr>
         }
     }
-}
+    }
 
 
-<h3>Config for @serviceName Service</h3>
-<div>
-    <table class="configTable">
-        @for((k, v) <- configList) {
-            <tr><td><h3>@k config</h3></td></tr>
-            @printMap(v)
-            <tr><td><h3><hr/></h3></td><td><h3><hr/></h3></td></tr>
+    <h3>Config for @serviceName Service</h3>
+
+    <div>
+        <h3 class=envHeading>Internal Application Config - ({service}/conf/application.conf)</h3>
+        <table class=configTable>
+            @{printMap(configList("base"))}
+        </table>
+
+        <h3 class=envHeading>'base' Config - (app-config-base)</h3>
+        <table class=configTable>
+            @{printMap(configList("base"))}
+        </table>
+    </div>
+
+    <div>
+        @for(env <- List("development", "qa", "staging", "integration", "externalTest", "production")) {
+            <h3 class=envHeading>@env Config</h3>
+            <h4 class=envSubHeading>common - (these settings are common to all services of this type in this environment)</h4>
+            <table class=configTable>
+            @(printMap(configList(env + "Common")))
+            </table>
+            <h4 class=envSubHeading>app specific</h4>
+            <table class=configTable>
+            @printMap(configList(env))
+            </table>
         }
-    </table>
-</div>
-
+    </div>
 
 
 

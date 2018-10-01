@@ -30,18 +30,45 @@ import scala.collection.mutable
 @Singleton
 class ConfigService @Inject()(configConnector: ConfigConnector) {
 
-  def serviceConfigYaml(str: String, serviceName: String)(implicit hc: HeaderCarrier) = configConnector.serviceConfigYaml(str, serviceName)
 
-  def serviceConfigConf(str: String, serviceName: String)(implicit hc: HeaderCarrier) = configConnector.serviceConfigConf(str, serviceName)
+  def configFromYaml(env: String, serviceName: String)(implicit hc: HeaderCarrier) = configConnector.serviceConfigYaml(env, serviceName)
 
+  def configFromConfFile(env: String, serviceName: String)(implicit hc: HeaderCarrier) = configConnector.serviceConfigConf(env, serviceName)
 
-  def buildConfigMap(baseConfig: String, devConfig: String, qaConfig: String, stagingConfig: String) = {
+  def commonConfigFromYaml(env: String, serviceType: String)(implicit hc: HeaderCarrier) = configConnector.serviceCommonConfigYaml(env, serviceType)
+
+  def internalConfigFromConfFile(serviceName: String)(implicit hc: HeaderCarrier) = configConnector.internalConfigFile(serviceName)
+
+  def buildConfigMap(internalConfig: String,
+                     baseConfig: String,
+                     devConfig: String,
+                     devCommonConfig: String,
+                     qaConfig: String,
+                     qaCommonConfig: String,
+                     stagingConfig: String,
+                     stagingCommonConfig: String,
+                     integrationConfig: String,
+                     integrationCommonConfig: String,
+                     externalTestConfig: String,
+                     externalTestCommonConfig: String,
+                     productionConfig: String,
+                     productionCommonConfig: String) = {
 
     val resultMap = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, Object]](
+      "internal" -> loadConfResponseToMap(internalConfig),
       "base" -> loadConfResponseToMap(baseConfig),
       "development" -> loadYamlResponseToMap(devConfig),
+      "developmentCommon" -> loadYamlResponseToMap(devCommonConfig),
       "qa" -> loadYamlResponseToMap(qaConfig),
-      "staging" -> loadYamlResponseToMap(stagingConfig)
+      "qaCommon" -> loadYamlResponseToMap(qaCommonConfig),
+      "staging" -> loadYamlResponseToMap(stagingConfig),
+      "stagingCommon" -> loadYamlResponseToMap(stagingCommonConfig),
+      "integration" -> loadYamlResponseToMap(integrationConfig),
+      "integrationCommon" -> loadYamlResponseToMap(integrationCommonConfig),
+      "externalTest" -> loadYamlResponseToMap(externalTestConfig),
+      "externalTestCommon" -> loadYamlResponseToMap(externalTestCommonConfig),
+      "production" -> loadYamlResponseToMap(productionConfig),
+      "productionCommon" -> loadYamlResponseToMap(productionCommonConfig)
     )
 
     convertAllMapsToImmutable(checkDuplicates(resultMap))
@@ -53,7 +80,7 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
 
     val fallbackIncluder = ConfigParseOptions.defaults().getIncluder()
 
-    val includer = new ConfigIncluder() {
+    val doNotInclude = new ConfigIncluder() {
       override def withFallback(fallback: ConfigIncluder): ConfigIncluder = this
       override def include(context: ConfigIncludeContext, what: String): ConfigObject = {
 //        ConfigFactory.parseString(what).root()
@@ -61,7 +88,7 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
       }
     }
 
-    val options: ConfigParseOptions = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF).setAllowMissing(false).setIncluder(includer)
+    val options: ConfigParseOptions = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF).setAllowMissing(false).setIncluder(doNotInclude)
     responseString match {
       case s: String if s.nonEmpty => {
         val conf: Config = ConfigFactory.parseString(responseString, options)

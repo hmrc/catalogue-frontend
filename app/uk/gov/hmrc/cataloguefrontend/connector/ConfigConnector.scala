@@ -36,6 +36,7 @@ class ConfigConnector @Inject()(
   servicesConfig: ServicesConfig
 ) {
 
+
   private val teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
 
   private implicit val linkFormats         = Json.format[Link]
@@ -64,6 +65,18 @@ class ConfigConnector @Inject()(
   def serviceConfigConf(env: String, service: String)(implicit hc: HeaderCarrier): Future[String] = {
     val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
     val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-$env/master/$service.conf"
+    doCall(requestUrl, newHc)
+  }
+
+  def serviceCommonConfigYaml(env: String, serviceType: String)(implicit hc: HeaderCarrier): Future[String] = {
+    val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
+    val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-common/master/$env-$serviceType-common.yaml"
+    doCall(requestUrl, newHc)
+  }
+
+  def internalConfigFile(serviceName: String)(implicit hc: HeaderCarrier) = {
+    val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
+    val requestUrl = s"https://raw.githubusercontent.com/hmrc/$serviceName/master/conf/application.conf"
     doCall(requestUrl, newHc)
   }
 
