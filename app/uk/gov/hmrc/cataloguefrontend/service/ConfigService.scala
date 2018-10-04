@@ -16,107 +16,30 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import java.util
-
-import com.typesafe.config._
 import javax.inject.{Inject, Singleton}
-import org.yaml.snakeyaml.Yaml
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.collection.immutable.ListMap
 import scala.collection.mutable
+import scala.concurrent.Future
 
-@Singleton
-class ConfigService @Inject()(configConnector: ConfigConnector) {
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
+class ConfigService @Inject()(configConnector: ConfigConnector, configParser: ConfigParser){
+  import ConfigService._
 
-  def configFromYaml(env: String, serviceName: String)(implicit hc: HeaderCarrier) = configConnector.serviceConfigYaml(env, serviceName)
-
-  def configFromConfFile(env: String, serviceName: String)(implicit hc: HeaderCarrier) = configConnector.serviceConfigConf(env, serviceName)
-
-  def commonConfigFromYaml(env: String, serviceType: String)(implicit hc: HeaderCarrier) = configConnector.serviceCommonConfigYaml(env, serviceType)
-
-  def internalConfigFromConfFile(serviceName: String)(implicit hc: HeaderCarrier) = configConnector.internalConfigFile(serviceName)
-
-  def buildConfigMap(internalConfig: String,
-                     baseConfig: String,
-                     devConfig: String,
-                     devCommonConfig: String,
-                     qaConfig: String,
-                     qaCommonConfig: String,
-                     stagingConfig: String,
-                     stagingCommonConfig: String,
-                     integrationConfig: String,
-                     integrationCommonConfig: String,
-                     externalTestConfig: String,
-                     externalTestCommonConfig: String,
-                     productionConfig: String,
-                     productionCommonConfig: String) = {
-
-    val resultMap = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, Object]](
-      "internal" -> loadConfResponseToMap(internalConfig),
-      "base" -> loadConfResponseToMap(baseConfig),
-      "development" -> loadYamlResponseToMap(devConfig),
-      "developmentCommon" -> loadYamlResponseToMap(devCommonConfig),
-      "qa" -> loadYamlResponseToMap(qaConfig),
-      "qaCommon" -> loadYamlResponseToMap(qaCommonConfig),
-      "staging" -> loadYamlResponseToMap(stagingConfig),
-      "stagingCommon" -> loadYamlResponseToMap(stagingCommonConfig),
-      "integration" -> loadYamlResponseToMap(integrationConfig),
-      "integrationCommon" -> loadYamlResponseToMap(integrationCommonConfig),
-      "externalTest" -> loadYamlResponseToMap(externalTestConfig),
-      "externalTestCommon" -> loadYamlResponseToMap(externalTestCommonConfig),
-      "production" -> loadYamlResponseToMap(productionConfig),
-      "productionCommon" -> loadYamlResponseToMap(productionCommonConfig)
-    )
-
-    convertAllMapsToImmutable(checkDuplicates(resultMap))
-  }
-
-  def loadConfResponseToMap(responseString: String): scala.collection.mutable.Map[String, Object] = {
-    import scala.collection.mutable.Map
-    import scala.collection.JavaConversions.mapAsScalaMap
-
-    val fallbackIncluder = ConfigParseOptions.defaults().getIncluder()
-
-    val doNotInclude = new ConfigIncluder() {
-      override def withFallback(fallback: ConfigIncluder): ConfigIncluder = this
-      override def include(context: ConfigIncludeContext, what: String): ConfigObject = {
-//        ConfigFactory.parseString(what).root()
-        ConfigFactory.empty.root()
-      }
+  def buildConfigMap(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigMap] =
+    allConfigs.foldLeft(Future.successful(newConfigMap)) { case (mapF, (env, source)) =>
+      mapF flatMap { map => source.get(configConnector, configParser)(serviceName, env, map) }
     }
 
-    val options: ConfigParseOptions = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF).setAllowMissing(false).setIncluder(doNotInclude)
-    responseString match {
-      case s: String if s.nonEmpty => {
-        val conf: Config = ConfigFactory.parseString(responseString, options)
-        flattenConfigToDotNotation(Map(), conf)
-      }
-      case _ => Map()
-    }
-  }
-
-  def loadYamlResponseToMap(responseString: String): scala.collection.mutable.Map[String, Object] = {
-    import scala.collection.mutable.Map
-    import scala.collection.JavaConversions.mapAsScalaMap
-    responseString match {
-      case s: String if s.nonEmpty => {
-        val yamlMap: Map[String, Object] = new Yaml().load(responseString).asInstanceOf[util.LinkedHashMap[String, Object]]
-        flattenYamlToDotNotation(Map(), yamlMap)
-      }
-      case _ => Map()
-    }
-  }
-
+  //TODO: Wire checkDuplicates back in
   def checkDuplicates(mapOfMaps: mutable.Map[String, mutable.Map[String, Object]]): mutable.Map[String, mutable.Map[String, Object]] = {
     mapOfMaps foreach {
       case (mapName: String, valueMap: Object) => {
         valueMap foreach {
           case (ke: String, ce: ConfigEntry) => {
-            mapOfMaps.filter(_._1 != mapName).map { m =>
-              checkSingleMapForValue(ke, ce.value, m._2, mapName)
+            mapOfMaps.filter(_._1 != mapName).map { m => checkSingleMapForValue(ke, ce.value, m._2, mapName)
             }
           }
           case _ => println("Ooooppss! That shouldn't happen!")
@@ -125,7 +48,6 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
     }
     mapOfMaps
   }
-
 
   def checkSingleMapForValue(key: String, value: String, toCheck: mutable.Map[String, Object], mapName: String) = {
     toCheck.get(key) match {
@@ -138,65 +60,111 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
     toCheck
   }
 
-  def flattenConfigToDotNotation(start: mutable.Map[String, Object], input: Config, prefix: String = ""): mutable.Map[String, Object] = {
-    import scala.collection.JavaConversions._
-    input.entrySet().toArray().foreach {
-        case e: java.util.AbstractMap.SimpleImmutableEntry[Object, com.typesafe.config.ConfigValue] => start.put(s"hmrc_config.${e.getKey.toString}", ConfigEntry(removeQuotes(e.getValue.render)))
-        case e => println("Can't do that!")
-      }
-    start
-  }
-
-  def removeQuotes(input: String) = {
-    if(input.charAt(0).equals('"') && input.charAt(input.length - 1).equals('"')) {
-      input.substring(1, input.length - 1)
-    } else {
-      input
-    }
-  }
-
-  def flattenYamlToDotNotation(start: mutable.Map[String, Object], input: mutable.Map[String, Object], currentPrefix: String = ""): mutable.Map[String, Object] = {
-    import scala.collection.JavaConversions.mapAsScalaMap
-    input foreach {
-      case (k: String, v: mutable.Map[String, Object]) => flattenYamlToDotNotation(start, v, buildPrefix(currentPrefix, k))
-      case (k: String, v: java.util.LinkedHashMap[String, Object]) => flattenYamlToDotNotation(start, v, buildPrefix(currentPrefix, k))
-      case (k: String, v: Object) => start.put(buildPrefix(currentPrefix, k), ConfigEntry(v.toString))
-    }
-    start
-  }
-
-
-  private def buildPrefix(currentPrefix: String, key: String) = {
-    (currentPrefix, key) match {
-      case ("", "0.0.0") => currentPrefix  // filter out the (unused) config version numbering
-      case (cp, _) if cp.isEmpty => key
-      case _ => s"$currentPrefix.$key"
-    }
-  }
-
-  def convertAllMapsToImmutable(input: mutable.Map[String, mutable.Map[String, Object]]): Map[String, Map[String, Object]] = {
-    var result = Map[String, Map[String, Object]]()
-    for ((k: String, v: mutable.Map[String, Object]) <- input) {
-      result += (k -> convertSingleMapToImmutable(v))
-    }
-    ListMap(result.toSeq.sortWith(_._1 < _._1):_*)
-  }
-
-  def convertSingleMapToImmutable(input: mutable.Map[String, Object]): Map[String, Object] = {
-    import scala.collection.JavaConversions.mapAsScalaMap
-
-    var result = Map[String, Object]()
-    for((k: String, v: Object) <- input) {
-      (k, v) match {
-        case (k: String, v: java.util.Map[String, Object]) => result += k -> convertSingleMapToImmutable(v)
-        case (_, _) => result += k -> v
-      }
-    }
-    ListMap(result.toSeq.sortWith(_._1 < _._1):_*)
-  }
-
-
 }
 
+@Singleton
+object ConfigService {
+  type EnvironmentConfigSource = (Environment, ConfigSource)
+  type ConfigMap = Map[EnvironmentConfigSource, Map[String, Object]]
+
+  val allConfigs = Seq(Service, Base, Development, Qa, Staging, Integration, ExternalTest, Production).flatMap(c => c.configs)
+  val environments = Seq(Development, Qa, Staging, Integration, ExternalTest, Production)
+
+  sealed trait Environment {
+    def name: String
+    def configs: Seq[EnvironmentConfigSource]
+  }
+
+  case object Service extends Environment {
+    val name = "internal"
+    val configs = Seq((Service, ApplicationConf))
+  }
+
+  case object Base extends Environment {
+    val name = "base"
+    val configs = Seq((Base, BaseConfig))
+  }
+
+  case object Development extends Environment {
+    val name = "development"
+    val configs =
+      Seq((Development, AppConfig), (Development, AppConfigCommonFixed), (Development, AppConfigCommonOverridable))
+  }
+
+  case object Qa extends Environment {
+    val name = "qa"
+    val configs = Seq((Qa, AppConfig), (Qa, AppConfigCommonFixed), (Qa, AppConfigCommonOverridable))
+  }
+
+  case object Staging extends Environment {
+    val name = "staging"
+    val configs = Seq((Staging, AppConfig), (Staging, AppConfigCommonFixed), (Staging, AppConfigCommonOverridable))
+  }
+
+  case object Integration extends Environment {
+    val name = "integration"
+    val configs =
+      Seq((Integration, AppConfig), (Integration, AppConfigCommonFixed), (Integration, AppConfigCommonOverridable))
+  }
+
+  case object ExternalTest extends Environment {
+    val name = "externaltest"
+    val configs =
+      Seq((ExternalTest, AppConfig), (ExternalTest, AppConfigCommonFixed), (ExternalTest, AppConfigCommonOverridable))
+  }
+
+  case object Production extends Environment {
+    val name = "production"
+    val configs =
+      Seq((Production, AppConfig), (Production, AppConfigCommonFixed), (Production, AppConfigCommonOverridable))
+  }
+
+  sealed trait ConfigSource {
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier): Future[ConfigMap]
+  }
+
+  case object ApplicationConf extends ConfigSource {
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier) =
+      connector.serviceApplicationConfigFile(serviceName)
+        .map(raw => map + ((env, this) -> parser.loadConfResponseToMap(raw).toMap))
+  }
+
+  case object BaseConfig extends ConfigSource {
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier) =
+      connector.serviceConfigConf(env.name, serviceName)
+        .map(raw => map + ((env, this) -> parser.loadConfResponseToMap(raw).toMap))
+  }
+
+  case object AppConfig extends ConfigSource {
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier) =
+      connector.serviceConfigYaml(env.name, serviceName)
+        .map(raw => map + ((env, this) -> parser.loadYamlResponseToMap(raw).toMap))
+  }
+
+  case object AppConfigCommonFixed extends ConfigSource {
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier) =
+      for (entries <- getServiceType(map, env) match {
+        case Some(serviceType) =>
+          connector.serviceCommonConfigYaml(env.name, serviceType).map(raw => parser.loadYamlResponseToMap(raw).toMap)
+        case None => Future.successful(Map[String, Object]())
+      }) yield map + ((env, this) -> entries)
+  }
+
+  case object AppConfigCommonOverridable extends ConfigSource {
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier) =
+      for (entries <- getServiceType(map, env) match {
+        case Some(serviceType) =>
+          connector.serviceCommonConfigYaml(env.name, serviceType).map(raw => parser.loadYamlResponseToMap(raw).toMap)
+        case None => Future.successful(Map[String, Object]())
+      }) yield map + ((env, this) -> entries)
+  }
+
+  def newConfigMap = Map[EnvironmentConfigSource, Map[String, Object]]()
+
+  def getServiceType(acc: ConfigMap, env: Environment): Option[String] =
+    acc((env, AppConfig))
+      .get("type")
+      .map(t => t.asInstanceOf[ConfigEntry].value)
+}
 
 case class ConfigEntry(value: String, repeats: List[String] = List())

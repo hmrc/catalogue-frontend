@@ -17,10 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import java.io.File
+import java.util
 
+import com.typesafe.config._
 import javax.inject.{Inject, Singleton}
+import org.yaml.snakeyaml.Yaml
 import play.Logger
 import play.api.libs.json._
+import uk.gov.hmrc.cataloguefrontend.service.ConfigEntry
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -28,6 +32,8 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.githubclient.GitApiConfig
+
+import scala.collection.mutable
 
 
 @Singleton
@@ -74,7 +80,7 @@ class ConfigConnector @Inject()(
     doCall(requestUrl, newHc)
   }
 
-  def internalConfigFile(serviceName: String)(implicit hc: HeaderCarrier) = {
+  def serviceApplicationConfigFile(serviceName: String)(implicit hc: HeaderCarrier) = {
     val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
     val requestUrl = s"https://raw.githubusercontent.com/hmrc/$serviceName/master/conf/application.conf"
     doCall(requestUrl, newHc)

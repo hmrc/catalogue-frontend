@@ -17,9 +17,10 @@
 @import partials.DependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigEntry
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
-@(serviceName: String, configList: Map[String, Map[String, Object]])(implicit messages: Messages, request: Request[_])
+@(serviceName: String, configList: ConfigMap)(implicit messages: Messages, request: Request[_])
 
 <style type="text/css" media="screen">
 
@@ -82,7 +83,9 @@
 
 </style>
 
-    @repeatText(v: List[String]) = @{
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.Service
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ApplicationConf
+@repeatText(v: List[String]) = @{
         v.fold("Repeated in ") { (s, t) => s + t + " " }
     }
 
@@ -111,26 +114,26 @@
     <div>
         <h3 class=envHeading>Internal Application Config - (<a href="https://www.github.com/hmrc/@serviceName/blob/master/conf/application.conf">@serviceName/conf/application.conf)</a></h3>
         <table class=configTable>
-            @{printMap(configList("internal"))}
+            @printMap(configList((Service, ApplicationConf)))
         </table>
 
         <h3 class=envHeading>'base' Config - (<a href="https://www.github.com/hmrc/app-config-base/blob/master/@{serviceName}.conf">app-config-base</a>)</h3>
         <table class=configTable>
-            @{printMap(configList("base"))}
+            @printMap(configList((Base, BaseConfig)))
         </table>
     </div>
 
     <div>
-        @for(env <- List("development", "qa", "staging", "integration", "externalTest", "production")) {
-            <h3 class=envHeading>@env Config</h3>
+        @for(env <- environments) {
+            <h3 class=envHeading>@env.name Config</h3>
             @*TODO - fix this hardcoded 'frontend'*@
             <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common - (these settings are common to all services of this type in this environment)</a></h4>
             <table class=configTable>
-            @(printMap(configList(env + "Common")))
+            @printMap(configList((env, AppConfigCommonOverridable)))
             </table>
             <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-@env/blob/master/@{serviceName}.yaml">app specific</a></h4>
             <table class=configTable>
-            @printMap(configList(env))
+            @printMap(configList((env, AppConfig)))
             </table>
         }
     </div>
