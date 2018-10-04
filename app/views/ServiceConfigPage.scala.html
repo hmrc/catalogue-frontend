@@ -109,12 +109,12 @@
     <h3>Config for @serviceName Service</h3>
 
     <div>
-        <h3 class=envHeading>Internal Application Config - ({service}/conf/application.conf)</h3>
+        <h3 class=envHeading>Internal Application Config - (<a href="https://www.github.com/hmrc/@serviceName/blob/master/conf/application.conf">@serviceName/conf/application.conf)</a></h3>
         <table class=configTable>
             @{printMap(configList("base"))}
         </table>
 
-        <h3 class=envHeading>'base' Config - (app-config-base)</h3>
+        <h3 class=envHeading>'base' Config - (<a href="https://www.github.com/hmrc/app-config-base/blob/master/@{serviceName}.conf">app-config-base</a>)</h3>
         <table class=configTable>
             @{printMap(configList("base"))}
         </table>
@@ -123,11 +123,12 @@
     <div>
         @for(env <- List("development", "qa", "staging", "integration", "externalTest", "production")) {
             <h3 class=envHeading>@env Config</h3>
-            <h4 class=envSubHeading>common - (these settings are common to all services of this type in this environment)</h4>
+            @*TODO - fix this hardcoded 'frontend'*@
+            <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common - (these settings are common to all services of this type in this environment)</a></h4>
             <table class=configTable>
             @(printMap(configList(env + "Common")))
             </table>
-            <h4 class=envSubHeading>app specific</h4>
+            <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-@env/blob/master/@{serviceName}.yaml">app specific</a></h4>
             <table class=configTable>
             @printMap(configList(env))
             </table>

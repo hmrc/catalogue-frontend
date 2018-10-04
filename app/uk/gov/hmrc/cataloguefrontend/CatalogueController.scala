@@ -256,7 +256,6 @@ class CatalogueController @Inject()(
       serviceType = configService.loadYamlResponseToMap(qaConfig).getOrElse("type",
         throw new RuntimeException("failed to find service type setting in config")).asInstanceOf[ConfigEntry].value
 
-      // common config (per service type and environment)
       developmentCommonConfig <- configService.commonConfigFromYaml("development", serviceType)
       qaCommonConfig <- configService.commonConfigFromYaml("qa", serviceType)
       stagingCommonConfig <- configService.commonConfigFromYaml("staging", serviceType)
@@ -266,9 +265,7 @@ class CatalogueController @Inject()(
 
     } yield () match {
       case _ => {
-//        println(devYamlMap)
         println(s"$serviceType")
-//        val serviceType = devYamlMap("development")("type")
         Ok(serviceConfigPage(serviceName, configService.buildConfigMap( internalConfig,
                                                                         baseConfig,
                                                                         developmentConfig,
