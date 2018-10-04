@@ -67,56 +67,54 @@ object ConfigService {
   type EnvironmentConfigSource = (Environment, ConfigSource)
   type ConfigMap = Map[EnvironmentConfigSource, Map[String, Object]]
 
-  val allConfigs = Seq(Service, Base, Development, Qa, Staging, Integration, ExternalTest, Production).flatMap(c => c.configs)
   val environments = Seq(Development, Qa, Staging, Integration, ExternalTest, Production)
+  val allConfigs: Seq[EnvironmentConfigSource] =
+    Seq(Service, Base, Development, Qa, Staging, Integration, ExternalTest, Production)
+      .flatMap(env => env.configs.map(c => env -> c))
 
   sealed trait Environment {
     def name: String
-    def configs: Seq[EnvironmentConfigSource]
+    def configs: Seq[ConfigSource]
   }
 
   case object Service extends Environment {
     val name = "internal"
-    val configs = Seq((Service, ApplicationConf))
+    val configs = Seq(ApplicationConf)
   }
 
   case object Base extends Environment {
     val name = "base"
-    val configs = Seq((Base, BaseConfig))
+    val configs = Seq(BaseConfig)
   }
 
   case object Development extends Environment {
     val name = "development"
-    val configs =
-      Seq((Development, AppConfig), (Development, AppConfigCommonFixed), (Development, AppConfigCommonOverridable))
+    val configs = Seq(AppConfig, AppConfigCommonFixed, AppConfigCommonOverridable)
   }
 
   case object Qa extends Environment {
     val name = "qa"
-    val configs = Seq((Qa, AppConfig), (Qa, AppConfigCommonFixed), (Qa, AppConfigCommonOverridable))
+    val configs = Seq(AppConfig, AppConfigCommonFixed, AppConfigCommonOverridable)
   }
 
   case object Staging extends Environment {
     val name = "staging"
-    val configs = Seq((Staging, AppConfig), (Staging, AppConfigCommonFixed), (Staging, AppConfigCommonOverridable))
+    val configs = Seq(AppConfig, AppConfigCommonFixed, AppConfigCommonOverridable)
   }
 
   case object Integration extends Environment {
     val name = "integration"
-    val configs =
-      Seq((Integration, AppConfig), (Integration, AppConfigCommonFixed), (Integration, AppConfigCommonOverridable))
+    val configs = Seq(AppConfig, AppConfigCommonFixed, AppConfigCommonOverridable)
   }
 
   case object ExternalTest extends Environment {
     val name = "externaltest"
-    val configs =
-      Seq((ExternalTest, AppConfig), (ExternalTest, AppConfigCommonFixed), (ExternalTest, AppConfigCommonOverridable))
+    val configs = Seq(AppConfig, AppConfigCommonFixed, AppConfigCommonOverridable)
   }
 
   case object Production extends Environment {
     val name = "production"
-    val configs =
-      Seq((Production, AppConfig), (Production, AppConfigCommonFixed), (Production, AppConfigCommonOverridable))
+    val configs = Seq(AppConfig, AppConfigCommonFixed, AppConfigCommonOverridable)
   }
 
   sealed trait ConfigSource {
@@ -161,8 +159,8 @@ object ConfigService {
 
   def newConfigMap = Map[EnvironmentConfigSource, Map[String, Object]]()
 
-  def getServiceType(acc: ConfigMap, env: Environment): Option[String] =
-    acc((env, AppConfig))
+  def getServiceType(map: ConfigMap, env: Environment): Option[String] =
+    map((env, AppConfig))
       .get("type")
       .map(t => t.asInstanceOf[ConfigEntry].value)
 }

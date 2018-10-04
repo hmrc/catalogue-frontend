@@ -17,31 +17,23 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import java.io.File
-import java.util
 
-import com.typesafe.config._
 import javax.inject.{Inject, Singleton}
-import org.yaml.snakeyaml.Yaml
 import play.Logger
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.service.ConfigEntry
+import uk.gov.hmrc.githubclient.GitApiConfig
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.githubclient.GitApiConfig
-
-import scala.collection.mutable
-
 
 @Singleton
 class ConfigConnector @Inject()(
   http: HttpClient,
   servicesConfig: ServicesConfig
 ) {
-
 
   private val teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
 
@@ -55,7 +47,7 @@ class ConfigConnector @Inject()(
 
   // TODO - where does this belong and how should it really be initiated?
   val gitConf = {
-    if(new File(s"${System.getProperty("user.home")}/.github/.credentials").exists()) {
+    if (new File(s"${System.getProperty("user.home")}/.github/.credentials").exists()) {
       GitApiConfig.fromFile(s"${System.getProperty("user.home")}/.github/.credentials")
     } else {
       GitApiConfig("key-not-set", "token-not-set", "api-url-not-set")
@@ -63,25 +55,25 @@ class ConfigConnector @Inject()(
   }
 
   def serviceConfigYaml(env: String, service: String)(implicit hc: HeaderCarrier): Future[String] = {
-    val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
+    val newHc      = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
     val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-$env/master/$service.yaml"
     doCall(requestUrl, newHc)
   }
 
   def serviceConfigConf(env: String, service: String)(implicit hc: HeaderCarrier): Future[String] = {
-    val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
+    val newHc      = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
     val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-$env/master/$service.conf"
     doCall(requestUrl, newHc)
   }
 
   def serviceCommonConfigYaml(env: String, serviceType: String)(implicit hc: HeaderCarrier): Future[String] = {
-    val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
+    val newHc      = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
     val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-common/master/$env-$serviceType-common.yaml"
     doCall(requestUrl, newHc)
   }
 
   def serviceApplicationConfigFile(serviceName: String)(implicit hc: HeaderCarrier) = {
-    val newHc = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
+    val newHc      = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
     val requestUrl = s"https://raw.githubusercontent.com/hmrc/$serviceName/master/conf/application.conf"
     doCall(requestUrl, newHc)
   }
@@ -90,7 +82,7 @@ class ConfigConnector @Inject()(
     implicit val hc: HeaderCarrier = newHc
     http.GET(url).map {
       case response: HttpResponse if response.status != 200 => {
-        Logger.warn(s"Failed to download config file from $url" )
+        Logger.warn(s"Failed to download config file from $url")
         ""
       }
       case response: HttpResponse => {
@@ -99,8 +91,4 @@ class ConfigConnector @Inject()(
     }
   }
 
-
-
 }
-
-
