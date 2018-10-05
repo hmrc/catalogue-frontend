@@ -20,14 +20,14 @@ import java.util
 import com.typesafe.config._
 import javax.inject.Singleton
 import org.yaml.snakeyaml.Yaml
+import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ConfigEntry
 
-import scala.collection.immutable.ListMap
 import scala.collection.mutable
 
 @Singleton
 class ConfigParser {
 
-  def loadConfResponseToMap(responseString: String): scala.collection.mutable.Map[String, Object] = {
+  def loadConfResponseToMap(responseString: String): scala.collection.mutable.Map[String, ConfigEntry] = {
     import scala.collection.mutable.Map
 
     val fallbackIncluder = ConfigParseOptions.defaults().getIncluder()
@@ -50,7 +50,7 @@ class ConfigParser {
     }
   }
 
-  def loadYamlResponseToMap(responseString: String): scala.collection.mutable.Map[String, Object] = {
+  def loadYamlResponseToMap(responseString: String): scala.collection.mutable.Map[String, ConfigEntry] = {
     import scala.collection.JavaConversions.mapAsScalaMap
     import scala.collection.mutable.Map
     responseString match {
@@ -64,9 +64,9 @@ class ConfigParser {
   }
 
   private def flattenConfigToDotNotation(
-    start: mutable.Map[String, Object],
+    start: mutable.Map[String, ConfigEntry],
     input: Config,
-    prefix: String = ""): mutable.Map[String, Object] = {
+    prefix: String = ""): mutable.Map[String, ConfigEntry] = {
     input.entrySet().toArray().foreach {
       case e: java.util.AbstractMap.SimpleImmutableEntry[Object, com.typesafe.config.ConfigValue] =>
         start.put(s"hmrc_config.${e.getKey.toString}", ConfigEntry(removeQuotes(e.getValue.render)))
@@ -83,9 +83,9 @@ class ConfigParser {
     }
 
   private def flattenYamlToDotNotation(
-    start: mutable.Map[String, Object],
+    start: mutable.Map[String, ConfigEntry],
     input: mutable.Map[String, Object],
-    currentPrefix: String = ""): mutable.Map[String, Object] = {
+    currentPrefix: String = ""): mutable.Map[String, ConfigEntry] = {
     import scala.collection.JavaConversions.mapAsScalaMap
     input foreach {
       case (k: String, v: mutable.Map[String, Object]) =>

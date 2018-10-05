@@ -238,8 +238,9 @@ class CatalogueController @Inject()(
   }
 
   def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
-    configService.buildConfigMap(serviceName) map { configMap =>
-      Ok(serviceConfigPage(serviceName, configMap))}
+    configService.configByEnvironment(serviceName) map { configByEnvironment =>
+      val configByKey = configService.configByKey(configByEnvironment)
+      Ok(serviceConfigPage(serviceName, configByEnvironment, configByKey))}
   }
 
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>

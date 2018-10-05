@@ -19,8 +19,6 @@ package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.http.HeaderCarrier
-
-import scala.collection.mutable
 import scala.concurrent.Future
 
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
@@ -28,49 +26,34 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 class ConfigService @Inject()(configConnector: ConfigConnector, configParser: ConfigParser){
   import ConfigService._
 
-  def buildConfigMap(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigMap] =
+  def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
     allConfigs.foldLeft(Future.successful(newConfigMap)) { case (mapF, (env, source)) =>
       mapF flatMap { map => source.get(configConnector, configParser)(serviceName, env, map) }
     }
 
-  //TODO: Wire checkDuplicates back in
-  def checkDuplicates(mapOfMaps: mutable.Map[String, mutable.Map[String, Object]]): mutable.Map[String, mutable.Map[String, Object]] = {
-    mapOfMaps foreach {
-      case (mapName: String, valueMap: Object) => {
-        valueMap foreach {
-          case (ke: String, ce: ConfigEntry) => {
-            mapOfMaps.filter(_._1 != mapName).map { m => checkSingleMapForValue(ke, ce.value, m._2, mapName)
-            }
-          }
-          case _ => println("Ooooppss! That shouldn't happen!")
-        }
-      }
+  def configByKey(map: ConfigByEnvironment) =
+    map.foldLeft(Map[String, Map[EnvironmentConfigSource, ConfigEntry]]()) {
+      case (acc, (envSrc, keyValues)) =>
+        acc ++ (keyValues map {
+          case (key, value) =>
+            val keyMap = acc.getOrElse(key, Map[EnvironmentConfigSource, ConfigEntry]())
+            key -> (keyMap + (envSrc -> value))
+        })
     }
-    mapOfMaps
-  }
-
-  def checkSingleMapForValue(key: String, value: String, toCheck: mutable.Map[String, Object], mapName: String) = {
-    toCheck.get(key) match {
-      case Some(ev: ConfigEntry) if ev.value.toString == value => {
-        val newValue = ev.copy(repeats = ev.repeats :+ mapName)
-        toCheck.put(key, newValue)
-      }
-      case _ =>
-    }
-    toCheck
-  }
-
 }
 
 @Singleton
 object ConfigService {
   type EnvironmentConfigSource = (Environment, ConfigSource)
-  type ConfigMap = Map[EnvironmentConfigSource, Map[String, Object]]
+  type ConfigByEnvironment = Map[EnvironmentConfigSource, Map[String, ConfigEntry]]
+  type ConfigByKey = Map[String, Map[EnvironmentConfigSource, ConfigEntry]]
 
   val environments = Seq(Development, Qa, Staging, Integration, ExternalTest, Production)
   val allConfigs: Seq[EnvironmentConfigSource] =
     Seq(Service, Base, Development, Qa, Staging, Integration, ExternalTest, Production)
       .flatMap(env => env.configs.map(c => env -> c))
+
+  case class ConfigEntry(value: String)
 
   sealed trait Environment {
     def name: String
@@ -118,51 +101,56 @@ object ConfigService {
   }
 
   sealed trait ConfigSource {
-    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier): Future[ConfigMap]
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigByEnvironment)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment]
   }
 
   case object ApplicationConf extends ConfigSource {
-    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier) =
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigByEnvironment)(implicit hc: HeaderCarrier) =
       connector.serviceApplicationConfigFile(serviceName)
         .map(raw => map + ((env, this) -> parser.loadConfResponseToMap(raw).toMap))
   }
 
   case object BaseConfig extends ConfigSource {
-    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier) =
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigByEnvironment)(implicit hc: HeaderCarrier) =
       connector.serviceConfigConf(env.name, serviceName)
         .map(raw => map + ((env, this) -> parser.loadConfResponseToMap(raw).toMap))
   }
 
   case object AppConfig extends ConfigSource {
-    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier) =
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigByEnvironment)(implicit hc: HeaderCarrier) =
       connector.serviceConfigYaml(env.name, serviceName)
         .map(raw => map + ((env, this) -> parser.loadYamlResponseToMap(raw).toMap))
   }
 
   case object AppConfigCommonFixed extends ConfigSource {
-    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier) =
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigByEnvironment)(implicit hc: HeaderCarrier) =
       for (entries <- getServiceType(map, env) match {
         case Some(serviceType) =>
           connector.serviceCommonConfigYaml(env.name, serviceType).map(raw => parser.loadYamlResponseToMap(raw).toMap)
-        case None => Future.successful(Map[String, Object]())
+        case None => Future.successful(Map[String, ConfigEntry]())
       }) yield map + ((env, this) -> entries)
   }
 
   case object AppConfigCommonOverridable extends ConfigSource {
-    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigMap)(implicit hc: HeaderCarrier) =
+    def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigByEnvironment)(implicit hc: HeaderCarrier) =
       for (entries <- getServiceType(map, env) match {
         case Some(serviceType) =>
           connector.serviceCommonConfigYaml(env.name, serviceType).map(raw => parser.loadYamlResponseToMap(raw).toMap)
-        case None => Future.successful(Map[String, Object]())
+        case None => Future.successful(Map[String, ConfigEntry]())
       }) yield map + ((env, this) -> entries)
   }
 
-  def newConfigMap = Map[EnvironmentConfigSource, Map[String, Object]]()
+  def newConfigMap = Map[EnvironmentConfigSource, Map[String, ConfigEntry]]()
 
-  def getServiceType(map: ConfigMap, env: Environment): Option[String] =
+  def getServiceType(map: ConfigByEnvironment, env: Environment): Option[String] =
     map((env, AppConfig))
       .get("type")
-      .map(t => t.asInstanceOf[ConfigEntry].value)
-}
+      .map(t => t.value)
 
-case class ConfigEntry(value: String, repeats: List[String] = List())
+
+  def prepareMapForPrint(byEnv: ConfigByEnvironment, byKey: ConfigByKey, envSource: EnvironmentConfigSource): Seq[(String, ConfigEntry, Seq[EnvironmentConfigSource])] = {
+    byEnv(envSource).map {
+      case (k, v) => (k, v, byKey(k).filter { case (key, value) => key != envSource && value == v }.keys.toSeq)
+    }.toSeq
+  }
+}

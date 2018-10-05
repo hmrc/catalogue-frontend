@@ -16,11 +16,10 @@
 
 @import partials.DependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.service.ConfigEntry
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
-@(serviceName: String, configList: ConfigMap)(implicit messages: Messages, request: Request[_])
+@(serviceName: String, configByEnvironment: ConfigByEnvironment, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
 
 <style type="text/css" media="screen">
 
@@ -85,28 +84,28 @@
 
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService.Service
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ApplicationConf
-@repeatText(v: List[String]) = @{
-        v.fold("Repeated in ") { (s, t) => s + t + " " }
-    }
+@repeatText(v: Seq[EnvironmentConfigSource]) = @{
+    v.foldLeft("Repeated in ") { case (s, (env, source)) => s"$s ${env.name} ${source.toString}"}
+}
 
-    @printMap(map: Map[String, Object]) = {
-    @for((k: String, v: ConfigEntry) <- map) {
-        @if(v.repeats.nonEmpty) {
+@printMap(envSource: EnvironmentConfigSource) = {
+    @for((k, v, repeats) <- prepareMapForPrint(configByEnvironment, configByKey, envSource)) {
+        @if(repeats.nonEmpty) {
             <tr>
                 <td class="configTable repeat">
                     <div class="tooltip">
                         <span class="tooltiptext">@{
-                            repeatText(v.repeats)
+                            repeatText(repeats)
                         }</span>
                         @k
                     </div>
-                </td><td class="repeat">@v.asInstanceOf[ConfigEntry].value</td>
+                </td><td class="repeat">@v.value</td>
             </tr>
         } else {
             <tr><td>@k</td><td>@v.value</td></tr>
         }
     }
-    }
+}
 
 
     <h3>Config for @serviceName Service</h3>
@@ -114,12 +113,12 @@
     <div>
         <h3 class=envHeading>Internal Application Config - (<a href="https://www.github.com/hmrc/@serviceName/blob/master/conf/application.conf">@serviceName/conf/application.conf)</a></h3>
         <table class=configTable>
-            @printMap(configList((Service, ApplicationConf)))
+            @printMap((Service, ApplicationConf))
         </table>
 
         <h3 class=envHeading>'base' Config - (<a href="https://www.github.com/hmrc/app-config-base/blob/master/@{serviceName}.conf">app-config-base</a>)</h3>
         <table class=configTable>
-            @printMap(configList((Base, BaseConfig)))
+            @printMap((Base, BaseConfig))
         </table>
     </div>
 
@@ -129,11 +128,11 @@
             @*TODO - fix this hardcoded 'frontend'*@
             <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common - (these settings are common to all services of this type in this environment)</a></h4>
             <table class=configTable>
-            @printMap(configList((env, AppConfigCommonOverridable)))
+            @printMap((env, AppConfigCommonOverridable))
             </table>
             <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-@env/blob/master/@{serviceName}.yaml">app specific</a></h4>
             <table class=configTable>
-            @printMap(configList((env, AppConfig)))
+            @printMap((env, AppConfig))
             </table>
         }
     </div>

@@ -70,7 +70,7 @@ class ConfigServiceSpec extends WordSpec with MockitoSugar {
         val input = Map("map1" -> input1, "map2" -> input2)
         val expectedMultiResult = Map("map1" -> input1Expected, "map2" -> input2Expected)
 
-        val multiResult = service.checkDuplicates(input)
+        val multiResult = service.configByKey(input)
         multiResult shouldBe expectedMultiResult
       }
     }
