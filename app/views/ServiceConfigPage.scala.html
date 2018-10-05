@@ -126,14 +126,22 @@
         @for(env <- environments) {
             <h3 class=envHeading>@env.name Config</h3>
             @*TODO - fix this hardcoded 'frontend'*@
-            <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common - (these settings are common to all services of this type in this environment)</a></h4>
+
+            <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common overridable - (these settings are common to all services of this type in this environment)</a></h4>
             <table class=configTable>
             @printMap((env, AppConfigCommonOverridable))
             </table>
+
             <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-@env/blob/master/@{serviceName}.yaml">app specific</a></h4>
             <table class=configTable>
             @printMap((env, AppConfig))
             </table>
+
+            <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common fixed - (these settings are common to all services of this type in this environment)</a></h4>
+            <table class=configTable>
+            @printMap((env, AppConfigCommonFixed))
+            </table>
+
         }
     </div>
 

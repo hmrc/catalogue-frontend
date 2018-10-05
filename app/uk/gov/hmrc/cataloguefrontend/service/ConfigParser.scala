@@ -69,7 +69,7 @@ class ConfigParser {
     prefix: String = ""): mutable.Map[String, ConfigEntry] = {
     input.entrySet().toArray().foreach {
       case e: java.util.AbstractMap.SimpleImmutableEntry[Object, com.typesafe.config.ConfigValue] =>
-        start.put(s"hmrc_config.${e.getKey.toString}", ConfigEntry(removeQuotes(e.getValue.render)))
+        start.put(s"${e.getKey.toString}", ConfigEntry(removeQuotes(e.getValue.render)))
       case e => println("Can't do that!")
     }
     start

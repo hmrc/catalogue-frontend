@@ -119,14 +119,21 @@ object ConfigService {
   case object AppConfig extends ConfigSource {
     def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigByEnvironment)(implicit hc: HeaderCarrier) =
       connector.serviceConfigYaml(env.name, serviceName)
-        .map(raw => map + ((env, this) -> parser.loadYamlResponseToMap(raw).toMap))
+        .map { raw =>
+          map + ((env, this) -> parser.loadYamlResponseToMap(raw)
+            .map { case (k, v) => k.replace("hmrc_config.", "") -> v }
+            .toMap) }
   }
 
   case object AppConfigCommonFixed extends ConfigSource {
     def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigByEnvironment)(implicit hc: HeaderCarrier) =
       for (entries <- getServiceType(map, env) match {
         case Some(serviceType) =>
-          connector.serviceCommonConfigYaml(env.name, serviceType).map(raw => parser.loadYamlResponseToMap(raw).toMap)
+          connector.serviceCommonConfigYaml(env.name, serviceType).map { raw =>
+            parser.loadYamlResponseToMap(raw)
+              .filterKeys(key => key.startsWith("hmrc_config.fixed"))
+              .map { case (k, v) => k.replace("hmrc_config.fixed.", "") -> v }
+              .toMap }
         case None => Future.successful(Map[String, ConfigEntry]())
       }) yield map + ((env, this) -> entries)
   }
@@ -135,7 +142,11 @@ object ConfigService {
     def get(connector: ConfigConnector, parser: ConfigParser)(serviceName: String, env: Environment, map: ConfigByEnvironment)(implicit hc: HeaderCarrier) =
       for (entries <- getServiceType(map, env) match {
         case Some(serviceType) =>
-          connector.serviceCommonConfigYaml(env.name, serviceType).map(raw => parser.loadYamlResponseToMap(raw).toMap)
+          connector.serviceCommonConfigYaml(env.name, serviceType).map { raw =>
+            parser.loadYamlResponseToMap(raw)
+              .filterKeys(key => key.startsWith("hmrc_config.overridable"))
+              .map { case (k, v) => k.replace("hmrc_config.overridable.", "") -> v }
+              .toMap }
         case None => Future.successful(Map[String, ConfigEntry]())
       }) yield map + ((env, this) -> entries)
   }
