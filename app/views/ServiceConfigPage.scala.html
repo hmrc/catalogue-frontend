@@ -21,129 +21,143 @@
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 @(serviceName: String, configByEnvironment: ConfigByEnvironment, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
 
-<style type="text/css" media="screen">
+    <style type="text/css" media="screen">
 
-    table.configTable {
-        padding-left:50px;
+            table > tbody > tr > td:first-child {
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow-x: hidden;
+            }
+
+            div.scroll-x {
+                overflow-x: scroll;
+            }
+
+            .tooltip {
+                position: relative;
+                display: inline-block;
+            }
+
+            /* Tooltip text */
+            .tooltip .tooltiptext {
+                visibility: hidden;
+
+                width: 120px;
+                top: 100%;
+                left: 50%;
+                margin-left: -60px;
+                background-color: black;
+
+                color: #fff;
+                text-align: center;
+                padding: 5px 0;
+                border-radius: 6px;
+
+                /* Position the tooltip text - see examples below! */
+                position: absolute;
+                z-index: 1;
+            }
+
+            /* Show the tooltip text when you mouse over the tooltip container */
+            .tooltip:hover .tooltiptext {
+                visibility: visible;
+            }
+
+    </style>
+
+    @repeatText(v: Seq[EnvironmentConfigSource]) = @{
+        v.foldLeft("Repeated in ") { case (s, (env, source)) => s"$s ${env.name} ${source.toString}" }
     }
 
-    td.configTable {
-        display: inline-block;
-        vertical-align: top;
-        width: 100%;
-    }
-
-    tr:nth-child(even) {
-        background-color: #f2f2f2;
-    }
-
-    .envHeading {
-        background-color: #ACDDE7;
-    }
-
-    .envSubHeading {
-        background-color: #ADB9E3;
-        margin-left:50px;
-    }
-
-    .repeat {
-        color: #8B0000;
-    }
-
-    .tooltip {
-        position: relative;
-        display: inline-block;
-    }
-
-    /* Tooltip text */
-    .tooltip .tooltiptext {
-        visibility: hidden;
-
-        width: 120px;
-        top: 100%;
-        left: 50%;
-        margin-left: -60px;
-        background-color: black;
-
-        color: #fff;
-        text-align: center;
-        padding: 5px 0;
-        border-radius: 6px;
-
-        /* Position the tooltip text - see examples below! */
-        position: absolute;
-        z-index: 1;
-    }
-
-    /* Show the tooltip text when you mouse over the tooltip container */
-    .tooltip:hover .tooltiptext {
-        visibility: visible;
-    }
-
-</style>
-
-@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.Service
-@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ApplicationConf
-@repeatText(v: Seq[EnvironmentConfigSource]) = @{
-    v.foldLeft("Repeated in ") { case (s, (env, source)) => s"$s ${env.name} ${source.toString}"}
-}
-
-@printMap(envSource: EnvironmentConfigSource) = {
-    @for((k, v, repeats) <- prepareMapForPrint(configByEnvironment, configByKey, envSource)) {
-        @if(repeats.nonEmpty) {
-            <tr>
-                <td class="configTable repeat">
-                    <div class="tooltip">
-                        <span class="tooltiptext">@{
-                            repeatText(repeats)
-                        }</span>
-                        @k
-                    </div>
-                </td><td class="repeat">@v.value</td>
-            </tr>
-        } else {
-            <tr><td>@k</td><td>@v.value</td></tr>
+    @printMap(envSource: EnvironmentConfigSource) = {
+        @for((k, v, repeats) <- prepareMapForPrint(configByEnvironment, configByKey, envSource)) {
+            @if(repeats.nonEmpty) {
+                <tr>
+                    <td class="configTable repeat">
+                        <div class="tooltip">
+                            <span class="tooltiptext">@{
+                                repeatText(repeats)
+                            }</span>
+                            @k
+                        </div>
+                    </td><td class="repeat">@v.value</td>
+                </tr>
+            } else {
+                <tr><td>@k</td><td>@v.value</td></tr>
+            }
         }
     }
-}
 
+    @print
 
-    <h3>Config for @serviceName Service</h3>
+@standard_layout(serviceName, "configuration") {
 
-    <div>
-        <h3 class=envHeading>Internal Application Config - (<a href="https://www.github.com/hmrc/@serviceName/blob/master/conf/application.conf">@serviceName/conf/application.conf)</a></h3>
-        <table class=configTable>
+    <header class="header-with-github-badge">
+        <div>
+            <h1 id="service-header">Config: @serviceName</h1>
+        </div>
+    </header>
+
+    <h3>
+        Internal Application Config - <a href="https://www.github.com/hmrc/@serviceName/blob/master/conf/application.conf">@serviceName/conf/application.conf</a>
+    </h3>
+    <div class="scroll-x">
+        <table class="table table-striped">
+           <tbody>
+               <tr><th>Key</th><th>Value</th></tr>
             @printMap((Service, ApplicationConf))
-        </table>
-
-        <h3 class=envHeading>'base' Config - (<a href="https://www.github.com/hmrc/app-config-base/blob/master/@{serviceName}.conf">app-config-base</a>)</h3>
-        <table class=configTable>
-            @printMap((Base, BaseConfig))
+           </tbody>
         </table>
     </div>
-
-    <div>
-        @for(env <- environments) {
-            <h3 class=envHeading>@env.name Config</h3>
-            @*TODO - fix this hardcoded 'frontend'*@
-
-            <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common overridable - (these settings are common to all services of this type in this environment)</a></h4>
-            <table class=configTable>
-            @printMap((env, AppConfigCommonOverridable))
-            </table>
-
-            <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-@env/blob/master/@{serviceName}.yaml">app specific</a></h4>
-            <table class=configTable>
-            @printMap((env, AppConfig))
-            </table>
-
-            <h4 class=envSubHeading><a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common fixed - (these settings are common to all services of this type in this environment)</a></h4>
-            <table class=configTable>
-            @printMap((env, AppConfigCommonFixed))
-            </table>
-
-        }
+    <h3>
+        'base' Config - <a href="https://www.github.com/hmrc/app-config-base/blob/master/@{serviceName}.conf">app-config-base</a>
+    </h3>
+    <div class="scroll-x">
+        <table class="table table-striped">
+            <tbody>
+                <tr><th>Key</th><th>Value</th></tr>
+                @printMap((Base, BaseConfig))
+            </tbody>
+        </table>
     </div>
+    @for(env <- environments) {
+        <h2>@env.name Config</h2>
+        <h3>
+            <a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common overridable</a>
+        </h3>
+        <p>These settings are common to all services of this type in this environment</p>
+        <div class="scroll-x">
+            <table class="table table-striped">
+                <tbody>
+                    <tr><th>Key</th><th>Value</th></tr>
+                    @printMap((env, AppConfigCommonOverridable))
+                </tbody>
+            </table>
+        </div>
 
+        <h3>
+            <a href="https://www.github.com/hmrc/app-config-@env/blob/master/@{serviceName}.yaml">app specific</a>
+        </h3>
+        <div class="scroll-x">
+            <table class="table table-striped">
+                <tbody>
+                    <tr><th>Key</th><th>Value</th></tr>
+                    @printMap((env, AppConfig))
+                </tbody>
+            </table>
+        </div>
 
-
+        <h3>
+            <a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common fixed</a>
+        </h3>
+        <p>These settings are common to all services of this type in this environment</p>
+        <div class="scroll-x">
+            <table class="table table-striped">
+                <tbody>
+                    <tr><th>Key</th><th>Value</th></tr>
+                    @printMap((env, AppConfigCommonFixed))
+                </tbody>
+            </table>
+        </div>
+    }
+}
