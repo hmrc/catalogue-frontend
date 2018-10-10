@@ -21,47 +21,65 @@
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 @(serviceName: String, configByEnvironment: ConfigByEnvironment, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
 
-    <style type="text/css" media="screen">
+    <style type="text/css">
 
-            table > tbody > tr > td:first-child {
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow-x: hidden;
-            }
+        body {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
 
-            div.scroll-x {
-                overflow-x: scroll;
-            }
+        table > tbody > tr > td:first-child {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow-x: hidden;
+        }
 
-            .tooltip {
-                position: relative;
-                display: inline-block;
-            }
+        table.table > tbody > tr > td {
+            max-width: 50em;
+            text-overflow: ellipsis;
+            overflow-x: hidden;
+            white-space: nowrap;
+            overflow-wrap: break-word;
+            padding: 0 1em 0 0;
 
-            /* Tooltip text */
-            .tooltip .tooltiptext {
-                visibility: hidden;
+            font-family: monospace ;
+        }
 
-                width: 120px;
-                top: 100%;
-                left: 50%;
-                margin-left: -60px;
-                background-color: black;
+        table td ul {
+            margin: 0;
+            padding: 0;
+        }
 
-                color: #fff;
-                text-align: center;
-                padding: 5px 0;
-                border-radius: 6px;
+        table td li {
+            text-overflow: ellipsis;
+            overflow-x: hidden;
+            text-decoration: line-through;
+        }
 
-                /* Position the tooltip text - see examples below! */
-                position: absolute;
-                z-index: 1;
-            }
+        table td li:last-child {
+            text-decoration: none;
+        }
 
-            /* Show the tooltip text when you mouse over the tooltip container */
-            .tooltip:hover .tooltiptext {
-                visibility: visible;
-            }
+        nav {
+            flex: auto 0 0;
+        }
+
+        section.container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scroll-container {
+            flex: 1 1 auto;
+            overflow-x: scroll;
+            overflow-y: scroll;
+        }
+
+        /* Show the tooltip text when you mouse over the tooltip container */
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+        }
 
     </style>
 
@@ -69,26 +87,24 @@
         v.foldLeft("Repeated in ") { case (s, (env, source)) => s"$s ${env.name} ${source.toString}" }
     }
 
-    @printMap(envSource: EnvironmentConfigSource) = {
-        @for((k, v, repeats) <- prepareMapForPrint(configByEnvironment, configByKey, envSource)) {
-            @if(repeats.nonEmpty) {
-                <tr>
-                    <td class="configTable repeat">
-                        <div class="tooltip">
-                            <span class="tooltiptext">@{
-                                repeatText(repeats)
-                            }</span>
-                            @k
-                        </div>
-                    </td><td class="repeat">@v.value</td>
-                </tr>
-            } else {
-                <tr><td>@k</td><td>@v.value</td></tr>
-            }
+
+
+    @printComparison() = {
+        @for((key, environmentConfig) <- configByKey) {
+            <tr>
+                <td>@key</td>
+                @for(env <- environments) {
+                <td>
+                    <ul>
+                    @for((src, v) <- getValueByPrecendence(environmentConfig(env))) {
+                        <li>@src: @v</li>
+                    }
+                    </ul>
+                </td>
+                }
+            </tr>
         }
     }
-
-    @print
 
 @standard_layout(serviceName, "configuration") {
 
@@ -98,7 +114,24 @@
         </div>
     </header>
 
-    <h3>
+    <div class="scroll-container">
+        <table class="table table-striped">
+           <thead>
+               <tr>
+                   <th>Key</th>
+                   @for(env <- environments) {
+                       <th>@env.name</th>
+                   }
+               </tr>
+            </thead>
+            <tbody>
+               @printComparison()
+
+           </tbody>
+        </table>
+    </div>
+
+    @{/* <h3>
         Internal Application Config - <a href="https://www.github.com/hmrc/@serviceName/blob/master/conf/application.conf">@serviceName/conf/application.conf</a>
     </h3>
     <div class="scroll-x">
@@ -160,4 +193,5 @@
             </table>
         </div>
     }
+    */}
 }
