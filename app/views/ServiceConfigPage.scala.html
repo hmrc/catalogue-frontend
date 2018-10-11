@@ -22,125 +22,143 @@
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 @(serviceName: String, configByEnvironment: ConfigByEnvironment, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
-
-    <style type="text/css">
-
-        body {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        table > tbody > tr > td:first-child {
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow-x: hidden;
-        }
-
-        table.table > tbody > tr > td {
-            max-width: 50em;
-            text-overflow: ellipsis;
-            overflow-x: hidden;
-            white-space: nowrap;
-            overflow-wrap: break-word;
-            padding: 0 1em 0 0;
-
-            font-family: monospace ;
-        }
-
-        table td ul {
-            margin: 0;
-            padding: 0;
-        }
-
-        table td li {
-            text-overflow: ellipsis;
-            overflow-x: hidden;
-            text-decoration: line-through;
-        }
-
-        table td li:last-child {
-            text-decoration: none;
-        }
-
-        nav {
-            flex: auto 0 0;
-        }
-
-        section.container {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .scroll-container {
-            flex: 1 1 auto;
-            overflow-x: scroll;
-            overflow-y: scroll;
-        }
-
-        /* Show the tooltip text when you mouse over the tooltip container */
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-        }
-
-    </style>
-
-
-@*
-    @repeatText(v: Seq[EnvironmentConfigSource]) = @{
-        v.foldLeft("Repeated in ") { case (s, (env, source)) => s"$s ${env.name} ${source.toString}" }
-    }
-*@
-
-
-
-    @printComparison() = {
-        @for((key: String, entries: List[ConfigByKeyEntry]) <- ListMap(configByKey.toMap.toSeq.sortWith(_._1 < _._1):_*)) {
-            <tr>
-                <td>@key</td>
-                @for(env <- environments) {
-                <td>
-                    <ul>
-                    @for(entry: ConfigByKeyEntry <- sortBySourcePrecedence(filterForEnv(env, entries))) {
-                        <li>@entry.configSource: @entry.value</li>
-                    }
-                    </ul>
-                </td>
-                }
-            </tr>
-        }
-    }
-
-@standard_layout(serviceName, "configuration") {
-
-    <header class="header-with-github-badge">
-        <div>
+<html>
+    <head>
+        <link rel="stylesheet" href="@routes.Assets.at("config-explorer.css")" />
+        <script src="@routes.Assets.at("split.js")"></script>
+        <script src="@routes.Assets.at("config-explorer.js")"></script>
+    </head>
+    <body>
+        <header>
             <h1 id="service-header">Config: @serviceName</h1>
+        </header>
+
+        <div class="grid-container">
+            <div class="grid-header">
+                <div id="header-0" class="grid-item first">Key</div>
+                @for((env, index) <- environments.zipWithIndex) {
+                    <div class="gutter gutter-horizontal"></div>
+                    <div id="header-@{index + 1}" class="grid-item">@env</div>
+                }
+            </div>
+            @for((key: String, entries: List[ConfigByKeyEntry]) <- ListMap(configByKey.toMap.toSeq.sortWith(_._1 < _._1):_*)) {
+                <div class="grid-row">
+                    <div class="grid-item first">@key</div>
+                    @for(env <- environments) {
+                        <div class="grid-item">
+                            <ul>
+                            @for(entry: ConfigByKeyEntry <- sortBySourcePrecedence(filterForEnv(env, entries))) {
+                                <li>@entry.configSource: @entry.value</li>
+                            }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            }
         </div>
-    </header>
-
-    <div class="scroll-container">
-        <table class="table table-striped">
-           <thead>
-               <tr>
-                   <th>Key</th>
-                   @for(env <- environments) {
-                       <th>@env</th>
-                   }
-               </tr>
-            </thead>
-            <tbody>
-                @printComparison()
-           </tbody>
-        </table>
-    </div>
-
-
-
-
-
-
-
+        @{/*<div class="grid-header">
+            <div id="header-1" class="grid-item first">Header 1</div>
+            <div class="gutter gutter-horizontal"></div>
+            <div id="header-2" class="grid-item">Header 2</div>
+            <div class="gutter gutter-horizontal"></div>
+            <div id="header-3" class="grid-item">Header 3</div>
+            <div class="gutter gutter-horizontal"></div>
+            <div id="header-4" class="grid-item">Header 4</div>
+            <div class="gutter gutter-horizontal"></div>
+            <div id="header-5" class="grid-item">Header 5</div>
+            <div class="gutter gutter-horizontal"></div>
+            <div id="header-6" class="grid-item">Header 6</div>
+        </div>
+        <div class="grid-container">
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+            <div class="grid-row">
+                <div class="grid-item first">Sticky Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+                <div class="grid-item">Item</div>
+            </div>
+        </div>*/}
 
 
     @{/* <h3>
@@ -180,30 +198,31 @@
             </table>
         </div>
 
-        <h3>
-            <a href="https://www.github.com/hmrc/app-config-@env/blob/master/@{serviceName}.yaml">app specific</a>
-        </h3>
-        <div class="scroll-x">
-            <table class="table table-striped">
-                <tbody>
-                    <tr><th>Key</th><th>Value</th></tr>
-                    @printMap((env, AppConfig))
-                </tbody>
-            </table>
-        </div>
+            <h3>
+                <a href="https://www.github.com/hmrc/app-config-@env/blob/master/@{serviceName}.yaml">app specific</a>
+            </h3>
+            <div class="scroll-x">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr><th>Key</th><th>Value</th></tr>
+                        @printMap((env, AppConfig))
+                    </tbody>
+                </table>
+            </div>
 
-        <h3>
-            <a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common fixed</a>
-        </h3>
-        <p>These settings are common to all services of this type in this environment</p>
-        <div class="scroll-x">
-            <table class="table table-striped">
-                <tbody>
-                    <tr><th>Key</th><th>Value</th></tr>
-                    @printMap((env, AppConfigCommonFixed))
-                </tbody>
-            </table>
-        </div>
-    }
-    */}
-}
+            <h3>
+                <a href="https://www.github.com/hmrc/app-config-common/blob/master/@env-frontend-common.yaml">common fixed</a>
+            </h3>
+            <p>These settings are common to all services of this type in this environment</p>
+            <div class="scroll-x">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr><th>Key</th><th>Value</th></tr>
+                        @printMap((env, AppConfigCommonFixed))
+                    </tbody>
+                </table>
+            </div>
+        }
+        */}
+    </body>
+</html>
