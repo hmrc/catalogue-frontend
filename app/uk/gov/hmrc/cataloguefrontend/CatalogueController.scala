@@ -35,6 +35,7 @@ import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
 
+import scala.collection.SortedMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -238,9 +239,13 @@ class CatalogueController @Inject()(
   }
 
   def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
-    configService.configByEnvironment(serviceName) map { configByEnvironment =>
-      val configByKey = configService.configByKey(configByEnvironment)
-      Ok(serviceConfigPage(serviceName, configByEnvironment, configByKey))}
+    // TODO this should be 2 seperate calls
+    for {
+      configByEnvironment <- configService.configByEnvironment(serviceName)
+      configByKey <- configService.configByKey(serviceName)
+    } yield () match {
+      case _ => Ok(serviceConfigPage(serviceName, configByEnvironment, configByKey))
+    }
   }
 
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>

@@ -54,28 +54,15 @@ class ConfigConnector @Inject()(
     }
   }
 
-  def serviceConfigYaml(env: String, service: String)(implicit hc: HeaderCarrier): Future[String] = {
-    val newHc      = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
-    val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-$env/master/$service.yaml"
-    doCall(requestUrl, newHc)
+
+  def configByEnv(service: String)(implicit hc: HeaderCarrier) = {
+    val url = s"http://localhost:8460/service-configs/config-by-env/$service"
+    doCall(url, hc)
   }
 
-  def serviceConfigConf(env: String, service: String)(implicit hc: HeaderCarrier): Future[String] = {
-    val newHc      = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
-    val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-$env/master/$service.conf"
-    doCall(requestUrl, newHc)
-  }
-
-  def serviceCommonConfigYaml(env: String, serviceType: String)(implicit hc: HeaderCarrier): Future[String] = {
-    val newHc      = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
-    val requestUrl = s"https://raw.githubusercontent.com/hmrc/app-config-common/master/$env-$serviceType-common.yaml"
-    doCall(requestUrl, newHc)
-  }
-
-  def serviceApplicationConfigFile(serviceName: String)(implicit hc: HeaderCarrier) = {
-    val newHc      = hc.withExtraHeaders(("Authorization", s"token ${gitConf.key}"))
-    val requestUrl = s"https://raw.githubusercontent.com/hmrc/$serviceName/master/conf/application.conf"
-    doCall(requestUrl, newHc)
+  def configByKey(service: String)(implicit hc: HeaderCarrier) = {
+    val url = s"http://localhost:8460/service-configs/config-by-key/$service"
+    doCall(url, hc)
   }
 
   private def doCall(url: String, newHc: HeaderCarrier) = {
