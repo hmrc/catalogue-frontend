@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ConfigByKeyEntry
+@import scala.collection.immutable.ListMap
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 @(serviceName: String, configByEnvironment: ConfigByEnvironment, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
@@ -94,7 +95,7 @@
 
 
     @printComparison() = {
-        @for((key: String, entries: List[ConfigByKeyEntry]) <- configByKey) {
+        @for((key: String, entries: List[ConfigByKeyEntry]) <- ListMap(configByKey.toMap.toSeq.sortWith(_._1 < _._1):_*)) {
             <tr>
                 <td>@key</td>
                 @for(env <- environments) {
