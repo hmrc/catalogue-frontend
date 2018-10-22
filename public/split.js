@@ -6,7 +6,6 @@ const global = window;
 
 // Save a couple long function names that are used frequently.
 // This optimization saves around 400 bytes.
-const getBoundingClientRect = 'getBoundingClientRect';
 const gutterStartDragging = '_a';
 const HORIZONTAL = 'horizontal';
 const NOOP = () => false;
@@ -44,6 +43,25 @@ const Split = (idsOption, options = {}) => {
         position = 'top';
     }
 
+    elements = ids.map((id, i) => {
+        let pair;
+        const element = {element: document.querySelector(id), size: sizes[i], i};
+
+        if (i > 0) {
+            pair = {a: i - 1, b: i, dragging: false, isFirst: (i === 1), isLast: (i === ids.length - 1), direction, parent};
+            pair.gutter = element.element.previousElementSibling;
+
+            // Save bound event listener for removal later
+            pair[gutterStartDragging] = startDragging.bind(pair);
+            pair.gutter.addEventListener('mousedown', pair[gutterStartDragging]);
+            pair.gutter.addEventListener('touchstart', pair[gutterStartDragging]);
+        }
+
+        elementStyle(element.element, element.size);
+
+        return element
+    });
+
     function drag(e) {
         let offset;
 
@@ -61,12 +79,6 @@ const Split = (idsOption, options = {}) => {
         elementStyle(a.element, offset);
     }
 
-    function calculateSizes() {
-        // Figure out the parent size minus padding.
-        const a = elements[this.a].element;
-        const aBounds = a[getBoundingClientRect]();
-        this.start = aBounds[position]
-    }
 
     // stopDragging is very similar to startDragging in reverse.
     function stopDragging() {
@@ -161,45 +173,10 @@ const Split = (idsOption, options = {}) => {
         document.body.style.cursor = cursor;
 
         // Cache the initial sizes of the pair.
-        calculateSizes.call(self);
+        // Figure out the parent size minus padding.
+        const aBounds = a.getBoundingClientRect();
+        self.start = aBounds[position]
     }
-
-    elements = ids.map((id, i) => {
-        // Create the element object.
-        const element = {
-            element: document.querySelector(id),
-            size: sizes[i],
-            i,
-        };
-
-        let pair;
-
-        if (i > 0) {
-            // Create the pair object with its metadata.
-            pair = {
-                a: i - 1,
-                b: i,
-                dragging: false,
-                isFirst: (i === 1),
-                isLast: (i === ids.length - 1),
-                direction,
-                parent,
-            };
-
-            const gutterElement = element.element.previousElementSibling;
-
-            // Save bound event listener for removal later
-            pair[gutterStartDragging] = startDragging.bind(pair);
-            gutterElement.addEventListener('mousedown', pair[gutterStartDragging]);
-            gutterElement.addEventListener('touchstart', pair[gutterStartDragging]);
-
-            pair.gutter = gutterElement;
-        }
-
-        elementStyle(element.element, element.size);
-
-        return element
-    });
 };
 
 window.Split = Split;
