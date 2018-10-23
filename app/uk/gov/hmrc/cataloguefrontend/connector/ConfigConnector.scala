@@ -16,26 +16,23 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import java.io.File
-
 import javax.inject.{Inject, Singleton}
-import play.Logger
 import play.api.libs.json._
-import uk.gov.hmrc.githubclient.GitApiConfig
+import uk.gov.hmrc.cataloguefrontend.service.ConfigJson
+import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{ConfigByEnvironment, ConfigByKey}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 @Singleton
 class ConfigConnector @Inject()(
   http: HttpClient,
   servicesConfig: ServicesConfig
-) {
+) extends ConfigJson {
 
-  private val teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
+  private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
 
   private implicit val linkFormats         = Json.format[Link]
   private implicit val environmentsFormats = Json.format[TargetEnvironment]
@@ -45,37 +42,10 @@ class ConfigConnector @Inject()(
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
 
-  // TODO - where does this belong and how should it really be initiated?
-  val gitConf = {
-    if (new File(s"${System.getProperty("user.home")}/.github/.credentials").exists()) {
-      GitApiConfig.fromFile(s"${System.getProperty("user.home")}/.github/.credentials")
-    } else {
-      GitApiConfig("key-not-set", "token-not-set", "api-url-not-set")
-    }
-  }
+  def configByEnv(service: String)(implicit hc: HeaderCarrier) =
+    http.GET[ConfigByEnvironment](s"$serviceConfigsBaseUrl/config-by-env/$service")
 
-
-  def configByEnv(service: String)(implicit hc: HeaderCarrier) = {
-    val url = s"http://localhost:8460/service-configs/config-by-env/$service"
-    doCall(url, hc)
-  }
-
-  def configByKey(service: String)(implicit hc: HeaderCarrier) = {
-    val url = s"http://localhost:8460/service-configs/config-by-key/$service"
-    doCall(url, hc)
-  }
-
-  private def doCall(url: String, newHc: HeaderCarrier) = {
-    implicit val hc: HeaderCarrier = newHc
-    http.GET(url).map {
-      case response: HttpResponse if response.status != 200 => {
-        Logger.warn(s"Failed to download config file from $url")
-        ""
-      }
-      case response: HttpResponse => {
-        response.body
-      }
-    }
-  }
+  def configByKey(service: String)(implicit hc: HeaderCarrier) =
+    http.GET[ConfigByKey](s"$serviceConfigsBaseUrl/config-by-key/$service")
 
 }

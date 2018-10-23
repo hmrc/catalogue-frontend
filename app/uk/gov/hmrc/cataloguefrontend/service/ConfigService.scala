@@ -17,29 +17,21 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{Json, Reads, Writes}
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-
-import scala.collection.SortedMap
 import scala.concurrent.Future
 
 class ConfigService @Inject()(configConnector: ConfigConnector, configParser: ConfigParser) extends ConfigJson {
   import ConfigService._
 
-  def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] = {
-    configConnector.configByEnv(serviceName).map { s =>
-      Json.parse(s).as[ConfigByEnvironment]
-    }
-  }
+  def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
+    configConnector.configByEnv(serviceName)
 
   def configByKey(serviceName: String)(implicit hc: HeaderCarrier) =
-    configConnector.configByKey(serviceName).map { s =>
-      Json.parse(s).as[ConfigByKey]
-    }
+    configConnector.configByKey(serviceName)
 
 }
+
 
 @Singleton
 object ConfigService {
