@@ -70,6 +70,7 @@ class CatalogueController @Inject()(
   teamInfoPage: TeamInfoPage,
   serviceInfoPage: ServiceInfoPage,
   serviceConfigPage: ServiceConfigPage,
+  serviceConfigRawPage: ServiceConfigRawPage,
   libraryInfoPage: LibraryInfoPage,
   prototypeInfoPage: PrototypeInfoPage,
   repositoryInfoPage: RepositoryInfoPage,
@@ -245,6 +246,15 @@ class CatalogueController @Inject()(
       configByKey <- configService.configByKey(serviceName)
     } yield () match {
       case _ => Ok(serviceConfigPage(serviceName, configByEnvironment, configByKey))
+    }
+  }
+
+  def serviceConfigRaw(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
+    // TODO this should be 2 seperate calls
+    for {
+      configByEnvironment <- configService.configByEnvironment(serviceName)
+    } yield () match {
+      case _ => Ok(serviceConfigRawPage(serviceName, configByEnvironment))
     }
   }
 

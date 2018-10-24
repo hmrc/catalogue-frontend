@@ -39,18 +39,17 @@ object ConfigService {
   case class ConfigEntry(value: String)
   case class ConfigByKeyEntry(environment: String, configSource: String, value: String)
 
-  type ConfigByEnvironment     = Map[String, Map[String, ConfigEntry]]
-  type ConfigByKey             = Map[String, List[ConfigByKeyEntry]]
+  type ConfigByEnvironment = Map[String, Map[String, Map[String, ConfigEntry]]]
+  type ConfigByKey         = Map[String, List[ConfigByKeyEntry]]
 
-  val environments: Seq[String] = Seq("Local", "Development", "Qa", "Staging", "Integration", "ExternalTest", "Production")
-
-  val sourcePrecedence: Seq[String] = Seq("local", "baseConfig", "appConfigCommonOverridable", "appConfig", "appConfigCommonFixed")
+  val environments: Seq[String] =
+    Seq("Local", "Development", "Qa", "Staging", "Integration", "ExternalTest", "Production")
+  val sourcePrecedence: Seq[String] =
+    Seq("local", "baseConfig", "appConfigCommonOverridable", "appConfig", "appConfigCommonFixed")
 
   def sortBySourcePrecedence(entries: List[ConfigByKeyEntry]): Seq[ConfigByKeyEntry] =
-    entries.sortWith((a,b) => sourcePrecedence.indexOf(a.configSource) < sourcePrecedence.indexOf(b.configSource))
+    entries.sortWith((a, b) => sourcePrecedence.indexOf(a.configSource) < sourcePrecedence.indexOf(b.configSource))
 
   def filterForEnv(env: String, entries: List[ConfigByKeyEntry]) =
     entries.filter(e => List(env.toLowerCase, "internal").contains(e.environment))
-
-
 }

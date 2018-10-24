@@ -8,6 +8,7 @@ const global = window;
 // This optimization saves around 400 bytes.
 const gutterStartDragging = '_a';
 const HORIZONTAL = 'horizontal';
+const GUTTER_SIZE = 10;
 const NOOP = () => false;
 
 const Split = (idsOption, options = {}) => {
@@ -30,7 +31,32 @@ const Split = (idsOption, options = {}) => {
     // Get other options
     const direction = options.direction || HORIZONTAL;
     const cursor = options.cursor = direction === HORIZONTAL ? 'ew-resize' : 'ns-resize';
-    const elementStyle = options.elementStyle || (() => {});
+    const elementStyle = options.elementStyle || function (el, offset) {
+        const parent = el.parentElement;
+        const container = parent.parentElement;
+
+        const cells = container.getElementsByClassName("grid-item");
+        const index = [].indexOf.call(el.parentElement.children, el) / 2;
+
+        for (var i = index; i < cells.length; i += ids.length) {
+            const element = cells[i];
+            if (offset) {
+                element.style["width"] = `${offset + GUTTER_SIZE}px`
+            }
+            else {
+                delete element.style.width;
+            }
+
+        }
+
+        if (offset) {
+            el.style["width"] = `${offset}px`;
+        }
+        else
+        {
+            delete el.style.width;
+        }
+    };
 
     // 2. Initialize a bunch of strings based on the direction we're splitting.
     // A lot of the behavior in the rest of the library is paramatized down to

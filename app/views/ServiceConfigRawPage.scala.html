@@ -1,0 +1,75 @@
+@*
+ * Copyright 2018 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import partials.DependenciesPartial
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ConfigByKeyEntry
+@import scala.collection.immutable.ListMap
+
+@this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
+@(serviceName: String, configByEnvironment: ConfigByEnvironment)(implicit messages: Messages, request: Request[_])
+<html>
+    <head>
+        <link rel="stylesheet" href="@routes.Assets.at("config-explorer.css")" />
+        <script src="@routes.Assets.at("split.js")"></script>
+        <script src="@routes.Assets.at("config-explorer.js")"></script>
+    </head>
+    <body>
+        <header class="opaque">
+            <h1 id="service-header">Config: @serviceName</h1>
+        </header>
+        <section>
+        @for((environment, sources) <- configByEnvironment) {
+            <div class="environment-container">
+                <div class="environment-header opaque">
+                    <h2 class="sticky-header">@environment</h2>
+                </div>
+                @for((source, values) <- sources) {
+                    <div class="grid-container raw-grid">
+                        <div class="source-header opaque">
+                            <h3 class="sticky-header">@source</h3>
+                        </div>
+                        <div class="grid-header">
+                            <div id="header-@environment-@source-0" class="grid-item sticky-column truncate-content">Key</div>
+                            <div class="gutter gutter-horizontal"></div>
+                            <div id="header-@environment-@source-1" class="grid-item">Value</div>
+                        </div>
+                        @for((key, entry) <- values) {
+                            <div class="grid-row">
+                                <div class="grid-item sticky-column truncate-content">@key</div>
+                                <div class="grid-item">@entry.value</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        </section>
+        <script type="text/javascript">
+            ready(function() {
+                const options = {sizes: [400]};
+
+                const grids = document.getElementsByClassName("grid-container");
+                Array.prototype.forEach.call(grids, g => {
+                    const headers = g.querySelectorAll(".grid-header > .grid-item");
+                    const ids = Array.from(headers).map(h => `#${h.id}`);
+                    Split(ids, options);
+                });
+            });
+        </script>
+    </body>
+</html>
