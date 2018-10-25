@@ -43,9 +43,9 @@ object ConfigService {
   type ConfigByKey         = Map[String, List[ConfigByKeyEntry]]
 
   val environments: Seq[String] =
-    Seq("Local", "Development", "Qa", "Staging", "Integration", "ExternalTest", "Production")
+    Seq("local", "development", "qa", "staging", "integration", "externaltest", "production")
   val sourcePrecedence: Seq[String] =
-    Seq("local", "baseConfig", "appConfigCommonOverridable", "appConfig", "appConfigCommonFixed")
+    Seq("applicationConf", "baseConfig", "appConfigCommonOverridable", "appConfig", "appConfigCommonFixed")
 
   def sortBySourcePrecedence(entries: List[ConfigByKeyEntry]): Seq[ConfigByKeyEntry] =
     entries.sortWith((a, b) => sourcePrecedence.indexOf(a.configSource) < sourcePrecedence.indexOf(b.configSource))

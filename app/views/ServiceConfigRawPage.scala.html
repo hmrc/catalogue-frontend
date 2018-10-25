@@ -49,7 +49,7 @@
                             <div id="header-@environment-@source-1" class="grid-item">Value</div>
                         </div>
                         @for((key, entry) <- values) {
-                            <div class="grid-row">
+                            <div id="@environment-@source-@key" class="grid-row">
                                 <div class="grid-item sticky-column truncate-content">@key</div>
                                 <div class="grid-item">@entry.value</div>
                             </div>
@@ -61,6 +61,17 @@
         </section>
         <script type="text/javascript">
             ready(function() {
+                (window.onhashchange = function () {
+                    const el = document.getElementById(location.hash.replace("#", ""));
+                    const highlighted = Array.from(document.getElementsByClassName("highlight"));
+                    highlighted.forEach(e => e.classList.remove("highlight"));
+
+                    if (el) {
+                        el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
+                        el.classList.add("highlight");
+                    }
+                })();
+
                 const options = {sizes: [400]};
 
                 const grids = document.getElementsByClassName("grid-container");

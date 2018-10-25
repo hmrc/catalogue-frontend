@@ -48,7 +48,7 @@
                             <div class="grid-item truncate-content">
                                 <ul>
                                 @for(entry: ConfigByKeyEntry <- sortBySourcePrecedence(filterForEnv(env, entries))) {
-                                    <li>@entry.configSource: @entry.value</li>
+                                    <li><a target="raw" href="config/raw#@env-@entry.configSource-@key">@entry.value</a></li>
                                 }
                                 </ul>
                             </div>
