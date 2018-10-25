@@ -45,10 +45,13 @@
                     <div class="grid-row">
                         <div class="grid-item sticky-column truncate-content">@key</div>
                         @for(env <- environments) {
-                            <div class="grid-item truncate-content">
+                            <div class="grid-item">
                                 <ul>
                                 @for(entry: ConfigByKeyEntry <- sortBySourcePrecedence(filterForEnv(env, entries))) {
-                                    <li><a target="raw" href="config/raw#@env-@entry.configSource-@key">@entry.value</a></li>
+                                    <li title="@entry.configSource">
+                                        <span class="truncate-content">@entry.value</span>
+                                        <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env-@entry.configSource-@key"></a>
+                                    </li>
                                 }
                                 </ul>
                             </div>

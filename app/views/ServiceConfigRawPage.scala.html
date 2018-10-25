@@ -51,7 +51,9 @@
                         @for((key, entry) <- values) {
                             <div id="@environment-@source-@key" class="grid-row">
                                 <div class="grid-item sticky-column truncate-content">@key</div>
-                                <div class="grid-item">@entry.value</div>
+                                <div class="grid-item">
+                                    @entry.value
+                                </div>
                             </div>
                         }
                     </div>
@@ -73,9 +75,8 @@
                 })();
 
                 const options = {sizes: [400]};
-
-                const grids = document.getElementsByClassName("grid-container");
-                Array.prototype.forEach.call(grids, g => {
+                const grids = Array.from(document.getElementsByClassName("grid-container"));
+                grids.forEach(g => {
                     const headers = g.querySelectorAll(".grid-header > .grid-item");
                     const ids = Array.from(headers).map(h => `#${h.id}`);
                     Split(ids, options);

@@ -1,3 +1,10 @@
+$bootstrap-sass-asset-helper: false !default;
+$icon-font-path: './fonts/';
+$icon-font-name: "glyphicons-halflings-regular" !default;
+$icon-font-svg-id: "glyphicons_halflingsregular" !default;
+
+@import '../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap/glyphicons';
+
 $header-height: 4.5em;
 $environment-header-top: $header-height;
 $environment-header-height: 3.6em;
@@ -31,30 +38,6 @@ h1 {
 
 h2, h3 {
   padding-bottom: 1em;
-}
-
-.opaque::after {
-  display: block;
-  width: 100%;
-  background: white;
-  position: absolute;
-  content: "";
-  top: 0;
-  height: 100%;
-}
-
-.sticky-header {
-  position:sticky;
-  display: block;
-  width: 1vw;
-  left: $body-left-padding;
-}
-
-.sticky-column {
-  position: sticky;
-  left: 0;
-  padding-left: $body-left-padding;
-  background: white;
 }
 
 header {
@@ -115,6 +98,15 @@ section {
   display: grid;
   grid-template-columns: repeat(15, auto);
   justify-content: start;
+
+  background-color: #f9f9f9;
+  border-top: 1px solid #ddd;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+
+  &:nth-child(odd) {
+    background-color: white;
+  }
 }
 
 .grid-item {
@@ -140,12 +132,33 @@ section {
     padding: 0;
 
     > li {
-      text-overflow: ellipsis;
-      overflow-x: hidden;
-      text-decoration: line-through;
+      padding-right: 0.5em;
+      display: flex;
+      flex-wrap: nowrap;
 
-      &:last-child {
+      > span {
+        flex-grow: 1;
+        text-decoration: line-through;
+      }
+
+      &:last-child > span {
         text-decoration: none;
+      }
+
+      &:hover > a {
+        visibility: visible;
+      }
+
+      > a {
+        color: grey;
+        text-decoration: inherit;
+        flex-shrink: 0;
+        width: 1.2em;
+        visibility: hidden;
+
+        &:hover {
+          color: inherit;
+        }
       }
     }
   }
@@ -156,6 +169,31 @@ section {
   padding-top: 0.5em;
   padding-bottom: 0.5em;
   font-weight: bold;
+}
+
+.opaque::after {
+  display: block;
+  width: 100%;
+  background: white;
+  position: absolute;
+  content: "";
+  top: 0;
+  height: 100%;
+}
+
+.sticky-header {
+  position: sticky;
+  display: block;
+  width: 1vw;
+  left: $body-left-padding;
+}
+
+.sticky-column {
+  position: sticky;
+  left: 0;
+  padding-left: $body-left-padding;
+  background: inherit;
+  z-index: 5;
 }
 
 @font-face {
