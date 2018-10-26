@@ -810,7 +810,8 @@ h1, h2, h3 {
   position: relative;
   margin: 0;
   padding: 0;
-  z-index: 10; }
+  z-index: 10;
+  text-transform: capitalize; }
 
 h1 {
   color: #008770;
@@ -885,7 +886,8 @@ section {
   text-overflow: ellipsis; }
 
 .grid-header > .grid-item {
-  font-weight: bold; }
+  font-weight: bold;
+  text-transform: capitalize; }
 
 .grid-row > .grid-item {
   font-family: monospace; }
@@ -899,6 +901,10 @@ section {
       .grid-row > .grid-item > ul > li > span {
         flex-grow: 1;
         text-decoration: line-through; }
+        .grid-row > .grid-item > ul > li > span:empty::after {
+          color: grey;
+          content: "<empty>";
+          font-style: italic; }
       .grid-row > .grid-item > ul > li:last-child > span {
         text-decoration: none; }
       .grid-row > .grid-item > ul > li:hover > a {
@@ -931,7 +937,8 @@ section {
   position: sticky;
   display: block;
   width: 1vw;
-  left: 8px; }
+  left: 8px;
+  white-space: nowrap; }
 
 .sticky-column {
   position: sticky;

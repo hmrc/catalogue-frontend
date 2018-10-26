@@ -17,7 +17,6 @@
 @import partials.DependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
-@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ConfigByKeyEntry
 @import scala.collection.immutable.ListMap
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
@@ -33,26 +32,26 @@
             <h1 id="service-header">Config: @serviceName</h1>
         </header>
         <section>
-        @for((environment, sources) <- configByEnvironment) {
+        @for(environment <- environments) {
             <div class="environment-container">
                 <div class="environment-header opaque">
                     <h2 class="sticky-header">@environment</h2>
                 </div>
-                @for((source, values) <- sources) {
+                @for(sourceEntries <- configByEnvironment(environment).sortWith(_.precedence < _.precedence)) {
                     <div class="grid-container raw-grid">
                         <div class="source-header opaque">
-                            <h3 class="sticky-header">@source</h3>
+                            <h3 class="sticky-header">@friendlySourceName(sourceEntries.source, environment)</h3>
                         </div>
                         <div class="grid-header">
-                            <div id="header-@environment-@source-0" class="grid-item sticky-column truncate-content">Key</div>
+                            <div id="header-@environment-@sourceEntries.source-0" class="grid-item sticky-column truncate-content">Key</div>
                             <div class="gutter gutter-horizontal"></div>
-                            <div id="header-@environment-@source-1" class="grid-item">Value</div>
+                            <div id="header-@environment-@sourceEntries.source-1" class="grid-item">Value</div>
                         </div>
-                        @for((key, entry) <- values) {
-                            <div id="@environment-@source-@key" class="grid-row">
+                        @for((key, entry) <- sourceEntries.entries.toSeq.sortWith(_._1 < _._1)) {
+                            <div id="key-@environment-@sourceEntries.source-@key" class="grid-row">
                                 <div class="grid-item sticky-column truncate-content">@key</div>
                                 <div class="grid-item">
-                                    @entry.value
+                                    @entry
                                 </div>
                             </div>
                         }
@@ -64,7 +63,7 @@
         <script type="text/javascript">
             ready(function() {
                 (window.onhashchange = function () {
-                    const el = document.getElementById(location.hash.replace("#", ""));
+                    const el = document.getElementById(location.hash.replace("#", "key-"));
                     const highlighted = Array.from(document.getElementsByClassName("highlight"));
                     highlighted.forEach(e => e.classList.remove("highlight"));
 
