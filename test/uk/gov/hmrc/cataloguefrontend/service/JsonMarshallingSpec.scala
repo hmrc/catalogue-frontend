@@ -29,17 +29,19 @@ class JsonMarshallingSpec extends WordSpec with ConfigJson {
         """
           |{
           |	"env1": {
-          |		"key1": {
-          |			"value": "value1"
-          |		},
-          |		"key2": {
-          |			"value": "value2"
-          |		}
+          |	  "map1":{
+              |  "key1": {
+              |			"value": "value1"
+              |		},
+              |		"key2": {
+              |			"value": "value2"
+              |		}
+              |}
           |  }
           |}
         """.stripMargin
 
-      val expected = Map("env1" -> Map("key1" -> ConfigEntry("value1"), "key2" -> ConfigEntry("value2")))
+      val expected = Map("env1" -> Map("map1" -> Map("key1" -> ConfigEntry("value1"), "key2" -> ConfigEntry("value2"))))
 
       Json.parse(jsonString).as[ConfigByEnvironment] shouldBe expected
 

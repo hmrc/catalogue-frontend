@@ -361,6 +361,7 @@ class DigitalServicePageSpec
       mock[TeamInfoPage],
       mock[ServiceInfoPage],
       mock[ServiceConfigPage],
+      mock[ServiceConfigRawPage],
       mock[LibraryInfoPage],
       mock[PrototypeInfoPage],
       mock[RepositoryInfoPage],
