@@ -21,6 +21,9 @@ user    = <user_name>
 token   = <personal_access_token>
 ```
 
+#### Feature Flags
+`feature.configExplorer = true` enables config explorer link in Code & Build section.
+
 ### Frontend Development
 
 #### Requirements
