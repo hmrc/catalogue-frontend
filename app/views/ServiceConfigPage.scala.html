@@ -17,11 +17,10 @@
 @import partials.DependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
-@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ConfigByKeyEntry
 @import scala.collection.immutable.ListMap
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
-@(serviceName: String, configByEnvironment: ConfigByEnvironment, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
+@(serviceName: String, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
 <html>
     <head>
         <link rel="stylesheet" href="@routes.Assets.at("config-explorer.css")" />
@@ -41,16 +40,16 @@
                         <div id="header-@{index + 1}" class="grid-item truncate-content">@env</div>
                     }
                 </div>
-                @for((key: String, entries: List[ConfigByKeyEntry]) <- ListMap(configByKey.toMap.toSeq.sortWith(_._1 < _._1):_*)) {
+                @for((key: String, envSources: Map[String, Seq[ConfigSourceValue]]) <- ListMap(configByKey.toSeq.sortWith(_._1 < _._1):_*)) {
                     <div class="grid-row">
                         <div class="grid-item sticky-column truncate-content">@key</div>
                         @for(env <- environments) {
                             <div class="grid-item">
                                 <ul>
-                                @for(entry: ConfigByKeyEntry <- sortBySourcePrecedence(filterForEnv(env, entries))) {
-                                    <li title="@entry.configSource">
-                                        <span class="truncate-content">@entry.value</span>
-                                        <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env-@entry.configSource-@key"></a>
+                                @for(sourceValue: ConfigSourceValue <- sortBySourcePrecedence(envSources.get(env))) {
+                                    <li title="@sourceValue.source">
+                                        <span class="truncate-content">@sourceValue.value</span>
+                                        <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env-@sourceValue.source-@key"></a>
                                     </li>
                                 }
                                 </ul>

@@ -18,8 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.service.ConfigJson
-import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{ConfigByEnvironment, ConfigByKey}
+import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{ConfigByEnvironment, ConfigByKey, ConfigSourceEntries, ConfigSourceValue}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -30,9 +29,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class ConfigConnector @Inject()(
   http: HttpClient,
   servicesConfig: ServicesConfig
-) extends ConfigJson {
+) {
 
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
+
+  implicit val configSourceEntriesReads = Json.reads[ConfigSourceEntries]
+  implicit val configSourceValueReads = Json.reads[ConfigSourceValue]
 
   private implicit val linkFormats         = Json.format[Link]
   private implicit val environmentsFormats = Json.format[TargetEnvironment]

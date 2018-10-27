@@ -240,17 +240,14 @@ class CatalogueController @Inject()(
   }
 
   def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
-    // TODO this should be 2 seperate calls
     for {
-      configByEnvironment <- configService.configByEnvironment(serviceName)
       configByKey <- configService.configByKey(serviceName)
     } yield () match {
-      case _ => Ok(serviceConfigPage(serviceName, configByEnvironment, configByKey))
+      case _ => Ok(serviceConfigPage(serviceName, configByKey))
     }
   }
 
   def serviceConfigRaw(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
-    // TODO this should be 2 seperate calls
     for {
       configByEnvironment <- configService.configByEnvironment(serviceName)
     } yield () match {

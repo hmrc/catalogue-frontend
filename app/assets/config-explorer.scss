@@ -28,6 +28,8 @@ h1, h2, h3 {
   margin: 0;
   padding: 0;
   z-index: 10;
+
+  text-transform: capitalize;
 }
 
 h1 {
@@ -122,6 +124,7 @@ section {
 
 .grid-header > .grid-item {
   font-weight: bold;
+  text-transform: capitalize;
 }
 
 .grid-row > .grid-item {
@@ -139,6 +142,12 @@ section {
       > span {
         flex-grow: 1;
         text-decoration: line-through;
+
+        &:empty::after {
+          color: grey;
+          content: "<empty>";
+          font-style: italic;
+        }
       }
 
       &:last-child > span {
@@ -186,6 +195,7 @@ section {
   display: block;
   width: 1vw;
   left: $body-left-padding;
+  white-space: nowrap;
 }
 
 .sticky-column {

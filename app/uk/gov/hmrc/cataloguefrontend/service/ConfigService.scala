@@ -17,11 +17,13 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.Future
 
-class ConfigService @Inject()(configConnector: ConfigConnector, configParser: ConfigParser) extends ConfigJson {
+class ConfigService @Inject()(configConnector: ConfigConnector) {
   import ConfigService._
 
   def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
@@ -29,27 +31,44 @@ class ConfigService @Inject()(configConnector: ConfigConnector, configParser: Co
 
   def configByKey(serviceName: String)(implicit hc: HeaderCarrier) =
     configConnector.configByKey(serviceName)
-
 }
-
 
 @Singleton
 object ConfigService {
+  type EnvironmentName = String
+  type KeyName = String
 
-  case class ConfigEntry(value: String)
-  case class ConfigByKeyEntry(environment: String, configSource: String, value: String)
+  type ConfigByEnvironment = Map[EnvironmentName, Seq[ConfigSourceEntries]]
+  type ConfigByKey = Map[KeyName, Map[EnvironmentName, Seq[ConfigSourceValue]]]
 
-  type ConfigByEnvironment = Map[String, Map[String, Map[String, ConfigEntry]]]
-  type ConfigByKey         = Map[String, List[ConfigByKeyEntry]]
+  case class ConfigSourceEntries(source: String, precedence: Int, entries: Map[KeyName, String] = Map())
 
-  val environments: Seq[String] =
-    Seq("local", "development", "qa", "staging", "integration", "externaltest", "production")
-  val sourcePrecedence: Seq[String] =
-    Seq("applicationConf", "baseConfig", "appConfigCommonOverridable", "appConfig", "appConfigCommonFixed")
+  case class ConfigSourceValue(source: String, precedence: Int, value: String)
 
-  def sortBySourcePrecedence(entries: List[ConfigByKeyEntry]): Seq[ConfigByKeyEntry] =
-    entries.sortWith((a, b) => sourcePrecedence.indexOf(a.configSource) < sourcePrecedence.indexOf(b.configSource))
+  val environments: Seq[String] = Seq("local", "development", "qa", "staging", "integration", "externaltest", "production")
 
-  def filterForEnv(env: String, entries: List[ConfigByKeyEntry]) =
-    entries.filter(e => List(env.toLowerCase, "internal").contains(e.environment))
+  def sortBySourcePrecedence(entries: Option[Seq[ConfigSourceValue]]): Seq[ConfigSourceValue] =
+    entries.map(e => e.sortWith((a, b) => a.precedence < b.precedence)).getOrElse(Seq())
+
+  def friendlySourceName(source: String, environment: String): String = {
+    source match {
+      case "applicationConf" => "Microservice application.conf file"
+      case "baseConfig" => "App-config-base"
+      case "appConfigEnvironment" => s"App-config-$environment"
+      case "appConfigCommonFixed" => "App-config-common fixed settings"
+      case "appConfigCommonOverridable" => "App-config-common overridable settings"
+      case _ => source
+    }
+  }
+
+//  def sourceUrl(source: String, serviceName: String, environment: String): String = {
+//    source match {
+//      case "applicationConf" => "Microservice application.conf file"
+//      case "baseConfig" => "App-config-base"
+//      case "appConfigEnvironment" => s"App-config-$environment"
+//      case "appConfigCommonFixed" => "App-config-common fixed settings"
+//      case "appConfigCommonOverridable" => "App-config-common overridable settings"
+//      case _ => source
+//    }
+//  }
 }
