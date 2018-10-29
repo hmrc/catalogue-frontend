@@ -867,6 +867,13 @@ aside {
   right: 0;
   padding: 1em;
   border-left: 1px solid #ddd; }
+  aside h2 {
+    padding-bottom: 0.5em; }
+  aside ul {
+    margin-bottom: 1em; }
+    aside ul li.jump-to, aside ul label {
+      cursor: pointer;
+      color: #008770; }
 
 .hidden {
   display: none; }
@@ -892,6 +899,10 @@ aside {
 
 .explorer-grid .grid-header {
   top: 4.5em; }
+
+.raw-grid .grid-item {
+  overflow-x: hidden;
+  text-overflow: ellipsis; }
 
 .raw-grid .grid-header {
   top: 10.9em; }
@@ -919,6 +930,12 @@ aside {
 .grid-item {
   margin: 0; }
 
+.word-wrap .grid-item:not(.sticky-column) span {
+  white-space: normal;
+  overflow-wrap: normal;
+  overflow-x: hidden;
+  text-overflow: ellipsis; }
+
 .truncate-content {
   overflow-x: hidden;
   white-space: nowrap;
@@ -928,6 +945,9 @@ aside {
 .grid-header > .grid-item {
   font-weight: bold;
   text-transform: capitalize; }
+
+.hide-evictions li.config-value:not(:last-child) {
+  display: none; }
 
 .grid-row > .grid-item {
   font-family: monospace; }

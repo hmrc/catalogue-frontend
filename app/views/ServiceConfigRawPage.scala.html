@@ -30,10 +30,11 @@
     <body>
         <header class="opaque">
             <h1 id="service-header">Config: @serviceName</h1>
+            <i class="glyphicon glyphicon-menu-hamburger menu-icon"></i>
         </header>
         <section>
         @for(environment <- environments) {
-            <div class="environment-container">
+            <div id="container-@environment" class="environment-container">
                 <div class="environment-header opaque">
                     <h2 class="sticky-header">@environment</h2>
                 </div>
@@ -47,13 +48,14 @@
                         </div>
                         <div class="grid-content">
                             <div class="grid-header">
-                                <div id="header-@environment-@sourceEntries.source-0" class="grid-item sticky-column truncate-content">Key</div>
+                                <div id="header-@environment-@sourceEntries.source-0" class="grid-item sticky-column truncate-content" style="width:400px;">Key</div>
                                 <div class="gutter gutter-horizontal"></div>
                                 <div id="header-@environment-@sourceEntries.source-1" class="grid-item">Value</div>
+                                <div class="gutter gutter-horizontal"></div>
                             </div>
                             @for((key, entry) <- sourceEntries.entries.toSeq.sortWith(_._1 < _._1)) {
                                 <div id="key-@environment-@sourceEntries.source-@key" class="grid-row">
-                                    <div class="grid-item sticky-column truncate-content">@key</div>
+                                    <div class="grid-item sticky-column truncate-content" style="width:410px;">@key</div>
                                     <div class="grid-item">
                                         @entry
                                     </div>
@@ -65,6 +67,16 @@
             </div>
         }
         </section>
+        <aside>
+            <h2>Jump to...</h2>
+            <ul>
+                @for(env <- environments) {
+                <li class="jump-to" data-env="@env">
+                    @env
+                </li>
+                }
+            </ul>
+        </aside>
         <script type="text/javascript">
             ready(function() {
                 (window.onhashchange = function () {
@@ -79,7 +91,18 @@
                     }
                 })();
 
-                const options = {sizes: [400]};
+                document.querySelector(".menu-icon").addEventListener("click", e => {
+                    document.querySelector("body").classList.toggle("sidebar-open");
+                });
+
+                Array.from(document.querySelectorAll(".jump-to")).forEach(span => {
+                    const env = span.dataset.env;
+                    span.addEventListener("click", e => {
+                        const el = document.getElementById(`container-${env}`);
+                        el.scrollIntoView({block: "start", inline: "nearest", behavior: "smooth"});
+                    });
+                });
+
                 Array.from(document.getElementsByClassName("environment-header")).forEach(header => {
                     let open = true;
 
@@ -97,6 +120,7 @@
                     });
                 });
 
+                const options = {sizes: [400]};
                 Array.from(document.getElementsByClassName("grid-container")).forEach(grid => {
                     grid.querySelector(".source-header").addEventListener("click", e => {
                         grid.classList.toggle("collapsed");

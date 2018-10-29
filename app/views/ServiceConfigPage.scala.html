@@ -35,21 +35,21 @@
         <section>
             <div class="grid-container explorer-grid">
                 <div class="grid-header">
-                    <div id="header-0" class="grid-item sticky-column truncate-content">Key</div>
+                    <div id="header-0" class="grid-item sticky-column truncate-content" style="width:300px;">Key</div>
                     <div class="gutter gutter-horizontal"></div>
                     @for((env, index) <- environments.zipWithIndex) {
-                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env">@env</div>
+                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env" style="width:500px;">@env</div>
                         <div class="gutter gutter-horizontal column-@env"></div>
                     }
                 </div>
                 @for((key: String, envSources: Map[String, Seq[ConfigSourceValue]]) <- ListMap(configByKey.toSeq.sortWith(_._1 < _._1):_*)) {
                     <div class="grid-row">
-                        <div class="grid-item sticky-column truncate-content">@key</div>
-                        @for(env <- environments) {
-                            <div class="grid-item column-@env">
+                        <div class="grid-item sticky-column truncate-content" style="width:310px;">@key</div>
+                        @for((env, i) <- environments.zipWithIndex) {
+                            <div class="grid-item column-@env" style="width:510px;">
                                 <ul>
                                 @for(sourceValue: ConfigSourceValue <- sortBySourcePrecedence(envSources.get(env))) {
-                                    <li title="@friendlySourceName(sourceValue.source, env)">
+                                    <li class="config-value" title="@friendlySourceName(sourceValue.source, env)">
                                         <span class="truncate-content">@sourceValue.value</span>
                                         <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env-@sourceValue.source-@key"></a>
                                     </li>
@@ -71,6 +71,17 @@
                     </li>
                 }
             </ul>
+            <h2>Values</h2>
+            <ul>
+                <li>
+                    <input type="checkbox" id="hide-evictions" />
+                    <label for="hide-evictions">Hide evictions</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="word-wrap" />
+                    <label for="word-wrap">Word wrap</label>
+                </li>
+            </ul>
         </aside>
         <script type="text/javascript">
             ready(function() {
@@ -89,6 +100,14 @@
                             item.classList.toggle("hidden");
                         });
                     });
+                });
+
+                document.querySelector("#hide-evictions").addEventListener("change", e => {
+                    document.querySelector("body").classList.toggle("hide-evictions");
+                });
+
+                document.querySelector("#word-wrap").addEventListener("change", e => {
+                    document.querySelector("body").classList.toggle("word-wrap");
                 });
             });
         </script>

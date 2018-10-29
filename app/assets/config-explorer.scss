@@ -104,6 +104,19 @@ aside {
   padding: 1em;
 
   border-left: 1px solid #ddd;
+
+  h2 {
+    padding-bottom: 0.5em;
+  }
+
+  ul {
+    margin-bottom: 1em;
+
+    li.jump-to, label {
+      cursor:pointer;
+      color: #008770;
+    }
+  }
 }
 
 .hidden {
@@ -135,12 +148,21 @@ aside {
   margin-bottom: 1.5em;
 }
 
-.explorer-grid .grid-header {
-  top: $explorer-grid-header-top;
+.explorer-grid {
+  .grid-header {
+    top: $explorer-grid-header-top;
+  }
 }
 
-.raw-grid .grid-header {
-  top: $raw-grid-header-top;
+.raw-grid {
+  .grid-item {
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .grid-header {
+    top: $raw-grid-header-top;
+  }
 }
 
 .grid-header {
@@ -173,6 +195,15 @@ aside {
   margin: 0;
 }
 
+.word-wrap {
+  .grid-item:not(.sticky-column) span {
+    white-space: normal;
+    overflow-wrap: normal;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .truncate-content {
   overflow-x: hidden;
   white-space: nowrap;
@@ -183,6 +214,12 @@ aside {
 .grid-header > .grid-item {
   font-weight: bold;
   text-transform: capitalize;
+}
+
+.hide-evictions {
+  li.config-value:not(:last-child) {
+    display: none;
+  }
 }
 
 .grid-row > .grid-item {
