@@ -74,8 +74,8 @@
             <h2>Values</h2>
             <ul>
                 <li>
-                    <input type="checkbox" id="hide-evictions" />
-                    <label for="hide-evictions">Hide evictions</label>
+                    <input type="checkbox" id="show-evictions" checked="checked" />
+                    <label for="show-evictions">Show evictions</label>
                 </li>
                 <li>
                     <input type="checkbox" id="word-wrap" />
@@ -102,7 +102,7 @@
                     });
                 });
 
-                document.querySelector("#hide-evictions").addEventListener("change", e => {
+                document.querySelector("#show-evictions").addEventListener("change", e => {
                     document.querySelector("body").classList.toggle("hide-evictions");
                 });
 
