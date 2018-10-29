@@ -821,17 +821,55 @@ h1 {
 h2, h3 {
   padding-bottom: 1em; }
 
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none; }
+
 header {
   position: fixed;
   padding-left: 8px;
   padding-bottom: 1em;
   width: 100%;
-  z-index: 40; }
+  z-index: 40;
+  display: flex;
+  flex-wrap: nowrap; }
+  header > h1 {
+    flex-grow: 1; }
+
+i.menu-icon {
+  z-index: 10;
+  flex-shrink: 0;
+  font-size: 2em;
+  align-self: center;
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  padding-top: 0.3em;
+  border-bottom: 3px solid #008770;
+  cursor: pointer; }
 
 section {
   position: absolute;
   top: 4.5em;
   left: 0; }
+
+.sidebar-open aside {
+  transform: translate3d(0, 0, 0); }
+
+aside {
+  transition: all 0.2s ease-in;
+  transform: translate3d(100%, 0, 0);
+  position: fixed;
+  top: 3.5em;
+  background: white;
+  height: 100%;
+  z-index: 50;
+  right: 0;
+  padding: 1em;
+  border-left: 1px solid #ddd; }
+
+.hidden {
+  display: none; }
 
 .gutter-horizontal {
   width: 10px;
@@ -893,32 +931,29 @@ section {
 
 .grid-row > .grid-item {
   font-family: monospace; }
-  .grid-row > .grid-item > ul {
-    margin: 0;
-    padding: 0; }
-    .grid-row > .grid-item > ul > li {
-      padding-right: 0.5em;
-      display: flex;
-      flex-wrap: nowrap; }
-      .grid-row > .grid-item > ul > li > span {
-        flex-grow: 1;
-        text-decoration: line-through; }
-        .grid-row > .grid-item > ul > li > span:empty::after {
-          color: grey;
-          content: "<empty>";
-          font-style: italic; }
-      .grid-row > .grid-item > ul > li:last-child > span {
-        text-decoration: none; }
-      .grid-row > .grid-item > ul > li:hover > a {
-        visibility: visible; }
-      .grid-row > .grid-item > ul > li > a {
+  .grid-row > .grid-item > ul > li {
+    padding-right: 0.5em;
+    display: flex;
+    flex-wrap: nowrap; }
+    .grid-row > .grid-item > ul > li > span {
+      flex-grow: 1;
+      text-decoration: line-through; }
+      .grid-row > .grid-item > ul > li > span:empty::after {
         color: grey;
-        text-decoration: inherit;
-        flex-shrink: 0;
-        width: 1.2em;
-        visibility: hidden; }
-        .grid-row > .grid-item > ul > li > a:hover {
-          color: inherit; }
+        content: "<empty>";
+        font-style: italic; }
+    .grid-row > .grid-item > ul > li:last-child > span {
+      text-decoration: none; }
+    .grid-row > .grid-item > ul > li:hover > a {
+      visibility: visible; }
+    .grid-row > .grid-item > ul > li > a {
+      color: grey;
+      text-decoration: inherit;
+      flex-shrink: 0;
+      width: 1.2em;
+      visibility: hidden; }
+      .grid-row > .grid-item > ul > li > a:hover {
+        color: inherit; }
 
 .highlight {
   border: 2px solid red;

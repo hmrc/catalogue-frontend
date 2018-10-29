@@ -70,18 +70,17 @@ const Split = (idsOption, options = {}) => {
     }
 
     elements = ids.map((id, i) => {
-        let pair;
+        let column;
         const element = {element: document.querySelector(id), size: sizes[i], i};
 
-        if (i > 0) {
-            pair = {a: i - 1, b: i, dragging: false, isFirst: (i === 1), isLast: (i === ids.length - 1), direction, parent};
-            pair.gutter = element.element.previousElementSibling;
+            column = {a: i, dragging: false, direction, parent};
+            column.gutter = element.element.nextElementSibling;
 
             // Save bound event listener for removal later
-            pair[gutterStartDragging] = startDragging.bind(pair);
-            pair.gutter.addEventListener('mousedown', pair[gutterStartDragging]);
-            pair.gutter.addEventListener('touchstart', pair[gutterStartDragging]);
-        }
+            column[gutterStartDragging] = startDragging.bind(column);
+            column.gutter.addEventListener('mousedown', column[gutterStartDragging]);
+            column.gutter.addEventListener('touchstart', column[gutterStartDragging]);
+
 
         elementStyle(element.element, element.size);
 
@@ -110,7 +109,6 @@ const Split = (idsOption, options = {}) => {
     function stopDragging() {
         const self = this;
         const a = elements[self.a].element;
-        const b = elements[self.b].element;
 
         self.dragging = false;
 
@@ -127,18 +125,11 @@ const Split = (idsOption, options = {}) => {
 
         a.removeEventListener('selectstart', NOOP);
         a.removeEventListener('dragstart', NOOP);
-        b.removeEventListener('selectstart', NOOP);
-        b.removeEventListener('dragstart', NOOP);
 
         a.style.userSelect = '';
         a.style.webkitUserSelect = '';
         a.style.MozUserSelect = '';
         a.style.pointerEvents = '';
-
-        b.style.userSelect = '';
-        b.style.webkitUserSelect = '';
-        b.style.MozUserSelect = '';
-        b.style.pointerEvents = '';
 
         self.gutter.style.cursor = '';
         self.parent.style.cursor = '';
@@ -157,7 +148,6 @@ const Split = (idsOption, options = {}) => {
         // Alias frequently used variables to save space. 200 bytes.
         const self = this;
         const a = elements[self.a].element;
-        const b = elements[self.b].element;
 
         // Don't actually drag the element. We emulate that in the drag function.
         e.preventDefault();
@@ -180,18 +170,11 @@ const Split = (idsOption, options = {}) => {
         // Disable selection. Disable!
         a.addEventListener('selectstart', NOOP);
         a.addEventListener('dragstart', NOOP);
-        b.addEventListener('selectstart', NOOP);
-        b.addEventListener('dragstart', NOOP);
 
         a.style.userSelect = 'none';
         a.style.webkitUserSelect = 'none';
         a.style.MozUserSelect = 'none';
         a.style.pointerEvents = 'none';
-
-        b.style.userSelect = 'none';
-        b.style.webkitUserSelect = 'none';
-        b.style.MozUserSelect = 'none';
-        b.style.pointerEvents = 'none';
 
         // Set the cursor at multiple levels
         self.gutter.style.cursor = cursor;

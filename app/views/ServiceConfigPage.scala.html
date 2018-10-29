@@ -30,21 +30,23 @@
     <body>
         <header class="opaque">
             <h1 id="service-header">Config: @serviceName</h1>
+            <i class="glyphicon glyphicon-menu-hamburger menu-icon"></i>
         </header>
         <section>
             <div class="grid-container explorer-grid">
                 <div class="grid-header">
                     <div id="header-0" class="grid-item sticky-column truncate-content">Key</div>
+                    <div class="gutter gutter-horizontal"></div>
                     @for((env, index) <- environments.zipWithIndex) {
-                        <div class="gutter gutter-horizontal"></div>
-                        <div id="header-@{index + 1}" class="grid-item truncate-content">@env</div>
+                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env">@env</div>
+                        <div class="gutter gutter-horizontal column-@env"></div>
                     }
                 </div>
                 @for((key: String, envSources: Map[String, Seq[ConfigSourceValue]]) <- ListMap(configByKey.toSeq.sortWith(_._1 < _._1):_*)) {
                     <div class="grid-row">
                         <div class="grid-item sticky-column truncate-content">@key</div>
                         @for(env <- environments) {
-                            <div class="grid-item">
+                            <div class="grid-item column-@env">
                                 <ul>
                                 @for(sourceValue: ConfigSourceValue <- sortBySourcePrecedence(envSources.get(env))) {
                                     <li title="@friendlySourceName(sourceValue.source, env)">
@@ -59,11 +61,35 @@
                 }
             </div>
         </section>
+        <aside>
+            <h2>Columns</h2>
+            <ul>
+                @for(env <- environments) {
+                    <li>
+                        <input class="column-filter" type="checkbox" id="show-@env" checked="checked" />
+                        <label for="show-@env">@env</label>
+                    </li>
+                }
+            </ul>
+        </aside>
         <script type="text/javascript">
             ready(function() {
                 Split(["#header-0", "#header-1", "#header-2", "#header-3", "#header-4", "#header-5", "#header-6", "#header-7"], {
                     sizes: [300, 500, 500, 500, 500, 500, 500, 500]
-                })
+                });
+
+                document.querySelector(".menu-icon").addEventListener("click", e => {
+                    document.querySelector("body").classList.toggle("sidebar-open");
+                });
+
+                Array.from(document.querySelectorAll(".column-filter")).forEach(input => {
+                    const env = input.id.replace("show-", "");
+                    input.addEventListener("change", e => {
+                        Array.from(document.getElementsByClassName(`column-${env}`)).forEach(item => {
+                            item.classList.toggle("hidden");
+                        });
+                    });
+                });
             });
         </script>
     </body>
