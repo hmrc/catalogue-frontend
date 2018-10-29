@@ -826,6 +826,10 @@ ul {
   padding: 0;
   list-style: none; }
 
+ul.bullets {
+  list-style: inherit;
+  padding-left: inherit; }
+
 header {
   position: fixed;
   padding-left: 8px;
@@ -837,7 +841,7 @@ header {
   header > h1 {
     flex-grow: 1; }
 
-i.menu-icon {
+header i {
   z-index: 10;
   flex-shrink: 0;
   font-size: 2em;
@@ -853,8 +857,16 @@ section {
   top: 4.5em;
   left: 0; }
 
-.sidebar-open aside {
+.sidebar-open aside#menu {
   transform: translate3d(0, 0, 0); }
+
+.help-open aside#help {
+  transform: translate3d(0, 0, 0); }
+
+aside#help {
+  width: 25em; }
+  aside#help h2 {
+    color: #008770; }
 
 aside {
   transition: all 0.2s ease-in;
@@ -868,6 +880,7 @@ aside {
   padding: 1em;
   border-left: 1px solid #ddd; }
   aside h2 {
+    text-transform: none;
     padding-bottom: 0.5em; }
   aside ul {
     margin-bottom: 1em; }

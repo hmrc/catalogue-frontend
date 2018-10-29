@@ -49,6 +49,11 @@ ul {
   list-style: none;
 }
 
+ul.bullets {
+  list-style: inherit;
+  padding-left: inherit;
+}
+
 header {
   position: fixed;
   padding-left: $body-left-padding;
@@ -64,7 +69,7 @@ header {
   }
 }
 
-i.menu-icon {
+header i {
   z-index: 10;
   flex-shrink: 0;
   font-size: 2em;
@@ -85,8 +90,22 @@ section {
 }
 
 .sidebar-open {
-  aside {
+  aside#menu {
     transform: translate3d(0, 0, 0);
+  }
+}
+
+.help-open {
+  aside#help {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+aside#help {
+  width: 25em;
+
+  h2 {
+    color: #008770;
   }
 }
 
@@ -106,6 +125,7 @@ aside {
   border-left: 1px solid #ddd;
 
   h2 {
+    text-transform: none;
     padding-bottom: 0.5em;
   }
 

@@ -30,6 +30,7 @@
     <body>
         <header class="opaque">
             <h1 id="service-header">Config: @serviceName</h1>
+            <i class="glyphicon glyphicon-question-sign help-icon"></i>
             <i class="glyphicon glyphicon-menu-hamburger menu-icon"></i>
         </header>
         <section>
@@ -67,7 +68,7 @@
             </div>
         }
         </section>
-        <aside>
+        <aside id="menu">
             <h2>Jump to...</h2>
             <ul>
                 @for(env <- environments) {
@@ -75,6 +76,17 @@
                     @env
                 </li>
                 }
+            </ul>
+        </aside>
+        <aside id="help">
+            <h2>How to use the raw config viewer</h2>
+            <ul class="bullets">
+                <li>Drag the handles to the left of column headers to re-size columns</li>
+                <li>Sources are ordered according to their precendence in the config hierarchy</li>
+                <li>Click source and environment headers to collapse/expand</li>
+                <li>Triple click a truncated value to select the whole thing</li>
+                <li>Jump to a specific environment using the hamburger menu</li>
+                <li>Ctrl-f to search for a key or value (uses browser find)</li>
             </ul>
         </aside>
         <script type="text/javascript">
@@ -91,8 +103,15 @@
                     }
                 })();
 
+                const body = document.querySelector("body");
                 document.querySelector(".menu-icon").addEventListener("click", e => {
-                    document.querySelector("body").classList.toggle("sidebar-open");
+                    body.classList.remove("help-open");
+                    body.classList.toggle("sidebar-open");
+                });
+
+                document.querySelector(".help-icon").addEventListener("click", e => {
+                    body.classList.remove("sidebar-open");
+                    body.classList.toggle("help-open");
                 });
 
                 Array.from(document.querySelectorAll(".jump-to")).forEach(span => {
