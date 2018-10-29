@@ -9,18 +9,6 @@
 
 ### Setup
 
-You need to have:
-* `$HOME/.github/.credentials` file
-
-with following information:
-> Please ask a team mate for the api urls
-
-```
-api-url = <api_url>
-user    = <user_name>
-token   = <personal_access_token>
-```
-
 #### Feature Flags
 `feature.configExplorer = true` enables config explorer link in Code & Build section.
 

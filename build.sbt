@@ -26,7 +26,6 @@ val compile = Seq(
   "org.typelevel"             %% "cats-core"               % "1.1.0",
   "org.apache.httpcomponents" % "httpcore"                 % "4.3.2",
   "org.yaml"                  % "snakeyaml"                % "1.17",
-  "uk.gov.hmrc"               %% "github-client"           % "1.18.0",
   "org.apache.httpcomponents" % "httpclient"               % "4.3.5",
   "com.github.tototoshi"      %% "scala-csv"               % "1.3.4",
   "com.github.melrief"        %% "purecsv"                 % "0.1.0",
