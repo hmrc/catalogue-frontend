@@ -768,13 +768,13 @@
 .glyphicon-object-align-right:before {
   content: "\e249"; }
 
-.glyphicon-triangle-right:before {
+.glyphicon-triangle-right:before, .grid-container.collapsed .collapse-toggle:before {
   content: "\e250"; }
 
 .glyphicon-triangle-left:before {
   content: "\e251"; }
 
-.glyphicon-triangle-bottom:before {
+.glyphicon-triangle-bottom:before, .collapse-toggle:before {
   content: "\e252"; }
 
 .glyphicon-triangle-top:before {
@@ -840,20 +840,22 @@ section {
 .environment-header {
   position: sticky;
   top: 4.5em;
-  z-index: 30; }
+  z-index: 30;
+  cursor: pointer; }
 
 .source-header {
   position: sticky;
   top: 8.1em;
-  z-index: 20; }
+  z-index: 20;
+  cursor: pointer; }
 
 .grid-container {
   margin-bottom: 1.5em; }
 
-.explorer-grid > .grid-header {
+.explorer-grid .grid-header {
   top: 4.5em; }
 
-.raw-grid > .grid-header {
+.raw-grid .grid-header {
   top: 10.9em; }
 
 .grid-header {
@@ -937,7 +939,8 @@ section {
   position: sticky;
   display: block;
   width: 1vw;
-  left: 8px;
+  left: 0;
+  padding-left: 8px;
   white-space: nowrap; }
 
 .sticky-column {
@@ -946,6 +949,12 @@ section {
   padding-left: 8px;
   background: inherit;
   z-index: 5; }
+
+.grid-container.collapsed .grid-content {
+  display: none; }
+
+.grid-container.collapsed:not(:last-child) {
+  margin-bottom: 0; }
 
 @font-face {
   font-family: 'nta';

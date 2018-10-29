@@ -40,21 +40,26 @@
                 @for(sourceEntries <- configByEnvironment(environment).sortWith(_.precedence < _.precedence)) {
                     <div class="grid-container raw-grid">
                         <div class="source-header opaque">
-                            <h3 class="sticky-header">@friendlySourceName(sourceEntries.source, environment)</h3>
+                            <h3 class="sticky-header">
+                                @friendlySourceName(sourceEntries.source, environment)
+                                <i class="glyphicon collapse-toggle"></i>
+                            </h3>
                         </div>
-                        <div class="grid-header">
-                            <div id="header-@environment-@sourceEntries.source-0" class="grid-item sticky-column truncate-content">Key</div>
-                            <div class="gutter gutter-horizontal"></div>
-                            <div id="header-@environment-@sourceEntries.source-1" class="grid-item">Value</div>
-                        </div>
-                        @for((key, entry) <- sourceEntries.entries.toSeq.sortWith(_._1 < _._1)) {
-                            <div id="key-@environment-@sourceEntries.source-@key" class="grid-row">
-                                <div class="grid-item sticky-column truncate-content">@key</div>
-                                <div class="grid-item">
-                                    @entry
-                                </div>
+                        <div class="grid-content">
+                            <div class="grid-header">
+                                <div id="header-@environment-@sourceEntries.source-0" class="grid-item sticky-column truncate-content">Key</div>
+                                <div class="gutter gutter-horizontal"></div>
+                                <div id="header-@environment-@sourceEntries.source-1" class="grid-item">Value</div>
                             </div>
-                        }
+                            @for((key, entry) <- sourceEntries.entries.toSeq.sortWith(_._1 < _._1)) {
+                                <div id="key-@environment-@sourceEntries.source-@key" class="grid-row">
+                                    <div class="grid-item sticky-column truncate-content">@key</div>
+                                    <div class="grid-item">
+                                        @entry
+                                    </div>
+                                </div>
+                            }
+                        </div>
                     </div>
                 }
             </div>
@@ -73,10 +78,23 @@
                     }
                 })();
 
+
+
                 const options = {sizes: [400]};
-                const grids = Array.from(document.getElementsByClassName("grid-container"));
-                grids.forEach(g => {
-                    const headers = g.querySelectorAll(".grid-header > .grid-item");
+                Array.from(document.getElementsByClassName("environment-header")).forEach(header => {
+                    header.addEventListener("click", e => {
+                        Array.from(header.parentElement.getElementsByClassName("grid-container")).forEach(grid => {
+                            grid.classList.toggle("collapsed");
+                        });
+                    });
+                });
+
+                Array.from(document.getElementsByClassName("grid-container")).forEach(grid => {
+                    grid.querySelector(".source-header").addEventListener("click", e => {
+                        grid.classList.toggle("collapsed");
+                    });
+
+                    const headers = grid.querySelectorAll(".grid-header > .grid-item");
                     const ids = Array.from(headers).map(h => `#${h.id}`);
                     Split(ids, options);
                 });

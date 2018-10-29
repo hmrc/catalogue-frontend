@@ -47,7 +47,7 @@
                             <div class="grid-item">
                                 <ul>
                                 @for(sourceValue: ConfigSourceValue <- sortBySourcePrecedence(envSources.get(env))) {
-                                    <li title="@sourceValue.source">
+                                    <li title="@friendlySourceName(sourceValue.source, env)">
                                         <span class="truncate-content">@sourceValue.value</span>
                                         <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env-@sourceValue.source-@key"></a>
                                     </li>

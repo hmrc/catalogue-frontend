@@ -65,23 +65,27 @@ section {
   position: sticky;
   top: $environment-header-top;
   z-index: 30;
+
+  cursor:pointer;
 }
 
 .source-header {
   position: sticky;
   top: $source-header-top;
   z-index: 20;
+
+  cursor: pointer;
 }
 
 .grid-container {
   margin-bottom: 1.5em;
 }
 
-.explorer-grid > .grid-header {
+.explorer-grid .grid-header {
   top: $explorer-grid-header-top;
 }
 
-.raw-grid > .grid-header {
+.raw-grid .grid-header {
   top: $raw-grid-header-top;
 }
 
@@ -194,7 +198,8 @@ section {
   position: sticky;
   display: block;
   width: 1vw;
-  left: $body-left-padding;
+  left: 0;
+  padding-left: $body-left-padding;
   white-space: nowrap;
 }
 
@@ -204,6 +209,24 @@ section {
   padding-left: $body-left-padding;
   background: inherit;
   z-index: 5;
+}
+
+.grid-container.collapsed {
+  .collapse-toggle {
+    @extend .glyphicon-triangle-right;
+  }
+
+  .grid-content {
+    display: none;
+  }
+
+  &:not(:last-child) {
+    margin-bottom: 0;
+  }
+}
+
+.collapse-toggle {
+  @extend .glyphicon-triangle-bottom;
 }
 
 @font-face {
