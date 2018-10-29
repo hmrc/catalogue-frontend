@@ -73,19 +73,27 @@
                     highlighted.forEach(e => e.classList.remove("highlight"));
 
                     if (el) {
+                        el.closest(".grid-container").classList.remove("collapsed");
                         el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
                         el.classList.add("highlight");
                     }
                 })();
 
-
-
                 const options = {sizes: [400]};
                 Array.from(document.getElementsByClassName("environment-header")).forEach(header => {
+                    let open = true;
+
                     header.addEventListener("click", e => {
                         Array.from(header.parentElement.getElementsByClassName("grid-container")).forEach(grid => {
-                            grid.classList.toggle("collapsed");
+                            if (open) {
+                                grid.classList.add("collapsed");
+                            }
+                            else {
+                                grid.classList.remove("collapsed");
+                            }
                         });
+
+                        open = !open;
                     });
                 });
 
