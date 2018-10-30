@@ -20,9 +20,9 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.{IndicatorsConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -42,6 +42,7 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
   private lazy val catalogueController = new CatalogueController(
     mock[UserManagementConnector],
     mock[TeamsAndRepositoriesConnector],
+    mock[ConfigService],
     mock[ServiceDependenciesConnector],
     mock[IndicatorsConnector],
     mock[LeakDetectionService],
@@ -56,6 +57,8 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     mock[IndexPage],
     mock[TeamInfoPage],
     mock[ServiceInfoPage],
+    mock[ServiceConfigPage],
+    mock[ServiceConfigRawPage],
     mock[LibraryInfoPage],
     mock[PrototypeInfoPage],
     mock[RepositoryInfoPage],

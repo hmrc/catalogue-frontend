@@ -1,0 +1,135 @@
+@*
+ * Copyright 2018 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import partials.DependenciesPartial
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
+@import scala.collection.immutable.ListMap
+
+@this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
+@(serviceName: String, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
+<html>
+    <head>
+        <link rel="stylesheet" href="@routes.Assets.at("config-explorer.css")" />
+        <script src="@routes.Assets.at("split.js")"></script>
+        <script src="@routes.Assets.at("config-explorer.js")"></script>
+    </head>
+    <body>
+        <header class="opaque">
+            <h1 id="service-header">Config: @serviceName</h1>
+            <i class="glyphicon glyphicon-question-sign help-icon"></i>
+            <i class="glyphicon glyphicon-menu-hamburger menu-icon"></i>
+        </header>
+        <section>
+            <div class="grid-container explorer-grid">
+                <div class="grid-header">
+                    <div id="header-0" class="grid-item sticky-column truncate-content" style="width:300px;">Key</div>
+                    <div class="gutter gutter-horizontal"></div>
+                    @for((env, index) <- environments.zipWithIndex) {
+                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env" style="width:500px;">@env</div>
+                        <div class="gutter gutter-horizontal column-@env"></div>
+                    }
+                </div>
+                @for((key: String, envSources: Map[String, Seq[ConfigSourceValue]]) <- ListMap(configByKey.toSeq.sortWith(_._1 < _._1):_*)) {
+                    <div class="grid-row">
+                        <div class="grid-item sticky-column truncate-content" style="width:310px;">@key</div>
+                        @for((env, i) <- environments.zipWithIndex) {
+                            <div class="grid-item column-@env" style="width:510px;">
+                                <ul>
+                                @for(sourceValue: ConfigSourceValue <- sortBySourcePrecedence(envSources.get(env))) {
+                                    <li class="config-value" title="@friendlySourceName(sourceValue.source, env)">
+                                        <span class="truncate-content">@sourceValue.value</span>
+                                        <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env-@sourceValue.source-@key"></a>
+                                    </li>
+                                }
+                                </ul>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+        <aside id="menu">
+            <h2>Columns</h2>
+            <ul>
+                @for(env <- environments) {
+                    <li>
+                        <input class="column-filter" type="checkbox" id="show-@env" checked="checked" />
+                        <label for="show-@env">@env</label>
+                    </li>
+                }
+            </ul>
+            <h2>Values</h2>
+            <ul>
+                <li>
+                    <input type="checkbox" id="show-evictions" checked="checked" />
+                    <label for="show-evictions">Show evictions</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="word-wrap" />
+                    <label for="word-wrap">Word wrap</label>
+                </li>
+            </ul>
+        </aside>
+        <aside id="help">
+            <h2>How to use the config explorer</h2>
+            <ul class="bullets">
+                <li>Drag the handles to the left of column headers to re-size columns</li>
+                <li>Hover over a config value to see it's source</li>
+                <li>Triple click a truncated value to select the whole thing</li>
+                <li>Crossed out values indicate an eviction according to their precendence in the config hierarchy</li>
+                <li>Click the arrow to the right of a value to see the config item in context</li>
+                <li>Toggle environments on/off and adjust formatting using the hamburger menu</li>
+                <li>Ctrl-f to search for a key or value (uses browser find)</li>
+            </ul>
+        </aside>
+        <script type="text/javascript">
+            ready(function() {
+                Split(["#header-0", "#header-1", "#header-2", "#header-3", "#header-4", "#header-5", "#header-6", "#header-7"], {
+                    sizes: [300, 500, 500, 500, 500, 500, 500, 500]
+                });
+
+                const body = document.querySelector("body");
+                document.querySelector(".menu-icon").addEventListener("click", e => {
+                    body.classList.remove("help-open");
+                    body.classList.toggle("sidebar-open");
+                });
+
+                document.querySelector(".help-icon").addEventListener("click", e => {
+                    body.classList.remove("sidebar-open");
+                    body.classList.toggle("help-open");
+                });
+
+                Array.from(document.querySelectorAll(".column-filter")).forEach(input => {
+                    const env = input.id.replace("show-", "");
+                    input.addEventListener("change", e => {
+                        Array.from(document.getElementsByClassName(`column-${env}`)).forEach(item => {
+                            item.classList.toggle("hidden");
+                        });
+                    });
+                });
+
+                document.querySelector("#show-evictions").addEventListener("change", e => {
+                    document.querySelector("body").classList.toggle("hide-evictions");
+                });
+
+                document.querySelector("#word-wrap").addEventListener("change", e => {
+                    document.querySelector("body").classList.toggle("word-wrap");
+                });
+            });
+        </script>
+    </body>
+</html>

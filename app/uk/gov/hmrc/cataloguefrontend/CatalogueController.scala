@@ -30,11 +30,12 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events._
-import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
 
+import scala.collection.SortedMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -53,6 +54,7 @@ case class DigitalServiceDetails(
 class CatalogueController @Inject()(
   userManagementConnector: UserManagementConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  configService: ConfigService,
   serviceDependencyConnector: ServiceDependenciesConnector,
   indicatorsConnector: IndicatorsConnector,
   leakDetectionService: LeakDetectionService,
@@ -67,6 +69,8 @@ class CatalogueController @Inject()(
   indexPage: IndexPage,
   teamInfoPage: TeamInfoPage,
   serviceInfoPage: ServiceInfoPage,
+  serviceConfigPage: ServiceConfigPage,
+  serviceConfigRawPage: ServiceConfigRawPage,
   libraryInfoPage: LibraryInfoPage,
   prototypeInfoPage: PrototypeInfoPage,
   repositoryInfoPage: RepositoryInfoPage,
@@ -233,6 +237,22 @@ class CatalogueController @Inject()(
           )
         case _ => NotFound(error_404_template())
       }
+  }
+
+  def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
+    for {
+      configByKey <- configService.configByKey(serviceName)
+    } yield () match {
+      case _ => Ok(serviceConfigPage(serviceName, configByKey))
+    }
+  }
+
+  def serviceConfigRaw(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
+    for {
+      configByEnvironment <- configService.configByEnvironment(serviceName)
+    } yield () match {
+      case _ => Ok(serviceConfigRawPage(serviceName, configByEnvironment))
+    }
   }
 
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>

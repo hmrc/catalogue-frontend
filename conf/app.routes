@@ -11,6 +11,8 @@ GET        /users                                       uk.gov.hmrc.cataloguefro
 
 GET        /services                                    uk.gov.hmrc.cataloguefrontend.CatalogueController.allServices
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
+GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceConfig(name)
+GET        /service/:name/config/raw                    uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceConfigRaw(name)
 GET        /libraries                                   uk.gov.hmrc.cataloguefrontend.CatalogueController.allLibraries
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)

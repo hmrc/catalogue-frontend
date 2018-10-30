@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "bootstrap-sass": "^3.3.7",
-    "node-sass": "^3.7.0"
+    "node-sass": "^3.7.0",
+    "split.js": "^1.5.2"
   }
 }
