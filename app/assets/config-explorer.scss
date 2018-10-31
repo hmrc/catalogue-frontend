@@ -150,6 +150,7 @@ aside {
 
 .environment-header {
   position: sticky;
+  position: -webkit-sticky;
   top: $environment-header-top;
   z-index: 30;
 
@@ -158,6 +159,7 @@ aside {
 
 .source-header {
   position: sticky;
+  position: -webkit-sticky;
   top: $source-header-top;
   z-index: 20;
 
@@ -187,6 +189,7 @@ aside {
 
 .grid-header {
   position: sticky;
+  position: -webkit-sticky;
   background-color: white;
   padding-bottom: 0.5em;
 
@@ -304,6 +307,7 @@ aside {
 
 .sticky-header {
   position: sticky;
+  position: -webkit-sticky;
   display: block;
   width: 1vw;
   left: 0;
@@ -313,6 +317,7 @@ aside {
 
 .sticky-column {
   position: sticky;
+  position: -webkit-sticky;
   left: 0;
   padding-left: $body-left-padding;
   background: inherit;
