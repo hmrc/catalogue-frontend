@@ -52,4 +52,16 @@ class DependencySpec extends FreeSpec with Matchers {
     }
 
   }
+
+  "Version" - {
+
+    "should include suffix when converted to a string" in {
+      Version(1,2,3,Some("play-26")).toString should be ("1.2.3-play-26")
+    }
+
+    "should omit suffix the suffix completely when not present" in {
+      Version(1,2,3).toString should be ("1.2.3")
+    }
+
+  }
 }

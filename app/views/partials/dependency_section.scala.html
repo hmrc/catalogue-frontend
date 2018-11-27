@@ -30,9 +30,9 @@
                         @dependency.name
                     }
                 </span>
-                <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion</span>
+                <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion.toString</span>
                 <span class="col-xs-1 glyphicon glyphicon-arrow-right small-glyphicon"> </span>
-                <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.getOrElse("(not found)")</span>
+                <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.map(_.toString).getOrElse("(not found)")</span>
             </div>
         </li>
 }
