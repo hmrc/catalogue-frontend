@@ -59,8 +59,8 @@ object Dependencies {
   implicit val format = Json.format[Dependencies]
 }
 
-case class Version(major: Int, minor: Int, patch: Int) {
-  override def toString: String = s"$major.$minor.$patch"
+case class Version(major: Int, minor: Int, patch: Int, suffix: Option[String] = None) {
+  override def toString: String = s"$major.$minor.$patch" + suffix.map("-"+_).getOrElse("")
 
   //!@TODO test
   def -(other: Version): (Int, Int, Int) =
