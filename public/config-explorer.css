@@ -924,7 +924,7 @@ aside {
 
 .grid-header {
   position: sticky;
-  position: -webkit-sticky;
+  /*position: -webkit-sticky;*/
   background-color: white;
   padding-bottom: 0.5em;
   display: grid;
