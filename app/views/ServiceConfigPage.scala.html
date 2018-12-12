@@ -23,6 +23,7 @@
 @(serviceName: String, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
 <html>
     <head>
+        <title>Config - @serviceName</title>
         <link rel="stylesheet" href="@routes.Assets.at("config-explorer.css")" />
         <script src="@routes.Assets.at("split.js")"></script>
         <script src="@routes.Assets.at("config-explorer.js")"></script>
@@ -44,8 +45,8 @@
                     }
                 </div>
                 @for((key: String, envSources: Map[String, Seq[ConfigSourceValue]]) <- ListMap(configByKey.toSeq.sortWith(_._1 < _._1):_*)) {
-                    <div class="grid-row">
-                        <div class="grid-item sticky-column truncate-content" style="width:310px;">@key</div>
+                    <div qa-tag="config-row-@key" class="grid-row">
+                        <div qa-tag="config-key" class="grid-item sticky-column truncate-content" style="width:310px;">@key</div>
                         @for((env, i) <- environments.zipWithIndex) {
                             <div class="grid-item column-@env" style="width:510px;">
                                 <ul>
