@@ -46,7 +46,7 @@
                 </div>
                 @for((key: String, envSources: Map[String, Seq[ConfigSourceValue]]) <- ListMap(configByKey.toSeq.sortWith(_._1 < _._1):_*)) {
                     <div id="config-row-@key" class="grid-row">
-                        <div id="config-key" class="grid-item sticky-column truncate-content" style="width:310px;">@key</div>
+                        <div id="config-key-@key" class="grid-item sticky-column truncate-content" style="width:310px;">@key</div>
                         @for((env, i) <- environments.zipWithIndex) {
                             <div class="grid-item column-@env" style="width:510px;">
                                 <ul>
