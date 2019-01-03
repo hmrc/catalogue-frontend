@@ -1,0 +1,44 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
+
+@(serviceRoutes: ServiceRoutes)
+@if(CatalogueFrontendSwitches.routingRules.isEnabled && serviceRoutes.hasInconsistentUrls) {
+    <div id="routing-rule-violations" >
+        <div class="board" class="col-md-12">
+            <h3 class="board__heading red">Inconsistent Route Rules</h3>
+            <div class="board__body">
+                <ul id="routing-rule-list" class="list list--minimal list-group row">
+                @for(environmentRoute <- serviceRoutes.environmentRoutes) {
+                    @for(route <- environmentRoute.routes) {
+                        <li class="col-xs-3">
+                            <labe>@environmentRoute.environment</labe>
+                        </li>
+                        <li class="col-xs-6">
+                            <a href="@{environmentRoute.basePath + route.frontendPath}" target="_blank">@route.frontendPath <span class="glyphicon glyphicon-new-window"/></a>
+                        </li>
+                        <li class="col-xs-3">
+                            <a target="_blank" href="@route.ruleConfigurationUrl">GitHub.com <span class="glyphicon glyphicon-new-window"/></a>
+                        </li>
+                    }
+                }
+                </ul>
+            </div>
+        </div>
+    </div>
+}

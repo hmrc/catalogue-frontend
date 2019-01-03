@@ -1,5 +1,5 @@
 @*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,19 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import play.twirl.api.Html
 @import java.time.LocalDateTime
 
+@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 @import uk.gov.hmrc.cataloguefrontend.DeploymentVO
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import views.partials.githubBadgeType
 @import partials.DependenciesPartial
+@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 
@@ -33,7 +36,9 @@
   stabilityChartData: Option[ChartDataRows],
   repositoryCreationDate: LocalDateTime,
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
-  linkToLeakDetection: Option[String]
+  linkToLeakDetection: Option[String],
+  productionEnvironmentRoute: Option[EnvironmentRoute],
+  serviceRoutes: ServiceRoutes
 )(implicit messages: Messages, request: Request[_])
 
 @datacentreMappings(datacentreLongName: String) = @{
@@ -56,12 +61,15 @@
     @partials.leak_detection_banner(linkToLeakDetection)
 
     <section class="section-wrapper">
-        @partials.details(service)
+
+        @partials.details(service, productionEnvironmentRoute)
+
+        @partials.serviceRouteRuleViolations(serviceRoutes)
 
         <div class="row">
             @partials.repo_owning_teams(service)
 
-            @partials.code_and_builds(service)
+            @partials.code_and_builds(service, productionEnvironmentRoute)
 
         </div>
         <div class="row">
@@ -69,7 +77,7 @@
             @if(idx < 3) {
                 <div id="@{environment.id}-environment" class="col-md-2">
             } else {
-                <div id="@{environment.id}-environment" class="col-md-3">
+                <div id="@{environment.id}-environmCatalogueControllerent" class="col-md-3">
             }
                 <div class="board">
                     <h3 class="board__heading">
@@ -164,10 +172,7 @@
             </small>
         </div>
     </div>
-
 }
-
-
 
 @renderGraphText = {
     @{Html(viewMessages.deploymentThroughputAndStabilityGraphText)}
@@ -190,6 +195,3 @@
         </div>
     </div>
 }
-
-
-

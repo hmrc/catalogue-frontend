@@ -34,7 +34,8 @@ class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServ
         Map(
           "microservice.services.teams-and-repositories.port" -> endpointPort,
           "microservice.services.teams-and-repositories.host" -> host,
-          "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+          "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
+          "metrics.jvm"                                       -> false
         )
       )
       .build()

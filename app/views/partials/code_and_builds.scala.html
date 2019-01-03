@@ -1,5 +1,5 @@
 @*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
-@(repo: RepositoryDetails)
+@(repo: RepositoryDetails, environmentRoute: Option[EnvironmentRoute] = None)
 
 <div id="code-and-build" class="col-md-6">
     <div class="board">
@@ -25,13 +26,19 @@
         <div class="board__body">
             <ul class="list list--minimal">
                 <li class="list-item"><a id="link-to-@{repo.githubUrl.id}" href="@{repo.githubUrl.url}" target="_blank">@{repo.githubUrl.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
-
-                @if(CatalogueFrontendSwitches.configExplorer.isEnabled){
-                    <li class="list-item"><a id="link-to-@{repo.name}-config" href="@{repo.name}/config" target="_blank">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
-                }
-                @for(ciLink <- repo.ci) {
+            @if(CatalogueFrontendSwitches.configExplorer.isEnabled){
+                <li class="list-item"><a id="link-to-@{repo.name}-config" href="@{repo.name}/config" target="_blank">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
+            }
+            @for(ciLink <- repo.ci) {
                 <li class="list-item"><a id="link-to-@{ciLink.id}" href="@{ciLink.url}" target="_blank">@{ciLink.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
+            }
+            @if(CatalogueFrontendSwitches.routingRules.isEnabled && environmentRoute.isDefined) {
+                @for((route, index) <- environmentRoute.get.routes.zipWithIndex) {
+                <li id="route-rule-@index" class="list-item">
+                    <a target="_blank" title="@route.frontendPath" href="@route.ruleConfigurationUrl">Routing Configuration: '@route.frontendPath' <span class="glyphicon glyphicon-new-window"/></a>
+                </li>
                 }
+            }
             </ul>
         </div>
     </div>

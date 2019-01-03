@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.ActionsSupport
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -161,6 +161,7 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       mock[UserManagementConnector],
       mock[TeamsAndRepositoriesConnector],
       mock[ConfigService],
+      mock[RouteRulesService],
       mock[ServiceDependenciesConnector],
       mock[IndicatorsConnector],
       mock[LeakDetectionService],

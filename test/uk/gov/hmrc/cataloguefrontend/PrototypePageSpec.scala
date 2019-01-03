@@ -33,7 +33,8 @@ class PrototypePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMo
         "microservice.services.teams-and-repositories.port" -> endpointPort,
         "microservice.services.teams-and-repositories.host" -> host,
         "microservice.services.leak-detection.port"         -> endpointPort,
-        "microservice.services.leak-detection.host"         -> host
+        "microservice.services.leak-detection.host"         -> host,
+        "metrics.jvm"                                       -> false
       )
       .build()
 

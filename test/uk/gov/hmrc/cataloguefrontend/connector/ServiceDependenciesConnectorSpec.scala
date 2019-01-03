@@ -51,7 +51,8 @@ class ServiceDependenciesConnectorSpec
       .configure(
         Map(
           "microservice.services.service-dependencies.port" -> endpointPort,
-          "microservice.services.service-dependencies.host" -> host
+          "microservice.services.service-dependencies.host" -> host,
+          "metrics.jvm"                                     -> false
         ))
       .build()
 

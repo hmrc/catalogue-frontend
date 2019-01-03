@@ -51,7 +51,8 @@ class TeamsAndRepositoriesConnectorSpec
       .configure(
         "microservice.services.teams-and-repositories.host" -> host,
         "microservice.services.teams-and-repositories.port" -> endpointPort,
-        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
+        "metrics.jvm"                                       -> false
       )
       .build()
 

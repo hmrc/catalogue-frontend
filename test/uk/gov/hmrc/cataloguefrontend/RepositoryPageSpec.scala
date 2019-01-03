@@ -53,7 +53,8 @@ class RepositoryPageSpec
         "microservice.services.indicators.host"             -> host,
         "microservice.services.leak-detection.port"         -> endpointPort,
         "microservice.services.leak-detection.host"         -> host,
-        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
+        "metrics.jvm"                                       -> false
       )
       .build()
 

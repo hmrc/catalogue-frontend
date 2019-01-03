@@ -56,7 +56,8 @@ class UserManagementConnectorSpec
       .configure(
         "microservice.services.user-management.url"        -> endpointMockUrl,
         "microservice.services.user-management.myTeamsUrl" -> "http://some.ump.com/myTeams",
-        "play.http.requestHandler"                         -> "play.api.http.DefaultHttpRequestHandler"
+        "play.http.requestHandler"                         -> "play.api.http.DefaultHttpRequestHandler",
+        "metrics.jvm"                                      -> false
       )
       .build()
 
