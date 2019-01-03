@@ -44,9 +44,7 @@
                     <label>URL(s):</label>
                     <ul id="production-urls" class="list list--minimal">
                     @for((route, index) <- environmentRoute.get.routes.zipWithIndex) {
-                        <li id="url-@index" class="list-item">
-                            <a href="@{environmentRoute.get.basePath + route.frontendPath}" target="_blank">@route.frontendPath <span class="glyphicon glyphicon-new-window"/></a>
-                        </li>
+                        <li id="url-@index" class="list-item">@route.frontendPath</li>
                     }
                     </ul>
                 </li>
