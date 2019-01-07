@@ -1,0 +1,49 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.{SearchResults, ServiceUrl}
+
+@this(viewMessages: ViewMessages)
+@(form: Form[_], searchResults: SearchResults)(implicit request: Request[_])
+
+@standard_layout("Search", "search") {
+    <header>
+        <h1>Search</h1>
+    </header>
+    <div id="service-list">
+        <form action="/search" method="get">
+            <div class="form-group row">
+                <div class="col-xs-2 padding-reset-right">
+                    <label for="search">Url to search:</label>
+                </div>
+                <div class="col col-xs-5">
+                    <input class="search form-control" id="search" type="text" name="name" value="@form("name").value" autofocus>
+                </div>
+            </div>
+        </form>
+        <table class="table table-striped">
+            <tr>
+                <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Service</button></th>
+                <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
+                <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
+            </tr>
+            <tbody class="list">
+                <span>Search Results: @searchResults.nonEmpty</span>
+            </tbody>
+        </table>
+    </div>
+}

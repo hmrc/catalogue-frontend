@@ -29,3 +29,5 @@ GET        /dependencyReport                            uk.gov.hmrc.cataloguefro
 GET        /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.showSignInPage
 POST       /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.submit
 GET        /sign-out                                    @uk.gov.hmrc.cataloguefrontend.AuthController.signOut
+
+GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.search
