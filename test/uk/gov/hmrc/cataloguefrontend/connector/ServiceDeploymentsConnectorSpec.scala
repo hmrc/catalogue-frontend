@@ -40,7 +40,8 @@ class ServiceDeploymentsConnectorSpec
     .configure(Map(
       "microservice.services.service-deployments.port" -> endpointPort,
       "microservice.services.service-deployments.host" -> host,
-      "play.http.requestHandler"                       -> "play.api.http.DefaultHttpRequestHandler"
+      "play.http.requestHandler"                       -> "play.api.http.DefaultHttpRequestHandler",
+      "metrics.jvm"                                    -> false
     ))
     .build()
 

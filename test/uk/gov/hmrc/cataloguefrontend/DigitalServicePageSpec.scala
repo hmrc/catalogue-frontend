@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -60,7 +60,8 @@ class DigitalServicePageSpec
         "usermanagement.portal.url"                          -> "http://usermanagement/link",
         "microservice.services.user-management.frontPageUrl" -> "http://some.ump.fontpage.com",
         "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-        "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
+        "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",
+        "metrics.jvm"                                        -> false
       )
       .build()
 
@@ -346,6 +347,7 @@ class DigitalServicePageSpec
       userManagementConnectorMock,
       teamsAndRepositoriesConnectorMock,
       mock[ConfigService],
+      mock[RouteRulesService],
       mock[ServiceDependenciesConnector],
       mock[IndicatorsConnector],
       mock[LeakDetectionService],

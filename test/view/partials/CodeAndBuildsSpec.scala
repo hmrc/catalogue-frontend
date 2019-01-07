@@ -18,10 +18,11 @@ package view.partials
 import java.time.LocalDateTime
 
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, FeatureSwitch}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, RepositoryDetails}
 import uk.gov.hmrc.cataloguefrontend.connector.Link
+import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
+import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
 class CodeAndBuildsSpec extends WordSpec with Matchers {
 
@@ -39,6 +40,13 @@ class CodeAndBuildsSpec extends WordSpec with Matchers {
     isPrivate    = true
   )
 
+  val environmentRoute = EnvironmentRoute(
+    environment = "EnvName",
+    basePath    = "basePath",
+    routes      = Seq(RouteRulesService.Route("TestUrl0", "TestUrl0", "ruleConfigurationUrl0"),
+                      RouteRulesService.Route("TestUrl1", "TestUrl1", "ruleConfigurationUrl1"))
+  )
+
   "code_and_builds" should {
 
     "display configuration explorer when feature flag is enabled" in {
@@ -53,6 +61,27 @@ class CodeAndBuildsSpec extends WordSpec with Matchers {
       val result = views.html.partials.code_and_builds(repo).body
       result should not include ("href=\"reponame/config\"")
       result should not include ("Config Explorer")
+    }
+
+    "display routing rules when feature flag is enabled" in {
+      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
+      val result = views.html.partials.code_and_builds(repo, Some(environmentRoute)).body
+      result should include ("id=\"route-rule-0\"")
+      result should include ("id=\"route-rule-1\"")
+    }
+
+    "do not display routing rules when feature flag is disabled" in {
+      FeatureSwitch.disable(CatalogueFrontendSwitches.routingRules)
+      val result = views.html.partials.code_and_builds(repo, Some(environmentRoute)).body
+      result should not include ("id=\"route-rule-0\"")
+      result should not include ("id=\"route-rule-1\"")
+    }
+
+    "do not display routing rules when no rules" in {
+      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
+      val result = views.html.partials.code_and_builds(repo, None).body
+      result should not include ("id=\"route-rule-0\"")
+      result should not include ("id=\"route-rule-1\"")
     }
   }
 

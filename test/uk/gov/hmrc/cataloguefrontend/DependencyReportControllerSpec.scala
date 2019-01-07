@@ -24,6 +24,8 @@ import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
@@ -49,6 +51,13 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Gui
     mockedDependenciesConnector,
     stubMessagesControllerComponents()
   )
+
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "metrics.jvm" -> false
+      )
+      .build()
 
   "dependencyReport" should {
 

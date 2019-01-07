@@ -38,7 +38,8 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPe
         "microservice.services.service-dependencies.port"   -> endpointPort,
         "microservice.services.leak-detection.port"         -> endpointPort,
         "microservice.services.leak-detection.host"         -> host,
-        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
+        "metrics.jvm"                                       -> false
       )
       .build()
 

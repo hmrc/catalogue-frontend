@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events._
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
@@ -55,6 +55,7 @@ class CatalogueController @Inject()(
   userManagementConnector: UserManagementConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   configService: ConfigService,
+  routeRulesService: RouteRulesService,
   serviceDependencyConnector: ServiceDependenciesConnector,
   indicatorsConnector: IndicatorsConnector,
   leakDetectionService: LeakDetectionService,
@@ -282,6 +283,8 @@ class CatalogueController @Inject()(
     val serviceDeploymentInformationF: Future[Either[Throwable, ServiceDeploymentInformation]] =
       deploymentsService.getWhatsRunningWhere(name)
     val dependenciesF = serviceDependencyConnector.getDependencies(name)
+    val serviceUrlF = routeRulesService.serviceUrl(name)
+    val serviceRoutesF = routeRulesService.serviceRoutes(name)
 
     for {
       service                      <- repositoryDetailsF
@@ -289,6 +292,8 @@ class CatalogueController @Inject()(
       serviceDeploymentInformation <- serviceDeploymentInformationF
       mayBeDependencies            <- dependenciesF
       urlIfLeaksFound              <- leakDetectionService.urlIfLeaksFound(name)
+      serviceUrl                   <- serviceUrlF
+      serviceRoutes                <- serviceRoutesF
     } yield
       (service, serviceDeploymentInformation) match {
         case (_, Left(t)) =>
@@ -315,7 +320,9 @@ class CatalogueController @Inject()(
               ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
               repositoryDetails.createdAt,
               deploymentsByEnvironmentName,
-              urlIfLeaksFound
+              urlIfLeaksFound,
+              serviceUrl,
+              serviceRoutes
             )
           )
         case _ => NotFound(error_404_template())

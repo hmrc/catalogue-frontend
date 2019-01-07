@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{ConfigByEnvironment, ConfigByKey, ConfigSourceEntries, ConfigSourceValue}
+import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -36,6 +36,7 @@ class ConfigConnector @Inject()(
   implicit val configSourceEntriesReads = Json.reads[ConfigSourceEntries]
   implicit val configSourceValueReads = Json.reads[ConfigSourceValue]
 
+
   private implicit val linkFormats         = Json.format[Link]
   private implicit val environmentsFormats = Json.format[TargetEnvironment]
   private implicit val serviceFormats      = Json.format[RepositoryDetails]
@@ -49,5 +50,4 @@ class ConfigConnector @Inject()(
 
   def configByKey(service: String)(implicit hc: HeaderCarrier) =
     http.GET[ConfigByKey](s"$serviceConfigsBaseUrl/config-by-key/$service")
-
 }

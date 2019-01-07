@@ -46,7 +46,8 @@ class IndicatorsConnectorSpec
       .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(
         "microservice.services.indicators.port" -> endpointPort,
-        "microservice.services.indicators.host" -> host
+        "microservice.services.indicators.host" -> host,
+        "metrics.jvm"                           -> false
       )
       .build()
 

@@ -34,7 +34,8 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite
         "microservice.services.teams-and-repositories.port" -> endpointPort,
         "microservice.services.teams-and-repositories.host" -> host,
         "play.ws.ssl.loose.acceptAnyCertificate"            -> true,
-        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler"
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
+        "metrics.jvm"                                       -> false
       ))
       .build()
 

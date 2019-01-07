@@ -1,5 +1,5 @@
 @*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
-@(repositoryDetails: RepositoryDetails)
-
+@(repositoryDetails: RepositoryDetails, environmentRoute: Option[EnvironmentRoute] = None)
 <div id="details" >
     <div class="board" class="col-md-12">
         <h3 class="board__heading">Details</h3>
         <div class="board__body">
-
             <ul class="list list--minimal list-group row">
                 <li id="description" class="col-xs-6">
                     <label>Description: </label>
@@ -33,12 +33,23 @@
                     <label>Created: </label>
                     @repositoryDetails.createdAt.displayFormat
                 </li>
-                <li class="col-xs-6"> </li>
                 <li id="last-active" class="col-xs-6">
                     <label>Last Active: </label>
                     @repositoryDetails.lastActive.displayFormat
                 </li>
             </ul>
+            @if(CatalogueFrontendSwitches.routingRules.isEnabled && environmentRoute.isDefined) {
+            <ul id="service-urls-section" class="list list--minimal">
+                <li class="list-item">
+                    <label>URL(s):</label>
+                    <ul id="production-urls" class="list list--minimal">
+                    @for((route, index) <- environmentRoute.get.routes.zipWithIndex) {
+                        <li id="url-@index" class="list-item">@route.frontendPath</li>
+                    }
+                    </ul>
+                </li>
+            </ul>
+            }
         </div>
     </div>
 </div>

@@ -401,4 +401,45 @@ object JsonData {
       |}
     """.stripMargin
 
-}
+  val configServiceEmpty =
+    """
+      |[
+      |]
+    """.stripMargin
+
+  val configServiceService1 =
+    """
+      |[
+      |    {
+      |        "environment": "qa",
+      |        "routes": [
+      |            {
+      |                "frontendPath": "/test/qa/ccc",
+      |                "backendPath": "https://test.co/ccc",
+      |                "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29"
+      |            }
+      |        ]
+      |    },
+      |    {
+      |        "environment": "production",
+      |        "routes": [
+      |            {
+      |                "frontendPath": "/test/prod/ccc",
+      |                "backendPath": "https://test.co/prod/ccc",
+      |                "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29"
+      |            }
+      |        ]
+      |    },
+      |    {
+      |        "environment": "development",
+      |        "routes": [
+      |            {
+      |                "frontendPath": "/test/dev/ccc",
+      |                "backendPath": "https://test.co/ccc",
+      |                "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29"
+      |            }
+      |        ]
+      |    }
+      |]
+    """.stripMargin
+  }

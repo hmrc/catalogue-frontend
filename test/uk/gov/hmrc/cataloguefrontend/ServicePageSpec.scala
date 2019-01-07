@@ -44,7 +44,10 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       "microservice.services.service-deployments.host"  -> host,
       "microservice.services.leak-detection.port"       -> endpointPort,
       "microservice.services.leak-detection.host"       -> host,
-      "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler"
+      "microservice.services.service-configs.port"      -> endpointPort,
+      "microservice.services.service-configs.host"      -> host,
+      "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler",
+      "metrics.jvm"                                     -> false
     )
     .build()
 
@@ -54,11 +57,14 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
   override def beforeEach(): Unit = {
     super.beforeEach()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/frontend-route/service-1", willRespondWith = (200, Some(configServiceService1)))
+    serviceEndpoint(GET, "/frontend-route/service-name", willRespondWith = (200, Some(configServiceService1)))
   }
 
   "A service page" should {
 
     "return a 404 when teams and services returns a 404" in {
+      serviceEndpoint(GET, "/frontend-route/serv", willRespondWith = (200, Some(configServiceEmpty)))
       serviceEndpoint(GET, "/api/services/serv", willRespondWith = (404, None))
 
       val response = await(ws.url(s"http://localhost:$port/repositories/serv").get)
@@ -66,6 +72,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     }
 
     "return a 404 when a Library is viewed as a service" in {
+      serviceEndpoint(GET, "/frontend-route/serv", willRespondWith = (200, Some(configServiceEmpty)))
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
       serviceEndpoint(
         GET,
@@ -77,7 +84,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     }
 
     "show the teams owning the service with github, ci and environment links and info box" in {
-
       serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(
         GET,

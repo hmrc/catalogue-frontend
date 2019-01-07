@@ -54,7 +54,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
         "usermanagement.portal.url"                          -> "http://usermanagement/link",
         "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
         "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-        "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler"
+        "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",
+        "metrics.jvm"                                        -> false
       )
       .build()
 

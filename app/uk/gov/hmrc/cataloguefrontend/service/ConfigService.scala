@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,6 @@ object ConfigService {
   type ConfigByKey = Map[KeyName, Map[EnvironmentName, Seq[ConfigSourceValue]]]
 
   case class ConfigSourceEntries(source: String, precedence: Int, entries: Map[KeyName, String] = Map())
-
   case class ConfigSourceValue(source: String, precedence: Int, value: String)
 
   val environments: Seq[String] = Seq("local", "development", "qa", "staging", "integration", "externaltest", "production")
@@ -60,15 +59,4 @@ object ConfigService {
       case _ => source
     }
   }
-
-//  def sourceUrl(source: String, serviceName: String, environment: String): String = {
-//    source match {
-//      case "applicationConf" => "Microservice application.conf file"
-//      case "baseConfig" => "App-config-base"
-//      case "appConfigEnvironment" => s"App-config-$environment"
-//      case "appConfigCommonFixed" => "App-config-common fixed settings"
-//      case "appConfigCommonOverridable" => "App-config-common overridable settings"
-//      case _ => source
-//    }
-//  }
 }
