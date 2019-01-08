@@ -50,11 +50,17 @@ object RouteRulesService {
         .diff(referenceEnvironmentRoute.routes.map(route => route.frontendPath))
         .nonEmpty
 
+    private def filterRoutesToDifferences(environmentRoute: EnvironmentRoute, referenceEnvironmentRoute: EnvironmentRoute) =
+      environmentRoute.routes
+        .filter(r => environmentRoute.routes.map(route => route.frontendPath)
+                     .diff(referenceEnvironmentRoute.routes.map(route => route.frontendPath)).contains(r.frontendPath))
+
     val inconsistentRoutes: Seq[EnvironmentRoute] =
       referenceEnvironmentRoutes.map(refEnvRoutes => {
         environmentRoutes
           .filter(environmentRoute => environmentRoute.environment != refEnvRoutes.environment)
           .filter(environmentRoute => hasDifferentRoutesToReferenceEnvironment(environmentRoute, refEnvRoutes))
+          .map(environmentRoute => environmentRoute.copy(routes=filterRoutesToDifferences(environmentRoute, refEnvRoutes)))
       })
         .getOrElse(Nil)
 
