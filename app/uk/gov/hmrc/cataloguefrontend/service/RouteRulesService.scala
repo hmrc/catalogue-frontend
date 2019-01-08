@@ -24,47 +24,48 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class RouteRulesService @Inject()(routeRulesConnector: RouteRulesConnector) {
   import RouteRulesService._
 
-  private def resolveEnvironmentBasePath(environmentName: String) = environmentName.toLowerCase match {
-    case "production" => s"https://www.tax.service.gov.uk"
-    case _ => s"https://www.$environmentName.tax.service.gov.uk"
-  }
-
-  private def enrichEnvironmentBasePath(environmentRoute: EnvironmentRoute) =
-    environmentRoute.copy(basePath = resolveEnvironmentBasePath(environmentRoute.environment))
-
   def serviceRoutes(serviceName: String)(implicit hc: HeaderCarrier) =
     routeRulesConnector.serviceRoutes(serviceName).map(environmentRoutes =>
-      ServiceRoutes(environmentRoutes.map(enrichEnvironmentBasePath))
+      ServiceRoutes(environmentRoutes)
     )
 
-  def serviceUrl(serviceName: String)(implicit hc: HeaderCarrier) =
+  def serviceUrl(serviceName: String, environment: String = "production")(implicit hc: HeaderCarrier) =
     routeRulesConnector.serviceRoutes(serviceName).map(environmentRoutes => {
       environmentRoutes
-        .find(environmentRoute => environmentRoute.environment == "production")
-        .map(enrichEnvironmentBasePath)
+        .find(environmentRoute => environmentRoute.environment == environment)
     })
 }
 
 @Singleton
 object RouteRulesService {
   case class ServiceRoutes(environmentRoutes: Seq[EnvironmentRoute]) {
-    private val hasInconsistentRoutesInEnvironment =
-      environmentRoutes.nonEmpty && environmentRoutes.map(environmentRoute => environmentRoute.routes.length).distinct.length != 1
+    private[service] val referenceEnvironmentRoutes: Option[EnvironmentRoute] =
+      environmentRoutes
+        .find(environmentRoute => environmentRoute.environment == "production")
+        .orElse(environmentRoutes.headOption)
+        .orElse(None)
 
-    private val hasDifferentRoutesInEnvironment =
-      environmentRoutes.nonEmpty &&
+    private def hasDifferentRoutesToReferenceEnvironment(environmentRoute: EnvironmentRoute, referenceEnvironmentRoute: EnvironmentRoute) =
+      environmentRoute.routes.map(route => route.frontendPath)
+        .diff(referenceEnvironmentRoute.routes.map(route => route.frontendPath))
+        .nonEmpty
+
+    val inconsistentRoutes: Seq[EnvironmentRoute] =
+      referenceEnvironmentRoutes.map(refEnvRoutes => {
         environmentRoutes
-          .flatMap(environmentRoute => environmentRoute.routes.map(route => route.frontendPath))
-          .distinct.length != environmentRoutes.head.routes.length
+          .filter(environmentRoute => environmentRoute.environment != refEnvRoutes.environment)
+          .filter(environmentRoute => hasDifferentRoutesToReferenceEnvironment(environmentRoute, refEnvRoutes))
+      })
+        .getOrElse(Nil)
+
+    val hasInconsistentRoutes: Boolean = inconsistentRoutes.nonEmpty
 
     val isDefined: Boolean = environmentRoutes.nonEmpty
-
-    val hasInconsistentUrls: Boolean = hasInconsistentRoutesInEnvironment || hasDifferentRoutesInEnvironment
   }
 
   type EnvironmentRoutes = Seq[EnvironmentRoute]
 
-  case class EnvironmentRoute(environment: String, basePath: String = "", routes: Seq[Route])
+  case class EnvironmentRoute(environment: String, routes: Seq[Route])
 
   case class Route(frontendPath: String, backendPath: String, ruleConfigurationUrl: String)
 

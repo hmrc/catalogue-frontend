@@ -42,7 +42,6 @@ class DetailsSpec extends WordSpec with Matchers {
 
   val environmentRoute = EnvironmentRoute(
     environment = "EnvName",
-    basePath    = "basePath",
     routes      = Seq(RouteRulesService.Route("TestUrl0", "TestUrl0", "ruleConfigurationUrl0"),
                       RouteRulesService.Route("TestUrl1", "TestUrl1", "ruleConfigurationUrl1"))
   )
