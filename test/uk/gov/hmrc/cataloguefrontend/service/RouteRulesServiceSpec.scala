@@ -23,53 +23,86 @@ import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute
 class RouteRulesServiceSpec extends WordSpec with Matchers with PropertyChecks {
 
   "Service" should {
+    "No result for inconsistency check when no environment routes" in {
+      val inconsistentRoutes = ServiceRoutes(Nil).inconsistentRoutes
+      inconsistentRoutes.nonEmpty shouldBe false
+    }
+
     "determine if there is inconsistency in the public URL rules" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", "basePath", Seq(RouteRulesService.Route("frontendPath", "backendPath", "ruleConfigurationUrl"))),
-        EnvironmentRoute("qa", "basePath", Seq(RouteRulesService.Route("inconsistent", "backendPath", "ruleConfigurationUrl")))
+        EnvironmentRoute("production", Seq(RouteRulesService.Route("frontendPath", "backendPath", "ruleConfigurationUrl"))),
+        EnvironmentRoute("qa", Seq(RouteRulesService.Route("inconsistent", "backendPath", "ruleConfigurationUrl")))
       )
 
-      ServiceRoutes(environmentRoutes).hasInconsistentUrls shouldBe true
+      val inconsistentRoutes = ServiceRoutes(environmentRoutes).inconsistentRoutes
+      inconsistentRoutes.nonEmpty shouldBe true
+      inconsistentRoutes.head.environment shouldBe "qa"
     }
 
     "determine if there is inconsistency with public URL rules when duplicates exist" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", "basePath", Seq(
+        EnvironmentRoute("production", Seq(
           RouteRulesService.Route("frontendPathOne", "backendPathOne", "ruleConfigurationUrlOne"),
           RouteRulesService.Route("frontendPathTwo", "backendPathTwo", "ruleConfigurationUrlTwo")
         )),
-        EnvironmentRoute("qa", "basePath", Seq(
+        EnvironmentRoute("qa", Seq(
           RouteRulesService.Route("frontendPathOne", "backendPathOne", "ruleConfigurationUrlOne"),
           RouteRulesService.Route("frontendPathTwo", "backendPathTwo", "ruleConfigurationUrlTwo"),
           RouteRulesService.Route("frontendPathTwo", "backendPathTwo", "ruleConfigurationUrlTwo")
         ))
       )
 
-      ServiceRoutes(environmentRoutes).hasInconsistentUrls shouldBe true
+      val inconsistentRoutes = ServiceRoutes(environmentRoutes).inconsistentRoutes
+      inconsistentRoutes.nonEmpty shouldBe true
+      inconsistentRoutes.head.environment shouldBe "qa"
     }
 
     "determine if there is consistency with public URL rules" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", "basePath", Seq(
+        EnvironmentRoute("production", Seq(
           RouteRulesService.Route("frontendPathOne", "backendPathOne", "ruleConfigurationUrlOne"),
           RouteRulesService.Route("frontendPathTwo", "backendPathTwo", "ruleConfigurationUrlTwo")
         )),
-        EnvironmentRoute("qa", "basePath", Seq(
+        EnvironmentRoute("qa", Seq(
           RouteRulesService.Route("frontendPathOne", "backendPathOne", "ruleConfigurationUrlOne"),
           RouteRulesService.Route("frontendPathTwo", "backendPathTwo", "ruleConfigurationUrlTwo")
         ))
       )
 
-      ServiceRoutes(environmentRoutes).hasInconsistentUrls shouldBe false
+      ServiceRoutes(environmentRoutes).inconsistentRoutes.nonEmpty shouldBe false
     }
 
     "Is consistent when no routes" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", "basePath", Nil),
-        EnvironmentRoute("qa", "basePath", Nil)
+        EnvironmentRoute("production", Nil),
+        EnvironmentRoute("qa", Nil)
       )
 
-      ServiceRoutes(environmentRoutes).hasInconsistentUrls shouldBe false
+      ServiceRoutes(environmentRoutes).inconsistentRoutes.nonEmpty shouldBe false
+    }
+
+    "Production environment route is default reference route" in {
+      val environmentRoutes = Seq(
+        EnvironmentRoute("production", Seq(RouteRulesService.Route("frontendPath", "backendPath", "ruleConfigurationUrl"))),
+        EnvironmentRoute("qa", Seq(RouteRulesService.Route("inconsistent", "backendPath", "ruleConfigurationUrl")))
+      )
+
+      ServiceRoutes(environmentRoutes).referenceEnvironmentRoutes.isDefined shouldBe true
+    }
+
+    "Next environment route is reference when no production" in {
+      val environmentRoutes = Seq(
+        EnvironmentRoute("development", Seq(RouteRulesService.Route("frontendPath", "backendPath", "ruleConfigurationUrl"))),
+        EnvironmentRoute("qa", Seq(RouteRulesService.Route("inconsistent", "backendPath", "ruleConfigurationUrl")))
+      )
+
+      ServiceRoutes(environmentRoutes).referenceEnvironmentRoutes.isDefined shouldBe true
+    }
+
+    "No reference environment when no environment routes" in {
+      val environmentRoutes: Seq[EnvironmentRoute] = Nil
+
+      ServiceRoutes(environmentRoutes).referenceEnvironmentRoutes.isDefined shouldBe false
     }
   }
 }

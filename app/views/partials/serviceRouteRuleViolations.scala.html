@@ -18,25 +18,31 @@
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 
 @(serviceRoutes: ServiceRoutes)
-@if(CatalogueFrontendSwitches.routingRules.isEnabled && serviceRoutes.hasInconsistentUrls) {
+@if(CatalogueFrontendSwitches.routingRules.isEnabled && serviceRoutes.hasInconsistentRoutes) {
     <div id="routing-rule-violations" >
         <div class="board" class="col-md-12">
             <h3 class="board__heading red">Inconsistent Route Rules</h3>
             <div class="board__body">
-                <ul id="routing-rule-list" class="list list--minimal list-group row">
-                @for(environmentRoute <- serviceRoutes.environmentRoutes) {
-                    @for(route <- environmentRoute.routes) {
-                        <li class="col-xs-3">
-                            <labe>@environmentRoute.environment</labe>
-                        </li>
-                        <li class="col-xs-6">
-                            <a href="@{environmentRoute.basePath + route.frontendPath}" target="_blank">@route.frontendPath <span class="glyphicon glyphicon-new-window"/></a>
-                        </li>
-                        <li class="col-xs-3">
-                            <a target="_blank" href="@route.ruleConfigurationUrl">GitHub.com <span class="glyphicon glyphicon-new-window"/></a>
-                        </li>
+                <table id="routing-rule-list" class="table">
+                    <tr>
+                        <th class="col-lg-2">Environment</th>
+                        <th class="col-lg-10">Route Rule</th>
+                    </tr>
+                    <tbody>
+                    @for(environmentRoute <- serviceRoutes.inconsistentRoutes) {
+                        @for(route <- environmentRoute.routes) {
+                        <tr>
+                            <td>
+                                <a target="_blank" href="@route.ruleConfigurationUrl" title="Route Rule Configuration">@environmentRoute.environment <span class="glyphicon glyphicon-new-window"/></a>
+                            </td>
+                            <td>
+                                @route.frontendPath
+                            </td>
+                        </tr>
+                        }
                     }
-                }
+                    </tbody>
+                </table>
                 </ul>
             </div>
         </div>

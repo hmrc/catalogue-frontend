@@ -26,12 +26,10 @@ class ServiceRouteRuleViolationsSpec extends WordSpec with Matchers {
   val misMatchedServiceRoutes = ServiceRoutes(Seq(
     EnvironmentRoute(
       environment = "EnvName0",
-      basePath    = "basePath",
       routes      = Seq(RouteRulesService.Route("TestUrl0", "TestUrl0", "ruleConfigurationUrl0"))
     ),
     EnvironmentRoute(
       environment = "EnvName1",
-      basePath    = "basePath",
       routes      = Seq(RouteRulesService.Route("TestUrl1", "TestUrl1", "ruleConfigurationUrl1"))
     )
   ))
@@ -39,12 +37,10 @@ class ServiceRouteRuleViolationsSpec extends WordSpec with Matchers {
   val matchingServiceRoutes = ServiceRoutes(Seq(
     EnvironmentRoute(
       environment = "EnvName0",
-      basePath    = "basePath",
       routes      = Seq(RouteRulesService.Route("TestUrl0", "TestUrl0", "ruleConfigurationUrl0"))
     ),
     EnvironmentRoute(
       environment = "EnvName1",
-      basePath    = "basePath",
       routes      = Seq(RouteRulesService.Route("TestUrl0", "TestUrl0", "ruleConfigurationUrl1"))
     )
   ))
