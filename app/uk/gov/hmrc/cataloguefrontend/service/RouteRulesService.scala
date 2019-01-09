@@ -73,7 +73,7 @@ object RouteRulesService {
 
   case class EnvironmentRoute(environment: String, routes: Seq[Route])
 
-  case class Route(frontendPath: String, backendPath: String, ruleConfigurationUrl: String, isRegex: Boolean)
+  case class Route(frontendPath: String, backendPath: String, ruleConfigurationUrl: String, isRegex: Boolean = false)
 
   case class EnvironmentUrl(environment: String, url: String)
 }
