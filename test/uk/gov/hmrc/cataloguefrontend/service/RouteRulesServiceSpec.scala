@@ -31,12 +31,16 @@ class RouteRulesServiceSpec extends WordSpec with Matchers with PropertyChecks {
     "determine if there is inconsistency in the public URL rules" in {
       val environmentRoutes = Seq(
         EnvironmentRoute("production", Seq(RouteRulesService.Route("frontendPath", "backendPath", "ruleConfigurationUrl"))),
-        EnvironmentRoute("qa", Seq(RouteRulesService.Route("inconsistent", "backendPath", "ruleConfigurationUrl")))
+        EnvironmentRoute("qa",
+          Seq(RouteRulesService.Route("frontendPath", "backendPathQa", "ruleConfigurationUrlQa"),
+          RouteRulesService.Route("inconsistent", "backendPathQa", "ruleConfigurationUrlQa")))
       )
 
       val inconsistentRoutes = ServiceRoutes(environmentRoutes).inconsistentRoutes
       inconsistentRoutes.nonEmpty shouldBe true
       inconsistentRoutes.head.environment shouldBe "qa"
+      inconsistentRoutes.head.routes.length shouldBe 1
+      inconsistentRoutes.head.routes.head.frontendPath shouldBe "inconsistent"
     }
 
     "determine if there is inconsistency with public URL rules when duplicates exist" in {
