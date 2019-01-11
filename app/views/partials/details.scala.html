@@ -39,22 +39,34 @@
                 </li>
             </ul>
             @if(CatalogueFrontendSwitches.routingRules.isEnabled && environmentRoute.isDefined) {
-            <ul id="service-urls-section" class="list list--minimal">
-                <li class="list-item">
-                    <label>URL(s):</label>
-                    <ul id="production-urls" class="list list--minimal">
-                    @for((route, index) <- environmentRoute.get.routes.zipWithIndex) {
-                        <li id="url-@index" class="list-item">
-                            @if(route.isRegex) {
-                            @route.frontendPath
-                            } else {
-                            <a href="https://www.tax.service.gov.uk@route.frontendPath" target="_blank">@route.frontendPath <span class="glyphicon glyphicon-new-window"/></a>
-                            }
-                        </li>
-                    }
+                @defining(environmentRoute.get.routes.size > 3) { collapsable =>
+                    <ul id="service-urls-section" class="list list--minimal">
+                        <div class="board">
+                            <li class="list-item">
+                                <h5 class="board__heading" id="headingSU">
+                                    <div class="@if(collapsable){accordion-toggle collapsed}" data-toggle="@if(collapsable) {collapse}" data-target="#collapseSU" aria-expanded="@if(collapsable) {false} else {true}" aria-controls="collapseSU">
+                                        URL(s):
+                                    </div>
+                                </h5>
+                                <div class="board__body">
+                                    <div id="collapseSU" class="@if(collapsable) {collapse}" aria-labelledby="headingSU">
+                                        <ul id="production-urls" class="list list--minimal">
+                                            @for((route, index) <- environmentRoute.get.routes.zipWithIndex) {
+                                                <li id="url-@index" class="list-item">
+                                                    @if(route.isRegex) {
+                                                        @route.frontendPath
+                                                    } else {
+                                                        <a href="https://www.tax.service.gov.uk@route.frontendPath" target="_blank">@route.frontendPath <span class="glyphicon glyphicon-new-window"/></a>
+                                                    }
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </li>
+                        </div>
                     </ul>
-                </li>
-            </ul>
+                }
             }
         </div>
     </div>

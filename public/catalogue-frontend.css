@@ -11763,7 +11763,7 @@ h1 {
   padding-bottom: .2em;
   border-bottom: 3px solid #008770; }
 
-h1, h2, h3, h4 {
+h1, h2, h3, h4, h5 {
   color: #008770;
   font-weight: 700; }
 
@@ -11830,6 +11830,7 @@ section span.other-teams-message {
 .list {
   overflow: hidden;
   padding-left: 1.2em;
+  padding-right: 1.2em;
   list-style: disc;
   color: #6f777b;
   margin-bottom: .4em; }
@@ -12030,7 +12031,7 @@ section span.other-teams-message {
   width: 100%;
 }
 
-.board__heading .accordion-toggle:after {
+.accordion-toggle:after {
   /* symbol for "opening" panels */
   font-family: 'Glyphicons Halflings';
   content: "\e114";
@@ -12038,7 +12039,7 @@ section span.other-teams-message {
   color: grey;
 }
 
-.board__heading .accordion-toggle.collapsed:after {
+.accordion-toggle.collapsed:after {
   /* symbol for "collapsed" panels */
   content: "\e080";
 }
