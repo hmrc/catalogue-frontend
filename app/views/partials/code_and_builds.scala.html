@@ -33,10 +33,25 @@
                 <li class="list-item"><a id="link-to-@{ciLink.id}" href="@{ciLink.url}" target="_blank">@{ciLink.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
             }
             @if(CatalogueFrontendSwitches.routingRules.isEnabled && environmentRoute.isDefined) {
-                @for((route, index) <- environmentRoute.get.routes.zipWithIndex) {
-                <li id="route-rule-@index" class="list-item">
-                    <a target="_blank" title="@route.frontendPath" href="@route.ruleConfigurationUrl">Routing Configuration: '@route.frontendPath' <span class="glyphicon glyphicon-new-window"/></a>
-                </li>
+                @defining(environmentRoute.get.routes.size > 3) { collapsable =>
+                    <div class="board">
+                        <h5 class="board__heading" id="headingRSU">
+                            <div class="@if(collapsable){accordion-toggle collapsed}" data-toggle="@if(collapsable) {collapse}" data-target="#collapseRSU" aria-expanded="@if(collapsable) {false} else {true}" aria-controls="collapseRSU">
+                                Routing Configuration(s):
+                            </div>
+                        </h5>
+                        <div class="board__body">
+                            <div id="collapseRSU" class="@if(collapsable) {collapse}" aria-labelledby="headingRSU">
+                                <ul id="production-urls" class="list list--minimal">
+                                    @for((route, index) <- environmentRoute.get.routes.zipWithIndex) {
+                                        <li id="route-rule-@index" class="list-item">
+                                            <a target="_blank" title="@route.frontendPath" href="@route.ruleConfigurationUrl">@route.frontendPath<span class="glyphicon glyphicon-new-window"/></a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 }
             }
             </ul>

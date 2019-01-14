@@ -19,32 +19,39 @@
 
 @(serviceRoutes: ServiceRoutes)
 @if(CatalogueFrontendSwitches.routingRules.isEnabled && serviceRoutes.hasInconsistentRoutes) {
-    <div id="routing-rule-violations" >
-        <div class="board" class="col-md-12">
-            <h3 class="board__heading red">Inconsistent Route Rules</h3>
-            <div class="board__body">
-                <table id="routing-rule-list" class="table">
-                    <tr>
-                        <th class="col-lg-2">Environment</th>
-                        <th class="col-lg-10">Route Rule</th>
-                    </tr>
-                    <tbody>
-                    @for(environmentRoute <- serviceRoutes.inconsistentRoutes) {
-                        @for(route <- environmentRoute.routes) {
-                        <tr>
-                            <td>
-                                <a target="_blank" href="@route.ruleConfigurationUrl" title="Route Rule Configuration">@environmentRoute.environment <span class="glyphicon glyphicon-new-window"/></a>
-                            </td>
-                            <td>
-                                @route.frontendPath
-                            </td>
-                        </tr>
-                        }
-                    }
-                    </tbody>
-                </table>
-                </ul>
+    @defining(serviceRoutes.inconsistentRoutes.size > 3) { collapsable =>
+        <div id="routing-rule-violations" >
+            <div class="accordion board" class="col-md-12">
+                <h3 class="board__heading red" id="headingSRRV">
+                    <div class="@if(collapsable){accordion-toggle collapsed}" data-toggle="@if(collapsable) {collapse}" data-target="#collapseSRRV" aria-expanded="@if(collapsable) {false} else {true}" aria-controls="collapseSRRV">
+                        Inconsistent Route Rules
+                    </div>
+                </h3>
+                <div id="collapseSRRV" class="@if(collapsable) {collapse}" aria-labelledby="headingSRRV">
+                    <div class="board__body">
+                        <table id="routing-rule-list" class="table">
+                            <tr>
+                                <th class="col-lg-2">Environment</th>
+                                <th class="col-lg-10">Route Rule</th>
+                            </tr>
+                            <tbody>
+                            @for(environmentRoute <- serviceRoutes.inconsistentRoutes) {
+                                @for(route <- environmentRoute.routes) {
+                                <tr>
+                                    <td>
+                                        <a target="_blank" href="@route.ruleConfigurationUrl" title="Route Rule Configuration">@environmentRoute.environment <span class="glyphicon glyphicon-new-window"/></a>
+                                    </td>
+                                    <td>
+                                        @route.frontendPath
+                                    </td>
+                                </tr>
+                                }
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    }
 }
