@@ -30,4 +30,5 @@ GET        /sign-in                                     @uk.gov.hmrc.cataloguefr
 POST       /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.submit
 GET        /sign-out                                    @uk.gov.hmrc.cataloguefrontend.AuthController.signOut
 
-GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.search
+GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchLanding
+POST       /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchUrl

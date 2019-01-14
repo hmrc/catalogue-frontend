@@ -20,8 +20,10 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
-import views.html.{SearchByUrlPage, error_404_template}
+import views.html.SearchByUrlPage
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService
@@ -33,20 +35,26 @@ class SearchByUrlController @Inject()(
   searchByUrlPage: SearchByUrlPage
 ) extends FrontendController(mcc) {
 
-  def search(): Action[AnyContent] = Action.async { implicit request =>
+  private val serviceNameToUrl = routes.CatalogueController.service _
+
+  def searchLanding: Action[AnyContent] = Action.async { implicit request =>
+    Future.successful(Ok(searchByUrlPage(UrlSearchFilter.form, Nil, serviceNameToUrl)))
+  }
+
+  def searchUrl = Action.async { implicit request =>
     UrlSearchFilter.form
       .bindFromRequest()
       .fold(
-        formWithErrors => Future.successful(Ok(searchByUrlPage(formWithErrors, Nil))),
+        formWithErrors => Future.successful(Ok(searchByUrlPage(formWithErrors, Nil, serviceNameToUrl))),
         query => {
           for {
             searchResult <- searchByUrlService.search(query.name)
           } yield searchResult match {
-            case Nil => NotFound(error_404_template())
             case _ =>
               Ok(searchByUrlPage(
                 UrlSearchFilter.form.bindFromRequest(),
-                searchResult))
+                searchResult,
+                serviceNameToUrl))
           }
         }
       )
@@ -63,5 +71,4 @@ class SearchByUrlController @Inject()(
       )(UrlSearchFilter.apply)(UrlSearchFilter.unapply)
     )
   }
-
 }

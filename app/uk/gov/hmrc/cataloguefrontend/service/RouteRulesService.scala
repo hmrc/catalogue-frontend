@@ -20,16 +20,17 @@ import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class RouteRulesService @Inject()(routeRulesConnector: RouteRulesConnector) {
   import RouteRulesService._
 
-  def serviceRoutes(serviceName: String)(implicit hc: HeaderCarrier) =
+  def serviceRoutes(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRoutes] =
     routeRulesConnector.serviceRoutes(serviceName).map(environmentRoutes =>
       ServiceRoutes(environmentRoutes)
     )
 
-  def serviceUrl(serviceName: String, environment: String = "production")(implicit hc: HeaderCarrier) =
+  def serviceUrl(serviceName: String, environment: String = "production")(implicit hc: HeaderCarrier): Future[Option[EnvironmentRoute]] =
     routeRulesConnector.serviceRoutes(serviceName).map(environmentRoutes => {
       environmentRoutes
         .find(environmentRoute => environmentRoute.environment == environment)

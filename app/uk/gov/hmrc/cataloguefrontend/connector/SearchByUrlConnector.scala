@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{Json, Reads}
-import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.{SearchResults, ServiceUrl}
+import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.{FrontendRoute, FrontendRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -34,13 +34,14 @@ class SearchByUrlConnector @Inject()(
                                  servicesConfig: ServicesConfig
                                ) {
 
-  private val url: String = s"${servicesConfig.baseUrl("service-configs")}/frontend-route"
+  private val url: String = s"${servicesConfig.baseUrl("service-configs")}/frontend-route/search"
 
-  implicit val serviceUrlReads: Reads[ServiceUrl] = Json.reads[ServiceUrl]
+  implicit val frontendRouteReads: Reads[FrontendRoute] = Json.using[Json.WithDefaultValues].reads[FrontendRoute]
+  implicit val frontendRoutesReads: Reads[FrontendRoutes] = Json.reads[FrontendRoutes]
 
-  def search(term: String)(implicit hc: HeaderCarrier): Future[SearchResults] =
+  def search(term: String)(implicit hc: HeaderCarrier): Future[Seq[FrontendRoutes]] =
     http
-      .GET[SearchResults](s"$url", Seq("term" -> term))
+      .GET[Seq[FrontendRoutes]](s"$url", Seq("frontendPath" -> term))
       .recover {
         case NonFatal(ex) =>
           Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
