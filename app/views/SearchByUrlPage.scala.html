@@ -1,0 +1,90 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import views.html.helper.CSRF
+@import play.api.mvc.Call
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
+
+@this(viewMessages: ViewMessages)
+@(form: Form[_],
+ searchResults: Seq[FrontendRoutes],
+ serviceNameToUrl: String => Call)(implicit request: Request[_])
+
+@standard_layout("Service Search", "search") {
+    <header>
+        <h1 id="search-service-header">Service Search</h1>
+    </header>
+    <div id="service-list">
+        <div class="board">
+            <h3 id="info-box-header" class="board__heading"><img class="info-icon" src="assets/infoicon.svg"/> How to find a service</h3>
+            <div class="board__body">
+                <p id="info-box-copy">Use this page to search for a service on the tax platform.  Enter the URL into the box below and click on the service name to find out more about it.</p>
+                <div class="row col-xs-12 ">
+                    <p>Addresses beginning with the following are not tax platform services:</p>
+                    <ul class="list list--minimal">
+                        <li class="list-item">https://www.access.tax.service.gov.uk/</li>
+                        <li class="list-item">https://www.gov.uk/</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="board">
+            <div class="board__body">
+                <form action="/search" method="post">
+                    @{
+                        play.filters.csrf.CSRF.getToken(request).map { token => CSRF.formField(request) }
+                    }
+                    <div class="form-group row col-xs-12">
+                        <div class="col-xs-3"><label for="search">https://www.tax.service.gov.uk/</label></div>
+                        <div class="col-xs-8"><input class="search form-control" id="search-box" type="text" name="name" value="@form("name").value" autofocus /></div>
+                        <div class="col-xs-1"><button id="search-button" class="btn btn-primary" type="submit">Search</button></div>
+                    </div>
+                </form>
+                @if(searchResults.nonEmpty) {
+                    <table id="search-results" class="table table-striped">
+                        <tr>
+                            <th class="col-lg-3">Service</th>
+                            <th class="col-lg-9">URL</th>
+                        </tr>
+                        <tbody class="list">
+                        @for(result <- searchResults) {
+                            @for(route <- result.routes) {
+                                <tr>
+                                    <td><a target="_blank" href="@{
+                                        serviceNameToUrl(result.service)
+                                    }">@result.service</a>
+                                    </td>
+                                    <td>
+                                    @if(route.isRegex) {
+                                        @route.frontendPath
+                                    } else {
+                                        <a href="https://www.tax.service.gov.uk@route.frontendPath" target="_blank">@route.frontendPath <span class="glyphicon glyphicon-new-window"/></a>
+                                    }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        </tbody>
+                    </table>
+                }
+                @if(searchResults.isEmpty && form("name").value.nonEmpty) {
+                    <p id="search-results-empty">This search did not return any results.</p>
+                }
+            </div>
+        </div>
+    </div>
+}
