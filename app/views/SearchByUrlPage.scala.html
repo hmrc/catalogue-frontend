@@ -26,13 +26,13 @@
 
 @standard_layout("Service Search", "search") {
     <header>
-        <h1>Service Search</h1>
+        <h1 id="search-service-header">Service Search</h1>
     </header>
     <div id="service-list">
         <div class="board">
-            <h3 class="board__heading"><img class="info-icon" src="assets/infoicon.svg"/> How to find a service</h3>
+            <h3 id="info-box-header" class="board__heading"><img class="info-icon" src="assets/infoicon.svg"/> How to find a service</h3>
             <div class="board__body">
-                <p>Use this page to search for a service on the tax platform.  Enter the URL into the box below and click on the service name to find out more about it.</p>
+                <p id="info-box-copy">Use this page to search for a service on the tax platform.  Enter the URL into the box below and click on the service name to find out more about it.</p>
                 <div class="row col-xs-12 ">
                     <p>Addresses beginning with the following are not tax platform services:</p>
                     <ul class="list list--minimal">
@@ -50,12 +50,12 @@
                     }
                     <div class="form-group row col-xs-12">
                         <div class="col-xs-3"><label for="search">https://www.tax.service.gov.uk/</label></div>
-                        <div class="col-xs-8"><input class="search form-control" id="search" type="text" name="name" value="@form("name").value" autofocus /></div>
-                        <div class="col-xs-1"><button class="btn btn-primary" type="submit">Search</button></div>
+                        <div class="col-xs-8"><input class="search form-control" id="search-box" type="text" name="name" value="@form("name").value" autofocus /></div>
+                        <div class="col-xs-1"><button id="search-button" class="btn btn-primary" type="submit">Search</button></div>
                     </div>
                 </form>
                 @if(searchResults.nonEmpty) {
-                    <table class="table table-striped">
+                    <table id="search-results" class="table table-striped">
                         <tr>
                             <th class="col-lg-3">Service</th>
                             <th class="col-lg-9">URL</th>
@@ -82,7 +82,7 @@
                     </table>
                 }
                 @if(searchResults.isEmpty && form("name").value.nonEmpty) {
-                    <p>This search did not return any results.</p>
+                    <p id="search-results-empty">This search did not return any results.</p>
                 }
             </div>
         </div>
