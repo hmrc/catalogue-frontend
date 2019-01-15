@@ -66,18 +66,6 @@ class SearchByUrlService @Inject()(searchByUrlConnector: SearchByUrlConnector) {
       return url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim
 
     url.getPath.trim
-
-    /*
-    **test cases**
-    tax.service.gov.uk
-    https://www.tax.service.gov.uk/business-account/a/b/c/s
-    www.tax.service.gov.uk/business-account/a/b/c/s
-    tax.service.gov.uk/business-account/a/b/c/s
-    /business-account/a/b/c/s
-    business-account/a/b/c/s
-    /
-    \
-    */
   }
 }
 
