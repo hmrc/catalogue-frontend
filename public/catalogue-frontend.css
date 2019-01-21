@@ -12043,3 +12043,8 @@ section span.other-teams-message {
   /* symbol for "collapsed" panels */
   content: "\e080";
 }
+
+.hand-pointer {
+  cursor: pointer;
+  cursor: hand;
+}

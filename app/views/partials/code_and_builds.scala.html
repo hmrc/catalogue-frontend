@@ -32,6 +32,9 @@
             @for(ciLink <- repo.ci) {
                 <li class="list-item"><a id="link-to-@{ciLink.id}" href="@{ciLink.url}" target="_blank">@{ciLink.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
             }
+            @if(CatalogueFrontendSwitches.dependencyExplorer.isEnabled) {
+                <li class="list-item"><a id="link-to-dependency-explorer" href="/dependencies/@{repo.name}" target="_blank">Service Dependencies<span class="glyphicon glyphicon-new-window"/></a></li>
+            }
             </ul>
         </div>
     </div>

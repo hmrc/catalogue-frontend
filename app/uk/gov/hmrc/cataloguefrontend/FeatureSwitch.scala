@@ -43,6 +43,8 @@ object CatalogueFrontendSwitches {
 
   def routingRules = FeatureSwitch.forName("urlRoutingRules")
 
+  def dependencyExplorer = FeatureSwitch.forName("dependencyExplorer")
+
   def allSwitches: Seq[FeatureSwitch] = Seq(configExplorer)
 
 }

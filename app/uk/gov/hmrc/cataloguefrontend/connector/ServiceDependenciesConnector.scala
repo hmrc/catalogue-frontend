@@ -16,22 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-/*
- * Copyright 2016 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
@@ -39,14 +23,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-
 import scala.concurrent.Future
 
 @Singleton
-class ServiceDependenciesConnector @Inject()(
-  http: HttpClient,
-  servicesConfig: ServicesConfig
-) {
+class ServiceDependenciesConnector @Inject()(http: HttpClient,
+                                             servicesConfig: ServicesConfig) {
 
   private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies") + "/api"
 
@@ -70,4 +51,5 @@ class ServiceDependenciesConnector @Inject()(
 
   def dependenciesForTeam(team: String)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] =
     http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/teams/$team/dependencies")
+
 }
