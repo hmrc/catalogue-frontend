@@ -3,6 +3,7 @@
 GET        /repositories                                uk.gov.hmrc.cataloguefrontend.CatalogueController.allRepositories
 GET        /teams                                       uk.gov.hmrc.cataloguefrontend.CatalogueController.allTeams
 GET        /teams/:teamName                             uk.gov.hmrc.cataloguefrontend.CatalogueController.team(teamName)
+GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.CatalogueController.outOfDateTeamDependencies(teamName)
 GET        /digital-services                            uk.gov.hmrc.cataloguefrontend.CatalogueController.allDigitalServices
 GET        /digital-service/:digitalServiceName         uk.gov.hmrc.cataloguefrontend.CatalogueController.digitalService(digitalServiceName)
 GET        /digital-service/owner/:digitalServiceName   uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceOwner(digitalServiceName)

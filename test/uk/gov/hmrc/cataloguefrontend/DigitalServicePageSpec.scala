@@ -367,7 +367,8 @@ class DigitalServicePageSpec
       mock[LibraryInfoPage],
       mock[PrototypeInfoPage],
       mock[RepositoryInfoPage],
-      mock[RepositoriesListPage]
+      mock[RepositoriesListPage],
+      mock[OutOfDateTeamDependenciesPage]
     )
   }
 
