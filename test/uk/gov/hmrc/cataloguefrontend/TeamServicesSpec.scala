@@ -48,6 +48,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
         "microservice.services.teams-and-repositories.port"  -> endpointPort,
         "microservice.services.indicators.port"              -> endpointPort,
         "microservice.services.indicators.host"              -> host,
+        "microservice.services.service-dependencies.port"    -> endpointPort,
+        "microservice.services.service-dependencies.host"    -> host,
         "microservice.services.leak-detection.port"          -> endpointPort,
         "microservice.services.leak-detection.host"          -> host,
         "microservice.services.user-management.url"          -> endpointMockUrl,
@@ -67,6 +69,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
   override def beforeEach(): Unit = {
     super.beforeEach()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/teams/teamA/dependencies", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/teams/CATO/dependencies", willRespondWith = (200, Some("[]")))
   }
 
   "Team services page" should {
