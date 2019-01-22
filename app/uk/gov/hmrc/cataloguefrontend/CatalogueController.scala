@@ -29,6 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStat
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, MajorVersionOutOfDate}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
@@ -52,30 +53,31 @@ case class DigitalServiceDetails(
 
 @Singleton
 class CatalogueController @Inject()(
-  userManagementConnector: UserManagementConnector,
-  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  configService: ConfigService,
-  routeRulesService: RouteRulesService,
-  serviceDependencyConnector: ServiceDependenciesConnector,
-  indicatorsConnector: IndicatorsConnector,
-  leakDetectionService: LeakDetectionService,
-  deploymentsService: DeploymentsService,
-  eventService: EventService,
-  readModelService: ReadModelService,
-  verifySignInStatus: VerifySignInStatus,
-  umpAuthenticated: UmpAuthenticated,
-  userManagementPortalConfig: UserManagementPortalConfig,
-  mcc: MessagesControllerComponents,
-  digitalServiceInfoPage: DigitalServiceInfoPage,
-  indexPage: IndexPage,
-  teamInfoPage: TeamInfoPage,
-  serviceInfoPage: ServiceInfoPage,
-  serviceConfigPage: ServiceConfigPage,
-  serviceConfigRawPage: ServiceConfigRawPage,
-  libraryInfoPage: LibraryInfoPage,
-  prototypeInfoPage: PrototypeInfoPage,
-  repositoryInfoPage: RepositoryInfoPage,
-  repositoriesListPage: RepositoriesListPage
+   userManagementConnector: UserManagementConnector,
+   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+   configService: ConfigService,
+   routeRulesService: RouteRulesService,
+   serviceDependencyConnector: ServiceDependenciesConnector,
+   indicatorsConnector: IndicatorsConnector,
+   leakDetectionService: LeakDetectionService,
+   deploymentsService: DeploymentsService,
+   eventService: EventService,
+   readModelService: ReadModelService,
+   verifySignInStatus: VerifySignInStatus,
+   umpAuthenticated: UmpAuthenticated,
+   userManagementPortalConfig: UserManagementPortalConfig,
+   mcc: MessagesControllerComponents,
+   digitalServiceInfoPage: DigitalServiceInfoPage,
+   indexPage: IndexPage,
+   teamInfoPage: TeamInfoPage,
+   serviceInfoPage: ServiceInfoPage,
+   serviceConfigPage: ServiceConfigPage,
+   serviceConfigRawPage: ServiceConfigRawPage,
+   libraryInfoPage: LibraryInfoPage,
+   prototypeInfoPage: PrototypeInfoPage,
+   repositoryInfoPage: RepositoryInfoPage,
+   repositoriesListPage: RepositoriesListPage,
+   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage
 ) extends FrontendController(mcc) {
 
   import UserManagementConnector._
@@ -208,6 +210,7 @@ class CatalogueController @Inject()(
     val eventualErrorOrMembers     = userManagementConnector.getTeamMembersFromUMP(teamName)
     val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
     val eventualReposWithLeaks     = leakDetectionService.repositoriesWithLeaks
+    val eventualTeamDependencies   = serviceDependencyConnector.dependenciesForTeam(teamName)
 
     val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
     for {
@@ -216,6 +219,7 @@ class CatalogueController @Inject()(
       teamDetails    <- eventualErrorOrTeamDetails
       teamIndicators <- eventualMaybeDeploymentIndicators
       reposWithLeaks <- eventualReposWithLeaks
+      teamDependencies <- eventualTeamDependencies
     } yield
       (teamInfo, teamMembers, teamDetails, teamIndicators) match {
         case (Some(team), _, _, _) =>
@@ -233,11 +237,20 @@ class CatalogueController @Inject()(
               TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
               umpMyTeamsPageUrl(team.name),
               leakDetectionService.teamHasLeaks(team, reposWithLeaks),
-              leakDetectionService.hasLeaks(reposWithLeaks)
+              leakDetectionService.hasLeaks(reposWithLeaks),
+              teamDependencies.filter(_.hasOutOfDateDependencies)
             )
           )
         case _ => NotFound(error_404_template())
       }
+  }
+
+  def outOfDateTeamDependencies(teamName: String) = Action.async { implicit request =>
+    for {
+      teamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
+    } yield () match {
+      case _ => Ok(outOfDateTeamDependenciesPage(teamName, teamDependencies.filter(_.hasOutOfDateDependencies)))
+    }
   }
 
   def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request =>

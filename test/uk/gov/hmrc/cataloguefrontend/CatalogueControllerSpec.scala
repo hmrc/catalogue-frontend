@@ -169,7 +169,8 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
       mock[LibraryInfoPage],
       mock[PrototypeInfoPage],
       mock[RepositoryInfoPage],
-      mock[RepositoriesListPage]
+      mock[RepositoriesListPage],
+      mock[OutOfDateTeamDependenciesPage]
     )
   }
 

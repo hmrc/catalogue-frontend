@@ -42,6 +42,9 @@ case class Dependency(
       }
     }
 
+  def isUpToDate: Boolean = {
+    this.getVersionState.contains(UpToDate)
+  }
 }
 
 case class Dependencies(
@@ -49,8 +52,12 @@ case class Dependencies(
   libraryDependencies: Seq[Dependency],
   sbtPluginsDependencies: Seq[Dependency],
   otherDependencies: Seq[Dependency],
-  lastUpdated: DateTime
-)
+  lastUpdated: DateTime) {
+
+  def hasOutOfDateDependencies: Boolean = {
+    !(libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies).forall(_.isUpToDate)
+  }
+}
 
 object Dependencies {
   implicit val vf     = Json.format[Version]

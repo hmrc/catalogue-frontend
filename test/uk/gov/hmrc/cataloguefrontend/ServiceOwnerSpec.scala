@@ -181,7 +181,8 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       mock[LibraryInfoPage],
       mock[PrototypeInfoPage],
       mock[RepositoryInfoPage],
-      mock[RepositoriesListPage]
+      mock[RepositoriesListPage],
+      mock[OutOfDateTeamDependenciesPage]
     )
   }
 }

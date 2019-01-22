@@ -63,6 +63,7 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
     mock[LibraryInfoPage],
     mock[PrototypeInfoPage],
     mock[RepositoryInfoPage],
-    mock[RepositoriesListPage]
+    mock[RepositoriesListPage],
+    mock[OutOfDateTeamDependenciesPage]
   )
 }
