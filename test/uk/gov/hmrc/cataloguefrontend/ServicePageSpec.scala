@@ -201,7 +201,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
 
         response.body should include("https://deploy-dev.co.uk/job/deploy-microservice")
         response.body should include("https://grafana-dev.co.uk/#/dashboard")
-
       }
 
       "show show 'Not deployed' for envs in which the service is not deployed" in {
