@@ -49,55 +49,28 @@ class DetailsSpec extends WordSpec with Matchers {
   "details" should {
     "display description when available" in {
       FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.details(repo, None).body
+      val result = views.html.partials.details(repo).body
       result should include ("some description")
     }
 
     "should not display description when it is not available" in {
       FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.details(repo.copy(description = ""), None).body
+      val result = views.html.partials.details(repo.copy(description = "")).body
       result should not include ("some description")
     }
 
     "display Created At Date" in {
       FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.details(repo, None).body
+      val result = views.html.partials.details(repo).body
       result should include ("id=\"created-at\"")
       result should include ("31 Dec 2018 08:30")
     }
 
     "display Last Active Date" in {
       FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.details(repo, None).body
+      val result = views.html.partials.details(repo).body
       result should include ("id=\"last-active\"")
       result should include ("31 Dec 2018 18:30")
-    }
-
-    "display production URLs when feature flag is enabled" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.details(repo, Some(environmentRoute)).body
-      result should include ("id=\"service-urls-section\"")
-      result should include ("id=\"production-urls\"")
-      result should include ("id=\"url-0\"")
-      result should include ("id=\"url-1\"")
-    }
-
-    "do not display production URLs when feature flag is disabled" in {
-      FeatureSwitch.disable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.details(repo, Some(environmentRoute)).body
-      result should not include ("id=\"service-urls-section\"")
-      result should not include ("id=\"production-urls\"")
-      result should not include ("id=\"url-0\"")
-      result should not include ("id=\"url-1\"")
-    }
-
-    "do not display production URLs when no rules" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.details(repo, None).body
-      result should not include ("id=\"service-urls-section\"")
-      result should not include ("id=\"production-urls\"")
-      result should not include ("id=\"url-0\"")
-      result should not include ("id=\"url-1\"")
     }
   }
 }

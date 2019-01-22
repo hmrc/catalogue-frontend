@@ -62,15 +62,16 @@
 
     <section class="section-wrapper">
 
-        @partials.details(service, productionEnvironmentRoute)
+        @partials.details(service)
+
+        @partials.serviceUrlDetails(productionEnvironmentRoute)
 
         @partials.serviceRouteRuleViolations(serviceRoutes)
 
         <div class="row">
             @partials.repo_owning_teams(service)
 
-            @partials.code_and_builds(service, productionEnvironmentRoute)
-
+            @partials.code_and_builds(service)
         </div>
         <div class="row">
         @for((environment, idx) <- service.environments.get.zipWithIndex) {
