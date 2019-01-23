@@ -39,10 +39,9 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
           deploymentVO => deploymentVO.environmentMapping.name
         }
 
-        if(environmentMappingName.nonEmpty) {
-          serviceDependency.copy(environment = Some(environmentMappingName.get))
-        } else {
-          serviceDependency
+        environmentMappingName match {
+          case Some(_) => serviceDependency.copy(environment = environmentMappingName)
+          case None => serviceDependency
         }
       }
     }

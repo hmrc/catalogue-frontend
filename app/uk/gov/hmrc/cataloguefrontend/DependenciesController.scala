@@ -37,7 +37,7 @@ class DependenciesController @Inject()(mcc: MessagesControllerComponents,
     } yield
       (deployments, serviceDependencies) match {
         case (Left(t), _) => ServiceUnavailable(t.getMessage)
-        case (_, sd) => Ok(dependenciesPage(name, sd.sortBy(_.version)(Ordering[Option[String]].reverse)))
+        case _ => Ok(dependenciesPage(name, serviceDependencies.sortBy(_.version)(Ordering[Option[String]].reverse)))
       }
   }
 }
