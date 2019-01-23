@@ -35,8 +35,8 @@ class DependenciesController @Inject()(mcc: MessagesControllerComponents,
       deployments <- deploymentsService.getWhatsRunningWhere(name)
       serviceDependencies <- dependenciesService.search(name, deployments)
     } yield
-      (deployments, serviceDependencies) match {
-        case (Left(t), _) => ServiceUnavailable(t.getMessage)
+      deployments match {
+        case Left(t) => ServiceUnavailable(t.getMessage)
         case _ => Ok(dependenciesPage(name, serviceDependencies.sortBy(_.version)(Ordering[Option[String]].reverse)))
       }
   }
