@@ -19,11 +19,14 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 
 @Singleton
 class ServiceDependenciesConnector @Inject()(http: HttpClient,
@@ -51,5 +54,21 @@ class ServiceDependenciesConnector @Inject()(http: HttpClient,
 
   def dependenciesForTeam(team: String)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] =
     http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/teams/$team/dependencies")
+
+  def getSlugDependencies(serviceName: String, version: Option[String] = None)
+                         (implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] = {
+    val queryParams = buildQueryParams(("name", Some(serviceName)), ("version", version))
+
+    http
+      .GET[Seq[ServiceDependencies]](s"$servicesDependenciesBaseUrl/sluginfos", queryParams)
+      .recover {
+        case NonFatal(ex) =>
+          Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)
+          Nil
+      }
+  }
+
+  private def buildQueryParams(queryParams: (String, Option[String])*) =
+    queryParams.flatMap(param => param._2.map(v => (param._1, v)))
 
 }
