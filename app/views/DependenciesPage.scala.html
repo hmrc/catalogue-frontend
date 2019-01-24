@@ -1,0 +1,66 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
+
+@this(viewMessages: ViewMessages)
+@(serviceName: String, serviceDependencies: Seq[ServiceDependencies])(implicit request: Request[_])
+@standard_layout(s"Dependencies: $serviceName", "dependencies") {
+    <header>
+        <h1 id="dependencies-header">Dependencies: @serviceName</h1>
+    </header>
+    <div>
+        @serviceDependencies.zipWithIndex.map { case (serviceDependency, index) =>
+            <div class="hand-pointer accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@index" aria-expanded="false" aria-controls="collapsible-area">
+                <label class="hand-pointer">@{serviceVersion(serviceDependency.version)} @{environment(serviceDependency.environment)}</label>
+            </div>
+            <div id="collapsible-area-@index" class="collapse">
+                <table id="dependencies-list" class="table table-condensed">
+                    <tr>
+                        <th class="col-lg-4">Group ID</th>
+                        <th class="col-lg-4">Artifact ID</th>
+                        <th class="col-lg-4">Version</th>
+                    </tr>
+                    <tbody class="list">
+                    @for(dependency <- serviceDependency.dependencies) {
+                        <tr>
+                            <td><span>@dependency.group</span></td>
+                            <td><span>@dependency.artifact</span></td>
+                            <td><span>@dependency.version</span></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+        @if(serviceDependencies.isEmpty) {
+            <p id="dependencies-empty">This search did not return any results.</p>
+        }
+    </div>
+}
+
+@serviceVersion(version: Option[String]) = {
+    @version.map { v =>
+        Version: @v
+    }
+}
+
+@environment(environment: Option[String]) = {
+    @environment.map { env =>
+        (@env)
+    }
+}

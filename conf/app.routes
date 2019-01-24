@@ -33,3 +33,5 @@ GET        /sign-out                                    @uk.gov.hmrc.cataloguefr
 
 GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchLanding
 POST       /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchUrl
+
+GET        /dependencies/:name                          uk.gov.hmrc.cataloguefrontend.DependenciesController.service(name)
