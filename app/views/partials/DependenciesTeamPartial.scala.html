@@ -34,7 +34,7 @@
           }
          <div class="col-xs-8">
              @for(dependency <- dependencies) {
-                 <ul class="list list--minimal list-group row">
+                 <ul class="list list--minimal list-group row" id="ood-@dependency.repositoryName">
 
                      <h4>@dependency.repositoryName</h4>
                      <li>
