@@ -16,6 +16,8 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
+@import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 
 @this(viewMessages: ViewMessages)
 @(serviceName: String, serviceDependencies: Seq[ServiceDependencies])(implicit request: Request[_])
@@ -36,7 +38,7 @@
                         <th class="col-lg-4">Version</th>
                     </tr>
                     <tbody class="list">
-                    @for(dependency <- serviceDependency.dependencies) {
+                    @for(dependency <- DependenciesService.sortDependencies(serviceDependency.dependencies)) {
                         <tr>
                             <td><span>@dependency.group</span></td>
                             <td><span>@dependency.artifact</span></td>

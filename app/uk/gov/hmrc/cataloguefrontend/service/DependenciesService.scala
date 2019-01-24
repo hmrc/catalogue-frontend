@@ -55,6 +55,14 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
 
 }
 
+object DependenciesService {
+
+  def sortDependencies(dependencies: Seq[ServiceDependency]): Seq[ServiceDependency] = {
+    dependencies.sortBy(serviceDependency => (serviceDependency.group, serviceDependency.artifact))
+  }
+
+}
+
 case class ServiceDependency(path: String, group: String, artifact: String, version: String, meta: String = "")
 case class ServiceDependencies(uri: String,
                                name: String,
