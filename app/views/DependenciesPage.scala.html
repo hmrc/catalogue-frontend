@@ -31,12 +31,14 @@
                 <label class="hand-pointer">@{serviceVersion(serviceDependency.version)} @{environment(serviceDependency.environment)}</label>
             </div>
             <div id="collapsible-area-@index" class="collapse">
-                <table id="dependencies-list" class="table table-condensed">
-                    <tr>
-                        <th class="col-lg-4">Group ID</th>
-                        <th class="col-lg-4">Artifact ID</th>
-                        <th class="col-lg-4">Version</th>
-                    </tr>
+                <table id="dependencies-list" class="table table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th class="col-lg-4">Group ID</th>
+                            <th class="col-lg-4">Artifact ID</th>
+                            <th class="col-lg-4">Version</th>
+                        </tr>
+                    </thead>
                     <tbody class="list">
                     @for(dependency <- DependenciesService.sortDependencies(serviceDependency.dependencies)) {
                         <tr>
