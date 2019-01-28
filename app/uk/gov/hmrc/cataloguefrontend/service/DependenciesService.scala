@@ -20,28 +20,29 @@ import javax.inject._
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceDeploymentInformation}
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.ServiceWithDependency
 import uk.gov.hmrc.http.HeaderCarrier
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDependenciesConnector) {
+
+  import ExecutionContext.Implicits.global
 
   def search(serviceName: String, serviceDeploymentInformation: Either[Throwable, ServiceDeploymentInformation])
             (implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] = {
     val deployments = getDeployments(serviceDeploymentInformation)
 
-    serviceDependenciesConnector.getSlugDependencies(serviceName).map { item =>
-      item.map { serviceDependency =>
-        val environmentMappingName = deployments.find {
-          deploymentVO => serviceDependency.version.nonEmpty && deploymentVO.version == serviceDependency.version.get
-        } .map {
-          deploymentVO => deploymentVO.environmentMapping.name
-        }
+    serviceDependenciesConnector.getSlugDependencies(serviceName).map {
+      _.map { serviceDependency =>
+        val environmentMappingName =
+          deployments
+            .find(deploymentVO => serviceDependency.version.map(_ == deploymentVO.version).getOrElse(false))
+            .map(_.environmentMapping.name)
 
         environmentMappingName match {
           case Some(_) => serviceDependency.copy(environment = environmentMappingName)
-          case None => serviceDependency
+          case None    => serviceDependency
         }
       }
     }
@@ -53,14 +54,22 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
       case Right(sdi) => sdi.deployments
     }
 
+  def getServicesWithDependency(
+      group       : String,
+      artefact    : String,
+      versionOpStr: String,
+      version     : String)(implicit hc: HeaderCarrier): Future[Either[String, Seq[ServiceWithDependency]]] =
+    serviceDependenciesConnector
+      .getServicesWithDependency(group, artefact, versionOpStr, version)
+      .map(_.right.map(_
+        .sortBy(_.slugName)
+        .sortBy(_.depVersion))) // TODO sorting version (and reverse)
 }
 
 object DependenciesService {
 
-  def sortDependencies(dependencies: Seq[ServiceDependency]): Seq[ServiceDependency] = {
+  def sortDependencies(dependencies: Seq[ServiceDependency]): Seq[ServiceDependency] =
     dependencies.sortBy(serviceDependency => (serviceDependency.group, serviceDependency.artifact))
-  }
-
 }
 
 case class ServiceDependency(path: String, group: String, artifact: String, version: String, meta: String = "")

@@ -27,10 +27,10 @@ case object MajorVersionOutOfDate extends VersionState
 case object InvalidVersionState extends VersionState
 
 case class Dependency(
-  name: String,
+  name          : String,
   currentVersion: Version,
-  latestVersion: Option[Version],
-  isExternal: Boolean = false) {
+  latestVersion : Option[Version],
+  isExternal    : Boolean = false) {
 
   def getVersionState: Option[VersionState] =
     latestVersion.map { latestVersion =>
@@ -48,15 +48,14 @@ case class Dependency(
 }
 
 case class Dependencies(
-  repositoryName: String,
-  libraryDependencies: Seq[Dependency],
+  repositoryName        : String,
+  libraryDependencies   : Seq[Dependency],
   sbtPluginsDependencies: Seq[Dependency],
-  otherDependencies: Seq[Dependency],
-  lastUpdated: DateTime) {
+  otherDependencies     : Seq[Dependency],
+  lastUpdated           : DateTime) {
 
-  def hasOutOfDateDependencies: Boolean = {
+  def hasOutOfDateDependencies: Boolean =
     !(libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies).forall(_.isUpToDate)
-  }
 }
 
 object Dependencies {
@@ -75,4 +74,26 @@ case class Version(major: Int, minor: Int, patch: Int, suffix: Option[String] = 
   def +(other: Version): Version =
     Version(this.major + other.major, this.minor + other.minor, this.patch + other.patch)
 
+}
+
+
+case class ServiceWithDependency(
+  slugName    : String,
+  slugVersion : String,
+  depGroup    : String,
+  depArtefact : String,
+  depVersion  : String)
+
+
+object ServiceWithDependency {
+  import play.api.libs.json._
+  import play.api.libs.functional.syntax._
+
+  val reads: Reads[ServiceWithDependency] =
+    ( (__ \ "slugName"   ).read[String]
+    ~ (__ \ "slugVersion").read[String]
+    ~ (__ \ "depGroup"   ).read[String]
+    ~ (__ \ "depArtefact").read[String]
+    ~ (__ \ "depVersion" ).read[String]
+    )(ServiceWithDependency.apply _)
 }
