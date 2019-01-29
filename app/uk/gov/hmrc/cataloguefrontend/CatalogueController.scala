@@ -29,7 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStat
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, MajorVersionOutOfDate}
+import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController

@@ -21,10 +21,12 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.controllers.RestFormats
 
 sealed trait VersionState
-case object UpToDate extends VersionState
-case object MinorVersionOutOfDate extends VersionState
-case object MajorVersionOutOfDate extends VersionState
-case object InvalidVersionState extends VersionState
+object VersionState {
+  case object UpToDate              extends VersionState
+  case object MinorVersionOutOfDate extends VersionState
+  case object MajorVersionOutOfDate extends VersionState
+  case object Invalid              extends VersionState
+}
 
 case class Dependency(
   name          : String,
@@ -33,18 +35,10 @@ case class Dependency(
   isExternal    : Boolean = false) {
 
   def getVersionState: Option[VersionState] =
-    latestVersion.map { latestVersion =>
-      latestVersion - currentVersion match {
-        case (0, 0, 0)                                   => UpToDate
-        case (0, minor, patch) if minor > 0 || patch > 0 => MinorVersionOutOfDate
-        case (major, _, _) if major >= 1                 => MajorVersionOutOfDate
-        case _                                           => InvalidVersionState
-      }
-    }
+    latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
 
-  def isUpToDate: Boolean = {
-    this.getVersionState.contains(UpToDate)
-  }
+  def isUpToDate: Boolean =
+    getVersionState.contains(VersionState.UpToDate)
 }
 
 case class Dependencies(
@@ -69,11 +63,18 @@ case class Version(major: Int, minor: Int, patch: Int, suffix: Option[String] = 
   override def toString: String = s"$major.$minor.$patch" + suffix.map("-"+_).getOrElse("")
 
   //!@TODO test
-  def -(other: Version): (Int, Int, Int) =
+  def diff(other: Version): (Int, Int, Int) =
     (this.major - other.major, this.minor - other.minor, this.patch - other.patch)
-  def +(other: Version): Version =
-    Version(this.major + other.major, this.minor + other.minor, this.patch + other.patch)
+}
 
+object Version {
+  def getVersionState(currentVersion: Version, latestVersion: Version): VersionState =
+    latestVersion.diff(currentVersion) match {
+      case (0, 0, 0)                                   => VersionState.UpToDate
+      case (0, minor, patch) if minor > 0 || patch > 0 => VersionState.MinorVersionOutOfDate
+      case (major, _, _) if major >= 1                 => VersionState.MajorVersionOutOfDate
+      case _                                           => VersionState.Invalid
+    }
 }
 
 
