@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, ServiceWithDependency}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.{HeaderCarrier, BadRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -73,18 +73,14 @@ class ServiceDependenciesConnector @Inject()(
 
   def getServicesWithDependency(
       group       : String,
-      artefact    : String,
-      versionOpStr: String,
-      version     : String)(implicit hc: HeaderCarrier): Future[Either[String, Seq[ServiceWithDependency]]] = {
+      artefact    : String)(implicit hc: HeaderCarrier): Future[Either[String, Seq[ServiceWithDependency]]] = {
     implicit val r = ServiceWithDependency.reads
     http
       .GET[Seq[ServiceWithDependency]](
         s"$servicesDependenciesBaseUrl/serviceDeps",
         queryParams = Seq(
           "group"     -> group,
-          "artefact"  -> artefact,
-          "versionOp" -> versionOpStr, // TODO type
-          "version"   -> version))     // TODO Version type?
+          "artefact"  -> artefact))
       .map(Right.apply)
       .recover {
         case e: BadRequestException => Left(e.getMessage) // TODO http library not allowing to handle BadRequest? e.getMessage includes extra data...

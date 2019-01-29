@@ -20,7 +20,7 @@ import javax.inject._
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceDeploymentInformation}
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.ServiceWithDependency
+import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -55,15 +55,22 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
     }
 
   def getServicesWithDependency(
-      group       : String,
-      artefact    : String,
-      versionOpStr: String,
-      version     : String)(implicit hc: HeaderCarrier): Future[Either[String, Seq[ServiceWithDependency]]] =
+      group    : String,
+      artefact : String,
+      versionOp: VersionOp,
+      version  : Version)(implicit hc: HeaderCarrier): Future[Either[String, Seq[ServiceWithDependency]]] =
     serviceDependenciesConnector
-      .getServicesWithDependency(group, artefact, versionOpStr, version)
+      .getServicesWithDependency(group, artefact)
+      .map(_.right.map { l =>
+            versionOp match {
+              case VersionOp.Gte => l.filter(_.depSemanticVersion.map(_ >= version).getOrElse(true)) // include invalid semanticVersion in results
+              case VersionOp.Lte => l.filter(_.depSemanticVersion.map(_ <= version).getOrElse(true))
+              case VersionOp.Eq  => l.filter(_.depSemanticVersion == Some(version))
+            }
+          })
       .map(_.right.map(_
         .sortBy(_.slugName)
-        .sortBy(_.depVersion))) // TODO sorting version (and reverse)
+        .sorted(Ordering.by((_: ServiceWithDependency).depSemanticVersion).reverse)))
 }
 
 object DependenciesService {

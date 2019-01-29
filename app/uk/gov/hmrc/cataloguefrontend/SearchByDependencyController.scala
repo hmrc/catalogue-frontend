@@ -16,12 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import cats.data.EitherT
+import cats.instances.all._
+import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
+import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.filters.csrf.CSRF
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Version, VersionOp}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.SearchByDependencyPage
 
@@ -43,17 +48,21 @@ class SearchByDependencyController @Inject()(
 
   def search =
     Action.async { implicit request =>
+      def badRequest(msg: String) = BadRequest(page(form.bindFromRequest().withGlobalError(msg), None))
       form
         .bindFromRequest()
         .fold(
           hasErrors = formWithErrors => Future.successful(Ok(page(formWithErrors, None))),
           success   = query => {
-            service
-              .getServicesWithDependency(query.group, query.artefact, query.versionOp, query.version)
-              .map {
-                case Left(err) => BadRequest(page(form.bindFromRequest().withGlobalError(err), None))
-                case Right(results) => Ok(page(form.bindFromRequest(), Some(results)))
-              }
+            (for {
+              versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), badRequest("Invalid version op"))
+              version   <- EitherT.fromOption[Future](Version.parse(query.version), badRequest("Invalid version"))
+              results   <- EitherT {
+                             service
+                              .getServicesWithDependency(query.group, query.artefact, versionOp, version)
+                           }.leftMap(badRequest)
+             } yield Ok(page(form.bindFromRequest(), Some(results)))
+            ).merge
           }
         )
     }

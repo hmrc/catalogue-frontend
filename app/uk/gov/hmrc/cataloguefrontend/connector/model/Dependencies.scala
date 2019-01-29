@@ -53,18 +53,37 @@ case class Dependencies(
 }
 
 object Dependencies {
-  implicit val vf     = Json.format[Version]
-  implicit val dtr    = RestFormats.dateTimeFormats
-  implicit val osf    = Json.format[Dependency]
-  implicit val format = Json.format[Dependencies]
+  implicit val osf = {
+    implicit val vf = Json.format[Version]
+    Json.format[Dependency]
+  }
+  implicit val format = {
+    implicit val dtr = RestFormats.dateTimeFormats
+    Json.format[Dependencies]
+  }
 }
 
-case class Version(major: Int, minor: Int, patch: Int, suffix: Option[String] = None) {
-  override def toString: String = s"$major.$minor.$patch" + suffix.map("-"+_).getOrElse("")
+case class Version(
+    major: Int,
+    minor: Int,
+    patch: Int,
+    original: String)
+  extends Ordered[Version] {
 
   //!@TODO test
   def diff(other: Version): (Int, Int, Int) =
     (this.major - other.major, this.minor - other.minor, this.patch - other.patch)
+
+  override def compare(other: Version): Int =
+    if (major == other.major)
+      if (minor == other.minor)
+        patch - other.patch
+      else
+        minor - other.minor
+    else
+      major - other.major
+
+  override def toString: String = original
 }
 
 object Version {
@@ -75,26 +94,60 @@ object Version {
       case (major, _, _) if major >= 1                 => VersionState.MajorVersionOutOfDate
       case _                                           => VersionState.Invalid
     }
+
+  def parse(s: String): Option[Version] = {
+    val regex3 = """(\d+)\.(\d+)\.(\d+)(.*)""".r
+    val regex2 = """(\d+)\.(\d+)(.*)""".r
+    val regex1 = """(\d+)(.*)""".r
+    s match {
+      case regex3(maj, min, patch, _) => Some(Version(Integer.parseInt(maj), Integer.parseInt(min), Integer.parseInt(patch), s))
+      case regex2(maj, min,  _)       => Some(Version(Integer.parseInt(maj), Integer.parseInt(min), 0                      , s))
+      case regex1(min,  _)            => Some(Version(0                    , Integer.parseInt(min), 0                      , s))
+      case _                          => None
+    }
+  }
+}
+
+
+trait VersionOp {
+  def s: String
+}
+object VersionOp {
+  case object Gte extends VersionOp { val s = "gte" }
+  case object Lte extends VersionOp { val s = "lte" }
+  case object Eq  extends VersionOp { val s = "eq" }
+
+  def parse(s: String): Option[VersionOp] =
+    s match {
+      case Gte.s => Some(Gte)
+      case Lte.s => Some(Lte)
+      case Eq.s  => Some(Eq)
+      case _     => None
+    }
 }
 
 
 case class ServiceWithDependency(
-  slugName    : String,
-  slugVersion : String,
-  depGroup    : String,
-  depArtefact : String,
-  depVersion  : String)
+  slugName          : String,
+  slugVersion       : String,
+  depGroup          : String,
+  depArtefact       : String,
+  depVersion        : String,
+  depSemanticVersion: Option[Version])
 
 
 object ServiceWithDependency {
   import play.api.libs.json._
   import play.api.libs.functional.syntax._
 
-  val reads: Reads[ServiceWithDependency] =
+  val reads: Reads[ServiceWithDependency] = {
+    implicit val vf = Json.format[Version]
     ( (__ \ "slugName"   ).read[String]
     ~ (__ \ "slugVersion").read[String]
     ~ (__ \ "depGroup"   ).read[String]
     ~ (__ \ "depArtefact").read[String]
     ~ (__ \ "depVersion" ).read[String]
+    ~ (__ \ "depVersion" ).read[String].map(Version.parse)
     )(ServiceWithDependency.apply _)
+  }
 }

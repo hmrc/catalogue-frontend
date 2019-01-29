@@ -16,7 +16,7 @@
 
 @import views.html.helper.CSRF
 @import play.api.mvc.Call
-@import uk.gov.hmrc.cataloguefrontend.connector.model.ServiceWithDependency
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, VersionOp}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.routes
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
@@ -74,7 +74,10 @@
                         )
                         @helper.select(
                             form("versionOp"),
-                            helper.options("gt" -> ">=" ,"lt" -> "<=", "eq" -> "=="),
+                            helper.options(
+                                VersionOp.Gte.s -> ">=",
+                                VersionOp.Lte.s -> "<=",
+                                VersionOp.Eq.s  -> "=="),
                             '_label -> null,
                             '_class -> "form-group"
                         )
