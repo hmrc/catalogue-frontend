@@ -17,7 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import org.joda.time.DateTime
-import play.api.libs.json.Json
+import play.api.libs.json.{__, Format, Json, JsError, JsString, JsSuccess, JsValue, OFormat}
+import play.api.libs.functional.syntax._
 import uk.gov.hmrc.http.controllers.RestFormats
 
 sealed trait VersionState
@@ -25,7 +26,7 @@ object VersionState {
   case object UpToDate              extends VersionState
   case object MinorVersionOutOfDate extends VersionState
   case object MajorVersionOutOfDate extends VersionState
-  case object Invalid              extends VersionState
+  case object Invalid               extends VersionState
 }
 
 case class Dependency(
@@ -54,7 +55,7 @@ case class Dependencies(
 
 object Dependencies {
   implicit val osf = {
-    implicit val vf = Json.format[Version]
+    implicit val vf = Version.format
     Json.format[Dependency]
   }
   implicit val format = {
@@ -106,6 +107,16 @@ object Version {
       case _                          => None
     }
   }
+
+  val format: Format[Version] = new Format[Version] {
+    override def reads(json: JsValue) =
+      json match {
+        case JsString(s) => Version.parse(s).map(v => JsSuccess(v)).getOrElse(JsError("Could not parse version"))
+        case _           => JsError("Not a string")
+      }
+    override def writes(v: Version) =
+      JsString(v.original)
+  }
 }
 
 
@@ -113,9 +124,9 @@ trait VersionOp {
   def s: String
 }
 object VersionOp {
-  case object Gte extends VersionOp { val s = "gte" }
-  case object Lte extends VersionOp { val s = "lte" }
-  case object Eq  extends VersionOp { val s = "eq" }
+  case object Gte extends VersionOp { val s = ">=" }
+  case object Lte extends VersionOp { val s = "<=" }
+  case object Eq  extends VersionOp { val s = "==" }
 
   def parse(s: String): Option[VersionOp] =
     s match {
@@ -141,7 +152,6 @@ object ServiceWithDependency {
   import play.api.libs.functional.syntax._
 
   val reads: Reads[ServiceWithDependency] = {
-    implicit val vf = Json.format[Version]
     ( (__ \ "slugName"   ).read[String]
     ~ (__ \ "slugVersion").read[String]
     ~ (__ \ "depGroup"   ).read[String]

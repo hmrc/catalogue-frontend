@@ -74,10 +74,7 @@
                         )
                         @helper.select(
                             form("versionOp"),
-                            helper.options(
-                                VersionOp.Gte.s -> ">=",
-                                VersionOp.Lte.s -> "<=",
-                                VersionOp.Eq.s  -> "=="),
+                            helper.options(List(VersionOp.Gte.s, VersionOp.Lte.s, VersionOp.Eq.s)),
                             '_label -> null,
                             '_class -> "form-group"
                         )
