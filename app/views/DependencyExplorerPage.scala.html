@@ -28,7 +28,7 @@
   implicit request         : Request[_],
            messagesProvider: MessagesProvider)
 
-@standard_layout("Search by Dependency", "search") {
+@standard_layout("Dependency Explorer", "search") {
     <header>
         <h1 id="search-service-header">Dependency Explorer</h1>
     </header>
@@ -49,7 +49,7 @@
         <div class="board">
             <div class="board__body">
                 @helper.form(
-                    action =  routes.SearchByDependencyController.search,
+                    action =  routes.DependencyExplorerController.search,
                     'class -> "form-inline",
                     'id    -> "search-by-dependency-form") {
                     @helper.CSRF.formField

@@ -96,6 +96,7 @@ case class UserManagementConnector @Inject()(
         }
       }
 
+
     val eventualErrorOrTeamMembers =
       http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>
         response.status match {

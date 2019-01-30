@@ -29,17 +29,17 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
-import views.html.SearchByDependencyPage
+import views.html.DependencyExplorerPage
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
 @Singleton
-class SearchByDependencyController @Inject()(
+class DependencyExplorerController @Inject()(
     mcc    : MessagesControllerComponents,
     service: DependenciesService,
-    page   : SearchByDependencyPage)
+    page   : DependencyExplorerPage)
   extends FrontendController(mcc) {
 
   def landing: Action[AnyContent] =
