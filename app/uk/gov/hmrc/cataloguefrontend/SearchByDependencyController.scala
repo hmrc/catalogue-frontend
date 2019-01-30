@@ -20,18 +20,20 @@ import cats.data.EitherT
 import cats.instances.all._
 import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.data.{Form, Forms}
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.filters.csrf.CSRF
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.SearchByDependencyPage
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 
 @Singleton
 class SearchByDependencyController @Inject()(
@@ -48,19 +50,19 @@ class SearchByDependencyController @Inject()(
 
   def search =
     Action.async { implicit request =>
-      def badRequest(msg: String) = BadRequest(page(form.bindFromRequest().withGlobalError(msg), None))
+      def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), None)
       form
         .bindFromRequest()
         .fold(
-          hasErrors = formWithErrors => Future.successful(Ok(page(formWithErrors, None))),
+          hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, None))),
           success   = query => {
             (for {
-              versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), badRequest("Invalid version op"))
-              version   <- EitherT.fromOption[Future](Version.parse(query.version), badRequest("Invalid version"))
-              results   <- EitherT {
+              versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
+              version   <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
+              results   <- EitherT.right[Result] {
                              service
                               .getServicesWithDependency(query.group, query.artefact, versionOp, version)
-                           }.leftMap(badRequest)
+                           }
              } yield Ok(page(form.bindFromRequest(), Some(results)))
             ).merge
           }

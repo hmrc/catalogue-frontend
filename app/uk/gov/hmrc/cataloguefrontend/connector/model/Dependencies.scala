@@ -108,6 +108,9 @@ object Version {
     }
   }
 
+  def apply(version: String): Version =
+    parse(version).getOrElse(sys.error(s"Could not parse version $version"))
+
   val format: Format[Version] = new Format[Version] {
     override def reads(json: JsValue) =
       json match {

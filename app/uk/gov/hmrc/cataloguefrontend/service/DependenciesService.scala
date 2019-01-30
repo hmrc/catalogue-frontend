@@ -58,19 +58,19 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
       group    : String,
       artefact : String,
       versionOp: VersionOp,
-      version  : Version)(implicit hc: HeaderCarrier): Future[Either[String, Seq[ServiceWithDependency]]] =
+      version  : Version)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =
     serviceDependenciesConnector
       .getServicesWithDependency(group, artefact)
-      .map(_.right.map { l =>
-            versionOp match {
-              case VersionOp.Gte => l.filter(_.depSemanticVersion.map(_ >= version).getOrElse(true)) // include invalid semanticVersion in results
-              case VersionOp.Lte => l.filter(_.depSemanticVersion.map(_ <= version).getOrElse(true))
-              case VersionOp.Eq  => l.filter(_.depSemanticVersion == Some(version))
-            }
-          })
-      .map(_.right.map(_
+      .map { l =>
+        versionOp match {
+          case VersionOp.Gte => l.filter(_.depSemanticVersion.map(_ >= version).getOrElse(true)) // include invalid semanticVersion in results
+          case VersionOp.Lte => l.filter(_.depSemanticVersion.map(_ <= version).getOrElse(true))
+          case VersionOp.Eq  => l.filter(_.depSemanticVersion == Some(version))
+        }
+      }
+      .map(_
         .sortBy(_.slugName)
-        .sorted(Ordering.by((_: ServiceWithDependency).depSemanticVersion).reverse)))
+        .sorted(Ordering.by((_: ServiceWithDependency).depSemanticVersion).reverse))
 }
 
 object DependenciesService {

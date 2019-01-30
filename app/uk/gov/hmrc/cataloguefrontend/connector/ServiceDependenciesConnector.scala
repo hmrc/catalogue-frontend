@@ -73,7 +73,7 @@ class ServiceDependenciesConnector @Inject()(
 
   def getServicesWithDependency(
       group       : String,
-      artefact    : String)(implicit hc: HeaderCarrier): Future[Either[String, Seq[ServiceWithDependency]]] = {
+      artefact    : String)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] = {
     implicit val r = ServiceWithDependency.reads
     http
       .GET[Seq[ServiceWithDependency]](
@@ -81,13 +81,6 @@ class ServiceDependenciesConnector @Inject()(
         queryParams = Seq(
           "group"     -> group,
           "artefact"  -> artefact))
-      .map(Right.apply)
-      .recover {
-        case e: BadRequestException => Left(e.getMessage) // TODO http library not allowing to handle BadRequest? e.getMessage includes extra data...
-        case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl/serviceDeps: ${ex.getMessage}", ex)
-          Left("Could not make request")
-      }
    }
 
 
