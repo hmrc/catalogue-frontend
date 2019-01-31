@@ -14,8 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependency
-@import uk.gov.hmrc.cataloguefrontend.connector.model._
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, VersionState}
 @(dependencies: Seq[Dependency])
 
 
@@ -39,29 +38,27 @@
 
 @getColourClass(dependency: Dependency) = @{
     dependency.getVersionState.fold("grey") {
-        case UpToDate => "green"
-        case MinorVersionOutOfDate => "amber"
-        case MajorVersionOutOfDate => "red"
-        case InvalidVersionState => "black"
+        case VersionState.UpToDate              => "green"
+        case VersionState.MinorVersionOutOfDate => "amber"
+        case VersionState.MajorVersionOutOfDate => "red"
+        case VersionState.Invalid               => "black"
     }
 }
 
 @getIconClass(dependency: Dependency) = @{
     " medium-glyphicon glyphicon " + dependency.getVersionState.fold("glyphicon-question-sign") {
-        case UpToDate => "glyphicon-ok-circle"
-        case MinorVersionOutOfDate => "glyphicon-alert"
-        case MajorVersionOutOfDate => "glyphicon-ban-circle"
-        case InvalidVersionState => "glyphicon-question-sign"
+        case VersionState.UpToDate              => "glyphicon-ok-circle"
+        case VersionState.MinorVersionOutOfDate => "glyphicon-alert"
+        case VersionState.MajorVersionOutOfDate => "glyphicon-ban-circle"
+        case VersionState.Invalid               => "glyphicon-question-sign"
     }
 }
 
 @getAltText(dependency: Dependency) = @{
     dependency.getVersionState.fold("not found") {
-        case UpToDate => "up to date"
-        case MinorVersionOutOfDate => "minor version behind"
-        case MajorVersionOutOfDate => "major version behind"
-        case InvalidVersionState => "invalid version difference"
+        case VersionState.UpToDate              => "up to date"
+        case VersionState.MinorVersionOutOfDate => "minor version behind"
+        case VersionState.MajorVersionOutOfDate => "major version behind"
+        case VersionState.Invalid               => "invalid version difference"
     }
 }
-
-

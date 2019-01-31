@@ -29,7 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStat
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, MajorVersionOutOfDate}
+import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
@@ -206,23 +206,16 @@ class CatalogueController @Inject()(
   }
 
   def team(teamName: String): Action[AnyContent] = Action.async { implicit request =>
-    val eventualTeamInfo           = teamsAndRepositoriesConnector.teamInfo(teamName)
-    val eventualErrorOrMembers     = userManagementConnector.getTeamMembersFromUMP(teamName)
-    val eventualErrorOrTeamDetails = userManagementConnector.getTeamDetails(teamName)
-    val eventualReposWithLeaks     = leakDetectionService.repositoriesWithLeaks
-    val eventualTeamDependencies   = serviceDependencyConnector.dependenciesForTeam(teamName)
-
-    val eventualMaybeDeploymentIndicators = indicatorsConnector.deploymentIndicatorsForTeam(teamName)
     for {
-      teamInfo       <- eventualTeamInfo
-      teamMembers    <- eventualErrorOrMembers
-      teamDetails    <- eventualErrorOrTeamDetails
-      teamIndicators <- eventualMaybeDeploymentIndicators
-      reposWithLeaks <- eventualReposWithLeaks
-      teamDependencies <- eventualTeamDependencies
+      teamInfo         <- teamsAndRepositoriesConnector.teamInfo(teamName)
+      teamMembers      <- userManagementConnector.getTeamMembersFromUMP(teamName)
+      teamDetails      <- userManagementConnector.getTeamDetails(teamName)
+      teamIndicators   <- indicatorsConnector.deploymentIndicatorsForTeam(teamName)
+      reposWithLeaks   <- leakDetectionService.repositoriesWithLeaks
+      teamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
     } yield
-      (teamInfo, teamMembers, teamDetails, teamIndicators) match {
-        case (Some(team), _, _, _) =>
+      teamInfo match {
+        case Some(team) =>
           implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
 
           Ok(
@@ -248,25 +241,19 @@ class CatalogueController @Inject()(
   def outOfDateTeamDependencies(teamName: String) = Action.async { implicit request =>
     for {
       teamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
-    } yield () match {
-      case _ => Ok(outOfDateTeamDependenciesPage(teamName, teamDependencies.filter(_.hasOutOfDateDependencies)))
-    }
+    } yield Ok(outOfDateTeamDependenciesPage(teamName, teamDependencies.filter(_.hasOutOfDateDependencies)))
   }
 
   def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
     for {
       configByKey <- configService.configByKey(serviceName)
-    } yield () match {
-      case _ => Ok(serviceConfigPage(serviceName, configByKey))
-    }
+    } yield Ok(serviceConfigPage(serviceName, configByKey))
   }
 
   def serviceConfigRaw(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
     for {
       configByEnvironment <- configService.configByEnvironment(serviceName)
-    } yield () match {
-      case _ => Ok(serviceConfigRawPage(serviceName, configByEnvironment))
-    }
+    } yield Ok(serviceConfigRawPage(serviceName, configByEnvironment))
   }
 
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>
@@ -276,8 +263,8 @@ class CatalogueController @Inject()(
 
       val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
 
-      maybeRefEnvironments.map { environments =>
-        environments
+      maybeRefEnvironments.map {
+        _
           .map(e => (e.name.toLowerCase, e))
           .map {
             case (lwrCasedRefEnvName, refEnvironment)
@@ -360,12 +347,11 @@ class CatalogueController @Inject()(
     for {
       repository      <- teamsAndRepositoriesConnector.repositoryDetails(name)
       urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
-    } yield {
+    } yield
       repository match {
         case Some(s) if s.repoType == RepoType.Prototype =>
           Ok(prototypeInfoPage(s.copy(environments = None), s.createdAt, urlIfLeaksFound))
         case None => NotFound(error_404_template())
-      }
     }
   }
 

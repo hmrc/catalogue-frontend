@@ -21,8 +21,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
 
 class DependencySectionSpec extends WordSpec with Matchers {
 
-  val dependency1 = Dependency("example-library", Version(1,2,3, Some("play-25")), Some(Version(1,2,3, Some("play-26"))))
-  val dependency2 = Dependency("library4j", Version(4,0,1), Some(Version(4,2,0)))
+  val dependency1 = Dependency("example-library", Version("1.2.3-play-25"), Some(Version("1.2.3-play-26")))
+  val dependency2 = Dependency("library4j", Version("4.0.1"), Some(Version("4.2.0")))
 
   "dependency_section" should {
 

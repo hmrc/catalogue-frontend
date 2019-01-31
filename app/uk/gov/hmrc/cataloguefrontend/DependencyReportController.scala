@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.util.Date
 
 import akka.stream.scaladsl._
+import java.util.Date
 import javax.inject.{Inject, Singleton}
 import org.apache.commons.io.IOUtils
 import play.api.http.HttpEntity
 import play.api.libs.json.{Json, OFormat}
 import play.api.mvc._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version, VersionState}
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, ServiceDependenciesConnector, Team, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
@@ -124,14 +124,13 @@ class DependencyReportController @Inject()(
       .map(_.name)
       .getOrElse("Unknown")
 
-  private def getColour(currentVersion: Version, mayBeLatestVersion: Option[Version]): String =
-    mayBeLatestVersion.fold("grey") { latestVersion =>
-      latestVersion - currentVersion match {
-        case (0, 0, 0)                                     => "green"
-        case (0, minor, patch) if minor != 0 || patch != 0 => "amber"
-        case (major, _, _) if major >= 1                   => "red"
-        case _                                             => "N/A"
-      }
+  private def getColour(currentVersion: Version, optLatestVersion: Option[Version]): String =
+    optLatestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion)) match {
+      case Some(VersionState.UpToDate)              => "green"
+      case Some(VersionState.MinorVersionOutOfDate) => "amber"
+      case Some(VersionState.MajorVersionOutOfDate) => "red"
+      case Some(VersionState.Invalid)               => "N/A"
+      case None                                     => "grey"
     }
 
   def dependencyReport(): Action[AnyContent] = Action.async { implicit request =>

@@ -18,9 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, BadRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
@@ -29,8 +29,9 @@ import scala.concurrent.Future
 import scala.util.control.NonFatal
 
 @Singleton
-class ServiceDependenciesConnector @Inject()(http: HttpClient,
-                                             servicesConfig: ServicesConfig) {
+class ServiceDependenciesConnector @Inject()(
+  http          : HttpClient,
+  servicesConfig: ServicesConfig) {
 
   private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies") + "/api"
 
@@ -57,18 +58,32 @@ class ServiceDependenciesConnector @Inject()(http: HttpClient,
 
   def getSlugDependencies(serviceName: String, version: Option[String] = None)
                          (implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] = {
-    val queryParams = buildQueryParams(("name", Some(serviceName)), ("version", version))
+    val queryParams = buildQueryParams(
+      "name"    -> Some(serviceName),
+      "version" -> version)
 
     http
       .GET[Seq[ServiceDependencies]](s"$servicesDependenciesBaseUrl/sluginfos", queryParams)
       .recover {
         case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)
+          Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl/sluginfos: ${ex.getMessage}", ex)
           Nil
       }
   }
 
-  private def buildQueryParams(queryParams: (String, Option[String])*) =
-    queryParams.flatMap(param => param._2.map(v => (param._1, v)))
+  def getServicesWithDependency(
+      group       : String,
+      artefact    : String)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] = {
+    implicit val r = ServiceWithDependency.reads
+    http
+      .GET[Seq[ServiceWithDependency]](
+        s"$servicesDependenciesBaseUrl/serviceDeps",
+        queryParams = Seq(
+          "group"     -> group,
+          "artefact"  -> artefact))
+   }
 
+
+  private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
+    queryParams.flatMap(param => param._2.map(v => (param._1, v)))
 }

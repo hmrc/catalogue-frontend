@@ -47,15 +47,14 @@ class SearchByUrlController @Inject()(
       .fold(
         formWithErrors => Future.successful(Ok(searchByUrlPage(formWithErrors, Nil, serviceNameToUrl))),
         query => {
-          for {
-            searchResult <- searchByUrlService.search(query.name)
-          } yield searchResult match {
-            case _ =>
+          searchByUrlService
+            .search(query.name)
+            .map { results =>
               Ok(searchByUrlPage(
-                UrlSearchFilter.form.bindFromRequest(),
-                searchResult,
-                serviceNameToUrl))
-          }
+                  UrlSearchFilter.form.bindFromRequest(),
+                  results,
+                  serviceNameToUrl))
+            }
         }
       )
   }

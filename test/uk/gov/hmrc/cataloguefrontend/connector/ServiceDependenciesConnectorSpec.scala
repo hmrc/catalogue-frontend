@@ -73,76 +73,36 @@ class ServiceDependenciesConnectorSpec
           |  "libraryDependencies": [
           |    {
           |      "name": "frontend-bootstrap",
-          |      "currentVersion": {
-          |        "major": 7,
-          |        "minor": 11,
-          |        "patch": 0
-          |      } ,
-          |      "latestVersion": {
-          |        "major": 8,
-          |        "minor": 80,
-          |        "patch": 0
-          |      },
+          |      "currentVersion": "7.11.0",
+          |      "latestVersion": "8.80.0",
           |      "isExternal": false
           |    },
           |    {
           |      "name": "play-config",
-          |      "currentVersion": {
-          |        "major": 3,
-          |        "minor": 0,
-          |        "patch": 0
-          |      },
-          |      "latestVersion": {
-          |        "major": 7,
-          |        "minor": 70,
-          |        "patch": 0
-          |      },
+          |      "currentVersion": "3.0.0",
+          |      "latestVersion": "7.70.0",
           |      "isExternal": false
           |    }
           |  ],
           |  "sbtPluginsDependencies": [
           |    {
           |      "name": "plugin-1",
-          |      "currentVersion": {
-          |        "major": 1,
-          |        "minor": 0,
-          |        "patch": 0
-          |      } ,
-          |      "latestVersion": {
-          |        "major": 1,
-          |        "minor": 1,
-          |        "patch": 0
-          |      },
+          |      "currentVersion": "1.0.0",
+          |      "latestVersion": "1.1.0",
           |      "isExternal": true
           |    },
           |    {
           |      "name": "plugin-2",
-          |      "currentVersion": {
-          |        "major": 2,
-          |        "minor": 0,
-          |        "patch": 0
-          |      },
-          |      "latestVersion": {
-          |        "major": 2,
-          |        "minor": 1,
-          |        "patch": 0
-          |      },
+          |      "currentVersion": "2.0.0",
+          |      "latestVersion": "2.1.0",
           |      "isExternal": false
           |    }
           |  ],
           |  "otherDependencies": [
           |    {
           |      "name": "sbt",
-          |      "currentVersion": {
-          |        "major": 0,
-          |        "minor": 13,
-          |        "patch": 8
-          |      },
-          |      "latestVersion": {
-          |        "major": 0,
-          |        "minor": 13,
-          |        "patch": 15
-          |      },
+          |      "currentVersion": "0.13.8",
+          |      "latestVersion": "0.13.15",
           |      "isExternal": false
           |    }
           |  ],
@@ -161,18 +121,18 @@ class ServiceDependenciesConnectorSpec
       response.repositoryName      shouldBe "repo1"
       response.libraryDependencies should contain theSameElementsAs
         Seq(
-          Dependency("frontend-bootstrap", Version(7, 11, 0), Some(Version(8, 80, 0))),
-          Dependency("play-config", Version(3, 0, 0), Some(Version(7, 70, 0)))
+          Dependency("frontend-bootstrap", Version("7.11.0"), Some(Version("8.80.0"))),
+          Dependency("play-config", Version("3.0.0"), Some(Version("7.70.0")))
         )
 
       response.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), true),
-          Dependency("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)), false)
+          Dependency("plugin-1", Version("1.0.0"), Some(Version("1.1.0")), true),
+          Dependency("plugin-2", Version("2.0.0"), Some(Version("2.1.0")), false)
         )
       response.otherDependencies should contain theSameElementsAs
         Seq(
-          Dependency("sbt", Version(0, 13, 8), Some(Version(0, 13, 15)))
+          Dependency("sbt", Version("0.13.8"), Some(Version("0.13.15")))
         )
 
     }
@@ -219,76 +179,36 @@ class ServiceDependenciesConnectorSpec
           |    "libraryDependencies": [
           |      {
           |        "name": "frontend-bootstrap",
-          |        "currentVersion": {
-          |          "major": 7,
-          |          "minor": 11,
-          |          "patch": 0
-          |        } ,
-          |        "latestVersion": {
-          |          "major": 8,
-          |          "minor": 80,
-          |          "patch": 0
-          |        },
+          |        "currentVersion": "7.11.0",
+          |        "latestVersion": "8.80.0",
           |        "isExternal": false
           |      },
           |      {
           |        "name": "play-config",
-          |        "currentVersion": {
-          |          "major": 3,
-          |          "minor": 0,
-          |          "patch": 0
-          |        },
-          |        "latestVersion": {
-          |          "major": 7,
-          |          "minor": 70,
-          |          "patch": 0
-          |        },
+          |        "currentVersion": "3.0.0",
+          |        "latestVersion": "7.70.0",
           |        "isExternal": false
           |      }
           |    ],
           |    "sbtPluginsDependencies": [
           |      {
           |        "name": "plugin-1",
-          |        "currentVersion": {
-          |          "major": 1,
-          |          "minor": 0,
-          |          "patch": 0
-          |        } ,
-          |        "latestVersion": {
-          |          "major": 1,
-          |          "minor": 1,
-          |          "patch": 0
-          |        },
+          |        "currentVersion": "1.0.0",
+          |        "latestVersion": "1.1.0",
           |        "isExternal": true
           |      },
           |      {
           |        "name": "plugin-2",
-          |        "currentVersion": {
-          |          "major": 2,
-          |          "minor": 0,
-          |          "patch": 0
-          |        },
-          |        "latestVersion": {
-          |          "major": 2,
-          |          "minor": 1,
-          |          "patch": 0
-          |        },
+          |        "currentVersion": "2.0.0",
+          |        "latestVersion": "2.1.0",
           |        "isExternal": false
           |      }
           |    ],
           |    "otherDependencies": [
           |      {
           |        "name": "sbt",
-          |        "currentVersion": {
-          |          "major": 0,
-          |          "minor": 13,
-          |          "patch": 7
-          |        },
-          |        "latestVersion": {
-          |          "major": 0,
-          |          "minor": 13,
-          |          "patch": 15
-          |        },
+          |        "currentVersion": "0.13.7",
+          |        "latestVersion": "0.13.15",
           |        "isExternal": false
           |      }
           |    ],
@@ -299,76 +219,36 @@ class ServiceDependenciesConnectorSpec
           |    "libraryDependencies": [
           |      {
           |        "name": "some-lib-1",
-          |        "currentVersion": {
-          |          "major": 7,
-          |          "minor": 77,
-          |          "patch": 0
-          |        } ,
-          |        "latestVersion": {
-          |          "major": 8,
-          |          "minor": 80,
-          |          "patch": 0
-          |        },
+          |        "currentVersion": "7.77.0",
+          |        "latestVersion": "8.80.0",
           |        "isExternal": false
           |      },
           |      {
           |        "name": "some-lib-2",
-          |        "currentVersion": {
-          |          "major": 3,
-          |          "minor": 0,
-          |          "patch": 0
-          |        },
-          |        "latestVersion": {
-          |          "major": 7,
-          |          "minor": 70,
-          |          "patch": 0
-          |        },
+          |        "currentVersion": "3.0.0",
+          |        "latestVersion": "7.70.0",
           |        "isExternal": false
           |      }
           |    ],
           |    "sbtPluginsDependencies": [
           |      {
           |        "name": "plugin-3",
-          |        "currentVersion": {
-          |          "major": 1,
-          |          "minor": 0,
-          |          "patch": 0
-          |        } ,
-          |        "latestVersion": {
-          |          "major": 1,
-          |          "minor": 1,
-          |          "patch": 0
-          |        },
+          |        "currentVersion": "1.0.0",
+          |        "latestVersion": "1.1.0",
           |        "isExternal": true
           |      },
           |      {
           |        "name": "plugin-4",
-          |        "currentVersion": {
-          |          "major": 2,
-          |          "minor": 0,
-          |          "patch": 0
-          |        },
-          |        "latestVersion": {
-          |          "major": 2,
-          |          "minor": 1,
-          |          "patch": 0
-          |        },
+          |        "currentVersion": "2.0.0",
+          |        "latestVersion": "2.1.0",
           |        "isExternal": false
           |      }
           |    ],
           |    "otherDependencies": [
           |      {
           |        "name": "sbt",
-          |        "currentVersion": {
-          |          "major": 0,
-          |          "minor": 13,
-          |          "patch": 8
-          |        },
-          |        "latestVersion": {
-          |          "major": 0,
-          |          "minor": 13,
-          |          "patch": 15
-          |        },
+          |        "currentVersion": "0.13.8",
+          |        "latestVersion": "0.13.15",
           |        "isExternal": false
           |      }
           |    ],
@@ -389,19 +269,19 @@ class ServiceDependenciesConnectorSpec
       response.head.repositoryName      shouldBe "repo1"
       response.head.libraryDependencies should contain theSameElementsAs
         Seq(
-          Dependency("frontend-bootstrap", Version(7, 11, 0), Some(Version(8, 80, 0))),
-          Dependency("play-config", Version(3, 0, 0), Some(Version(7, 70, 0)))
+          Dependency("frontend-bootstrap", Version("7.11.0"), Some(Version("8.80.0"))),
+          Dependency("play-config", Version("3.0.0"), Some(Version("7.70.0")))
         )
 
       response.head.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-1", Version(1, 0, 0), Some(Version(1, 1, 0)), isExternal = true),
-          Dependency("plugin-2", Version(2, 0, 0), Some(Version(2, 1, 0)), isExternal = false)
+          Dependency("plugin-1", Version("1.0.0"), Some(Version("1.1.0")), isExternal = true),
+          Dependency("plugin-2", Version("2.0.0"), Some(Version("2.1.0")), isExternal = false)
         )
 
       response.head.otherDependencies should contain theSameElementsAs
         Seq(
-          Dependency("sbt", Version(0, 13, 7), Some(Version(0, 13, 15)))
+          Dependency("sbt", Version("0.13.7"), Some(Version("0.13.15")))
         )
 
       response.last.libraryDependencies.size shouldBe 2
@@ -409,19 +289,19 @@ class ServiceDependenciesConnectorSpec
       response.last.repositoryName      shouldBe "repo2"
       response.last.libraryDependencies should contain theSameElementsAs
         Seq(
-          Dependency("some-lib-1", Version(7, 77, 0), Some(Version(8, 80, 0))),
-          Dependency("some-lib-2", Version(3, 0, 0), Some(Version(7, 70, 0)))
+          Dependency("some-lib-1", Version("7.77.0"), Some(Version("8.80.0"))),
+          Dependency("some-lib-2", Version("3.0.0"), Some(Version("7.70.0")))
         )
 
       response.last.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-3", Version(1, 0, 0), Some(Version(1, 1, 0)), isExternal = true),
-          Dependency("plugin-4", Version(2, 0, 0), Some(Version(2, 1, 0)), isExternal = false)
+          Dependency("plugin-3", Version("1.0.0"), Some(Version("1.1.0")), isExternal = true),
+          Dependency("plugin-4", Version("2.0.0"), Some(Version("2.1.0")), isExternal = false)
         )
 
       response.last.otherDependencies should contain theSameElementsAs
         Seq(
-          Dependency("sbt", Version(0, 13, 8), Some(Version(0, 13, 15)))
+          Dependency("sbt", Version("0.13.8"), Some(Version("0.13.15")))
         )
     }
   }

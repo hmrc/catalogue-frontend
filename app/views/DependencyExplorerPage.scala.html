@@ -1,0 +1,132 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import views.html.helper.CSRF
+@import play.api.mvc.Call
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, VersionOp}
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.routes
+@import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
+
+@this(viewMessages: ViewMessages)
+
+@(form            : Form[_],
+  searchResults   : Option[Seq[ServiceWithDependency]])(
+  implicit request         : Request[_],
+           messagesProvider: MessagesProvider)
+
+@standard_layout("Dependency Explorer", "search") {
+    <header>
+        <h1 id="search-service-header">Dependency Explorer</h1>
+    </header>
+
+    <div id="service-list">
+
+        @if(form.hasGlobalErrors) {
+            <div class="alert alert-error error">
+                <a class="close" data-dismiss="alert">×</a>
+                <ul>
+                    @form.globalErrors.map { error =>
+                        <li>@error.format</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <div class="board">
+            <div class="board__body">
+                @helper.form(
+                    action =  routes.DependencyExplorerController.search,
+                    'class -> "form-inline",
+                    'id    -> "search-by-dependency-form") {
+                    @helper.CSRF.formField
+                    <div>
+                        @helper.inputText(
+                            form("group"),
+                            'id          -> "group",
+                            'size        -> 20,
+                            '_label      -> null,
+                            'required    -> true,
+                            'placeholder -> "Group ID",
+                            '_class      -> "form-group"
+                        )
+                        @helper.inputText(
+                            form("artefact"),
+                            'id          -> "artefact",
+                            'size        -> 20,
+                            '_label      -> null,
+                            'required    -> true,
+                            'placeholder -> "Artifact ID",
+                            '_class      -> "form-group"
+                        )
+                        @helper.select(
+                            form("versionOp"),
+                            helper.options(List(VersionOp.Gte.s, VersionOp.Lte.s, VersionOp.Eq.s)),
+                            '_label -> null,
+                            '_class -> "form-group"
+                        )
+                        @helper.inputText(
+                            form("version"),
+                            'id          -> "version",
+                            'size        -> 20,
+                            '_label      -> null,
+                            'required    -> true,
+                            'placeholder -> "Version (e.g. 1.0.0)",
+                            '_class      -> "form-group"
+                        )
+                     </div>
+                     <div>
+                        <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                }
+                @searchResults match {
+                    case None                => {}
+                    case Some(Nil)           => {
+                        <p id="search-results-empty">This search did not return any results.</p>
+                    }
+                    case Some(searchResults) => {
+                        <p>Found @searchResults.size results</p>
+                        <table id="search-results" class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th rowspan="2">Service</th>
+                                <th rowspan="2">Version</th>
+                                <th colspan="3" class="text-center">Dependency</th>
+                            </tr>
+                            <tr>
+                                <th>Group ID</th>
+                                <th>Artifact ID</th>
+                                <th>Version</th>
+                            </tr>
+                            </thead>
+                            <tbody class="list">
+                            @for(result <- searchResults) {
+                                <tr>
+                                    <td><a href="@routes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
+                                    <td>@result.slugVersion</td>
+                                    <td>@result.depGroup</td>
+                                    <td>@result.depArtefact</td>
+                                    <td>@result.depVersion</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}

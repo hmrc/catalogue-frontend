@@ -23,45 +23,31 @@ class DependencySpec extends FreeSpec with Matchers {
   "getVersionState" - {
 
     "should return UpToDate if on the latest version" in {
-      Dependency("library-abc", Version(1, 2, 3), Some(Version(1, 2, 3))).getVersionState shouldBe Some(UpToDate)
+      Dependency("library-abc", Version("1.2.3"), Some(Version("1.2.3"))).getVersionState shouldBe Some(VersionState.UpToDate)
     }
 
     "should return MinorVersionOutOfDate if on patch version behind" in {
-      Dependency("library-abc", Version(1, 2, 2), Some(Version(1, 2, 3))).getVersionState shouldBe Some(
-        MinorVersionOutOfDate)
+      Dependency("library-abc", Version("1.2.2"), Some(Version("1.2.3"))).getVersionState shouldBe Some(
+        VersionState.MinorVersionOutOfDate)
     }
 
     "should return MinorVersionOutOfDate if on minor version behind" in {
-      Dependency("library-abc", Version(1, 1, 3), Some(Version(1, 2, 3))).getVersionState shouldBe Some(
-        MinorVersionOutOfDate)
+      Dependency("library-abc", Version("1.1.3"), Some(Version("1.2.3"))).getVersionState shouldBe Some(
+        VersionState.MinorVersionOutOfDate)
     }
 
     "should return MajorVersionOutOfDate if on minor version behind" in {
-      Dependency("library-abc", Version(1, 2, 3), Some(Version(2, 2, 3))).getVersionState shouldBe Some(
-        MajorVersionOutOfDate)
+      Dependency("library-abc", Version("1.2.3"), Some(Version("2.2.3"))).getVersionState shouldBe Some(
+        VersionState.MajorVersionOutOfDate)
     }
 
-    "should return InvalidVersionState if current version is greater than the latest version " in {
-
-      Dependency("library-abc", Version(1, 0, 1), Some(Version(1, 0, 0))).getVersionState shouldBe Some(
-        InvalidVersionState)
-      Dependency("library-abc", Version(1, 1, 0), Some(Version(1, 0, 0))).getVersionState shouldBe Some(
-        InvalidVersionState)
-      Dependency("library-abc", Version(2, 0, 0), Some(Version(1, 0, 0))).getVersionState shouldBe Some(
-        InvalidVersionState)
+    "should return Invalid if current version is greater than the latest version " in {
+      Dependency("library-abc", Version("1.0.1"), Some(Version("1.0.0"))).getVersionState shouldBe Some(
+        VersionState.Invalid)
+      Dependency("library-abc", Version("1.1.0"), Some(Version("1.0.0"))).getVersionState shouldBe Some(
+        VersionState.Invalid)
+      Dependency("library-abc", Version("2.0.0"), Some(Version("1.0.0"))).getVersionState shouldBe Some(
+        VersionState.Invalid)
     }
-
-  }
-
-  "Version" - {
-
-    "should include suffix when converted to a string" in {
-      Version(1,2,3,Some("play-26")).toString should be ("1.2.3-play-26")
-    }
-
-    "should omit suffix the suffix completely when not present" in {
-      Version(1,2,3).toString should be ("1.2.3")
-    }
-
   }
 }

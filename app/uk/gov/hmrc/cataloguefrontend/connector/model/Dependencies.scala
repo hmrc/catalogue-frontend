@@ -17,62 +17,150 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import org.joda.time.DateTime
-import play.api.libs.json.Json
+import play.api.libs.json.{__, Format, Json, JsError, JsString, JsSuccess, JsValue, OFormat}
+import play.api.libs.functional.syntax._
 import uk.gov.hmrc.http.controllers.RestFormats
 
 sealed trait VersionState
-case object UpToDate extends VersionState
-case object MinorVersionOutOfDate extends VersionState
-case object MajorVersionOutOfDate extends VersionState
-case object InvalidVersionState extends VersionState
+object VersionState {
+  case object UpToDate              extends VersionState
+  case object MinorVersionOutOfDate extends VersionState
+  case object MajorVersionOutOfDate extends VersionState
+  case object Invalid               extends VersionState
+}
 
 case class Dependency(
-  name: String,
+  name          : String,
   currentVersion: Version,
-  latestVersion: Option[Version],
-  isExternal: Boolean = false) {
+  latestVersion : Option[Version],
+  isExternal    : Boolean = false) {
 
   def getVersionState: Option[VersionState] =
-    latestVersion.map { latestVersion =>
-      latestVersion - currentVersion match {
-        case (0, 0, 0)                                   => UpToDate
-        case (0, minor, patch) if minor > 0 || patch > 0 => MinorVersionOutOfDate
-        case (major, _, _) if major >= 1                 => MajorVersionOutOfDate
-        case _                                           => InvalidVersionState
-      }
-    }
+    latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
 
-  def isUpToDate: Boolean = {
-    this.getVersionState.contains(UpToDate)
-  }
+  def isUpToDate: Boolean =
+    getVersionState.contains(VersionState.UpToDate)
 }
 
 case class Dependencies(
-  repositoryName: String,
-  libraryDependencies: Seq[Dependency],
+  repositoryName        : String,
+  libraryDependencies   : Seq[Dependency],
   sbtPluginsDependencies: Seq[Dependency],
-  otherDependencies: Seq[Dependency],
-  lastUpdated: DateTime) {
+  otherDependencies     : Seq[Dependency],
+  lastUpdated           : DateTime) {
 
-  def hasOutOfDateDependencies: Boolean = {
+  def hasOutOfDateDependencies: Boolean =
     !(libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies).forall(_.isUpToDate)
-  }
 }
 
 object Dependencies {
-  implicit val vf     = Json.format[Version]
-  implicit val dtr    = RestFormats.dateTimeFormats
-  implicit val osf    = Json.format[Dependency]
-  implicit val format = Json.format[Dependencies]
+  implicit val osf = {
+    implicit val vf = Version.format
+    Json.format[Dependency]
+  }
+  implicit val format = {
+    implicit val dtr = RestFormats.dateTimeFormats
+    Json.format[Dependencies]
+  }
 }
 
-case class Version(major: Int, minor: Int, patch: Int, suffix: Option[String] = None) {
-  override def toString: String = s"$major.$minor.$patch" + suffix.map("-"+_).getOrElse("")
+case class Version(
+    major: Int,
+    minor: Int,
+    patch: Int,
+    original: String)
+  extends Ordered[Version] {
 
   //!@TODO test
-  def -(other: Version): (Int, Int, Int) =
+  def diff(other: Version): (Int, Int, Int) =
     (this.major - other.major, this.minor - other.minor, this.patch - other.patch)
-  def +(other: Version): Version =
-    Version(this.major + other.major, this.minor + other.minor, this.patch + other.patch)
 
+  override def compare(other: Version): Int =
+    if (major == other.major)
+      if (minor == other.minor)
+        patch - other.patch
+      else
+        minor - other.minor
+    else
+      major - other.major
+
+  override def toString: String = original
+}
+
+object Version {
+  def getVersionState(currentVersion: Version, latestVersion: Version): VersionState =
+    latestVersion.diff(currentVersion) match {
+      case (0, 0, 0)                                   => VersionState.UpToDate
+      case (0, minor, patch) if minor > 0 || patch > 0 => VersionState.MinorVersionOutOfDate
+      case (major, _, _) if major >= 1                 => VersionState.MajorVersionOutOfDate
+      case _                                           => VersionState.Invalid
+    }
+
+  def parse(s: String): Option[Version] = {
+    val regex3 = """(\d+)\.(\d+)\.(\d+)(.*)""".r
+    val regex2 = """(\d+)\.(\d+)(.*)""".r
+    val regex1 = """(\d+)(.*)""".r
+    s match {
+      case regex3(maj, min, patch, _) => Some(Version(Integer.parseInt(maj), Integer.parseInt(min), Integer.parseInt(patch), s))
+      case regex2(maj, min,  _)       => Some(Version(Integer.parseInt(maj), Integer.parseInt(min), 0                      , s))
+      case regex1(min,  _)            => Some(Version(0                    , Integer.parseInt(min), 0                      , s))
+      case _                          => None
+    }
+  }
+
+  def apply(version: String): Version =
+    parse(version).getOrElse(sys.error(s"Could not parse version $version"))
+
+  val format: Format[Version] = new Format[Version] {
+    override def reads(json: JsValue) =
+      json match {
+        case JsString(s) => Version.parse(s).map(v => JsSuccess(v)).getOrElse(JsError("Could not parse version"))
+        case _           => JsError("Not a string")
+      }
+    override def writes(v: Version) =
+      JsString(v.original)
+  }
+}
+
+
+trait VersionOp {
+  def s: String
+}
+object VersionOp {
+  case object Gte extends VersionOp { val s = ">=" }
+  case object Lte extends VersionOp { val s = "<=" }
+  case object Eq  extends VersionOp { val s = "==" }
+
+  def parse(s: String): Option[VersionOp] =
+    s match {
+      case Gte.s => Some(Gte)
+      case Lte.s => Some(Lte)
+      case Eq.s  => Some(Eq)
+      case _     => None
+    }
+}
+
+
+case class ServiceWithDependency(
+  slugName          : String,
+  slugVersion       : String,
+  depGroup          : String,
+  depArtefact       : String,
+  depVersion        : String,
+  depSemanticVersion: Option[Version])
+
+
+object ServiceWithDependency {
+  import play.api.libs.json._
+  import play.api.libs.functional.syntax._
+
+  val reads: Reads[ServiceWithDependency] = {
+    ( (__ \ "slugName"   ).read[String]
+    ~ (__ \ "slugVersion").read[String]
+    ~ (__ \ "depGroup"   ).read[String]
+    ~ (__ \ "depArtefact").read[String]
+    ~ (__ \ "depVersion" ).read[String]
+    ~ (__ \ "depVersion" ).read[String].map(Version.parse)
+    )(ServiceWithDependency.apply _)
+  }
 }

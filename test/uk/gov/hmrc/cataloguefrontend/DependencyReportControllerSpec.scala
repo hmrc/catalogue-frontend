@@ -147,17 +147,17 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Gui
   def latestVersion(currentVersion: Version, colour: String): Option[Version] =
     colour match {
       case "green" => Some(currentVersion)
-      case "amber" => Some(currentVersion + Version(0, 1, 0))
-      case "red"   => Some(currentVersion + Version(1, 0, 0))
+      case "amber" => Some(Version(s"${currentVersion.major}.${currentVersion.minor + 1}.${currentVersion.patch}"))
+      case "red"   => Some(Version(s"${currentVersion.major + 1}.${currentVersion.minor}.${currentVersion.patch}"))
     }
 
   private def sbtPluginsDependencyState(sbtPluginName: String, majorVersion: Int, colour: String) = {
-    val currentVersion = Version(majorVersion, 0, 0)
+    val currentVersion = Version(s"$majorVersion.0.0")
     Dependency(sbtPluginName, currentVersion, latestVersion(currentVersion, colour))
   }
 
   private def libraryDependency(libraryName: String, majorVersion: Int, colour: String) = {
-    val currentVersion = Version(majorVersion, 0, 0)
+    val currentVersion = Version(s"$majorVersion.0.0")
     Dependency(libraryName, currentVersion, latestVersion(currentVersion, colour))
   }
 
