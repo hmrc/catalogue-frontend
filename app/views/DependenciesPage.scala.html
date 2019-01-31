@@ -27,29 +27,35 @@
     </header>
     <div>
         @serviceDependencies.zipWithIndex.map { case (serviceDependency, index) =>
-            <div class="hand-pointer accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@index" aria-expanded="false" aria-controls="collapsible-area">
-                <label class="hand-pointer">@{serviceVersion(serviceDependency.version)} @{environment(serviceDependency.environment)}</label>
-            </div>
-            <div id="collapsible-area-@index" class="collapse">
-                <table id="dependencies-list" class="table table-condensed table-striped">
-                    <thead>
-                        <tr>
-                            <th class="col-lg-4">Group ID</th>
-                            <th class="col-lg-4">Artifact ID</th>
-                            <th class="col-lg-4">Version</th>
-                        </tr>
-                    </thead>
-                    <tbody class="list">
-                    @for(dependency <- DependenciesService.sortDependencies(serviceDependency.dependencies)) {
-                        <tr>
-                            <td><span>@dependency.group</span></td>
-                            <td><span>@dependency.artifact</span></td>
-                            <td><span>@dependency.version</span></td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
-            </div>
+            @defining(serviceDependencies.length > 1) { collapsable =>
+                <div @if(collapsable){class="hand-pointer accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@index" aria-expanded="false" aria-controls="collapsible-area"}>
+                    <label @if(collapsable){class="hand-pointer"}>@{
+                        serviceVersion(serviceDependency.version)
+                    } @{
+                        environment(serviceDependency.environment)
+                    }</label>
+                </div>
+                <div id="collapsible-area-@index" class="@if(collapsable) {collapse}">
+                    <table id="dependencies-list" class="table table-condensed table-striped">
+                        <thead>
+                            <tr>
+                                <th class="col-lg-4">Group ID</th>
+                                <th class="col-lg-4">Artefact ID</th>
+                                <th class="col-lg-4">Version</th>
+                            </tr>
+                        </thead>
+                        <tbody class="list">
+                        @for(dependency <- DependenciesService.sortDependencies(serviceDependency.dependencies)) {
+                            <tr>
+                                <td><span>@dependency.group</span></td>
+                                <td><span>@dependency.artifact</span></td>
+                                <td><span>@dependency.version</span></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
         }
         @if(serviceDependencies.isEmpty) {
             <p id="dependencies-empty">This search did not return any results.</p>
