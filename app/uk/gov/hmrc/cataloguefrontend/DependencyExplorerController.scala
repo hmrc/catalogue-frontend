@@ -27,12 +27,11 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.filters.csrf.CSRF
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.DependencyExplorerPage
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
@@ -42,31 +41,38 @@ class DependencyExplorerController @Inject()(
     page   : DependencyExplorerPage)
   extends FrontendController(mcc) {
 
+
+import ExecutionContext.Implicits.global
+
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
-      Future.successful(Ok(page(form, None)))
+      service.getGroupArtefacts.map { groupArtefacts =>
+        Ok(page(form, groupArtefacts, searchResults = None))
+      }
     }
 
 
   def search =
     Action.async { implicit request =>
-      def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), None)
-      form
-        .bindFromRequest()
-        .fold(
-          hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, None))),
-          success   = query => {
-            (for {
-              versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
-              version   <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
-              results   <- EitherT.right[Result] {
-                             service
-                              .getServicesWithDependency(query.group, query.artefact, versionOp, version)
-                           }
-             } yield Ok(page(form.bindFromRequest(), Some(results)))
-            ).merge
-          }
-        )
+      service.getGroupArtefacts.flatMap { groupArtefacts =>
+        def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), groupArtefacts, searchResults = None)
+        form
+          .bindFromRequest()
+          .fold(
+            hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, groupArtefacts, searchResults = None))),
+            success   = query => {
+              (for {
+                versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
+                version   <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
+                results   <- EitherT.right[Result] {
+                              service
+                                .getServicesWithDependency(query.group, query.artefact, versionOp, version)
+                            }
+              } yield Ok(page(form.bindFromRequest(), groupArtefacts, Some(results)))
+              ).merge
+            }
+          )
+      }
     }
 
   case class SearchForm(
@@ -84,4 +90,5 @@ class DependencyExplorerController @Inject()(
         "version"   -> Forms.text
       )(SearchForm.apply)(SearchForm.unapply)
     )
+
 }

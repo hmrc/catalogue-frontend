@@ -16,14 +16,16 @@
 
 @import views.html.helper.CSRF
 @import play.api.mvc.Call
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, VersionOp}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, VersionOp}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.routes
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
+@import play.twirl.api.Html
 
 @this(viewMessages: ViewMessages)
 
 @(form            : Form[_],
+  groupArtefacts  : List[GroupArtefacts],
   searchResults   : Option[Seq[ServiceWithDependency]])(
   implicit request         : Request[_],
            messagesProvider: MessagesProvider)
@@ -54,23 +56,17 @@
                     'id    -> "search-by-dependency-form") {
                     @helper.CSRF.formField
                     <div>
-                        @helper.inputText(
+                        @helper.select(
                             form("group"),
-                            'id          -> "group",
-                            'size        -> 20,
-                            '_label      -> null,
-                            'required    -> true,
-                            'placeholder -> "Group ID",
-                            '_class      -> "form-group"
+                            helper.options(groupArtefacts.map(_.group)),
+                            '_label -> null,
+                            '_class -> "form-group"
                         )
-                        @helper.inputText(
+                        @helper.select(
                             form("artefact"),
-                            'id          -> "artefact",
-                            'size        -> 20,
-                            '_label      -> null,
-                            'required    -> true,
-                            'placeholder -> "Artifact ID",
-                            '_class      -> "form-group"
+                            helper.options(List()),
+                            '_label -> null,
+                            '_class -> "form-group"
                         )
                         @helper.select(
                             form("versionOp"),
@@ -108,7 +104,7 @@
                             </tr>
                             <tr>
                                 <th>Group ID</th>
-                                <th>Artifact ID</th>
+                                <th>Artefact ID</th>
                                 <th>Version</th>
                             </tr>
                             </thead>
@@ -129,4 +125,46 @@
             </div>
         </div>
     </div>
+
+    <script>
+        if (document.readyState != 'loading'){
+            ready();
+        } else {
+            document.addEventListener('DOMContentLoaded', ready);
+        }
+
+        function ready() {
+            document.getElementById("group").onchange = updateArtefacts;
+            updateArtefacts();
+        }
+
+        function updateArtefacts() {
+            var group = document.getElementById("group").value;
+
+            var groupArtefacts = {
+                @groupArtefacts.map { res =>
+                '@{res.group}': [@for(a <- res.artefacts){
+                    '@a',
+                    }]
+                ,
+                }
+            }
+
+            var artefacts = groupArtefacts[group];
+            var artefactSelect = document.getElementById("artefact")
+
+            while (artefactSelect.options.length > 0) {
+                artefactSelect.remove(artefactSelect.options.length - 1);
+            }
+
+            for (i = 0; i < artefacts.length; i++)
+            {
+                var opt = document.createElement('option');
+                opt.text = artefacts[i];
+                opt.value = artefacts[i];
+                artefactSelect.add(opt, null);
+            }
+        }
+    </script>
+
 }

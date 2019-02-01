@@ -164,3 +164,9 @@ object ServiceWithDependency {
     )(ServiceWithDependency.apply _)
   }
 }
+
+case class GroupArtefacts(group: String, artefacts: List[String])
+
+object GroupArtefacts {
+  val apiFormat = Json.format[GroupArtefacts]
+}
