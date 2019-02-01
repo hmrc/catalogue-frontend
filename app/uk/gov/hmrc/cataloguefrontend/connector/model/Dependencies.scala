@@ -168,5 +168,8 @@ object ServiceWithDependency {
 case class GroupArtefacts(group: String, artefacts: List[String])
 
 object GroupArtefacts {
-  val apiFormat = Json.format[GroupArtefacts]
+  val apiFormat: OFormat[GroupArtefacts] =
+    ( (__ \ "group"      ).format[String]
+    ~ (__ \ "artefacts"  ).format[List[String]]
+    )(GroupArtefacts.apply, unlift(GroupArtefacts.unapply))
 }

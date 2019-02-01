@@ -81,11 +81,18 @@ import ExecutionContext.Implicits.global
     versionOp: String,
     version  : String)
 
+  def notEmptyOr(s: String) = {
+    import play.api.data.validation._
+    Constraint[String]("") { o =>
+      if (o == null || o.trim.isEmpty || o == s) Invalid(ValidationError("error.required")) else Valid
+    }
+  }
+
   val form =
     Form(
       Forms.mapping(
-        "group"     -> Forms.text,
-        "artefact"  -> Forms.text,
+        "group"     -> Forms.text.verifying(notEmptyOr("Select Group")),
+        "artefact"  -> Forms.text.verifying(notEmptyOr("Select Artefact")),
         "versionOp" -> Forms.text,
         "version"   -> Forms.text
       )(SearchForm.apply)(SearchForm.unapply)

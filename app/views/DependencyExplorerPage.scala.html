@@ -55,38 +55,49 @@
                     'class -> "form-inline",
                     'id    -> "search-by-dependency-form") {
                     @helper.CSRF.formField
-                    <div>
-                        @helper.select(
-                            form("group"),
-                            helper.options(groupArtefacts.map(_.group)),
-                            '_label -> null,
-                            '_class -> "form-group"
-                        )
-                        @helper.select(
-                            form("artefact"),
-                            helper.options(List()),
-                            '_label -> null,
-                            '_class -> "form-group"
-                        )
-                        @helper.select(
-                            form("versionOp"),
-                            helper.options(List(VersionOp.Gte.s, VersionOp.Lte.s, VersionOp.Eq.s)),
-                            '_label -> null,
-                            '_class -> "form-group"
-                        )
-                        @helper.inputText(
-                            form("version"),
-                            'id          -> "version",
-                            'size        -> 20,
-                            '_label      -> null,
-                            'required    -> true,
-                            'placeholder -> "Version (e.g. 1.0.0)",
-                            '_class      -> "form-group"
-                        )
+                    <table padding="1">
+                        <tr>
+                            <td valign="top">
+                                @helper.select(
+                                    form("group"),
+                                    helper.options(List("Select Group") ++ groupArtefacts.map(_.group)),
+                                    '_label -> null,
+                                    '_class -> "form-group"
+                                )
+                           </td>
+                            <td valign="top">
+                                @helper.select(
+                                    form("artefact"),
+                                    helper.options(List()),
+                                    '_label -> null,
+                                    '_class -> "form-group"
+                                )
+                           </td>
+                            <td valign="top">
+                                @helper.select(
+                                    form("versionOp"),
+                                    helper.options(List(VersionOp.Gte.s, VersionOp.Lte.s, VersionOp.Eq.s)),
+                                    '_label -> null,
+                                    '_class -> "form-group"
+                                )
+                           </td>
+                            <td valign="top">
+                                @helper.inputText(
+                                    form("version"),
+                                    'id          -> "version",
+                                    'size        -> 20,
+                                    '_label      -> null,
+                                    'required    -> true,
+                                    'placeholder -> "Version (e.g. 1.0.0)",
+                                    '_class      -> "form-group"
+                                )
+                          </td>
+                          <td valign="bottom">
+                              <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                          </td>
+                        </tr>
+                        </table>
                      </div>
-                     <div>
-                        <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-                    </div>
                 }
                 @searchResults match {
                     case None                => {}
@@ -150,19 +161,25 @@
                 }
             }
 
-            var artefacts = groupArtefacts[group];
             var artefactSelect = document.getElementById("artefact")
-
             while (artefactSelect.options.length > 0) {
                 artefactSelect.remove(artefactSelect.options.length - 1);
             }
 
-            for (i = 0; i < artefacts.length; i++)
-            {
+            var artefacts = groupArtefacts[group];
+            if (artefacts) {
                 var opt = document.createElement('option');
-                opt.text = artefacts[i];
-                opt.value = artefacts[i];
+                opt.text = "Select Artefact";
+                opt.value = "Select Artefact";
                 artefactSelect.add(opt, null);
+                for (i = 0; i < artefacts.length; i++)
+                {
+                    var opt = document.createElement('option');
+                    opt.text = artefacts[i];
+                    opt.value = artefacts[i];
+                    opt.selected = artefacts[i] == '@{form("artefact").value}';
+                    artefactSelect.add(opt, null);
+                }
             }
         }
     </script>

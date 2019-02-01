@@ -72,14 +72,6 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
         .sortBy(_.slugName)
         .sorted(Ordering.by((_: ServiceWithDependency).depSemanticVersion).reverse))
 
-  def getGroups(implicit hc: HeaderCarrier): Future[List[String]] =
-    serviceDependenciesConnector
-      .getGroups
-
-  def getArtefacts(group: String)(implicit hc: HeaderCarrier): Future[List[String]] =
-    serviceDependenciesConnector
-      .getArtefacts(group)
-
   def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] =
     serviceDependenciesConnector
       .getGroupArtefacts
