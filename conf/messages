@@ -7,3 +7,5 @@ hotfixinterval.explanation.text=number of days between production deployment and
 duration.explanation.text=amount of time that your build took to complete
 successrate.explanation.text=percentage of builds that have succeeded
 sign-in.wrong-credentials=Invalid username or password
+dependencyexplorer.select.group=Select Group
+dependencyexplorer.select.artefact=Select Artefact
