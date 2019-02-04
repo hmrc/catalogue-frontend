@@ -42,7 +42,7 @@ class DependencyExplorerController @Inject()(
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
       service.getGroupArtefacts.map { groupArtefacts =>
-        Ok(page(form, groupArtefacts, searchResults = None))
+        Ok(page(form, groupArtefacts, searchResults = None, pieData = None))
       }
     }
 
@@ -50,11 +50,11 @@ class DependencyExplorerController @Inject()(
   def search =
     Action.async { implicit request =>
       service.getGroupArtefacts.flatMap { groupArtefacts =>
-        def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), groupArtefacts, searchResults = None)
+        def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), groupArtefacts, searchResults = None, pieData = None)
         form
           .bindFromRequest()
           .fold(
-            hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, groupArtefacts, searchResults = None))),
+            hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, groupArtefacts, searchResults = None, pieData = None))),
             success   = query => {
               (for {
                 versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
@@ -62,8 +62,13 @@ class DependencyExplorerController @Inject()(
                 results   <- EitherT.right[Result] {
                               service
                                 .getServicesWithDependency(query.group, query.artefact, versionOp, version)
-                            }
-              } yield Ok(page(form.bindFromRequest(), groupArtefacts, Some(results)))
+                             }
+                pieData   =  DependencyExplorerController.PieData(
+                               "Version spread",
+                               results
+                                 .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
+                                 .map(r => r._1 -> r._2.size))
+              } yield Ok(page(form.bindFromRequest(), groupArtefacts, Some(results), Some(pieData)))
               ).merge
             }
           )
@@ -92,5 +97,10 @@ class DependencyExplorerController @Inject()(
         "version"   -> Forms.text
       )(SearchForm.apply)(SearchForm.unapply)
     )
+}
 
+object DependencyExplorerController {
+  case class PieData(
+    title  : String,
+    results: Map[String, Int])
 }

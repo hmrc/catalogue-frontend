@@ -17,6 +17,7 @@
 @import views.html.helper.CSRF
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, VersionOp}
+@import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.routes
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
@@ -26,13 +27,15 @@
 
 @(form            : Form[_],
   groupArtefacts  : List[GroupArtefacts],
-  searchResults   : Option[Seq[ServiceWithDependency]])(
+  searchResults   : Option[Seq[ServiceWithDependency]],
+  pieData         : Option[PieData])(
   implicit request         : Request[_],
            messagesProvider: MessagesProvider)
 
 @standard_layout("Dependency Explorer", "search") {
     <header>
         <h1 id="search-service-header">Dependency Explorer</h1>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
     <div id="service-list">
@@ -106,6 +109,9 @@
                     }
                     case Some(searchResults) => {
                         <p>Found @searchResults.size results</p>
+
+                        <div id="chart_div" align="center"></div>
+
                         <table id="search-results" class="table table-striped">
                             <thead>
                             <tr>
@@ -179,6 +185,37 @@
                     opt.value = artefacts[i];
                     opt.selected = artefacts[i] == '@{form("artefact").value}';
                     artefactSelect.add(opt, null);
+                }
+            }
+        }
+    </script>
+
+    <script type="text/javascript">
+        google.charts.load('current', {'packages': ['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+        function drawChart() {
+
+            @pieData match {
+                case None => {}
+                case Some(pd) => {
+
+                    var data = new google.visualization.DataTable();
+                    var x =   Math.floor((Math.random() * 10) + 1);
+                    data.addColumn('string', 'Version');
+                    data.addColumn('number', 'Count');
+                    data.addRows([
+                        @for(r <- pd.results) {
+                        ['@r._1', @r._2],
+                        }
+                    ]);
+
+                    var options = { 'title'    : '@pd.title',
+                                    'width'    : "80%",
+                                    'height'   : 200,
+                                    'chartArea': { 'width': '100%',
+                                                'height': '100%'}};
+                    var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+                    chart.draw(data, options);
                 }
             }
         }
