@@ -16,14 +16,16 @@
 
 @import views.html.helper.CSRF
 @import play.api.mvc.Call
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, VersionOp}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, VersionOp}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.routes
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
+@import play.twirl.api.Html
 
 @this(viewMessages: ViewMessages)
 
 @(form            : Form[_],
+  groupArtefacts  : List[GroupArtefacts],
   searchResults   : Option[Seq[ServiceWithDependency]])(
   implicit request         : Request[_],
            messagesProvider: MessagesProvider)
@@ -53,44 +55,49 @@
                     'class -> "form-inline",
                     'id    -> "search-by-dependency-form") {
                     @helper.CSRF.formField
-                    <div>
-                        @helper.inputText(
-                            form("group"),
-                            'id          -> "group",
-                            'size        -> 20,
-                            '_label      -> null,
-                            'required    -> true,
-                            'placeholder -> "Group ID",
-                            '_class      -> "form-group"
-                        )
-                        @helper.inputText(
-                            form("artefact"),
-                            'id          -> "artefact",
-                            'size        -> 20,
-                            '_label      -> null,
-                            'required    -> true,
-                            'placeholder -> "Artifact ID",
-                            '_class      -> "form-group"
-                        )
-                        @helper.select(
-                            form("versionOp"),
-                            helper.options(List(VersionOp.Gte.s, VersionOp.Lte.s, VersionOp.Eq.s)),
-                            '_label -> null,
-                            '_class -> "form-group"
-                        )
-                        @helper.inputText(
-                            form("version"),
-                            'id          -> "version",
-                            'size        -> 20,
-                            '_label      -> null,
-                            'required    -> true,
-                            'placeholder -> "Version (e.g. 1.0.0)",
-                            '_class      -> "form-group"
-                        )
+                    <table padding="1">
+                        <tr>
+                            <td valign="top">
+                                @helper.select(
+                                    form("group"),
+                                    helper.options(List(Messages("dependencyexplorer.select.group")) ++ groupArtefacts.map(_.group)),
+                                    '_label -> null,
+                                    '_class -> "form-group"
+                                )
+                           </td>
+                            <td valign="top">
+                                @helper.select(
+                                    form("artefact"),
+                                    helper.options(List()),
+                                    '_label -> null,
+                                    '_class -> "form-group"
+                                )
+                           </td>
+                            <td valign="top">
+                                @helper.select(
+                                    form("versionOp"),
+                                    helper.options(List(VersionOp.Gte.s, VersionOp.Lte.s, VersionOp.Eq.s)),
+                                    '_label -> null,
+                                    '_class -> "form-group"
+                                )
+                           </td>
+                            <td valign="top">
+                                @helper.inputText(
+                                    form("version"),
+                                    'id          -> "version",
+                                    'size        -> 20,
+                                    '_label      -> null,
+                                    'required    -> true,
+                                    'placeholder -> "Version (e.g. 1.0.0)",
+                                    '_class      -> "form-group"
+                                )
+                          </td>
+                          <td valign="bottom">
+                              <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                          </td>
+                        </tr>
+                        </table>
                      </div>
-                     <div>
-                        <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-                    </div>
                 }
                 @searchResults match {
                     case None                => {}
@@ -108,7 +115,7 @@
                             </tr>
                             <tr>
                                 <th>Group ID</th>
-                                <th>Artifact ID</th>
+                                <th>Artefact ID</th>
                                 <th>Version</th>
                             </tr>
                             </thead>
@@ -129,4 +136,51 @@
             </div>
         </div>
     </div>
+
+    <script>
+        if (document.readyState != 'loading'){
+            ready();
+        } else {
+            document.addEventListener('DOMContentLoaded', ready);
+        }
+
+        function ready() {
+            document.getElementById("group").onchange = updateArtefacts;
+            updateArtefacts();
+        }
+
+        function updateArtefacts() {
+            var group = document.getElementById("group").value;
+
+            var groupArtefacts = {
+                @groupArtefacts.map { res =>
+                '@{res.group}': [@for(a <- res.artefacts){
+                    '@a',
+                    }]
+                ,
+                }
+            }
+
+            var artefactSelect = document.getElementById("artefact")
+            while (artefactSelect.options.length > 0) {
+                artefactSelect.remove(artefactSelect.options.length - 1);
+            }
+
+            var artefacts = groupArtefacts[group];
+            if (artefacts) {
+                var opt = document.createElement('option');
+                opt.text = "@Messages("dependencyexplorer.select.artefact")";
+                opt.value = "@Messages("dependencyexplorer.select.artefact")";
+                artefactSelect.add(opt, null);
+                for (i = 0; i < artefacts.length; i++)
+                {
+                    var opt = document.createElement('option');
+                    opt.text = artefacts[i];
+                    opt.value = artefacts[i];
+                    opt.selected = artefacts[i] == '@{form("artefact").value}';
+                    artefactSelect.add(opt, null);
+                }
+            }
+        }
+    </script>
 }

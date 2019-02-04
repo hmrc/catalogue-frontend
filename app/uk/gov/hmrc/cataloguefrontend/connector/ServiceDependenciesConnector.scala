@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, ServiceWithDependency, Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, GroupArtefacts, ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.{HeaderCarrier, BadRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -81,6 +81,11 @@ class ServiceDependenciesConnector @Inject()(
         queryParams = Seq(
           "group"     -> group,
           "artefact"  -> artefact))
+   }
+
+   def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] = {
+     implicit val r = GroupArtefacts.apiFormat
+     http.GET[List[GroupArtefacts]](s"$servicesDependenciesBaseUrl/groupArtefacts")
    }
 
 

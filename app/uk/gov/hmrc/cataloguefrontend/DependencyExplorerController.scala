@@ -18,22 +18,16 @@ package uk.gov.hmrc.cataloguefrontend
 
 import cats.data.EitherT
 import cats.instances.all._
-import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import play.api.data.{Form, Forms}
-import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
+import play.api.i18n.{Messages, MessagesProvider}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import play.filters.csrf.CSRF
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Version, VersionOp}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.DependencyExplorerPage
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.control.NonFatal
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DependencyExplorerController @Inject()(
@@ -42,31 +36,38 @@ class DependencyExplorerController @Inject()(
     page   : DependencyExplorerPage)
   extends FrontendController(mcc) {
 
+
+  import ExecutionContext.Implicits.global
+
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
-      Future.successful(Ok(page(form, None)))
+      service.getGroupArtefacts.map { groupArtefacts =>
+        Ok(page(form, groupArtefacts, searchResults = None))
+      }
     }
 
 
   def search =
     Action.async { implicit request =>
-      def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), None)
-      form
-        .bindFromRequest()
-        .fold(
-          hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, None))),
-          success   = query => {
-            (for {
-              versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
-              version   <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
-              results   <- EitherT.right[Result] {
-                             service
-                              .getServicesWithDependency(query.group, query.artefact, versionOp, version)
-                           }
-             } yield Ok(page(form.bindFromRequest(), Some(results)))
-            ).merge
-          }
-        )
+      service.getGroupArtefacts.flatMap { groupArtefacts =>
+        def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), groupArtefacts, searchResults = None)
+        form
+          .bindFromRequest()
+          .fold(
+            hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, groupArtefacts, searchResults = None))),
+            success   = query => {
+              (for {
+                versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
+                version   <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
+                results   <- EitherT.right[Result] {
+                              service
+                                .getServicesWithDependency(query.group, query.artefact, versionOp, version)
+                            }
+              } yield Ok(page(form.bindFromRequest(), groupArtefacts, Some(results)))
+              ).merge
+            }
+          )
+      }
     }
 
   case class SearchForm(
@@ -75,13 +76,21 @@ class DependencyExplorerController @Inject()(
     versionOp: String,
     version  : String)
 
-  val form =
+  def notEmptyOr(s: String) = {
+    import play.api.data.validation._
+    Constraint[String]("") { o =>
+      if (o == null || o.trim.isEmpty || o == s) Invalid(ValidationError("error.required")) else Valid
+    }
+  }
+
+  def form(implicit messagesProvider: MessagesProvider) =
     Form(
       Forms.mapping(
-        "group"     -> Forms.text,
-        "artefact"  -> Forms.text,
+        "group"     -> Forms.text.verifying(notEmptyOr(Messages("dependencyexplorer.select.group"))),
+        "artefact"  -> Forms.text.verifying(notEmptyOr(Messages("dependencyexplorer.select.artefact"))),
         "versionOp" -> Forms.text,
         "version"   -> Forms.text
       )(SearchForm.apply)(SearchForm.unapply)
     )
+
 }
