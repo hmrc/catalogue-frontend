@@ -18,21 +18,16 @@ package uk.gov.hmrc.cataloguefrontend
 
 import cats.data.EitherT
 import cats.instances.all._
-import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import play.api.data.{Form, Forms}
-import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
+import play.api.i18n.{Messages, MessagesProvider}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import play.filters.csrf.CSRF
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Version, VersionOp}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.DependencyExplorerPage
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.control.NonFatal
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DependencyExplorerController @Inject()(
@@ -42,7 +37,7 @@ class DependencyExplorerController @Inject()(
   extends FrontendController(mcc) {
 
 
-import ExecutionContext.Implicits.global
+  import ExecutionContext.Implicits.global
 
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
@@ -88,11 +83,11 @@ import ExecutionContext.Implicits.global
     }
   }
 
-  val form =
+  def form(implicit messagesProvider: MessagesProvider) =
     Form(
       Forms.mapping(
-        "group"     -> Forms.text.verifying(notEmptyOr("Select Group")),
-        "artefact"  -> Forms.text.verifying(notEmptyOr("Select Artefact")),
+        "group"     -> Forms.text.verifying(notEmptyOr(Messages("dependencyexplorer.select.group"))),
+        "artefact"  -> Forms.text.verifying(notEmptyOr(Messages("dependencyexplorer.select.artefact"))),
         "versionOp" -> Forms.text,
         "version"   -> Forms.text
       )(SearchForm.apply)(SearchForm.unapply)

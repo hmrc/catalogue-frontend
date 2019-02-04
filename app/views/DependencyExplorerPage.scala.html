@@ -60,7 +60,7 @@
                             <td valign="top">
                                 @helper.select(
                                     form("group"),
-                                    helper.options(List("Select Group") ++ groupArtefacts.map(_.group)),
+                                    helper.options(List(Messages("dependencyexplorer.select.group")) ++ groupArtefacts.map(_.group)),
                                     '_label -> null,
                                     '_class -> "form-group"
                                 )
@@ -169,8 +169,8 @@
             var artefacts = groupArtefacts[group];
             if (artefacts) {
                 var opt = document.createElement('option');
-                opt.text = "Select Artefact";
-                opt.value = "Select Artefact";
+                opt.text = "@Messages("dependencyexplorer.select.artefact")";
+                opt.value = "@Messages("dependencyexplorer.select.artefact")";
                 artefactSelect.add(opt, null);
                 for (i = 0; i < artefacts.length; i++)
                 {
@@ -183,5 +183,4 @@
             }
         }
     </script>
-
 }

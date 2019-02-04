@@ -75,6 +75,7 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
   def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] =
     serviceDependenciesConnector
       .getGroupArtefacts
+      .map(_.map(g => g.copy(artefacts = g.artefacts.sorted)))
       .map(_.sortBy(_.group))
 }
 
