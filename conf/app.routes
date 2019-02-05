@@ -37,4 +37,4 @@ POST       /search                                      uk.gov.hmrc.cataloguefro
 GET        /dependencies/:name                          uk.gov.hmrc.cataloguefrontend.DependenciesController.service(name)
 
 GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.landing
-POST       /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search
+GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search

@@ -14,7 +14,6 @@
  * limitations under the License.
  *@
 
-@import views.html.helper.CSRF
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, VersionOp}
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
@@ -57,7 +56,6 @@
                     action =  routes.DependencyExplorerController.search,
                     'class -> "form-inline",
                     'id    -> "search-by-dependency-form") {
-                    @helper.CSRF.formField
                     <table padding="1">
                         <tr>
                             <td valign="top">
