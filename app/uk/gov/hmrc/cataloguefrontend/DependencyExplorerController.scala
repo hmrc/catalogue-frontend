@@ -42,7 +42,7 @@ class DependencyExplorerController @Inject()(
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
       service.getGroupArtefacts.map { groupArtefacts =>
-        Ok(page(form, groupArtefacts, searchResults = None, pieData = None))
+        Ok(page(form.fill(SearchForm("", "", "", "0.0.0")), groupArtefacts, searchResults = None, pieData = None))
       }
     }
 
