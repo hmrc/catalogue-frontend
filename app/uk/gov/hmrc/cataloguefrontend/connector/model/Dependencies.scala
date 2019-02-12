@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import org.joda.time.DateTime
-import play.api.libs.json.{__, Format, Json, JsError, JsString, JsSuccess, JsValue, OFormat}
+import play.api.libs.json.{__, Format, Json, JsError, JsObject, JsString, JsSuccess, JsValue, OFormat}
 import play.api.libs.functional.syntax._
 import uk.gov.hmrc.http.controllers.RestFormats
 
@@ -112,11 +112,18 @@ object Version {
     parse(version).getOrElse(sys.error(s"Could not parse version $version"))
 
   val format: Format[Version] = new Format[Version] {
-    override def reads(json: JsValue) =
+    override def reads(json: JsValue) = {
+      def parseStr(s: String) = Version.parse(s).map(v => JsSuccess(v)).getOrElse(JsError("Could not parse version"))
       json match {
-        case JsString(s) => Version.parse(s).map(v => JsSuccess(v)).getOrElse(JsError("Could not parse version"))
+        case JsString(s) => parseStr(s)
+        case JsObject(m) => m.get("original") match {
+                              case Some(JsString(s)) => parseStr(s)
+                              case _                 => JsError("Not a string")
+                            }
         case _           => JsError("Not a string")
       }
+    }
+
     override def writes(v: Version) =
       JsString(v.original)
   }
