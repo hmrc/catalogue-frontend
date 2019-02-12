@@ -62,7 +62,7 @@
                                 @helper.select(
                                     form("group"),
                                     helper.options(List(Messages("dependencyexplorer.select.group")) ++ groupArtefacts.map(_.group)),
-                                    '_label -> null,
+                                    '_label -> "",
                                     '_class -> "form-group"
                                 )
                            </td>
@@ -70,7 +70,7 @@
                                 @helper.select(
                                     form("artefact"),
                                     helper.options(List()),
-                                    '_label -> null,
+                                    '_label -> "",
                                     '_class -> "form-group"
                                 )
                            </td>
@@ -78,7 +78,7 @@
                                 @helper.select(
                                     form("versionOp"),
                                     helper.options(List(VersionOp.Gte.s, VersionOp.Lte.s, VersionOp.Eq.s)),
-                                    '_label -> null,
+                                    '_label -> "",
                                     '_class -> "form-group"
                                 )
                            </td>
@@ -87,7 +87,7 @@
                                     form("version"),
                                     'id          -> "version",
                                     'size        -> 20,
-                                    '_label      -> null,
+                                    '_label      -> "",
                                     'required    -> true,
                                     'placeholder -> "Version (e.g. 1.0.0)",
                                     '_class      -> "form-group"
