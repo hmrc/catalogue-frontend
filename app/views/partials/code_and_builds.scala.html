@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
@@ -32,7 +33,7 @@
             @for(ciLink <- repo.ci) {
                 <li class="list-item"><a id="link-to-@{ciLink.id}" href="@{ciLink.url}" target="_blank">@{ciLink.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
             }
-            @if(CatalogueFrontendSwitches.dependencyExplorer.isEnabled) {
+            @if(CatalogueFrontendSwitches.dependencyExplorer.isEnabled && repo.repoType == RepoType.Service) {
                 <li class="list-item"><a id="link-to-dependency-explorer" href="/dependencies/@{repo.name}" target="_blank">Service Dependencies<span class="glyphicon glyphicon-new-window"/></a></li>
             }
             </ul>

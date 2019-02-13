@@ -17,6 +17,7 @@
 package view.partials
 import java.time.LocalDateTime
 
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, FeatureSwitch}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, RepositoryDetails}
@@ -24,7 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.Link
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
-class CodeAndBuildsSpec extends WordSpec with Matchers {
+class CodeAndBuildsSpec extends WordSpec with Matchers with GeneratorDrivenPropertyChecks {
 
   val repo = RepositoryDetails(
     name         = "reponame",
@@ -36,7 +37,7 @@ class CodeAndBuildsSpec extends WordSpec with Matchers {
     githubUrl    = Link("repo1", "repository 1", "http://url"),
     ci           = Seq(),
     environments = None,
-    repoType     = RepoType.Other,
+    repoType     = RepoType.Service,
     isPrivate    = true
   )
 
@@ -60,6 +61,24 @@ class CodeAndBuildsSpec extends WordSpec with Matchers {
       val result = views.html.partials.code_and_builds(repo).body
       result should not include ("href=\"reponame/config\"")
       result should not include ("Config Explorer")
+    }
+
+    "display the service dependencies link when the repo type is a Service" in {
+      FeatureSwitch.enable(CatalogueFrontendSwitches.dependencyExplorer)
+      val result = views.html.partials.code_and_builds(repo).body
+      result should include("""href="/dependencies/reponame"""")
+      result should include("Service Dependencies")
+    }
+
+    import org.scalacheck._
+    "not display the service dependencies link when the repo type is anything other than a Service" in {
+      FeatureSwitch.enable(CatalogueFrontendSwitches.dependencyExplorer)
+
+      forAll(Gen.oneOf(RepoType.Library, RepoType.Other, RepoType.Prototype)) { genRepoType =>
+        val result = views.html.partials.code_and_builds(repo.copy(repoType = genRepoType)).body
+        result should not include("""href="/dependencies/reponame"""")
+        result should not include("Service Dependencies")
+      }
     }
 
 /*    "display routing rules when feature flag is enabled" in {
