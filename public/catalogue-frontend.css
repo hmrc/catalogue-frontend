@@ -12048,3 +12048,8 @@ section span.other-teams-message {
   cursor: pointer;
   cursor: hand;
 }
+
+.padded-table td {
+  padding-left: 2px;
+  padding-right: 2px;
+}
