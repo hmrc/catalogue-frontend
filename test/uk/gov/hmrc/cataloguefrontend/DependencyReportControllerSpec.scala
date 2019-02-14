@@ -130,7 +130,7 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Gui
 
       status(response) shouldBe 200
 
-      val csvLines = contentAsString(response).lines.toList
+      val csvLines = contentAsString(response).lines.toArray
 
       csvLines.length shouldBe 7
 

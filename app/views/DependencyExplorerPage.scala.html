@@ -56,7 +56,7 @@
                     action =  routes.DependencyExplorerController.search,
                     'class -> "form-inline",
                     'id    -> "search-by-dependency-form") {
-                    <table padding="1">
+                    <table class="padded-table">
                         <tr>
                             <td valign="top">
                                 @helper.select(
@@ -95,6 +95,11 @@
                           </td>
                           <td valign="bottom">
                               <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="5">
+                            <h5>N.B. Dependencies are only applicable for Scala based services currently</h5>
                           </td>
                         </tr>
                         </table>
