@@ -63,7 +63,8 @@
                             <td>
                                 @helper.select(
                                     form("team"),
-                                    helper.options(List(Messages("dependencyexplorer.select.teams.all")) ++ teams),
+                                    helper.options(Seq("" -> Messages("dependencyexplorer.select.teams.all")) ++
+                                                   teams.map(t => (t, t)) :_*),
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )
@@ -73,7 +74,8 @@
                             <td valign="top">
                                 @helper.select(
                                     form("group"),
-                                    helper.options(List(Messages("dependencyexplorer.select.group")) ++ groupArtefacts.map(_.group)),
+                                    helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
+                                                   groupArtefacts.map(_.group).map(g => (g, g)) :_*),
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )
@@ -193,7 +195,7 @@
             if (artefacts) {
                 var opt = document.createElement('option');
                 opt.text = "@Messages("dependencyexplorer.select.artefact")";
-                opt.value = "@Messages("dependencyexplorer.select.artefact")";
+                opt.value = "";
                 artefactSelect.add(opt, null);
                 for (i = 0; i < artefacts.length; i++)
                 {

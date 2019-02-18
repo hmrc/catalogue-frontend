@@ -65,7 +65,7 @@ class DependencyExplorerController @Inject()(
                 (for {
                   versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
                   version   <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
-                  team      =  if (query.team == Messages("dependencyexplorer.select.teams.all")) None else Some(query.team)
+                  team      =  if (query.team.isEmpty) None else Some(query.team)
                   results   <- EitherT.right[Result] {
                                 service
                                   .getServicesWithDependency(team, query.group, query.artefact, versionOp, version)
@@ -90,10 +90,11 @@ class DependencyExplorerController @Inject()(
     versionOp: String,
     version  : String)
 
-  def notEmptyOr(s: String) = {
+  // Forms.nonEmptyText, but has no constraint info label
+  def notEmpty = {
     import play.api.data.validation._
     Constraint[String]("") { o =>
-      if (o == null || o.trim.isEmpty || o == s) Invalid(ValidationError("error.required")) else Valid
+      if (o == null || o.trim.isEmpty) Invalid(ValidationError("error.required")) else Valid
     }
   }
 
@@ -101,8 +102,8 @@ class DependencyExplorerController @Inject()(
     Form(
       Forms.mapping(
         "team"      -> Forms.text,
-        "group"     -> Forms.text.verifying(notEmptyOr(Messages("dependencyexplorer.select.group"))),
-        "artefact"  -> Forms.text.verifying(notEmptyOr(Messages("dependencyexplorer.select.artefact"))),
+        "group"     -> Forms.text.verifying(notEmpty),
+        "artefact"  -> Forms.text.verifying(notEmpty),
         "versionOp" -> Forms.text,
         "version"   -> Forms.text
       )(SearchForm.apply)(SearchForm.unapply)
