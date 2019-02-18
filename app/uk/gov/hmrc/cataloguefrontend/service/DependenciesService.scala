@@ -55,12 +55,14 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
     }
 
   def getServicesWithDependency(
+      optTeam  : Option[String],
       group    : String,
       artefact : String,
       versionOp: VersionOp,
       version  : Version)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =
+      // TODO or just filter team in results?
     serviceDependenciesConnector
-      .getServicesWithDependency(group, artefact)
+      .getServicesWithDependency(optTeam, group, artefact)
       .map { l =>
         versionOp match {
           case VersionOp.Gte => l.filter(_.depSemanticVersion.map(_ >= version).getOrElse(true)) // include invalid semanticVersion in results

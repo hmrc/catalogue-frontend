@@ -15,6 +15,7 @@
  *@
 
 @import play.api.mvc.Call
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, VersionOp}
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
@@ -25,6 +26,7 @@
 @this(viewMessages: ViewMessages)
 
 @(form            : Form[_],
+  teams           : Seq[String],
   groupArtefacts  : List[GroupArtefacts],
   searchResults   : Option[Seq[ServiceWithDependency]],
   pieData         : Option[PieData])(
@@ -57,6 +59,16 @@
                     'class -> "form-inline",
                     'id    -> "search-by-dependency-form") {
                     <table class="padded-table">
+                        <tr>
+                            <td>
+                                @helper.select(
+                                    form("team"),
+                                    helper.options(List(Messages("dependencyexplorer.select.teams.all")) ++ teams),
+                                    '_label -> "",
+                                    '_class -> "form-group"
+                                )
+                            </td>
+                        </tr>
                         <tr>
                             <td valign="top">
                                 @helper.select(
