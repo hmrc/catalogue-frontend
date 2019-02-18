@@ -28,15 +28,14 @@ import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.sign_in
-
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AuthController @Inject()(
   authService: AuthService,
   configuration: Configuration,
-  mcc: MessagesControllerComponents
-) extends FrontendController(mcc) {
+  mcc: MessagesControllerComponents)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
   import AuthController.signinForm
 
@@ -52,16 +51,18 @@ class AuthController @Inject()(
       .fold(
         formWithErrors => Future.successful(BadRequest(sign_in(formWithErrors, selfServiceUrl))),
         signInData =>
-          authService.authenticate(signInData.username, signInData.password).map {
-            case Right(TokenAndDisplayName(UmpToken(token), DisplayName(displayName))) =>
-              Redirect(routes.CatalogueController.index())
-                .withSession(
-                  UmpToken.SESSION_KEY_NAME    -> token,
-                  DisplayName.SESSION_KEY_NAME -> displayName
-                )
-            case Left(_) =>
-              BadRequest(sign_in(signinForm.withGlobalError(Messages("sign-in.wrong-credentials")), selfServiceUrl))
-        }
+          authService
+            .authenticate(signInData.username, signInData.password)
+            .map {
+              case Right(TokenAndDisplayName(UmpToken(token), DisplayName(displayName))) =>
+                Redirect(routes.CatalogueController.index())
+                  .withSession(
+                    UmpToken.SESSION_KEY_NAME    -> token,
+                    DisplayName.SESSION_KEY_NAME -> displayName
+                  )
+              case Left(_) =>
+                BadRequest(sign_in(signinForm.withGlobalError(Messages("sign-in.wrong-credentials")), selfServiceUrl))
+          }
       )
   }
 
