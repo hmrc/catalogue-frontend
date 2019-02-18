@@ -151,6 +151,7 @@ object VersionOp {
 case class ServiceWithDependency(
   slugName          : String,
   slugVersion       : String,
+  teams             : List[String],
   depGroup          : String,
   depArtefact       : String,
   depVersion        : String,
@@ -164,6 +165,7 @@ object ServiceWithDependency {
   val reads: Reads[ServiceWithDependency] = {
     ( (__ \ "slugName"   ).read[String]
     ~ (__ \ "slugVersion").read[String]
+    ~ (__ \ "teams"      ).read[List[String]]
     ~ (__ \ "depGroup"   ).read[String]
     ~ (__ \ "depArtefact").read[String]
     ~ (__ \ "depVersion" ).read[String]
