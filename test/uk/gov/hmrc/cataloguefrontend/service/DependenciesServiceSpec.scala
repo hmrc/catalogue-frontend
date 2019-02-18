@@ -39,6 +39,7 @@ class SlugInfoServiceSpec
     ServiceWithDependency(
       slugName           = "service1",
       slugVersion        = "v1",
+      teams              = List("T1"),
       depGroup           = group,
       depArtefact        = artefact,
       depVersion         = "1.0.0",
@@ -48,6 +49,7 @@ class SlugInfoServiceSpec
     ServiceWithDependency(
       slugName           = "service1",
       slugVersion        = "v1",
+      teams              = List("T1", "T2"),
       depGroup           = group,
       depArtefact        = artefact,
       depVersion         = "2.0.0",
@@ -57,22 +59,23 @@ class SlugInfoServiceSpec
     ServiceWithDependency(
       slugName           = "service1",
       slugVersion        = "v1",
+      teams              = List("T2"),
       depGroup           = group,
       depArtefact        = artefact,
       depVersion         = "2.0.5",
       depSemanticVersion = Version.parse("2.0.5"))
 
   "DependenciesService.getServicesWithDependency" should {
-    "filter results" in {
+    "filter results by version" in {
 
       val boot = Boot.init
 
       when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(group, artefact))
         .thenReturn(Future(Seq(v100, v200, v205)))
 
-      await(boot.service.getServicesWithDependency(group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200)
-      await(boot.service.getServicesWithDependency(group, artefact, versionOp = VersionOp.Lte, version = Version("1.0.1"))) shouldBe Seq(v100)
-      await(boot.service.getServicesWithDependency(group, artefact, versionOp = VersionOp.Eq,  version = Version("2.0.0"))) shouldBe Seq(v200)
+      await(boot.service.getServicesWithDependency(optTeam = None, group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200)
+      await(boot.service.getServicesWithDependency(optTeam = None, group, artefact, versionOp = VersionOp.Lte, version = Version("1.0.1"))) shouldBe Seq(v100)
+      await(boot.service.getServicesWithDependency(optTeam = None, group, artefact, versionOp = VersionOp.Eq,  version = Version("2.0.0"))) shouldBe Seq(v200)
     }
 
     "include non-parseable versions" in {
@@ -84,8 +87,19 @@ class SlugInfoServiceSpec
       when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(group, artefact))
         .thenReturn(Future(Seq(v100, v200, v205, bad)))
 
-      await(boot.service.getServicesWithDependency(group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200, bad)
-      await(boot.service.getServicesWithDependency(group, artefact, versionOp = VersionOp.Lte, version = Version("1.0.1"))) shouldBe Seq(v100, bad)
+      await(boot.service.getServicesWithDependency(optTeam = None, group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200, bad)
+      await(boot.service.getServicesWithDependency(optTeam = None, group, artefact, versionOp = VersionOp.Lte, version = Version("1.0.1"))) shouldBe Seq(v100, bad)
+    }
+
+    "filter results by team" in {
+
+      val boot = Boot.init
+
+      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(group, artefact))
+        .thenReturn(Future(Seq(v100, v200, v205)))
+
+      await(boot.service.getServicesWithDependency(optTeam = Some("T1"), group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v200)
+      await(boot.service.getServicesWithDependency(optTeam = Some("T2"), group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200)
     }
   }
 
