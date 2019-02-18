@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
+import akka.actor.ActorSystem
 import cats.data.OptionT
 import cats.implicits._
 import com.typesafe.config.Config
@@ -26,7 +27,6 @@ import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.ws.WSHttp
-
 import scala.collection.immutable.Queue
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -187,9 +187,10 @@ trait HttpClientStub {
     override def doDelete(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
       ???
 
-    override protected def configuration: Option[Config] = ???
+    override protected def configuration: Option[Config] = None
 
-    override def wsClient: WSClient = ???
+    override def wsClient: WSClient                 = ???
+    override protected def actorSystem: ActorSystem = ActorSystem("test-actor-system")
   }
 
   val httpClient: ClientStub = new ClientStub(expect)
