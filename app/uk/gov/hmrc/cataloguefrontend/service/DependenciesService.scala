@@ -60,9 +60,14 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
       artefact : String,
       versionOp: VersionOp,
       version  : Version)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =
-      // TODO or just filter team in results?
     serviceDependenciesConnector
-      .getServicesWithDependency(optTeam, group, artefact)
+      .getServicesWithDependency(group, artefact)
+      .map { l =>
+        optTeam match {
+          case None       => l
+          case Some(team) => l.filter(_.teams.contains(team))
+        }
+      }
       .map { l =>
         versionOp match {
           case VersionOp.Gte => l.filter(_.depSemanticVersion.map(_ >= version).getOrElse(true)) // include invalid semanticVersion in results
