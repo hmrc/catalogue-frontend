@@ -55,12 +55,19 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
     }
 
   def getServicesWithDependency(
+      optTeam  : Option[String],
       group    : String,
       artefact : String,
       versionOp: VersionOp,
       version  : Version)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =
     serviceDependenciesConnector
       .getServicesWithDependency(group, artefact)
+      .map { l =>
+        optTeam match {
+          case None       => l
+          case Some(team) => l.filter(_.teams.contains(team))
+        }
+      }
       .map { l =>
         versionOp match {
           case VersionOp.Gte => l.filter(_.depSemanticVersion.map(_ >= version).getOrElse(true)) // include invalid semanticVersion in results
