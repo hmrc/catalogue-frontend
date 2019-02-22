@@ -92,16 +92,29 @@ object DependenciesService {
     dependencies.sortBy(serviceDependency => (serviceDependency.group, serviceDependency.artifact))
 }
 
-case class ServiceDependency(path: String, group: String, artifact: String, version: String, meta: String = "")
-case class ServiceDependencies(uri: String,
-                               name: String,
-                               version: Option[String],
-                               runnerVersion: String,
-                               classpath: String,
-                               dependencies: Seq[ServiceDependency],
-                               environment: Option[String] = None) {
+case class ServiceDependency(
+    path    : String
+  , group   : String
+  , artifact: String
+  , version : String
+  , meta    : String = ""
+  )
+
+case class ServiceDependencies(
+      uri          : String
+    , name         : String
+    , version      : Option[String]
+    , runnerVersion: String
+    , classpath    : String
+    , dependencies : Seq[ServiceDependency]
+    , environment  : Option[String] = None
+    ) {
   val isEmpty: Boolean = dependencies.isEmpty
+
   val nonEmpty: Boolean = dependencies.nonEmpty
+
+  val semanticVersion: Option[Version] =
+    version.flatMap(Version.parse)
 }
 
 object ServiceDependencies {

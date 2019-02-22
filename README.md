@@ -11,6 +11,8 @@
 
 #### Feature Flags
 `feature.configExplorer = true` enables config explorer link in Code & Build section.
+`feature.urlRoutingRules =true` enables url routing rules.
+`feature.dependencyExplorer = true` enables the dependency explorer link in navigation bar.
 
 ### Frontend Development
 
