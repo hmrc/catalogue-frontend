@@ -1,6 +1,7 @@
 # microservice specific routes
 
 GET        /repositories                                uk.gov.hmrc.cataloguefrontend.CatalogueController.allRepositories
+GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 GET        /teams                                       uk.gov.hmrc.cataloguefrontend.CatalogueController.allTeams
 GET        /teams/:teamName                             uk.gov.hmrc.cataloguefrontend.CatalogueController.team(teamName)
 GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.CatalogueController.outOfDateTeamDependencies(teamName)
@@ -16,7 +17,6 @@ GET        /service/:name/config                        uk.gov.hmrc.cataloguefro
 GET        /service/:name/config/raw                    uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceConfigRaw(name)
 GET        /libraries                                   uk.gov.hmrc.cataloguefrontend.CatalogueController.allLibraries
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
-GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 GET        /prototypes                                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allPrototypes
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
 GET        /deployments                                 uk.gov.hmrc.cataloguefrontend.CatalogueController.deploymentsPage
