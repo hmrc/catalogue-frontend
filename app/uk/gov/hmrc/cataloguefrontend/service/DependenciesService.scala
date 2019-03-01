@@ -56,12 +56,13 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
 
   def getServicesWithDependency(
       optTeam  : Option[String],
+      flag     : String,
       group    : String,
       artefact : String,
       versionOp: VersionOp,
       version  : Version)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =
     serviceDependenciesConnector
-      .getServicesWithDependency(group, artefact)
+      .getServicesWithDependency(flag, group, artefact)
       .map { l =>
         optTeam match {
           case None       => l

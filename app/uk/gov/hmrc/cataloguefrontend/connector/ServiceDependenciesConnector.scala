@@ -72,15 +72,17 @@ class ServiceDependenciesConnector @Inject()(
   }
 
   def getServicesWithDependency(
-      group       : String,
-      artefact    : String)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] = {
+      flag    : String,
+      group   : String,
+      artefact: String)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] = {
     implicit val r = ServiceWithDependency.reads
     http
       .GET[Seq[ServiceWithDependency]](
         s"$servicesDependenciesBaseUrl/serviceDeps",
         queryParams = Seq(
-          "group"     -> group,
-          "artefact"  -> artefact))
+          "flag"     -> flag,
+          "group"    -> group,
+          "artefact" -> artefact))
    }
 
    def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] = {

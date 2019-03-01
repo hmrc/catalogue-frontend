@@ -27,6 +27,7 @@
 
 @(form            : Form[_],
   teams           : Seq[String],
+  flags           : Seq[String],
   groupArtefacts  : List[GroupArtefacts],
   searchResults   : Option[Seq[ServiceWithDependency]],
   pieData         : Option[PieData])(
@@ -65,6 +66,14 @@
                                     form("team"),
                                     helper.options(Seq("" -> Messages("dependencyexplorer.select.teams.all")) ++
                                                    teams.map(t => (t, t)) :_*),
+                                    '_label -> "",
+                                    '_class -> "form-group"
+                                )
+                            </td>
+                            <td>
+                                @helper.select(
+                                    form("flag"),
+                                    helper.options(flags.map(t => (t, t)) :_*),
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )
