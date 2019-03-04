@@ -23,9 +23,8 @@ import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.{HeaderCarrier, BadRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 sealed trait SlugInfoFlag { def s: String }
@@ -43,7 +42,8 @@ object SlugInfoFlag {
 @Singleton
 class ServiceDependenciesConnector @Inject()(
   http          : HttpClient,
-  servicesConfig: ServicesConfig) {
+  servicesConfig: ServicesConfig
+)(implicit val ec: ExecutionContext) {
 
   private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies") + "/api"
 

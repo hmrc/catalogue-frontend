@@ -31,9 +31,10 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{Toke
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
+  import ExecutionContext.Implicits.global
 
   implicit val defaultPatienceConfig = PatienceConfig(Span(500, Millis), Span(15, Millis))
 

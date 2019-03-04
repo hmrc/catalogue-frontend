@@ -25,9 +25,8 @@ import play.api.Logger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 
 case class Deployer(name: String, deploymentDate: LocalDateTime)
@@ -65,9 +64,9 @@ object ServiceDeploymentInformation {
 
 @Singleton
 class ServiceDeploymentsConnector @Inject()(
-  http: HttpClient,
+  http          : HttpClient,
   servicesConfig: ServicesConfig
-) {
+)(implicit val ec: ExecutionContext) {
 
   private val serviceUrl: String                 = servicesConfig.baseUrl("service-deployments")
   private val servicesDeploymentsBaseUrl: String = s"$serviceUrl/api/deployments"

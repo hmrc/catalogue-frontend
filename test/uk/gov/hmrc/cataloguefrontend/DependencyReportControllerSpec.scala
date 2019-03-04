@@ -36,9 +36,10 @@ import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.time.DateTimeUtils
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
+  import ExecutionContext.Implicits.global
 
   private val now: LocalDateTime = LocalDateTime.now()
 

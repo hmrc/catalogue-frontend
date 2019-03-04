@@ -20,11 +20,12 @@ import java.net.{URI, URISyntaxException}
 import javax.inject._
 import uk.gov.hmrc.cataloguefrontend.connector.SearchByUrlConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SearchByUrlService @Inject()(searchByUrlConnector: SearchByUrlConnector) {
+class SearchByUrlService @Inject()(
+  searchByUrlConnector: SearchByUrlConnector
+)(implicit val ec: ExecutionContext) {
 
   import SearchByUrlService._
 

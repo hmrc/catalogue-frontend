@@ -22,10 +22,9 @@ import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.{Deployer, Release, ServiceDeploymentInformation, ServiceDeploymentsConnector}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
+
+import scala.concurrent.{ExecutionContext, Future}
 
 case class TeamRelease(
   name: ServiceName,
@@ -51,8 +50,8 @@ object ReleaseFilter {
 @Singleton
 class DeploymentsService @Inject()(
   serviceDeploymentsConnector: ServiceDeploymentsConnector,
-  teamsAndServicesConnector: TeamsAndRepositoriesConnector
-) {
+  teamsAndServicesConnector  : TeamsAndRepositoriesConnector
+)(implicit val ec: ExecutionContext) {
 
   import ReleaseFilter._
 

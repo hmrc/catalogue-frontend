@@ -35,11 +35,9 @@ class DependencyExplorerController @Inject()(
     mcc        : MessagesControllerComponents,
     trConnector: TeamsAndRepositoriesConnector,
     service    : DependenciesService,
-    page       : DependencyExplorerPage)
-  extends FrontendController(mcc) {
-
-
-  import ExecutionContext.Implicits.global
+    page       : DependencyExplorerPage
+  )(implicit val ec: ExecutionContext
+  ) extends FrontendController(mcc) {
 
   def landing: Action[AnyContent] =
     Action.async { implicit request =>

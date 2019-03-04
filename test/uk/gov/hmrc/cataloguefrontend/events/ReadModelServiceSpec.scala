@@ -22,11 +22,12 @@ import org.scalatest.{FunSpec, Matchers}
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 
 class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
+  import ExecutionContext.Implicits.global
 
   val eventService            = mock[EventService]
   val userManagementConnector = mock[UserManagementConnector]

@@ -21,7 +21,11 @@ import org.scalatest.{Matchers, WordSpec}
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.{RepositoryWithLeaks, Team}
 
+import scala.concurrent.ExecutionContext
+
 class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyChecks {
+
+  import ExecutionContext.Implicits.global
 
   "Service" should {
 

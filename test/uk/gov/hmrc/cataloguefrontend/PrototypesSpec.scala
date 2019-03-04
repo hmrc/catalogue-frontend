@@ -27,7 +27,10 @@ import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
 
+import scala.concurrent.ExecutionContext
+
 class PrototypesSpec extends UnitSpec with MockitoSugar {
+  import ExecutionContext.Implicits.global
 
   "/prototypes" should {
     "redirect to the repositories page with a filter showing only prototypes" in {

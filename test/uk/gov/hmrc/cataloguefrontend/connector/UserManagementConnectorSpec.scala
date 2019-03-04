@@ -36,7 +36,7 @@ import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 class UserManagementConnectorSpec
@@ -50,6 +50,8 @@ class UserManagementConnectorSpec
     with EitherValues
     with MockitoSugar
     with OptionValues {
+
+  import ExecutionContext.Implicits.global
 
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()

@@ -22,15 +22,15 @@ import play.api.libs.json.Reads
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import scala.concurrent.Future
+
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
 class LeakDetectionConnector @Inject()(
-  http: HttpClient,
+  http          : HttpClient,
   servicesConfig: ServicesConfig
-) {
+)(implicit val ec: ExecutionContext) {
 
   private val url: String = servicesConfig.baseUrl("leak-detection")
 

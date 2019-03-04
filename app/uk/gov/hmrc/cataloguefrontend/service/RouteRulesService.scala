@@ -19,10 +19,11 @@ package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class RouteRulesService @Inject()(routeRulesConnector: RouteRulesConnector) {
+class RouteRulesService @Inject()(
+  routeRulesConnector: RouteRulesConnector
+)(implicit val ec: ExecutionContext) {
   import RouteRulesService._
 
   def serviceRoutes(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRoutes] =

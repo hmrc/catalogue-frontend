@@ -37,8 +37,7 @@ import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
 
 import scala.collection.SortedMap
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class TeamActivityDates(
   firstActive: Option[LocalDateTime],
@@ -78,7 +77,8 @@ class CatalogueController @Inject()(
    repositoryInfoPage: RepositoryInfoPage,
    repositoriesListPage: RepositoriesListPage,
    outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage
-) extends FrontendController(mcc) {
+)(implicit val ec: ExecutionContext)
+ extends FrontendController(mcc) {
 
   import UserManagementConnector._
   import userManagementPortalConfig._

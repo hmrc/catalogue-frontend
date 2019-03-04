@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -70,12 +70,12 @@ class SlugInfoServiceSpec
 
       val boot = Boot.init
 
-      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(group, artefact))
+      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact))
         .thenReturn(Future(Seq(v100, v200, v205)))
 
-      await(boot.service.getServicesWithDependency(optTeam = None, group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200)
-      await(boot.service.getServicesWithDependency(optTeam = None, group, artefact, versionOp = VersionOp.Lte, version = Version("1.0.1"))) shouldBe Seq(v100)
-      await(boot.service.getServicesWithDependency(optTeam = None, group, artefact, versionOp = VersionOp.Eq,  version = Version("2.0.0"))) shouldBe Seq(v200)
+      await(boot.service.getServicesWithDependency(optTeam = None, SlugInfoFlag.Latest, group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200)
+      await(boot.service.getServicesWithDependency(optTeam = None, SlugInfoFlag.Latest, group, artefact, versionOp = VersionOp.Lte, version = Version("1.0.1"))) shouldBe Seq(v100)
+      await(boot.service.getServicesWithDependency(optTeam = None, SlugInfoFlag.Latest, group, artefact, versionOp = VersionOp.Eq,  version = Version("2.0.0"))) shouldBe Seq(v200)
     }
 
     "include non-parseable versions" in {
@@ -84,22 +84,22 @@ class SlugInfoServiceSpec
 
       val bad = v100.copy(depVersion  = "r938", depSemanticVersion = None)
 
-      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(group, artefact))
+      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact))
         .thenReturn(Future(Seq(v100, v200, v205, bad)))
 
-      await(boot.service.getServicesWithDependency(optTeam = None, group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200, bad)
-      await(boot.service.getServicesWithDependency(optTeam = None, group, artefact, versionOp = VersionOp.Lte, version = Version("1.0.1"))) shouldBe Seq(v100, bad)
+      await(boot.service.getServicesWithDependency(optTeam = None, SlugInfoFlag.Latest, group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200, bad)
+      await(boot.service.getServicesWithDependency(optTeam = None, SlugInfoFlag.Latest, group, artefact, versionOp = VersionOp.Lte, version = Version("1.0.1"))) shouldBe Seq(v100, bad)
     }
 
     "filter results by team" in {
 
       val boot = Boot.init
 
-      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(group, artefact))
+      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact))
         .thenReturn(Future(Seq(v100, v200, v205)))
 
-      await(boot.service.getServicesWithDependency(optTeam = Some("T1"), group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v200)
-      await(boot.service.getServicesWithDependency(optTeam = Some("T2"), group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200)
+      await(boot.service.getServicesWithDependency(optTeam = Some("T1"), SlugInfoFlag.Latest, group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v200)
+      await(boot.service.getServicesWithDependency(optTeam = Some("T2"), SlugInfoFlag.Latest, group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200)
     }
   }
 

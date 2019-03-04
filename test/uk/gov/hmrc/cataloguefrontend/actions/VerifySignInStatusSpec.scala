@@ -29,9 +29,10 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFutures with GuiceOneAppPerSuite {
+  import ExecutionContext.Implicits.global
 
   "Action" should {
 

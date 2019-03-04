@@ -36,9 +36,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import views.html._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndAfter {
+
+  import ExecutionContext.Implicits.global
 
   "deploymentsList" should {
 

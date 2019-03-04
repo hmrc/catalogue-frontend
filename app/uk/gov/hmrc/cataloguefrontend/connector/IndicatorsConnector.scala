@@ -24,9 +24,8 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class MedianDataPoint(median: Int)
 
@@ -70,9 +69,9 @@ case class MeasureResult(median: Int)
 
 @Singleton
 class IndicatorsConnector @Inject()(
-  http: HttpClient,
+  http          : HttpClient,
   servicesConfig: ServicesConfig
-) {
+)(implicit val ec: ExecutionContext) {
   private val indicatorsBaseUrl: String = servicesConfig.baseUrl("indicators") + "/api/indicators"
 
   private implicit val mesureResultFormats              = Json.reads[MeasureResult]

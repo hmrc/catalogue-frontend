@@ -23,7 +23,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.FrontendHeaderCarrierProvider
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -33,8 +32,9 @@ final case class UmpVerifiedRequest[A](request: Request[A], override val message
 @Singleton
 class VerifySignInStatus @Inject()(
   userManagementAuthConnector: UserManagementAuthConnector,
-  cc: MessagesControllerComponents
-) extends ActionBuilder[UmpVerifiedRequest, AnyContent]
+  cc                         : MessagesControllerComponents
+)(implicit val ec: ExecutionContext)
+  extends ActionBuilder[UmpVerifiedRequest, AnyContent]
     with FrontendHeaderCarrierProvider {
 
   def invokeBlock[A](request: Request[A], block: UmpVerifiedRequest[A] => Future[Result]): Future[Result] = {

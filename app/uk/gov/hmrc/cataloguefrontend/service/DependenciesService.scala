@@ -25,9 +25,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDependenciesConnector) {
-
-  import ExecutionContext.Implicits.global
+class DependenciesService @Inject()(
+  serviceDependenciesConnector: ServiceDependenciesConnector
+)(implicit val ec: ExecutionContext) {
 
   def search(serviceName: String, serviceDeploymentInformation: Either[Throwable, ServiceDeploymentInformation])
             (implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] = {

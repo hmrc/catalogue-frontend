@@ -19,9 +19,10 @@ package uk.gov.hmrc.cataloguefrontend.actions
 import play.api.mvc.{MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait ActionsSupport {
+  import ExecutionContext.Implicits.global
 
   class UmpAuthenticatedPassThrough(
     umac: UserManagementAuthConnector,

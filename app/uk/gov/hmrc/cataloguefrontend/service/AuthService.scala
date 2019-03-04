@@ -24,14 +24,14 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayNa
 import uk.gov.hmrc.cataloguefrontend.connector.{UserManagementAuthConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AuthService @Inject()(
   userManagementAuthConnector: UserManagementAuthConnector,
-  userManagementConnector: UserManagementConnector) {
+  userManagementConnector    : UserManagementConnector
+)(implicit val ec: ExecutionContext) {
 
   def authenticate(username: String, password: String)(
     implicit hc: HeaderCarrier): Future[Either[UmpUnauthorized, TokenAndDisplayName]] = {

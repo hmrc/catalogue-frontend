@@ -24,13 +24,13 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers
 import uk.gov.hmrc.mongo.ReactiveRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class EventRepository @Inject()(
-  mongo: ReactiveMongoComponent,
+  mongo        : ReactiveMongoComponent,
   futureHelpers: FutureHelpers
+)(implicit val ec: ExecutionContext
 ) extends ReactiveRepository[Event, BSONObjectID](
       collectionName = "events",
       mongo          = mongo.mongoConnector.db,

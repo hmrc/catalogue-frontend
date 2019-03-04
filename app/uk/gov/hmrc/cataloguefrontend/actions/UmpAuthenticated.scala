@@ -21,7 +21,6 @@ import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import play.api.mvc.Results._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -30,8 +29,10 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class UmpAuthenticated @Inject()(
   userManagementAuthConnector: UserManagementAuthConnector,
-  cc: MessagesControllerComponents
-) extends ActionBuilder[Request, AnyContent] {
+  cc                         : MessagesControllerComponents
+)(implicit val ec: ExecutionContext)
+  extends ActionBuilder[Request, AnyContent] {
+
 
   def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
