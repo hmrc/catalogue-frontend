@@ -358,6 +358,10 @@ class CatalogueController @Inject()(
   def repository(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
       repository           <- teamsAndRepositoriesConnector.repositoryDetails(name)
+                                .map(_.map(repo => repo.copy(teamNames = {
+                                  val (owners, other) = repo.teamNames.partition(s => repo.owningTeams.contains(s))
+                                  owners.sorted ++ other.sorted
+                                })))
       indicators           <- indicatorsConnector.buildIndicatorsForRepository(name)
       mayBeDependencies    <- serviceDependencyConnector.getDependencies(name)
       maybeUrlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
