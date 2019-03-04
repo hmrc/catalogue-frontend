@@ -15,7 +15,7 @@
  *@
 
 @import play.api.mvc.Call
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, Team}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, VersionOp}
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
@@ -27,7 +27,7 @@
 
 @(form            : Form[_],
   teams           : Seq[String],
-  flags           : Seq[String],
+  flags           : Seq[SlugInfoFlag],
   groupArtefacts  : List[GroupArtefacts],
   searchResults   : Option[Seq[ServiceWithDependency]],
   pieData         : Option[PieData])(
@@ -73,7 +73,7 @@
                             <td>
                                 @helper.select(
                                     form("flag"),
-                                    helper.options(flags.map(t => (t, t)) :_*),
+                                    helper.options(flags.map(t => (t.s, t.s.capitalize)) :_*),
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )

@@ -22,7 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.i18n.{Messages, MessagesProvider}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Version, VersionOp}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
@@ -45,9 +45,9 @@ class DependencyExplorerController @Inject()(
     Action.async { implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
-        flags          =  List("latest", "production", "qa")
+        flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
-      } yield Ok(page(form.fill(SearchForm("", "latest", "", "", "", "0.0.0")), teams, flags, groupArtefacts, searchResults = None, pieData = None))
+      } yield Ok(page(form.fill(SearchForm("", SlugInfoFlag.Latest.s, "", "", "", "0.0.0")), teams, flags, groupArtefacts, searchResults = None, pieData = None))
     }
 
 
@@ -55,7 +55,7 @@ class DependencyExplorerController @Inject()(
     Action.async { implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
-        flags          =  List("latest", "production", "qa")
+        flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
         res            <- {
           def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), teams, flags, groupArtefacts, searchResults = None, pieData = None)
@@ -68,9 +68,10 @@ class DependencyExplorerController @Inject()(
                   versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
                   version   <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
                   team      =  if (query.team.isEmpty) None else Some(query.team)
+                  flag      <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
                   results   <- EitherT.right[Result] {
                                 service
-                                  .getServicesWithDependency(team, query.flag, query.group, query.artefact, versionOp, version)
+                                  .getServicesWithDependency(team, flag, query.group, query.artefact, versionOp, version)
                               }
                   pieData   =  DependencyExplorerController.PieData(
                                 "Version spread",

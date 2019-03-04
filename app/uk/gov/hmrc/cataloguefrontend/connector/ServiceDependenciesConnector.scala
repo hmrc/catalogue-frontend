@@ -28,6 +28,18 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
+sealed trait SlugInfoFlag { def s: String }
+object SlugInfoFlag {
+  case object Latest     extends SlugInfoFlag { val s = "latest"     }
+  case object Production extends SlugInfoFlag { val s = "production" }
+  case object QA         extends SlugInfoFlag { val s = "qa"         }
+
+  val values = List(Latest, Production, QA)
+
+  def parse(s: String): Option[SlugInfoFlag] =
+    values.find(_.s == s)
+}
+
 @Singleton
 class ServiceDependenciesConnector @Inject()(
   http          : HttpClient,
@@ -72,7 +84,7 @@ class ServiceDependenciesConnector @Inject()(
   }
 
   def getServicesWithDependency(
-      flag    : String,
+      flag    : SlugInfoFlag,
       group   : String,
       artefact: String)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] = {
     implicit val r = ServiceWithDependency.reads
@@ -80,7 +92,7 @@ class ServiceDependenciesConnector @Inject()(
       .GET[Seq[ServiceWithDependency]](
         s"$servicesDependenciesBaseUrl/serviceDeps",
         queryParams = Seq(
-          "flag"     -> flag,
+          "flag"     -> flag.s,
           "group"    -> group,
           "artefact" -> artefact))
    }

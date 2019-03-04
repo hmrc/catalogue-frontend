@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject._
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceDeploymentInformation}
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,7 +56,7 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
 
   def getServicesWithDependency(
       optTeam  : Option[String],
-      flag     : String,
+      flag     : SlugInfoFlag,
       group    : String,
       artefact : String,
       versionOp: VersionOp,
