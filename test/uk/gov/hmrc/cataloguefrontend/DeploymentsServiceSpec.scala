@@ -29,7 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, TeamRelease}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class DeploymentsServiceSpec
     extends WordSpec
@@ -38,6 +38,8 @@ class DeploymentsServiceSpec
     with ScalaFutures
     with OptionValues
     with EitherValues {
+
+  import ExecutionContext.Implicits.global
 
   val now: LocalDateTime = LocalDateTime.now()
 

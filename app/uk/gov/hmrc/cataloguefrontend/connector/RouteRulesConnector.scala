@@ -24,15 +24,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
 class RouteRulesConnector @Inject()(
-                                 http: HttpClient,
-                                 servicesConfig: ServicesConfig
-                               ) {
+  http          : HttpClient,
+  servicesConfig: ServicesConfig
+)(implicit val ec: ExecutionContext) {
 
   private val url: String = s"${servicesConfig.baseUrl("service-configs")}/frontend-route"
 

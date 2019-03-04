@@ -33,9 +33,10 @@ import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
+  import ExecutionContext.Implicits.global
 
   "serviceOwner" should {
 

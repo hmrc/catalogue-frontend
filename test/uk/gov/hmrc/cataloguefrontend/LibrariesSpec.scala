@@ -27,7 +27,10 @@ import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
 
+import scala.concurrent.ExecutionContext
+
 class LibrariesSpec extends UnitSpec with MockitoSugar {
+  import ExecutionContext.Implicits.global
 
   "/libraries" should {
     "redirect to the repositories page with the appropriate filters" in {

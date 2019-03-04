@@ -21,11 +21,12 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, FunSpec}
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 class UpdateSchedulerSpec extends FunSpec with MockitoSugar with BeforeAndAfterAll {
+  import ExecutionContext.Implicits.global
 
   private val actorSystem           = ActorSystem()
   override protected def afterAll() = Await.ready(actorSystem.terminate(), 5 seconds)

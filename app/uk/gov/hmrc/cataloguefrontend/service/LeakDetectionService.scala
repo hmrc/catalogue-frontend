@@ -19,12 +19,15 @@ import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.{LeakDetectionConnector, RepositoryWithLeaks, Team}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class LeakDetectionService @Inject()(leakDetectionConnector: LeakDetectionConnector, configuration: Configuration) {
+class LeakDetectionService @Inject()(
+  leakDetectionConnector: LeakDetectionConnector,
+  configuration         : Configuration
+)(implicit val ec: ExecutionContext) {
+
   def urlIfLeaksFound(repoName: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
     repositoriesWithLeaks.map { reposWithLeaks =>
       if (hasLeaks(reposWithLeaks)(repoName)) {

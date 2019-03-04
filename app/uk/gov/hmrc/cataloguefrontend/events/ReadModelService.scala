@@ -21,11 +21,13 @@ import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReadModelService @Inject()(eventService: EventService, userManagementConnector: UserManagementConnector) {
+class ReadModelService @Inject()(
+  eventService           : EventService,
+  userManagementConnector: UserManagementConnector
+)(implicit val ec: ExecutionContext) {
 
   type ServiceName          = String
   type ServiceOwnerUserName = String

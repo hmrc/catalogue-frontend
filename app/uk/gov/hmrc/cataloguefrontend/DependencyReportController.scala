@@ -28,8 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version, Ver
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, ServiceDependenciesConnector, Team, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class DependencyReport(
   repository: String,
@@ -45,8 +44,9 @@ case class DependencyReport(
 @Singleton
 class DependencyReportController @Inject()(
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  serviceDependencyConnector: ServiceDependenciesConnector,
-  cc: ControllerComponents
+  serviceDependencyConnector   : ServiceDependenciesConnector,
+  cc                           : ControllerComponents
+)(implicit val ec: ExecutionContext
 ) extends BackendController(cc) {
 
   implicit val drFormat: OFormat[DependencyReport] = Json.format[DependencyReport]
@@ -136,25 +136,18 @@ class DependencyReportController @Inject()(
   def dependencyReport(): Action[AnyContent] = Action.async { implicit request =>
     type RepoName = String
 
-    val allTeamsF = teamsAndRepositoriesConnector.teamsWithRepositories()
-    val digitalServicesF: Future[Seq[DigitalService]] = teamsAndRepositoriesConnector.allDigitalServices.flatMap {
-      digitalServices =>
-        Future
-          .sequence {
-            digitalServices.map(teamsAndRepositoriesConnector.digitalServiceInfo)
-          }
-          .map(_.flatten)
-    }
-
     val eventualDependencyReports = for {
-      allTeams: Seq[Team] <- allTeamsF
-      digitalServices     <- digitalServicesF
-      allDependencies     <- serviceDependencyConnector.getAllDependencies
-    } yield {
+      allTeams         <- teamsAndRepositoriesConnector.teamsWithRepositories
+      digitalServices1 <- teamsAndRepositoriesConnector.allDigitalServices
+      digitalServices  <- Future.sequence {
+                            digitalServices1.map(teamsAndRepositoriesConnector.digitalServiceInfo)
+                          }
+                          .map(_.flatten)
+      allDependencies <- serviceDependencyConnector.getAllDependencies
+    } yield
       allDependencies.flatMap { dependencies =>
         getDependencies(digitalServices, allTeams, dependencies)
       }
-    }
 
     eventualDependencyReports.map { deps =>
       val csv = toCsv(deps, Seq("timestamp"))

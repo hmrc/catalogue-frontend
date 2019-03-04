@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class ServiceDependenciesConnectorSpec
     extends FreeSpec
@@ -44,6 +44,7 @@ class ServiceDependenciesConnectorSpec
     with ScalaFutures
     with MockitoSugar
     with IntegrationPatience {
+  import ExecutionContext.Implicits.global
 
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()

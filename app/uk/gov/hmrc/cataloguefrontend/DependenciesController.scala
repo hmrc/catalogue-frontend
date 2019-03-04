@@ -22,13 +22,16 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.service.{DependenciesService, DeploymentsService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.DependenciesPage
-import scala.concurrent.ExecutionContext.Implicits.global
+
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class DependenciesController @Inject()(mcc: MessagesControllerComponents,
-                                       dependenciesService: DependenciesService,
-                                       deploymentsService: DeploymentsService,
-                                       dependenciesPage: DependenciesPage
+class DependenciesController @Inject()(
+  mcc                : MessagesControllerComponents,
+  dependenciesService: DependenciesService,
+  deploymentsService : DeploymentsService,
+  dependenciesPage   : DependenciesPage
+)(implicit val ec: ExecutionContext
 ) extends FrontendController(mcc) {
 
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>

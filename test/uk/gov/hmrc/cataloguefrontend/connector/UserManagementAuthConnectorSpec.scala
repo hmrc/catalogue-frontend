@@ -28,9 +28,11 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 
+import scala.concurrent.ExecutionContext
 import scala.util.Random
 
 class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with MockitoSugar with ScalaFutures {
+  import ExecutionContext.Implicits.global
 
   "authenticate" should {
 

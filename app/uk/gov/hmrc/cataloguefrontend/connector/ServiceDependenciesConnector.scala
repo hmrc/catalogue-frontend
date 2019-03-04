@@ -23,15 +23,27 @@ import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.{HeaderCarrier, BadRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+
+sealed trait SlugInfoFlag { def s: String }
+object SlugInfoFlag {
+  case object Latest     extends SlugInfoFlag { val s = "latest"     }
+  case object Production extends SlugInfoFlag { val s = "production" }
+  case object QA         extends SlugInfoFlag { val s = "qa"         }
+
+  val values = List(Latest, Production, QA)
+
+  def parse(s: String): Option[SlugInfoFlag] =
+    values.find(_.s == s)
+}
 
 @Singleton
 class ServiceDependenciesConnector @Inject()(
   http          : HttpClient,
-  servicesConfig: ServicesConfig) {
+  servicesConfig: ServicesConfig
+)(implicit val ec: ExecutionContext) {
 
   private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies") + "/api"
 
@@ -72,15 +84,17 @@ class ServiceDependenciesConnector @Inject()(
   }
 
   def getServicesWithDependency(
-      group       : String,
-      artefact    : String)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] = {
+      flag    : SlugInfoFlag,
+      group   : String,
+      artefact: String)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] = {
     implicit val r = ServiceWithDependency.reads
     http
       .GET[Seq[ServiceWithDependency]](
         s"$servicesDependenciesBaseUrl/serviceDeps",
         queryParams = Seq(
-          "group"     -> group,
-          "artefact"  -> artefact))
+          "flag"     -> flag.s,
+          "group"    -> group,
+          "artefact" -> artefact))
    }
 
    def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] = {

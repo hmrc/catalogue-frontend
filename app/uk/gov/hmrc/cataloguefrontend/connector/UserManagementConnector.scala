@@ -23,16 +23,15 @@ import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 case class UserManagementConnector @Inject()(
-  http: HttpClient,
+  http                      : HttpClient,
   userManagementPortalConfig: UserManagementPortalConfig,
-  futureHelpers: FutureHelpers
-) {
+  futureHelpers             : FutureHelpers
+)(implicit val ec: ExecutionContext) {
 
   import UserManagementConnector._
   import userManagementPortalConfig._
@@ -64,7 +63,7 @@ case class UserManagementConnector @Inject()(
       }
 
     val eventualConnectorErrorOrTeamMembers =
-      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>
+      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec).map { response =>
         response.status match {
           case 200      => extractMembers(team, response)
           case httpCode => Left(HTTPError(httpCode))
@@ -82,8 +81,6 @@ case class UserManagementConnector @Inject()(
 
   def getAllUsersFromUMP: Future[Either[UMPError, Seq[TeamMember]]] = {
 
-    import scala.concurrent.ExecutionContext.Implicits.global
-
     val newHeaderCarrier = HeaderCarrier().withExtraHeaders("requester" -> "None", "Token" -> "None")
 
     val url = s"$userManagementBaseUrl/v2/organisations/users"
@@ -98,7 +95,7 @@ case class UserManagementConnector @Inject()(
 
 
     val eventualErrorOrTeamMembers =
-      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>
+      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec).map { response =>
         response.status match {
           case 200      => Right(extractUsers(response))
           case httpCode => Left(HTTPError(httpCode))
@@ -119,7 +116,7 @@ case class UserManagementConnector @Inject()(
     val url              = s"$userManagementBaseUrl/v2/organisations/teams/$team"
     futureHelpers.withTimerAndCounter("ump-teamdetails") {
       http
-        .GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier))
+        .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
         .map { response =>
           response.status match {
             case 200      => extractData[TeamDetails](team, response)
@@ -139,7 +136,7 @@ case class UserManagementConnector @Inject()(
     val url              = s"$userManagementBaseUrl/v2/organisations/users/$userId"
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
     futureHelpers.withTimerAndCounter("ump-userdetails") {
-      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, fromLoggingDetails(newHeaderCarrier)).map { response =>
+      http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec).map { response =>
         response.status match {
           case 200   => (response.json \ "displayName").asOpt[String].map(DisplayName.apply)
           case 404   => None

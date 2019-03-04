@@ -22,7 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.i18n.{Messages, MessagesProvider}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Version, VersionOp}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
@@ -35,18 +35,17 @@ class DependencyExplorerController @Inject()(
     mcc        : MessagesControllerComponents,
     trConnector: TeamsAndRepositoriesConnector,
     service    : DependenciesService,
-    page       : DependencyExplorerPage)
-  extends FrontendController(mcc) {
-
-
-  import ExecutionContext.Implicits.global
+    page       : DependencyExplorerPage
+  )(implicit val ec: ExecutionContext
+  ) extends FrontendController(mcc) {
 
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
+        flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
-      } yield Ok(page(form.fill(SearchForm("", "", "", "", "0.0.0")), teams, groupArtefacts, searchResults = None, pieData = None))
+      } yield Ok(page(form.fill(SearchForm("", SlugInfoFlag.Latest.s, "", "", "", "0.0.0")), teams, flags, groupArtefacts, searchResults = None, pieData = None))
     }
 
 
@@ -54,28 +53,30 @@ class DependencyExplorerController @Inject()(
     Action.async { implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
+        flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
         res            <- {
-          def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), teams, groupArtefacts, searchResults = None, pieData = None)
+          def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), teams, flags, groupArtefacts, searchResults = None, pieData = None)
           form
             .bindFromRequest()
             .fold(
-              hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, groupArtefacts, searchResults = None, pieData = None))),
+              hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, flags, groupArtefacts, searchResults = None, pieData = None))),
               success   = query => {
                 (for {
                   versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
                   version   <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
                   team      =  if (query.team.isEmpty) None else Some(query.team)
+                  flag      <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
                   results   <- EitherT.right[Result] {
                                 service
-                                  .getServicesWithDependency(team, query.group, query.artefact, versionOp, version)
+                                  .getServicesWithDependency(team, flag, query.group, query.artefact, versionOp, version)
                               }
                   pieData   =  DependencyExplorerController.PieData(
                                 "Version spread",
                                 results
                                   .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
                                   .map(r => r._1 -> r._2.size))
-                } yield Ok(page(form.bindFromRequest(), teams, groupArtefacts, Some(results), Some(pieData)))
+                } yield Ok(page(form.bindFromRequest(), teams, flags, groupArtefacts, Some(results), Some(pieData)))
                 ).merge
               }
             )
@@ -85,6 +86,7 @@ class DependencyExplorerController @Inject()(
 
   case class SearchForm(
     team     : String,
+    flag     : String,
     group    : String,
     artefact : String,
     versionOp: String,
@@ -102,6 +104,7 @@ class DependencyExplorerController @Inject()(
     Form(
       Forms.mapping(
         "team"      -> Forms.text,
+        "flag"      -> Forms.text.verifying(notEmpty),
         "group"     -> Forms.text.verifying(notEmpty),
         "artefact"  -> Forms.text.verifying(notEmpty),
         "versionOp" -> Forms.text,

@@ -24,11 +24,14 @@ import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResp
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UserManagementAuthConnector @Inject()(http: HttpClient, userManagementAuthConfig: UserManagementAuthConfig) {
+class UserManagementAuthConnector @Inject()(
+  http                    : HttpClient,
+  userManagementAuthConfig: UserManagementAuthConfig
+)(implicit val ec: ExecutionContext) {
+
 
   import UserManagementAuthConnector._
   import userManagementAuthConfig._

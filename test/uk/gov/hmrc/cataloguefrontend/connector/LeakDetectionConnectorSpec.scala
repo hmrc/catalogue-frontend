@@ -24,9 +24,10 @@ import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class LeakDetectionConnectorSpec extends WordSpec with Matchers with ScalaFutures with MockitoSugar {
+  import ExecutionContext.Implicits.global
 
   "repositoriesWithLeaks" should {
     "return empty if leak detection service returns status different than 2xx" in {

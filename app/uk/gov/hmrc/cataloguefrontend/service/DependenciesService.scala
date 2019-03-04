@@ -19,15 +19,15 @@ package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject._
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceDeploymentInformation}
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDependenciesConnector) {
-
-  import ExecutionContext.Implicits.global
+class DependenciesService @Inject()(
+  serviceDependenciesConnector: ServiceDependenciesConnector
+)(implicit val ec: ExecutionContext) {
 
   def search(serviceName: String, serviceDeploymentInformation: Either[Throwable, ServiceDeploymentInformation])
             (implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] = {
@@ -56,12 +56,13 @@ class DependenciesService @Inject()(serviceDependenciesConnector: ServiceDepende
 
   def getServicesWithDependency(
       optTeam  : Option[String],
+      flag     : SlugInfoFlag,
       group    : String,
       artefact : String,
       versionOp: VersionOp,
       version  : Version)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =
     serviceDependenciesConnector
-      .getServicesWithDependency(group, artefact)
+      .getServicesWithDependency(flag, group, artefact)
       .map { l =>
         optTeam match {
           case None       => l

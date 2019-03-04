@@ -21,13 +21,15 @@ import javax.inject.{Inject, Singleton}
 import play.Logger
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 @Singleton
-class UpdateScheduler @Inject()(actorSystem: ActorSystem, readModelService: ReadModelService) {
+class UpdateScheduler @Inject()(
+  actorSystem     : ActorSystem,
+  readModelService: ReadModelService
+)(implicit val ec: ExecutionContext) {
 
   private def updateEventsReadModel: Future[Map[String, String]] = readModelService.refreshEventsCache
   private def updateUmpCacheReadModel: Future[Seq[TeamMember]]   = readModelService.refreshUmpCache
