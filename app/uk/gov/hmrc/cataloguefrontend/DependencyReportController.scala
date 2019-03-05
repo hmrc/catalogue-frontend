@@ -121,7 +121,7 @@ class DependencyReportController @Inject()(
       deps             =  allDependencies.flatMap { dependencies =>
                             getDependencies(digitalServices, allTeams, dependencies)
                           }
-      csv              =  CsvUtils.toCsv(deps, ignoreFields = Seq("timestamp"))
+      csv              =  CsvUtils.toCsv(CsvUtils.toRows(deps, ignoreFields = Seq("timestamp")))
       source           =  Source.single(ByteString(csv, "UTF-8"))
     } yield Ok.sendEntity(HttpEntity.Streamed(source, None, Some("text/csv")))
   }

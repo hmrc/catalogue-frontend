@@ -84,7 +84,7 @@ class DependencyExplorerController @Inject()(
                                   .map(r => r._1 -> r._2.size))
                 } yield
                   if (query.asCsv)  {
-                    val csv    =  CsvUtils.toCsv(results.flatMap(CsvCC.toCsvCCs))
+                    val csv    =  CsvUtils.toCsv(toRows(results))
                     val source =  Source.single(ByteString(csv, "UTF-8"))
                     Ok.sendEntity(HttpEntity.Streamed(source, None, Some("text/csv")))
                   }
@@ -132,27 +132,17 @@ object DependencyExplorerController {
     results: Map[String, Int])
 
 
-  case class CsvCC(
-    slugName          : String,
-    slugVersion       : String,
-    team              : String,
-    depGroup          : String,
-    depArtefact       : String,
-    depVersion        : String,
-    depSemanticVersion: String)
-
-  object CsvCC {
-    def toCsvCCs(serviceWithDependency: ServiceWithDependency): List[CsvCC] = {
-      val csvCC = CsvCC(
-        slugName           = serviceWithDependency.slugName,
-        slugVersion        = serviceWithDependency.slugVersion,
-        team               = "",
-        depGroup           = serviceWithDependency.depGroup,
-        depArtefact        = serviceWithDependency.depArtefact,
-        depVersion         = serviceWithDependency.depVersion,
-        depSemanticVersion = serviceWithDependency.depSemanticVersion.map(_.toString).getOrElse(""))
-      if (serviceWithDependency.teams.isEmpty) List(csvCC)
-      else serviceWithDependency.teams.map { team => csvCC.copy(team = team) }
+  def toRows(seq: Seq[ServiceWithDependency]): Seq[Map[String, String]] =
+    seq.flatMap { serviceWithDependency =>
+      val m = Map(
+        "slugName"           -> serviceWithDependency.slugName,
+        "slugVersion"        -> serviceWithDependency.slugVersion,
+        "team"               -> "",
+        "depGroup"           -> serviceWithDependency.depGroup,
+        "depArtefact"        -> serviceWithDependency.depArtefact,
+        "depVersion"         -> serviceWithDependency.depVersion,
+        "depSemanticVersion" -> serviceWithDependency.depSemanticVersion.map(_.toString).getOrElse(""))
+      if (serviceWithDependency.teams.isEmpty) Seq(m)
+      else serviceWithDependency.teams.map { team => m + ("team" -> team) }
     }
-  }
 }

@@ -17,23 +17,30 @@
 package uk.gov.hmrc.cataloguefrontend.util
 
 trait CsvUtils {
-  /** convert case classes to csv rows */
-  def toCsv(ccs: Seq[AnyRef], ignoreFields: Seq[String] = Seq()): String = {
-    val asMap = ccs.map { cc =>
-      cc.getClass.getDeclaredFields.foldLeft(Map.empty[String, Any]) { (acc, field) =>
+  /** generate csv */
+  def toCsv(rows: Seq[Map[String, String]]): String =
+    rows.headOption
+      .map { first =>
+        val keys = first.keys.toList
+        val dataRows: Seq[Seq[String]] = rows.map(row => keys.map(key => row.getOrElse(key, "")))
+        (keys +: dataRows).map(_.mkString(",")).mkString("\n")
+      }
+      .getOrElse("No data")
+
+  /** Convert case classes to map seq with reflection.
+    * Can then be converted to Csv.
+    */
+  def toRows(ccs: Seq[AnyRef], ignoreFields: Seq[String] = Seq()): Seq[Map[String, String]] =
+    ccs.map { cc =>
+      cc.getClass.getDeclaredFields.foldLeft(Map.empty[String, String]) { (acc, field) =>
         if (ignoreFields.contains(field.getName)) {
           acc
         } else {
           field.setAccessible(true)
-          acc + (field.getName -> field.get(cc))
+          acc + (field.getName -> field.get(cc).toString)
         }
       }
     }
-    val headers = asMap.headOption.map(_.keys.mkString(","))
-    val dataRows = asMap.map(_.values.mkString(","))
-
-    headers.map(x => (x +: dataRows).mkString("\n")).getOrElse("No data")
-  }
 }
 
 object CsvUtils extends CsvUtils
