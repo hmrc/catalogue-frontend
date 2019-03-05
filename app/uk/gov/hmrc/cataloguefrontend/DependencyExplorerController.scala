@@ -26,7 +26,7 @@ import play.api.http.HttpEntity
 import play.api.i18n.{Messages, MessagesProvider}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
@@ -42,6 +42,8 @@ class DependencyExplorerController @Inject()(
     page       : DependencyExplorerPage
   )(implicit val ec: ExecutionContext
   ) extends FrontendController(mcc) {
+
+  import DependencyExplorerController._
 
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
@@ -75,14 +77,14 @@ class DependencyExplorerController @Inject()(
                                 service
                                   .getServicesWithDependency(team, flag, query.group, query.artefact, versionOp, version)
                               }
-                  pieData   =  DependencyExplorerController.PieData(
+                  pieData   =  PieData(
                                 "Version spread",
                                 results
                                   .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
                                   .map(r => r._1 -> r._2.size))
                 } yield
                   if (query.asCsv)  {
-                    val csv    =  CsvUtils.toCsv(results, Seq("timestamp"))
+                    val csv    =  CsvUtils.toCsv(results.flatMap(CsvCC.toCsvCCs))
                     val source =  Source.single(ByteString(csv, "UTF-8"))
                     Ok.sendEntity(HttpEntity.Streamed(source, None, Some("text/csv")))
                   }
@@ -128,4 +130,29 @@ object DependencyExplorerController {
   case class PieData(
     title  : String,
     results: Map[String, Int])
+
+
+  case class CsvCC(
+    slugName          : String,
+    slugVersion       : String,
+    team              : String,
+    depGroup          : String,
+    depArtefact       : String,
+    depVersion        : String,
+    depSemanticVersion: String)
+
+  object CsvCC {
+    def toCsvCCs(serviceWithDependency: ServiceWithDependency): List[CsvCC] = {
+      val csvCC = CsvCC(
+        slugName           = serviceWithDependency.slugName,
+        slugVersion        = serviceWithDependency.slugVersion,
+        team               = "",
+        depGroup           = serviceWithDependency.depGroup,
+        depArtefact        = serviceWithDependency.depArtefact,
+        depVersion         = serviceWithDependency.depVersion,
+        depSemanticVersion = serviceWithDependency.depSemanticVersion.map(_.toString).getOrElse(""))
+      if (serviceWithDependency.teams.isEmpty) List(csvCC)
+      else serviceWithDependency.teams.map { team => csvCC.copy(team = team) }
+    }
+  }
 }

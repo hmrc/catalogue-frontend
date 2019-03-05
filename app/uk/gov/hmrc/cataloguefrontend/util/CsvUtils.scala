@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.util
 
 trait CsvUtils {
   /** convert case classes to csv rows */
-  def toCsv(ccs: Seq[AnyRef], ignoreFields: Seq[String]): String = {
+  def toCsv(ccs: Seq[AnyRef], ignoreFields: Seq[String] = Seq()): String = {
     val asMap = ccs.map { cc =>
       cc.getClass.getDeclaredFields.foldLeft(Map.empty[String, Any]) { (acc, field) =>
         if (ignoreFields.contains(field.getName)) {
