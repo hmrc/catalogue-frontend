@@ -116,8 +116,10 @@
                                     '_class      -> "form-group"
                                 )
                           </td>
+                          <input type="hidden" id="asCsv" name="asCsv" value="false">
                           <td valign="bottom">
                               <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                              <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV" onclick="exportAsCsv()"/>
                           </td>
                         </tr>
                         <tr>
@@ -215,6 +217,12 @@
                     artefactSelect.add(opt, null);
                 }
             }
+        }
+
+        function exportAsCsv() {
+            document.getElementById('asCsv').value = true;
+            document.getElementById('search-by-dependency-form').submit();
+            document.getElementById('asCsv').value = false;
         }
     </script>
 

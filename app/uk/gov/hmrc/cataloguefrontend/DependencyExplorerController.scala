@@ -16,15 +16,19 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 import cats.data.EitherT
 import cats.instances.all._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
+import play.api.http.HttpEntity
 import play.api.i18n.{Messages, MessagesProvider}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Version, VersionOp}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
+import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.DependencyExplorerPage
 
@@ -61,7 +65,7 @@ class DependencyExplorerController @Inject()(
             .bindFromRequest()
             .fold(
               hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, flags, groupArtefacts, searchResults = None, pieData = None))),
-              success   = query => {
+              success   = query =>
                 (for {
                   versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
                   version   <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
@@ -76,9 +80,14 @@ class DependencyExplorerController @Inject()(
                                 results
                                   .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
                                   .map(r => r._1 -> r._2.size))
-                } yield Ok(page(form.bindFromRequest(), teams, flags, groupArtefacts, Some(results), Some(pieData)))
+                } yield
+                  if (query.asCsv)  {
+                    val csv    =  CsvUtils.toCsv(results, Seq("timestamp"))
+                    val source =  Source.single(ByteString(csv, "UTF-8"))
+                    Ok.sendEntity(HttpEntity.Streamed(source, None, Some("text/csv")))
+                  }
+                  else Ok(page(form.bindFromRequest(), teams, flags, groupArtefacts, Some(results), Some(pieData)))
                 ).merge
-              }
             )
         }
       } yield res
@@ -90,7 +99,8 @@ class DependencyExplorerController @Inject()(
     group    : String,
     artefact : String,
     versionOp: String,
-    version  : String)
+    version  : String,
+    asCsv    : Boolean = false)
 
   // Forms.nonEmptyText, but has no constraint info label
   def notEmpty = {
@@ -108,7 +118,8 @@ class DependencyExplorerController @Inject()(
         "group"     -> Forms.text.verifying(notEmpty),
         "artefact"  -> Forms.text.verifying(notEmpty),
         "versionOp" -> Forms.text,
-        "version"   -> Forms.text
+        "version"   -> Forms.text,
+        "asCsv"     -> Forms.boolean
       )(SearchForm.apply)(SearchForm.unapply)
     )
 }
