@@ -19,10 +19,11 @@ package uk.gov.hmrc.cataloguefrontend
 import akka.util.ByteString
 import akka.stream.scaladsl.Source
 import java.util.Date
+
 import javax.inject.{Inject, Singleton}
 import play.api.http.HttpEntity
 import play.api.libs.json.{Json, OFormat}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version, VersionState}
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, ServiceDependenciesConnector, Team, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
@@ -123,6 +124,10 @@ class DependencyReportController @Inject()(
                           }
       csv              =  CsvUtils.toCsv(CsvUtils.toRows(deps, ignoreFields = Seq("timestamp")))
       source           =  Source.single(ByteString(csv, "UTF-8"))
-    } yield Ok.sendEntity(HttpEntity.Streamed(source, None, Some("text/csv")))
+    } yield
+      Result(
+        header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"deprep.csv\"")),
+        body   = HttpEntity.Streamed(source, None, Some("text/csv"))
+      )
   }
 }

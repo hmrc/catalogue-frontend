@@ -23,8 +23,8 @@ import cats.instances.all._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
-import play.api.i18n.{Messages, MessagesProvider}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.i18n.MessagesProvider
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
@@ -86,7 +86,10 @@ class DependencyExplorerController @Inject()(
                   if (query.asCsv)  {
                     val csv    =  CsvUtils.toCsv(toRows(results))
                     val source =  Source.single(ByteString(csv, "UTF-8"))
-                    Ok.sendEntity(HttpEntity.Streamed(source, None, Some("text/csv")))
+                    Result(
+                      header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
+                      body   = HttpEntity.Streamed(source, None, Some("text/csv"))
+                    )
                   }
                   else Ok(page(form.bindFromRequest(), teams, flags, groupArtefacts, Some(results), Some(pieData)))
                 ).merge
