@@ -16,30 +16,31 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-
-import akka.stream.scaladsl._
+import akka.util.ByteString
+import akka.stream.scaladsl.Source
 import java.util.Date
+
 import javax.inject.{Inject, Singleton}
-import org.apache.commons.io.IOUtils
 import play.api.http.HttpEntity
 import play.api.libs.json.{Json, OFormat}
-import play.api.mvc._
+import play.api.mvc.{Action, AnyContent, ControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version, VersionState}
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, ServiceDependenciesConnector, Team, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class DependencyReport(
-  repository: String,
-  team: String,
+  repository    : String,
+  team          : String,
   digitalService: String,
   dependencyName: String,
   dependencyType: String,
   currentVersion: String,
-  latestVersion: String,
-  colour: String,
-  timestamp: Long = new Date().getTime)
+  latestVersion : String,
+  colour        : String,
+  timestamp     : Long = new Date().getTime)
 
 @Singleton
 class DependencyReportController @Inject()(
@@ -88,30 +89,6 @@ class DependencyReportController @Inject()(
     libraryDependencyReportLines ++ sbtPluginDependencyReportLines
   }
 
-  private def toCsv(deps: Seq[DependencyReport], ignoreFields: Seq[String]): String = {
-
-    def ccToMap(cc: AnyRef): Map[String, Any] =
-      cc.getClass.getDeclaredFields.foldLeft(Map.empty[String, Any]) { (acc, field) =>
-        if (ignoreFields.contains(field.getName)) {
-          acc
-        } else {
-          field.setAccessible(true)
-          acc + (field.getName -> field.get(cc))
-        }
-      }
-
-    val dependencyDataMaps = deps.map(ccToMap)
-    val headers = dependencyDataMaps.headOption.map { row =>
-      row.keys.mkString(",")
-    }
-    val dataRows = dependencyDataMaps.map { row =>
-      row.values.mkString(",")
-    }
-
-    headers.map(x => (x +: dataRows).mkString("\n")).getOrElse("No data")
-
-  }
-
   private def findTeamNames(repositoryName: String, teams: Seq[Team]): Seq[String] =
     teams
       .filter(_.repos.isDefined)
@@ -134,30 +111,23 @@ class DependencyReportController @Inject()(
     }
 
   def dependencyReport(): Action[AnyContent] = Action.async { implicit request =>
-    type RepoName = String
-
-    val eventualDependencyReports = for {
+    for {
       allTeams         <- teamsAndRepositoriesConnector.teamsWithRepositories
       digitalServices1 <- teamsAndRepositoriesConnector.allDigitalServices
       digitalServices  <- Future.sequence {
                             digitalServices1.map(teamsAndRepositoriesConnector.digitalServiceInfo)
                           }
                           .map(_.flatten)
-      allDependencies <- serviceDependencyConnector.getAllDependencies
+      allDependencies  <- serviceDependencyConnector.getAllDependencies
+      deps             =  allDependencies.flatMap { dependencies =>
+                            getDependencies(digitalServices, allTeams, dependencies)
+                          }
+      csv              =  CsvUtils.toCsv(CsvUtils.toRows(deps, ignoreFields = Seq("timestamp")))
+      source           =  Source.single(ByteString(csv, "UTF-8"))
     } yield
-      allDependencies.flatMap { dependencies =>
-        getDependencies(digitalServices, allTeams, dependencies)
-      }
-
-    eventualDependencyReports.map { deps =>
-      val csv = toCsv(deps, Seq("timestamp"))
-      val source = StreamConverters.fromInputStream(() => {
-        IOUtils.toInputStream(csv, "UTF-8")
-      })
       Result(
-        header = ResponseHeader(200, Map.empty),
+        header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"deprep.csv\"")),
         body   = HttpEntity.Streamed(source, None, Some("text/csv"))
       )
-    }
   }
 }
