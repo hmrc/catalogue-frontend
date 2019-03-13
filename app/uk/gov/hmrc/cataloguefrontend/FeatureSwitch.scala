@@ -36,15 +36,3 @@ object FeatureSwitch {
   private def systemPropertyName(name: String) = s"feature.$name"
 
 }
-
-object CatalogueFrontendSwitches {
-
-  def configExplorer = FeatureSwitch.forName("configExplorer")
-
-  def routingRules = FeatureSwitch.forName("urlRoutingRules")
-
-  def dependencyExplorer = FeatureSwitch.forName("dependencyExplorer")
-
-  def allSwitches: Seq[FeatureSwitch] = Seq(configExplorer)
-
-}

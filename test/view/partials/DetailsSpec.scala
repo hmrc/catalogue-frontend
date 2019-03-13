@@ -22,7 +22,6 @@ import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.cataloguefrontend.connector.{Link, RepoType, RepositoryDetails}
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
-import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, FeatureSwitch}
 
 class DetailsSpec extends WordSpec with Matchers {
 
@@ -48,26 +47,22 @@ class DetailsSpec extends WordSpec with Matchers {
 
   "details" should {
     "display description when available" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
       val result = views.html.partials.details(repo).body
       result should include ("some description")
     }
 
     "should not display description when it is not available" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
       val result = views.html.partials.details(repo.copy(description = "")).body
       result should not include ("some description")
     }
 
     "display Created At Date" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
       val result = views.html.partials.details(repo).body
       result should include ("id=\"created-at\"")
       result should include ("31 Dec 2018 08:30")
     }
 
     "display Last Active Date" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
       val result = views.html.partials.details(repo).body
       result should include ("id=\"last-active\"")
       result should include ("31 Dec 2018 18:30")

@@ -19,7 +19,6 @@ package view.partials
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
-import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, FeatureSwitch}
 
 class ServiceRouteRuleViolationsSpec extends WordSpec with Matchers {
 
@@ -46,26 +45,12 @@ class ServiceRouteRuleViolationsSpec extends WordSpec with Matchers {
   ))
 
   "ServiceRouteRuleViolations" should {
-    "display when feature flag is enabled" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.serviceRouteRuleViolations(misMatchedServiceRoutes).body
-      result should include ("id=\"routing-rule-violations\"")
-    }
-
-    "do not display when feature flag is disabled" in {
-      FeatureSwitch.disable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.serviceRouteRuleViolations(misMatchedServiceRoutes).body
-      result should not include ("id=\"routing-rule-violations\"")
-    }
-
     "display when there are URLs not matching" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
       val result = views.html.partials.serviceRouteRuleViolations(misMatchedServiceRoutes).body
       result should include ("id=\"routing-rule-violations\"")
     }
 
     "do not display when there are URLs are matching" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
       val result = views.html.partials.serviceRouteRuleViolations(matchingServiceRoutes).body
       result should not include ("id=\"routing-rule-violations\"")
     }

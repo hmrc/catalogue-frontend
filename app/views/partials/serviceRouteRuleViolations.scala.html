@@ -14,11 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 
 @(serviceRoutes: ServiceRoutes)
-@if(CatalogueFrontendSwitches.routingRules.isEnabled && serviceRoutes.hasInconsistentRoutes) {
+@if(serviceRoutes.hasInconsistentRoutes) {
     @defining(serviceRoutes.inconsistentRoutes.size > 3) { collapsable =>
         <div id="routing-rule-violations" >
             <div class="accordion board" class="col-md-12">
