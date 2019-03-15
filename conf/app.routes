@@ -38,3 +38,5 @@ GET        /dependencies/:name                          uk.gov.hmrc.cataloguefro
 
 GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.landing
 GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search
+
+GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JDKVersionController.findLatestVersions(flag: String)

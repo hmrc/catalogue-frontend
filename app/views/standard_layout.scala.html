@@ -16,6 +16,8 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
+@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
 @(title: String = "Home", active: String = "")(content: Html)(implicit request: Request[_])
 <html>
     <head>
@@ -84,6 +86,7 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
+                            <li><a href="@appRoutes.JDKVersionController.findLatestVersions(Latest.s)">JDK Explorer</a></li>
                             <li><a href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
                         </ul>
                     </li>
