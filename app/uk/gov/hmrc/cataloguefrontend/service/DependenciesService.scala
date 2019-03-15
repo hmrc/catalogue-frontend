@@ -20,8 +20,9 @@ import javax.inject._
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceDeploymentInformation}
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -85,6 +86,13 @@ class DependenciesService @Inject()(
       .getGroupArtefacts
       .map(_.map(g => g.copy(artefacts = g.artefacts.sorted)))
       .map(_.sortBy(_.group))
+
+  def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier) : Future[List[JDKVersion]] = {
+    serviceDependenciesConnector
+      .getJDKVersions(flag)
+      .map(_.sortBy(_.version))
+  }
+
 }
 
 object DependenciesService {
@@ -106,6 +114,7 @@ case class ServiceDependencies(
     , name         : String
     , version      : Option[String]
     , runnerVersion: String
+    , jdkVersion   : String
     , classpath    : String
     , dependencies : Seq[ServiceDependency]
     , environment  : Option[String] = None
