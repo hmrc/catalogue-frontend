@@ -15,6 +15,8 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
 
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
@@ -88,6 +90,7 @@
                             <li><a href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
                             <li><a href="@appRoutes.JDKVersionController.findLatestVersions(Latest.s)">JDK Explorer</a></li>
                             <li><a href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
+
                         </ul>
                     </li>
                 </ul>
