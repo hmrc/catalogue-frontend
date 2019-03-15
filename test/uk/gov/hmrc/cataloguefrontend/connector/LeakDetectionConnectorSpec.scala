@@ -19,11 +19,13 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.time.{Seconds, Span}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class LeakDetectionConnectorSpec extends WordSpec with Matchers with ScalaFutures with MockitoSugar {
@@ -42,7 +44,7 @@ class LeakDetectionConnectorSpec extends WordSpec with Matchers with ScalaFuture
 
       val leakDetectionConnector = new LeakDetectionConnector(httpClient, servicesConfig)
 
-      leakDetectionConnector.repositoriesWithLeaks.futureValue shouldBe Seq.empty
+      leakDetectionConnector.repositoriesWithLeaks.futureValue(PatienceConfiguration.Timeout(Span(1, Seconds))) shouldBe Seq.empty
     }
   }
 }
