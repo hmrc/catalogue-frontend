@@ -19,7 +19,6 @@ import java.time.LocalDateTime
 
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, FeatureSwitch}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, RepositoryDetails}
 import uk.gov.hmrc.cataloguefrontend.connector.Link
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
@@ -49,22 +48,13 @@ class CodeAndBuildsSpec extends WordSpec with Matchers with GeneratorDrivenPrope
 
   "code_and_builds" should {
 
-    "display configuration explorer when feature flag is enabled" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.configExplorer)
+    "display configuration explorer" in {
       val result = views.html.partials.code_and_builds(repo).body
       result should include ("href=\"reponame/config\"")
       result should include ("Config Explorer")
     }
 
-    "not display config explorer link when feature flag is disabled" in {
-      FeatureSwitch.disable(CatalogueFrontendSwitches.configExplorer)
-      val result = views.html.partials.code_and_builds(repo).body
-      result should not include ("href=\"reponame/config\"")
-      result should not include ("Config Explorer")
-    }
-
     "display the service dependencies link when the repo type is a Service" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.dependencyExplorer)
       val result = views.html.partials.code_and_builds(repo).body
       result should include("""href="/dependencies/reponame"""")
       result should include("Service Dependencies")
@@ -72,8 +62,6 @@ class CodeAndBuildsSpec extends WordSpec with Matchers with GeneratorDrivenPrope
 
     import org.scalacheck._
     "not display the service dependencies link when the repo type is anything other than a Service" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.dependencyExplorer)
-
       forAll(Gen.oneOf(RepoType.Library, RepoType.Other, RepoType.Prototype)) { genRepoType =>
         val result = views.html.partials.code_and_builds(repo.copy(repoType = genRepoType)).body
         result should not include("""href="/dependencies/reponame"""")
@@ -81,25 +69,10 @@ class CodeAndBuildsSpec extends WordSpec with Matchers with GeneratorDrivenPrope
       }
     }
 
-/*    "display routing rules when feature flag is enabled" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
+/*    "display routing rules" in {
       val result = views.html.partials.code_and_builds(repo).body
       result should include ("id=\"route-rule-0\"")
       result should include ("id=\"route-rule-1\"")
-    }
-
-    "do not display routing rules when feature flag is disabled" in {
-      FeatureSwitch.disable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.code_and_builds(repo).body
-      result should not include ("id=\"route-rule-0\"")
-      result should not include ("id=\"route-rule-1\"")
-    }
-
-    "do not display routing rules when no rules" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.routingRules)
-      val result = views.html.partials.code_and_builds(repo).body
-      result should not include ("id=\"route-rule-0\"")
-      result should not include ("id=\"route-rule-1\"")
     }*/
   }
 

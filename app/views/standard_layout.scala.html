@@ -15,7 +15,6 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
@@ -81,19 +80,16 @@
                     <li>
                         <a id="link-to-deployments" href="@appRoutes.CatalogueController.deploymentsPage" class="@if(active=="deployments") {active}">Deployments</a>
                     </li>
-                    @if(CatalogueFrontendSwitches.dependencyExplorer.isEnabled) {
-                        <li class="dropdown">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                                Tools<span class="caret"></span>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
-                                <li><a href="@appRoutes.JDKVersionController.findLatestVersions(Latest.s)">JDK Explorer</a></li>
-                                <li><a href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
-
-                            </ul>
-                        </li>
-                    }
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            Tools<span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
+                            <li><a href="@appRoutes.JDKVersionController.findLatestVersions(Latest.s)">JDK Explorer</a></li>
+                            <li><a href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
+                        </ul>
+                    </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li class="dropdown">

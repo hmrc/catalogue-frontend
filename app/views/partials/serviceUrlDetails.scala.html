@@ -16,10 +16,9 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @(environmentRoute: Option[EnvironmentRoute] = None)
-@if(CatalogueFrontendSwitches.routingRules.isEnabled && environmentRoute.isDefined) {
+@if(environmentRoute.isDefined) {
     @defining(environmentRoute.get.routes.size > 3) { collapsable =>
         <div id="service-urls-section" class="board">
             <h3 class="board__heading" id="headingRSU">
