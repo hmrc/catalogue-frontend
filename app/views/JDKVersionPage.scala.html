@@ -21,6 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import play.twirl.api.Html
+@import uk.gov.hmrc.cataloguefrontend.routes
 
 @this(viewMessages: ViewMessages)
 
@@ -37,15 +38,19 @@
     <div id="chart_div"></div>
     <hr>
     <div>
-    <form>
-        <select name="flag">
+    <form class="form-inline">
+        <div class="form-inline">
+            <label for="flag">Environment:</label>
+            <select name="flag">
             @flags.map(flagSelect)
-        </select>
-        <input type="submit"/>
+            </select>
+            <input class="btn btn-primary" type="submit"/>
+
+        </div>
     </form>
     </div>
     <div>
-        <table class="table table-striped">
+        <table class="table table-striped" id="jdk-table">
             <thead>
                 <tr>
                     <th>Service</th>
@@ -86,8 +91,8 @@
 }
 
 @jdkVersion(version: JDKVersion) = {
-    <tr>
-        <td>@version.name</td>
+    <tr id="jdk-slug-@version.name">
+        <td><a href="@routes.CatalogueController.repository(version.name)">@version.name</a></td>
         <td>@version.version</td>
     </tr>
 }
