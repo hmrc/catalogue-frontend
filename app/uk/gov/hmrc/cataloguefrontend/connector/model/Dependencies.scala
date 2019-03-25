@@ -103,7 +103,7 @@ object Version {
     s match {
       case regex3(maj, min, patch, _) => Some(Version(Integer.parseInt(maj), Integer.parseInt(min), Integer.parseInt(patch), s))
       case regex2(maj, min,  _)       => Some(Version(Integer.parseInt(maj), Integer.parseInt(min), 0                      , s))
-      case regex1(min,  _)            => Some(Version(0                    , Integer.parseInt(min), 0                      , s))
+      case regex1(patch,  _)          => Some(Version(0                    , 0                    , Integer.parseInt(patch), s))
       case _                          => None
     }
   }
