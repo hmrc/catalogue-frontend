@@ -405,6 +405,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
   }
 
   "Render a message if the indicators service returns 404" in {
+    FeatureSwitch.enable(CatalogueFrontendSwitches.indicators)
+
     serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith          = (200, Some(teamDetailsData)))
     serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (404, None))
 
@@ -418,6 +420,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
   }
 
   "Render a message if the indicators service encounters an error" in {
+    FeatureSwitch.enable(CatalogueFrontendSwitches.indicators)
+
     serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith          = (200, Some(teamDetailsData)))
     serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (500, None))
 

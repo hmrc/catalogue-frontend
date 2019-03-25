@@ -14,6 +14,7 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import play.twirl.api.Html
@@ -116,20 +117,23 @@
                 <div class="board">
                     <h3 class="board__heading">Delivery Indicators</h3>
                     <div class="board__body">
-                        @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-                            @renderGraphText
-                            @renderThroughputGraph
-                            @renderStabilityGraph
-                        }
-
-                        @{
-                            if(throughputChartData.isEmpty) {
-                                {viewMessages.errorMessage}
-                            } else if(throughputChartData.get.isEmpty) {
-                                {viewMessages.noProductionDeploymentSinceDaysMessage(repositoryCreationDate)}
+                        @if(CatalogueFrontendSwitches.indicators.isEnabled) {
+                            @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
+                                @renderGraphText
+                                @renderThroughputGraph
+                                @renderStabilityGraph
                             }
-                        }
 
+                            @{
+                                if(throughputChartData.isEmpty) {
+                                    {viewMessages.errorMessage}
+                                } else if(throughputChartData.get.isEmpty) {
+                                    {viewMessages.noProductionDeploymentSinceDaysMessage(repositoryCreationDate)}
+                                }
+                            }
+                        } else {
+                            <p>PlatOps are removing the deployment and build indicator graphs as they are thought to be unhelpful. Please voice any objections on <a href="https://hmrcdigital.slack.com/messages/C0GS60DK2/">#team-platops</a>.</p>
+                        }
                     </div>
                 </div>
             </div>
