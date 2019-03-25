@@ -257,7 +257,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
     }
 
-    "Render a message if the indicators service returns 404" in {
+    "Render a message if the indicators service returns 404" ignore {
       val today       = LocalDateTime.now
       val dayInterval = createdAt.until(today, ChronoUnit.DAYS) + 1
 
@@ -276,7 +276,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       response.body shouldNot include(s"""chart.draw(data, options);""")
     }
 
-    "Render a message if the indicators service encounters an error" in {
+    "Render a message if the indicators service encounters an error" ignore {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                   = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (500, None))
       serviceEndpoint(
