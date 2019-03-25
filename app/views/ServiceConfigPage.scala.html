@@ -28,7 +28,7 @@
         <script src="@routes.Assets.at("split.js")"></script>
         <script src="@routes.Assets.at("config-explorer.js")"></script>
     </head>
-    <body>
+    <body class="hide-refconf-only">
         <header class="opaque">
             <h1 id="service-header">Config: @serviceName</h1>
             <i class="glyphicon glyphicon-question-sign help-icon"></i>
@@ -45,21 +45,23 @@
                     }
                 </div>
                 @for((key: String, envSources: Map[String, Seq[ConfigSourceValue]]) <- ListMap(configByKey.toSeq.sortWith(_._1 < _._1):_*)) {
-                    <div id="config-row-@key" class="grid-row">
-                        <div id="config-key-@key" class="grid-item sticky-column truncate-content" style="width:310px;">@key</div>
-                        @for((env, i) <- environments.zipWithIndex) {
-                            <div class="grid-item column-@env" style="width:510px;">
-                                <ul>
-                                @for(sourceValue: ConfigSourceValue <- sortBySourcePrecedence(envSources.get(env))) {
-                                    <li class="config-value" title="@friendlySourceName(sourceValue.source, env)">
-                                        <span class="truncate-content">@sourceValue.value</span>
-                                        <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env-@sourceValue.source-@key"></a>
-                                    </li>
-                                }
-                                </ul>
-                            </div>
-                        }
-                    </div>
+                    @defining(envSources.forall(_._2.map(_.source) == List("referenceConf"))) { isRefconfOnly =>
+                        <div id="config-row-@key" class="grid-row @if(isRefconfOnly) {refconf-only} else {}">
+                            <div id="config-key-@key" class="grid-item sticky-column truncate-content" style="width:310px;">@key</div>
+                            @for((env, i) <- environments.zipWithIndex) {
+                                <div class="grid-item column-@env" style="width:510px;">
+                                    <ul>
+                                    @for(sourceValue: ConfigSourceValue <- sortBySourcePrecedence(envSources.get(env))) {
+                                        <li class="config-value" title="@friendlySourceName(sourceValue.source, env)">
+                                            <span class="truncate-content">@sourceValue.value</span>
+                                            <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env-@sourceValue.source-@key"></a>
+                                        </li>
+                                    }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    }
                 }
             </div>
         </section>
@@ -76,6 +78,10 @@
             <h2>Values</h2>
             <ul>
                 <li>
+                    <input type="checkbox" id="show-referenceConf" checked="checked" />
+                    <label for="show-referenceConf">Show referenceConf</label>
+                </li>
+                <li>
                     <input type="checkbox" id="show-evictions" checked="checked" />
                     <label for="show-evictions">Show evictions</label>
                 </li>
@@ -86,6 +92,11 @@
             </ul>
         </aside>
         <aside id="help">
+            <h2>What am I seeing?</h2>
+            <ul class="bullets">
+                <li>The Microservice reference.conf files, application.conf files and the App-config-base are extracted from the latest slug build. They <i>might</i> not correspond to what is actually deployed in the environment, and actually represent what the resulting configuration would be if the latest slug is deployed into that environment.</li>
+                <li>The App-config environment and common configuration are looked up in the corresponding github project.</li>
+            </ul>
             <h2>How to use the config explorer</h2>
             <ul class="bullets">
                 <li>Drag the handles to the left of column headers to re-size columns</li>
@@ -94,6 +105,7 @@
                 <li>Crossed out values indicate an eviction according to their precendence in the config hierarchy</li>
                 <li>Click the arrow to the right of a value to see the config item in context</li>
                 <li>Toggle environments on/off and adjust formatting using the hamburger menu</li>
+                <li>Toggle inclusion of values from reference.conf files using the hamburger menu. Note reference.conf values are always shown if they have been overridden</li>
                 <li>Ctrl-f to search for a key or value (uses browser find)</li>
             </ul>
         </aside>
@@ -125,6 +137,9 @@
 
                 document.querySelector("#show-evictions").addEventListener("change", e => {
                     document.querySelector("body").classList.toggle("hide-evictions");
+                });
+                document.querySelector("#show-referenceConf").addEventListener("change", e => {
+                    document.querySelector("body").classList.toggle("hide-refconf-only");
                 });
 
                 document.querySelector("#word-wrap").addEventListener("change", e => {

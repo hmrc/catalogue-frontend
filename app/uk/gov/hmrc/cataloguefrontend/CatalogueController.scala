@@ -220,18 +220,17 @@ class CatalogueController @Inject()(
 
           Ok(
             teamInfoPage(
-              team.name,
-              repos = team.repos.getOrElse(Map()),
-              activityDates =
-                TeamActivityDates(team.firstActiveDate, team.lastActiveDate, team.firstServiceCreationDate),
-              errorOrTeamMembers = convertToDisplayableTeamMembers(team.name, teamMembers),
-              teamDetails,
-              TeamChartData.deploymentThroughput(team.name, teamIndicators.map(_.throughput)),
-              TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
-              umpMyTeamsPageUrl(team.name),
-              leakDetectionService.teamHasLeaks(team, reposWithLeaks),
-              leakDetectionService.hasLeaks(reposWithLeaks),
-              teamDependencies.filter(_.hasOutOfDateDependencies)
+              teamName            = team.name,
+              repos               = team.repos.getOrElse(Map()),
+              activityDates       = TeamActivityDates(team.firstActiveDate, team.lastActiveDate, team.firstServiceCreationDate),
+              errorOrTeamMembers  = convertToDisplayableTeamMembers(team.name, teamMembers),
+              errorOrTeamDetails  = teamDetails,
+              throughputChartData = TeamChartData.deploymentThroughput(team.name, teamIndicators.map(_.throughput)),
+              stabilityChartData  = TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
+              umpMyTeamsUrl       = umpMyTeamsPageUrl(team.name),
+              leaksFoundForTeam   = leakDetectionService.teamHasLeaks(team, reposWithLeaks),
+              hasLeaks            = leakDetectionService.hasLeaks(reposWithLeaks),
+              dependencies        = teamDependencies.filter(_.hasOutOfDateDependencies)
             )
           )
         case _ => NotFound(error_404_template())
