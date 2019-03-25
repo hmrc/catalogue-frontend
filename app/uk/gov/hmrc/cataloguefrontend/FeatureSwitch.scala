@@ -36,3 +36,9 @@ object FeatureSwitch {
   private def systemPropertyName(name: String) = s"feature.$name"
 
 }
+
+object CatalogueFrontendSwitches {
+
+  def indicators = FeatureSwitch.forName("indicators")
+
+}

@@ -14,6 +14,7 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, NoData, TeamDetails}
 @import uk.gov.hmrc.cataloguefrontend.{ChartDataRows, ViewMessages}
@@ -171,7 +172,7 @@
                 <div class="board">
                     <h3 class="board__heading">Delivery Indicators</h3>
                     <div class="board__body">
-                        @if(false) {
+                        @if(CatalogueFrontendSwitches.indicators.isEnabled) {
                             @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
                                 @renderGraphText
                                 @renderThroughputGraph
