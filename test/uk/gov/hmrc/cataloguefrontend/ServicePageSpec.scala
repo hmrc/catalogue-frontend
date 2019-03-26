@@ -56,6 +56,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
 
   override def beforeEach(): Unit = {
     super.beforeEach()
+    FeatureSwitch.disable(CatalogueFrontendSwitches.indicators)
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/frontend-route/service-1", willRespondWith = (200, Some(configServiceService1)))
     serviceEndpoint(GET, "/frontend-route/service-name", willRespondWith = (200, Some(configServiceService1)))
@@ -258,6 +259,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     }
 
     "Render a message if the indicators service returns 404" in {
+      FeatureSwitch.enable(CatalogueFrontendSwitches.indicators)
       val today       = LocalDateTime.now
       val dayInterval = createdAt.until(today, ChronoUnit.DAYS) + 1
 
@@ -277,6 +279,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     }
 
     "Render a message if the indicators service encounters an error" in {
+      FeatureSwitch.enable(CatalogueFrontendSwitches.indicators)
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                   = (200, Some(serviceDetailsData)))
       serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (500, None))
       serviceEndpoint(
