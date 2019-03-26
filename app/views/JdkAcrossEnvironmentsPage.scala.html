@@ -1,0 +1,118 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
+@import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
+@import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
+@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
+@import play.twirl.api.Html
+@import uk.gov.hmrc.cataloguefrontend.routes
+@import uk.gov.hmrc.cataloguefrontend.connector.model.JDKUsageByEnv
+
+@this(viewMessages: ViewMessages)
+
+@(data: List[JDKUsageByEnv],
+  jdks: List[String])(implicit request: Request[_])
+
+@standard_layout(s"JDK Versions", "dependencies") {
+    <header>
+        <h1 id="jdk-header">JDK Versions Across Environments</h1>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    </header>
+
+    <div id="chart_div"></div>
+
+    <button id="chart-toggle" class="btn btn-default" onclick="toggle()">show absolute</button>
+    <hr/>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Environment</th>
+                @jdks.map(jdk => {<th>{jdk}</th>})
+            </tr>
+
+        </thead>
+        <tbody>
+
+        @for(d <- data) {
+          <tr>
+              <td><a href="@routes.JDKVersionController.findLatestVersions(d.env)">@d.env</a></td>
+              @for(jdk <- jdks) { <td>@{d.usage.getOrElse(jdk, 0)}</td>}
+          </tr>
+
+        }
+        </tbody>
+    </table>
+
+    <div>
+
+    </div>
+
+    <script type="text/javascript">
+            google.charts.load('current', {'packages': ['corechart']});
+            google.charts.setOnLoadCallback(drawChart);
+
+            // either true or "percent"
+            var drawMode = "percent";
+
+            function toggle() {
+                if(drawMode == "percent") {
+                    document.getElementById("chart-toggle").textContent = "show percent"
+                    drawMode = "absolute"
+                }else {
+                    document.getElementById("chart-toggle").textContent = "show absolute"
+                    drawMode = "percent"
+                }
+
+                drawChart()
+            }
+
+            function drawChart() {
+                drawStackedChart(drawMode)
+            }
+
+          function drawStackedChart(stack) {
+
+                var data = new google.visualization.DataTable();
+                data.addColumn('string', 'Environment');
+                @for(jdk <- jdks) {
+                  data.addColumn('number','@jdk');
+                }
+
+                data.addRows([
+                    @for(d <- data) {
+                        ['@d.env' @for(jdk <- jdks) {,@{d.usage.getOrElse(jdk, 0)}}],
+                    }
+                ]);
+
+                var options = { 'title'    : 'JDK Usage',
+                    'width'    : "100%",
+                    'height'   : 400,
+                    'isStacked': stack,
+                    'legend': { 'position': 'top', 'maxLines': 3 }
+                };
+
+                var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
+                chart.draw(data, options);
+            }
+
+
+    </script>
+}
+

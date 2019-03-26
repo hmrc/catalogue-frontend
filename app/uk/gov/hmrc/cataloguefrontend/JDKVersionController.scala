@@ -17,10 +17,10 @@
 package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.ControllerComponents
-import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersionFormats
+import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnvFormat, JDKVersionFormats}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
-import views.html.JDKVersionPage
+import views.html.{JdkVersionPage, JdkAcrossEnvironmentsPage}
 import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,7 +29,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class JDKVersionController @Inject()(
                                       cc: ControllerComponents,
                                       dependenciesService: DependenciesService,
-                                      jdkPage: JDKVersionPage
+                                      jdkPage: JdkVersionPage,
+                                      jdkCountsPage: JdkAcrossEnvironmentsPage
                                       )(
   implicit val ec: ExecutionContext)
     extends BackendController(cc) {
@@ -41,7 +42,15 @@ class JDKVersionController @Inject()(
         flag        <- Future.successful(SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest))
         jdkVersions <- dependenciesService.getJDKVersions(flag)
     } yield Ok(jdkPage(jdkVersions, SlugInfoFlag.values, flag))
+  }
 
+  def compareAllEnvironments() = Action.async { implicit request =>
+    implicit val r = JDKUsageByEnvFormat.jdkUsageByEnvFormat
+
+    for {
+       envs      <- Future.sequence(SlugInfoFlag.values.map(dependenciesService.getJDKCountsForEnv))
+       jdks      =  envs.flatMap(_.usage.keys).distinct.sorted
+    } yield Ok(jdkCountsPage(envs, jdks))
   }
 
 }

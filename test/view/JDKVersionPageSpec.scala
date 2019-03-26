@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.ViewMessages
 import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
 import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
-import views.html.JDKVersionPage
+import views.html.JdkVersionPage
 
 
 
@@ -37,7 +37,7 @@ class JDKVersionPageSpec extends WordSpec with MockitoSugar with Matchers {
       implicit val request = FakeRequest()
 
       val versions = List(JDKVersion("test-slug", "1.181.0"), JDKVersion("thing-service", "1.171.0"))
-      val document = asDocument(new JDKVersionPage(msg)(versions, SlugInfoFlag.values, Latest))
+      val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, Latest))
 
       val slug1 = document.select("#jdk-slug-test-slug")
       val slug2 = document.select("#jdk-slug-thing-service")
@@ -52,7 +52,7 @@ class JDKVersionPageSpec extends WordSpec with MockitoSugar with Matchers {
       implicit val request = FakeRequest()
 
       val versions = List(JDKVersion("thing-service", "1.171.0"))
-      val document = asDocument(new JDKVersionPage(msg)(versions, SlugInfoFlag.values, Latest))
+      val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, Latest))
 
       val slug = document.select("#jdk-slug-thing-service")
       val link = slug.select("a[href*='/repositories/thing-service']")

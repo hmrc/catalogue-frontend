@@ -20,7 +20,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -102,6 +102,32 @@ class SlugInfoServiceSpec
       await(boot.service.getServicesWithDependency(optTeam = Some("T2"), SlugInfoFlag.Latest, group, artefact, versionOp = VersionOp.Gte, version = Version("1.0.1"))) shouldBe Seq(v205, v200)
     }
   }
+
+  "DependenciesService.getJDKCountsForEnv" should {
+    "return totals of each jdk in an environment" in {
+      val boot = Boot.init
+
+      when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
+        .thenReturn(Future(List(
+          JDKVersion("test1", "1.181.1"),
+          JDKVersion("test2", "1.181.1"),
+          JDKVersion("test3", "1.191.1"),
+          JDKVersion("test4", "1.121.1"))))
+
+      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.s, Map("1.181.1"-> 2, "1.191.1"->1, "1.121.1" -> 1))
+    }
+
+    "still returns a value when no matches are found for env" in {
+      val boot = Boot.init
+
+      when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
+        .thenReturn(Future(List.empty[JDKVersion]))
+
+      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.s, Map.empty[String, Int])
+    }
+
+  }
+
 
   case class Boot(
     mockedServiceDependenciesConnector: ServiceDependenciesConnector,

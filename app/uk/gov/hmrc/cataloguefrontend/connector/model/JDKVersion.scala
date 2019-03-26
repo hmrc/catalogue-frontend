@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import play.api.libs.json.{__, OFormat}
+import play.api.libs.json.{OFormat, __}
 import play.api.libs.functional.syntax._
 
 case class JDKVersion(name:String, version: String)
@@ -30,3 +30,19 @@ trait JDKVersionFormats {
 }
 
 object JDKVersionFormats extends JDKVersionFormats
+
+
+case class JDKUsageByEnv(env: String, usage: Map[String, Int])
+
+
+trait JDKUsageByEnvFormat {
+
+  val jdkUsageByEnvFormat: OFormat[JDKUsageByEnv] =
+    (
+      (__ \ "env").format[String]
+    ~ (__ \ "usage").format[Map[String, Int]]
+    )(JDKUsageByEnv.apply, unlift(JDKUsageByEnv.unapply))
+
+}
+
+object JDKUsageByEnvFormat extends JDKUsageByEnvFormat
