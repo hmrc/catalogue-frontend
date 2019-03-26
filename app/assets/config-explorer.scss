@@ -242,6 +242,12 @@ aside {
   }
 }
 
+.hide-refconf-only {
+  .refconf-only {
+    display: none;
+  }
+}
+
 .grid-row > .grid-item {
   font-family: monospace;
 

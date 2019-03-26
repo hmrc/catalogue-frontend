@@ -51,10 +51,11 @@ object ConfigService {
 
   def friendlySourceName(source: String, environment: String): String = {
     source match {
-      case "applicationConf" => "Microservice application.conf file"
-      case "baseConfig" => "App-config-base"
-      case "appConfigEnvironment" => s"App-config-$environment"
-      case "appConfigCommonFixed" => "App-config-common fixed settings"
+      case "referenceConf"              => "Microservice reference.conf files"
+      case "applicationConf"            => "Microservice application.conf file"
+      case "baseConfig"                 => "App-config-base"
+      case "appConfigEnvironment"       => s"App-config-$environment"
+      case "appConfigCommonFixed"       => "App-config-common fixed settings"
       case "appConfigCommonOverridable" => "App-config-common overridable settings"
       case _ => source
     }

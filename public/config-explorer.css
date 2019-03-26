@@ -965,6 +965,10 @@ aside {
 .hide-evictions li.config-value:not(:last-child) {
   display: none; }
 
+.hide-refconf-only .refconf-only {
+  display: none;
+}
+
 .grid-row > .grid-item {
   font-family: monospace; }
   .grid-row > .grid-item > ul > li {
