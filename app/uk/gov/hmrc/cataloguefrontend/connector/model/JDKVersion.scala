@@ -24,9 +24,10 @@ case class JDKVersion(name:String, version: String)
 trait JDKVersionFormats {
 
   val jdkFormat: OFormat[JDKVersion] =
-    (   (__ \ "name"     ).format[String]
-      ~ (__ \ "jdkVersion" ).format[String]
-      )(JDKVersion.apply, unlift(JDKVersion.unapply))
+    (
+      (__ \ "name"     ).format[String]
+    ~ (__ \ "jdkVersion" ).format[String]
+    )(JDKVersion.apply, unlift(JDKVersion.unapply))
 }
 
 object JDKVersionFormats extends JDKVersionFormats
