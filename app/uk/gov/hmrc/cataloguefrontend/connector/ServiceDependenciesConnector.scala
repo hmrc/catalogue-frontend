@@ -18,9 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, GroupArtefacts, ServiceWithDependency, Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
-import uk.gov.hmrc.http.{HeaderCarrier, BadRequestException}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -102,6 +102,10 @@ class ServiceDependenciesConnector @Inject()(
      http.GET[List[GroupArtefacts]](s"$servicesDependenciesBaseUrl/groupArtefacts")
    }
 
+  def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] = {
+    implicit val r = JDKVersionFormats.jdkFormat
+    http.GET[List[JDKVersion]](url = s"$servicesDependenciesBaseUrl/jdkVersions?flag=$flag")
+  }
 
   private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
     queryParams.flatMap(param => param._2.map(v => (param._1, v)))
