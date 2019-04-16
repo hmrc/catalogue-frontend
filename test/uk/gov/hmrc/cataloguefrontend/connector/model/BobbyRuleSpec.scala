@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import java.time.Clock
+import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleFactory.aBobbyRule
 
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.cataloguefrontend.service.EventsReloadScheduler
+class BobbyRuleSpec extends WordSpec with Matchers {
 
-class CatalogueFrontendModule extends AbstractModule {
+  "groupArtifactName" should {
 
-  override def configure(): Unit = {
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    bind(classOf[EventsReloadScheduler]).asEagerSingleton()
+    "return group ID and artifact ID" in {
+      aBobbyRule(organisation = "a", name = "b").groupArtifactName should be("a.b")
+    }
+
+    "return All for *" in {
+      aBobbyRule(organisation = "*", name = "*").groupArtifactName should be("*")
+    }
+
   }
 }

@@ -1,0 +1,68 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
+@import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
+
+@this(viewMessages: ViewMessages)
+
+@(rules: BobbyRulesView)(implicit request: Request[_])
+
+@standard_layout(s"Bobby rules") {
+    <header>
+        <h1>Bobby Rules</h1>
+    </header>
+    @bobbyRulesTimeSection(rules.upcoming, "Upcoming", "table table-striped")
+    @bobbyRulesTimeSection(rules.active, "Active", "table table-striped-warning")
+}
+
+@bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String, cssClass: String) = {
+    @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
+        <div><h2>@heading</h2></div>
+        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", cssClass)
+        @bobbyRulesArtifactTypeSection(rulesByTime.plugins, "Plugin", cssClass)
+    }
+}
+
+@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, cssClass: String) = {
+    @if(rulesByArtifactType.nonEmpty) {
+        <div>
+            <table class="@cssClass">
+                <thead>
+                    <tr>
+                        <th>@artifactType</th>
+                        <th>Version</th>
+                        <th>Reason</th>
+                        <th>Active from</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @rulesByArtifactType.map(bobbyRuleRow)
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@bobbyRuleRow(rule: BobbyRule) = {
+    <tr>
+        <td>@rule.groupArtifactName</td>
+        <td>@rule.range</td>
+        <td>@rule.reason</td>
+        <td>@rule.from</td>
+    </tr>
+}

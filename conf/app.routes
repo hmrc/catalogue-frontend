@@ -41,3 +41,5 @@ GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefro
 
 GET        /jdkexplorer/:env                            uk.gov.hmrc.cataloguefrontend.JDKVersionController.findLatestVersions(env: String)
 GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JDKVersionController.compareAllEnvironments
+
+GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()

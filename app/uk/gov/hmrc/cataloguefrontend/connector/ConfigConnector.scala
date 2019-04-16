@@ -18,12 +18,13 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
+import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ConfigConnector @Inject()(
@@ -50,4 +51,6 @@ class ConfigConnector @Inject()(
 
   def configByKey(service: String)(implicit hc: HeaderCarrier) =
     http.GET[ConfigByKey](s"$serviceConfigsBaseUrl/config-by-key/$service")
+
+  def bobbyRules()(implicit hc: HeaderCarrier): Future[BobbyRuleSet] = http.GET[BobbyRuleSet](s"$serviceConfigsBaseUrl/bobby/rules")
 }

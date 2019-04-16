@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import java.time.Clock
+import java.time.LocalDate
 
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.cataloguefrontend.service.EventsReloadScheduler
-
-class CatalogueFrontendModule extends AbstractModule {
-
-  override def configure(): Unit = {
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    bind(classOf[EventsReloadScheduler]).asEagerSingleton()
-  }
+object BobbyRuleFactory {
+  def aBobbyRule(organisation: String = "uk.gov.hmrc", name: String = "play-frontend", range: String = "[*-SNAPSHOT]", reason: String = "No snapshot dependencies permitted", from: LocalDate = LocalDate.of(2015, 3, 16)) =
+    BobbyRule(organisation, name, range, reason, from)
 }
