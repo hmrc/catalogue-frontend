@@ -32,11 +32,10 @@ class BobbyService @Inject()(configConnector: ConfigConnector, clock: Clock)(imp
     val today = LocalDate.now(clock)
     def filterUpcoming(rule: BobbyRule) = rule.from.isAfter(today)
     def filterActive(rule: BobbyRule) = rule.from.isBefore(today) || rule.from.isEqual(today)
-    def compareUpcoming(rule1: BobbyRule, rule2: BobbyRule) = compareRules(rule1, rule2)(_ < _)
-    def compareActive(rule1: BobbyRule, rule2: BobbyRule) = compareRules(rule1, rule2)(_ > _)
-    def compareRules(x: BobbyRule, y: BobbyRule)(sortDirection: (Int, Int) => Boolean) =
-      if (x.from == y.from) x.groupArtifactName < y.groupArtifactName
-      else sortDirection(x.from compareTo y.from, 0)
+    def compareUpcoming(rule1: BobbyRule, rule2: BobbyRule) = compareRules(rule1, rule2)(_ isBefore _)
+    def compareActive(rule1: BobbyRule, rule2: BobbyRule) = compareRules(rule1, rule2)(_ isAfter _)
+    def compareRules(x: BobbyRule, y: BobbyRule)(sortDirection: (LocalDate, LocalDate) => Boolean) =
+      if (x.from == y.from) x.groupArtifactName < y.groupArtifactName else sortDirection(x.from, y.from)
 
     configConnector.bobbyRules().map(r => BobbyRulesView(
         upcoming = BobbyRuleSet(libraries = r.libraries.filter(filterUpcoming).sortWith(compareUpcoming), plugins = r.plugins.filter(filterUpcoming).sortWith(compareUpcoming)),
