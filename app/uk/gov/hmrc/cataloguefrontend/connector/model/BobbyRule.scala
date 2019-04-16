@@ -23,7 +23,7 @@ import play.api.libs.json.{Json, Reads}
 case class BobbyRule(organisation: String, name: String, range: String, reason: String, from: LocalDate) {
   val groupArtifactName: String = {
     val wildcard = "*"
-    if (organisation == wildcard && name == wildcard) "*" else s"$organisation.$name"
+    if (organisation == wildcard && name == wildcard) "*" else s"$organisation:$name"
   }
 }
 object BobbyRule {

@@ -24,10 +24,10 @@ class BobbyRuleSpec extends WordSpec with Matchers {
   "groupArtifactName" should {
 
     "return group ID and artifact ID" in {
-      aBobbyRule(organisation = "a", name = "b").groupArtifactName should be("a.b")
+      aBobbyRule(organisation = "a", name = "b").groupArtifactName should be("a:b")
     }
 
-    "return All for *" in {
+    "return * for matching all" in {
       aBobbyRule(organisation = "*", name = "*").groupArtifactName should be("*")
     }
 
