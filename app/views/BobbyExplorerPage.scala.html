@@ -41,7 +41,7 @@
 @bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, cssClass: String) = {
     @if(rulesByArtifactType.nonEmpty) {
         <div>
-            <table class="@cssClass">
+            <table class="@{artifactType.toLowerCase}-rules @cssClass">
                 <thead>
                     <tr>
                         <th>@artifactType</th>
