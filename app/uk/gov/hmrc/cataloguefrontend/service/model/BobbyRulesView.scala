@@ -14,17 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.service.model
 
-import java.time.Clock
+import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.cataloguefrontend.service.EventsReloadScheduler
-
-class CatalogueFrontendModule extends AbstractModule {
-
-  override def configure(): Unit = {
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    bind(classOf[EventsReloadScheduler]).asEagerSingleton()
-  }
-}
+case class BobbyRulesView (upcoming: BobbyRuleSet, active: BobbyRuleSet)
