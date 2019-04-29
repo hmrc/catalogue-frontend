@@ -128,8 +128,8 @@ class ServiceDependenciesConnectorSpec
 
       response.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-1", Version("1.0.0"), Some(Version("1.1.0")), true),
-          Dependency("plugin-2", Version("2.0.0"), Some(Version("2.1.0")), false)
+          Dependency("plugin-1", Version("1.0.0"), Some(Version("1.1.0")), isExternal = true),
+          Dependency("plugin-2", Version("2.0.0"), Some(Version("2.1.0")), isExternal = false)
         )
       response.otherDependencies should contain theSameElementsAs
         Seq(

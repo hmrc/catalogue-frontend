@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
+import java.time.LocalDate
+
 import org.joda.time.DateTime
-import play.api.libs.json.{__, Format, Json, JsError, JsObject, JsString, JsSuccess, JsValue, OFormat}
+import play.api.libs.json.{Format, JsError, JsObject, JsString, JsSuccess, JsValue, Json, OFormat, __}
 import play.api.libs.functional.syntax._
 import uk.gov.hmrc.http.controllers.RestFormats
 
@@ -27,19 +29,34 @@ object VersionState {
   case object MinorVersionOutOfDate extends VersionState
   case object MajorVersionOutOfDate extends VersionState
   case object Invalid               extends VersionState
+  case object BobbyRuleViolated     extends VersionState
+  case object BobbyRulePending      extends VersionState
+}
+
+case class BobbyRuleViolation(reason: String, from: LocalDate) {
+
+  // TODO: would rather this didn't have to compare against current time
+  def isActive: Boolean = now().isAfter(from)
+
+  def now() : LocalDate = LocalDate.now()
 }
 
 case class Dependency(
   name          : String,
   currentVersion: Version,
   latestVersion : Option[Version],
+  bobbyRuleViolations: Seq[BobbyRuleViolation]=Seq.empty,
   isExternal    : Boolean = false) {
 
-  def getVersionState: Option[VersionState] =
-    latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
+  def getVersionState: Option[VersionState] = bobbyRuleViolations match {
+    case Nil                         => latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
+    case br if br.exists(_.isActive) => Some(VersionState.BobbyRuleViolated)
+    case _                           => Some(VersionState.BobbyRulePending)
+  }
 
   def isUpToDate: Boolean =
     getVersionState.contains(VersionState.UpToDate)
+
 }
 
 case class Dependencies(
@@ -51,14 +68,28 @@ case class Dependencies(
 
   def hasOutOfDateDependencies: Boolean =
     !(libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies).forall(_.isUpToDate)
+
+  def activeBobbyRuleViolations: Seq[Dependency] =
+    (libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies)
+      .filter(_.getVersionState.contains(VersionState.BobbyRuleViolated))
+      .map(d => d.copy(bobbyRuleViolations = d.bobbyRuleViolations.filter(_.isActive)))
+
+  def upcomingBobbyRuleViolations: Seq[Dependency] =
+    (libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies)
+      .filter(_.getVersionState.contains(VersionState.BobbyRulePending))
+      .map(d => d.copy(bobbyRuleViolations = d.bobbyRuleViolations.filterNot(_.isActive)))
+
 }
 
 object Dependencies {
-  implicit val osf = {
+  implicit val brvf: OFormat[BobbyRuleViolation] = {
+    Json.format[BobbyRuleViolation]
+  }
+  implicit val osf: OFormat[Dependency] = {
     implicit val vf = Version.format
     Json.format[Dependency]
   }
-  implicit val format = {
+  implicit val format: OFormat[Dependencies] = {
     implicit val dtr = RestFormats.dateTimeFormats
     Json.format[Dependencies]
   }

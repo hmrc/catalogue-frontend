@@ -42,6 +42,8 @@
         case VersionState.MinorVersionOutOfDate => "amber"
         case VersionState.MajorVersionOutOfDate => "red"
         case VersionState.Invalid               => "black"
+        case VersionState.BobbyRuleViolated     => "verybad"
+        case VersionState.BobbyRulePending      => "pending"
     }
 }
 
@@ -51,6 +53,8 @@
         case VersionState.MinorVersionOutOfDate => "glyphicon-alert"
         case VersionState.MajorVersionOutOfDate => "glyphicon-ban-circle"
         case VersionState.Invalid               => "glyphicon-question-sign"
+        case VersionState.BobbyRuleViolated     => "glyphicon-remove"
+        case VersionState.BobbyRulePending      => "glyphicon-remove"
     }
 }
 
@@ -60,5 +64,7 @@
         case VersionState.MinorVersionOutOfDate => "minor version behind"
         case VersionState.MajorVersionOutOfDate => "major version behind"
         case VersionState.Invalid               => "invalid version difference"
+        case VersionState.BobbyRuleViolated     => "bobby rule violated"
+        case VersionState.BobbyRulePending      => "bobby rule pending"
     }
 }
