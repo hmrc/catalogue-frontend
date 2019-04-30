@@ -23,7 +23,8 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @import _root_.views.html.partials.DependenciesTeamPartial
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependencies}
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
 
@@ -62,9 +63,46 @@
         </div>
     }
 
-    @defining(dependencies.map(_.toSeq).flatten) { allDependencies =>
-      @partials.BobbyPendingBanner(allDependencies)
-      @partials.BobbyViolationBanner(allDependencies)
+
+    @defining(dependencies.map(_.toSeq.filter(_.isViolatingBobbyRule)).flatten) { violations =>
+        @if(violations.nonEmpty) {
+            <div class="alert alert-danger" id="bobby-rules-broken-banner">
+                <h4>
+                    One or more of your repositories have broken Bobby Rules!
+                    See below to see which repositories are affected by the following rules:
+                </h4>
+
+
+                @violations.map(_.activeBobbyRuleViolations).flatten.toSet[BobbyRuleViolation].map { rule =>
+                    <div class="row">
+                        @*<span class="col-xs-2">@rule.organisation</span>
+                        <span class="col-xs-2">@rule.name</span>
+                        <span class="col-xs-2">@rule.range</span>*@
+                        <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">@rule.reason</a></span>
+                    </div>
+                }
+            </div>
+        }
+    }
+
+    @defining(dependencies.map(_.toSeq.filter(_.isViolatingPendingBobbyRule)).flatten) { violations =>
+        @if(violations.nonEmpty) {
+            <div class="alert alert-info" id="bobby-rule-pending-banner">
+                <strong>
+                    One or more of your repositories will break upcoming bobby rules!
+                    See below to see which repositories are affected by the following rules:
+                </strong>
+
+                @violations.map(_.pendingBobbyRuleViolations).flatten.toSet[BobbyRuleViolation].map { rule =>
+                    <div class="row">
+                        @*<span class="col-xs-2">@rule.organisation</span>
+                        <span class="col-xs-2">@rule.name</span>
+                        <span class="col-xs-2">@rule.range</span>*@
+                        <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">@rule.from - @rule.reason</a></span>
+                    </div>
+                }
+            </div>
+        }
     }
 
 
