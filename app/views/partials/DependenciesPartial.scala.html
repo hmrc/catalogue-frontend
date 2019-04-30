@@ -58,18 +58,7 @@
             </ul>
         </div>
         @if(mayBeDependencies.exists(dependencies => dependencies.libraryDependencies.nonEmpty || dependencies.sbtPluginsDependencies.nonEmpty || dependencies.otherDependencies.nonEmpty)) {
-            <div class="col-xs-4">
-                <div id="legend">
-                    <label>Legend:</label>
-                    <ul class="list list--minimal list-group legend" >
-                        <li><span class="green"><span class="glyphicon glyphicon-ok-circle medium-glyphicon" title="up to date"> </span> Up to date</span></li>
-                        <li><span class="amber"><span class="glyphicon glyphicon-alert medium-glyphicon" title="minor version behind"> </span> Minor version behind</span></li>
-                        <li><span class="red"><span class="glyphicon glyphicon-ban-circle medium-glyphicon" title="major version behind"> </span> Major version behind</span></li>
-                        <li><span class="pending"><span class="glyphicon glyphicon-remove medium-glyphicon" title="bobby rule pending"> </span> Bobby rule pending</span></li>
-                        <li><span class="verybad"><span class="glyphicon glyphicon-remove medium-glyphicon" title="bobby rule violation"> </span> Bobby rule violation</span></li>
-                    </ul>
-                </div>
-            </div>
+            @partials.dependency_legend()
         }
     </div>
 
@@ -95,7 +84,3 @@
             mayBeDependencies.get.otherDependencies.nonEmpty)
     }
 </div>
-
-
-
-
