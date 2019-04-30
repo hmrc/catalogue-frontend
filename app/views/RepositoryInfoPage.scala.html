@@ -32,67 +32,67 @@
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(repository.name, "repositories") {
-<header class="header-with-github-badge">
-    <div>
-        <h1>Repository: @repository.name<span>@githubBadgeType(repository)</span></h1>
-    </div>
+    <header class="header-with-github-badge">
+        <div>
+            <h1>Repository: @repository.name<span>@githubBadgeType(repository)</span></h1>
+        </div>
 
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-</header>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
     @partials.BobbyPendingBanner(mayBeDependencies.map(_.upcomingBobbyRuleViolations).getOrElse(Seq.empty))
     @partials.BobbyViolationBanner(mayBeDependencies.map(_.activeBobbyRuleViolations).getOrElse(Seq.empty))
 
-<section class="section-wrapper">
-    @partials.details(repository)
+    <section class="section-wrapper">
+        @partials.details(repository)
 
 
 
-    <div class="row">
-        @partials.repo_owning_teams(repository)
-        @partials.code(repository)
-    </div>
+        <div class="row">
+            @partials.repo_owning_teams(repository)
+            @partials.code(repository)
+        </div>
 
-    @dependenciesPartial(mayBeDependencies)
+        @dependenciesPartial(mayBeDependencies)
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="board">
-                <h3 class="board__heading">Delivery Indicators</h3>
-                <div class="board__body">
-                    @if(jobExecutionTimeChartData.isDefined && !jobExecutionTimeChartData.get.isEmpty) {
-                        @renderGraphText
-                        @renderJobExecutionTimeGraph
-                    }
-
-                    @{
-                        if(jobExecutionTimeChartData.isEmpty) {
-                            {viewMessages.errorMessage}
-                        } else if(jobExecutionTimeChartData.get.isEmpty) {
-                            {viewMessages.noJobExecutionTimeDataHtml}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="board">
+                    <h3 class="board__heading">Delivery Indicators</h3>
+                    <div class="board__body">
+                        @if(jobExecutionTimeChartData.isDefined && !jobExecutionTimeChartData.get.isEmpty) {
+                            @renderGraphText
+                            @renderJobExecutionTimeGraph
                         }
-                    }
+
+                        @{
+                            if(jobExecutionTimeChartData.isEmpty) {
+                                {viewMessages.errorMessage}
+                            } else if(jobExecutionTimeChartData.get.isEmpty) {
+                                {viewMessages.noJobExecutionTimeDataHtml}
+                            }
+                        }
+                    </div>
                 </div>
             </div>
         </div>
+    </section>
+
+
+    <div class="alert alert-success" role="alert" id="@repository.name">
+        <p>
+        @Html(viewMessages.informationalText)
+        </p>
     </div>
-</section>
 
+    <script type="text/javascript">
 
-<div class="alert alert-success" role="alert" id="@repository.name">
-    <p>
-    @Html(viewMessages.informationalText)
-    </p>
-</div>
+        @if(jobExecutionTimeChartData.isDefined && !jobExecutionTimeChartData.get.isEmpty) {
+            @views.html.jobexecutiontimechart_script(jobExecutionTimeChartData)
+        }
 
-<script type="text/javascript">
-
-    @if(jobExecutionTimeChartData.isDefined && !jobExecutionTimeChartData.get.isEmpty) {
-        @views.html.jobexecutiontimechart_script(jobExecutionTimeChartData)
-    }
-
-</script>
+    </script>
 }
 
 @renderGraphText = {
