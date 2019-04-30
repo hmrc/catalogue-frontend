@@ -19,21 +19,23 @@
 
 @(dependencies: Seq[Dependency])
 
-@defining(dependencies.filter(_.isViolatingBobbyRule)){ violations =>
+@defining(
+    dependencies
+        .flatMap(dependency => dependency.activeBobbyRuleViolations.map(rule => (dependency.name, dependency.currentVersion, rule)))
+        .toSet
+    ) { violations =>
     @if(violations.nonEmpty) {
         <div class="alert alert-danger" id="bobby-rules-broken-banner">
             <h4>
                 This repository has broken these Bobby Rule(s)!
             </h4>
 
-            @violations.map { v =>
-                @v.activeBobbyRuleViolations.map { rule =>
-                    <div class="row">
-                        <span class="col-xs-2">@v.name</span>
-                        <span class="col-xs-2">@v.currentVersion</span>
-                        <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">@rule.reason</a></span>
-                    </div>
-                }
+            @violations.map { case (name, currentVersion, rule) =>
+                <div class="row">
+                    <span class="col-xs-2">@name</span>
+                    <span class="col-xs-2">@currentVersion</span>
+                    <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">@rule.reason</a></span>
+                </div>
             }
         </div>
     }

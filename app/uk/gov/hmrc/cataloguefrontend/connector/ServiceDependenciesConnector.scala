@@ -47,7 +47,8 @@ class ServiceDependenciesConnector @Inject()(
 
   private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies") + "/api"
 
-  def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] =
+  def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
+    implicit val reads = Dependencies.reads
     http
       .GET[Option[Dependencies]](s"$servicesDependenciesBaseUrl/dependencies/$repositoryName")
       .recover {
@@ -55,8 +56,10 @@ class ServiceDependenciesConnector @Inject()(
           Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)
           None
       }
+  }
 
-  def getAllDependencies()(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] =
+  def getAllDependencies()(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
+    implicit val reads = Dependencies.reads
     http
       .GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/dependencies")
       .recover {
@@ -64,9 +67,12 @@ class ServiceDependenciesConnector @Inject()(
           Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)
           Nil
       }
+  }
 
-  def dependenciesForTeam(team: String)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] =
+  def dependenciesForTeam(team: String)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
+    implicit val reads = Dependencies.reads
     http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/teams/$team/dependencies")
+  }
 
   def getSlugDependencies(serviceName: String, version: Option[String] = None)
                          (implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] = {

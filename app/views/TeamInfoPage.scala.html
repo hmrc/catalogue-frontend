@@ -38,7 +38,7 @@
   umpMyTeamsUrl: String,
   leaksFoundForTeam: Boolean,
   hasLeaks: String => Boolean,
-  dependencies: Seq[Dependencies]
+  teamDependencies: Seq[Dependencies]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(teamName, "teams") {
@@ -63,8 +63,7 @@
         </div>
     }
 
-
-    @defining(dependencies.map(_.toSeq.filter(_.isViolatingBobbyRule)).flatten) { violations =>
+    @defining(Dependencies.collectViolations(teamDependencies, _.activeBobbyRuleViolations)) { violations =>
         @if(violations.nonEmpty) {
             <div class="alert alert-danger" id="bobby-rules-broken-banner">
                 <h4>
@@ -72,12 +71,11 @@
                     See below to see which repositories are affected by the following rules:
                 </h4>
 
-
-                @violations.map(_.activeBobbyRuleViolations).flatten.toSet[BobbyRuleViolation].map { rule =>
+                @violations.map { case (name, rule) =>
                     <div class="row">
-                        @*<span class="col-xs-2">@rule.organisation</span>
-                        <span class="col-xs-2">@rule.name</span>
-                        <span class="col-xs-2">@rule.range</span>*@
+                        @*<span class="col-xs-2">@rule.organisation</span>*@
+                        <span class="col-xs-2">@name</span>
+                        <span class="col-xs-2">@rule.range</span>
                         <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">@rule.reason</a></span>
                     </div>
                 }
@@ -85,7 +83,7 @@
         }
     }
 
-    @defining(dependencies.map(_.toSeq.filter(_.isViolatingPendingBobbyRule)).flatten) { violations =>
+    @defining(Dependencies.collectViolations(teamDependencies, _.pendingBobbyRuleViolations)) { violations =>
         @if(violations.nonEmpty) {
             <div class="alert alert-info" id="bobby-rule-pending-banner">
                 <strong>
@@ -93,11 +91,11 @@
                     See below to see which repositories are affected by the following rules:
                 </strong>
 
-                @violations.map(_.pendingBobbyRuleViolations).flatten.toSet[BobbyRuleViolation].map { rule =>
+                @violations.map { case (name, rule) =>
                     <div class="row">
-                        @*<span class="col-xs-2">@rule.organisation</span>
-                        <span class="col-xs-2">@rule.name</span>
-                        <span class="col-xs-2">@rule.range</span>*@
+                        @*<span class="col-xs-2">@rule.organisation</span>*@
+                        <span class="col-xs-2">@name</span>
+                        <span class="col-xs-2">@rule.range</span>
                         <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">@rule.from - @rule.reason</a></span>
                     </div>
                 }
@@ -246,7 +244,7 @@
 
     </section>
 
-    @dependenciesTeamPartial(teamName, dependencies, true)
+    @dependenciesTeamPartial(teamName, teamDependencies, true)
 }
 
 <script type="text/javascript">
