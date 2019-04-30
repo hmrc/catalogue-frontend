@@ -20,10 +20,8 @@
 @(dependencies: Seq[Dependency])
 
 @defining(dependencies.filter(_.isViolatingBobbyRule)){ violations =>
-
-    @if(violations.nonEmpty ){
+    @if(violations.nonEmpty) {
         <div class="alert alert-danger" id="bobby-rules-broken-banner">
-
             <h4>
                 This repository has broken these Bobby Rule(s)!
             </h4>
@@ -37,7 +35,6 @@
                     </div>
                 }
             }
-
         </div>
     }
 }
