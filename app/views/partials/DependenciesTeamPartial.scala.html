@@ -20,6 +20,7 @@
 @this()
 @(teamName: String, dependencies: Seq[Dependencies], showLink: Boolean = false)
 
+@defining(dependencies.filter(_.hasOutOfDateDependencies)) { outOfDateDependencies =>
 
 <div id="team-dependencies" class="board">
     <h3 class="board__heading">Out of Date Platform Dependencies for Team @teamName</h3>
@@ -44,17 +45,19 @@
                          <span class="col-xs-3"><label>Latest Version</label></span>
 
                      </li>
-                     @partials.dependency_section(dependency.libraryDependencies.filter(!_.isUpToDate))
-                     @partials.dependency_section(dependency.sbtPluginsDependencies.filter(!_.isUpToDate))
-                     @partials.dependency_section(dependency.otherDependencies.filter(!_.isUpToDate))
+                     @partials.dependency_section(dependency.libraryDependencies.filter(_.isOutOfDate))
+                     @partials.dependency_section(dependency.sbtPluginsDependencies.filter(_.isOutOfDate))
+                     @partials.dependency_section(dependency.otherDependencies.filter(_.isOutOfDate))
 
                  </ul>
              }
         </div>
         @if(dependencies.nonEmpty) {
-          @partials.dependency_legend()
+          @partials.dependency_legend(includeUpToDate = false)
         }
       }
     </div>
 
 </div>
+
+}

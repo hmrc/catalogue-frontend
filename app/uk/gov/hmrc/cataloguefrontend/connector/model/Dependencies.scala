@@ -45,18 +45,28 @@ case class Dependency(
   name          : String,
   currentVersion: Version,
   latestVersion : Option[Version],
-  bobbyRuleViolations: Seq[BobbyRuleViolation]=Seq.empty,
+  bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty,
   isExternal    : Boolean = false) {
 
-  def getVersionState: Option[VersionState] = bobbyRuleViolations match {
-    case Nil                         => latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
-    case br if br.exists(_.isActive) => Some(VersionState.BobbyRuleViolated)
-    case _                           => Some(VersionState.BobbyRulePending)
-  }
+  lazy val (activeBobbyRuleViolations, pendingBobbyRuleViolations) =
+    bobbyRuleViolations.partition(_.isActive)
 
-  def isUpToDate: Boolean =
-    getVersionState.contains(VersionState.UpToDate)
+  def versionState: Option[VersionState] =
+    if (activeBobbyRuleViolations.nonEmpty)
+      Some(VersionState.BobbyRuleViolated)
+    else if (pendingBobbyRuleViolations.nonEmpty)
+      Some(VersionState.BobbyRulePending)
+    else
+      latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
 
+  def isOutOfDate: Boolean =
+    !versionState.contains(VersionState.UpToDate)
+
+  def isViolatingBobbyRule: Boolean =
+    versionState.contains(VersionState.BobbyRuleViolated)
+
+  def isViolatingPendingBobbyRule: Boolean =
+    versionState.contains(VersionState.BobbyRulePending)
 }
 
 case class Dependencies(
@@ -66,19 +76,11 @@ case class Dependencies(
   otherDependencies     : Seq[Dependency],
   lastUpdated           : DateTime) {
 
+  def toSeq: Seq[Dependency] =
+    libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies
+
   def hasOutOfDateDependencies: Boolean =
-    !(libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies).forall(_.isUpToDate)
-
-  def activeBobbyRuleViolations: Seq[Dependency] =
-    (libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies)
-      .filter(_.getVersionState.contains(VersionState.BobbyRuleViolated))
-      .map(d => d.copy(bobbyRuleViolations = d.bobbyRuleViolations.filter(_.isActive)))
-
-  def upcomingBobbyRuleViolations: Seq[Dependency] =
-    (libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies)
-      .filter(_.getVersionState.contains(VersionState.BobbyRulePending))
-      .map(d => d.copy(bobbyRuleViolations = d.bobbyRuleViolations.filterNot(_.isActive)))
-
+    toSeq.exists(_.isOutOfDate)
 }
 
 object Dependencies {
