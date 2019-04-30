@@ -62,6 +62,12 @@
         </div>
     }
 
+    @defining(dependencies.map(_.toSeq).flatten) { allDependencies =>
+      @partials.BobbyPendingBanner(allDependencies)
+      @partials.BobbyViolationBanner(allDependencies)
+    }
+
+
     <section class="section-wrapper">
 
         <div class="row">

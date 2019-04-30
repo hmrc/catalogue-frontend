@@ -58,8 +58,8 @@
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
-    @partials.BobbyPendingBanner(mayBeDependencies.map(_.upcomingBobbyRuleViolations).getOrElse(Seq.empty))
-    @partials.BobbyViolationBanner(mayBeDependencies.map(_.activeBobbyRuleViolations).getOrElse(Seq.empty))
+    @partials.BobbyPendingBanner(mayBeDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.BobbyViolationBanner(mayBeDependencies.map(_.toSeq).getOrElse(Seq.empty))
 
     <section class="section-wrapper">
 

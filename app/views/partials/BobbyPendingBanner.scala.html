@@ -17,22 +17,24 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependency
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
-@(violations: Seq[Dependency])
+@(dependencies: Seq[Dependency])
 
-@if(violations.nonEmpty ){
-    <div class="alert alert-info" id="bobby-rule-pending-banner">
-        <strong>
-            This repository will break these upcoming bobby rules!
-        </strong>
+@defining(dependencies.filter(_.isViolatingPendingBobbyRule)){ violations =>
+    @if(violations.nonEmpty ){
+        <div class="alert alert-info" id="bobby-rule-pending-banner">
+            <strong>
+                This repository will break these upcoming bobby rules!
+            </strong>
 
-        @violations.map { v =>
-          @v.bobbyRuleViolations.map { rule =>
-              <div class="row">
-                  <span class="col-xs-2">@v.name</span>
-                  <span class="col-xs-2">@v.currentVersion</span>
-                  <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">rule.from - @rule.reason</a></span>
-              </div>
-          }
-        }
-    </div>
+            @violations.map { v =>
+                @v.pendingBobbyRuleViolations.map { rule =>
+                    <div class="row">
+                        <span class="col-xs-2">@v.name</span>
+                        <span class="col-xs-2">@v.currentVersion</span>
+                        <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">rule.from - @rule.reason</a></span>
+                    </div>
+                }
+            }
+        </div>
+    }
 }

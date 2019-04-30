@@ -37,7 +37,7 @@
 }
 
 @getColourClass(dependency: Dependency) = @{
-    dependency.getVersionState.fold("grey") {
+    dependency.versionState.fold("grey") {
         case VersionState.UpToDate              => "green"
         case VersionState.MinorVersionOutOfDate => "amber"
         case VersionState.MajorVersionOutOfDate => "red"
@@ -48,7 +48,7 @@
 }
 
 @getIconClass(dependency: Dependency) = @{
-    " medium-glyphicon glyphicon " + dependency.getVersionState.fold("glyphicon-question-sign") {
+    " medium-glyphicon glyphicon " + dependency.versionState.fold("glyphicon-question-sign") {
         case VersionState.UpToDate              => "glyphicon-ok-circle"
         case VersionState.MinorVersionOutOfDate => "glyphicon-alert"
         case VersionState.MajorVersionOutOfDate => "glyphicon-ban-circle"
@@ -59,7 +59,7 @@
 }
 
 @getAltText(dependency: Dependency) = @{
-    dependency.getVersionState.fold("not found") {
+    dependency.versionState.fold("not found") {
         case VersionState.UpToDate              => "up to date"
         case VersionState.MinorVersionOutOfDate => "minor version behind"
         case VersionState.MajorVersionOutOfDate => "major version behind"

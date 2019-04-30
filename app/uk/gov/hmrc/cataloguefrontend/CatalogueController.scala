@@ -230,7 +230,7 @@ class CatalogueController @Inject()(
               umpMyTeamsUrl       = umpMyTeamsPageUrl(team.name),
               leaksFoundForTeam   = leakDetectionService.teamHasLeaks(team, reposWithLeaks),
               hasLeaks            = leakDetectionService.hasLeaks(reposWithLeaks),
-              dependencies        = teamDependencies.filter(_.hasOutOfDateDependencies)
+              dependencies        = teamDependencies
             )
           )
         case _ => NotFound(error_404_template())
@@ -240,7 +240,7 @@ class CatalogueController @Inject()(
   def outOfDateTeamDependencies(teamName: String) = Action.async { implicit request =>
     for {
       teamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
-    } yield Ok(outOfDateTeamDependenciesPage(teamName, teamDependencies.filter(_.hasOutOfDateDependencies)))
+    } yield Ok(outOfDateTeamDependenciesPage(teamName, teamDependencies))
   }
 
   def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
