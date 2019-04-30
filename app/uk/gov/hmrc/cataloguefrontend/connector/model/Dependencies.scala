@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 import java.time.LocalDate
 
 import org.joda.time.DateTime
-import play.api.libs.json.{Format, JsError, JsObject, JsString, JsSuccess, JsValue, Json, OFormat, __}
+import play.api.libs.json.{Format, JsError, JsObject, JsString, JsSuccess, JsValue, Json, OFormat, Reads, __}
 import play.api.libs.functional.syntax._
 import uk.gov.hmrc.http.controllers.RestFormats
 
@@ -33,12 +33,12 @@ object VersionState {
   case object BobbyRulePending      extends VersionState
 }
 
-case class BobbyRuleViolation(reason: String, from: LocalDate) {
+case class BobbyRuleViolation(reason: String, range: String, from: LocalDate) {
 
   // TODO: would rather this didn't have to compare against current time
   def isActive: Boolean = now().isAfter(from)
 
-  def now() : LocalDate = LocalDate.now()
+  def now(): LocalDate = LocalDate.now()
 }
 
 case class Dependency(
@@ -61,12 +61,6 @@ case class Dependency(
 
   def isOutOfDate: Boolean =
     !versionState.contains(VersionState.UpToDate)
-
-  def isViolatingBobbyRule: Boolean =
-    versionState.contains(VersionState.BobbyRuleViolated)
-
-  def isViolatingPendingBobbyRule: Boolean =
-    versionState.contains(VersionState.BobbyRulePending)
 }
 
 case class Dependencies(
@@ -84,17 +78,29 @@ case class Dependencies(
 }
 
 object Dependencies {
-  implicit val brvf: OFormat[BobbyRuleViolation] = {
-    Json.format[BobbyRuleViolation]
-  }
-  implicit val osf: OFormat[Dependency] = {
-    implicit val vf = Version.format
-    Json.format[Dependency]
-  }
-  implicit val format: OFormat[Dependencies] = {
+  val reads: Reads[Dependencies] = {
     implicit val dtr = RestFormats.dateTimeFormats
-    Json.format[Dependencies]
+    implicit val brvf =
+      ( (__ \ "reason" ).read[String]
+      ~ (__ \ "range"  ).read[JsValue].map(j => (j \ "range").as[String])
+      ~ (__ \ "from"   ).read[LocalDate]
+      )(BobbyRuleViolation.apply _)
+
+    implicit val osf = {
+      implicit val vf = Version.format
+      Json.reads[Dependency]
+    }
+    Json.reads[Dependencies]
   }
+
+  def collectViolations(dependenciesSeq: Seq[Dependencies], f: Dependency => Seq[BobbyRuleViolation]): Seq[(String, BobbyRuleViolation)] =
+    dependenciesSeq
+      .flatMap(
+          _.toSeq
+           .flatMap(dependency => f(dependency).map(v => (dependency.name, v))))
+      .toSet
+      .toList
+      .sortBy { (e: (String, BobbyRuleViolation)) => e._1 }
 }
 
 case class Version(

@@ -230,7 +230,7 @@ class CatalogueController @Inject()(
               umpMyTeamsUrl       = umpMyTeamsPageUrl(team.name),
               leaksFoundForTeam   = leakDetectionService.teamHasLeaks(team, reposWithLeaks),
               hasLeaks            = leakDetectionService.hasLeaks(reposWithLeaks),
-              dependencies        = teamDependencies
+              teamDependencies    = teamDependencies
             )
           )
         case _ => NotFound(error_404_template())
