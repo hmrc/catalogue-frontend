@@ -29,10 +29,10 @@
         <p>No out of date dependencies. Well done you!</p>
         <p>Feel free to go and treat yourselves to a coffee and a biscuit.</p>
       } else {
-         @if(showLink){
-             <p>Click <a href="/teams/@teamName/out-of-date-dependencies">here</a> to open in dedicated window. (Useful for build monitors)</p>
-          }
-         <div class="col-xs-8">
+        @if(showLink) {
+          <p>Click <a href="/teams/@teamName/out-of-date-dependencies">here</a> to open in dedicated window. (Useful for build monitors)</p>
+        }
+        <div class="col-xs-8">
              @for(dependency <- dependencies) {
                  <ul class="list list--minimal list-group row" id="ood-@dependency.repositoryName">
 
@@ -50,8 +50,11 @@
 
                  </ul>
              }
-         </div>
+        </div>
+        @if(dependencies.nonEmpty) {
+          @partials.dependency_legend()
         }
+      }
     </div>
 
 </div>
