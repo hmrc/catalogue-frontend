@@ -47,44 +47,9 @@
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
-    @if(leaksFoundForTeam) {
-        <div class="alert alert-danger">
-            <strong>
-                One or more of your repositories is leaking sensitive information.
-                Please review the lists below, visit the pages for any highlighted items
-                and follow the instructions at the top of the page.
-                This requires immediate attention.
-                Contact
-                <a href="https://hmrcdigital.slack.com/messages/community-security/" target="_blank">
-                    #community-security
-                <span class="glyphicon glyphicon-new-window"/></a>
-                for more help.
-            </strong>
-        </div>
-    }
-
-    @defining(Dependencies.collectViolations(teamDependencies, _.activeBobbyRuleViolations)) { violations =>
-        @if(violations.nonEmpty) {
-            <div class="alert alert-danger" id="bobby-rules-broken-banner">
-                <h4>
-                    One or more of your repositories have broken Bobby Rules, and will fail to build in Jenkins.
-                    Please review the lists below, and refer to <a href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
-                </h4>
-            </div>
-        }
-    }
-
-    @defining(Dependencies.collectViolations(teamDependencies, _.pendingBobbyRuleViolations)) { violations =>
-        @if(violations.nonEmpty) {
-            <div class="alert alert-info" id="bobby-rule-pending-banner">
-                <strong>
-                    One or more of your repositories will break upcoming Bobby Rules, and will fail to build in Jenkins.
-                    Please review the lists below, and refer to <a href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
-                </strong>
-            </div>
-        }
-    }
-
+    @partials.team_leak_detection_banner(leaksFoundForTeam)
+    @partials.team_bobby_active_violations_banner(teamDependencies)
+    @partials.team_bobby_pending_violations_banner(teamDependencies)
 
     <section class="section-wrapper">
 
