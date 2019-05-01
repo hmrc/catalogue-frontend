@@ -67,18 +67,9 @@
         @if(violations.nonEmpty) {
             <div class="alert alert-danger" id="bobby-rules-broken-banner">
                 <h4>
-                    One or more of your repositories have broken Bobby Rules!
-                    See below to see which repositories are affected by the following rules:
+                    One or more of your repositories have broken Bobby Rules, and will fail to build in Jenkins.
+                    Please review the lists below, and refer to <a href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
                 </h4>
-
-                @violations.map { case (name, rule) =>
-                    <div class="row">
-                        @*<span class="col-xs-2">@rule.organisation</span>*@
-                        <span class="col-xs-2">@name</span>
-                        <span class="col-xs-2">@rule.range</span>
-                        <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">@rule.reason</a></span>
-                    </div>
-                }
             </div>
         }
     }
@@ -87,18 +78,9 @@
         @if(violations.nonEmpty) {
             <div class="alert alert-info" id="bobby-rule-pending-banner">
                 <strong>
-                    One or more of your repositories will break upcoming bobby rules!
-                    See below to see which repositories are affected by the following rules:
+                    One or more of your repositories will break upcoming Bobby Rules, and will fail to build in Jenkins.
+                    Please review the lists below, and refer to <a href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
                 </strong>
-
-                @violations.map { case (name, rule) =>
-                    <div class="row">
-                        @*<span class="col-xs-2">@rule.organisation</span>*@
-                        <span class="col-xs-2">@name</span>
-                        <span class="col-xs-2">@rule.range</span>
-                        <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">@rule.from - @rule.reason</a></span>
-                    </div>
-                }
             </div>
         }
     }

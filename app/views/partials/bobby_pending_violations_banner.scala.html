@@ -27,16 +27,9 @@
     @if(violations.nonEmpty) {
         <div class="alert alert-info" id="bobby-rule-pending-banner">
             <strong>
-                This repository will break these upcoming bobby rules!
+                This repository will break the following upcoming Bobby Rules, and will fail to build in Jenkins.
+                Please review the lists below, and refer to <a href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
             </strong>
-
-            @violations.map { case (name, currentVersion, rule) =>
-                <div class="row">
-                    <span class="col-xs-2">@name</span>
-                    <span class="col-xs-2">@currentVersion</span>
-                    <span class="col-xs-8"><a href="@appRoutes.BobbyExplorerController.list()">@rule.from - @rule.reason</a></span>
-                </div>
-            }
         </div>
     }
 }

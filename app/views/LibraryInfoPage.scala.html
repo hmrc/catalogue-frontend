@@ -24,7 +24,7 @@
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 
 @(library: RepositoryDetails,
-  mayBeDependencies: Option[Dependencies],
+  optDependencies: Option[Dependencies],
   linkToLeakDetection: Option[String]
 )(implicit request: Request[_])
 
@@ -36,8 +36,8 @@
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
-    @partials.BobbyPendingBanner(mayBeDependencies.map(_.toSeq).getOrElse(Seq.empty))
-    @partials.BobbyViolationBanner(mayBeDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.bobby_active_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.bobby_pending_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
 
     <section class="section-wrapper">
         @partials.details(library)
@@ -46,7 +46,7 @@
             @partials.repo_owning_teams(library)
             @partials.code_and_builds(library)
         </div>
-        @dependenciesPartial(mayBeDependencies)
+        @dependenciesPartial(optDependencies)
     </section>
 
     <div class="alert alert-success" role="alert" id="@library.name">
