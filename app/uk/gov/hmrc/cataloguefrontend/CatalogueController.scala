@@ -259,56 +259,42 @@ class CatalogueController @Inject()(
     def getDeployedEnvs(
       deployedToEnvs: Seq[DeploymentVO],
       maybeRefEnvironments: Option[Seq[TargetEnvironment]]): Option[Seq[TargetEnvironment]] = {
+        val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
 
-      val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
-
-      maybeRefEnvironments.map {
-        _
-          .map(e => (e.name.toLowerCase, e))
-          .map {
-            case (lwrCasedRefEnvName, refEnvironment)
-                if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
-              refEnvironment
-            case (_, refEnvironment) =>
-              refEnvironment.copy(services = Nil)
-          }
-      }
-
+        maybeRefEnvironments.map {
+          _
+            .map(e => (e.name.toLowerCase, e))
+            .map {
+              case (lwrCasedRefEnvName, refEnvironment)
+                  if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
+                refEnvironment
+              case (_, refEnvironment) =>
+                refEnvironment.copy(services = Nil)
+            }
+        }
     }
 
-    val repositoryDetailsF = teamsAndRepositoriesConnector.repositoryDetails(name)
-    val deploymentIndicatorsForServiceF: Future[Option[DeploymentIndicators]] =
-      indicatorsConnector.deploymentIndicatorsForService(name)
-    val serviceDeploymentInformationF: Future[Either[Throwable, ServiceDeploymentInformation]] =
-      deploymentsService.getWhatsRunningWhere(name)
-    val dependenciesF = serviceDependencyConnector.getDependencies(name)
-    val serviceUrlF = routeRulesService.serviceUrl(name)
-    val serviceRoutesF = routeRulesService.serviceRoutes(name)
-
     for {
-      service                      <- repositoryDetailsF
-      maybeDataPoints              <- deploymentIndicatorsForServiceF
-      serviceDeploymentInformation <- serviceDeploymentInformationF
-      mayBeDependencies            <- dependenciesF
-      urlIfLeaksFound              <- leakDetectionService.urlIfLeaksFound(name)
-      serviceUrl                   <- serviceUrlF
-      serviceRoutes                <- serviceRoutesF
+      service           <- teamsAndRepositoriesConnector.repositoryDetails(name)
+      maybeDataPoints   <- indicatorsConnector.deploymentIndicatorsForService(name)
+      deployments       <- deploymentsService.getWhatsRunningWhere(name).map(_.deployments)
+      mayBeDependencies <- serviceDependencyConnector.getDependencies(name)
+      urlIfLeaksFound   <- leakDetectionService.urlIfLeaksFound(name)
+      serviceUrl        <- routeRulesService.serviceUrl(name)
+      serviceRoutes     <- routeRulesService.serviceRoutes(name)
     } yield
-      (service, serviceDeploymentInformation) match {
-        case (_, Left(t)) =>
-          t.printStackTrace()
-          ServiceUnavailable(t.getMessage)
-        case (Some(repositoryDetails), Right(sdi: ServiceDeploymentInformation))
-            if repositoryDetails.repoType == RepoType.Service =>
+      service match {
+        case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
           val maybeDeployedEnvironments =
-            getDeployedEnvs(sdi.deployments, repositoryDetails.environments)
+            getDeployedEnvs(deployments, repositoryDetails.environments)
 
           val deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]] =
-            sdi.deployments
-              .map(
-                deployment =>
-                  deployment.environmentMapping.name -> sdi.deployments
-                    .filter(_.environmentMapping.name == deployment.environmentMapping.name))
+            deployments
+              .map(deployment =>
+                  ( deployment.environmentMapping.name
+                  , deployments.filter(_.environmentMapping.name == deployment.environmentMapping.name)
+                  )
+              )
               .toMap
 
           Ok(

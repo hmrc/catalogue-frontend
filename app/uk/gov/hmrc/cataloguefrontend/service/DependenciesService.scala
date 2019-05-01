@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject._
 import play.api.libs.json.{Json, Reads}
-import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceDeploymentInformation}
+import uk.gov.hmrc.cataloguefrontend.DeploymentVO
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -30,10 +30,8 @@ class DependenciesService @Inject()(
   serviceDependenciesConnector: ServiceDependenciesConnector
 )(implicit val ec: ExecutionContext) {
 
-  def search(serviceName: String, serviceDeploymentInformation: Either[Throwable, ServiceDeploymentInformation])
+  def search(serviceName: String, deployments: Seq[DeploymentVO])
             (implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] = {
-    val deployments = getDeployments(serviceDeploymentInformation)
-
     serviceDependenciesConnector.getSlugDependencies(serviceName).map {
       _.map { serviceDependency =>
         val environmentMappingName =
@@ -48,12 +46,6 @@ class DependenciesService @Inject()(
       }
     }
   }
-
-  private def getDeployments(serviceDeploymentInformation: Either[Throwable, ServiceDeploymentInformation]): Seq[DeploymentVO] =
-    serviceDeploymentInformation match {
-      case Left(t) => Nil
-      case Right(sdi) => sdi.deployments
-    }
 
   def getServicesWithDependency(
       optTeam  : Option[String],

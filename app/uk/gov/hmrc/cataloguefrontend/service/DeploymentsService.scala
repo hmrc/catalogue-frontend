@@ -58,7 +58,7 @@ class DeploymentsService @Inject()(
   def getDeployments(teamName: Option[TeamName], serviceName: Option[ServiceName])(
     implicit hc: HeaderCarrier): Future[Seq[TeamRelease]] =
     for {
-      query <- buildFilter(teamName, serviceName)
+      query       <- buildFilter(teamName, serviceName)
       deployments <- query match {
                       case All(_) =>
                         serviceDeploymentsConnector.getDeployments()
@@ -67,11 +67,11 @@ class DeploymentsService @Inject()(
                       case NotFound =>
                         Future.successful(Seq.empty)
                     }
-    } yield deployments map teamRelease(query)
+    } yield deployments.map(teamRelease(query))
 
   def getWhatsRunningWhere(serviceName: String)(
-    implicit hc: HeaderCarrier): Future[Either[Throwable, ServiceDeploymentInformation]] =
-    serviceDeploymentsConnector.getWhatIsRunningWhere(serviceName)
+    implicit hc: HeaderCarrier): Future[ServiceDeploymentInformation] =
+      serviceDeploymentsConnector.getWhatIsRunningWhere(serviceName)
 
   private def teamRelease(rq: ReleaseFilter)(r: Release) =
     TeamRelease(
