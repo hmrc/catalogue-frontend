@@ -33,12 +33,9 @@ object VersionState {
   case object BobbyRulePending      extends VersionState
 }
 
-case class BobbyRuleViolation(reason: String, range: String, from: LocalDate) {
-
-  // TODO: would rather this didn't have to compare against current time
-  def isActive: Boolean = now().isAfter(from)
-
-  def now(): LocalDate = LocalDate.now()
+// TODO avoid caching LocalDate, and provide to isActive function
+case class BobbyRuleViolation(reason: String, range: String, from: LocalDate)(implicit now: LocalDate = LocalDate.now()) {
+  def isActive: Boolean = now.isAfter(from)
 }
 
 case class Dependency(
@@ -201,7 +198,7 @@ object ServiceWithDependency {
   import play.api.libs.json._
   import play.api.libs.functional.syntax._
 
-  val reads: Reads[ServiceWithDependency] = {
+  val reads: Reads[ServiceWithDependency] =
     ( (__ \ "slugName"   ).read[String]
     ~ (__ \ "slugVersion").read[String]
     ~ (__ \ "teams"      ).read[List[String]]
@@ -210,7 +207,6 @@ object ServiceWithDependency {
     ~ (__ \ "depVersion" ).read[String]
     ~ (__ \ "depVersion" ).read[String].map(Version.parse)
     )(ServiceWithDependency.apply _)
-  }
 }
 
 case class GroupArtefacts(group: String, artefacts: List[String])

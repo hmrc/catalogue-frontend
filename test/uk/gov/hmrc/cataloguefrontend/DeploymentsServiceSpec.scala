@@ -219,10 +219,10 @@ class DeploymentsServiceSpec
 
       val appName = "app-1"
 
-      val cannedWhatIsRunningWhere = Right(
+      val cannedWhatIsRunningWhere =
         ServiceDeploymentInformation(
           appName,
-          Seq(DeploymentVO(EnvironmentMapping("qa", "qa"), "skyscape-farnborough", "0.0.1"))))
+          Seq(DeploymentVO(EnvironmentMapping("qa", "qa"), "skyscape-farnborough", "0.0.1")))
       when(deploymentsConnector.getWhatIsRunningWhere(any())(any()))
         .thenReturn(Future.successful(cannedWhatIsRunningWhere))
 

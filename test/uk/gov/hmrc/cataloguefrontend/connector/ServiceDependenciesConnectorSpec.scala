@@ -76,13 +76,15 @@ class ServiceDependenciesConnectorSpec
           |      "name": "frontend-bootstrap",
           |      "currentVersion": "7.11.0",
           |      "latestVersion": "8.80.0",
-          |      "isExternal": false
+          |      "isExternal": false,
+          |      "bobbyRuleViolations": []
           |    },
           |    {
           |      "name": "play-config",
           |      "currentVersion": "3.0.0",
           |      "latestVersion": "7.70.0",
-          |      "isExternal": false
+          |      "isExternal": false,
+          |      "bobbyRuleViolations": []
           |    }
           |  ],
           |  "sbtPluginsDependencies": [
@@ -90,13 +92,15 @@ class ServiceDependenciesConnectorSpec
           |      "name": "plugin-1",
           |      "currentVersion": "1.0.0",
           |      "latestVersion": "1.1.0",
-          |      "isExternal": true
+          |      "isExternal": true,
+          |      "bobbyRuleViolations": []
           |    },
           |    {
           |      "name": "plugin-2",
           |      "currentVersion": "2.0.0",
           |      "latestVersion": "2.1.0",
-          |      "isExternal": false
+          |      "isExternal": false,
+          |      "bobbyRuleViolations": []
           |    }
           |  ],
           |  "otherDependencies": [
@@ -104,7 +108,8 @@ class ServiceDependenciesConnectorSpec
           |      "name": "sbt",
           |      "currentVersion": "0.13.8",
           |      "latestVersion": "0.13.15",
-          |      "isExternal": false
+          |      "isExternal": false,
+          |      "bobbyRuleViolations": []
           |    }
           |  ],
           |  "lastUpdated": "2017-11-08T16:31:38.975Z"
@@ -182,13 +187,15 @@ class ServiceDependenciesConnectorSpec
           |        "name": "frontend-bootstrap",
           |        "currentVersion": "7.11.0",
           |        "latestVersion": "8.80.0",
-          |        "isExternal": false
+          |        "isExternal": false,
+          |        "bobbyRuleViolations": []
           |      },
           |      {
           |        "name": "play-config",
           |        "currentVersion": "3.0.0",
           |        "latestVersion": "7.70.0",
-          |        "isExternal": false
+          |        "isExternal": false,
+          |        "bobbyRuleViolations": []
           |      }
           |    ],
           |    "sbtPluginsDependencies": [
@@ -196,13 +203,15 @@ class ServiceDependenciesConnectorSpec
           |        "name": "plugin-1",
           |        "currentVersion": "1.0.0",
           |        "latestVersion": "1.1.0",
-          |        "isExternal": true
+          |        "isExternal": true,
+          |        "bobbyRuleViolations": []
           |      },
           |      {
           |        "name": "plugin-2",
           |        "currentVersion": "2.0.0",
           |        "latestVersion": "2.1.0",
-          |        "isExternal": false
+          |        "isExternal": false,
+          |        "bobbyRuleViolations": []
           |      }
           |    ],
           |    "otherDependencies": [
@@ -210,7 +219,8 @@ class ServiceDependenciesConnectorSpec
           |        "name": "sbt",
           |        "currentVersion": "0.13.7",
           |        "latestVersion": "0.13.15",
-          |        "isExternal": false
+          |        "isExternal": false,
+          |        "bobbyRuleViolations": []
           |      }
           |    ],
           |    "lastUpdated": "2017-11-08T16:31:38.975Z"
@@ -222,13 +232,15 @@ class ServiceDependenciesConnectorSpec
           |        "name": "some-lib-1",
           |        "currentVersion": "7.77.0",
           |        "latestVersion": "8.80.0",
-          |        "isExternal": false
+          |        "isExternal": false,
+          |        "bobbyRuleViolations": []
           |      },
           |      {
           |        "name": "some-lib-2",
           |        "currentVersion": "3.0.0",
           |        "latestVersion": "7.70.0",
-          |        "isExternal": false
+          |        "isExternal": false,
+          |        "bobbyRuleViolations": []
           |      }
           |    ],
           |    "sbtPluginsDependencies": [
@@ -236,13 +248,15 @@ class ServiceDependenciesConnectorSpec
           |        "name": "plugin-3",
           |        "currentVersion": "1.0.0",
           |        "latestVersion": "1.1.0",
-          |        "isExternal": true
+          |        "isExternal": true,
+          |        "bobbyRuleViolations": []
           |      },
           |      {
           |        "name": "plugin-4",
           |        "currentVersion": "2.0.0",
           |        "latestVersion": "2.1.0",
-          |        "isExternal": false
+          |        "isExternal": false,
+          |        "bobbyRuleViolations": []
           |      }
           |    ],
           |    "otherDependencies": [
@@ -250,7 +264,8 @@ class ServiceDependenciesConnectorSpec
           |        "name": "sbt",
           |        "currentVersion": "0.13.8",
           |        "latestVersion": "0.13.15",
-          |        "isExternal": false
+          |        "isExternal": false,
+          |        "bobbyRuleViolations": []
           |      }
           |    ],
           |    "lastUpdated": "2017-11-08T16:31:38.975Z"
