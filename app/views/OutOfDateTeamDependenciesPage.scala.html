@@ -27,10 +27,10 @@
 
 @this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
 
-@(teamName: String, dependencies: Seq[Dependencies])(implicit messages: Messages, request: Request[_])
-
+@(teamName: String, teamDependencies: Seq[Dependencies])(implicit messages: Messages, request: Request[_])
 
 @standard_layout(teamName, "teams") {
-    @dependenciesTeamPartial(teamName, dependencies)
+    @partials.team_bobby_active_violations_banner(teamDependencies)
+    @partials.team_bobby_pending_violations_banner(teamDependencies)
+    @dependenciesTeamPartial(teamName, teamDependencies)
 }
-
