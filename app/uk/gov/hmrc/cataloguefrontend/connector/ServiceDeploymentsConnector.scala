@@ -112,23 +112,22 @@ class ServiceDeploymentsConnector @Inject()(
       }
 
   def getWhatIsRunningWhere(serviceName: String)(
-    implicit hc: HeaderCarrier): Future[Either[Throwable, ServiceDeploymentInformation]] = {
+    implicit hc: HeaderCarrier): Future[ServiceDeploymentInformation] = {
     val url = s"$serviceUrl/api/whatsrunningwhere/$serviceName"
 
     http
       .GET[HttpResponse](url)
       .map { r =>
         r.status match {
-          case 200 =>
-            Try(r.json.as[ServiceDeploymentInformation]).transform(s => Success(Right(s)), f => Success(Left(f))).get
+          case 200 => r.json.as[ServiceDeploymentInformation]
         }
       }
       .recover {
         case _: NotFoundException =>
-          Right(ServiceDeploymentInformation(serviceName, Nil)) // 404 if the service has had no deployments
+          ServiceDeploymentInformation(serviceName, Nil) // 404 if the service has had no deployments
         case ex =>
           Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          Left(ex)
+          throw ex
       }
   }
 }

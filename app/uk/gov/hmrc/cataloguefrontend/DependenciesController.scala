@@ -36,12 +36,8 @@ class DependenciesController @Inject()(
 
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
-      deployments         <- deploymentsService.getWhatsRunningWhere(name)
+      deployments         <- deploymentsService.getWhatsRunningWhere(name).map(_.deployments)
       serviceDependencies <- dependenciesService.search(name, deployments)
-    } yield
-      deployments match {
-        case Left(t) => ServiceUnavailable(t.getMessage)
-        case _       => Ok(dependenciesPage(name, serviceDependencies.sortBy(_.semanticVersion)(Ordering[Option[Version]].reverse)))
-      }
+    } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.semanticVersion)(Ordering[Option[Version]].reverse)))
   }
 }
