@@ -26,8 +26,10 @@ case class BobbyRule(organisation: String, name: String, range: String, reason: 
     if (organisation == wildcard && name == wildcard) "*" else s"$organisation:$name"
   }
 }
+
 object BobbyRule {
   implicit val reader: Reads[BobbyRule] = Json.reads[BobbyRule]
+
 }
 
 case class BobbyRuleSet(libraries: Seq[BobbyRule], plugins: Seq[BobbyRule])

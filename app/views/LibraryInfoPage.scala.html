@@ -24,32 +24,34 @@
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 
 @(library: RepositoryDetails,
-  mayBeDependencies: Option[Dependencies],
+  optDependencies: Option[Dependencies],
   linkToLeakDetection: Option[String]
 )(implicit request: Request[_])
 
 @standard_layout(library.name,"libraries") {
-<header class="header-with-github-badge">
-    <div>
-        <h1>Library: @library.name<span>@githubBadgeType(library)</span></h1>
+    <header class="header-with-github-badge">
+        <div>
+            <h1>Library: @library.name<span>@githubBadgeType(library)</span></h1>
+        </div>
+    </header>
+
+    @partials.leak_detection_banner(linkToLeakDetection)
+    @partials.bobby_active_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.bobby_pending_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
+
+    <section class="section-wrapper">
+        @partials.details(library)
+
+        <div class="row">
+            @partials.repo_owning_teams(library)
+            @partials.code_and_builds(library)
+        </div>
+        @dependenciesPartial(optDependencies)
+    </section>
+
+    <div class="alert alert-success" role="alert" id="@library.name">
+        <p>
+        @Html(viewMessages.informationalText)
+        </p>
     </div>
-</header>
-
-@partials.leak_detection_banner(linkToLeakDetection)
-
-<section class="section-wrapper">
-    @partials.details(library)
-
-    <div class="row">
-        @partials.repo_owning_teams(library)
-        @partials.code_and_builds(library)
-    </div>
-    @dependenciesPartial(mayBeDependencies)
-</section>
-
-<div class="alert alert-success" role="alert" id="@library.name">
-    <p>
-    @Html(viewMessages.informationalText)
-    </p>
-</div>
 }

@@ -314,7 +314,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
   }
 
   private def verifyLegendSectionIsShowing(document: Document) =
-    document.select("#legend").get(0).text() shouldBe "Legend: Up to date Minor version behind Major version behind"
+    document.select("#legend").get(0).text() shouldBe "Legend: Up to date Minor version behind Major version behind Bobby rule pending Bobby rule violation"
 
   private def asDocument(html: Html): Document = Jsoup.parse(html.toString())
 }

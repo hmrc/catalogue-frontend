@@ -20,6 +20,7 @@
 @this()
 @(teamName: String, dependencies: Seq[Dependencies], showLink: Boolean = false)
 
+@defining(dependencies.filter(_.hasOutOfDateDependencies)) { outOfDateDependencies =>
 
 <div id="team-dependencies" class="board">
     <h3 class="board__heading">Out of Date Platform Dependencies for Team @teamName</h3>
@@ -29,10 +30,10 @@
         <p>No out of date dependencies. Well done you!</p>
         <p>Feel free to go and treat yourselves to a coffee and a biscuit.</p>
       } else {
-         @if(showLink){
-             <p>Click <a href="/teams/@teamName/out-of-date-dependencies">here</a> to open in dedicated window. (Useful for build monitors)</p>
-          }
-         <div class="col-xs-8">
+        @if(showLink) {
+          <p>Click <a href="/teams/@teamName/out-of-date-dependencies">here</a> to open in dedicated window. (Useful for build monitors)</p>
+        }
+        <div class="col-xs-8">
              @for(dependency <- dependencies) {
                  <ul class="list list--minimal list-group row" id="ood-@dependency.repositoryName">
 
@@ -44,14 +45,19 @@
                          <span class="col-xs-3"><label>Latest Version</label></span>
 
                      </li>
-                     @partials.dependency_section(dependency.libraryDependencies.filter(!_.isUpToDate))
-                     @partials.dependency_section(dependency.sbtPluginsDependencies.filter(!_.isUpToDate))
-                     @partials.dependency_section(dependency.otherDependencies.filter(!_.isUpToDate))
+                     @partials.dependency_section(dependency.libraryDependencies.filter(_.isOutOfDate))
+                     @partials.dependency_section(dependency.sbtPluginsDependencies.filter(_.isOutOfDate))
+                     @partials.dependency_section(dependency.otherDependencies.filter(_.isOutOfDate))
 
                  </ul>
              }
-         </div>
+        </div>
+        @if(dependencies.nonEmpty) {
+          @partials.dependency_legend(includeUpToDate = false)
         }
+      }
     </div>
 
 </div>
+
+}

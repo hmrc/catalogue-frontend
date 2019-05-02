@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
+import java.time.LocalDate
+
 import org.joda.time.DateTime
-import play.api.libs.json.{__, Format, Json, JsError, JsObject, JsString, JsSuccess, JsValue, OFormat}
+import play.api.libs.json.{Format, JsError, JsObject, JsString, JsSuccess, JsValue, Json, OFormat, Reads, __}
 import play.api.libs.functional.syntax._
 import uk.gov.hmrc.http.controllers.RestFormats
 
@@ -27,19 +29,35 @@ object VersionState {
   case object MinorVersionOutOfDate extends VersionState
   case object MajorVersionOutOfDate extends VersionState
   case object Invalid               extends VersionState
+  case object BobbyRuleViolated     extends VersionState
+  case object BobbyRulePending      extends VersionState
+}
+
+// TODO avoid caching LocalDate, and provide to isActive function
+case class BobbyRuleViolation(reason: String, range: String, from: LocalDate)(implicit now: LocalDate = LocalDate.now()) {
+  def isActive: Boolean = now.isAfter(from)
 }
 
 case class Dependency(
   name          : String,
   currentVersion: Version,
   latestVersion : Option[Version],
+  bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty,
   isExternal    : Boolean = false) {
 
-  def getVersionState: Option[VersionState] =
-    latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
+  lazy val (activeBobbyRuleViolations, pendingBobbyRuleViolations) =
+    bobbyRuleViolations.partition(_.isActive)
 
-  def isUpToDate: Boolean =
-    getVersionState.contains(VersionState.UpToDate)
+  def versionState: Option[VersionState] =
+    if (activeBobbyRuleViolations.nonEmpty)
+      Some(VersionState.BobbyRuleViolated)
+    else if (pendingBobbyRuleViolations.nonEmpty)
+      Some(VersionState.BobbyRulePending)
+    else
+      latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
+
+  def isOutOfDate: Boolean =
+    !versionState.contains(VersionState.UpToDate)
 }
 
 case class Dependencies(
@@ -49,19 +67,37 @@ case class Dependencies(
   otherDependencies     : Seq[Dependency],
   lastUpdated           : DateTime) {
 
+  def toSeq: Seq[Dependency] =
+    libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies
+
   def hasOutOfDateDependencies: Boolean =
-    !(libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies).forall(_.isUpToDate)
+    toSeq.exists(_.isOutOfDate)
 }
 
 object Dependencies {
-  implicit val osf = {
-    implicit val vf = Version.format
-    Json.format[Dependency]
-  }
-  implicit val format = {
+  val reads: Reads[Dependencies] = {
     implicit val dtr = RestFormats.dateTimeFormats
-    Json.format[Dependencies]
+    implicit val brvf =
+      ( (__ \ "reason" ).read[String]
+      ~ (__ \ "range"  ).read[JsValue].map(j => (j \ "range").as[String])
+      ~ (__ \ "from"   ).read[LocalDate]
+      )(BobbyRuleViolation.apply _)
+
+    implicit val osf = {
+      implicit val vf = Version.format
+      Json.reads[Dependency]
+    }
+    Json.reads[Dependencies]
   }
+
+  def collectViolations(dependenciesSeq: Seq[Dependencies], f: Dependency => Seq[BobbyRuleViolation]): Seq[(String, BobbyRuleViolation)] =
+    dependenciesSeq
+      .flatMap(
+          _.toSeq
+           .flatMap(dependency => f(dependency).map(v => (dependency.name, v))))
+      .toSet
+      .toList
+      .sortBy { (e: (String, BobbyRuleViolation)) => e._1 }
 }
 
 case class Version(
@@ -162,7 +198,7 @@ object ServiceWithDependency {
   import play.api.libs.json._
   import play.api.libs.functional.syntax._
 
-  val reads: Reads[ServiceWithDependency] = {
+  val reads: Reads[ServiceWithDependency] =
     ( (__ \ "slugName"   ).read[String]
     ~ (__ \ "slugVersion").read[String]
     ~ (__ \ "teams"      ).read[List[String]]
@@ -171,7 +207,6 @@ object ServiceWithDependency {
     ~ (__ \ "depVersion" ).read[String]
     ~ (__ \ "depVersion" ).read[String].map(Version.parse)
     )(ServiceWithDependency.apply _)
-  }
 }
 
 case class GroupArtefacts(group: String, artefacts: List[String])

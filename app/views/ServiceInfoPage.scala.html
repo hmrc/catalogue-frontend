@@ -30,7 +30,7 @@
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 
 @(service: RepositoryDetails,
-  mayBeDependencies: Option[Dependencies],
+  optDependencies: Option[Dependencies],
   throughputChartData: Option[ChartDataRows],
   stabilityChartData: Option[ChartDataRows],
   repositoryCreationDate: LocalDateTime,
@@ -58,6 +58,8 @@
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
+    @partials.bobby_active_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.bobby_pending_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
 
     <section class="section-wrapper">
 
@@ -111,7 +113,7 @@
             </div>
         }
         </div>
-        @dependenciesPartial(mayBeDependencies)
+        @dependenciesPartial(optDependencies)
         <div class="row">
             <div class="col-md-12">
                 <div class="board">

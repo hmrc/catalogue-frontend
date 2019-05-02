@@ -28,19 +28,28 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BobbyService @Inject()(configConnector: ConfigConnector, clock: Clock)(implicit val ec: ExecutionContext) {
 
-  def getRules()(implicit hc: HeaderCarrier) : Future[BobbyRulesView] = {
+  def getRules()(implicit hc: HeaderCarrier): Future[BobbyRulesView] = {
     val today = LocalDate.now(clock)
-    def filterUpcoming(rule: BobbyRule) = rule.from.isAfter(today)
-    def filterActive(rule: BobbyRule) = rule.from.isBefore(today) || rule.from.isEqual(today)
-    def compareUpcoming(rule1: BobbyRule, rule2: BobbyRule) = compareRules(rule1, rule2)(_ isBefore _)
-    def compareActive(rule1: BobbyRule, rule2: BobbyRule) = compareRules(rule1, rule2)(_ isAfter _)
-    def compareRules(x: BobbyRule, y: BobbyRule)(sortDirection: (LocalDate, LocalDate) => Boolean) =
-      if (x.from == y.from) x.groupArtifactName < y.groupArtifactName else sortDirection(x.from, y.from)
 
-    configConnector.bobbyRules().map(r => BobbyRulesView(
-        upcoming = BobbyRuleSet(libraries = r.libraries.filter(filterUpcoming).sortWith(compareUpcoming), plugins = r.plugins.filter(filterUpcoming).sortWith(compareUpcoming)),
-        active = BobbyRuleSet(libraries = r.libraries.filter(filterActive).sortWith(compareActive), plugins = r.plugins.filter(filterActive).sortWith(compareActive)))
-    )
+    def sort(ruleset: BobbyRuleSet, sortDateLt: (LocalDate, LocalDate) => Boolean) = {
+      def sortRulesLt(x: BobbyRule, y: BobbyRule) =
+        if (x.from == y.from) x.groupArtifactName < y.groupArtifactName
+        else sortDateLt(x.from, y.from)
+
+      BobbyRuleSet(
+          libraries = ruleset.libraries.sortWith(sortRulesLt)
+        , plugins   = ruleset.plugins.sortWith(sortRulesLt)
+        )
+    }
+
+    configConnector.bobbyRules
+      .map { ruleset =>
+        val (upcomingLibraries, activeLibraries) = ruleset.libraries.partition(_.from isAfter today)
+        val (upcomingPlugins  , activePlugins  ) = ruleset.plugins.partition(_.from isAfter today)
+        BobbyRulesView(
+          upcoming = sort(BobbyRuleSet(upcomingLibraries, upcomingPlugins), _ isBefore _)
+        , active   = sort(BobbyRuleSet(activeLibraries  , activePlugins  ), _ isAfter  _)
+        )
+      }
   }
-
 }

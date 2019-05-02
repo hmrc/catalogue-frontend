@@ -23,7 +23,8 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @import _root_.views.html.partials.DependenciesTeamPartial
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependencies}
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
 
@@ -37,7 +38,7 @@
   umpMyTeamsUrl: String,
   leaksFoundForTeam: Boolean,
   hasLeaks: String => Boolean,
-  dependencies: Seq[Dependencies]
+  teamDependencies: Seq[Dependencies]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(teamName, "teams") {
@@ -46,21 +47,9 @@
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
-    @if(leaksFoundForTeam) {
-        <div class="alert alert-danger">
-            <strong>
-                One or more of your repositories is leaking sensitive information.
-                Please review the lists below, visit the pages for any highlighted items
-                and follow the instructions at the top of the page.
-                This requires immediate attention.
-                Contact
-                <a href="https://hmrcdigital.slack.com/messages/community-security/" target="_blank">
-                    #community-security
-                <span class="glyphicon glyphicon-new-window"/></a>
-                for more help.
-            </strong>
-        </div>
-    }
+    @partials.team_leak_detection_banner(leaksFoundForTeam)
+    @partials.team_bobby_active_violations_banner(teamDependencies)
+    @partials.team_bobby_pending_violations_banner(teamDependencies)
 
     <section class="section-wrapper">
 
@@ -202,7 +191,7 @@
 
     </section>
 
-    @dependenciesTeamPartial(teamName, dependencies, true)
+    @dependenciesTeamPartial(teamName, teamDependencies, true)
 }
 
 <script type="text/javascript">

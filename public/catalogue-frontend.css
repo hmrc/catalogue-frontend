@@ -11916,6 +11916,24 @@ section span.other-teams-message {
 .padding-reset-right {
   padding-right: 0; }
 
+.verybad {
+  color: red;
+  font-weight: bold;
+}
+.verybad a {
+  color: red;
+  font-weight: bold;
+}
+
+.pending {
+  color: orange;
+  font-weight: bold;
+}
+.pending a {
+  color: orange;
+  font-weight: bold;
+}
+
 .red {
   color: red; }
   .red a {

@@ -233,7 +233,7 @@ class ServiceDeploymentsConnectorSpec
         serviceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(
           HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
-      response.right.get.deployments shouldEqual Seq(
+      response.deployments shouldEqual Seq(
         DeploymentVO(EnvironmentMapping("qa", "qa"), "datacentred-sal01", "0.0.1"),
         DeploymentVO(EnvironmentMapping("staging", "staging"), "skyscape-farnborough", "0.0.1"),
         DeploymentVO(EnvironmentMapping("staging", "staging"), "datacentred-sal01", "0.0.2"),
@@ -251,8 +251,8 @@ class ServiceDeploymentsConnectorSpec
         serviceDeploymentsConnector.getWhatIsRunningWhere(serviceName)(
           HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
-      response.right.get.deployments shouldBe Seq()
-      response.right.get.serviceName shouldBe serviceName
+      response.deployments shouldBe Seq()
+      response.serviceName shouldBe serviceName
     }
   }
 }

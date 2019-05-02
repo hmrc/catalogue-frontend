@@ -442,4 +442,147 @@ object JsonData {
       |    }
       |]
     """.stripMargin
-  }
+
+
+  val dependenciesWithRuleViolation =
+  """{
+   "repositoryName" : "catalogue-frontend",
+   "lastUpdated" : "2018-12-14T15:45:07.335Z",
+   "sbtPluginsDependencies" : [
+      {
+         "currentVersion" : {
+            "minor" : 1,
+            "original" : "1.1.0",
+            "major" : 1,
+            "patch" : 0
+         },
+         "isExternal" : false,
+         "latestVersion" : {
+            "minor" : 1,
+            "original" : "1.1.0",
+            "patch" : 0,
+            "major" : 1
+         },
+         "name" : "sbt-distributables",
+         "bobbyRuleViolations" : []
+      },
+      {
+         "isExternal" : false,
+         "latestVersion" : {
+            "patch" : 0,
+            "major" : 1,
+            "minor" : 13,
+            "original" : "1.13.0"
+         },
+         "name" : "sbt-auto-build",
+         "currentVersion" : {
+            "original" : "1.13.0",
+            "minor" : 13,
+            "major" : 1,
+            "patch" : 0
+         },
+         "bobbyRuleViolations" : [
+            {
+               "range" : {
+                  "range" : "(,1.4.0)",
+                  "upperBound" : {
+                     "version" : {
+                        "original" : "1.4.0",
+                        "minor" : 4,
+                        "patch" : 0,
+                        "major" : 1
+                     },
+                     "inclusive" : false
+                  }
+               },
+               "reason" : "Play 2.5 upgrade",
+               "from" : "2017-05-01"
+            }
+         ]
+      }
+   ],
+   "otherDependencies" : [
+      {
+         "isExternal" : false,
+         "latestVersion" : {
+            "minor" : 13,
+            "original" : "0.13.17",
+            "major" : 0,
+            "patch" : 17
+         },
+         "currentVersion" : {
+            "patch" : 17,
+            "major" : 0,
+            "minor" : 13,
+            "original" : "0.13.17"
+         },
+         "name" : "sbt",
+         "bobbyRuleViolations" : []
+      }
+   ],
+   "libraryDependencies" : [
+      {
+         "latestVersion" : {
+            "minor" : 2,
+            "original" : "3.2.0",
+            "major" : 3,
+            "patch" : 0
+         },
+         "isExternal" : false,
+         "currentVersion" : {
+            "major" : 3,
+            "patch" : 0,
+            "original" : "3.0.0",
+            "minor" : 0
+         },
+         "name" : "hmrctest",
+         "bobbyRuleViolations" : []
+      },
+      {
+         "name" : "simple-reactivemongo",
+         "isExternal" : false,
+         "latestVersion" : {
+            "patch" : 0,
+            "major" : 7,
+            "minor" : 3,
+            "original" : "7.3.0-play-26"
+         },
+         "currentVersion" : {
+            "major" : 7,
+            "patch" : 0,
+            "original" : "7.0.0-play-26",
+            "minor" : 0
+         },
+         "bobbyRuleViolations" : [
+            {
+               "range" : {
+                  "lowerBound" : {
+                     "inclusive" : true,
+                     "version" : {
+                        "original" : "7.0.0",
+                        "minor" : 0,
+                        "major" : 7,
+                        "patch" : 0
+                     }
+                  },
+                  "upperBound" : {
+                     "inclusive" : true,
+                     "version" : {
+                        "minor" : 7,
+                        "original" : "7.7.0",
+                        "major" : 7,
+                        "patch" : 0
+                     }
+                  },
+                  "range" : "[7.0.0,7.7.0]"
+               },
+               "reason" : "Uses ReactiveMongo [0.15.0, 0.16.0] which has problems with reconnecting",
+               "from" : "2019-02-06"
+            }
+         ]
+      }
+   ]
+}
+"""
+}
+

@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import cats.implicits._
 import java.time.{LocalDateTime, ZoneOffset}
-
 import javax.inject.{Inject, Singleton}
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
@@ -107,10 +107,10 @@ class CatalogueController @Inject()(
       .map { payload =>
         val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
         val serviceOwnerDisplayName: String                      = serviceOwnerSaveEventData.displayName
-        val maybeTeamMember: Option[TeamMember] =
+        val optTeamMember: Option[TeamMember] =
           readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
 
-        maybeTeamMember.fold {
+        optTeamMember.fold {
           Future.successful(NotAcceptable(toJson(s"Invalid user: $serviceOwnerDisplayName")))
         } { member =>
           member.username.fold(
@@ -230,7 +230,7 @@ class CatalogueController @Inject()(
               umpMyTeamsUrl       = umpMyTeamsPageUrl(team.name),
               leaksFoundForTeam   = leakDetectionService.teamHasLeaks(team, reposWithLeaks),
               hasLeaks            = leakDetectionService.hasLeaks(reposWithLeaks),
-              dependencies        = teamDependencies.filter(_.hasOutOfDateDependencies)
+              teamDependencies    = teamDependencies
             )
           )
         case _ => NotFound(error_404_template())
@@ -240,7 +240,7 @@ class CatalogueController @Inject()(
   def outOfDateTeamDependencies(teamName: String) = Action.async { implicit request =>
     for {
       teamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
-    } yield Ok(outOfDateTeamDependenciesPage(teamName, teamDependencies.filter(_.hasOutOfDateDependencies)))
+    } yield Ok(outOfDateTeamDependenciesPage(teamName, teamDependencies))
   }
 
   def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
@@ -258,65 +258,50 @@ class CatalogueController @Inject()(
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>
     def getDeployedEnvs(
       deployedToEnvs: Seq[DeploymentVO],
-      maybeRefEnvironments: Option[Seq[TargetEnvironment]]): Option[Seq[TargetEnvironment]] = {
+      optRefEnvironments: Option[Seq[TargetEnvironment]]): Option[Seq[TargetEnvironment]] = {
+        val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
 
-      val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
-
-      maybeRefEnvironments.map {
-        _
-          .map(e => (e.name.toLowerCase, e))
-          .map {
-            case (lwrCasedRefEnvName, refEnvironment)
-                if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
-              refEnvironment
-            case (_, refEnvironment) =>
-              refEnvironment.copy(services = Nil)
-          }
-      }
-
+        optRefEnvironments.map {
+          _
+            .map(e => (e.name.toLowerCase, e))
+            .map {
+              case (lwrCasedRefEnvName, refEnvironment)
+                  if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
+                refEnvironment
+              case (_, refEnvironment) =>
+                refEnvironment.copy(services = Nil)
+            }
+        }
     }
 
-    val repositoryDetailsF = teamsAndRepositoriesConnector.repositoryDetails(name)
-    val deploymentIndicatorsForServiceF: Future[Option[DeploymentIndicators]] =
-      indicatorsConnector.deploymentIndicatorsForService(name)
-    val serviceDeploymentInformationF: Future[Either[Throwable, ServiceDeploymentInformation]] =
-      deploymentsService.getWhatsRunningWhere(name)
-    val dependenciesF = serviceDependencyConnector.getDependencies(name)
-    val serviceUrlF = routeRulesService.serviceUrl(name)
-    val serviceRoutesF = routeRulesService.serviceRoutes(name)
-
-    for {
-      service                      <- repositoryDetailsF
-      maybeDataPoints              <- deploymentIndicatorsForServiceF
-      serviceDeploymentInformation <- serviceDeploymentInformationF
-      mayBeDependencies            <- dependenciesF
-      urlIfLeaksFound              <- leakDetectionService.urlIfLeaksFound(name)
-      serviceUrl                   <- serviceUrlF
-      serviceRoutes                <- serviceRoutesF
-    } yield
-      (service, serviceDeploymentInformation) match {
-        case (_, Left(t)) =>
-          t.printStackTrace()
-          ServiceUnavailable(t.getMessage)
-        case (Some(repositoryDetails), Right(sdi: ServiceDeploymentInformation))
-            if repositoryDetails.repoType == RepoType.Service =>
-          val maybeDeployedEnvironments =
-            getDeployedEnvs(sdi.deployments, repositoryDetails.environments)
+    ( teamsAndRepositoriesConnector.repositoryDetails(name)
+    , indicatorsConnector.deploymentIndicatorsForService(name)
+    , deploymentsService.getWhatsRunningWhere(name).map(_.deployments)
+    , serviceDependencyConnector.getDependencies(name)
+    , leakDetectionService.urlIfLeaksFound(name)
+    , routeRulesService.serviceUrl(name)
+    , routeRulesService.serviceRoutes(name)
+    ).mapN { case (service, optDataPoints, deployments, optDependencies, urlIfLeaksFound, serviceUrl, serviceRoutes) =>
+      service match {
+        case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
+          val optDeployedEnvironments =
+            getDeployedEnvs(deployments, repositoryDetails.environments)
 
           val deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]] =
-            sdi.deployments
-              .map(
-                deployment =>
-                  deployment.environmentMapping.name -> sdi.deployments
-                    .filter(_.environmentMapping.name == deployment.environmentMapping.name))
+            deployments
+              .map(deployment =>
+                  ( deployment.environmentMapping.name
+                  , deployments.filter(_.environmentMapping.name == deployment.environmentMapping.name)
+                  )
+              )
               .toMap
 
           Ok(
             serviceInfoPage(
-              repositoryDetails.copy(environments = maybeDeployedEnvironments),
-              mayBeDependencies,
-              ServiceChartData.deploymentThroughput(repositoryDetails.name, maybeDataPoints.map(_.throughput)),
-              ServiceChartData.deploymentStability(repositoryDetails.name, maybeDataPoints.map(_.stability)),
+              repositoryDetails.copy(environments = optDeployedEnvironments),
+              optDependencies,
+              ServiceChartData.deploymentThroughput(repositoryDetails.name, optDataPoints.map(_.throughput)),
+              ServiceChartData.deploymentStability(repositoryDetails.name, optDataPoints.map(_.stability)),
               repositoryDetails.createdAt,
               deploymentsByEnvironmentName,
               urlIfLeaksFound,
@@ -326,17 +311,18 @@ class CatalogueController @Inject()(
           )
         case _ => NotFound(error_404_template())
       }
+    }
   }
 
   def library(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
-      library           <- teamsAndRepositoriesConnector.repositoryDetails(name)
-      mayBeDependencies <- serviceDependencyConnector.getDependencies(name)
-      urlIfLeaksFound   <- leakDetectionService.urlIfLeaksFound(name)
+      library         <- teamsAndRepositoriesConnector.repositoryDetails(name)
+      optDependencies <- serviceDependencyConnector.getDependencies(name)
+      urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
     } yield
       library match {
         case Some(s) if s.repoType == Library =>
-          Ok(libraryInfoPage(s, mayBeDependencies, urlIfLeaksFound))
+          Ok(libraryInfoPage(s, optDependencies, urlIfLeaksFound))
         case _ =>
           NotFound(error_404_template())
       }
@@ -362,17 +348,17 @@ class CatalogueController @Inject()(
                                   owners.sorted ++ other.sorted
                                 })))
       indicators           <- indicatorsConnector.buildIndicatorsForRepository(name)
-      mayBeDependencies    <- serviceDependencyConnector.getDependencies(name)
-      maybeUrlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
+      optDependencies    <- serviceDependencyConnector.getDependencies(name)
+      optUrlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
     } yield
       (repository, indicators) match {
-        case (Some(repositoryDetails), maybeDataPoints) =>
+        case (Some(repositoryDetails), optDataPoints) =>
           Ok(
             repositoryInfoPage(
               repositoryDetails,
-              mayBeDependencies,
-              ServiceChartData.jobExecutionTime(repositoryDetails.name, maybeDataPoints),
-              maybeUrlIfLeaksFound
+              optDependencies,
+              ServiceChartData.jobExecutionTime(repositoryDetails.name, optDataPoints),
+              optUrlIfLeaksFound
             )
           )
         case _ => NotFound(error_404_template())
@@ -441,9 +427,9 @@ class CatalogueController @Inject()(
       }
   }
 
-  private implicit class OptionOps(maybeString: Option[String]) {
+  private implicit class OptionOps(optString: Option[String]) {
     lazy val blankToNone: Option[String] =
-      maybeString.map(_.trim).filterNot(_.isEmpty)
+      optString.map(_.trim).filterNot(_.isEmpty)
   }
 
   private def convertToDisplayableTeamMembers(
