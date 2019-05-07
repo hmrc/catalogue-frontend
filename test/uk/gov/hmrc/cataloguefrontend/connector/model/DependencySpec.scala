@@ -46,7 +46,7 @@ class DependencySpec extends FreeSpec with Matchers {
 
     "should return BobbyRuleViolated if dependency has any broken bobby rules" in {
       Dependency("library-abc", Version("1.2.3"), Some(Version("2.2.3")),
-        Seq(BobbyRuleViolation("banned library",  "1.2.3", LocalDate.of(1,1,1)))).versionState shouldBe Some(VersionState.BobbyRuleViolated)
+        Seq(BobbyRuleViolation("banned library",  BobbyVersionRange("1.2.3"), LocalDate.of(1,1,1)))).versionState shouldBe Some(VersionState.BobbyRuleViolated)
     }
 
     "should return BobbyRulePending if dependency will break future rules" in {
@@ -54,7 +54,7 @@ class DependencySpec extends FreeSpec with Matchers {
           "library-abc"
         , Version("1.2.3")
         , Some(Version("2.2.3"))
-        , Seq(BobbyRuleViolation("banned library",  "1.2.3", LocalDate.of(9999,1,1))(now = LocalDate.of(200,1,2)))
+        , Seq(BobbyRuleViolation("banned library",  BobbyVersionRange("1.2.3"), LocalDate.of(9999,1,1))(now = LocalDate.of(200,1,2)))
         )
         .versionState shouldBe Some(VersionState.BobbyRulePending)
     }
@@ -64,8 +64,8 @@ class DependencySpec extends FreeSpec with Matchers {
           "library-abc"
         , Version("1.2.3")
         , Some(Version("2.2.3"))
-        , Seq( BobbyRuleViolation("banned library",  "1.2.3", LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2))
-             , BobbyRuleViolation("banned library",  "1.2.3", LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2))
+        , Seq( BobbyRuleViolation("banned library",  BobbyVersionRange("1.2.3"), LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2))
+             , BobbyRuleViolation("banned library",  BobbyVersionRange("1.2.3"), LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2))
              )
         ).versionState shouldBe Some(VersionState.BobbyRuleViolated)
     }
@@ -87,14 +87,14 @@ class DependencySpec extends FreeSpec with Matchers {
           "library-abc"
         , Version("1.2.3")
         , Some(Version("2.2.3"))
-        , Seq(BobbyRuleViolation("banned library",  "1.2.3", LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2)))
+        , Seq(BobbyRuleViolation("banned library",  BobbyVersionRange("1.2.3"), LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2)))
         )
 
       val pendingDep = new Dependency(
           "library-xyz"
         , Version("1.2.3")
         , Some(Version("2.2.3"))
-        , Seq(BobbyRuleViolation("banned library", "1.2.3", LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2)))
+        , Seq(BobbyRuleViolation("banned library", BobbyVersionRange("1.2.3"), LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2)))
         )
 
       val goodDep = Dependency("library-lol", Version("1.2.3"), Some(Version("2.2.3")))
@@ -115,14 +115,14 @@ class DependencySpec extends FreeSpec with Matchers {
           "library-abc"
         , Version("1.2.3")
         , Some(Version("2.2.3"))
-        , Seq(BobbyRuleViolation("banned library", "1.2.3", LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2)))
+        , Seq(BobbyRuleViolation("banned library", BobbyVersionRange("1.2.3"), LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2)))
         )
 
       val pendingDep = new Dependency(
           "library-xyz"
         , Version("1.2.3")
         , Some(Version("2.2.3"))
-        , Seq(BobbyRuleViolation("banned library", "1.2.3", LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2)))
+        , Seq(BobbyRuleViolation("banned library", BobbyVersionRange("1.2.3"), LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2)))
         )
 
       val goodDep = Dependency("library-lol", Version("1.2.3"), Some(Version("2.2.3")))

@@ -52,5 +52,8 @@ class ConfigConnector @Inject()(
   def configByKey(service: String)(implicit hc: HeaderCarrier) =
     http.GET[ConfigByKey](s"$serviceConfigsBaseUrl/config-by-key/$service")
 
-  def bobbyRules()(implicit hc: HeaderCarrier): Future[BobbyRuleSet] = http.GET[BobbyRuleSet](s"$serviceConfigsBaseUrl/bobby/rules")
+  def bobbyRules()(implicit hc: HeaderCarrier): Future[BobbyRuleSet] = {
+    implicit val brsr = BobbyRuleSet.reads
+    http.GET[BobbyRuleSet](s"$serviceConfigsBaseUrl/bobby/rules")
+  }
 }

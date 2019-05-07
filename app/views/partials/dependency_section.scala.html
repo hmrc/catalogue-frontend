@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, VersionState}
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @(dependencies: Seq[Dependency])
 
 
@@ -30,8 +31,15 @@
                     }
                 </span>
                 <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion.toString</span>
-                <span class="col-xs-1 glyphicon glyphicon-arrow-right small-glyphicon"> </span>
-                <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">@dependency.latestVersion.map(_.toString).getOrElse("(not found)")</span>
+                <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">
+                    <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10;"> </span>
+                    @dependency.latestVersion.map(_.toString).getOrElse("(not found)")
+                </span>
+                <span id="@{dependency.name}-bobbyrule" class="col-xs-2">
+                    @if(dependency.versionState.fold(false)(v => List(VersionState.BobbyRuleViolated, VersionState.BobbyRulePending).contains(v))) {
+                        <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.name}">See rule</a>
+                    } else { }
+                </span>
             </div>
         </li>
 }

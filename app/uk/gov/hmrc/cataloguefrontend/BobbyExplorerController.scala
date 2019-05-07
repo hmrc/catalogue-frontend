@@ -24,11 +24,13 @@ import views.html.BobbyExplorerPage
 
 import scala.concurrent.ExecutionContext
 
-class BobbyExplorerController  @Inject()     (mcc        : MessagesControllerComponents,
-                                              page       : BobbyExplorerPage,
-                                              bobbyService: BobbyService
-                                             )(  implicit val ec: ExecutionContext) extends FrontendController(mcc) {
-  def list(): Action[AnyContent] = Action.async { implicit request =>
-    bobbyService.getRules().map(r => Ok(page(r)))
-  }
+class BobbyExplorerController @Inject()(
+    mcc         : MessagesControllerComponents,
+    page        : BobbyExplorerPage,
+    bobbyService: BobbyService
+  )(implicit val ec: ExecutionContext
+  ) extends FrontendController(mcc) {
+    def list(): Action[AnyContent] = Action.async { implicit request =>
+      bobbyService.getRules().map(r => Ok(page(r)))
+    }
 }
