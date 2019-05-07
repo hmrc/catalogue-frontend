@@ -26,10 +26,10 @@
     ) { violations =>
     @if(violations.nonEmpty) {
         <div class="alert alert-danger" id="bobby-rules-broken-banner">
-            <h4>
+            <strong>
                 This repository has broken the following Bobby Rules, and will fail to build in Jenkins.
                 Please review the lists below, and refer to <a href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
-            </h4>
+            </strong>
         </div>
     }
 }
