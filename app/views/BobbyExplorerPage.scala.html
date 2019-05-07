@@ -45,7 +45,7 @@
                 <thead>
                     <tr>
                         <th>@artifactType</th>
-                        <th>Version</th>
+                        <th>Banned Versions</th>
                         <th>Reason</th>
                         <th>Active from</th>
                     </tr>
@@ -61,8 +61,14 @@
 @bobbyRuleRow(rule: BobbyRule) = {
     <tr class="bobby-rule">
         <td><a name="@rule.name">@rule.groupArtifactName</a></td>
-        <td>@rule.range</td>
+        <td data-toggle="tooltip" data-placement="top" title="@rule.range.range">@rule.range.description</td>
         <td>@rule.reason</td>
         <td>@rule.from</td>
     </tr>
 }
+
+<script type="text/javascript">
+    ready(function() {
+        document.querySelector('[data-toggle="tooltip"]').tooltip();
+    });
+</script>

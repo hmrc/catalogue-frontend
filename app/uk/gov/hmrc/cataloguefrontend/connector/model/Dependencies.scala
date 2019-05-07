@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 import java.time.LocalDate
 
 import org.joda.time.DateTime
-import play.api.libs.json.{Format, JsError, JsObject, JsString, JsSuccess, JsValue, Json, OFormat, Reads, __}
+import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsString, JsSuccess, JsValue, Json, OFormat, Reads, __}
 import play.api.libs.functional.syntax._
 import uk.gov.hmrc.http.controllers.RestFormats
 
@@ -31,11 +31,6 @@ object VersionState {
   case object Invalid               extends VersionState
   case object BobbyRuleViolated     extends VersionState
   case object BobbyRulePending      extends VersionState
-}
-
-// TODO avoid caching LocalDate, and provide to isActive function
-case class BobbyRuleViolation(reason: String, range: String, from: LocalDate)(implicit now: LocalDate = LocalDate.now()) {
-  def isActive: Boolean = now.isAfter(from)
 }
 
 case class Dependency(
@@ -74,12 +69,89 @@ case class Dependencies(
     toSeq.exists(_.isOutOfDate)
 }
 
+case class BobbyVersion(version: Version, inclusive: Boolean)
+
+object BobbyVersion {
+  val reads: Reads[BobbyVersion] = {
+    implicit val bvf = Version.format
+    ( (__ \ "version"  ).read[Version]
+    ~ (__ \ "inclusive").read[Boolean]
+    )(BobbyVersion.apply _)
+  }
+}
+
+case class BobbyVersionRange(
+    lowerBound: Option[BobbyVersion]
+  , upperBound: Option[BobbyVersion]
+  , qualifier : Option[String]
+  , range     : String
+  ) {
+  def description: String = {
+    def comp(v: BobbyVersion) = if (v.inclusive) " <= " else " < "
+    lowerBound.map(v => s"${v.version} ${comp(v)}").getOrElse("") +
+      "x" +
+      upperBound.map(v => s" ${comp(v)} ${v.version}").getOrElse("")
+  }
+}
+
+object BobbyVersionRange {
+
+  private val fixed      = """^\[(\d+\.\d+.\d+)\]""".r
+  private val fixedUpper = """^\(,?(\d+\.\d+.\d+)[\]\)]""".r
+  private val fixedLower = """^[\[\(](\d+\.\d+.\d+),[\]\)]""".r
+  private val rangeRegex = """^[\[\(](\d+\.\d+.\d+),(\d+\.\d+.\d+)[\]\)]""".r
+  private val qualifier  = """^\[[-\*]+(.*)\]""".r
+
+  def apply(range: String): BobbyVersionRange = {
+    val trimmedRange = range.replaceAll(" ", "")
+
+    trimmedRange match {
+      case fixed(v) =>
+        val fixed = Version.parse(v).map(BobbyVersion(_, inclusive = true))
+        BobbyVersionRange(lowerBound = fixed, upperBound = fixed, qualifier = None, range = trimmedRange)
+      case fixedUpper(v) =>
+        BobbyVersionRange(
+          lowerBound = None,
+          upperBound = Version.parse(v).map(BobbyVersion(_, inclusive = trimmedRange.endsWith("]"))),
+          qualifier  = None,
+          range      = trimmedRange)
+      case fixedLower(v) =>
+        BobbyVersionRange(
+          lowerBound = Version.parse(v).map(BobbyVersion(_, inclusive = trimmedRange.startsWith("["))),
+          upperBound = None,
+          qualifier  = None,
+          range      = trimmedRange)
+      case rangeRegex(v1, v2) =>
+        BobbyVersionRange(
+          lowerBound = Version.parse(v1).map(BobbyVersion(_, inclusive = trimmedRange.startsWith("["))),
+          upperBound = Version.parse(v2).map(BobbyVersion(_, inclusive = trimmedRange.endsWith("]"))),
+          qualifier  = None,
+          range      = trimmedRange
+        )
+      case qualifier(q) if q.length() > 1 =>
+        BobbyVersionRange(lowerBound = None, upperBound = None, qualifier = Some(q), range = trimmedRange)
+      case _ => BobbyVersionRange(lowerBound = None, upperBound = None, qualifier = None, range = trimmedRange)
+    }
+  }
+
+  val reads: Reads[BobbyVersionRange] =
+    JsPath.read[String].map(BobbyVersionRange.apply)
+
+}
+
+// TODO avoid caching LocalDate, and provide to isActive function
+case class BobbyRuleViolation(reason: String, range: BobbyVersionRange, from: LocalDate)(implicit now: LocalDate = LocalDate.now()) {
+  def isActive: Boolean = now.isAfter(from)
+}
+
+
 object Dependencies {
   val reads: Reads[Dependencies] = {
     implicit val dtr = RestFormats.dateTimeFormats
+    implicit val bvr = BobbyVersionRange.reads
     implicit val brvf =
       ( (__ \ "reason" ).read[String]
-      ~ (__ \ "range"  ).read[JsValue].map(j => (j \ "range").as[String])
+      ~ (__ \ "range"  ).read[BobbyVersionRange]
       ~ (__ \ "from"   ).read[LocalDate]
       )(BobbyRuleViolation.apply _)
 

@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import play.api.libs.json.{Json, Reads}
 
-case class BobbyRule(organisation: String, name: String, range: String, reason: String, from: LocalDate) {
+case class BobbyRule(organisation: String, name: String, range: BobbyVersionRange, reason: String, from: LocalDate) {
   val groupArtifactName: String = {
     val wildcard = "*"
     if (organisation == wildcard && name == wildcard) "*" else s"$organisation:$name"
@@ -28,7 +28,10 @@ case class BobbyRule(organisation: String, name: String, range: String, reason: 
 }
 
 object BobbyRule {
-  implicit val reader: Reads[BobbyRule] = Json.reads[BobbyRule]
+  implicit val reader: Reads[BobbyRule] = {
+    implicit val bvr = BobbyVersionRange.reads
+    Json.reads[BobbyRule]
+  }
 
 }
 
