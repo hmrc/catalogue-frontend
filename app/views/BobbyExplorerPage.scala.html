@@ -45,7 +45,7 @@
                 <thead>
                     <tr>
                         <th>@artifactType</th>
-                        <th>Banned Versions</th>
+                        <th colspan="3">Banned Versions</th>
                         <th>Reason</th>
                         <th>Active from</th>
                     </tr>
@@ -61,7 +61,18 @@
 @bobbyRuleRow(rule: BobbyRule) = {
     <tr class="bobby-rule">
         <td><a name="@rule.name">@rule.groupArtifactName</a></td>
-        <td data-toggle="tooltip" data-placement="top" title="@rule.range.range">@rule.range.description</td>
+        @defining(rule.range.rangeDescr) { rangeDescr =>
+            @rangeDescr match {
+                case Some((lbDescr, upDescr)) => {
+                    <td data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-right: 0; text-align: right">@lbDescr</td>
+                    <td data-toggle="tooltip" title="@rule.range.range">x</td>
+                    <td data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-left: 0; text-align: left">@upDescr</td>
+                }
+                case None => {
+                    <td colspan="3">@rule.range.range</td>
+                }
+            }
+        }
         <td>@rule.reason</td>
         <td>@rule.from</td>
     </tr>

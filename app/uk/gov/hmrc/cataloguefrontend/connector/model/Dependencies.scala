@@ -71,26 +71,20 @@ case class Dependencies(
 
 case class BobbyVersion(version: Version, inclusive: Boolean)
 
-object BobbyVersion {
-  val reads: Reads[BobbyVersion] = {
-    implicit val bvf = Version.format
-    ( (__ \ "version"  ).read[Version]
-    ~ (__ \ "inclusive").read[Boolean]
-    )(BobbyVersion.apply _)
-  }
-}
-
 case class BobbyVersionRange(
     lowerBound: Option[BobbyVersion]
   , upperBound: Option[BobbyVersion]
   , qualifier : Option[String]
   , range     : String
   ) {
-  def description: String = {
+
+  def rangeDescr: Option[(String, String)] = {
     def comp(v: BobbyVersion) = if (v.inclusive) " <= " else " < "
-    lowerBound.map(v => s"${v.version} ${comp(v)}").getOrElse("") +
-      "x" +
-      upperBound.map(v => s" ${comp(v)} ${v.version}").getOrElse("")
+    if (lowerBound.isDefined || upperBound.isDefined) {
+       Some(( lowerBound.map(v => s"${v.version} ${comp(v)}").getOrElse("")
+            , upperBound.map(v => s"${comp(v)} ${v.version}").getOrElse("")
+           ))
+    } else None
   }
 }
 

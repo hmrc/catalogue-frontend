@@ -28,14 +28,16 @@ case class BobbyRule(organisation: String, name: String, range: BobbyVersionRang
 }
 
 object BobbyRule {
-  implicit val reader: Reads[BobbyRule] = {
-    implicit val bvr = BobbyVersionRange.reads
+  val reads: Reads[BobbyRule] = {
+    implicit val bvrr = BobbyVersionRange.reads
     Json.reads[BobbyRule]
   }
-
 }
 
 case class BobbyRuleSet(libraries: Seq[BobbyRule], plugins: Seq[BobbyRule])
 object BobbyRuleSet {
-  implicit val reader: Reads[BobbyRuleSet] = Json.reads[BobbyRuleSet]
+  val reads: Reads[BobbyRuleSet] = {
+    implicit val brr = BobbyRule.reads
+    Json.reads[BobbyRuleSet]
+  }
 }
