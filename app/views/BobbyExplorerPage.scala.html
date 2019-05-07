@@ -57,10 +57,10 @@
         </div>
     }
 }
-  
+
 @bobbyRuleRow(rule: BobbyRule) = {
     <tr class="bobby-rule">
-        <td>@rule.groupArtifactName</td>
+        <td><a name="@rule.name">@rule.groupArtifactName</a></td>
         <td>@rule.range</td>
         <td>@rule.reason</td>
         <td>@rule.from</td>
