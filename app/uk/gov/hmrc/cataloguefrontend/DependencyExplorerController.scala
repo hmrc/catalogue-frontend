@@ -26,7 +26,7 @@ import play.api.http.HttpEntity
 import play.api.i18n.MessagesProvider
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{ServiceWithDependency, Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, Version, VersionOp}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
@@ -51,7 +51,7 @@ class DependencyExplorerController @Inject()(
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
-      } yield Ok(page(form.fill(SearchForm("", SlugInfoFlag.Latest.s, "", "", "", "0.0.0")), teams, flags, groupArtefacts, searchResults = None, pieData = None))
+      } yield Ok(page(form.fill(SearchForm("", SlugInfoFlag.Latest.s, "", "", "", "0.0.0", "")), teams, flags, groupArtefacts, versionRange = None, searchResults = None, pieData = None))
     }
 
 
@@ -62,42 +62,55 @@ class DependencyExplorerController @Inject()(
         flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
         res            <- {
-          def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), teams, flags, groupArtefacts, searchResults = None, pieData = None)
+          def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), teams, flags, groupArtefacts, versionRange = None, searchResults = None, pieData = None)
           form
             .bindFromRequest()
             .fold(
-              hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, flags, groupArtefacts, searchResults = None, pieData = None))),
-              success   = query =>
-                (for {
-                  versionOp <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
-                  version   <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
-                  team      =  if (query.team.isEmpty) None else Some(query.team)
-                  flag      <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
-                  results   <- EitherT.right[Result] {
-                                service
-                                  .getServicesWithDependency(team, flag, query.group, query.artefact, versionOp, version)
-                              }
-                  pieData   =  PieData(
-                                "Version spread",
-                                results
-                                  .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
-                                  .map(r => r._1 -> r._2.size))
-                } yield
-                  if (query.asCsv)  {
-                    val csv    =  CsvUtils.toCsv(toRows(results))
-                    val source =  Source.single(ByteString(csv, "UTF-8"))
-                    Result(
-                      header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
-                      body   = HttpEntity.Streamed(source, None, Some("text/csv"))
-                    )
-                  }
-                  else Ok(page(form.bindFromRequest(), teams, flags, groupArtefacts, Some(results), Some(pieData)))
-                ).merge
-            )
+                hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, flags, groupArtefacts, versionRange = None, searchResults = None, pieData = None)))
+              , success   = query =>
+                  (for {
+                    versionRange <- query.filter match {
+                                      case ""     => for {
+                                                        version         <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
+                                                        versionOp       <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
+                                                        versionRangeStr =  versionOp match {
+                                                                             case VersionOp.Gte => s"[$version,)"
+                                                                             case VersionOp.Lte => s"(,$version]"
+                                                                             case VersionOp.Eq  => s"[$version]"
+                                                                           }
+                                                        versionRange    <- EitherT.fromOption[Future](BobbyVersionRange.parse(versionRangeStr), InternalServerError(pageWithError(s"Invalid filter")))
+                                                      } yield versionRange
+                                      case filter => EitherT.fromOption[Future](BobbyVersionRange.parse(query.filter), BadRequest(pageWithError("Invalid filter")))
+                                    }
+                    team         =  if (query.team.isEmpty) None else Some(query.team)
+                    flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
+                    results      <- EitherT.right[Result] {
+                                      service
+                                        .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange)
+                                    }
+                    pieData      =  PieData(
+                                        "Version spread"
+                                      , results
+                                          .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
+                                          .map(r => r._1 -> r._2.size)
+                                      )
+                  } yield
+                    if (query.asCsv)  {
+                      val csv    =  CsvUtils.toCsv(toRows(results))
+                      val source =  Source.single(ByteString(csv, "UTF-8"))
+                      Result(
+                        header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
+                        body   = HttpEntity.Streamed(source, None, Some("text/csv"))
+                      )
+                    }
+                    else Ok(page(form.bindFromRequest(), teams, flags, groupArtefacts, Some(versionRange), Some(results), Some(pieData)))
+                  ).merge
+              )
         }
       } yield res
     }
 
+  /** @param filter replaces versionOp and version, supporting Maven version range */
   case class SearchForm(
     team     : String,
     flag     : String,
@@ -105,6 +118,7 @@ class DependencyExplorerController @Inject()(
     artefact : String,
     versionOp: String,
     version  : String,
+    filter   : String,
     asCsv    : Boolean = false)
 
   // Forms.nonEmptyText, but has no constraint info label
@@ -118,14 +132,15 @@ class DependencyExplorerController @Inject()(
   def form(implicit messagesProvider: MessagesProvider) =
     Form(
       Forms.mapping(
-        "team"      -> Forms.text,
-        "flag"      -> Forms.text.verifying(notEmpty),
-        "group"     -> Forms.text.verifying(notEmpty),
-        "artefact"  -> Forms.text.verifying(notEmpty),
-        "versionOp" -> Forms.text,
-        "version"   -> Forms.text,
-        "asCsv"     -> Forms.boolean
-      )(SearchForm.apply)(SearchForm.unapply)
+          "team"      -> Forms.text
+        , "flag"      -> Forms.text.verifying(notEmpty)
+        , "group"     -> Forms.text.verifying(notEmpty)
+        , "artefact"  -> Forms.text.verifying(notEmpty)
+        , "versionOp" -> Forms.default(Forms.text, ">=")
+        , "version"   -> Forms.default(Forms.text, "")
+        , "filter"    -> Forms.text
+        , "asCsv"     -> Forms.boolean
+        )(SearchForm.apply)(SearchForm.unapply)
     )
 }
 

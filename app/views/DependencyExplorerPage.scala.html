@@ -16,7 +16,7 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, Team}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, VersionOp}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, GroupArtefacts, ServiceWithDependency, VersionOp}
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.routes
@@ -29,6 +29,7 @@
   teams           : Seq[String],
   flags           : Seq[SlugInfoFlag],
   groupArtefacts  : List[GroupArtefacts],
+  versionRange    : Option[BobbyVersionRange],
   searchResults   : Option[Seq[ServiceWithDependency]],
   pieData         : Option[PieData])(
   implicit request         : Request[_],
@@ -111,8 +112,17 @@
                                     'id          -> "version",
                                     'size        -> 20,
                                     '_label      -> "",
-                                    'required    -> true,
                                     'placeholder -> "Version (e.g. 1.0.0)",
+                                    '_class      -> "form-group"
+                                )
+                          </td>
+                            <td valign="top">
+                                @helper.inputText(
+                                    form("filter"),
+                                    'id          -> "filter",
+                                    'size        -> 20,
+                                    '_label      -> "",
+                                    'placeholder -> "Range (e.g. [1.0.0,1.8.0))",
                                     '_class      -> "form-group"
                                 )
                           </td>
@@ -136,7 +146,7 @@
                         <p id="search-results-empty">This search did not return any results.</p>
                     }
                     case Some(searchResults) => {
-                        <p>Found @searchResults.size results</p>
+                        <p>Found @searchResults.size results @versionRange.flatMap(_.rangeDescr.map { case (lb, ub) => "for " + lb + " x " + ub }).getOrElse("") </p>
 
                         <div id="chart_div" align="center"></div>
 

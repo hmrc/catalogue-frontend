@@ -29,7 +29,7 @@ case class BobbyRule(organisation: String, name: String, range: BobbyVersionRang
 
 object BobbyRule {
   val reads: Reads[BobbyRule] = {
-    implicit val bvrr = BobbyVersionRange.reads
+    implicit val bvrf = BobbyVersionRange.format
     Json.reads[BobbyRule]
   }
 }
