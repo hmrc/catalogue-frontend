@@ -118,6 +118,7 @@ class DependencyExplorerController @Inject()(
       } yield res
     }
 
+
   /** @param versionRange replaces versionOp and version, supporting Maven version range */
   case class SearchForm(
       team        : String
@@ -174,4 +175,8 @@ object DependencyExplorerController {
       if (serviceWithDependency.teams.isEmpty) Seq(m)
       else serviceWithDependency.teams.map(team => m + ("team" -> team))
     }
+
+  def search(team: String = "", flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange): String =
+    // how can we keep this in sync with SearchForm forms.mapping?
+    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search() + s"?team=$team&flag=${flag.s}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
 }

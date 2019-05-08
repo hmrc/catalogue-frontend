@@ -15,8 +15,9 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
 
 @this(viewMessages: ViewMessages)
@@ -77,7 +78,7 @@
         }
         <td>@rule.reason</td>
         <td>@rule.from</td>
-        <td><a href="@appRoutes.DependencyExplorerController.search()?team=&flag=latest&group=@rule.group&artefact=@rule.artefact&versionRange=@rule.range.range">See affected slugs</a></td>
+        <td><a href="@DependencyExplorerController.search(flag = SlugInfoFlag.Latest, group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See affected slugs</a></td>
     </tr>
 }
 
