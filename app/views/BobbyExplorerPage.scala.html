@@ -62,7 +62,7 @@
 
 @bobbyRuleRow(rule: BobbyRule) = {
     <tr id="rule-@rule.artefact" class="bobby-rule">
-        <td>@rule.groupArtifactName</td>
+        <td>@rule.group:@rule.artefact</td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {

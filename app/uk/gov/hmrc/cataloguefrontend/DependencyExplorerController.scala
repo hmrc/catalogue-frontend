@@ -36,10 +36,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DependencyExplorerController @Inject()(
-    mcc        : MessagesControllerComponents,
-    trConnector: TeamsAndRepositoriesConnector,
-    service    : DependenciesService,
-    page       : DependencyExplorerPage
+    mcc        : MessagesControllerComponents
+  , trConnector: TeamsAndRepositoriesConnector
+  , service    : DependenciesService
+  , page       : DependencyExplorerPage
   )(implicit val ec: ExecutionContext
   ) extends FrontendController(mcc) {
 
@@ -96,14 +96,22 @@ class DependencyExplorerController @Inject()(
                                       )
                   } yield
                     if (query.asCsv)  {
-                      val csv    =  CsvUtils.toCsv(toRows(results))
-                      val source =  Source.single(ByteString(csv, "UTF-8"))
+                      val csv    = CsvUtils.toCsv(toRows(results))
+                      val source = Source.single(ByteString(csv, "UTF-8"))
                       Result(
                         header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
                         body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                       )
                     }
-                    else Ok(page(form.bindFromRequest(), teams, flags, groupArtefacts, Some(versionRange), Some(results), Some(pieData)))
+                    else Ok(page(
+                        form.bindFromRequest()
+                      , teams
+                      , flags
+                      , groupArtefacts
+                      , if (query.versionRange.isEmpty) None else Some(versionRange)
+                      , Some(results)
+                      , Some(pieData)
+                      ))
                   ).merge
               )
         }
@@ -112,14 +120,15 @@ class DependencyExplorerController @Inject()(
 
   /** @param versionRange replaces versionOp and version, supporting Maven version range */
   case class SearchForm(
-    team        : String,
-    flag        : String,
-    group       : String,
-    artefact    : String,
-    versionOp   : String,
-    version     : String,
-    versionRange: String,
-    asCsv       : Boolean = false)
+      team        : String
+    , flag        : String
+    , group       : String
+    , artefact    : String
+    , versionOp   : String
+    , version     : String
+    , versionRange: String
+    , asCsv       : Boolean = false
+    )
 
   // Forms.nonEmptyText, but has no constraint info label
   def notEmpty = {
@@ -146,21 +155,23 @@ class DependencyExplorerController @Inject()(
 
 object DependencyExplorerController {
   case class PieData(
-    title  : String,
-    results: Map[String, Int])
+      title  : String
+    , results: Map[String, Int]
+    )
 
 
   def toRows(seq: Seq[ServiceWithDependency]): Seq[Map[String, String]] =
     seq.flatMap { serviceWithDependency =>
       val m = Map(
-        "slugName"           -> serviceWithDependency.slugName,
-        "slugVersion"        -> serviceWithDependency.slugVersion,
-        "team"               -> "",
-        "depGroup"           -> serviceWithDependency.depGroup,
-        "depArtefact"        -> serviceWithDependency.depArtefact,
-        "depVersion"         -> serviceWithDependency.depVersion,
-        "depSemanticVersion" -> serviceWithDependency.depSemanticVersion.map(_.toString).getOrElse(""))
+          "slugName"           -> serviceWithDependency.slugName
+        , "slugVersion"        -> serviceWithDependency.slugVersion
+        , "team"               -> ""
+        , "depGroup"           -> serviceWithDependency.depGroup
+        , "depArtefact"        -> serviceWithDependency.depArtefact
+        , "depVersion"         -> serviceWithDependency.depVersion
+        , "depSemanticVersion" -> serviceWithDependency.depSemanticVersion.map(_.toString).getOrElse("")
+        )
       if (serviceWithDependency.teams.isEmpty) Seq(m)
-      else serviceWithDependency.teams.map { team => m + ("team" -> team) }
+      else serviceWithDependency.teams.map(team => m + ("team" -> team))
     }
 }

@@ -33,7 +33,10 @@ class BobbyService @Inject()(configConnector: ConfigConnector, clock: Clock)(imp
 
     def sort(ruleset: BobbyRuleSet, sortDateLt: (LocalDate, LocalDate) => Boolean) = {
       def sortRulesLt(x: BobbyRule, y: BobbyRule) =
-        if (x.from == y.from) x.groupArtifactName < y.groupArtifactName
+        if (x.from == y.from) {
+          if (x.group == y.group) x.artefact < y.artefact
+          else x.group < y.group
+        }
         else sortDateLt(x.from, y.from)
 
       BobbyRuleSet(

@@ -22,12 +22,13 @@ import play.api.libs.json.{Json, Reads, __}
 import play.api.libs.functional.syntax._
 
 
-case class BobbyRule(group: String, artefact: String, range: BobbyVersionRange, reason: String, from: LocalDate) {
-  val groupArtifactName: String = {
-    val wildcard = "*"
-    if (group == wildcard && artefact == wildcard) "*" else s"$group:$artefact"
-  }
-}
+case class BobbyRule(
+    group   : String
+  , artefact: String
+  , range   : BobbyVersionRange
+  , reason  : String
+  , from    : LocalDate
+  )
 
 object BobbyRule {
   val reads: Reads[BobbyRule] = {

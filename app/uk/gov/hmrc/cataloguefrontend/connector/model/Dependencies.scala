@@ -72,6 +72,7 @@ case class Dependencies(
 case class BobbyVersion(version: Version, inclusive: Boolean)
 
 // TODO rename as VersionRange?
+/** Iso to Either[Qualifier, (Option[LowerBound], Option[UpperBound])]*/
 case class BobbyVersionRange(
     lowerBound: Option[BobbyVersion]
   , upperBound: Option[BobbyVersion]
@@ -89,6 +90,10 @@ case class BobbyVersionRange(
   }
 
   def isMatch(v: Version): Boolean = {
+    val qualFilter: Function1[Version, Boolean] = qualifier match {
+      case Some(qual) => _.toString.contains(qual)
+      case None       => _ => false
+    }
     val lbFilter: Function1[Version, Boolean] = lowerBound match {
       case Some(BobbyVersion(version, true))  => _ >= version
       case Some(BobbyVersion(version, false)) => _ >  version
@@ -99,7 +104,7 @@ case class BobbyVersionRange(
       case Some(BobbyVersion(version, false)) => _ <  version
       case None                               => _ => true
     }
-    lbFilter(v) && ubFilter(v) // No arrow notation in scala?
+    qualFilter(v) || (lbFilter(v) && ubFilter(v))
   }
 }
 
