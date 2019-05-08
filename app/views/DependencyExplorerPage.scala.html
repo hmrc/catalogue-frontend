@@ -89,7 +89,7 @@
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )
-                           </td>
+                            </td>
                             <td valign="top">
                                 @helper.select(
                                     form("artefact"),
@@ -97,7 +97,7 @@
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )
-                           </td>
+                            </td>
                             <td valign="top">
                                 @helper.select(
                                     form("versionOp"),
@@ -105,7 +105,7 @@
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )
-                           </td>
+                            </td>
                             <td valign="top">
                                 @helper.inputText(
                                     form("version"),
@@ -115,22 +115,13 @@
                                     'placeholder -> "Version (e.g. 1.0.0)",
                                     '_class      -> "form-group"
                                 )
-                          </td>
-                            <td valign="top">
-                                @helper.inputText(
-                                    form("filter"),
-                                    'id          -> "filter",
-                                    'size        -> 20,
-                                    '_label      -> "",
-                                    'placeholder -> "Range (e.g. [1.0.0,1.8.0))",
-                                    '_class      -> "form-group"
-                                )
-                          </td>
-                          <input type="hidden" id="asCsv" name="asCsv" value="false">
-                          <td valign="bottom">
-                              <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-                              <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV" onclick="exportAsCsv()"/>
-                          </td>
+                            </td>
+                            <input type="hidden" id="versionRange" name="versionRange" value="">
+                            <input type="hidden" id="asCsv" name="asCsv" value="false">
+                            <td valign="bottom">
+                                <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                                <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV" onclick="exportAsCsv()"/>
+                            </td>
                         </tr>
                         <tr>
                           <td colspan="5">

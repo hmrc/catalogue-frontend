@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
 
 @this(viewMessages: ViewMessages)
@@ -47,7 +48,8 @@
                         <th class="col-xs-3">@artifactType</th>
                         <th class="col-xs-2" colspan="3">Banned Versions</th>
                         <th class="col-xs-5">Reason</th>
-                        <th class="col-xs-2">Active from</th>
+                        <th class="col-xs-1">Active from</th>
+                        <th class="col-xs-1"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -59,7 +61,7 @@
 }
 
 @bobbyRuleRow(rule: BobbyRule) = {
-    <tr id="rule-@rule.name" class="bobby-rule">
+    <tr id="rule-@rule.artefact" class="bobby-rule">
         <td>@rule.groupArtifactName</td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
@@ -75,6 +77,7 @@
         }
         <td>@rule.reason</td>
         <td>@rule.from</td>
+        <td><a href="@appRoutes.DependencyExplorerController.search()?team=&flag=latest&group=@rule.group&artefact=@rule.artefact&versionRange=@rule.range.range">See affected slugs</a></td>
     </tr>
 }
 

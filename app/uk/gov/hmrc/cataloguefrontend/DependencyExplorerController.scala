@@ -69,18 +69,18 @@ class DependencyExplorerController @Inject()(
                 hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, flags, groupArtefacts, versionRange = None, searchResults = None, pieData = None)))
               , success   = query =>
                   (for {
-                    versionRange <- query.filter match {
-                                      case ""     => for {
-                                                        version         <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
-                                                        versionOp       <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
-                                                        versionRangeStr =  versionOp match {
-                                                                             case VersionOp.Gte => s"[$version,)"
-                                                                             case VersionOp.Lte => s"(,$version]"
-                                                                             case VersionOp.Eq  => s"[$version]"
-                                                                           }
-                                                        versionRange    <- EitherT.fromOption[Future](BobbyVersionRange.parse(versionRangeStr), InternalServerError(pageWithError(s"Invalid filter")))
-                                                      } yield versionRange
-                                      case filter => EitherT.fromOption[Future](BobbyVersionRange.parse(query.filter), BadRequest(pageWithError("Invalid filter")))
+                    versionRange <- query.versionRange match {
+                                      case ""           => for {
+                                                             version         <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
+                                                             versionOp       <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
+                                                             versionRangeStr =  versionOp match {
+                                                                                  case VersionOp.Gte => s"[$version,)"
+                                                                                  case VersionOp.Lte => s"(,$version]"
+                                                                                  case VersionOp.Eq  => s"[$version]"
+                                                                                }
+                                                             versionRange    <- EitherT.fromOption[Future](BobbyVersionRange.parse(versionRangeStr), InternalServerError(pageWithError(s"Invalid version range $versionRangeStr")))
+                                                           } yield versionRange
+                                      case versionRange => EitherT.fromOption[Future](BobbyVersionRange.parse(versionRange), BadRequest(pageWithError(s"Invalid version range")))
                                     }
                     team         =  if (query.team.isEmpty) None else Some(query.team)
                     flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
@@ -110,16 +110,16 @@ class DependencyExplorerController @Inject()(
       } yield res
     }
 
-  /** @param filter replaces versionOp and version, supporting Maven version range */
+  /** @param versionRange replaces versionOp and version, supporting Maven version range */
   case class SearchForm(
-    team     : String,
-    flag     : String,
-    group    : String,
-    artefact : String,
-    versionOp: String,
-    version  : String,
-    filter   : String,
-    asCsv    : Boolean = false)
+    team        : String,
+    flag        : String,
+    group       : String,
+    artefact    : String,
+    versionOp   : String,
+    version     : String,
+    versionRange: String,
+    asCsv       : Boolean = false)
 
   // Forms.nonEmptyText, but has no constraint info label
   def notEmpty = {
@@ -132,14 +132,14 @@ class DependencyExplorerController @Inject()(
   def form(implicit messagesProvider: MessagesProvider) =
     Form(
       Forms.mapping(
-          "team"      -> Forms.text
-        , "flag"      -> Forms.text.verifying(notEmpty)
-        , "group"     -> Forms.text.verifying(notEmpty)
-        , "artefact"  -> Forms.text.verifying(notEmpty)
-        , "versionOp" -> Forms.default(Forms.text, ">=")
-        , "version"   -> Forms.default(Forms.text, "")
-        , "filter"    -> Forms.text
-        , "asCsv"     -> Forms.boolean
+          "team"         -> Forms.text
+        , "flag"         -> Forms.text.verifying(notEmpty)
+        , "group"        -> Forms.text.verifying(notEmpty)
+        , "artefact"     -> Forms.text.verifying(notEmpty)
+        , "versionOp"    -> Forms.default(Forms.text, ">=")
+        , "version"      -> Forms.default(Forms.text, "")
+        , "versionRange" -> Forms.text
+        , "asCsv"        -> Forms.boolean
         )(SearchForm.apply)(SearchForm.unapply)
     )
 }
