@@ -26,28 +26,28 @@
     <header>
         <h1>Bobby Rules</h1>
     </header>
-    @bobbyRulesTimeSection(rules.upcoming, "Upcoming", "table table-striped")
-    @bobbyRulesTimeSection(rules.active, "Active", "table table-striped-warning")
+    @bobbyRulesTimeSection(rules.upcoming, "Upcoming")
+    @bobbyRulesTimeSection(rules.active, "Active")
 }
 
-@bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String, cssClass: String) = {
+@bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String) = {
     @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
         <div><h2>@heading</h2></div>
-        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", cssClass)
-        @bobbyRulesArtifactTypeSection(rulesByTime.plugins, "Plugin", cssClass)
+        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library")
+        @bobbyRulesArtifactTypeSection(rulesByTime.plugins, "Plugin")
     }
 }
 
-@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, cssClass: String) = {
+@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String) = {
     @if(rulesByArtifactType.nonEmpty) {
         <div>
-            <table class="@{artifactType.toLowerCase}-rules @cssClass">
+            <table class="@{artifactType.toLowerCase}-rules table table-striped">
                 <thead>
                     <tr>
-                        <th>@artifactType</th>
-                        <th colspan="3">Banned Versions</th>
-                        <th>Reason</th>
-                        <th>Active from</th>
+                        <th class="col-xs-3">@artifactType</th>
+                        <th class="col-xs-2" colspan="3">Banned Versions</th>
+                        <th class="col-xs-5">Reason</th>
+                        <th class="col-xs-2">Active from</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -59,8 +59,8 @@
 }
 
 @bobbyRuleRow(rule: BobbyRule) = {
-    <tr class="bobby-rule">
-        <td><a name="@rule.name">@rule.groupArtifactName</a></td>
+    <tr id="rule-@rule.name" class="bobby-rule">
+        <td>@rule.groupArtifactName</td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {
@@ -79,7 +79,22 @@
 }
 
 <script type="text/javascript">
-    ready(function() {
-        document.querySelector('[data-toggle="tooltip"]').tooltip();
-    });
+    if (document.readyState != 'loading'){
+        ready();
+    } else {
+        document.addEventListener('DOMContentLoaded', ready);
+    }
+
+    function ready() {
+        (window.onhashchange = function () {
+            const el = document.getElementById(location.hash.replace("#", "rule-"));
+            const highlighted = Array.from(document.getElementsByClassName("highlight"));
+            highlighted.forEach(e => e.classList.remove("highlight"));
+
+            if (el) {
+                el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
+                el.classList.add("highlight");
+            }
+        })();
+    };
 </script>

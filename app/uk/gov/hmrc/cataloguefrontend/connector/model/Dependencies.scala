@@ -81,8 +81,8 @@ case class BobbyVersionRange(
   def rangeDescr: Option[(String, String)] = {
     def comp(v: BobbyVersion) = if (v.inclusive) " <= " else " < "
     if (lowerBound.isDefined || upperBound.isDefined) {
-       Some(( lowerBound.map(v => s"${v.version} ${comp(v)}").getOrElse("")
-            , upperBound.map(v => s"${comp(v)} ${v.version}").getOrElse("")
+       Some(( lowerBound.map(v => s"${v.version} ${comp(v)}").getOrElse("0.0.0 <=")
+            , upperBound.map(v => s"${comp(v)} ${v.version}").getOrElse("<= 99.99.99")
            ))
     } else None
   }
