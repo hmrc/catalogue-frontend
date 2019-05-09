@@ -62,6 +62,68 @@
                     'id    -> "search-by-dependency-form") {
                     <table class="padded-table">
                         <tr>
+                            <td style="vertical-align: top;">
+                                @helper.select(
+                                    form("group"),
+                                    helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
+                                                   groupArtefacts.map(_.group).map(g => (g, g)) :_*),
+                                    '_label -> "",
+                                    '_class -> "form-group"
+                                )
+                            </td>
+                            <td style="vertical-align: top;">
+                                @helper.select(
+                                    form("artefact"),
+                                    helper.options(List()),
+                                    '_label -> "",
+                                    '_class -> "form-group"
+                                )
+                            </td>
+                        </tr>
+                    </table>
+                    <table>
+                        <tr>
+                            <td style="vertical-align: top;">
+                                @helper.inputText(
+                                    form("version"),
+                                    'id          -> "lbVersion",
+                                    'size        -> 20,
+                                    '_label      -> "",
+                                    'placeholder -> "0.0.0",
+                                    '_class      -> "form-group"
+                                )
+                            </td>
+                            <td style="vertical-align: top;">
+                                @helper.select(
+                                    form("versionOp"),
+                                    helper.options(List("<", "<=")),
+                                    '_label -> "",
+                                    '_class -> "form-group"
+                                )
+                            </td>
+                            <td style="vertical-align: bottom; padding-left: 10; padding-right: 10; ">version</td>
+                            <td style="vertical-align: top;">
+                                @helper.select(
+                                    form("versionOp"),
+                                    helper.options(List("<", "<=")),
+                                    '_label -> "",
+                                    '_class -> "form-group"
+                                )
+                            </td>
+                            <td style="vertical-align: top;">
+                                @helper.inputText(
+                                    form("version"),
+                                    'id          -> "upVersion",
+                                    'size        -> 20,
+                                    '_label      -> "",
+                                    'placeholder -> "99.99.99",
+                                    '_class      -> "form-group"
+                                )
+                            </td>
+                        </tr>
+                    </table>
+                    <table>
+                        <tr>
                             <td>
                                 @helper.select(
                                     form("team"),
@@ -77,43 +139,6 @@
                                     helper.options(flags.map(t => (t.s, t.s.capitalize)) :_*),
                                     '_label -> "",
                                     '_class -> "form-group"
-                                )
-                            </td>
-                        </tr>
-                        <tr>
-                            <td valign="top">
-                                @helper.select(
-                                    form("group"),
-                                    helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
-                                                   groupArtefacts.map(_.group).map(g => (g, g)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                            </td>
-                            <td valign="top">
-                                @helper.select(
-                                    form("artefact"),
-                                    helper.options(List()),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                            </td>
-                            <td valign="top">
-                                @helper.select(
-                                    form("versionOp"),
-                                    helper.options(List(VersionOp.Gte.s, VersionOp.Lte.s, VersionOp.Eq.s)),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                            </td>
-                            <td valign="top">
-                                @helper.inputText(
-                                    form("version"),
-                                    'id          -> "version",
-                                    'size        -> 20,
-                                    '_label      -> "",
-                                    'placeholder -> "Version (e.g. 1.0.0)",
-                                    '_class      -> "form-group"
                                 )
                             </td>
                             <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value">
