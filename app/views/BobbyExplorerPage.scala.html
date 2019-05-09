@@ -35,12 +35,12 @@
 @bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String) = {
     @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
         <div><h2>@heading</h2></div>
-        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library")
-        @bobbyRulesArtifactTypeSection(rulesByTime.plugins, "Plugin")
+        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true)
+        @bobbyRulesArtifactTypeSection(rulesByTime.plugins, "Plugin", inclViewSlugsLink = false)
     }
 }
 
-@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String) = {
+@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
     @if(rulesByArtifactType.nonEmpty) {
         <div>
             <table class="@{artifactType.toLowerCase}-rules table table-striped">
@@ -54,14 +54,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                @rulesByArtifactType.map(bobbyRuleRow)
+                @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
                 </tbody>
             </table>
         </div>
     }
 }
 
-@bobbyRuleRow(rule: BobbyRule) = {
+@bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
     <tr id="rule-@rule.artefact" class="bobby-rule">
         <td>@rule.group:@rule.artefact</td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
@@ -78,7 +78,8 @@
         }
         <td>@rule.reason</td>
         <td>@rule.from</td>
-        <td><a href="@DependencyExplorerController.search(flag = SlugInfoFlag.Latest, group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See affected slugs</a></td>
+        <td>@if(inclViewSlugsLink) { <a href="@DependencyExplorerController.search(flag = SlugInfoFlag.Latest, group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See affected slugs</a> }
+        </td>
     </tr>
 }
 

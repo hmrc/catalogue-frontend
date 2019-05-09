@@ -177,6 +177,6 @@ object DependencyExplorerController {
     }
 
   def search(team: String = "", flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange): String =
-    // how can we keep this in sync with SearchForm forms.mapping?
-    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search() + s"?team=$team&flag=${flag.s}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
+    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search() +
+      s"?team=$team&flag=${flag.s}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
 }
