@@ -27,6 +27,7 @@ import play.api.i18n.MessagesProvider
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
@@ -57,6 +58,31 @@ class DependencyExplorerController @Inject()(
 
   def search =
     Action.async { implicit request =>
+      // first preserve old API
+      if (request.queryString.contains("versionOp")) {
+        (for {
+          version         <- EitherT.fromOption[Future](request.queryString.get("version").flatMap(_.headOption).flatMap(Version.parse), Redirect(appRoutes.DependencyExplorerController.landing))
+          versionOp       <- EitherT.fromOption[Future](request.queryString.get("versionOp").flatMap(_.headOption).flatMap(VersionOp.parse), Redirect(appRoutes.DependencyExplorerController.landing))
+          versionRangeStr =  versionOp match {
+                              case VersionOp.Gte => s"[$version,)"
+                              case VersionOp.Lte => s"(,$version]"
+                              case VersionOp.Eq  => s"[$version]"
+                            }
+          queryString = request.queryString - "version" - "versionOp" + ("versionRange" -> Seq(versionRangeStr))
+
+         // updating queryString with play, does not update uri!?
+         //} yield Redirect(request.target.withQueryString(queryString).uri)
+         //} yield Redirect(request.copy(queryString = queryString).uri)
+          queryStr = queryString.flatMap { case (k, vs) =>
+                       vs.map(v => java.net.URLEncoder.encode(k, "UTF-8") + "=" + java.net.URLEncoder.encode(v, "UTF-8"))
+                     }.mkString("?", "&", "")
+         } yield Redirect(request.path + queryStr)
+        ).merge
+      } else search2(request)
+    }
+
+  def search2 =
+    Action.async { implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
@@ -69,19 +95,7 @@ class DependencyExplorerController @Inject()(
                 hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, flags, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)))
               , success   = query =>
                   (for {
-                    versionRange <- query.versionRange match {
-                                      case ""           => for {
-                                                             version         <- EitherT.fromOption[Future](request.queryString.get("version").flatMap(_.headOption).flatMap(Version.parse), BadRequest(pageWithError("Invalid version")))
-                                                             versionOp       <- EitherT.fromOption[Future](request.queryString.get("versionOp").flatMap(_.headOption).flatMap(VersionOp.parse), BadRequest(pageWithError("Invalid version op")))
-                                                             versionRangeStr =  versionOp match {
-                                                                                  case VersionOp.Gte => s"[$version,)"
-                                                                                  case VersionOp.Lte => s"(,$version]"
-                                                                                  case VersionOp.Eq  => s"[$version]"
-                                                                                }
-                                                             versionRange    <- EitherT.fromOption[Future](BobbyVersionRange.parse(versionRangeStr), InternalServerError(pageWithError(s"Invalid version range $versionRangeStr")))
-                                                           } yield versionRange
-                                      case versionRange => EitherT.fromOption[Future](BobbyVersionRange.parse(versionRange), BadRequest(pageWithError(s"Invalid version range")))
-                                    }
+                    versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
                     team         =  if (query.team.isEmpty) None else Some(query.team)
                     flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
                     results      <- EitherT.right[Result] {
