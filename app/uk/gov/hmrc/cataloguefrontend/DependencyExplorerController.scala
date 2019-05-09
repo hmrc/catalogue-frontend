@@ -51,7 +51,7 @@ class DependencyExplorerController @Inject()(
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
-      } yield Ok(page(form.fill(SearchForm("", SlugInfoFlag.Latest.s, "", "", "", "0.0.0", "")), teams, flags, groupArtefacts, versionRange = None, searchResults = None, pieData = None))
+      } yield Ok(page(form.fill(SearchForm("", SlugInfoFlag.Latest.s, "", "", "")), teams, flags, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None))
     }
 
 
@@ -62,17 +62,17 @@ class DependencyExplorerController @Inject()(
         flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
         res            <- {
-          def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), teams, flags, groupArtefacts, versionRange = None, searchResults = None, pieData = None)
+          def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), teams, flags, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)
           form
             .bindFromRequest()
             .fold(
-                hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, flags, groupArtefacts, versionRange = None, searchResults = None, pieData = None)))
+                hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, flags, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)))
               , success   = query =>
                   (for {
                     versionRange <- query.versionRange match {
                                       case ""           => for {
-                                                             version         <- EitherT.fromOption[Future](Version.parse(query.version), BadRequest(pageWithError("Invalid version")))
-                                                             versionOp       <- EitherT.fromOption[Future](VersionOp.parse(query.versionOp), BadRequest(pageWithError("Invalid version op")))
+                                                             version         <- EitherT.fromOption[Future](request.queryString.get("version").flatMap(_.headOption).flatMap(Version.parse), BadRequest(pageWithError("Invalid version")))
+                                                             versionOp       <- EitherT.fromOption[Future](request.queryString.get("versionOp").flatMap(_.headOption).flatMap(VersionOp.parse), BadRequest(pageWithError("Invalid version op")))
                                                              versionRangeStr =  versionOp match {
                                                                                   case VersionOp.Gte => s"[$version,)"
                                                                                   case VersionOp.Lte => s"(,$version]"
@@ -108,7 +108,7 @@ class DependencyExplorerController @Inject()(
                       , teams
                       , flags
                       , groupArtefacts
-                      , if (query.versionRange.isEmpty) None else Some(versionRange)
+                      , versionRange
                       , Some(results)
                       , Some(pieData)
                       ))
@@ -125,8 +125,6 @@ class DependencyExplorerController @Inject()(
     , flag        : String
     , group       : String
     , artefact    : String
-    , versionOp   : String
-    , version     : String
     , versionRange: String
     , asCsv       : Boolean = false
     )
@@ -146,9 +144,7 @@ class DependencyExplorerController @Inject()(
         , "flag"         -> Forms.text.verifying(notEmpty)
         , "group"        -> Forms.text.verifying(notEmpty)
         , "artefact"     -> Forms.text.verifying(notEmpty)
-        , "versionOp"    -> Forms.default(Forms.text, ">=")
-        , "version"      -> Forms.default(Forms.text, "")
-        , "versionRange" -> Forms.text
+        , "versionRange" -> Forms.default(Forms.text, "")
         , "asCsv"        -> Forms.boolean
         )(SearchForm.apply)(SearchForm.unapply)
     )

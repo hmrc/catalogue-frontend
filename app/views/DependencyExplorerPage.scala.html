@@ -16,7 +16,7 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, Team}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, GroupArtefacts, ServiceWithDependency, VersionOp}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersion, BobbyVersionRange, GroupArtefacts, ServiceWithDependency, VersionOp}
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.routes
@@ -29,7 +29,7 @@
   teams           : Seq[String],
   flags           : Seq[SlugInfoFlag],
   groupArtefacts  : List[GroupArtefacts],
-  versionRange    : Option[BobbyVersionRange],
+  versionRange    : BobbyVersionRange,
   searchResults   : Option[Seq[ServiceWithDependency]],
   pieData         : Option[PieData])(
   implicit request         : Request[_],
@@ -59,7 +59,8 @@
                 @helper.form(
                     action =  routes.DependencyExplorerController.search,
                     'class -> "form-inline",
-                    'id    -> "search-by-dependency-form") {
+                    'id    -> "search-by-dependency-form",
+                    'onsubmit -> "updateVersionRange();") {
                     <table class="padded-table">
                         <tr>
                             <td style="vertical-align: top;">
@@ -70,8 +71,6 @@
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )
-                            </td>
-                            <td style="vertical-align: top;">
                                 @helper.select(
                                     form("artefact"),
                                     helper.options(List()),
@@ -80,49 +79,21 @@
                                 )
                             </td>
                         </tr>
-                    </table>
-                    <table>
                         <tr>
-                            <td style="vertical-align: top;">
-                                @helper.inputText(
-                                    form("version"),
-                                    'id          -> "lbVersion",
-                                    'size        -> 20,
-                                    '_label      -> "",
-                                    'placeholder -> "0.0.0",
-                                    '_class      -> "form-group"
-                                )
-                            </td>
-                            <td style="vertical-align: top;">
-                                @helper.select(
-                                    form("versionOp"),
-                                    helper.options(List("<", "<=")),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                            </td>
-                            <td style="vertical-align: bottom; padding-left: 10; padding-right: 10; ">version</td>
-                            <td style="vertical-align: top;">
-                                @helper.select(
-                                    form("versionOp"),
-                                    helper.options(List("<", "<=")),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                            </td>
-                            <td style="vertical-align: top;">
-                                @helper.inputText(
-                                    form("version"),
-                                    'id          -> "upVersion",
-                                    'size        -> 20,
-                                    '_label      -> "",
-                                    'placeholder -> "99.99.99",
-                                    '_class      -> "form-group"
-                                )
+                            <td style="padding-top: 1em;">
+                                <input type="text" id="lbValue" value="@versionRange.lowerBound.map(_.version)" size="20" placeholder="0.0.0">
+                                <select id="lbInclusive">
+                                     <option value="false">&lt;</option>
+                                     <option value="true" @selected(versionRange.lowerBound)>&lt;=</option>
+                               </select>
+                               version
+                                <select id="ubInclusive">
+                                     <option value="false">&lt;</option>
+                                     <option value="true" @selected(versionRange.upperBound)>&lt;=</option>
+                               </select>
+                                <input type="text" id="ubValue" value="@versionRange.upperBound.map(_.version)" size="20" placeholder="">
                             </td>
                         </tr>
-                    </table>
-                    <table>
                         <tr>
                             <td>
                                 @helper.select(
@@ -132,8 +103,6 @@
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )
-                            </td>
-                            <td>
                                 @helper.select(
                                     form("flag"),
                                     helper.options(flags.map(t => (t.s, t.s.capitalize)) :_*),
@@ -162,7 +131,7 @@
                         <p id="search-results-empty">This search did not return any results.</p>
                     }
                     case Some(searchResults) => {
-                        <p>Found @searchResults.size results @versionRange.flatMap(_.rangeDescr.map { case (lb, ub) => "for " + lb + " x " + ub }).getOrElse("") </p>
+                        <p>Found @searchResults.size results</p>
 
                         <div id="chart_div" align="center"></div>
 
@@ -250,6 +219,17 @@
             document.getElementById('search-by-dependency-form').submit();
             document.getElementById('asCsv').value = false;
         }
+
+        function updateVersionRange() {
+            var lbValue      = document.getElementById('lbValue').value;
+            var lbInclusive  = document.getElementById('lbInclusive').value;
+            var ubInclusive  = document.getElementById('ubInclusive').value;
+            var ubValue      = document.getElementById('ubValue').value;
+            var versionRange = (lbInclusive == "true" ? "[" : "(") + (lbValue ? lbValue : "0.0.0") +
+                               "," +
+                               ubValue + (ubInclusive == "true" && ubValue ? "]" : ")");
+            document.getElementById('versionRange').value = versionRange;
+        }
     </script>
 
     <script type="text/javascript">
@@ -282,4 +262,8 @@
             }
         }
     </script>
+}
+
+@selected(optVersion: Option[BobbyVersion]) = {
+    @optVersion.map(v => if (v.inclusive) "selected" else "").getOrElse("selected")
 }
