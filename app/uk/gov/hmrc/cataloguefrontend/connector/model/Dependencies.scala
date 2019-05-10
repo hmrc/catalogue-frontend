@@ -89,10 +89,10 @@ case class BobbyVersionRange(
     } else None
   }
 
-  def isMatch(v: Version): Boolean = {
+  def includes(v: Version): Boolean = {
     val qualFilter: Function1[Version, Boolean] = qualifier match {
       case Some(qual) => _.toString.contains(qual)
-      case None       => _ => false
+      case None       => _ => true
     }
     val lbFilter: Function1[Version, Boolean] = lowerBound match {
       case Some(BobbyVersion(version, true))  => _ >= version
@@ -104,14 +104,16 @@ case class BobbyVersionRange(
       case Some(BobbyVersion(version, false)) => _ <  version
       case None                               => _ => true
     }
-    qualFilter(v) || (lbFilter(v) && ubFilter(v))
+    qualFilter(v) && lbFilter(v) && ubFilter(v)
   }
+
+  override def toString: String = range
 }
 
 object BobbyVersionRange {
 
   private val fixed      = """^\[(\d+\.\d+.\d+)\]""".r
-  private val fixedUpper = """^\(,?(\d+\.\d+.\d+)[\]\)]""".r
+  private val fixedUpper = """^[\[\(],?(\d+\.\d+.\d+)[\]\)]""".r
   private val fixedLower = """^[\[\(](\d+\.\d+.\d+),[\]\)]""".r
   private val rangeRegex = """^[\[\(](\d+\.\d+.\d+),(\d+\.\d+.\d+)[\]\)]""".r
   private val qualifier  = """^\[[-\*]+(.*)\]""".r
@@ -121,42 +123,54 @@ object BobbyVersionRange {
 
     PartialFunction.condOpt(trimmedRange) {
       case fixed(v) =>
-        val fixed = Version.parse(v).map(BobbyVersion(_, inclusive = true)) // TODO fail, if invalid version
-        BobbyVersionRange(
-            lowerBound = fixed
-          , upperBound = fixed
-          , qualifier  = None
-          , range      = trimmedRange
-          )
+        Version.parse(v).map(BobbyVersion(_, inclusive = true))
+          .map { fixed =>
+            BobbyVersionRange(
+                lowerBound = Some(fixed)
+              , upperBound = Some(fixed)
+              , qualifier  = None
+              , range      = trimmedRange
+              )
+          }
       case fixedUpper(v) =>
-        BobbyVersionRange(
-            lowerBound = None
-          , upperBound = Version.parse(v).map(BobbyVersion(_, inclusive = trimmedRange.endsWith("]"))) // TODO fail, if invalid version
-          , qualifier  = None
-          , range      = trimmedRange
-          )
+        Version.parse(v).map(BobbyVersion(_, inclusive = trimmedRange.endsWith("]")))
+          .map { ub =>
+            BobbyVersionRange(
+                lowerBound = None
+              , upperBound = Some(ub)
+              , qualifier  = None
+              , range      = trimmedRange
+              )
+          }
       case fixedLower(v) =>
-        BobbyVersionRange(
-            lowerBound = Version.parse(v).map(BobbyVersion(_, inclusive = trimmedRange.startsWith("["))) // TODO fail, if invalid version
-          , upperBound = None
-          , qualifier  = None
-          , range      = trimmedRange
-          )
+        Version.parse(v).map(BobbyVersion(_, inclusive = trimmedRange.startsWith("[")))
+          .map { lb =>
+            BobbyVersionRange(
+                lowerBound = Some(lb)
+              , upperBound = None
+              , qualifier  = None
+              , range      = trimmedRange
+              )
+          }
       case rangeRegex(v1, v2) =>
-        BobbyVersionRange(
-            lowerBound = Version.parse(v1).map(BobbyVersion(_, inclusive = trimmedRange.startsWith("["))) // TODO fail, if invalid version
-          , upperBound = Version.parse(v2).map(BobbyVersion(_, inclusive = trimmedRange.endsWith("]"))) // TODO fail, if invalid version
-          , qualifier  = None
-          , range      = trimmedRange
-          )
+        for {
+          lb <- Version.parse(v1).map(BobbyVersion(_, inclusive = trimmedRange.startsWith("[")))
+          ub <- Version.parse(v2).map(BobbyVersion(_, inclusive = trimmedRange.endsWith("]")))
+        } yield
+          BobbyVersionRange(
+              lowerBound = Some(lb)
+            , upperBound = Some(ub)
+            , qualifier  = None
+            , range      = trimmedRange
+            )
       case qualifier(q) if q.length() > 1 =>
-        BobbyVersionRange(
+        Some(BobbyVersionRange(
             lowerBound = None
           , upperBound = None
           , qualifier  = Some(q)
           , range      = trimmedRange
-          )
-    }
+          ))
+    }.flatten
   }
 
   def apply(range: String): BobbyVersionRange =
@@ -270,24 +284,6 @@ object Version {
     override def writes(v: Version) =
       JsString(v.original)
   }
-}
-
-
-trait VersionOp {
-  def s: String
-}
-object VersionOp {
-  case object Gte extends VersionOp { val s = ">=" }
-  case object Lte extends VersionOp { val s = "<=" }
-  case object Eq  extends VersionOp { val s = "==" }
-
-  def parse(s: String): Option[VersionOp] =
-    s match {
-      case Gte.s => Some(Gte)
-      case Lte.s => Some(Lte)
-      case Eq.s  => Some(Eq)
-      case _     => None
-    }
 }
 
 

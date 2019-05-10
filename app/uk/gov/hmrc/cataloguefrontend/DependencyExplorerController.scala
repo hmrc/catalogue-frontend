@@ -26,7 +26,7 @@ import play.api.http.HttpEntity
 import play.api.i18n.MessagesProvider
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, Version, VersionOp}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, Version}
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
@@ -61,23 +61,29 @@ class DependencyExplorerController @Inject()(
       // first preserve old API
       if (request.queryString.contains("versionOp")) {
         (for {
-          version         <- EitherT.fromOption[Future](request.queryString.get("version").flatMap(_.headOption).flatMap(Version.parse), Redirect(appRoutes.DependencyExplorerController.landing))
-          versionOp       <- EitherT.fromOption[Future](request.queryString.get("versionOp").flatMap(_.headOption).flatMap(VersionOp.parse), Redirect(appRoutes.DependencyExplorerController.landing))
-          versionRangeStr =  versionOp match {
-                              case VersionOp.Gte => s"[$version,)"
-                              case VersionOp.Lte => s"(,$version]"
-                              case VersionOp.Eq  => s"[$version]"
-                            }
-          queryString = request.queryString - "version" - "versionOp" + ("versionRange" -> Seq(versionRangeStr))
+          version       <- EitherT.fromOption[Future](
+                               request.queryString.get("version").flatMap(_.headOption).flatMap(Version.parse)
+                             , Redirect(appRoutes.DependencyExplorerController.landing)
+                             )
+          versionRange  <- EitherT.fromOption[Future](
+                               request.queryString.get("versionOp").flatMap(_.headOption).flatMap { versionOp =>
+                                 PartialFunction.condOpt(versionOp) {
+                                   case ">=" => s"[$version,)"
+                                   case "<=" => s"(,$version]"
+                                   case "==" => s"[$version]"
+                                 }
+                               }
+                             , Redirect(appRoutes.DependencyExplorerController.landing)
+                             )
+          queryString   =  request.queryString - "version" - "versionOp" + ("versionRange" -> Seq(versionRange))
 
-         // updating queryString with play, does not update uri!?
-         //} yield Redirect(request.target.withQueryString(queryString).uri)
-         //} yield Redirect(request.copy(queryString = queryString).uri)
-          queryStr = queryString.flatMap { case (k, vs) =>
-                       vs.map(v => java.net.URLEncoder.encode(k, "UTF-8") + "=" + java.net.URLEncoder.encode(v, "UTF-8"))
-                     }.mkString("?", "&", "")
+         // updating request with new querystring does not update uri!? - build uri manually...
+          queryStr      =  queryString.flatMap { case (k, vs) =>
+                             vs.map(v => java.net.URLEncoder.encode(k, "UTF-8") + "=" + java.net.URLEncoder.encode(v, "UTF-8"))
+                           }.mkString("?", "&", "")
          } yield Redirect(request.path + queryStr)
         ).merge
+      // else continue to new API
       } else search2(request)
     }
 

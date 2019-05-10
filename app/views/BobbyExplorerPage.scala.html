@@ -48,9 +48,9 @@
                     <tr>
                         <th class="col-xs-3">@artifactType</th>
                         <th class="col-xs-2" colspan="3">Banned Versions</th>
-                        <th class="col-xs-5">Reason</th>
+                        <th class="col-xs-4">Reason</th>
                         <th class="col-xs-1">Active from</th>
-                        <th class="col-xs-1"></th>
+                        <th class="col-xs-2"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -78,7 +78,7 @@
         }
         <td>@rule.reason</td>
         <td>@rule.from</td>
-        <td>@if(inclViewSlugsLink) { <a href="@DependencyExplorerController.search(flag = SlugInfoFlag.Latest, group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See affected slugs</a> }
+        <td>@if(inclViewSlugsLink) { <a href="@DependencyExplorerController.search(flag = SlugInfoFlag.Latest, group = rule.group, artefact = rule.artefact, versionRange = rule.range)">Affected slugs</a> }
         </td>
     </tr>
 }

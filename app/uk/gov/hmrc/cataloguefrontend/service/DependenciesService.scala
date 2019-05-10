@@ -62,7 +62,7 @@ class DependenciesService @Inject()(
         }
       }
       .map { l =>
-        l.filter(_.depSemanticVersion.map(versionRange.isMatch).getOrElse(true)) // include invalid semanticVersion in results
+        l.filter(_.depSemanticVersion.map(versionRange.includes).getOrElse(true)) // include invalid semanticVersion in results
       }
       .map(_
         .sortBy(_.slugName)
