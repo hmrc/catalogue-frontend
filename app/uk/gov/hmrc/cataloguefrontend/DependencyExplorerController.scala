@@ -52,7 +52,15 @@ class DependencyExplorerController @Inject()(
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
-      } yield Ok(page(form.fill(SearchForm("", SlugInfoFlag.Latest.s, "", "", "")), teams, flags, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None))
+      } yield Ok(page(
+            form.fill(SearchForm("", SlugInfoFlag.Latest.s, "", "", ""))
+          , teams
+          , flags
+          , groupArtefacts
+          , versionRange  = BobbyVersionRange(None, None, None, "")
+          , searchResults = None
+          , pieData       = None
+          ))
     }
 
 
@@ -94,7 +102,15 @@ class DependencyExplorerController @Inject()(
         flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
         res            <- {
-          def pageWithError(msg: String) = page(form.bindFromRequest().withGlobalError(msg), teams, flags, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)
+          def pageWithError(msg: String) = page(
+              form.bindFromRequest().withGlobalError(msg)
+            , teams
+            , flags
+            , groupArtefacts
+            , versionRange  = BobbyVersionRange(None, None, None, "")
+            , searchResults = None
+            , pieData       = None
+            )
           form
             .bindFromRequest()
             .fold(

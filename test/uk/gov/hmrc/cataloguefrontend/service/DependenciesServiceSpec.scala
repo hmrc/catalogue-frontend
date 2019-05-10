@@ -32,8 +32,9 @@ class SlugInfoServiceSpec
 
   implicit val hc = mock[HeaderCarrier]
 
-  val group    = "group"
-  val artefact = "artefact"
+  val group        = "group"
+  val artefact     = "artefact"
+  val versionRange = BobbyVersionRange("[1.0.1,)")
 
   val v100 =
     ServiceWithDependency(
@@ -66,40 +67,15 @@ class SlugInfoServiceSpec
       depSemanticVersion = Version.parse("2.0.5"))
 
   "DependenciesService.getServicesWithDependency" should {
-    "filter results by version" in {
-
-      val boot = Boot.init
-
-      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact))
-        .thenReturn(Future(Seq(v100, v200, v205)))
-
-      await(boot.service.getServicesWithDependency(optTeam = None, SlugInfoFlag.Latest, group, artefact, BobbyVersionRange("[1.0.1,)"))) shouldBe Seq(v205, v200)
-      await(boot.service.getServicesWithDependency(optTeam = None, SlugInfoFlag.Latest, group, artefact, BobbyVersionRange("(,1.0.1]"))) shouldBe Seq(v100)
-      await(boot.service.getServicesWithDependency(optTeam = None, SlugInfoFlag.Latest, group, artefact, BobbyVersionRange("[2.0.0]"))) shouldBe Seq(v200)
-    }
-
-    "include non-parseable versions" in {
-
-      val boot = Boot.init
-
-      val bad = v100.copy(depVersion  = "r938", depSemanticVersion = None)
-
-      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact))
-        .thenReturn(Future(Seq(v100, v200, v205, bad)))
-
-      await(boot.service.getServicesWithDependency(optTeam = None, SlugInfoFlag.Latest, group, artefact, BobbyVersionRange("[1.0.1,)"))) shouldBe Seq(v205, v200, bad)
-      await(boot.service.getServicesWithDependency(optTeam = None, SlugInfoFlag.Latest, group, artefact, BobbyVersionRange("(,1.0.1]"))) shouldBe Seq(v100, bad)
-    }
-
     "filter results by team" in {
 
       val boot = Boot.init
 
-      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact))
+      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact, versionRange))
         .thenReturn(Future(Seq(v100, v200, v205)))
 
-      await(boot.service.getServicesWithDependency(optTeam = Some("T1"), SlugInfoFlag.Latest, group, artefact, BobbyVersionRange("[1.0.1,)"))) shouldBe Seq(v200)
-      await(boot.service.getServicesWithDependency(optTeam = Some("T2"), SlugInfoFlag.Latest, group, artefact, BobbyVersionRange("[1.0.1,)"))) shouldBe Seq(v205, v200)
+      await(boot.service.getServicesWithDependency(optTeam = Some("T1"), SlugInfoFlag.Latest, group, artefact, versionRange)) shouldBe Seq(v200, v100)
+      await(boot.service.getServicesWithDependency(optTeam = Some("T2"), SlugInfoFlag.Latest, group, artefact, versionRange)) shouldBe Seq(v205, v200)
     }
   }
 

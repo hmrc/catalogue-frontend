@@ -54,15 +54,12 @@ class DependenciesService @Inject()(
       artefact    : String,
       versionRange: BobbyVersionRange)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =
     serviceDependenciesConnector
-      .getServicesWithDependency(flag, group, artefact)
+      .getServicesWithDependency(flag, group, artefact, versionRange)
       .map { l =>
         optTeam match {
           case None       => l
           case Some(team) => l.filter(_.teams.contains(team))
         }
-      }
-      .map { l =>
-        l.filter(_.depSemanticVersion.map(versionRange.includes).getOrElse(true)) // include invalid semanticVersion in results
       }
       .map(_
         .sortBy(_.slugName)

@@ -89,24 +89,6 @@ case class BobbyVersionRange(
     } else None
   }
 
-  def includes(v: Version): Boolean = {
-    val qualFilter: Function1[Version, Boolean] = qualifier match {
-      case Some(qual) => _.toString.contains(qual)
-      case None       => _ => true
-    }
-    val lbFilter: Function1[Version, Boolean] = lowerBound match {
-      case Some(BobbyVersion(version, true))  => _ >= version
-      case Some(BobbyVersion(version, false)) => _ >  version
-      case None                               => _ => true
-    }
-    val ubFilter: Function1[Version, Boolean] = upperBound match {
-      case Some(BobbyVersion(version, true))  => _ <= version
-      case Some(BobbyVersion(version, false)) => _ <  version
-      case None                               => _ => true
-    }
-    qualFilter(v) && lbFilter(v) && ubFilter(v)
-  }
-
   override def toString: String = range
 }
 
