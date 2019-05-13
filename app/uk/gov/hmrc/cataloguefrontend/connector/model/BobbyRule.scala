@@ -18,19 +18,27 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import java.time.LocalDate
 
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.{Json, Reads, __}
+import play.api.libs.functional.syntax._
 
-case class BobbyRule(organisation: String, name: String, range: BobbyVersionRange, reason: String, from: LocalDate) {
-  val groupArtifactName: String = {
-    val wildcard = "*"
-    if (organisation == wildcard && name == wildcard) "*" else s"$organisation:$name"
-  }
-}
+
+case class BobbyRule(
+    group   : String
+  , artefact: String
+  , range   : BobbyVersionRange
+  , reason  : String
+  , from    : LocalDate
+  )
 
 object BobbyRule {
   val reads: Reads[BobbyRule] = {
-    implicit val bvrr = BobbyVersionRange.reads
-    Json.reads[BobbyRule]
+    implicit val bvrf = BobbyVersionRange.format
+    ( (__ \ "organisation").read[String]
+    ~ (__ \ "name"        ).read[String]
+    ~ (__ \ "range"       ).read[BobbyVersionRange]
+    ~ (__ \ "reason"      ).read[String]
+    ~ (__ \ "from"        ).read[LocalDate]
+    )(BobbyRule.apply _)
   }
 }
 

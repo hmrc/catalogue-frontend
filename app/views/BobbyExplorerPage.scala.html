@@ -15,7 +15,9 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
+@import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
 
 @this(viewMessages: ViewMessages)
@@ -33,12 +35,12 @@
 @bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String) = {
     @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
         <div><h2>@heading</h2></div>
-        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library")
-        @bobbyRulesArtifactTypeSection(rulesByTime.plugins, "Plugin")
+        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true)
+        @bobbyRulesArtifactTypeSection(rulesByTime.plugins, "Plugin", inclViewSlugsLink = false)
     }
 }
 
-@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String) = {
+@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
     @if(rulesByArtifactType.nonEmpty) {
         <div>
             <table class="@{artifactType.toLowerCase}-rules table table-striped">
@@ -46,21 +48,22 @@
                     <tr>
                         <th class="col-xs-3">@artifactType</th>
                         <th class="col-xs-2" colspan="3">Banned Versions</th>
-                        <th class="col-xs-5">Reason</th>
-                        <th class="col-xs-2">Active from</th>
+                        <th class="col-xs-4">Reason</th>
+                        <th class="col-xs-1">Active from</th>
+                        <th class="col-xs-2"></th>
                     </tr>
                 </thead>
                 <tbody>
-                @rulesByArtifactType.map(bobbyRuleRow)
+                    @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
                 </tbody>
             </table>
         </div>
     }
 }
 
-@bobbyRuleRow(rule: BobbyRule) = {
-    <tr id="rule-@rule.name" class="bobby-rule">
-        <td>@rule.groupArtifactName</td>
+@bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
+    <tr id="rule-@rule.artefact" class="bobby-rule">
+        <td>@rule.group:@rule.artefact</td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {
@@ -75,6 +78,8 @@
         }
         <td>@rule.reason</td>
         <td>@rule.from</td>
+        <td>@if(inclViewSlugsLink) { <a href="@DependencyExplorerController.search(flag = SlugInfoFlag.Latest, group = rule.group, artefact = rule.artefact, versionRange = rule.range)">Affected slugs</a> }
+        </td>
     </tr>
 }
 

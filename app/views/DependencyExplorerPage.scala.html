@@ -16,7 +16,7 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, Team}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{GroupArtefacts, ServiceWithDependency, VersionOp}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersion, BobbyVersionRange, GroupArtefacts, ServiceWithDependency}
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.routes
@@ -29,6 +29,7 @@
   teams           : Seq[String],
   flags           : Seq[SlugInfoFlag],
   groupArtefacts  : List[GroupArtefacts],
+  versionRange    : BobbyVersionRange,
   searchResults   : Option[Seq[ServiceWithDependency]],
   pieData         : Option[PieData])(
   implicit request         : Request[_],
@@ -58,8 +59,41 @@
                 @helper.form(
                     action =  routes.DependencyExplorerController.search,
                     'class -> "form-inline",
-                    'id    -> "search-by-dependency-form") {
+                    'id    -> "search-by-dependency-form",
+                    'onsubmit -> "updateVersionRange();") {
                     <table class="padded-table">
+                        <tr>
+                            <td style="vertical-align: top;">
+                                @helper.select(
+                                    form("group"),
+                                    helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
+                                                   groupArtefacts.map(_.group).map(g => (g, g)) :_*),
+                                    '_label -> "",
+                                    '_class -> "form-group"
+                                )
+                                @helper.select(
+                                    form("artefact"),
+                                    helper.options(List()),
+                                    '_label -> "",
+                                    '_class -> "form-group"
+                                )
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top: 1em;">
+                                <input type="text" id="lbValue" value="@versionRange.lowerBound.map(_.version)" size="20" placeholder="0.0.0">
+                                <select id="lbInclusive">
+                                     <option value="false">&lt;</option>
+                                     <option value="true" @selected(versionRange.lowerBound)>&lt;=</option>
+                               </select>
+                               version
+                                <select id="ubInclusive">
+                                     <option value="false">&lt;</option>
+                                     <option value="true" @selected(versionRange.upperBound)>&lt;=</option>
+                               </select>
+                                <input type="text" id="ubValue" value="@versionRange.upperBound.map(_.version)" size="20" placeholder="">
+                            </td>
+                        </tr>
                         <tr>
                             <td>
                                 @helper.select(
@@ -69,8 +103,6 @@
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )
-                            </td>
-                            <td>
                                 @helper.select(
                                     form("flag"),
                                     helper.options(flags.map(t => (t.s, t.s.capitalize)) :_*),
@@ -78,49 +110,12 @@
                                     '_class -> "form-group"
                                 )
                             </td>
-                        </tr>
-                        <tr>
-                            <td valign="top">
-                                @helper.select(
-                                    form("group"),
-                                    helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
-                                                   groupArtefacts.map(_.group).map(g => (g, g)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                           </td>
-                            <td valign="top">
-                                @helper.select(
-                                    form("artefact"),
-                                    helper.options(List()),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                           </td>
-                            <td valign="top">
-                                @helper.select(
-                                    form("versionOp"),
-                                    helper.options(List(VersionOp.Gte.s, VersionOp.Lte.s, VersionOp.Eq.s)),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                           </td>
-                            <td valign="top">
-                                @helper.inputText(
-                                    form("version"),
-                                    'id          -> "version",
-                                    'size        -> 20,
-                                    '_label      -> "",
-                                    'required    -> true,
-                                    'placeholder -> "Version (e.g. 1.0.0)",
-                                    '_class      -> "form-group"
-                                )
-                          </td>
-                          <input type="hidden" id="asCsv" name="asCsv" value="false">
-                          <td valign="bottom">
-                              <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-                              <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV" onclick="exportAsCsv()"/>
-                          </td>
+                            <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value">
+                            <input type="hidden" id="asCsv" name="asCsv" value="false">
+                            <td valign="bottom">
+                                <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                                <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV" onclick="exportAsCsv()"/>
+                            </td>
                         </tr>
                         <tr>
                           <td colspan="5">
@@ -224,6 +219,17 @@
             document.getElementById('search-by-dependency-form').submit();
             document.getElementById('asCsv').value = false;
         }
+
+        function updateVersionRange() {
+            var lbValue      = document.getElementById('lbValue').value;
+            var lbInclusive  = document.getElementById('lbInclusive').value;
+            var ubInclusive  = document.getElementById('ubInclusive').value;
+            var ubValue      = document.getElementById('ubValue').value;
+            var versionRange = (lbInclusive == "true" ? "[" : "(") + (lbValue ? lbValue : "0.0.0") +
+                               "," +
+                               ubValue + (ubInclusive == "true" && ubValue ? "]" : ")");
+            document.getElementById('versionRange').value = versionRange;
+        }
     </script>
 
     <script type="text/javascript">
@@ -256,4 +262,8 @@
             }
         }
     </script>
+}
+
+@selected(optVersion: Option[BobbyVersion]) = {
+    @optVersion.map(v => if (v.inclusive) "selected" else "").getOrElse("selected")
 }
