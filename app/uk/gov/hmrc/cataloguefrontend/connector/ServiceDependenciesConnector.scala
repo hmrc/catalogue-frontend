@@ -29,11 +29,14 @@ import scala.util.control.NonFatal
 
 sealed trait SlugInfoFlag { def s: String }
 object SlugInfoFlag {
-  case object Latest     extends SlugInfoFlag { val s = "latest"     }
-  case object Production extends SlugInfoFlag { val s = "production" }
-  case object QA         extends SlugInfoFlag { val s = "qa"         }
+  case object Latest          extends SlugInfoFlag { val s = "latest"         }
+  case object Production      extends SlugInfoFlag { val s = "production"     }
+  case object QA              extends SlugInfoFlag { val s = "qa"             }
+  case object Staging         extends SlugInfoFlag { val s = "staging"        }
+  case object Dev             extends SlugInfoFlag { val s = "development"    }
+  case object ExternalTest    extends SlugInfoFlag { val s = "external test"  }
 
-  val values = List(Latest, Production, QA)
+  val values = List(Latest, Production, QA, Staging, Dev, ExternalTest)
 
   def parse(s: String): Option[SlugInfoFlag] =
     values.find(_.s == s)
