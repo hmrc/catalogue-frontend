@@ -9,6 +9,9 @@
 
 ### Setup
 
+Make sure your github token are set up [properly](https://github.com/hmrc/service-configs#setting-up-github-tokens-locally-required-for-viewing-bobby-rules)
+for service-dependency to work properly.
+
 ### Frontend Development
 
 #### Requirements
