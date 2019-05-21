@@ -115,7 +115,7 @@ class ServiceDependenciesConnector @Inject()(
 
   def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] = {
     implicit val r = JDKVersionFormats.jdkFormat
-    http.GET[List[JDKVersion]](url = s"$servicesDependenciesBaseUrl/jdkVersions?flag=$flag")
+    http.GET[List[JDKVersion]](url = s"$servicesDependenciesBaseUrl/jdkVersions?flag=${flag.s}")
   }
 
   private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
