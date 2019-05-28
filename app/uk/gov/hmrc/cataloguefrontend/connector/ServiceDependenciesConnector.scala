@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
+import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.HeaderCarrier
@@ -120,4 +121,11 @@ class ServiceDependenciesConnector @Inject()(
 
   private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
     queryParams.flatMap(param => param._2.map(v => (param._1, v)))
+
+  def getBobbyRuleViolations(flag: SlugInfoFlag)(implicit hc:HeaderCarrier): Future[Map[BobbyRule, Int]] = {
+    implicit val brvr = BobbyRuleViolationCount.reads
+
+    http.GET[Seq[BobbyRuleViolationCount]](url = s"$servicesDependenciesBaseUrl/bobbyViolations?flag=${flag.s}")
+      .map(_.map(br => br.rule -> br.count).toMap)
+  }
 }
