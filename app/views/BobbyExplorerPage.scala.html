@@ -22,54 +22,72 @@
 
 @this(viewMessages: ViewMessages)
 
-@(rules: BobbyRulesView)(implicit request: Request[_])
+@(rules: BobbyRulesView, counts: Map[String, Map[BobbyRule, Int]])(implicit request: Request[_])
 
 @standard_layout(s"Bobby rules") {
     <header>
         <h1>Bobby Rules</h1>
     </header>
-    @bobbyRulesTimeSection(rules.upcoming, "Upcoming")
-    @bobbyRulesTimeSection(rules.active, "Active")
+    @bobbyRulesTimeSection(rules.upcoming, "Upcoming", counts)
+    @bobbyRulesTimeSection(rules.active, "Active", counts)
 }
 
-@bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String) = {
+@bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String, counts:  Map[String, Map[BobbyRule, Int]]) = {
     @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
         <div><h2>@heading</h2></div>
-        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true)
-        @bobbyRulesArtifactTypeSection(rulesByTime.plugins, "Plugin", inclViewSlugsLink = false)
+        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true, counts: Map[String, Map[BobbyRule, Int]])
+        @bobbyRulesArtifactTypeSection(rulesByTime.plugins, "Plugin", inclViewSlugsLink = false, counts: Map[String, Map[BobbyRule, Int]])
     }
 }
 
-@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
+@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean, counts: Map[String, Map[BobbyRule, Int]]) = {
     @if(rulesByArtifactType.nonEmpty) {
         <div>
             <table class="@{artifactType.toLowerCase}-rules table table-striped">
                 <thead>
+
                     <tr>
-                        <th class="col-xs-3">@artifactType</th>
-                        <th class="col-xs-2" colspan="3">Banned Versions</th>
+                        <th colspan="6"></th>
+                        <th colspan="3" style="text-align: center;">Services Affected</th>
+                    </tr>
+
+                    <tr>
+                        <th class="col-xs-3" colspan="1">@artifactType</th>
+                        <th class="col-xs-2" colspan="3"  style="text-align: center">Banned Versions</th>
                         <th class="col-xs-4">Reason</th>
-                        <th class="col-xs-1">Active from</th>
-                        <th class="col-xs-2"></th>
+                        <th class="">Active from</th>
+                        <th class="">Latest</th>
+                        <th class="">QA</th>
+                        <th class="">Prod</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
+                    @rulesByArtifactType.map(rule => bobbyRuleRow(inclViewSlugsLink)(rule,  counts))
                 </tbody>
             </table>
         </div>
     }
 }
 
-@bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
+@bobbyViolationLink(rule: BobbyRule, env: SlugInfoFlag, count: Int) = @{
+   if(count == 0 )
+       <span>0</span>
+   else
+       <a href={DependencyExplorerController.search(flag = env, group = rule.group, artefact = rule.artefact, versionRange = rule.range)}>
+       {count}
+       </a>
+}
+
+
+@bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule, counts: Map[String, Map[BobbyRule, Int]]) = {
     <tr id="rule-@rule.artefact" class="bobby-rule">
         <td>@rule.group:@rule.artefact</td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {
-                    <td data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-right: 0; text-align: right">@lbDescr</td>
-                    <td data-toggle="tooltip" title="@rule.range.range">x</td>
-                    <td data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-left: 0; text-align: left">@upDescr</td>
+                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-right: 0; text-align: right">@lbDescr</td>
+                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range">x</td>
+                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-left: 0; text-align: left">@upDescr</td>
                 }
                 case None => {
                     <td colspan="3">@rule.range.range</td>
@@ -78,8 +96,16 @@
         }
         <td>@rule.reason</td>
         <td>@rule.from</td>
-        <td>@if(inclViewSlugsLink) { <a href="@DependencyExplorerController.search(flag = SlugInfoFlag.Latest, group = rule.group, artefact = rule.artefact, versionRange = rule.range)">Affected slugs</a> }
-        </td>
+        @if(inclViewSlugsLink) {
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest, counts(SlugInfoFlag.Latest.s).getOrElse(rule, 0))</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.QA, counts(SlugInfoFlag.QA.s).getOrElse(rule, 0))</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Production, counts(SlugInfoFlag.Production.s).getOrElse(rule, 0))</td>
+        }else {
+      <td></td>
+      <td></td>
+      <td></td>
+    }
+
     </tr>
 }
 

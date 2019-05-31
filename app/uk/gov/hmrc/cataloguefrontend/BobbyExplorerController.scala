@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.BobbyService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.BobbyExplorerPage
@@ -27,10 +28,24 @@ import scala.concurrent.ExecutionContext
 class BobbyExplorerController @Inject()(
     mcc         : MessagesControllerComponents,
     page        : BobbyExplorerPage,
-    bobbyService: BobbyService
+    bobbyService: BobbyService,
+    serviceDeps : ServiceDependenciesConnector
   )(implicit val ec: ExecutionContext
   ) extends FrontendController(mcc) {
-    def list(): Action[AnyContent] = Action.async { implicit request =>
-      bobbyService.getRules().map(r => Ok(page(r)))
-    }
+
+  def list(): Action[AnyContent] = Action.async { implicit request =>
+    for {
+      rules          <- bobbyService.getRules()
+      countsLatest   <- serviceDeps.getBobbyRuleViolations(SlugInfoFlag.Latest)
+      countsProd     <- serviceDeps.getBobbyRuleViolations(SlugInfoFlag.Production)
+      countsQA       <- serviceDeps.getBobbyRuleViolations(SlugInfoFlag.QA)
+      counts         =  Map( SlugInfoFlag.Latest.s     -> countsLatest
+                            ,SlugInfoFlag.Production.s -> countsProd
+                            ,SlugInfoFlag.QA.s         -> countsQA)
+      response =  Ok(page(rules, counts))
+    } yield response
+
+  }
+
+
 }
