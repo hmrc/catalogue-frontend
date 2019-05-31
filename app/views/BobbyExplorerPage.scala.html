@@ -45,14 +45,20 @@
         <div>
             <table class="@{artifactType.toLowerCase}-rules table table-striped">
                 <thead>
+
                     <tr>
-                        <th class="col-xs-3">@artifactType</th>
-                        <th class="col-xs-2" colspan="3">Banned Versions</th>
+                        <th colspan="6"></th>
+                        <th colspan="3" style="text-align: center;">Services Affected</th>
+                    </tr>
+
+                    <tr>
+                        <th class="col-xs-3" colspan="1">@artifactType</th>
+                        <th class="col-xs-2" colspan="3"  style="text-align: center">Banned Versions</th>
                         <th class="col-xs-4">Reason</th>
-                        <th class="col-xs-2">Active from</th>
+                        <th class="">Active from</th>
                         <th class="">Latest</th>
-                        <th class="">Prod</th>
                         <th class="">QA</th>
+                        <th class="">Prod</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,9 +85,9 @@
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {
-                    <td data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-right: 0; text-align: right">@lbDescr</td>
-                    <td data-toggle="tooltip" title="@rule.range.range">x</td>
-                    <td data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-left: 0; text-align: left">@upDescr</td>
+                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-right: 0; text-align: right">@lbDescr</td>
+                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range">x</td>
+                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-left: 0; text-align: left">@upDescr</td>
                 }
                 case None => {
                     <td colspan="3">@rule.range.range</td>
@@ -91,15 +97,9 @@
         <td>@rule.reason</td>
         <td>@rule.from</td>
         @if(inclViewSlugsLink) {
-            <td>
-                @bobbyViolationLink(rule, SlugInfoFlag.Latest, counts(SlugInfoFlag.Latest.s).getOrElse(rule, 0))
-            </td>
-            <td>
-                @bobbyViolationLink(rule, SlugInfoFlag.Production, counts(SlugInfoFlag.Production.s).getOrElse(rule, 0))
-            </td>
-            <td>
-                @bobbyViolationLink(rule, SlugInfoFlag.QA, counts(SlugInfoFlag.QA.s).getOrElse(rule, 0))
-            </td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest, counts(SlugInfoFlag.Latest.s).getOrElse(rule, 0))</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.QA, counts(SlugInfoFlag.QA.s).getOrElse(rule, 0))</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Production, counts(SlugInfoFlag.Production.s).getOrElse(rule, 0))</td>
         }else {
       <td></td>
       <td></td>
