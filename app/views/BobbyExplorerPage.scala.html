@@ -22,25 +22,25 @@
 
 @this(viewMessages: ViewMessages)
 
-@(rules: BobbyRulesView, counts: Map[String, Map[BobbyRule, Int]])(implicit request: Request[_])
+@(rules: BobbyRulesView, counts: Map[BobbyRule, Map[SlugInfoFlag, Int]])(implicit request: Request[_])
 
 @standard_layout(s"Bobby rules") {
     <header>
         <h1>Bobby Rules</h1>
     </header>
-    @bobbyRulesTimeSection(rules.upcoming, "Upcoming", counts)
-    @bobbyRulesTimeSection(rules.active, "Active", counts)
+    @bobbyRulesTimeSection(rules.upcoming, "Upcoming")
+    @bobbyRulesTimeSection(rules.active  , "Active")
 }
 
-@bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String, counts:  Map[String, Map[BobbyRule, Int]]) = {
+@bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String) = {
     @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
         <div><h2>@heading</h2></div>
-        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true, counts: Map[String, Map[BobbyRule, Int]])
-        @bobbyRulesArtifactTypeSection(rulesByTime.plugins, "Plugin", inclViewSlugsLink = false, counts: Map[String, Map[BobbyRule, Int]])
+        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true )
+        @bobbyRulesArtifactTypeSection(rulesByTime.plugins  , "Plugin" , inclViewSlugsLink = false)
     }
 }
 
-@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean, counts: Map[String, Map[BobbyRule, Int]]) = {
+@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
     @if(rulesByArtifactType.nonEmpty) {
         <div>
             <table class="@{artifactType.toLowerCase}-rules table table-striped">
@@ -62,24 +62,27 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @rulesByArtifactType.map(rule => bobbyRuleRow(inclViewSlugsLink)(rule,  counts))
+                    @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
                 </tbody>
             </table>
         </div>
     }
 }
 
-@bobbyViolationLink(rule: BobbyRule, env: SlugInfoFlag, count: Int) = @{
-   if(count == 0 )
+@bobbyViolationLink(rule: BobbyRule, env: SlugInfoFlag) = {
+  @defining(counts(rule).getOrElse(env, 0)){ count =>
+    @if(count == 0) {
        <span>0</span>
-   else
+    } else {
        <a href={DependencyExplorerController.search(flag = env, group = rule.group, artefact = rule.artefact, versionRange = rule.range)}>
        {count}
        </a>
+    }
+  }
 }
 
 
-@bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule, counts: Map[String, Map[BobbyRule, Int]]) = {
+@bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
     <tr id="rule-@rule.artefact" class="bobby-rule">
         <td>@rule.group:@rule.artefact</td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
@@ -97,9 +100,9 @@
         <td>@rule.reason</td>
         <td>@rule.from</td>
         @if(inclViewSlugsLink) {
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest, counts(SlugInfoFlag.Latest.s).getOrElse(rule, 0))</td>
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.QA, counts(SlugInfoFlag.QA.s).getOrElse(rule, 0))</td>
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.Production, counts(SlugInfoFlag.Production.s).getOrElse(rule, 0))</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest    )</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.QA        )</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Production)</td>
         }else {
       <td></td>
       <td></td>

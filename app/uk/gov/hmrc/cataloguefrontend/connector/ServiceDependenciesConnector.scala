@@ -28,19 +28,19 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-sealed trait SlugInfoFlag { def s: String }
+sealed trait SlugInfoFlag { def asString: String }
 object SlugInfoFlag {
-  case object Latest          extends SlugInfoFlag { val s = "latest"         }
-  case object Production      extends SlugInfoFlag { val s = "production"     }
-  case object QA              extends SlugInfoFlag { val s = "qa"             }
-  case object Staging         extends SlugInfoFlag { val s = "staging"        }
-  case object Dev             extends SlugInfoFlag { val s = "development"    }
-  case object ExternalTest    extends SlugInfoFlag { val s = "external test"  }
+  case object Latest          extends SlugInfoFlag { val asString = "latest"        }
+  case object Production      extends SlugInfoFlag { val asString = "production"    }
+  case object QA              extends SlugInfoFlag { val asString = "qa"            }
+  case object Staging         extends SlugInfoFlag { val asString = "staging"       }
+  case object Dev             extends SlugInfoFlag { val asString = "development"   }
+  case object ExternalTest    extends SlugInfoFlag { val asString = "external test" }
 
   val values = List(Latest, Production, QA, Staging, Dev, ExternalTest)
 
   def parse(s: String): Option[SlugInfoFlag] =
-    values.find(_.s == s)
+    values.find(_.asString == s)
 }
 
 @Singleton
@@ -93,6 +93,9 @@ class ServiceDependenciesConnector @Inject()(
       }
   }
 
+  private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
+    queryParams.flatMap(param => param._2.map((param._1, _)))
+
   def getServicesWithDependency(
       flag        : SlugInfoFlag,
       group       : String,
@@ -103,7 +106,7 @@ class ServiceDependenciesConnector @Inject()(
       .GET[Seq[ServiceWithDependency]](
         s"$servicesDependenciesBaseUrl/serviceDeps",
         queryParams = Seq(
-          "flag"         -> flag.s,
+          "flag"         -> flag.asString,
           "group"        -> group,
           "artefact"     -> artefact,
           "versionRange" -> versionRange.range))
@@ -116,16 +119,12 @@ class ServiceDependenciesConnector @Inject()(
 
   def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] = {
     implicit val r = JDKVersionFormats.jdkFormat
-    http.GET[List[JDKVersion]](url = s"$servicesDependenciesBaseUrl/jdkVersions?flag=${flag.s}")
+    http.GET[List[JDKVersion]](url = s"$servicesDependenciesBaseUrl/jdkVersions?flag=${flag.asString}")
   }
 
-  private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
-    queryParams.flatMap(param => param._2.map(v => (param._1, v)))
-
-  def getBobbyRuleViolations(flag: SlugInfoFlag)(implicit hc:HeaderCarrier): Future[Map[BobbyRule, Int]] = {
-    implicit val brvr = BobbyRuleViolationCount.reads
-
-    http.GET[Seq[BobbyRuleViolationCount]](url = s"$servicesDependenciesBaseUrl/bobbyViolations?flag=${flag.s}")
-      .map(_.map(br => br.rule -> br.count).toMap)
+  def getBobbyRuleViolations(implicit hc:HeaderCarrier): Future[Map[BobbyRule, Map[SlugInfoFlag, Int]]] = {
+    implicit val brvr = BobbyRulesSummary.reads
+    http.GET[BobbyRulesSummary](url = s"$servicesDependenciesBaseUrl/bobbyViolations")
+      .map(_.summary.mapValues(_.mapValues(_.headOption.getOrElse(0))))
   }
 }

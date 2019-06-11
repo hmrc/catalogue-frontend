@@ -53,7 +53,7 @@ class DependencyExplorerController @Inject()(
         flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
       } yield Ok(page(
-            form.fill(SearchForm("", SlugInfoFlag.Latest.s, "", "", ""))
+            form.fill(SearchForm("", SlugInfoFlag.Latest.asString, "", "", ""))
           , teams
           , flags
           , groupArtefacts
@@ -210,5 +210,5 @@ object DependencyExplorerController {
 
   def search(team: String = "", flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange): String =
     uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search() +
-      s"?team=$team&flag=${flag.s}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
+      s"?team=$team&flag=${flag.asString}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
 }
