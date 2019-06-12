@@ -32,12 +32,12 @@ sealed trait SlugInfoFlag { def asString: String }
 object SlugInfoFlag {
   case object Latest          extends SlugInfoFlag { val asString = "latest"        }
   case object Production      extends SlugInfoFlag { val asString = "production"    }
+  case object ExternalTest    extends SlugInfoFlag { val asString = "external test" }
   case object QA              extends SlugInfoFlag { val asString = "qa"            }
   case object Staging         extends SlugInfoFlag { val asString = "staging"       }
   case object Dev             extends SlugInfoFlag { val asString = "development"   }
-  case object ExternalTest    extends SlugInfoFlag { val asString = "external test" }
 
-  val values = List(Latest, Production, QA, Staging, Dev, ExternalTest)
+  val values = List(Latest, Production, ExternalTest, QA, Staging, Dev)
 
   def parse(s: String): Option[SlugInfoFlag] =
     values.find(_.asString == s)
@@ -122,9 +122,14 @@ class ServiceDependenciesConnector @Inject()(
     http.GET[List[JDKVersion]](url = s"$servicesDependenciesBaseUrl/jdkVersions?flag=${flag.asString}")
   }
 
-  def getBobbyRuleViolations(implicit hc:HeaderCarrier): Future[Map[BobbyRule, Map[SlugInfoFlag, Int]]] = {
+  def getBobbyRuleViolations(implicit hc:HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] = {
     implicit val brvr = BobbyRulesSummary.reads
     http.GET[BobbyRulesSummary](url = s"$servicesDependenciesBaseUrl/bobbyViolations")
-      .map(_.summary.mapValues(_.mapValues(_.headOption.getOrElse(0))))
+      .map(_.summary)
+  }
+
+  def getHistoricBobbyRuleViolations(implicit hc:HeaderCarrier): Future[HistoricBobbyRulesSummary] = {
+    implicit val brvr = HistoricBobbyRulesSummary.reads
+    http.GET[HistoricBobbyRulesSummary](url = s"$servicesDependenciesBaseUrl/historicBobbyViolations")
   }
 }

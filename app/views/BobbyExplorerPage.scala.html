@@ -14,15 +14,14 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, BobbyRulesTrendController, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
-@import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
 
 @this(viewMessages: ViewMessages)
 
-@(rules: BobbyRulesView, counts: Map[BobbyRule, Map[SlugInfoFlag, Int]])(implicit request: Request[_])
+@(rules: BobbyRulesView, counts: Map[(BobbyRule, SlugInfoFlag), Int])(implicit request: Request[_])
 
 @standard_layout(s"Bobby rules") {
     <header>
@@ -48,7 +47,7 @@
 
                     <tr>
                         <th colspan="6"></th>
-                        <th colspan="3" style="text-align: center;">Services Affected</th>
+                        <th colspan="4" style="text-align: center;">Services Affected</th>
                     </tr>
 
                     <tr>
@@ -59,6 +58,7 @@
                         <th class="">Latest</th>
                         <th class="">QA</th>
                         <th class="">Prod</th>
+                        <th class=""></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,12 +70,12 @@
 }
 
 @bobbyViolationLink(rule: BobbyRule, env: SlugInfoFlag) = {
-  @defining(counts(rule).getOrElse(env, 0)){ count =>
+  @defining(counts.getOrElse((rule, env), 0)){ count =>
     @if(count == 0) {
        <span>0</span>
     } else {
-       <a href={DependencyExplorerController.search(flag = env, group = rule.group, artefact = rule.artefact, versionRange = rule.range)}>
-       {count}
+       <a href=@DependencyExplorerController.search(flag = env, group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
+       @{count}
        </a>
     }
   }
@@ -103,11 +103,13 @@
             <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest    )</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.QA        )</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.Production)</td>
-        }else {
-      <td></td>
-      <td></td>
-      <td></td>
-    }
+            <td><a href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See trend</a></td>
+        } else {
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        }
 
     </tr>
 }

@@ -90,7 +90,7 @@ class SlugInfoServiceSpec
           JDKVersion("test3", "1.191.1"),
           JDKVersion("test4", "1.121.1"))))
 
-      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.s, Map("1.181.1"-> 2, "1.191.1"->1, "1.121.1" -> 1))
+      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.asString, Map("1.181.1"-> 2, "1.191.1"->1, "1.121.1" -> 1))
     }
 
     "still returns a value when no matches are found for env" in {
@@ -99,7 +99,7 @@ class SlugInfoServiceSpec
       when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
         .thenReturn(Future(List.empty[JDKVersion]))
 
-      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.s, Map.empty[String, Int])
+      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.asString, Map.empty[String, Int])
     }
   }
 
