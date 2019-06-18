@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, BobbyRulesTrendController, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, BobbyRulesTrendController, CatalogueFrontendSwitches, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
@@ -58,7 +58,9 @@
                         <th class="">Latest</th>
                         <th class="">QA</th>
                         <th class="">Prod</th>
-                        <th class=""></th>
+                        @if(CatalogueFrontendSwitches.bobbytrend.isEnabled) {
+                          <th class=""></th>
+                        }
                     </tr>
                 </thead>
                 <tbody>
@@ -103,12 +105,16 @@
             <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest    )</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.QA        )</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.Production)</td>
-            <td><a href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See trend</a></td>
+            @if(CatalogueFrontendSwitches.bobbytrend.isEnabled) {
+              <td><a href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See trend</a></td>
+            }
         } else {
           <td></td>
           <td></td>
           <td></td>
-          <td></td>
+          @if(CatalogueFrontendSwitches.bobbytrend.isEnabled) {
+            <td></td>
+          }
         }
 
     </tr>
