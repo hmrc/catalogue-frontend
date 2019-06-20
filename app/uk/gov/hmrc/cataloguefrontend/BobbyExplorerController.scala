@@ -33,19 +33,12 @@ class BobbyExplorerController @Inject()(
   )(implicit val ec: ExecutionContext
   ) extends FrontendController(mcc) {
 
-  def list(): Action[AnyContent] = Action.async { implicit request =>
-    for {
-      rules          <- bobbyService.getRules()
-      countsLatest   <- serviceDeps.getBobbyRuleViolations(SlugInfoFlag.Latest)
-      countsProd     <- serviceDeps.getBobbyRuleViolations(SlugInfoFlag.Production)
-      countsQA       <- serviceDeps.getBobbyRuleViolations(SlugInfoFlag.QA)
-      counts         =  Map( SlugInfoFlag.Latest.s     -> countsLatest
-                            ,SlugInfoFlag.Production.s -> countsProd
-                            ,SlugInfoFlag.QA.s         -> countsQA)
-      response =  Ok(page(rules, counts))
-    } yield response
-
-  }
-
-
+  def list(): Action[AnyContent] =
+    Action.async { implicit request =>
+      for {
+        rules    <- bobbyService.getRules
+        counts   <- serviceDeps.getBobbyRuleViolations
+        response =  Ok(page(rules, counts))
+      } yield response
+    }
 }

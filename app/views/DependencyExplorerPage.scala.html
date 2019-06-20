@@ -105,7 +105,7 @@
                                 )
                                 @helper.select(
                                     form("flag"),
-                                    helper.options(flags.map(t => (t.s, t.s.capitalize)) :_*),
+                                    helper.options(flags.map(t => (t.asString, t.asString.capitalize)) :_*),
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )

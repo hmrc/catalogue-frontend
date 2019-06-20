@@ -80,7 +80,7 @@ class DependenciesService @Inject()(
     for {
       versions <- serviceDependenciesConnector.getJDKVersions(env)
       counts   =  versions.groupBy(_.version).mapValues(_.length)
-    } yield JDKUsageByEnv(env.s, counts)
+    } yield JDKUsageByEnv(env.asString, counts)
 
 }
 

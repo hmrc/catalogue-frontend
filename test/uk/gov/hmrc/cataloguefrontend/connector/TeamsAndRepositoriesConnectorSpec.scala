@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest._
+import org.scalatest.{BeforeAndAfter, EitherValues, Matchers, OptionValues, WordSpec}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}

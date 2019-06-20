@@ -24,6 +24,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -53,6 +54,9 @@ class UserManagementConnectorSpec
 
   import ExecutionContext.Implicits.global
 
+
+  override implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
+
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()
       .configure(
@@ -68,7 +72,7 @@ class UserManagementConnectorSpec
   describe("User management connector") {
     it("should get the team members from the user-management service") {
       val teamMembers: Seq[TeamMember] =
-        callExternalMockedService("team-chicken", Some("/user-management-response.json")).right.value
+        callExternalMockedService("team-chicken", Some("/user-management-response.json")).futureValue.right.value
 
       teamMembers should have length 2
 
@@ -95,19 +99,19 @@ class UserManagementConnectorSpec
     it("has an empty members array in json") {
 
       val error: UMPError =
-        callExternalMockedService("team-chicken", Some("/user-management-empty-members.json")).left.value
+        callExternalMockedService("team-chicken", Some("/user-management-empty-members.json")).futureValue.left.value
       error should ===(NoData("http://some.ump.com/myTeams/team-chicken?edit"))
     }
 
     it("no members field in json") {
       val error: UMPError =
-        callExternalMockedService("team-chicken", Some("/user-management-no-members.json")).left.value
+        callExternalMockedService("team-chicken", Some("/user-management-no-members.json")).futureValue.left.value
 
       error should ===(NoData("http://some.ump.com/myTeams/team-chicken?edit"))
     }
 
     it("api returns an error code") {
-      val error: UMPError = callExternalMockedService("team-chicken", None, 404).left.value
+      val error: UMPError = callExternalMockedService("team-chicken", None, 404).futureValue.left.value
 
       error should ===(HTTPError(404))
     }
@@ -410,15 +414,12 @@ class UserManagementConnectorSpec
   def callExternalMockedService(
     teamName: String,
     jsonFileNameOpt: Option[String],
-    httpCode: Int = 200): Either[UMPError, Seq[TeamMember]] = {
+    httpCode: Int = 200): Future[Either[UMPError, Seq[TeamMember]]] = {
 
     stubUserManagementEndPoint(GET, httpCode, s"/v2/organisations/teams/$teamName/members", jsonFileNameOpt)
 
-    val errorOrResponse: Either[UMPError, Seq[TeamMember]] = userManagementConnector
+    userManagementConnector
       .getTeamMembersFromUMP(teamName)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-      .futureValue
-    errorOrResponse
-
   }
 
   def stubUserManagementEndPoint(

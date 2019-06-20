@@ -1,0 +1,128 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import java.time.LocalDate
+@import play.twirl.api.Html
+@import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, Team}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyVersion, BobbyVersionRange, GroupArtefacts, ServiceWithDependency}
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.routes
+@import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
+@import uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController
+@import helper._
+
+@this(viewMessages: ViewMessages)
+
+@( form    : Form[_]
+ , allRules: Seq[BobbyRule]
+ , flags   : List[SlugInfoFlag]
+ , data    : Option[Map[SlugInfoFlag, BobbyRulesTrendController.GraphData]]
+ )(
+  implicit request         : Request[_],
+           messagesProvider: MessagesProvider)
+
+@standard_layout("Bobby Rules Trend", "search") {
+    <header>
+        <h1 id="search-service-header">Bobby Rules Trend</h1>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    </header>
+
+    <div id="service-list">
+
+        @if(form.hasGlobalErrors) {
+            <div class="alert alert-error error">
+                <a class="close" data-dismiss="alert">×</a>
+                <ul>
+                    @form.globalErrors.map { error =>
+                        <li>@error.format</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <div class="board">
+            <div class="board__body">
+                @helper.form(
+                    action =  routes.BobbyRulesTrendController.display,
+                    'class -> "form-inline",
+                    'id    -> "bobby-rules-trend-form") {
+
+                    <table class="padded-table">
+                        <tr>
+                            <td style="vertical-align: top;">
+                                @select(
+                                    field     =  form("rules"),
+                                    options   =  allRules.map(r => (s"${r.group}:${r.artefact}:${r.range.range}", s"${r.group}:${r.artefact}:${r.range.range} ${r.reason}")),
+                                    '_label   -> "",
+                                    'multiple -> "multiple"
+                                )
+                            </td>
+
+                            <td valign="bottom">
+                                <button id="search-button" class="btn btn-primary" type="submit">Display</button>
+                            </td>
+                        </tr>
+                    </table>
+                }
+
+                @for(flag <- flags) {
+                  <br/>
+                  <div id="chart_div_@flag" align="center"></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @data match {
+        case None => {}
+        case Some(graphData) => {
+            <script type="text/javascript">
+                function drawCharts() {
+                    @for(flag <- flags) {
+                        @defining(graphData.get(flag)){
+                            case None => {}
+                            case Some(d2) => {
+                                var data = new google.visualization.DataTable();
+                                @for(col <- d2.columns) {
+                                    data.addColumn('@col._1', '@col._2');
+                                }
+                                data.addRows([
+                                    @for(r <- d2.rows) {
+                                        @Html(r.mkString("[", ",", "],"))
+                                    }
+                                ]);
+
+                                var options = {
+                                title   : '@flag.asString.capitalize',
+                                vAxis : { title   : 'Services affected'},
+                                focusTarget: 'category'
+                                };
+                                var chart = new google.visualization.LineChart(document.getElementById('chart_div_@flag'));
+                                chart.draw(data, options);
+                            }
+                        }
+                    }
+                }
+                google.charts.load('current', {'packages': ['line', 'corechart']});
+                google.charts.setOnLoadCallback(drawCharts);
+            </script>
+        }
+    }
+}
+
+@selected(optVersion: Option[BobbyVersion]) = {
+    @optVersion.map(v => if (v.inclusive) "selected" else "").getOrElse("selected")
+}
