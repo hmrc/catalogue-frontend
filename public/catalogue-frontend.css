@@ -12078,3 +12078,12 @@ section span.other-teams-message {
   padding-bottom: 0.5em;
   font-weight: bold;
 }
+
+select {
+  width: 100%;
+}
+
+select option {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
