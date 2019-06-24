@@ -12079,11 +12079,11 @@ section span.other-teams-message {
   font-weight: bold;
 }
 
-select {
+.bobbyrules select {
   width: 100%;
 }
 
-select option {
+.bobbyrules select option {
   overflow: hidden;
   text-overflow: ellipsis;
 }

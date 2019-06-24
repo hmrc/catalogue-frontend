@@ -66,6 +66,7 @@
                                 @select(
                                     field     =  form("rules"),
                                     options   =  allRules.map(r => (s"${r.group}:${r.artefact}:${r.range.range}", s"${r.group}:${r.artefact}:${r.range.range} ${r.reason}")),
+                                    '_class   -> "bobbyrules",
                                     '_label   -> "",
                                     'multiple -> "multiple"
                                 )
