@@ -46,4 +46,10 @@ GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefro
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()
 
-GET        /shuttering/:env                             uk.gov.hmrc.cataloguefrontend.shuttering.ShutterController.allStates(env: String)
+GET        /shuttering-overview/:env                    uk.gov.hmrc.cataloguefrontend.shuttering.ShutterController.allStates(env: String)
+
+GET        /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step1Get(env: Option[String], serviceName: Option[String])
+POST       /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step1Post
+GET        /shuttering/2                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2Get
+POST       /shuttering/2                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2Post
+GET        /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step3Get

@@ -24,19 +24,16 @@ import views.html.shuttering._
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ShutterController @Inject()(
-   mcc: MessagesControllerComponents,
-   shutterStatePage : ShutterStatePage,
-   shutterService: ShutterService)(implicit val ec: ExecutionContext) extends FrontendController(mcc) {
+class ShutterController @Inject()(mcc              : MessagesControllerComponents,
+                                  shutterStatePage : ShutterStatePage,
+                                  shutterService   : ShutterService)(implicit val ec: ExecutionContext)
+  extends FrontendController(mcc) {
 
-  def allStates(env: String): Action[AnyContent] = Action.async { implicit request =>
-
-    for {
-       currentState <- shutterService.findCurrentState()
-       page         =  shutterStatePage(currentState)
-    } yield Ok(page)
-
-  }
-
+    def allStates(env: String): Action[AnyContent] = Action.async { implicit request =>
+      for {
+         currentState <- shutterService.findCurrentState()
+         page         =  shutterStatePage(currentState)
+      } yield Ok(page)
+    }
 
 }

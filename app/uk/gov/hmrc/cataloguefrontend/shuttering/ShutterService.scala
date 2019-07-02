@@ -24,12 +24,31 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val ec: ExecutionContext) {
 
-  def findCurrentState()(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] = {
+  def getShutterStates: Future[Seq[ShutterState]] =
+    Future(Seq(
+        ShutterState(
+            name         = "service-dependencies"
+          , production   = false
+          , staging      = false
+          , qa           = false
+          , externalTest = false
+          , development  = false
+          )
+      , ShutterState(
+            name         = "teams-and-repositories"
+          , production   = false
+          , staging      = false
+          , qa           = false
+          , externalTest = false
+          , development  = false
+          )
+      ))
+
+  def findCurrentState()(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] =
     for {
       events <- shutterConnector.latestShutterEvents()
       sorted =  events.sortBy(_.isShuttered)
     } yield sorted
 
-  }
 
 }

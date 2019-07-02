@@ -27,10 +27,6 @@
       <h1>Shutter Status</h1>
   </header>
 
-  <div class="tiled">
-      @shutterStates.map(shutterGrid)
-  </div>
-
   <div>
       <table class="table table-striped">
           <thead>
@@ -54,18 +50,6 @@
 
 }
 
-@shutterGrid(event: ShutterEvent) = {
-   <div class="tile">
-       <div class="shutter-state">@{event.name}</div>
-       @if(event.isShuttered) {
-           <div class="">Shuttered</div>
-       } else {
-           <div class="">Unshuttered</div>
-       }
-       <div>@{event.date.toLocalDate.toString}</div>
-   </div>
-}
-
 @shutterRow(event: ShutterEvent) = {
   <tr class="shutter-row">
       <td class="shutter-service">
@@ -73,14 +57,13 @@
       </td>
       @{
         if(event.isShuttered) {
-            <td class="shutter-state shutter-shuttered">Shuttered</td>
+            <td class="shutter-shuttered">Shuttered</td>
         } else {
-            <td class="shutter-state shutter-unshuttered">Unshuttered</td>
+            <td class="shutter-unshuttered">Unshuttered</td>
         }
       }
 
-      <td class="shutter-state shutter-state-staging">@{event.user}</td>
-      <td class="shutter-state shutter-state-development">@{event.date}</td>
-
+      <td class="">@{event.user}</td>
+      <td class="">@{event.date}</td>
   </tr>
 }

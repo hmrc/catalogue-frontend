@@ -44,7 +44,7 @@
         </div>
         <div class="board">
             <div class="board__body">
-                <form action="/search" method="post">
+                <form action="@uk.gov.hmrc.cataloguefrontend.routes.SearchByUrlController.searchUrl" method="post">
                     @{
                         play.filters.csrf.CSRF.getToken(request).map { token => CSRF.formField(request) }
                     }

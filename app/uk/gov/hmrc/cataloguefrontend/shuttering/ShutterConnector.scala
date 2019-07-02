@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
+import play.api.libs.json.Reads
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -26,13 +27,14 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class ShutterConnector @Inject()(http: HttpClient, serviceConfig: ServicesConfig)(implicit val ec: ExecutionContext){
+class ShutterConnector @Inject()(http: HttpClient
+                                ,serviceConfig: ServicesConfig)(implicit val ec: ExecutionContext){
 
   private val urlStates: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/states"
   private val urlEvents: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/events"
 
-  private implicit val shutterStateReads = ShutterState.reads
-  private implicit val shutterEventReads = ShutterEvent.reads
+  private implicit val shutterStateReads: Reads[ShutterState] = ShutterState.reads
+  private implicit val shutterEventReads: Reads[ShutterEvent] = ShutterEvent.reads
 
   /**
     * GET
