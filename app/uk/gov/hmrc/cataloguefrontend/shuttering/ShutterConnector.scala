@@ -29,6 +29,7 @@ import scala.util.control.NonFatal
 class ShutterConnector @Inject()(http: HttpClient, serviceConfig: ServicesConfig)(implicit val ec: ExecutionContext){
 
   private val urlStates: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/states"
+  private val urlEvents: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/events"
 
   private implicit val shutterStateReads = ShutterState.reads
   private implicit val shutterEventReads = ShutterEvent.reads
@@ -45,6 +46,20 @@ class ShutterConnector @Inject()(http: HttpClient, serviceConfig: ServicesConfig
         Logger.error(s"An error occurred when connecting to $urlStates: ${ex.getMessage}", ex)
         Seq.empty
     }
+
+
+  /**
+    * GET
+    * ​/shutter-api​/events
+    * Retrieves the current shutter events for all applications in all environments
+    */
+  def latestShutterEvents()(implicit hc: HeaderCarrier): Future[Seq[ShutterEvent]] =
+    http.GET[Seq[ShutterEvent]](url = urlEvents)
+      .recover {
+        case NonFatal(ex) =>
+          Logger.error(s"An error occurred when connecting to $urlEvents: ${ex.getMessage}", ex)
+          Seq.empty
+      }
 
 
   /**

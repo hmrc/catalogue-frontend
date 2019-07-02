@@ -16,11 +16,20 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.http.HeaderCarrier
+
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ShutterService {
+class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val ec: ExecutionContext) {
 
+  def findCurrentState()(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] = {
+    for {
+      events <- shutterConnector.latestShutterEvents()
+      sorted =  events.sortBy(_.isShuttered)
+    } yield sorted
 
+  }
 
 }

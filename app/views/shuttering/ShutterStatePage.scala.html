@@ -15,6 +15,9 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEvent
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+
+@this(viewMessages: ViewMessages)
 
 @(shutterStates: Seq[ShutterEvent])(implicit request: Request[_])
 
@@ -24,15 +27,20 @@
       <h1>Shutter Status</h1>
   </header>
 
+  <div class="tiled">
+      @shutterStates.map(shutterGrid)
+  </div>
+
   <div>
       <table class="table table-striped">
           <thead>
               <tr>
                   <th>Service</th>
-                  <th>Production</th>
-                  <th>Staging</th>
-                  <th>QA</th>
-                  <th>Development</th>
+
+                  <th>Status</th>
+                  <th>Shuttered by</th>
+                  <th>Date</th>
+
               </tr>
           </thead>
 
@@ -46,15 +54,33 @@
 
 }
 
-@shutterRow(state: ShutterEvent) = {
+@shutterGrid(event: ShutterEvent) = {
+   <div class="tile">
+       <div class="shutter-state">@{event.name}</div>
+       @if(event.isShuttered) {
+           <div class="">Shuttered</div>
+       } else {
+           <div class="">Unshuttered</div>
+       }
+       <div>@{event.date.toLocalDate.toString}</div>
+   </div>
+}
+
+@shutterRow(event: ShutterEvent) = {
   <tr class="shutter-row">
       <td class="shutter-service">
-          <a name="@{state}">@{state}</a>
+          <a name="@{event.name}">@{event.name}</a>
       </td>
-      <td class="shutter-state shutter-state-production">@{state}</td>
-      <td class="shutter-state shutter-state-staging">@{state}</td>
-      <td class="shutter-state shutter-state-qa">@{state}</td>
-      <td class="shutter-state shutter-state-development">@{state}</td>
+      @{
+        if(event.isShuttered) {
+            <td class="shutter-state shutter-shuttered">Shuttered</td>
+        } else {
+            <td class="shutter-state shutter-unshuttered">Unshuttered</td>
+        }
+      }
+
+      <td class="shutter-state shutter-state-staging">@{event.user}</td>
+      <td class="shutter-state shutter-state-development">@{event.date}</td>
 
   </tr>
 }

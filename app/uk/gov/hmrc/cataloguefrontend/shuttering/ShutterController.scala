@@ -19,17 +19,23 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import views.html.shuttering._
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class ShutterController @Inject()(
    mcc: MessagesControllerComponents,
+   shutterStatePage : ShutterStatePage,
    shutterService: ShutterService)(implicit val ec: ExecutionContext) extends FrontendController(mcc) {
 
   def allStates(env: String): Action[AnyContent] = Action.async { implicit request =>
 
-    ???
+    for {
+       currentState <- shutterService.findCurrentState()
+       page         =  shutterStatePage(currentState)
+    } yield Ok(page)
+
   }
 
 
