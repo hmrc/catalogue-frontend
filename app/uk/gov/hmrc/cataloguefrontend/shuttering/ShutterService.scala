@@ -16,11 +16,33 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ShutterService {
+class ShutterService @Inject()(
+   )(implicit val ec: ExecutionContext) {
 
+  def getShutterStates: Future[Seq[ShutterState]] =
+    Future(Seq(
+        ShutterState(
+            name         = "service-dependencies"
+          , production   = false
+          , staging      = false
+          , qa           = false
+          , externalTest = false
+          , development  = false
+          )
+      , ShutterState(
+            name         = "teams-and-repositories"
+          , production   = false
+          , staging      = false
+          , qa           = false
+          , externalTest = false
+          , development  = false
+          )
+      ))
 
-
+  def shutterService(serviceName: String, env: String): Future[Unit] =
+    Future(())
 }

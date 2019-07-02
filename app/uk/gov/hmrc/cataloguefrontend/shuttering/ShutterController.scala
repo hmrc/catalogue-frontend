@@ -24,13 +24,14 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class ShutterController @Inject()(
-   mcc: MessagesControllerComponents,
-   shutterService: ShutterService)(implicit val ec: ExecutionContext) extends FrontendController(mcc) {
+     mcc           : MessagesControllerComponents
+   , shutterService: ShutterService
+   )(implicit val ec: ExecutionContext) extends FrontendController(mcc) {
 
+
+  // TODO split Shutter wizard from other controller actions
   def allStates(env: String): Action[AnyContent] = Action.async { implicit request =>
 
     ???
   }
-
-
 }
