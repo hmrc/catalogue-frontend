@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
+import java.time.LocalDateTime
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -44,11 +46,16 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
           )
       ))
 
-  def findCurrentState()(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] =
+  def shutterService(serviceName: String, env: String): Future[Unit] =
+    Future(())
+
+  def findCurrentState()(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] = {
     for {
       events <- shutterConnector.latestShutterEvents()
-      sorted =  events.sortBy(_.isShuttered)
+      sorted = events.sortBy(_.isShuttered)(Ordering[Boolean].reverse)
     } yield sorted
+
+  }
 
 
 }

@@ -16,6 +16,8 @@
 
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEvent
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import java.time.format.DateTimeFormatter
+
 
 @this(viewMessages: ViewMessages)
 
@@ -32,11 +34,10 @@
           <thead>
               <tr>
                   <th>Service</th>
-
                   <th>Status</th>
                   <th>Shuttered by</th>
                   <th>Date</th>
-
+                  <th>Update</th>
               </tr>
           </thead>
 
@@ -51,19 +52,22 @@
 }
 
 @shutterRow(event: ShutterEvent) = {
-  <tr class="shutter-row">
+  <tr class="shutter-row @{if(event.isShuttered) "shuttered" else "unshuttered"}">
       <td class="shutter-service">
-          <a name="@{event.name}">@{event.name}</a>
+         @{event.name}
       </td>
       @{
         if(event.isShuttered) {
-            <td class="shutter-shuttered">Shuttered</td>
+            <td class="shutter-state">Shuttered</td>
         } else {
-            <td class="shutter-unshuttered">Unshuttered</td>
+            <td class="shutter-state">Unshuttered</td>
         }
       }
 
-      <td class="">@{event.user}</td>
-      <td class="">@{event.date}</td>
+      <td class="shutter-user">@{event.user}</td>
+      <td class="shutter-date">@{event.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm"))}</td>
+      <td>
+          <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.name), Some(event.env))">Change Status</a>
+      </td>
   </tr>
 }
