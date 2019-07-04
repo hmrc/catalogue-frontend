@@ -26,13 +26,17 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
+/** Creates an Action will only proceed to invoke the action body, if there is a valid [[UmpToken]] in session.
+  * If there isn't, it will short circuit with a NotFound.
+  *
+  * Use [[VerifySignInStatus]] Action if you want to know if there is a valid token, but it should not terminate invocation.
+  */
 @Singleton
 class UmpAuthenticated @Inject()(
   userManagementAuthConnector: UserManagementAuthConnector,
   cc                         : MessagesControllerComponents
 )(implicit val ec: ExecutionContext)
   extends ActionBuilder[Request, AnyContent] {
-
 
   def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))

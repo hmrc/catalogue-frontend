@@ -25,6 +25,7 @@ import play.api.libs.json.{Format, Json}
 import play.api.mvc.{Action, MessagesControllerComponents, Request, Result, Session}
 import play.twirl.api.Html
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticated
 import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ routes => appRoutes }
 import views.html.shuttering.shutterService.{Page1, Page2, Page3}
@@ -33,48 +34,51 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ShutterServiceController @Inject()(
-     mcc           : MessagesControllerComponents
-   , shutterService: ShutterService
-   , page1         : Page1
-   , page2         : Page2
-   , page3         : Page3
-   )(implicit val ec: ExecutionContext) extends FrontendController(mcc) {
+     mcc             : MessagesControllerComponents
+   , shutterService  : ShutterService
+   , page1           : Page1
+   , page2           : Page2
+   , page3           : Page3
+   , umpAuthenticated: UmpAuthenticated
+   )(implicit val ec : ExecutionContext
+   ) extends FrontendController(mcc)
+        with play.api.i18n.I18nSupport {
 
   import ShutterServiceController._
 
-  private def start(form: Form[ShutterForm])(implicit request: Request[Any], messagesProvider: MessagesProvider): Future[Html] =
+  private def start(form: Form[ShutterForm])(implicit request: Request[Any]): Future[Html] =
     for {
       shutterStates <- shutterService.getShutterStates
       envs          =  Seq(SlugInfoFlag.Production, SlugInfoFlag.ExternalTest, SlugInfoFlag.QA, SlugInfoFlag.Staging, SlugInfoFlag.Dev)
     } yield page1(form, shutterStates, envs)
 
   def step1Get(env: Option[String], serviceName: Option[String]) =
-    Action.async { implicit request =>
+    umpAuthenticated.async { implicit request =>
       start(form.fill(ShutterForm(serviceName = "", env = ""))).map(Ok(_))
     }
 
   def step1Post =
-    Action.async { implicit request =>
+    umpAuthenticated.async { implicit request =>
       form
         .bindFromRequest
         .fold(
             hasErrors = formWithErrors => start(formWithErrors).map(BadRequest(_))
           , success   = data           => Future(
                                             Redirect(appRoutes.ShutterServiceController.step2Get)
-                                              .withSession(toSession(data))
+                                              .withSession(request.session + toSession(data))
                                           )
           )
     }
 
   def step2Get =
-    Action { implicit request =>
+    umpAuthenticated { implicit request =>
       fromSession(request.session)
         .map(sf => Ok(page2(sf)))
         .getOrElse(Redirect(appRoutes.ShutterServiceController.step1Post))
     }
 
   def step2Post =
-    Action.async { implicit request =>
+    umpAuthenticated.async { implicit request =>
       (for {
          sf <- EitherT.fromOption[Future](
                   fromSession(request.session)
@@ -89,9 +93,9 @@ class ShutterServiceController @Inject()(
     }
 
   def step3Get =
-    Action { implicit request =>
+    umpAuthenticated { implicit request =>
       fromSession(request.session)
-        .map(sf => Ok(page3(sf)).withNewSession)
+        .map(sf => Ok(page3(sf)).withSession(request.session - SessionKey))
         .getOrElse(Redirect(appRoutes.ShutterServiceController.step1Post))
     }
 
@@ -105,7 +109,7 @@ class ShutterServiceController @Inject()(
     )
 
   // Forms.nonEmpty, but has no constraint info label
-    def notEmpty = {
+  def notEmpty = {
     import play.api.data.validation._
     Constraint[String]("") { o =>
       if (o == null || o.trim.isEmpty) Invalid(ValidationError("error.required")) else Valid
@@ -119,7 +123,7 @@ object ShutterServiceController {
     , env        : String
     )
 
-  private val SessionKey = "ShutterServiceController"
+  val SessionKey = "ShutterServiceController"
 
   private implicit val shutterFormFormats = Json.format[ShutterForm]
 

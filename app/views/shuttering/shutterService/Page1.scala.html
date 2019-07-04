@@ -55,7 +55,8 @@
           , 'id    -> "shutter-service-form"
           ) {
 
-          @{play.filters.csrf.CSRF.getToken(request).map { token => CSRF.formField(request) }}
+          @CSRF.formField
+          @play.filters.csrf.CSRF.getToken(request).map(_ => CSRF.formField(request))
 
           <table class="padded-table">
             <tr>
