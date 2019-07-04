@@ -38,27 +38,32 @@
       <div class="board__body">
         @helper.form(
             action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step2Post
-          , 'class -> "form-inline"
           , 'id    -> "shutter-service-form"
+          , 'style -> "padding-left: 20px; padding-right: 20px"
           ) {
 
-          @play.filters.csrf.CSRF.getToken(request).map(_ => CSRF.formField(request))
+         @CSRF.formField
 
-          Confirm
-          <table class="padded-table">
+          Please confirm:
+          <br/><br/>
+
+          <table class="padded-table" style="width: 100%">
             <tr>
-              <td style="vertical-align: top;">
-                @shutterForm.serviceName
-              </td>
+              <td>Service:</td>
+              <td>@shutterForm.serviceName</td>
             </tr>
             <tr>
-              <td style="vertical-align: top;">
-                @shutterForm.env
-              </td>
+              <td>Environment:</td>
+              <td>@shutterForm.env</td>
             </tr>
             <tr>
-              <td valign="bottom">
-                <button id="search-button" class="btn btn-primary" type="submit">Confirm</button>
+              <td>State:</td>
+              <td>@shutterForm.state</td>
+            </tr>
+            <tr><td colspan="2">&nbsp;</td></tr>
+            <tr>
+              <td colspan="2" style="text-align:right;">
+                <button id="search-button" class="btn btn-primary" type="submit">Submit</button>
               </td>
             </tr>
           </table>

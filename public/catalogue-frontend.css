@@ -12087,3 +12087,6 @@ section span.other-teams-message {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+#shutter-service-form .error {
+  text-align: left; }

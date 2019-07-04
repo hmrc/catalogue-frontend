@@ -24,6 +24,7 @@
 @( form         : Form[_]
  , shutterStates: Seq[ShutterState]
  , envs         : Seq[SlugInfoFlag]
+ , states       : Seq[String]
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -53,17 +54,17 @@
             action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Post
           , 'class -> "form-inline"
           , 'id    -> "shutter-service-form"
+          , 'style -> "padding-left: 20px; padding-right: 20px"
           ) {
 
           @CSRF.formField
-          @play.filters.csrf.CSRF.getToken(request).map(_ => CSRF.formField(request))
 
-          <table class="padded-table">
+          <table class="padded-table" width="100%">
             <tr>
               <td style="vertical-align: top;">
                 @select(
                     field     =  form("serviceName")
-                  , options   =  shutterStates.map(s => (s.name, s.name))
+                  , options   =  Seq("" -> "Please select") ++ shutterStates.map(s => (s.name, s.name))
                   , '_label   -> "Service"
                   )
               </td>
@@ -72,14 +73,23 @@
               <td style="vertical-align: top;">
                 @select(
                     field     =  form("env")
-                  , options   =  envs.map(s => (s.toString, s.toString))
+                  , options   =  Seq("" -> "Please select") ++ envs.map(s => (s.toString, s.toString))
                   , '_label   -> "Environment"
                   )
               </td>
             </tr>
             <tr>
-              <td valign="bottom">
-                <button id="search-button" class="btn btn-primary" type="submit">Shutter</button>
+              <td style="vertical-align: top;">
+                @select(
+                    field     =  form("state")
+                  , options   =  Seq("" -> "Please select") ++ states.map(s => (s.toString, s.toString))
+                  , '_label   -> "State"
+                  )
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" style="text-align:right;">
+                <button id="search-button" class="btn btn-primary" type="submit">Next</button>
               </td>
             </tr>
           </table>

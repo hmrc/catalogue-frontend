@@ -50,11 +50,16 @@ class ShutterServiceController @Inject()(
     for {
       shutterStates <- shutterService.getShutterStates
       envs          =  Seq(SlugInfoFlag.Production, SlugInfoFlag.ExternalTest, SlugInfoFlag.QA, SlugInfoFlag.Staging, SlugInfoFlag.Dev)
-    } yield page1(form, shutterStates, envs)
+      states        =  Seq("shutter", "unshutter")
+    } yield page1(form, shutterStates, envs, states)
 
   def step1Get(env: Option[String], serviceName: Option[String]) =
     umpAuthenticated.async { implicit request =>
-      start(form.fill(ShutterForm(serviceName = "", env = ""))).map(Ok(_))
+      start(form.fill(ShutterForm(
+          serviceName = serviceName.getOrElse("")
+        , env         = env.getOrElse("")
+        , state       = "" // TODO from shutterStates, set to toggle current value
+        ))).map(Ok(_))
     }
 
   def step1Post =
@@ -105,6 +110,7 @@ class ShutterServiceController @Inject()(
       Forms.mapping(
           "serviceName" -> Forms.text.verifying(notEmpty)
         , "env"         -> Forms.text.verifying(notEmpty)
+        , "state"       -> Forms.text.verifying(notEmpty)
         )(ShutterForm.apply)(ShutterForm.unapply)
     )
 
@@ -121,6 +127,7 @@ object ShutterServiceController {
   case class ShutterForm(
       serviceName: String
     , env        : String
+    , state      : String
     )
 
   val SessionKey = "ShutterServiceController"

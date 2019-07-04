@@ -29,15 +29,15 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
   def getShutterStates: Future[Seq[ShutterState]] =
     Future(Seq(
         ShutterState(
-            name         = "service-dependencies"
-          , production   = false
+            name         = "abc-frontend"
+          , production   = true
           , staging      = false
           , qa           = false
           , externalTest = false
           , development  = false
           )
       , ShutterState(
-            name         = "teams-and-repositories"
+            name         = "zxy-frontend"
           , production   = false
           , staging      = false
           , qa           = false
@@ -49,13 +49,27 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
   def shutterService(serviceName: String, env: String): Future[Unit] =
     Future(())
 
-  def findCurrentState()(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] = {
-    for {
-      events <- shutterConnector.latestShutterEvents()
-      sorted = events.sortBy(_.isShuttered)(Ordering[Boolean].reverse)
-    } yield sorted
-
-  }
+  def findCurrentState()(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] =
+    Future(Seq(
+      ShutterEvent(
+        name = "abc-frontend"
+        ,env  = "production"
+        ,user = "test.user"
+        ,isShuttered = true
+        ,date = LocalDateTime.now().minusDays(2)
+      )
+      ,ShutterEvent(
+        name = "zxy-frontend"
+        ,env  = "production"
+        ,user = "fake.user"
+        ,isShuttered = false
+        ,date = LocalDateTime.now()
+      )
+    ))
+    // for {
+    //   events <- shutterConnector.latestShutterEvents()
+    //   sorted = events.sortBy(_.isShuttered)(Ordering[Boolean].reverse)
+    // } yield sorted
 
 
 }
