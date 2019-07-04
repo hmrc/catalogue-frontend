@@ -15,15 +15,14 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
-@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterState}
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
 @( form         : Form[_]
  , shutterStates: Seq[ShutterState]
- , envs         : Seq[SlugInfoFlag]
+ , envs         : Seq[Environment]
  , states       : Seq[String]
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
@@ -73,7 +72,7 @@
               <td style="vertical-align: top;">
                 @select(
                     field     =  form("env")
-                  , options   =  Seq("" -> "Please select") ++ envs.map(s => (s.toString, s.toString))
+                  , options   =  Seq("" -> "Please select") ++ envs.map(s => (s.asString, s.toString))
                   , '_label   -> "Environment"
                   )
               </td>

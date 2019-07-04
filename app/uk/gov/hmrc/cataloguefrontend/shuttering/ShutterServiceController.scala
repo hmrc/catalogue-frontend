@@ -49,7 +49,7 @@ class ShutterServiceController @Inject()(
   private def start(form: Form[ShutterForm])(implicit request: Request[Any]): Future[Html] =
     for {
       shutterStates <- shutterService.getShutterStates
-      envs          =  Seq(SlugInfoFlag.Production, SlugInfoFlag.ExternalTest, SlugInfoFlag.QA, SlugInfoFlag.Staging, SlugInfoFlag.Dev)
+      envs          =  Environment.values
       states        =  Seq("shutter", "unshutter")
     } yield page1(form, shutterStates, envs, states)
 
@@ -64,15 +64,21 @@ class ShutterServiceController @Inject()(
 
   def step1Post =
     umpAuthenticated.async { implicit request =>
-      form
-        .bindFromRequest
-        .fold(
-            hasErrors = formWithErrors => start(formWithErrors).map(BadRequest(_))
-          , success   = data           => Future(
-                                            Redirect(appRoutes.ShutterServiceController.step2Get)
-                                              .withSession(request.session + toSession(data))
-                                          )
-          )
+      (for {
+         sf      <- form
+                      .bindFromRequest
+                      .fold(
+                          hasErrors = formWithErrors => EitherT.left(start(formWithErrors).map(BadRequest(_)))
+                        , success   = data           => EitherT.pure[Future, Result](data)
+                        )
+         env     <- Environment.parse(sf.env) match {
+                      case Some(env) => EitherT.pure[Future, Result](env)
+                      case None      => EitherT.left(start(form.bindFromRequest).map(BadRequest(_)))
+                    }
+         shutter =  Shutter(sf.serviceName, env, sf.state)
+       } yield Redirect(appRoutes.ShutterServiceController.step2Get)
+                .withSession(request.session + toSession(shutter))
+      ).merge
     }
 
   def step2Get =
@@ -85,14 +91,14 @@ class ShutterServiceController @Inject()(
   def step2Post =
     umpAuthenticated.async { implicit request =>
       (for {
-         sf <- EitherT.fromOption[Future](
-                  fromSession(request.session)
-                , Redirect(appRoutes.ShutterServiceController.step1Post)
-                )
-         _  <- EitherT.right[Result] {
-                 shutterService
-                   .shutterService(sf.serviceName, sf.env)
-               }
+         shutter <- EitherT.fromOption[Future](
+                        fromSession(request.session)
+                      , Redirect(appRoutes.ShutterServiceController.step1Post)
+                      )
+         _       <- EitherT.right[Result] {
+                        shutterService
+                          .shutterService(shutter.serviceName, shutter.env)
+                      }
        } yield Redirect(appRoutes.ShutterServiceController.step3Get)
       ).merge
     }
@@ -100,7 +106,7 @@ class ShutterServiceController @Inject()(
   def step3Get =
     umpAuthenticated { implicit request =>
       fromSession(request.session)
-        .map(sf => Ok(page3(sf)).withSession(request.session - SessionKey))
+        .map(shutter => Ok(page3(shutter)).withSession(request.session - SessionKey))
         .getOrElse(Redirect(appRoutes.ShutterServiceController.step1Post))
     }
 
@@ -130,16 +136,25 @@ object ShutterServiceController {
     , state      : String
     )
 
+  case class Shutter(
+      serviceName: String
+    , env        : Environment
+    , state      : String
+    )
+
   val SessionKey = "ShutterServiceController"
 
-  private implicit val shutterFormFormats = Json.format[ShutterForm]
+    private implicit val shutterFormats = {
+      implicit val environmentFormats = Environment.format
+      Json.format[Shutter]
+    }
 
-  def toSession(sf: ShutterForm): (String, String) =
-    (SessionKey -> Json.stringify(Json.toJson(sf)(shutterFormFormats)))
+  def toSession(sf: Shutter): (String, String) =
+    (SessionKey -> Json.stringify(Json.toJson(sf)(shutterFormats)))
 
-  def fromSession(session: Session): Option[ShutterForm] =
+  def fromSession(session: Session): Option[Shutter] =
     for {
       js <- session.get(SessionKey)
-      sf <- Json.parse(js).asOpt[ShutterForm]
+      sf <- Json.parse(js).asOpt[Shutter]
     } yield sf
 }

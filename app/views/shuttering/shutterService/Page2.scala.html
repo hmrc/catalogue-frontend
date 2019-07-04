@@ -21,7 +21,7 @@
 
 @this(viewMessages: ViewMessages)
 
-@( shutterForm: ShutterServiceController.ShutterForm
+@( shutter: ShutterServiceController.Shutter
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -42,7 +42,7 @@
           , 'style -> "padding-left: 20px; padding-right: 20px"
           ) {
 
-         @CSRF.formField
+          @CSRF.formField
 
           Please confirm:
           <br/><br/>
@@ -50,15 +50,15 @@
           <table class="padded-table" style="width: 100%">
             <tr>
               <td>Service:</td>
-              <td>@shutterForm.serviceName</td>
+              <td>@shutter.serviceName</td>
             </tr>
             <tr>
               <td>Environment:</td>
-              <td>@shutterForm.env</td>
+              <td>@shutter.env</td>
             </tr>
             <tr>
               <td>State:</td>
-              <td>@shutterForm.state</td>
+              <td>@shutter.state</td>
             </tr>
             <tr><td colspan="2">&nbsp;</td></tr>
             <tr>

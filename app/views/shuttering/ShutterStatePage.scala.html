@@ -67,7 +67,7 @@
       <td class="shutter-user">@{event.user}</td>
       <td class="shutter-date">@{event.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm"))}</td>
       <td>
-          <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.env), Some(event.name))">Change Status</a>
+          <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.env.asString), Some(event.name))">Change Status</a>
       </td>
   </tr>
 }

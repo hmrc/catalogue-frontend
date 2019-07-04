@@ -17,21 +17,61 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import java.time.LocalDateTime
-import play.api.libs.json.{Json, Reads, __}
+import play.api.libs.json.{Format, Json, JsError, JsValue, JsString, JsSuccess, Reads, __}
 import play.api.libs.functional.syntax._
 
 
+sealed trait Environment { def asString: String }
+object Environment {
+  case object Production      extends Environment { val asString = "production"    }
+  case object ExternalTest    extends Environment { val asString = "external test" }
+  case object QA              extends Environment { val asString = "qa"            }
+  case object Staging         extends Environment { val asString = "staging"       }
+  case object Dev             extends Environment { val asString = "development"   }
+
+  val values = List(Production, ExternalTest, QA, Staging, Dev)
+
+  def parse(s: String): Option[Environment] =
+    values.find(_.asString == s)
+
+  val reads = Reads[Environment] {
+    _.validate[String]
+     .flatMap { s =>
+        Environment.parse(s) match {
+          case Some(env) => JsSuccess(env)
+          case None      => JsError(__, s"Invalid Environment '$s'")
+        }
+      }
+  }
+  val format: Format[Environment] = new Format[Environment] {
+    override def reads(json: JsValue) =
+      json.validate[String]
+        .flatMap { s =>
+            Environment.parse(s) match {
+              case Some(env) => JsSuccess(env)
+              case None      => JsError(__, s"Invalid Environment '$s'")
+            }
+          }
+
+    override def writes(e: Environment) =
+      JsString(e.asString)
+  }
+}
+
+
+
 case class ShutterState(
-   name: String
-  ,production:  Boolean
-  ,staging:     Boolean
-  ,qa:          Boolean
-  ,externalTest:Boolean
-  ,development: Boolean)
+    name        : String
+  , production  : Boolean
+  , staging     : Boolean
+  , qa          : Boolean
+  , externalTest: Boolean
+  , development : Boolean
+  )
 
 object ShutterState {
 
-  val reads: Reads[ShutterState] = {
+  val reads: Reads[ShutterState] =
     ( (__ \ "name"        ).read[String]
     ~ (__ \ "production"  ).read[Boolean]
     ~ (__ \ "staging"     ).read[Boolean]
@@ -39,21 +79,26 @@ object ShutterState {
     ~ (__ \ "externalTest").read[Boolean]
     ~ (__ \ "development" ).read[Boolean]
     )(ShutterState.apply _)
-  }
 }
 
 
-case class ShutterEvent(name: String, env: String, user: String, date: LocalDateTime, isShuttered: Boolean)
+case class ShutterEvent(
+    name       : String
+  , env        : Environment
+  , user       : String
+  , date       : LocalDateTime
+  , isShuttered: Boolean
+  )
 
 object ShutterEvent {
 
-  val  reads: Reads[ShutterEvent] = {
+  val reads: Reads[ShutterEvent] = {
+    implicit val er = Environment.reads
     ( (__ \ "name"       ).read[String]
-    ~ (__ \ "env"        ).read[String]
+    ~ (__ \ "env"        ).read[Environment]
     ~ (__ \ "user"       ).read[String]
     ~ (__ \ "date"       ).read[LocalDateTime]
     ~ (__ \ "isShuttered").read[Boolean]
     )(ShutterEvent.apply _)
   }
-
 }

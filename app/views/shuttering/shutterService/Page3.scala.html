@@ -21,7 +21,7 @@
 
 @this(viewMessages: ViewMessages)
 
-@( shutterForm: ShutterServiceController.ShutterForm
+@( shutter: ShutterServiceController.Shutter
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -36,7 +36,7 @@
 
     <div class="board">
       <div class="board__body">
-        Service @shutterForm.serviceName in @shutterForm.env has been set to @shutterForm.state
+        Service @shutter.serviceName in @shutter.env has been set to @shutter.state
       </div>
     </div>
 

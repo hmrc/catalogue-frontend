@@ -46,26 +46,26 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
           )
       ))
 
-  def shutterService(serviceName: String, env: String): Future[Unit] =
+  def shutterService(serviceName: String, env: Environment): Future[Unit] =
     Future(())
 
   def findCurrentState()(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] =
     Future(Seq(
-      ShutterEvent(
-        name = "abc-frontend"
-        ,env  = "production"
-        ,user = "test.user"
-        ,isShuttered = true
-        ,date = LocalDateTime.now().minusDays(2)
-      )
-      ,ShutterEvent(
-        name = "zxy-frontend"
-        ,env  = "production"
-        ,user = "fake.user"
-        ,isShuttered = false
-        ,date = LocalDateTime.now()
-      )
-    ))
+        ShutterEvent(
+            name        = "abc-frontend"
+          , env         = Environment.Production
+          , user        = "test.user"
+          , isShuttered = true
+          , date        = LocalDateTime.now().minusDays(2)
+          )
+      , ShutterEvent(
+            name        = "zxy-frontend"
+          , env         = Environment.Production
+          , user        = "fake.user"
+          , isShuttered = false
+          , date        = LocalDateTime.now()
+          )
+      ))
     // for {
     //   events <- shutterConnector.latestShutterEvents()
     //   sorted = events.sortBy(_.isShuttered)(Ordering[Boolean].reverse)
