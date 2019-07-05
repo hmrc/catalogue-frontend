@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import java.time.LocalDateTime
@@ -15,28 +31,28 @@ import scala.concurrent.duration.Duration
 class ShutterServiceSpec extends FlatSpec with MockitoSugar with Matchers {
 
   val mockEvents = Seq(
-    ShutterEvent(
-       name = "abc-frontend"
-      ,env  = "production"
-      ,user = "test.user"
-      ,isShuttered = true
-      ,date = LocalDateTime.now().minusDays(2)
+      ShutterEvent(
+          name = "abc-frontend"
+        , env  = Environment.Production
+        , user = "test.user"
+        , isShuttered = true
+        , date = LocalDateTime.now().minusDays(2)
+        )
+    , ShutterEvent(
+          name = "zxy-frontend"
+        , env  = Environment.Production
+        , user = "fake.user"
+        , isShuttered = false
+        , date = LocalDateTime.now()
+        )
+    , ShutterEvent(
+          name = "ijk-frontend"
+        , env  = Environment.Production
+        , user = "test.user"
+        , isShuttered = true
+        , date = LocalDateTime.now().minusDays(1)
+        )
     )
-    ,ShutterEvent(
-       name = "zxy-frontend"
-      ,env  = "production"
-      ,user = "fake.user"
-      ,isShuttered = false
-      ,date = LocalDateTime.now()
-    )
-    ,ShutterEvent(
-      name = "ijk-frontend"
-      ,env  = "production"
-      ,user = "test.user"
-      ,isShuttered = true
-      ,date = LocalDateTime.now().minusDays(1)
-    )
-  )
 
   "findCurrentState" should "return a list of shutter events ordered by shutter status" in {
 

@@ -144,10 +144,10 @@ object ShutterServiceController {
 
   val SessionKey = "ShutterServiceController"
 
-    private implicit val shutterFormats = {
-      implicit val environmentFormats = Environment.format
-      Json.format[Shutter]
-    }
+  private implicit val shutterFormats = {
+    implicit val environmentFormats = Environment.format
+    Json.format[Shutter]
+  }
 
   def toSession(sf: Shutter): (String, String) =
     (SessionKey -> Json.stringify(Json.toJson(sf)(shutterFormats)))

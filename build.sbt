@@ -24,7 +24,7 @@ val compile = Seq(
   "uk.gov.hmrc"               %% "simple-reactivemongo" % "7.20.0-play-26",
   "uk.gov.hmrc"               %% "bootstrap-play-26"    % bootstrapPlayVersion,
   "uk.gov.hmrc"               %% "url-builder"          % "1.1.0",
-  "org.typelevel"             %% "cats-core"            % "1.1.0",
+  "org.typelevel"             %% "cats-core"            % "1.6.1",
   "org.apache.httpcomponents" %  "httpcore"             % "4.3.2",
   "org.yaml"                  %  "snakeyaml"            % "1.17",
   "org.apache.httpcomponents" %  "httpclient"           % "4.3.5",
@@ -49,3 +49,5 @@ val test = Seq(
   "xerces"                 %  "xercesImpl"         % "2.12.0"             % Test,
   ws
 )
+
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")

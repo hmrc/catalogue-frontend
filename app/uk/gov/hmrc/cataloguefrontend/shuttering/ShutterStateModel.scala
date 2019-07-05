@@ -34,15 +34,6 @@ object Environment {
   def parse(s: String): Option[Environment] =
     values.find(_.asString == s)
 
-  val reads = Reads[Environment] {
-    _.validate[String]
-     .flatMap { s =>
-        Environment.parse(s) match {
-          case Some(env) => JsSuccess(env)
-          case None      => JsError(__, s"Invalid Environment '$s'")
-        }
-      }
-  }
   val format: Format[Environment] = new Format[Environment] {
     override def reads(json: JsValue) =
       json.validate[String]
@@ -93,7 +84,7 @@ case class ShutterEvent(
 object ShutterEvent {
 
   val reads: Reads[ShutterEvent] = {
-    implicit val er = Environment.reads
+    implicit val ef = Environment.format
     ( (__ \ "name"       ).read[String]
     ~ (__ \ "env"        ).read[Environment]
     ~ (__ \ "user"       ).read[String]

@@ -16,8 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.actions
 
+import cats.data.OptionT
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
+import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -27,7 +30,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Creates an Action will only proceed to invoke the action body, if there is a valid [[UmpToken]] in session.
-  * If there isn't, it will short circuit with a NotFound.
+  * If there isn't, it will short circuit with a Redirect to SignIn page.
   *
   * Use [[VerifySignInStatus]] Action if you want to know if there is a valid token, but it should not terminate invocation.
   */
@@ -41,16 +44,12 @@ class UmpAuthenticated @Inject()(
   def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
 
-    request.session.get(UmpToken.SESSION_KEY_NAME) match {
-      case Some(token) =>
-        userManagementAuthConnector.isValid(UmpToken(token)).flatMap {
-          case true  => block(request)
-          case false => Future.successful(NotFound)
-        }
-
-      case None =>
-        Future.successful(NotFound)
-    }
+    OptionT(
+        request.session.get(UmpToken.SESSION_KEY_NAME)
+          .filterA(token => userManagementAuthConnector.isValid(UmpToken(token)))
+      )
+      .semiflatMap(_ => block(request))
+      .getOrElse(Redirect(appRoutes.AuthController.showSignInPage))
   }
 
   override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
