@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.data.Form
-import play.api.data.Forms._
+import play.api.data.Forms
 import play.api.i18n.Messages
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
@@ -37,17 +37,18 @@ class AuthController @Inject()(
   mcc: MessagesControllerComponents)(implicit ec: ExecutionContext)
     extends FrontendController(mcc) {
 
-  import AuthController.signinForm
+  import AuthController._
 
   private[this] val selfServiceUrl = configuration.get[String]("self-service-url")
 
-  val showSignInPage: Action[AnyContent] = Action { implicit request =>
-    Ok(sign_in(signinForm, selfServiceUrl))
-  }
+  def showSignInPage(targetUrl: Option[String]): Action[AnyContent] =
+    Action { implicit request =>
+      Ok(sign_in(signinForm.fill(SignInData(username = "", password = "", targetUrl = targetUrl)), selfServiceUrl))
+    }
 
   val submit: Action[AnyContent] = Action.async { implicit request =>
-    signinForm
-      .bindFromRequest()
+    val filledForm = signinForm.bindFromRequest
+    filledForm
       .fold(
         formWithErrors => Future.successful(BadRequest(sign_in(formWithErrors, selfServiceUrl))),
         signInData =>
@@ -55,13 +56,14 @@ class AuthController @Inject()(
             .authenticate(signInData.username, signInData.password)
             .map {
               case Right(TokenAndDisplayName(UmpToken(token), DisplayName(displayName))) =>
-                Redirect(routes.CatalogueController.index())
+                val targetUrl = signInData.targetUrl.getOrElse(routes.CatalogueController.index.url)
+                Redirect(targetUrl)
                   .withSession(
-                    UmpToken.SESSION_KEY_NAME    -> token,
-                    DisplayName.SESSION_KEY_NAME -> displayName
-                  )
+                      UmpToken.SESSION_KEY_NAME    -> token
+                    , DisplayName.SESSION_KEY_NAME -> displayName
+                    )
               case Left(_) =>
-                BadRequest(sign_in(signinForm.withGlobalError(Messages("sign-in.wrong-credentials")), selfServiceUrl))
+                BadRequest(sign_in(filledForm.withGlobalError(Messages("sign-in.wrong-credentials")), selfServiceUrl))
           }
       )
   }
@@ -76,20 +78,21 @@ class AuthController @Inject()(
 object AuthController {
 
   final case class SignInData(
-    username: String,
-    password: String
-  )
+      username : String
+    , password : String
+    , targetUrl: Option[String]
+    )
 
   private val signinForm =
     Form(
-      mapping(
-        "username" -> text,
-        "password" -> text
-      )(SignInData.apply)(SignInData.unapply)
-        .verifying(
-          "sign-in.wrong-credentials",
-          signInData => signInData.username.nonEmpty && signInData.password.nonEmpty
-        )
+      Forms.mapping(
+          "username"  -> Forms.text
+        , "password"  -> Forms.text
+        , "targetUrl" -> Forms.optional(Forms.text)
+        )(SignInData.apply)(SignInData.unapply)
+          .verifying(
+            "sign-in.wrong-credentials",
+            signInData => signInData.username.nonEmpty && signInData.password.nonEmpty
+          )
     )
-
 }

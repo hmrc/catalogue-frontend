@@ -43,13 +43,12 @@ class UmpAuthenticated @Inject()(
 
   def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
-
     OptionT(
         request.session.get(UmpToken.SESSION_KEY_NAME)
           .filterA(token => userManagementAuthConnector.isValid(UmpToken(token)))
       )
       .semiflatMap(_ => block(request))
-      .getOrElse(Redirect(appRoutes.AuthController.showSignInPage))
+      .getOrElse(Redirect(appRoutes.AuthController.showSignInPage(targetUrl = Some(request.target.uriString))))
   }
 
   override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
