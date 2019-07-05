@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, IsShuttered, ShutterState}
 @import helper._
 
 @this(viewMessages: ViewMessages)
@@ -23,7 +23,7 @@
 @( form         : Form[_]
  , shutterStates: Seq[ShutterState]
  , envs         : Seq[Environment]
- , states       : Seq[String]
+ , states       : Seq[IsShuttered]
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -81,7 +81,10 @@
               <td style="vertical-align: top;">
                 @select(
                     field     =  form("state")
-                  , options   =  Seq("" -> "Please select") ++ states.map(s => (s.toString, s.toString))
+                  , options   =  Seq("" -> "Please select") ++ states.map {
+                                    case IsShuttered.True  => (IsShuttered.True .asString, "Shutter"  )
+                                    case IsShuttered.False => (IsShuttered.False.asString, "Unshutter")
+                                 }
                   , '_label   -> "State"
                   )
               </td>

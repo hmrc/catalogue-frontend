@@ -30,19 +30,19 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
     Future(Seq(
         ShutterState(
             name         = "abc-frontend"
-          , production   = true
-          , staging      = false
-          , qa           = false
-          , externalTest = false
-          , development  = false
+          , production   = IsShuttered.True
+          , staging      = IsShuttered.False
+          , qa           = IsShuttered.False
+          , externalTest = IsShuttered.False
+          , development  = IsShuttered.False
           )
       , ShutterState(
             name         = "zxy-frontend"
-          , production   = false
-          , staging      = false
-          , qa           = false
-          , externalTest = false
-          , development  = false
+          , production   = IsShuttered.False
+          , staging      = IsShuttered.False
+          , qa           = IsShuttered.False
+          , externalTest = IsShuttered.False
+          , development  = IsShuttered.False
           )
       ))
 
@@ -55,14 +55,14 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
             name        = "abc-frontend"
           , env         = Environment.Production
           , user        = "test.user"
-          , isShuttered = true
+          , isShuttered = IsShuttered.True
           , date        = LocalDateTime.now().minusDays(2)
           )
       , ShutterEvent(
             name        = "zxy-frontend"
           , env         = Environment.Production
           , user        = "fake.user"
-          , isShuttered = false
+          , isShuttered = IsShuttered.False
           , date        = LocalDateTime.now()
           )
       ))

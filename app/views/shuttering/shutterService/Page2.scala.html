@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterServiceController, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{IsShuttered, ShutterServiceController, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import helper._
 
@@ -44,21 +44,21 @@
 
           @CSRF.formField
 
-          Please confirm:
-          <br/><br/>
+          <div class="alert alert-danger" role="alert">
+            You are about to <b>@valueFor(shutter.state)</b> the following services in <b>@shutter.env</b>:
+          </div>
 
           <table class="padded-table" style="width: 100%">
             <tr>
-              <td>Service:</td>
-              <td>@shutter.serviceName</td>
+              <td>
+                <ul style="list-style: disc;">
+                  <li>@shutter.serviceName</li>
+                </ul>
+              </td>
             </tr>
+            <tr><td colspan="2">&nbsp;</td></tr>
             <tr>
-              <td>Environment:</td>
-              <td>@shutter.env</td>
-            </tr>
-            <tr>
-              <td>State:</td>
-              <td>@shutter.state</td>
+              <td>Please check this is correct before continuing. It will affect users.</td>
             </tr>
             <tr><td colspan="2">&nbsp;</td></tr>
             <tr>
@@ -74,4 +74,11 @@
 
   </div>
 
+}
+
+@valueFor(isShuttered: IsShuttered) = {
+  @isShuttered match {
+    case IsShuttered.True  => { Shutter   }
+    case IsShuttered.False => { Unshutter }
+  }
 }
