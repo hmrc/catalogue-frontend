@@ -49,18 +49,18 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
   def shutterService(serviceName: String, env: Environment): Future[Unit] =
     Future(())
 
-  def findCurrentState()(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] =
+  def findCurrentState(env: Environment)(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] =
     Future(Seq(
         ShutterEvent(
             name        = "abc-frontend"
-          , env         = Environment.Production
+          , env         = env
           , user        = "test.user"
           , isShuttered = IsShuttered.True
           , date        = LocalDateTime.now().minusDays(2)
           )
       , ShutterEvent(
             name        = "zxy-frontend"
-          , env         = Environment.Production
+          , env         = env
           , user        = "fake.user"
           , isShuttered = IsShuttered.False
           , date        = LocalDateTime.now()

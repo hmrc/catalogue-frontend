@@ -17,19 +17,35 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{IsShuttered, ShutterEvent}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import java.time.format.DateTimeFormatter
-
-
+@import uk.gov.hmrc.cataloguefrontend.shuttering.Environment
 @this(viewMessages: ViewMessages)
 
-@(shutterStates: Seq[ShutterEvent])(implicit request: Request[_])
+@(shutterStates: Seq[ShutterEvent],  selectedEnv: Environment)(implicit request: Request[_])
 
-@standard_layout(s"Shutter Status") {
+@standard_layout(s"Shutter Status: ${selectedEnv.asString}") {
 
   <header>
-      <h1>Shutter Status</h1>
+      <h1>Shutter Status: @selectedEnv.toString</h1>
+
+      @if(selectedEnv == Environment.Production) {
+          <div class="alert alert-danger">
+                  <!-- TODO: write a better message -->
+              <strong>This is the control page for PRODUCTION. Be careful!</strong>
+          </div>
+      }
   </header>
 
-  <div>
+  <section>
+
+    <div class="row">
+      <ul id="environment" class="nav nav-tabs">
+          @Environment.values.map(envOption)
+      </ul>
+  </div>
+
+  <div class="row tabs-bottom">
+
+
       <table class="table table-striped">
           <thead>
               <tr>
@@ -48,13 +64,20 @@
       </table>
 
   </div>
+  </section>
 
+}
+
+@envOption(env: Environment) = {
+  <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterController.allStates(env.asString)" class="navbar-link">@env.toString</a>
+  </li>
 }
 
 @valueFor(isShuttered: IsShuttered) = {
   @isShuttered match {
-    case IsShuttered.True  => { Shuttered   }
-    case IsShuttered.False => { Unshuttered }
+    case IsShuttered.True  => { Shutter   }
+    case IsShuttered.False => { Unshutter }
   }
 }
 
@@ -68,11 +91,13 @@
 @shutterRow(event: ShutterEvent) = {
   <tr class="shutter-row @classFor(event.isShuttered)">
       <td class="shutter-service">@event.name</td>
-      <td class="shutter-state">@valueFor(event.isShuttered)</td>
+      <td class="shutter-state">@{valueFor(event.isShuttered)}</td>
       <td class="shutter-user">@event.user</td>
       <td class="shutter-date">@event.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm"))</td>
       <td>
-          <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.env.asString), Some(event.name))">Change Status</a>
+          <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.env.asString), Some(event.name))">
+          @valueFor(event.isShuttered)
+          </a>
       </td>
   </tr>
 }

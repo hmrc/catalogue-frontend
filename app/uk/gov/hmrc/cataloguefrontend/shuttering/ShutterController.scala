@@ -21,7 +21,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ShutterController @Inject()(mcc              : MessagesControllerComponents,
@@ -29,11 +29,14 @@ class ShutterController @Inject()(mcc              : MessagesControllerComponent
                                   shutterService   : ShutterService)(implicit val ec: ExecutionContext)
   extends FrontendController(mcc) {
 
-    def allStates(env: String): Action[AnyContent] = Action.async { implicit request =>
-      for {
-         currentState <- shutterService.findCurrentState()
-         page         =  shutterStatePage(currentState)
-      } yield Ok(page)
+    def allStates(envParam: String): Action[AnyContent] = Action.async { implicit request =>
+      Environment.parse(envParam) match {
+        case None      => Future.successful(BadRequest(s"Unknown environment: $envParam"))
+        case Some(env) => for {
+          currentState  <- shutterService.findCurrentState(env)
+          page          =  shutterStatePage(currentState, env)
+        } yield Ok(page)
+      }
     }
 
 }
