@@ -52,7 +52,9 @@
             <tr>
               <td>
                 <ul style="list-style: disc;">
-                  <li>@shutter.serviceName</li>
+                  @shutter.serviceNames.map { serviceName =>
+                    <li>@serviceName</li>
+                  }
                 </ul>
               </td>
             </tr>

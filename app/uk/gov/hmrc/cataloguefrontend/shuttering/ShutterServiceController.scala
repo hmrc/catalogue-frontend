@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import cats.data.EitherT
 import cats.instances.all._
+import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.i18n.MessagesProvider
@@ -59,17 +60,17 @@ class ShutterServiceController @Inject()(
       shutterStates <- shutterService.getShutterStates
       shutter       =  if (serviceName.isDefined || env.isDefined) {
                           ShutterForm(
-                              serviceName = serviceName.getOrElse("")
-                            , env         = env.getOrElse("")
-                            , state       = stateFor(shutterStates)(serviceName, env).fold("")(_.asString)
+                              serviceNames = serviceName.toSeq
+                            , env          = env.getOrElse("")
+                            , state        = stateFor(shutterStates)(serviceName, env).fold("")(_.asString)
                             )
                         } else fromSession(request.session) match {
                           case Some(shutter) => ShutterForm(
-                                                    serviceName = shutter.serviceName
-                                                  , env         = shutter.env.asString
-                                                  , state       = shutter.state.asString
+                                                    serviceNames = shutter.serviceNames
+                                                  , env          = shutter.env.asString
+                                                  , state        = shutter.state.asString
                                                   )
-                          case None          => ShutterForm(serviceName = "", env = "", state = "")
+                          case None          => ShutterForm(serviceNames = Seq.empty, env = "", state = "")
                         }
       html          <- start(form.fill(shutter)).map(Ok(_))
     } yield html
@@ -103,7 +104,7 @@ class ShutterServiceController @Inject()(
                       case Some(state) => EitherT.pure[Future, Result](state)
                       case None        => EitherT.left(start(form.bindFromRequest).map(BadRequest(_)))
                     }
-         shutter =  Shutter(sf.serviceName, env, state)
+         shutter =  Shutter(sf.serviceNames, env, state)
        } yield Redirect(appRoutes.ShutterServiceController.step2Get)
                 .withSession(request.session + toSession(shutter))
       ).merge
@@ -123,10 +124,12 @@ class ShutterServiceController @Inject()(
                         fromSession(request.session)
                       , Redirect(appRoutes.ShutterServiceController.step1Post)
                       )
-         _       <- EitherT.right[Result] {
+         _       <- shutter.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
+                      EitherT.right[Result] {
                         shutterService
-                          .shutterService(shutter.serviceName, shutter.env)
+                          .shutterService(serviceName, shutter.env)
                       }
+                    }
        } yield Redirect(appRoutes.ShutterServiceController.step3Get)
       ).merge
     }
@@ -142,7 +145,7 @@ class ShutterServiceController @Inject()(
   def form(implicit messagesProvider: MessagesProvider) =
     Form(
       Forms.mapping(
-          "serviceName" -> Forms.text.verifying(notEmpty)
+          "serviceName" -> Forms.seq(Forms.text).verifying(notEmptySeq)
         , "env"         -> Forms.text.verifying(notEmpty)
         , "state"       -> Forms.text.verifying(notEmpty)
         )(ShutterForm.apply)(ShutterForm.unapply)
@@ -155,19 +158,26 @@ class ShutterServiceController @Inject()(
       if (o == null || o.trim.isEmpty) Invalid(ValidationError("error.required")) else Valid
     }
   }
+
+  def notEmptySeq = {
+    import play.api.data.validation._
+    Constraint[Seq[String]]("") { o =>
+      if (o == null || o.isEmpty) Invalid(ValidationError("error.required")) else Valid
+    }
+  }
 }
 
 object ShutterServiceController {
   case class ShutterForm(
-      serviceName: String
-    , env        : String
-    , state      : String
+      serviceNames: Seq[String]
+    , env         : String
+    , state       : String
     )
 
   case class Shutter(
-      serviceName: String
-    , env        : Environment
-    , state      : IsShuttered
+      serviceNames: Seq[String]
+    , env         : Environment
+    , state       : IsShuttered
     )
 
   val SessionKey = "ShutterServiceController"

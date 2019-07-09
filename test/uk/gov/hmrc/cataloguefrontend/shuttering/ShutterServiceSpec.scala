@@ -32,25 +32,25 @@ class ShutterServiceSpec extends FlatSpec with MockitoSugar with Matchers {
 
   val mockEvents = Seq(
       ShutterEvent(
-          name = "abc-frontend"
-        , env  = Environment.Production
-        , user = "test.user"
-        , isShuttered = true
-        , date = LocalDateTime.now().minusDays(2)
+          name        = "abc-frontend"
+        , env         = Environment.Production
+        , user        = "test.user"
+        , isShuttered = IsShuttered.True
+        , date        = LocalDateTime.now().minusDays(2)
         )
     , ShutterEvent(
-          name = "zxy-frontend"
-        , env  = Environment.Production
-        , user = "fake.user"
-        , isShuttered = false
-        , date = LocalDateTime.now()
+          name        = "zxy-frontend"
+        , env         = Environment.Production
+        , user        = "fake.user"
+        , isShuttered = IsShuttered.False
+        , date        = LocalDateTime.now()
         )
     , ShutterEvent(
-          name = "ijk-frontend"
-        , env  = Environment.Production
-        , user = "test.user"
-        , isShuttered = true
-        , date = LocalDateTime.now().minusDays(1)
+          name        = "ijk-frontend"
+        , env         = Environment.Production
+        , user        = "test.user"
+        , isShuttered = IsShuttered.True
+        , date        = LocalDateTime.now().minusDays(1)
         )
     )
 
@@ -62,13 +62,10 @@ class ShutterServiceSpec extends FlatSpec with MockitoSugar with Matchers {
     when(mockShutterConnector.latestShutterEvents()).thenReturn(Future(mockEvents))
     val ss = new ShutterService(mockShutterConnector)
 
-    val Seq(a,b,c) = Await.result(ss.findCurrentState(), Duration(10, "seconds"))
+    val Seq(a,b,c) = Await.result(ss.findCurrentState(Environment.Production), Duration(10, "seconds"))
 
-    a.isShuttered shouldBe true
-    b.isShuttered shouldBe true
-    c.isShuttered shouldBe false
-
-
+    a.isShuttered shouldBe IsShuttered.True
+    b.isShuttered shouldBe IsShuttered.True
+    c.isShuttered shouldBe IsShuttered.False
   }
-
 }

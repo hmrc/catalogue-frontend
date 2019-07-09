@@ -63,8 +63,9 @@
               <td style="vertical-align: top;">
                 @select(
                     field     =  form("serviceName")
-                  , options   =  Seq("" -> "Please select") ++ shutterStates.map(s => (s.name, s.name))
+                  , options   =  shutterStates.map(s => (s.name, s.name))
                   , '_label   -> "Service"
+                  , 'multiple -> "multiple"
                   )
               </td>
             </tr>

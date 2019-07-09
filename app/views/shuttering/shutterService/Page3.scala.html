@@ -38,7 +38,9 @@
       <div class="board__body">
         <p>The following services have been successfully @valueFor(shutter.state) in @shutter.env.</p>
         <ul style="list-style: disc;">
-          <li>@shutter.serviceName</li>
+          @shutter.serviceNames.map { serviceName =>
+            <li>@serviceName</li>
+          }
         </ul>
         <p>This may take a few minutes to be applied.</p>
       </div>
