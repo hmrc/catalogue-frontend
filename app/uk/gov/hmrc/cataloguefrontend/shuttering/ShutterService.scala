@@ -46,10 +46,10 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
           )
       ))
 
-  def shutterService(serviceName: String, env: Environment): Future[Unit] =
-    Future(())
+  def updateShutterState(serviceName: String, env: Environment, isShuttered: IsShuttered)(implicit hc: HeaderCarrier): Future[Unit] =
+    shutterConnector.updateShutterState(serviceName, env, isShuttered)
 
-  def findCurrentState(env: Environment)(implicit hc: HeaderCarrier) : Future[Seq[ShutterEvent]] =
+  def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterEvent]] =
     Future(Seq(
         ShutterEvent(
             name        = "abc-frontend"

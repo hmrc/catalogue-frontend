@@ -127,7 +127,7 @@ class ShutterServiceController @Inject()(
          _       <- shutter.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
                       EitherT.right[Result] {
                         shutterService
-                          .shutterService(serviceName, shutter.env)
+                          .updateShutterState(serviceName, shutter.env, shutter.state)
                       }
                     }
        } yield Redirect(appRoutes.ShutterServiceController.step3Get)

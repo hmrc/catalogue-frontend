@@ -27,8 +27,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class ShutterConnector @Inject()(http: HttpClient
-                                ,serviceConfig: ServicesConfig)(implicit val ec: ExecutionContext){
+class ShutterConnector @Inject()(
+    http         : HttpClient
+  , serviceConfig: ServicesConfig
+  )(implicit val ec: ExecutionContext){
 
   private val urlStates: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/states"
   private val urlEvents: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/events"
@@ -38,7 +40,7 @@ class ShutterConnector @Inject()(http: HttpClient
 
   /**
     * GET
-    * ​/shutter-api​/states
+    * /shutter-api/states
     * Retrieves the current shutter states for all applications in all environments
     */
   def shutterStates()(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
@@ -52,7 +54,7 @@ class ShutterConnector @Inject()(http: HttpClient
 
   /**
     * GET
-    * ​/shutter-api​/events
+    * /shutter-api/events
     * Retrieves the current shutter events for all applications in all environments
     */
   def latestShutterEvents()(implicit hc: HeaderCarrier): Future[Seq[ShutterEvent]] =
@@ -66,65 +68,36 @@ class ShutterConnector @Inject()(http: HttpClient
 
   /**
     * GET
-    * ​/shutter-api​/states​/{appName}
+    * /shutter-api/states/{appName}
     * Retrieves the current shutter states for the given application in all environments
     */
-  def shutterStateByApp(appName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] = {
-    val urlForApp = s"$urlStates/$appName"
-
-    http.GET[Option[ShutterState]](urlForApp)
-      .recover {
-        case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $urlForApp: ${ex.getMessage}", ex)
-          None
-      }
-  }
-
-
-  /**
-  * POST
-  ​* /shutter-api​/states​/{appName}
-  * Registers an application to allow it to be shuttered
-  */
-  def createShutterState(appName: String)(implicit hc: HeaderCarrier): Future[ShutterState] = {
-    ???
-  }
-
-
-  /**
-    * DELETE
-    * ​/shutter-api​/states​/{appName}
-    * Removes the ability to be able to shutter the given application
-    */
-  def deleteShutterState(appName: String)(implicit hc: HeaderCarrier): Future[Unit] = {
-    ???
-  }
+  def shutterStateByApp(appName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
+    http.GET[Option[ShutterState]](s"$urlStates/$appName")
 
 
   /**
     * GET
-    * ​/shutter-api​/states​/{appName}​/{environment}
+    * /shutter-api/states/{appName}/{environment}
     * Retrieves the current shutter state for the given application in the given environment
     */
-  def shutterStateByAppAndEnv(appName: String, env: String)(implicit hc: HeaderCarrier): Future[Option[ShutterEvent]] = {
-    ???
+  def shutterStateByAppAndEnv(appName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[IsShuttered]] = {
+    implicit val isf = IsShuttered.format
+    http.GET[Option[IsShuttered]](s"$urlStates/$appName/${env.asString}")
   }
 
 
   /**
     * PUT
-    * ​/shutter-api​/states​/{appName}​/{environment}
+    * /shutter-api/states/{appName}/{environment}
     * Shutters/un-shutters the application in the given environment
     */
-  private def updateShutterState(appName: String, env: String, isShuttered: Boolean)(implicit hc: HeaderCarrier): Future[Unit] = {
-    ???
+  def updateShutterState(appName: String, env: Environment, isShuttered: IsShuttered)(implicit hc: HeaderCarrier): Future[Unit] = {
+    implicit val isf = IsShuttered.format
+
+    implicit val nr = new uk.gov.hmrc.http.HttpReads[Unit] {
+      def read(method: String, url: String, response: uk.gov.hmrc.http.HttpResponse): Unit = ()
+    }
+
+    http.PUT[IsShuttered, Unit](s"$urlStates/$appName/${env.asString}", isShuttered)
   }
-
-  def shutter(appName: String, env: String)(implicit hc: HeaderCarrier): Future[Unit] =
-    updateShutterState(appName, env, isShuttered = true)
-
-
-  def unshutter(appName: String, env: String)(implicit hc: HeaderCarrier): Future[Unit] =
-    updateShutterState(appName, env, isShuttered = false)
-
 }
