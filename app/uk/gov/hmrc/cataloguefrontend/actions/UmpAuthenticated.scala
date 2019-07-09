@@ -48,7 +48,7 @@ class UmpAuthenticated @Inject()(
           .filterA(token => userManagementAuthConnector.isValid(UmpToken(token)))
       )
       .semiflatMap(_ => block(request))
-      .getOrElse(Redirect(appRoutes.AuthController.showSignInPage(targetUrl = Some(request.target.uriString))))
+      .getOrElse(Redirect(appRoutes.AuthController.showSignInPage(targetUrl = Some(request.target.uriString).filter(_ => request.method == "GET"))))
   }
 
   override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
