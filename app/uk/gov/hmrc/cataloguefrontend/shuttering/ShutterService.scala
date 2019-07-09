@@ -30,45 +30,45 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
     Future(Seq(
         ShutterState(
             name         = "abc-frontend"
-          , production   = IsShuttered.True
-          , staging      = IsShuttered.False
-          , qa           = IsShuttered.False
-          , externalTest = IsShuttered.False
-          , development  = IsShuttered.False
+          , production   = ShutterStatus.Shuttered
+          , staging      = ShutterStatus.Unshuttered
+          , qa           = ShutterStatus.Unshuttered
+          , externalTest = ShutterStatus.Unshuttered
+          , development  = ShutterStatus.Unshuttered
           )
       , ShutterState(
             name         = "zxy-frontend"
-          , production   = IsShuttered.False
-          , staging      = IsShuttered.False
-          , qa           = IsShuttered.False
-          , externalTest = IsShuttered.False
-          , development  = IsShuttered.False
+          , production   = ShutterStatus.Unshuttered
+          , staging      = ShutterStatus.Unshuttered
+          , qa           = ShutterStatus.Unshuttered
+          , externalTest = ShutterStatus.Unshuttered
+          , development  = ShutterStatus.Unshuttered
           )
       ))
 
-  def updateShutterState(serviceName: String, env: Environment, isShuttered: IsShuttered)(implicit hc: HeaderCarrier): Future[Unit] =
-    shutterConnector.updateShutterState(serviceName, env, isShuttered)
+  def updateShutterStatus(serviceName: String, env: Environment, status: ShutterStatus)(implicit hc: HeaderCarrier): Future[Unit] =
+    shutterConnector.updateShutterStatus(serviceName, env, status)
 
   def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterEvent]] =
     Future(Seq(
         ShutterEvent(
-            name        = "abc-frontend"
-          , env         = env
-          , user        = "test.user"
-          , isShuttered = IsShuttered.True
-          , date        = LocalDateTime.now().minusDays(2)
+            name   = "abc-frontend"
+          , env    = env
+          , user   = "test.user"
+          , status = ShutterStatus.Shuttered
+          , date   = LocalDateTime.now().minusDays(2)
           )
       , ShutterEvent(
-            name        = "zxy-frontend"
-          , env         = env
-          , user        = "fake.user"
-          , isShuttered = IsShuttered.False
-          , date        = LocalDateTime.now()
+            name   = "zxy-frontend"
+          , env    = env
+          , user   = "fake.user"
+          , status = ShutterStatus.Unshuttered
+          , date   = LocalDateTime.now()
           )
       ))
     // for {
     //   events <- shutterConnector.latestShutterEvents()
-    //   sorted = events.sortBy(_.isShuttered)(Ordering[Boolean].reverse)
+    //   sorted = events.sortBy(_.status)(Ordering[Boolean].reverse)
     // } yield sorted
 
 

@@ -51,8 +51,8 @@ class ShutterServiceController @Inject()(
     for {
       shutterStates <- shutterService.getShutterStates
       envs          =  Environment.values
-      states        =  IsShuttered.values
-    } yield page1(form, shutterStates, envs, states)
+      statusValues  =  ShutterStatus.values
+    } yield page1(form, shutterStates, envs, statusValues)
 
   def step1Get(env: Option[String], serviceName: Option[String]) =
     umpAuthenticated.async { implicit request =>
@@ -62,29 +62,29 @@ class ShutterServiceController @Inject()(
                           ShutterForm(
                               serviceNames = serviceName.toSeq
                             , env          = env.getOrElse("")
-                            , state        = stateFor(shutterStates)(serviceName, env).fold("")(_.asString)
+                            , status       = statusFor(shutterStates)(serviceName, env).fold("")(_.asString)
                             )
                         } else fromSession(request.session) match {
                           case Some(shutter) => ShutterForm(
                                                     serviceNames = shutter.serviceNames
                                                   , env          = shutter.env.asString
-                                                  , state        = shutter.state.asString
+                                                  , status       = shutter.status.asString
                                                   )
-                          case None          => ShutterForm(serviceNames = Seq.empty, env = "", state = "")
+                          case None          => ShutterForm(serviceNames = Seq.empty, env = "", status = "")
                         }
       html          <- start(form.fill(shutter)).map(Ok(_))
     } yield html
   }
 
-  def stateFor(shutterStates: Seq[ShutterState])(optServiceName: Option[String], optEnv: Option[String]): Option[IsShuttered] =
+  def statusFor(shutterStates: Seq[ShutterState])(optServiceName: Option[String], optEnv: Option[String]): Option[ShutterStatus] =
     for {
       serviceName <- optServiceName
       envStr      <- optEnv
       env         <- Environment.parse(envStr)
-      state       <- shutterStates.find(_.name == serviceName).map(_.stateFor(env))
-    } yield state match {
-      case IsShuttered.True  => IsShuttered.False
-      case IsShuttered.False => IsShuttered.True
+      status      <- shutterStates.find(_.name == serviceName).map(_.statusFor(env))
+    } yield status match {
+      case ShutterStatus.Shuttered   => ShutterStatus.Unshuttered
+      case ShutterStatus.Unshuttered => ShutterStatus.Shuttered
     }
 
   def step1Post =
@@ -100,11 +100,11 @@ class ShutterServiceController @Inject()(
                       case Some(env) => EitherT.pure[Future, Result](env)
                       case None      => EitherT.left(start(form.bindFromRequest).map(BadRequest(_)))
                     }
-         state   <- IsShuttered.parse(sf.state) match {
-                      case Some(state) => EitherT.pure[Future, Result](state)
-                      case None        => EitherT.left(start(form.bindFromRequest).map(BadRequest(_)))
+         status  <- ShutterStatus.parse(sf.status) match {
+                      case Some(status) => EitherT.pure[Future, Result](status)
+                      case None         => EitherT.left(start(form.bindFromRequest).map(BadRequest(_)))
                     }
-         shutter =  Shutter(sf.serviceNames, env, state)
+         shutter =  Shutter(sf.serviceNames, env, status)
        } yield Redirect(appRoutes.ShutterServiceController.step2Get)
                 .withSession(request.session + toSession(shutter))
       ).merge
@@ -127,7 +127,7 @@ class ShutterServiceController @Inject()(
          _       <- shutter.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
                       EitherT.right[Result] {
                         shutterService
-                          .updateShutterState(serviceName, shutter.env, shutter.state)
+                          .updateShutterStatus(serviceName, shutter.env, shutter.status)
                       }
                     }
        } yield Redirect(appRoutes.ShutterServiceController.step3Get)
@@ -147,7 +147,7 @@ class ShutterServiceController @Inject()(
       Forms.mapping(
           "serviceName" -> Forms.seq(Forms.text).verifying(notEmptySeq)
         , "env"         -> Forms.text.verifying(notEmpty)
-        , "state"       -> Forms.text.verifying(notEmpty)
+        , "status"      -> Forms.text.verifying(notEmpty)
         )(ShutterForm.apply)(ShutterForm.unapply)
     )
 
@@ -171,20 +171,20 @@ object ShutterServiceController {
   case class ShutterForm(
       serviceNames: Seq[String]
     , env         : String
-    , state       : String
+    , status      : String
     )
 
   case class Shutter(
       serviceNames: Seq[String]
     , env         : Environment
-    , state       : IsShuttered
+    , status      : ShutterStatus
     )
 
   val SessionKey = "ShutterServiceController"
 
   private implicit val shutterFormats = {
     implicit val ef  = Environment.format
-    implicit val isf = IsShuttered.format
+    implicit val ssf = ShutterStatus.format
     Json.format[Shutter]
   }
 

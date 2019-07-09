@@ -49,41 +49,41 @@ object Environment {
   }
 }
 
-sealed trait IsShuttered { def asString: String }
-object IsShuttered {
-  case object True  extends IsShuttered { val asString = "on" }
-  case object False extends IsShuttered { val asString = "off" }
+sealed trait ShutterStatus { def asString: String }
+object ShutterStatus {
+  case object Shuttered   extends ShutterStatus { val asString = "shuttered"   }
+  case object Unshuttered extends ShutterStatus { val asString = "unshuttered" }
 
-  val values = List(True, False)
+  val values = List(Shuttered, Unshuttered)
 
-  def parse(s: String): Option[IsShuttered] =
+  def parse(s: String): Option[ShutterStatus] =
     values.find(_.asString == s)
 
 
-  val format: Format[IsShuttered] = new Format[IsShuttered] {
+  val format: Format[ShutterStatus] = new Format[ShutterStatus] {
     override def reads(json: JsValue) =
       json.validate[String]
         .flatMap { s =>
             parse(s) match {
               case Some(env) => JsSuccess(env)
-              case None      => JsError(__, s"Invalid IsShuttered '$s'")
+              case None      => JsError(__, s"Invalid ShutterStatus '$s'")
             }
           }
 
-    override def writes(e: IsShuttered) =
+    override def writes(e: ShutterStatus) =
       JsString(e.asString)
   }
 }
 
-case class ShutterState( // Status
+case class ShutterState(
     name        : String
-  , production  : IsShuttered // ShutterState Shuttter/Unshutter
-  , staging     : IsShuttered
-  , qa          : IsShuttered
-  , externalTest: IsShuttered
-  , development : IsShuttered
+  , production  : ShutterStatus
+  , staging     : ShutterStatus
+  , qa          : ShutterStatus
+  , externalTest: ShutterStatus
+  , development : ShutterStatus
   ) {
-    def stateFor(env: Environment): IsShuttered =
+    def statusFor(env: Environment): ShutterStatus =
       env match {
         case Environment.Production   => production
         case Environment.ExternalTest => externalTest
@@ -96,36 +96,36 @@ case class ShutterState( // Status
 object ShutterState {
 
   val reads: Reads[ShutterState] = {
-    implicit val isf = IsShuttered.format
+    implicit val ssf = ShutterStatus.format
     ( (__ \ "name"        ).read[String]
-    ~ (__ \ "production"  ).read[IsShuttered]
-    ~ (__ \ "staging"     ).read[IsShuttered]
-    ~ (__ \ "qa"          ).read[IsShuttered]
-    ~ (__ \ "externalTest").read[IsShuttered]
-    ~ (__ \ "development" ).read[IsShuttered]
+    ~ (__ \ "production"  ).read[ShutterStatus]
+    ~ (__ \ "staging"     ).read[ShutterStatus]
+    ~ (__ \ "qa"          ).read[ShutterStatus]
+    ~ (__ \ "externalTest").read[ShutterStatus]
+    ~ (__ \ "development" ).read[ShutterStatus]
     )(ShutterState.apply _)
   }
 }
 
 
 case class ShutterEvent(
-    name       : String
-  , env        : Environment
-  , user       : String
-  , date       : LocalDateTime
-  , isShuttered: IsShuttered
+    name  : String
+  , env   : Environment
+  , user  : String
+  , date  : LocalDateTime
+  , status: ShutterStatus
   )
 
 object ShutterEvent {
 
   val reads: Reads[ShutterEvent] = {
     implicit val ef  = Environment.format
-    implicit val isf = IsShuttered.format
-    ( (__ \ "name"       ).read[String]
-    ~ (__ \ "env"        ).read[Environment]
-    ~ (__ \ "user"       ).read[String]
-    ~ (__ \ "date"       ).read[LocalDateTime]
-    ~ (__ \ "isShuttered").read[IsShuttered]
+    implicit val ssf = ShutterStatus.format
+    ( (__ \ "name"  ).read[String]
+    ~ (__ \ "env"   ).read[Environment]
+    ~ (__ \ "user"  ).read[String]
+    ~ (__ \ "date"  ).read[LocalDateTime]
+    ~ (__ \ "status").read[ShutterStatus]
     )(ShutterEvent.apply _)
   }
 }

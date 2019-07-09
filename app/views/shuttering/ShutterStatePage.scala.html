@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{IsShuttered, ShutterEvent}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatus, ShutterEvent}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import java.time.format.DateTimeFormatter
 @import uk.gov.hmrc.cataloguefrontend.shuttering.Environment
@@ -74,29 +74,29 @@
   </li>
 }
 
-@valueFor(isShuttered: IsShuttered) = {
-  @isShuttered match {
-    case IsShuttered.True  => { Shutter   }
-    case IsShuttered.False => { Unshutter }
+@valueFor(status: ShutterStatus) = {
+  @status match {
+    case ShutterStatus.Shuttered   => { Shutter   }
+    case ShutterStatus.Unshuttered => { Unshutter }
   }
 }
 
-@classFor(isShuttered: IsShuttered) = {
-  @isShuttered match {
-    case IsShuttered.True  => { shuttered   }
-    case IsShuttered.False => { unshuttered }
+@classFor(status: ShutterStatus) = {
+  @status match {
+    case ShutterStatus.Shuttered   => { shuttered   }
+    case ShutterStatus.Unshuttered => { unshuttered }
   }
 }
 
 @shutterRow(event: ShutterEvent) = {
-  <tr class="shutter-row @classFor(event.isShuttered)">
+  <tr class="shutter-row @classFor(event.status)">
       <td class="shutter-service">@event.name</td>
-      <td class="shutter-state">@{valueFor(event.isShuttered)}</td>
+      <td class="shutter-state">@{valueFor(event.status)}</td>
       <td class="shutter-user">@event.user</td>
       <td class="shutter-date">@event.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm"))</td>
       <td>
           <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.env.asString), Some(event.name))">
-          @valueFor(event.isShuttered)
+          @valueFor(event.status)
           </a>
       </td>
   </tr>

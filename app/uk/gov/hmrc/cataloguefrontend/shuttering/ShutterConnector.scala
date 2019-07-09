@@ -80,9 +80,9 @@ class ShutterConnector @Inject()(
     * /shutter-api/states/{appName}/{environment}
     * Retrieves the current shutter state for the given application in the given environment
     */
-  def shutterStateByAppAndEnv(appName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[IsShuttered]] = {
-    implicit val isf = IsShuttered.format
-    http.GET[Option[IsShuttered]](s"$urlStates/$appName/${env.asString}")
+  def shutterStatusByAppAndEnv(appName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[ShutterStatus]] = {
+    implicit val ssf = ShutterStatus.format
+    http.GET[Option[ShutterStatus]](s"$urlStates/$appName/${env.asString}")
   }
 
 
@@ -91,13 +91,13 @@ class ShutterConnector @Inject()(
     * /shutter-api/states/{appName}/{environment}
     * Shutters/un-shutters the application in the given environment
     */
-  def updateShutterState(appName: String, env: Environment, isShuttered: IsShuttered)(implicit hc: HeaderCarrier): Future[Unit] = {
-    implicit val isf = IsShuttered.format
+  def updateShutterStatus(appName: String, env: Environment, status: ShutterStatus)(implicit hc: HeaderCarrier): Future[Unit] = {
+    implicit val isf = ShutterStatus.format
 
     implicit val nr = new uk.gov.hmrc.http.HttpReads[Unit] {
       def read(method: String, url: String, response: uk.gov.hmrc.http.HttpResponse): Unit = ()
     }
 
-    http.PUT[IsShuttered, Unit](s"$urlStates/$appName/${env.asString}", isShuttered)
+    http.PUT[ShutterStatus, Unit](s"$urlStates/$appName/${env.asString}", status)
   }
 }

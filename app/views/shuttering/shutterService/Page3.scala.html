@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{IsShuttered, ShutterServiceController, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatus, ShutterServiceController, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import helper._
 
@@ -36,7 +36,7 @@
 
     <div class="board">
       <div class="board__body">
-        <p>The following services have been successfully @valueFor(shutter.state) in @shutter.env.</p>
+        <p>The following services have been successfully @valueFor(shutter.status) in @shutter.env.</p>
         <ul style="list-style: disc;">
           @shutter.serviceNames.map { serviceName =>
             <li>@serviceName</li>
@@ -50,9 +50,9 @@
 
 }
 
-@valueFor(isShuttered: IsShuttered) = {
-  @isShuttered match {
-    case IsShuttered.True  => { shuttered   }
-    case IsShuttered.False => { unshuttered }
+@valueFor(status: ShutterStatus) = {
+  @status match {
+    case ShutterStatus.Shuttered   => { shuttered   }
+    case ShutterStatus.Unshuttered => { unshuttered }
   }
 }

@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{IsShuttered, ShutterServiceController, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatus, ShutterServiceController, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import helper._
 
@@ -45,7 +45,7 @@
           @CSRF.formField
 
           <div class="alert alert-danger" role="alert">
-            You are about to <b>@valueFor(shutter.state)</b> the following services in <b>@shutter.env</b>:
+            You are about to <b>@valueFor(shutter.status)</b> the following services in <b>@shutter.env</b>:
           </div>
 
           <table class="padded-table" style="width: 100%">
@@ -78,9 +78,9 @@
 
 }
 
-@valueFor(isShuttered: IsShuttered) = {
-  @isShuttered match {
-    case IsShuttered.True  => { Shutter   }
-    case IsShuttered.False => { Unshutter }
+@valueFor(status: ShutterStatus) = {
+  @status match {
+    case ShutterStatus.Shuttered   => { Shutter   }
+    case ShutterStatus.Unshuttered => { Unshutter }
   }
 }

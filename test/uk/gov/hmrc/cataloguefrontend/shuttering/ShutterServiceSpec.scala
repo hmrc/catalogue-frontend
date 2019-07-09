@@ -32,25 +32,25 @@ class ShutterServiceSpec extends FlatSpec with MockitoSugar with Matchers {
 
   val mockEvents = Seq(
       ShutterEvent(
-          name        = "abc-frontend"
-        , env         = Environment.Production
-        , user        = "test.user"
-        , isShuttered = IsShuttered.True
-        , date        = LocalDateTime.now().minusDays(2)
+          name   = "abc-frontend"
+        , env    = Environment.Production
+        , user   = "test.user"
+        , status = ShutterStatus.Shuttered
+        , date   = LocalDateTime.now().minusDays(2)
         )
     , ShutterEvent(
-          name        = "zxy-frontend"
-        , env         = Environment.Production
-        , user        = "fake.user"
-        , isShuttered = IsShuttered.False
-        , date        = LocalDateTime.now()
+          name   = "zxy-frontend"
+        , env    = Environment.Production
+        , user   = "fake.user"
+        , status = ShutterStatus.Unshuttered
+        , date   = LocalDateTime.now()
         )
     , ShutterEvent(
-          name        = "ijk-frontend"
-        , env         = Environment.Production
-        , user        = "test.user"
-        , isShuttered = IsShuttered.True
-        , date        = LocalDateTime.now().minusDays(1)
+          name   = "ijk-frontend"
+        , env    = Environment.Production
+        , user   = "test.user"
+        , status = ShutterStatus.Shuttered
+        , date   = LocalDateTime.now().minusDays(1)
         )
     )
 
@@ -64,8 +64,8 @@ class ShutterServiceSpec extends FlatSpec with MockitoSugar with Matchers {
 
     val Seq(a,b,c) = Await.result(ss.findCurrentState(Environment.Production), Duration(10, "seconds"))
 
-    a.isShuttered shouldBe IsShuttered.True
-    b.isShuttered shouldBe IsShuttered.True
-    c.isShuttered shouldBe IsShuttered.False
+    a.status shouldBe ShutterStatus.Shuttered
+    b.status shouldBe ShutterStatus.Shuttered
+    c.status shouldBe ShutterStatus.Unshuttered
   }
 }
