@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatus, ShutterServiceController, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatus, ShutterServiceController, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import helper._
 
@@ -44,7 +44,8 @@
 
           @CSRF.formField
 
-          <div class="alert alert-danger" role="alert">
+          <div class="alert alert-warning" role="alert">
+            <span class="glyphicon glyphicon-warning-sign"></span>
             You are about to <b>@valueFor(shutter.status)</b> the following services in <b>@shutter.env</b>:
           </div>
 
@@ -58,9 +59,17 @@
                 </ul>
               </td>
             </tr>
+            <tr><td colspan="2">
+              @if(shutter.env == Environment.Production) {
+                <div class="alert alert-danger" role="alert">
+                  <span class="glyphicon glyphicon-warning-sign"></span>
+                  <b>Production</b> means it will impact real users!
+                </div>
+              }
+            </td></tr>
             <tr><td colspan="2">&nbsp;</td></tr>
             <tr>
-              <td>Please check this is correct before continuing. It will affect users.</td>
+              <td>Please check this is correct before continuing.</td>
             </tr>
             <tr><td colspan="2">&nbsp;</td></tr>
             <tr>

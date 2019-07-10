@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import java.time.LocalDateTime
-import play.api.libs.json.{Format, Json, JsError, JsValue, JsString, JsSuccess, Reads, __}
+import play.api.libs.json.{Format, Json, JsError, JsObject, JsValue, JsResult, JsString, JsSuccess, Reads, Writes, __}
 import play.api.libs.functional.syntax._
 
 
@@ -108,24 +108,153 @@ object ShutterState {
 }
 
 
+
+// -------------- Events ---------------------
+
+
+sealed trait EventType { def asString: String }
+object EventType {
+  case object ShutterStateCreated   extends EventType { override val asString = "shutter-state-created"   }
+  case object ShutterStateChange    extends EventType { override val asString = "shutter-state-change"    }
+  case object KillSwitchStateChange extends EventType { override val asString = "killswitch-state-change" }
+
+
+  val values = List(ShutterStateCreated, ShutterStateChange, KillSwitchStateChange)
+
+  def parse(s: String): Option[EventType] =
+    values.find(_.asString == s)
+
+  val format: Format[EventType] = new Format[EventType] {
+    override def reads(json: JsValue) =
+      json.validate[String]
+        .flatMap { s =>
+            parse(s) match {
+              case Some(et) => JsSuccess(et)
+              case None     => JsError(__, s"Invalid EventType '$s'")
+            }
+          }
+
+    override def writes(e: EventType) =
+      JsString(e.asString)
+  }
+}
+
+sealed trait ShutterCause { def asString: String }
+object ShutterCause {
+  case object Scheduled   extends ShutterCause { override val asString = "scheduled"   }
+  case object UserCreated extends ShutterCause { override val asString = "user-shutter"}
+
+  val values = List(Scheduled, UserCreated)
+
+  def parse(s: String): Option[ShutterCause] =
+    values.find(_.asString == s)
+
+  val format: Format[ShutterCause] = new Format[ShutterCause] {
+    override def reads(json: JsValue) =
+      json.validate[String]
+        .flatMap { s =>
+            parse(s) match {
+              case Some(et) => JsSuccess(et)
+              case None     => JsError(__, s"Invalid ShutterCause '$s'")
+            }
+          }
+
+    override def writes(e: ShutterCause) =
+      JsString(e.asString)
+  }
+
+}
+
+sealed trait EventData
+object EventData {
+  case class ShutterStateCreateData(
+      serviceName: String
+    ) extends EventData
+
+  case class ShutterStateChangeData(
+      serviceName: String
+    , environment: Environment
+    , status     : ShutterStatus
+    , cause      : ShutterCause
+    ) extends EventData
+
+  case class KillSwitchStateChangeData(
+      environment: Environment
+    , status     : ShutterStatus
+    ) extends EventData
+
+
+
+  val shutterStatusChangeDataFormat: Format[ShutterStateChangeData] = {
+    implicit val ef  = Environment.format
+    implicit val ssf = ShutterStatus.format
+    implicit val scf = ShutterCause.format
+
+    ( (__ \ "serviceName").format[String]
+    ~ (__ \ "environment").format[Environment]
+    ~ (__ \ "status"     ).format[ShutterStatus]
+    ~ (__ \ "cause"      ).format[ShutterCause]
+    )( ShutterStateChangeData.apply
+     , unlift(ShutterStateChangeData.unapply)
+     )
+  }
+
+  val killSwitchStateChangeDataFormat: Format[KillSwitchStateChangeData] = {
+    implicit val ef  = Environment.format
+    implicit val ssf = ShutterStatus.format
+
+    ( (__ \ "environment").format[Environment]
+    ~ (__ \ "status"     ).format[ShutterStatus]
+    )( KillSwitchStateChangeData.apply
+     , unlift(KillSwitchStateChangeData.unapply
+     ))
+  }
+}
+
 case class ShutterEvent(
-    name  : String
-  , env   : Environment
-  , user  : String
-  , date  : LocalDateTime
-  , status: ShutterStatus
-  )
+    username : String
+  , timestamp: LocalDateTime
+  , eventType: EventType
+  , data     : EventData
+  ) {
+    // TODO fix this - just for migration..
+    def ssData = data.asInstanceOf[EventData.ShutterStateChangeData]
+  }
 
 object ShutterEvent {
 
-  val reads: Reads[ShutterEvent] = {
-    implicit val ef  = Environment.format
-    implicit val ssf = ShutterStatus.format
-    ( (__ \ "name"  ).read[String]
-    ~ (__ \ "env"   ).read[Environment]
-    ~ (__ \ "user"  ).read[String]
-    ~ (__ \ "date"  ).read[LocalDateTime]
-    ~ (__ \ "status").read[ShutterStatus]
-    )(ShutterEvent.apply _)
+  val format: Format[ShutterEvent] = {
+    implicit val ef    = Environment.format
+    implicit val etf   = EventType.format
+    implicit val sscdf = EventData.shutterStatusChangeDataFormat
+    implicit val kscdf = EventData.killSwitchStateChangeDataFormat
+
+    val reads: Reads[ShutterEvent] =
+      ( (__ \ "username" ).read[String]
+      ~ (__ \ "timestamp").read[LocalDateTime]
+      ~ (__ \ "type"     ).read[EventType]
+      ~ (__ \ "type"     )
+            .read[EventType]
+            .flatMap[EventData] { et =>
+              val data = __ \ "data"
+              et match {
+                case EventType.ShutterStateChange    => data.read[EventData](implicitly[Reads[EventData.ShutterStateChangeData]].map[EventData](identity)) //Get round invariance of Reads[T]
+                case EventType.KillSwitchStateChange => data.read[EventData](implicitly[Reads[EventData.KillSwitchStateChangeData]].map[EventData](identity))
+              }
+            }
+      )(ShutterEvent.apply _)
+
+    val writes: Writes[ShutterEvent] =
+      ( (__ \ "username" ).write[String]
+      ~ (__ \ "timestamp").write[LocalDateTime]
+      ~ (__ \ "type"     ).write[EventType]
+      ~ (__ \ "data"     ).write[JsValue].contramap[EventData] {
+                             case s: EventData.ShutterStateChangeData    => EventData.shutterStatusChangeDataFormat.writes(s)
+                             case s: EventData.KillSwitchStateChangeData => EventData.killSwitchStateChangeDataFormat.writes(s)
+                           }
+      )(unlift(ShutterEvent.unapply))
+
+    Format(reads, writes)
   }
+
 }

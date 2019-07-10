@@ -36,7 +36,7 @@ class ShutterConnector @Inject()(
   private val urlEvents: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/events"
 
   private implicit val shutterStateReads: Reads[ShutterState] = ShutterState.reads
-  private implicit val shutterEventReads: Reads[ShutterEvent] = ShutterEvent.reads
+  private implicit val shutterEventReads: Reads[ShutterEvent] = ShutterEvent.format
 
   /**
     * GET

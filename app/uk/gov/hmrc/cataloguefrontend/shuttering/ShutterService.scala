@@ -26,50 +26,15 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val ec: ExecutionContext) {
 
-  def getShutterStates: Future[Seq[ShutterState]] =
-    Future(Seq(
-        ShutterState(
-            name         = "abc-frontend"
-          , production   = ShutterStatus.Shuttered
-          , staging      = ShutterStatus.Unshuttered
-          , qa           = ShutterStatus.Unshuttered
-          , externalTest = ShutterStatus.Unshuttered
-          , development  = ShutterStatus.Unshuttered
-          )
-      , ShutterState(
-            name         = "zxy-frontend"
-          , production   = ShutterStatus.Unshuttered
-          , staging      = ShutterStatus.Unshuttered
-          , qa           = ShutterStatus.Unshuttered
-          , externalTest = ShutterStatus.Unshuttered
-          , development  = ShutterStatus.Unshuttered
-          )
-      ))
+  def getShutterStates(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
+    shutterConnector.shutterStates
 
   def updateShutterStatus(serviceName: String, env: Environment, status: ShutterStatus)(implicit hc: HeaderCarrier): Future[Unit] =
     shutterConnector.updateShutterStatus(serviceName, env, status)
 
   def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterEvent]] =
-    Future(Seq(
-        ShutterEvent(
-            name   = "abc-frontend"
-          , env    = env
-          , user   = "test.user"
-          , status = ShutterStatus.Shuttered
-          , date   = LocalDateTime.now().minusDays(2)
-          )
-      , ShutterEvent(
-            name   = "zxy-frontend"
-          , env    = env
-          , user   = "fake.user"
-          , status = ShutterStatus.Unshuttered
-          , date   = LocalDateTime.now()
-          )
-      ))
-    // for {
-    //   events <- shutterConnector.latestShutterEvents()
-    //   sorted = events.sortBy(_.status)(Ordering[Boolean].reverse)
-    // } yield sorted
-
-
+    for {
+      events <- shutterConnector.latestShutterEvents()
+      sorted = events.sortWith{ case (l, r) => l.ssData.status == ShutterStatus.Shuttered && l.ssData.serviceName < r.ssData.serviceName }
+    } yield sorted
 }

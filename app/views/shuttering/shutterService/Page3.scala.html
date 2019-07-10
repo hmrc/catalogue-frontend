@@ -36,13 +36,23 @@
 
     <div class="board">
       <div class="board__body">
-        <p>The following services have been successfully @valueFor(shutter.status) in @shutter.env.</p>
-        <ul style="list-style: disc;">
-          @shutter.serviceNames.map { serviceName =>
-            <li>@serviceName</li>
-          }
-        </ul>
-        <p>This may take a few minutes to be applied.</p>
+
+        <div style="padding-left: 20px; padding-right: 20px">
+
+          <div class="alert alert-success" role="alert">
+            <span class="glyphicon glyphicon-ok"></span>
+            The following services have been successfully @valueFor(shutter.status) in <b>@shutter.env</b>:
+          </div>
+
+          <ul style="list-style: disc;">
+            @shutter.serviceNames.map { serviceName =>
+              <li>@serviceName</li>
+            }
+          </ul>
+
+          <p>This may take a few minutes to be applied.</p>
+        </div>
+
       </div>
     </div>
 
