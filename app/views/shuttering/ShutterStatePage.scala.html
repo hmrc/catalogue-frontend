@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, EventData, ShutterStatus, ShutterEvent}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import java.time.ZoneId
 @import java.time.format.DateTimeFormatter
 
 @this(viewMessages: ViewMessages)
@@ -86,7 +87,7 @@
       <td class="shutter-service">@event.ssData.serviceName</td>
       <td class="shutter-state">@event.ssData.status</td>
       <td class="shutter-user">@event.username</td>
-      <td class="shutter-date">@event.timestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm"))</td>
+      <td class="shutter-date">@DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:SS z").withZone(ZoneId.systemDefault).format(event.timestamp)</td>
       <td>
           <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.ssData.environment.asString), Some(event.ssData.serviceName))">
             @changeValueFor(event.ssData.status)

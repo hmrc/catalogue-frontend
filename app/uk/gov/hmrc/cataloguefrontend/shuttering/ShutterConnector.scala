@@ -35,8 +35,8 @@ class ShutterConnector @Inject()(
   private val urlStates: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/states"
   private val urlEvents: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/events"
 
-  private implicit val shutterStateReads: Reads[ShutterState] = ShutterState.reads
-  private implicit val shutterEventReads: Reads[ShutterEvent] = ShutterEvent.format
+  private implicit val ssr = ShutterState.reads
+  private implicit val ser = ShutterEvent.reads
 
   /**
     * GET
@@ -55,10 +55,10 @@ class ShutterConnector @Inject()(
   /**
     * GET
     * /shutter-api/events
-    * Retrieves the current shutter events for all applications in all environments
+    * Retrieves the current shutter events for all applications for given environment
     */
-  def latestShutterEvents()(implicit hc: HeaderCarrier): Future[Seq[ShutterEvent]] =
-    http.GET[Seq[ShutterEvent]](url = urlEvents)
+  def latestShutterEvents(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterEvent]] =
+    http.GET[Seq[ShutterEvent]](url = s"$urlEvents?type=${EventType.ShutterStateChange.asString}&namedFilter=latestByServiceName&data.environment=${env.asString}")
       .recover {
         case NonFatal(ex) =>
           Logger.error(s"An error occurred when connecting to $urlEvents: ${ex.getMessage}", ex)

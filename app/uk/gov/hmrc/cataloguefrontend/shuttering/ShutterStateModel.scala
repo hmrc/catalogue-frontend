@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import java.time.LocalDateTime
+import java.time.Instant
 import play.api.libs.json.{Format, Json, JsError, JsObject, JsValue, JsPath, JsResult, JsString, JsSuccess, Reads, Writes, __}
 import play.api.libs.functional.syntax._
 
 
 sealed trait Environment { def asString: String }
 object Environment {
-  case object Production      extends Environment { val asString = "production"    }
-  case object ExternalTest    extends Environment { val asString = "external test" }
-  case object QA              extends Environment { val asString = "qa"            }
-  case object Staging         extends Environment { val asString = "staging"       }
-  case object Dev             extends Environment { val asString = "development"   }
+  case object Production      extends Environment { val asString = "production"   }
+  case object ExternalTest    extends Environment { val asString = "externalTest" }
+  case object QA              extends Environment { val asString = "qa"           }
+  case object Staging         extends Environment { val asString = "staging"      }
+  case object Dev             extends Environment { val asString = "development"  }
 
   val values = List(Production, ExternalTest, QA, Staging, Dev)
 
@@ -114,12 +114,13 @@ object ShutterState {
 
 sealed trait EventType { def asString: String }
 object EventType {
-  case object ShutterStateCreated   extends EventType { override val asString = "shutter-state-created"   }
+  case object ShutterStateCreate    extends EventType { override val asString = "shutter-state-create"    }
+  case object ShutterStateDelete    extends EventType { override val asString = "shutter-state-delete"    }
   case object ShutterStateChange    extends EventType { override val asString = "shutter-state-change"    }
   case object KillSwitchStateChange extends EventType { override val asString = "killswitch-state-change" }
 
 
-  val values = List(ShutterStateCreated, ShutterStateChange, KillSwitchStateChange)
+  val values = List(ShutterStateCreate, ShutterStateDelete, ShutterStateChange, KillSwitchStateChange)
 
   def parse(s: String): Option[EventType] =
     values.find(_.asString == s)
@@ -171,6 +172,10 @@ object EventData {
       serviceName: String
     ) extends EventData
 
+  case class ShutterStateDeleteData(
+      serviceName: String
+    ) extends EventData
+
   case class ShutterStateChangeData(
       serviceName: String
     , environment: Environment
@@ -188,6 +193,12 @@ object EventData {
     (__ \ "serviceName").format[String]
       .inmap( ShutterStateCreateData.apply
             , unlift(ShutterStateCreateData.unapply)
+            )
+
+  val shutterStateDeleteDataFormat: Format[ShutterStateDeleteData] =
+    (__ \ "serviceName").format[String]
+      .inmap( ShutterStateDeleteData.apply
+            , unlift(ShutterStateDeleteData.unapply)
             )
 
   val shutterStateChangeDataFormat: Format[ShutterStateChangeData] = {
@@ -214,11 +225,25 @@ object EventData {
      , unlift(KillSwitchStateChangeData.unapply
      ))
   }
+
+  def reads(et: EventType) = new Reads[EventData] {
+    implicit val sscrdf = shutterStateCreateDataFormat
+    implicit val ssddf  = shutterStateDeleteDataFormat
+    implicit val sscdf  = shutterStateChangeDataFormat
+    implicit val kscdf  = killSwitchStateChangeDataFormat
+    def reads(js: JsValue): JsResult[EventData] =
+      et match {
+        case EventType.ShutterStateCreate    => js.validate[EventData.ShutterStateCreateData]
+        case EventType.ShutterStateDelete    => js.validate[EventData.ShutterStateDeleteData]
+        case EventType.ShutterStateChange    => js.validate[EventData.ShutterStateChangeData]
+        case EventType.KillSwitchStateChange => js.validate[EventData.KillSwitchStateChangeData]
+      }
+  }
 }
 
 case class ShutterEvent(
     username : String
-  , timestamp: LocalDateTime
+  , timestamp: Instant
   , eventType: EventType
   , data     : EventData
   ) {
@@ -228,44 +253,13 @@ case class ShutterEvent(
 
 object ShutterEvent {
 
-  val format: Format[ShutterEvent] = {
-    implicit val ef     = Environment.format
-    implicit val etf    = EventType.format
-    implicit val sscrdf = EventData.shutterStateCreateDataFormat
-    implicit val sscdf  = EventData.shutterStateChangeDataFormat
-    implicit val kscdf  = EventData.killSwitchStateChangeDataFormat
-
-
-    def eventDataRead(et: EventType) = new Reads[EventData] {
-      def reads(js: JsValue): JsResult[EventData] =
-        et match {
-          case EventType.ShutterStateCreated   => js.validate[EventData.ShutterStateCreateData]
-          case EventType.ShutterStateChange    => js.validate[EventData.ShutterStateChangeData]
-          case EventType.KillSwitchStateChange => js.validate[EventData.KillSwitchStateChangeData]
-        }
-    }
-
-    val reads: Reads[ShutterEvent] =
-      ( (__ \ "username" ).read[String]
-      ~ (__ \ "timestamp").read[LocalDateTime]
-      ~ (__ \ "type"     ).read[EventType]
-      ~ (__ \ "type"     ).read[EventType].flatMap[EventData](et => (__ \ "data").read(eventDataRead(et)))
-      )(ShutterEvent.apply _)
-
-    val writes: Writes[ShutterEvent] =
-      ( (__ \ "username" ).write[String]
-      ~ (__ \ "timestamp").write[LocalDateTime]
-      ~ (__ \ "type"     ).write[EventType]
-      ~ (__ \ "data"     ).write[JsValue]
-                          //Get round invariance of Writes[T]
-                          .contramap[EventData] {
-                             case s: EventData.ShutterStateCreateData    => Json.toJson(s)
-                             case s: EventData.ShutterStateChangeData    => Json.toJson(s)
-                             case s: EventData.KillSwitchStateChangeData => Json.toJson(s)
-                           }
-      )(unlift(ShutterEvent.unapply))
-
-    Format(reads, writes)
+  val reads: Reads[ShutterEvent] = {
+    implicit val etf = EventType.format
+    ( (__ \ "username" ).read[String]
+    ~ (__ \ "timestamp").read[Instant]
+    ~ (__ \ "type"     ).read[EventType]
+    ~ (__ \ "type"     ).read[EventType]
+                        .flatMap[EventData](et => (__ \ "data").read(EventData.reads(et)))
+    )(ShutterEvent.apply _)
   }
-
 }
