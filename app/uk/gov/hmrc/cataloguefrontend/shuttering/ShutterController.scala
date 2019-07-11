@@ -18,25 +18,29 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ShutterController @Inject()(mcc              : MessagesControllerComponents,
-                                  shutterStatePage : ShutterStatePage,
-                                  shutterService   : ShutterService)(implicit val ec: ExecutionContext)
-  extends FrontendController(mcc) {
+class ShutterController @Inject()(
+    mcc               : MessagesControllerComponents
+  , verifySignInStatus: VerifySignInStatus
+  , shutterStatePage  : ShutterStatePage
+  , shutterService    : ShutterService
+  )(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
-    def allStates(envParam: String): Action[AnyContent] = Action.async { implicit request =>
-      Environment.parse(envParam) match {
-        case None      => Future.successful(BadRequest(s"Unknown environment: $envParam"))
-        case Some(env) => for {
-          currentState  <- shutterService.findCurrentState(env)
-          page          =  shutterStatePage(currentState, env)
-        } yield Ok(page)
+    def allStates(envParam: String): Action[AnyContent] =
+      verifySignInStatus.async { implicit request =>
+        Environment.parse(envParam) match {
+          case None      => Future.successful(BadRequest(s"Unknown environment: $envParam"))
+          case Some(env) => for {
+                              currentState  <- shutterService.findCurrentState(env)
+                              page          =  shutterStatePage(currentState, env, request.isSignedIn)
+                            } yield Ok(page)
+        }
       }
-    }
-
 }

@@ -21,7 +21,10 @@
 
 @this(viewMessages: ViewMessages)
 
-@(shutterStates: Seq[ShutterEvent],  selectedEnv: Environment)(implicit request: Request[_])
+@( shutterStates: Seq[ShutterEvent]
+ , selectedEnv  : Environment
+ , isSignedIn   : Boolean
+ )(implicit request: Request[_])
 
 @standard_layout(s"Shutter Status: ${selectedEnv.asString}") {
 
@@ -47,7 +50,7 @@
                   <th>Status</th>
                   <th>Shuttered by</th>
                   <th>Date</th>
-                  <th>Update</th>
+                  @if(isSignedIn) { <th>Update</th> }
               </tr>
           </thead>
 
@@ -88,10 +91,12 @@
       <td class="shutter-state">@event.ssData.status</td>
       <td class="shutter-user">@event.username</td>
       <td class="shutter-date">@DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:SS z").withZone(ZoneId.systemDefault).format(event.timestamp)</td>
-      <td>
+      @if(isSignedIn) {
+        <td>
           <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.ssData.environment.asString), Some(event.ssData.serviceName))">
             @changeValueFor(event.ssData.status)
           </a>
-      </td>
+        </td>
+      }
   </tr>
 }
