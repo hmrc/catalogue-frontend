@@ -36,7 +36,7 @@ val compile = Seq(
 val test = Seq(
   "uk.gov.hmrc"            %% "bootstrap-play-26"  % bootstrapPlayVersion % Test classifier "tests",
   "uk.gov.hmrc"            %% "hmrctest"           % "3.2.0"              % Test,
-  "uk.gov.hmrc"            %% "reactivemongo-test" % "4.6.0-play-26"      % Test,
+  "uk.gov.hmrc"            %% "reactivemongo-test" % "4.15.0-play-26"     % Test,
   "org.scalatest"          %% "scalatest"          % "3.0.5"              % Test,
   "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2"              % Test,
   "org.scalacheck"         %% "scalacheck"         % "1.14.0"             % Test,

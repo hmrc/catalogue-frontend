@@ -17,12 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 @Singleton
 class ShutterController @Inject()(
@@ -39,8 +41,14 @@ class ShutterController @Inject()(
           case None      => Future.successful(BadRequest(s"Unknown environment: $envParam"))
           case Some(env) => for {
                               currentState  <- shutterService.findCurrentState(env)
+                                                 .recover {
+                                                   case NonFatal(ex) =>
+                                                    Logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
+                                                    Seq.empty
+                                                 }
                               page          =  shutterStatePage(currentState, env, request.isSignedIn)
                             } yield Ok(page)
+
         }
       }
 }

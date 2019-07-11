@@ -24,7 +24,6 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
 
 @Singleton
 class ShutterConnector @Inject()(
@@ -45,26 +44,15 @@ class ShutterConnector @Inject()(
     */
   def shutterStates()(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
     http.GET[Seq[ShutterState]](url = urlStates)
-    .recover {
-      case NonFatal(ex) =>
-        Logger.error(s"An error occurred when connecting to $urlStates: ${ex.getMessage}", ex)
-        Seq.empty
-    }
-
 
   /**
     * GET
     * /shutter-api/events
     * Retrieves the current shutter events for all applications for given environment
     */
-  def latestShutterEvents(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterEvent]] =
+  def latestShutterEvents(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     http.GET[Seq[ShutterEvent]](url = s"$urlEvents?type=${EventType.ShutterStateChange.asString}&namedFilter=latestByServiceName&data.environment=${env.asString}")
-      .recover {
-        case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $urlEvents: ${ex.getMessage}", ex)
-          Seq.empty
-      }
-
+      .map(_.flatMap(_.toShutterStateChangeEvent))
 
   /**
     * GET

@@ -247,9 +247,30 @@ case class ShutterEvent(
   , eventType: EventType
   , data     : EventData
   ) {
-    // TODO fix this - just for migration..
-    def ssData = data.asInstanceOf[EventData.ShutterStateChangeData]
+    def toShutterStateChangeEvent: Option[ShutterStateChangeEvent] =
+      data match {
+        case sscd: EventData.ShutterStateChangeData =>
+                    Some(ShutterStateChangeEvent(
+                            username    = username
+                          , timestamp   = timestamp
+                          , serviceName = sscd.serviceName
+                          , environment = sscd.environment
+                          , status      = sscd.status
+                          , cause       = sscd.cause
+                          ))
+        case _ => None
+      }
   }
+
+/** Special case flattened */
+case class ShutterStateChangeEvent(
+    username   : String
+  , timestamp  : Instant
+  , serviceName: String
+  , environment: Environment
+  , status     : ShutterStatus
+  , cause      : ShutterCause
+  )
 
 object ShutterEvent {
 

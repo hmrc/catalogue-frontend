@@ -32,11 +32,12 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
   def updateShutterStatus(serviceName: String, env: Environment, status: ShutterStatus)(implicit hc: HeaderCarrier): Future[Unit] =
     shutterConnector.updateShutterStatus(serviceName, env, status)
 
-  def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterEvent]] =
+  def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     for {
       events <- shutterConnector.latestShutterEvents(env)
-      sorted = events.sortWith { case (l, r) => l.ssData.status == ShutterStatus.Shuttered ||
-                                                l.ssData.serviceName < r.ssData.serviceName
-                               }
+      sorted =  events.sortWith {
+                  case (l, r) => l.status      == ShutterStatus.Shuttered ||
+                                 l.serviceName <  r.serviceName
+                }
     } yield sorted
 }

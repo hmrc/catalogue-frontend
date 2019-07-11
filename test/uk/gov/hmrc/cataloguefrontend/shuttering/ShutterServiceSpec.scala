@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import java.time.LocalDateTime
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 import org.scalatest.{FlatSpec, Matchers}
 import org.mockito.Matchers._
@@ -31,26 +32,29 @@ import scala.concurrent.duration.Duration
 class ShutterServiceSpec extends FlatSpec with MockitoSugar with Matchers {
 
   val mockEvents = Seq(
-      ShutterEvent(
-          name   = "abc-frontend"
-        , env    = Environment.Production
-        , user   = "test.user"
-        , status = ShutterStatus.Shuttered
-        , date   = LocalDateTime.now().minusDays(2)
+      ShutterStateChangeEvent(
+          username    = "test.user"
+        , timestamp   = Instant.now().minus(2, ChronoUnit.DAYS)
+        , serviceName = "abc-frontend"
+        , environment = Environment.Production
+        , status      = ShutterStatus.Shuttered
+        , cause       = ShutterCause.UserCreated
         )
-    , ShutterEvent(
-          name   = "zxy-frontend"
-        , env    = Environment.Production
-        , user   = "fake.user"
-        , status = ShutterStatus.Unshuttered
-        , date   = LocalDateTime.now()
+    , ShutterStateChangeEvent(
+          username    = "fake.user"
+        , timestamp   = Instant.now()
+        , serviceName = "zxy-frontend"
+        , environment = Environment.Production
+        , status      = ShutterStatus.Unshuttered
+        , cause       = ShutterCause.UserCreated
         )
-    , ShutterEvent(
-          name   = "ijk-frontend"
-        , env    = Environment.Production
-        , user   = "test.user"
-        , status = ShutterStatus.Shuttered
-        , date   = LocalDateTime.now().minusDays(1)
+    , ShutterStateChangeEvent(
+          username    = "test.user"
+        , timestamp   = Instant.now().minus(1, ChronoUnit.DAYS)
+        , serviceName = "ijk-frontend"
+        , environment = Environment.Production
+        , status      = ShutterStatus.Shuttered
+        , cause       = ShutterCause.UserCreated
         )
     )
 
@@ -59,7 +63,7 @@ class ShutterServiceSpec extends FlatSpec with MockitoSugar with Matchers {
     val mockShutterConnector = mock[ShutterConnector]
     implicit val hc = new HeaderCarrier()
 
-    when(mockShutterConnector.latestShutterEvents()).thenReturn(Future(mockEvents))
+    when(mockShutterConnector.latestShutterEvents(Environment.Production)).thenReturn(Future(mockEvents))
     val ss = new ShutterService(mockShutterConnector)
 
     val Seq(a,b,c) = Await.result(ss.findCurrentState(Environment.Production), Duration(10, "seconds"))
