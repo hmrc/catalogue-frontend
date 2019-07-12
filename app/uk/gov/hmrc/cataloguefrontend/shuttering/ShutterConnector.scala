@@ -82,7 +82,7 @@ class ShutterConnector @Inject()(
   def updateShutterStatus(appName: String, env: Environment, status: ShutterStatus)(implicit hc: HeaderCarrier): Future[Unit] = {
     implicit val isf = ShutterStatus.format
 
-    implicit val nr = new uk.gov.hmrc.http.HttpReads[Unit] {
+    implicit val ur = new uk.gov.hmrc.http.HttpReads[Unit] {
       def read(method: String, url: String, response: uk.gov.hmrc.http.HttpResponse): Unit = ()
     }
 

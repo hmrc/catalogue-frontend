@@ -37,18 +37,15 @@ class ShutterController @Inject()(
 
     def allStates(envParam: String): Action[AnyContent] =
       verifySignInStatus.async { implicit request =>
-        Environment.parse(envParam) match {
-          case None      => Future.successful(BadRequest(s"Unknown environment: $envParam"))
-          case Some(env) => for {
-                              currentState  <- shutterService.findCurrentState(env)
-                                                 .recover {
-                                                   case NonFatal(ex) =>
-                                                    Logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
-                                                    Seq.empty
-                                                 }
-                              page          =  shutterStatePage(currentState, env, request.isSignedIn)
-                            } yield Ok(page)
-
-        }
-      }
+        val env = Environment.parse(envParam).getOrElse(Environment.Production)
+        for {
+          currentState <- shutterService.findCurrentState(env)
+                            .recover {
+                              case NonFatal(ex) =>
+                                Logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
+                                Seq.empty
+                            }
+          page         =  shutterStatePage(currentState, env, request.isSignedIn)
+        } yield Ok(page)
+    }
 }
