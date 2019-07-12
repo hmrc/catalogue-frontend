@@ -21,7 +21,7 @@
 
 @this(viewMessages: ViewMessages)
 
-@( shutter: ShutterServiceController.Page1Out
+@( step1Out: ShutterServiceController.Step1Out
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -41,11 +41,11 @@
 
           <div class="alert alert-success" role="alert">
             <span class="glyphicon glyphicon-ok"></span>
-            The following services have been successfully @valueFor(shutter.status) in <b>@shutter.env</b>:
+            The following services have been successfully @valueFor(step1Out.status) in <b>@step1Out.env</b>:
           </div>
 
           <ul style="list-style: disc;">
-            @shutter.serviceNames.map { serviceName =>
+            @step1Out.serviceNames.map { serviceName =>
               <li>@serviceName</li>
             }
           </ul>

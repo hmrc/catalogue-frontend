@@ -21,7 +21,8 @@
 
 @this(viewMessages: ViewMessages)
 
-@( shutter: ShutterServiceController.Page1Out
+@( step1Out: ShutterServiceController.Step1Out
+ , step2Out: ShutterServiceController.Step2Out
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -46,21 +47,27 @@
 
           <div class="alert alert-warning" role="alert">
             <span class="glyphicon glyphicon-warning-sign"></span>
-            You are about to <b>@valueFor(shutter.status)</b> the following services in <b>@shutter.env</b>:
+            You are about to <b>@valueFor(step1Out.status)</b> the following services in <b>@step1Out.env</b>:
           </div>
 
           <table class="padded-table" style="width: 100%">
             <tr>
               <td>
                 <ul style="list-style: disc;">
-                  @shutter.serviceNames.map { serviceName =>
+                  @step1Out.serviceNames.map { serviceName =>
                     <li>@serviceName</li>
                   }
                 </ul>
               </td>
             </tr>
+            <tr>
+              <td>
+                Outage Message:<br/>
+                <p>@Html(step2Out.outageMessage)</p>
+              </td>
+            </tr>
             <tr><td colspan="2">
-              @if(shutter.env == Environment.Production) {
+              @if(step1Out.env == Environment.Production) {
                 <div class="alert alert-danger" role="alert">
                   <span class="glyphicon glyphicon-warning-sign"></span>
                   <b>Production</b> means it will impact real users!
@@ -73,8 +80,16 @@
             </tr>
             <tr><td colspan="2">&nbsp;</td></tr>
             <tr>
-              <td colspan="2" style="text-align:right;">
-                <button id="search-button" class="btn btn-primary" type="submit">Submit</button>
+              <td>
+                <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step2Get" class="btn btn-default">
+                  <span class="glyphicon glyphicon-chevron-left"></span>
+                  Back
+                </a>
+              </td>
+              <td style="text-align:right;">
+                <button id="search-button" class="btn btn-primary" type="submit">
+                  Submit
+                </button>
               </td>
             </tr>
           </table>

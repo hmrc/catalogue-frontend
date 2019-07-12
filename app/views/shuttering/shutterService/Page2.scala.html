@@ -16,14 +16,13 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatus, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.Page2Form
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Form}
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@( form         : Form[Page2Form]
- , envs         : Seq[Environment]
- , statusValues : Seq[ShutterStatus]
+@( form     : Form[Step2Form]
+ , step1Out : Step1Out
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -49,6 +48,7 @@
 
     <div class="board">
       <div class="board__body">
+
         @helper.form(
             action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step2Post
           , 'class -> "form-inline"
@@ -58,31 +58,63 @@
 
           @CSRF.formField
 
+          <div class="alert alert-warning" role="alert">
+            <span class="glyphicon glyphicon-warning-sign"></span>
+            You are about to <b>@valueFor(step1Out.status)</b> the following services in <b>@step1Out.env</b>:
+          </div>
+
+          <table class="padded-table" style="width: 100%">
+            <tr>
+              <td>
+                <ul style="list-style: disc;">
+                  @step1Out.serviceNames.map { serviceName =>
+                    <li>@serviceName</li>
+                  }
+                </ul>
+              </td>
+            </tr>
+            <tr><td colspan="2">
+              @if(step1Out.env == Environment.Production) {
+                <div class="alert alert-danger" role="alert">
+                  <span class="glyphicon glyphicon-warning-sign"></span>
+                  <b>Production</b> means it will impact real users!
+                </div>
+              }
+            </td></tr>
+
           <table class="padded-table" width="100%">
             <tr>
               <td style="vertical-align: top;">
-                @select(
-                    field     =  form("env")
-                  , options   =  Seq("" -> "Please select") ++ envs.map(s => (s.asString, s.toString))
-                  , '_label   -> "Environment"
+                @textarea(
+                    field     =  form("reason")
+                  , '_label   -> "Reason"
+                  , 'rows    -> 2
+                  , 'cols    -> 60
                   )
               </td>
             </tr>
             <tr>
               <td style="vertical-align: top;">
-                @select(
-                    field     =  form("status")
-                  , options   =  Seq("" -> "Please select") ++ statusValues.map {
-                                    case ShutterStatus.Shuttered   => (ShutterStatus.Shuttered  .asString, "Shutter"  )
-                                    case ShutterStatus.Unshuttered => (ShutterStatus.Unshuttered.asString, "Unshutter")
-                                 }
-                  , '_label   -> "Status"
+                @textarea(
+                    field     =  form("outageMessage")
+                  , '_label   -> "Outage Message"
+                  , 'rows    -> 5
+                  , 'cols    -> 60
                   )
               </td>
             </tr>
             <tr>
-              <td colspan="2" style="text-align:right;">
-                <button id="search-button" class="btn btn-primary" type="submit">Next</button>
+              <td>
+                <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(None, None)" class="btn btn-default">
+                  <span class="glyphicon glyphicon-chevron-left"></span>
+                  Back
+                </a>
+              </td>
+              <td style="text-align:right;">
+                <button id="search-button" class="btn btn-primary" type="submit">
+                  Next
+                  <span class="glyphicon glyphicon-chevron-right"></span>
+                </button>
               </td>
             </tr>
           </table>
@@ -92,4 +124,11 @@
 
   </div>
 
+}
+
+@valueFor(status: ShutterStatus) = {
+  @status match {
+    case ShutterStatus.Shuttered   => { Shutter   }
+    case ShutterStatus.Unshuttered => { Unshutter }
+  }
 }
