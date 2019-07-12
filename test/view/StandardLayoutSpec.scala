@@ -20,6 +20,7 @@ import org.jsoup.Jsoup
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import play.twirl.api.Html
 import views.html.standard_layout
 
@@ -28,16 +29,17 @@ class StandardLayoutSpec extends WordSpec with Matchers with GuiceOneAppPerSuite
   "standard layout" should {
 
     "show Sign In link if user is not signed-in" in {
-      val document = Jsoup.parse(standard_layout()(Html("n/a"))(FakeRequest()).toString())
+      val request  = FakeRequest(GET, "/currentPage")
+      val document = Jsoup.parse(standard_layout()(Html("n/a"))(request).toString())
 
       val signInLink = document.select("nav ul.nav.navbar-nav.navbar-right > li > a#sign-in")
-      signInLink.attr("href") shouldBe "/sign-in"
+      signInLink.attr("href") shouldBe "/sign-in?targetUrl=%2FcurrentPage"
       signInLink.text         shouldBe "Sign in"
     }
 
     "show name of a user if they are signed-in" in {
       val expectedDisplayName = "John Smith"
-      val request             = FakeRequest().withSession("ump.displayName" -> expectedDisplayName)
+      val request             = FakeRequest(GET, "/currentPage").withSession("ump.displayName" -> expectedDisplayName)
 
       val document = Jsoup.parse(standard_layout()(Html("n/a"))(request).toString())
 
@@ -47,7 +49,7 @@ class StandardLayoutSpec extends WordSpec with Matchers with GuiceOneAppPerSuite
 
     "show a link to sign-out if user is signed-in" in {
       val expectedDisplayName = "John Smith"
-      val request             = FakeRequest().withSession("ump.displayName" -> expectedDisplayName)
+      val request             = FakeRequest(GET, "/currentPage").withSession("ump.displayName" -> expectedDisplayName)
 
       val document = Jsoup.parse(standard_layout()(Html("n/a"))(request).toString())
 
