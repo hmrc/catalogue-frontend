@@ -165,15 +165,8 @@ class DependencyExplorerController @Inject()(
     , asCsv       : Boolean = false
     )
 
-  // Forms.nonEmptyText, but has no constraint info label
-  def notEmpty = {
-    import play.api.data.validation._
-    Constraint[String]("") { o =>
-      if (o == null || o.trim.isEmpty) Invalid(ValidationError("error.required")) else Valid
-    }
-  }
-
-  def form(implicit messagesProvider: MessagesProvider) =
+  def form(implicit messagesProvider: MessagesProvider) = {
+    import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmpty
     Form(
       Forms.mapping(
           "team"         -> Forms.text
@@ -184,6 +177,7 @@ class DependencyExplorerController @Inject()(
         , "asCsv"        -> Forms.boolean
         )(SearchForm.apply)(SearchForm.unapply)
     )
+  }
 }
 
 object DependencyExplorerController {

@@ -114,19 +114,13 @@ class BobbyRulesTrendController @Inject()(
       rules: Seq[String]
     )
 
-  def form(implicit messagesProvider: MessagesProvider) =
+  def form(implicit messagesProvider: MessagesProvider) = {
+    import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmptySeq
     Form(
       Forms.mapping(
-          "rules" -> Forms.seq(Forms.text).verifying(notEmpty)
+          "rules" -> Forms.seq(Forms.text).verifying(notEmptySeq)
         )(SearchForm.apply)(SearchForm.unapply)
     )
-
-  // Forms.nonEmpty, but has no constraint info label
-  def notEmpty = {
-    import play.api.data.validation._
-    Constraint[Seq[String]]("") { o =>
-      if (o == null || o.isEmpty) Invalid(ValidationError("error.required")) else Valid
-    }
   }
 }
 

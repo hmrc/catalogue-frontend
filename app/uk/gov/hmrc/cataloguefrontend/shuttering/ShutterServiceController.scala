@@ -187,21 +187,7 @@ class ShutterServiceController @Inject()(
 
 object ShutterServiceController {
 
-  // Forms.nonEmpty, but has no constraint info label
-  def notEmpty = {
-    import play.api.data.validation._
-    Constraint[String]("") { o =>
-      if (o == null || o.trim.isEmpty) Invalid(ValidationError("error.required")) else Valid
-    }
-  }
-
-  def notEmptySeq = {
-    import play.api.data.validation._
-    Constraint[Seq[String]]("") { o =>
-      if (o == null || o.isEmpty) Invalid(ValidationError("error.required")) else Valid
-    }
-  }
-
+  import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmpty, notEmptySeq}
 
   // -- Page 1 -------------------------
 
