@@ -16,11 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatus, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.Page1Form
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@( form         : Form[_]
+@( form         : Form[Page1Form]
  , shutterStates: Seq[ShutterState]
  , envs         : Seq[Environment]
  , statusValues : Seq[ShutterStatus]

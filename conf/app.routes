@@ -53,3 +53,5 @@ POST       /shuttering/1                                uk.gov.hmrc.cataloguefro
 GET        /shuttering/2                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2Get
 POST       /shuttering/2                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2Post
 GET        /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step3Get
+POST       /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step3Post
+GET        /shuttering/4                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step4Get

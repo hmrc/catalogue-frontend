@@ -15,13 +15,15 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatus, ShutterServiceController, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatus, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.Page2Form
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@( shutter: ShutterServiceController.Shutter
+@( form         : Form[Page2Form]
+ , envs         : Seq[Environment]
+ , statusValues : Seq[ShutterStatus]
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -34,62 +36,60 @@
 
   <div id="service-list">
 
+    @if(form.hasGlobalErrors) {
+      <div class="alert alert-error error">
+        <a class="close" data-dismiss="alert">×</a>
+        <ul>
+          @form.globalErrors.map { error =>
+            <li>@error.format</li>
+          }
+        </ul>
+      </div>
+    }
+
     <div class="board">
       <div class="board__body">
         @helper.form(
             action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step2Post
+          , 'class -> "form-inline"
           , 'id    -> "shutter-service-form"
           , 'style -> "padding-left: 20px; padding-right: 20px"
           ) {
 
           @CSRF.formField
 
-          <div class="alert alert-warning" role="alert">
-            <span class="glyphicon glyphicon-warning-sign"></span>
-            You are about to <b>@valueFor(shutter.status)</b> the following services in <b>@shutter.env</b>:
-          </div>
-
-          <table class="padded-table" style="width: 100%">
+          <table class="padded-table" width="100%">
             <tr>
-              <td>
-                <ul style="list-style: disc;">
-                  @shutter.serviceNames.map { serviceName =>
-                    <li>@serviceName</li>
-                  }
-                </ul>
+              <td style="vertical-align: top;">
+                @select(
+                    field     =  form("env")
+                  , options   =  Seq("" -> "Please select") ++ envs.map(s => (s.asString, s.toString))
+                  , '_label   -> "Environment"
+                  )
               </td>
             </tr>
-            <tr><td colspan="2">
-              @if(shutter.env == Environment.Production) {
-                <div class="alert alert-danger" role="alert">
-                  <span class="glyphicon glyphicon-warning-sign"></span>
-                  <b>Production</b> means it will impact real users!
-                </div>
-              }
-            </td></tr>
-            <tr><td colspan="2">&nbsp;</td></tr>
             <tr>
-              <td>Please check this is correct before continuing.</td>
+              <td style="vertical-align: top;">
+                @select(
+                    field     =  form("status")
+                  , options   =  Seq("" -> "Please select") ++ statusValues.map {
+                                    case ShutterStatus.Shuttered   => (ShutterStatus.Shuttered  .asString, "Shutter"  )
+                                    case ShutterStatus.Unshuttered => (ShutterStatus.Unshuttered.asString, "Unshutter")
+                                 }
+                  , '_label   -> "Status"
+                  )
+              </td>
             </tr>
-            <tr><td colspan="2">&nbsp;</td></tr>
             <tr>
               <td colspan="2" style="text-align:right;">
-                <button id="search-button" class="btn btn-primary" type="submit">Submit</button>
+                <button id="search-button" class="btn btn-primary" type="submit">Next</button>
               </td>
             </tr>
           </table>
-
         }
       </div>
     </div>
 
   </div>
 
-}
-
-@valueFor(status: ShutterStatus) = {
-  @status match {
-    case ShutterStatus.Shuttered   => { Shutter   }
-    case ShutterStatus.Unshuttered => { Unshutter }
-  }
 }
