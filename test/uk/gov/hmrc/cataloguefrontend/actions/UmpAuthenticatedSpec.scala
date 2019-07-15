@@ -49,21 +49,30 @@ class UmpAuthenticatedSpec extends WordSpec with MockitoSugar with ScalaFutures 
         .futureValue shouldBe expectedStatus
     }
 
-    "return 404 NOT_FOUND if user is not signed-in (token exists but not valid)" in new Setup {
+    "return 303 REDIRECT if user is not signed-in (token exists but not valid)" in new Setup {
       val umpToken = UmpToken("token")
-      val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
+      val request  = FakeRequest(GET, "requestedPage").withSession("ump.token" -> umpToken.value)
 
       when(userManagementAuthConnector.isValid(is(umpToken))(any())).thenReturn(Future(false))
 
-      val result = action.invokeBlock(request, (_: Request[AnyContent]) => Future(Ok))
+      val result = action.invokeBlock(request, (_: Request[AnyContent]) => Future(Ok)).futureValue
 
-      status(result) shouldBe 404
+      result.header.status shouldBe 303
+      result.header.headers.get("Location") shouldBe Some("/sign-in?targetUrl=requestedPage")
     }
 
-    "return 404 NOT_FOUND if user is not signed-in (no token in the session)" in new Setup {
-      val result = action.invokeBlock(FakeRequest(), (_: Request[AnyContent]) => Future(Ok))
+    "return 303 REDIRECT if user is not signed-in (no token in the session)" in new Setup {
+      val result = action.invokeBlock(FakeRequest(GET, "requestedPage"), (_: Request[AnyContent]) => Future(Ok)).futureValue
 
-      status(result) shouldBe 404
+      result.header.status shouldBe 303
+      result.header.headers.get("Location") shouldBe Some("/sign-in?targetUrl=requestedPage")
+    }
+
+    "return 303 REDIRECT with no targetUrl if request is not GET" in new Setup {
+      val result = action.invokeBlock(FakeRequest(POST, "requestedPage"), (_: Request[AnyContent]) => Future(Ok)).futureValue
+
+      result.header.status shouldBe 303
+      result.header.headers.get("Location") shouldBe Some("/sign-in")
     }
   }
 

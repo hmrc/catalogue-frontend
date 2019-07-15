@@ -29,6 +29,11 @@ import scala.concurrent.{ExecutionContext, Future}
 final case class UmpVerifiedRequest[A](request: Request[A], override val messagesApi: MessagesApi, isSignedIn: Boolean)
     extends MessagesRequest[A](request, messagesApi)
 
+/** Creates an Action to check if there is a UmpToken, and if it is valid.
+  * It will continue to invoke the action body, with a [[UmpVerifiedRequest]] representing this status.
+  *
+  * Use [[UmpAuthenticated]] Action if it should only proceed when there is a valid UmpToken.
+  */
 @Singleton
 class VerifySignInStatus @Inject()(
   userManagementAuthConnector: UserManagementAuthConnector,
@@ -43,7 +48,7 @@ class VerifySignInStatus @Inject()(
     request.session.get(UmpToken.SESSION_KEY_NAME) match {
       case Some(token) =>
         userManagementAuthConnector.isValid(UmpToken(token)).flatMap { isValid =>
-          block(UmpVerifiedRequest(request, cc.messagesApi, isValid))
+          block(UmpVerifiedRequest(request, cc.messagesApi, isSignedIn = isValid))
         }
       case None =>
         block(UmpVerifiedRequest(request, cc.messagesApi, isSignedIn = false))

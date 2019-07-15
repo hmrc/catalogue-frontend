@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized, UmpUserId}
@@ -34,30 +34,19 @@ class AuthService @Inject()(
 )(implicit val ec: ExecutionContext) {
 
   def authenticate(username: String, password: String)(
-    implicit hc: HeaderCarrier): Future[Either[UmpUnauthorized, TokenAndDisplayName]] = {
-
-    def getDisplayNameOrDefaultToUserId(userId: UmpUserId): Future[Either[UmpUnauthorized, DisplayName]] =
-      userManagementConnector.getDisplayName(userId).map {
-        case Some(displayName) => Right(displayName)
-        case None              => Right(DisplayName(userId.value))
-      }
-
+    implicit hc: HeaderCarrier): Future[Either[UmpUnauthorized, TokenAndDisplayName]] =
     (for {
-      umpAuthData <- EitherT(userManagementAuthConnector.authenticate(username, password))
-      displayName <- EitherT(getDisplayNameOrDefaultToUserId(umpAuthData.userId))
-    } yield {
-      TokenAndDisplayName(umpAuthData.token, displayName)
-    }).value
-
-  }
-
+       umpAuthData    <- EitherT(userManagementAuthConnector.authenticate(username, password))
+       optDisplayName <- EitherT.liftF[Future, UmpUnauthorized, Option[DisplayName]](userManagementConnector.getDisplayName(umpAuthData.userId))
+       displayName    =  optDisplayName.getOrElse(DisplayName(umpAuthData.userId.value))
+     } yield TokenAndDisplayName(umpAuthData.token, displayName)
+    ).value
 }
 
 object AuthService {
 
   final case class TokenAndDisplayName(
-    token: UmpToken,
+    token      : UmpToken,
     displayName: DisplayName
   )
-
 }

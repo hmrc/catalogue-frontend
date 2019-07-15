@@ -1,0 +1,102 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, EventData, ShutterStatus, ShutterStateChangeEvent}
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import java.time.ZoneId
+@import java.time.format.DateTimeFormatter
+
+@this(viewMessages: ViewMessages)
+
+@( shutterStates: Seq[ShutterStateChangeEvent]
+ , selectedEnv  : Environment
+ , isSignedIn   : Boolean
+ )(implicit request: Request[_])
+
+@standard_layout(s"Shutter Status: ${selectedEnv.asString}") {
+
+  <header>
+      <h1>Shutter Status: @selectedEnv.toString</h1>
+  </header>
+
+  <section>
+
+    <div class="row">
+      <ul id="environment" class="nav nav-tabs">
+          @Environment.values.map(envOption)
+      </ul>
+  </div>
+
+  <div class="row tabs-bottom">
+
+
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Shuttered by</th>
+                  <th>Date</th>
+                  @if(isSignedIn) { <th>Update</th> }
+              </tr>
+          </thead>
+
+          <tbody>
+              @shutterStates.map(shutterRow)
+          </tbody>
+
+      </table>
+
+  </div>
+  </section>
+
+}
+
+@envOption(env: Environment) = {
+  <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterController.allStates(env.asString)" class="navbar-link">@env.toString</a>
+  </li>
+}
+
+@changeValueFor(status: ShutterStatus) = {
+  @status match {
+    case ShutterStatus.Shuttered   => { Unshutter }
+    case ShutterStatus.Unshuttered => { Shutter   }
+  }
+}
+
+@classFor(status: ShutterStatus) = {
+  @status match {
+    case ShutterStatus.Shuttered   => { shuttered   }
+    case ShutterStatus.Unshuttered => { unshuttered }
+  }
+}
+
+@shutterRow(event: ShutterStateChangeEvent) = {
+  <tr class="shutter-row @classFor(event.status)">
+      <td class="shutter-service">@event.serviceName</td>
+      <td class="shutter-state">@event.status</td>
+      <td class="shutter-user">@event.username</td>
+      <td class="shutter-date">@DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:SS z").withZone(ZoneId.systemDefault).format(event.timestamp)</td>
+      @if(isSignedIn) {
+        <td>
+          <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.environment.asString), Some(event.serviceName))">
+            @changeValueFor(event.status)
+          </a>
+        </td>
+      }
+  </tr>
+}

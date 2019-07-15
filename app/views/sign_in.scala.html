@@ -43,7 +43,9 @@
 
 <form action="/sign-in" method="post">
 
-    @{ play.filters.csrf.CSRF.getToken(request).map { token => CSRF.formField(request) } }
+    @play.filters.csrf.CSRF.getToken(request).map(_ => CSRF.formField(request))
+
+    <input type="hidden" name="targetUrl" value="@form.data.get("targetUrl")" />
 
     <div class="form-group row">
         <div class="col-xs-1 padding-reset-right">

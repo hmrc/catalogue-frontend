@@ -94,7 +94,7 @@ class AuthControllerSpec
 
   "Showing sign-in page" should {
     "provide a link to help people who forgotten their password" in new Setup {
-      val result                = controller.showSignInPage(FakeRequest())
+      val result                = controller.showSignInPage(targetUrl = None)(FakeRequest())
       val signInPage            = Jsoup.parse(contentAsString(result))
       val forgottenPasswordLink = signInPage.select("#forgotten-password")
 

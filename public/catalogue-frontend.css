@@ -12087,3 +12087,13 @@ section span.other-teams-message {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+#shutter-service-form .error {
+  text-align: left; }
+
+.tabs-bottom {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #ddd;
+  border-top-color: transparent;
+}

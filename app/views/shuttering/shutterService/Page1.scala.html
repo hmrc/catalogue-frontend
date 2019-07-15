@@ -1,0 +1,105 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatus, ShutterState}
+@import helper._
+
+@this(viewMessages: ViewMessages)
+
+@( form         : Form[_]
+ , shutterStates: Seq[ShutterState]
+ , envs         : Seq[Environment]
+ , statusValues : Seq[ShutterStatus]
+ )(implicit request         : Request[_]
+          , messagesProvider: MessagesProvider
+          )
+
+@standard_layout(s"Shutter Service") {
+
+  <header>
+    <h1>Shutter Service</h1>
+  </header>
+
+  <div id="service-list">
+
+    @if(form.hasGlobalErrors) {
+      <div class="alert alert-error error">
+        <a class="close" data-dismiss="alert">×</a>
+        <ul>
+          @form.globalErrors.map { error =>
+            <li>@error.format</li>
+          }
+        </ul>
+      </div>
+    }
+
+    <div class="board">
+      <div class="board__body">
+        @helper.form(
+            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Post
+          , 'class -> "form-inline"
+          , 'id    -> "shutter-service-form"
+          , 'style -> "padding-left: 20px; padding-right: 20px"
+          ) {
+
+          @CSRF.formField
+
+          <table class="padded-table" width="100%">
+            <tr>
+              <td style="vertical-align: top;">
+                @select(
+                    field     =  form("serviceName")
+                  , options   =  shutterStates.map(s => (s.name, s.name))
+                  , '_label   -> "Service"
+                  , 'multiple -> "multiple"
+                  )
+              </td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;">
+                @select(
+                    field     =  form("env")
+                  , options   =  Seq("" -> "Please select") ++ envs.map(s => (s.asString, s.toString))
+                  , '_label   -> "Environment"
+                  )
+              </td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;">
+                @select(
+                    field     =  form("status")
+                  , options   =  Seq("" -> "Please select") ++ statusValues.map {
+                                    case ShutterStatus.Shuttered   => (ShutterStatus.Shuttered  .asString, "Shutter"  )
+                                    case ShutterStatus.Unshuttered => (ShutterStatus.Unshuttered.asString, "Unshutter")
+                                 }
+                  , '_label   -> "Status"
+                  )
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" style="text-align:right;">
+                <button id="search-button" class="btn btn-primary" type="submit">Next</button>
+              </td>
+            </tr>
+          </table>
+        }
+      </div>
+    </div>
+
+  </div>
+
+}
