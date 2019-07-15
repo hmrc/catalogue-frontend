@@ -15,14 +15,16 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatus, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, OutagePage, ShutterStatus, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Form}
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@( form     : Form[Step2Form]
- , step1Out : Step1Out
+@( form                  : Form[Step2Form]
+ , step1Out              : Step1Out
+ , requiresOutageMessage : Boolean
+ , outagePages           : List[OutagePage]
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -58,51 +60,89 @@
 
           @CSRF.formField
 
-          <div class="alert alert-warning" role="alert">
-            <span class="glyphicon glyphicon-warning-sign"></span>
-            You are about to <b>@valueFor(step1Out.status)</b> the following services in <b>@step1Out.env</b>:
-          </div>
-
-          <table class="padded-table" style="width: 100%">
-            <tr>
-              <td>
+          <div class="panel @if(step1Out.env == Environment.Production) {panel-danger} else {panel-warning}">
+            <div class="panel-heading">
+              <span class="glyphicon glyphicon-warning-sign"></span>
+              You are about to <b>@valueFor(step1Out.status)</b> the following services in <b>@step1Out.env</b>:
+            </div>
+            <div class="panel-body">
                 <ul style="list-style: disc;">
                   @step1Out.serviceNames.map { serviceName =>
                     <li>@serviceName</li>
                   }
                 </ul>
+            </div>
+          </div>
+          <table class="padded-table" style="width: 100%">
+            <tr>
+              <td style="vertical-align: top;">
+                @textarea(
+                    field        =  form("reason")
+                  , '_label      -> "Reason"
+                  , 'placeholder -> "You may optionally provide a reason here."
+                  , 'rows        -> 2
+                  , 'cols        -> 60
+                  )
               </td>
             </tr>
-            <tr><td colspan="2">
-              @if(step1Out.env == Environment.Production) {
-                <div class="alert alert-danger" role="alert">
-                  <span class="glyphicon glyphicon-warning-sign"></span>
-                  <b>Production</b> means it will impact real users!
-                </div>
+            @if(requiresOutageMessage) {
+              @if(!outagePages.flatMap(_.warnings).isEmpty) {
+                <tr>
+                  <td>
+                    <div class="panel panel-warning">
+                      <div class="panel-heading"><span class="glyphicon glyphicon-warning-sign"></span>
+                        There were some issues with the Outage pages.</div>
+                        <div class="panel-body">
+                          Please review, you can still continue to shutter.
+                          <br/><br/>
+                          <table>
+                            @step1Out.serviceNames.map { serviceName =>
+                              <tr>
+                                <td  style="border: 1px solid black;">@serviceName</td>
+                                  @outagePages.find(_.serviceName == serviceName) match {
+                                    case Some(outagePage) if outagePage.warnings.nonEmpty => {
+                                      <td style="border: 1px solid black;" class="alert-warning">
+                                        @Html(outagePage.warnings.map(_.message).mkString("<br/>"))
+                                      </td>
+                                    }
+                                    case Some(outagePage) if outagePage.templatedMessages.isEmpty => {
+                                      <td style="border: 1px solid black;" class="alert-warning">
+                                        No templatedMessage Element in outage-page
+                                      </td>
+                                    }
+                                    case Some(outagePage) if outagePage.templatedMessages.length > 1 => {
+                                      <td style="border: 1px solid black;" class="alert-warning">
+                                        Multiple templatedMessage Element in outage-page
+                                      </td>
+                                    }
+                                    case Some(_) => { <td style="border: 1px solid black;">Ok</td }
+                                    case None => {
+                                      <td style="border: 1px solid black;" class="alert-warning">
+                                        No templatedMessage Element no outage-page
+                                      </td>
+                                    }
+                                  }
+                              </tr>
+                            }
+                          </table>
+                        </div>
+                    </div>
+                  </td>
+                </tr>
               }
-            </td></tr>
-
-          <table class="padded-table" width="100%">
-            <tr>
-              <td style="vertical-align: top;">
-                @textarea(
-                    field     =  form("reason")
-                  , '_label   -> "Reason"
-                  , 'rows    -> 2
-                  , 'cols    -> 60
-                  )
-              </td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">
-                @textarea(
-                    field     =  form("outageMessage")
-                  , '_label   -> "Outage Message"
-                  , 'rows    -> 5
-                  , 'cols    -> 60
-                  )
-              </td>
-            </tr>
+              <tr>
+                <td style="vertical-align: top;">
+                  @textarea(
+                      field    =  form("outageMessage")
+                    , '_label  -> "Outage Message"
+                    , 'rows    -> 5
+                    , 'cols    -> 60
+                    )
+                </td>
+              </tr>
+            } else {
+              <input type="hidden" name="outageMessage" value=""/>
+            }
             <tr>
               <td>
                 <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(None, None)" class="btn btn-default">

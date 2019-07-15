@@ -29,8 +29,17 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
   def getShutterStates(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
     shutterConnector.shutterStates
 
-  def updateShutterStatus(serviceName: String, env: Environment, status: ShutterStatus)(implicit hc: HeaderCarrier): Future[Unit] =
-    shutterConnector.updateShutterStatus(serviceName, env, status)
+  def updateShutterStatus(
+      serviceName: String
+    , env          : Environment
+    , status       : ShutterStatus
+    , reason       : String
+    , outageMessage: String
+    )(implicit hc: HeaderCarrier): Future[Unit] =
+      shutterConnector.updateShutterStatus(serviceName, env, status, reason, outageMessage)
+
+  def outagePageByAppAndEnv(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] =
+    shutterConnector.outagePageByAppAndEnv(serviceName, env)
 
   def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     for {

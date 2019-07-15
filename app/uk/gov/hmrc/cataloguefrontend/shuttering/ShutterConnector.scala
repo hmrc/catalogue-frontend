@@ -31,8 +31,9 @@ class ShutterConnector @Inject()(
   , serviceConfig: ServicesConfig
   )(implicit val ec: ExecutionContext){
 
-  private val urlStates: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/states"
-  private val urlEvents: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/events"
+  private val urlStates     : String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/states"
+  private val urlEvents     : String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/events"
+  private val urlOutagePages: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/outage-pages"
 
   private implicit val ssr = ShutterState.reads
   private implicit val ser = ShutterEvent.reads
@@ -79,13 +80,32 @@ class ShutterConnector @Inject()(
     * /shutter-api/states/{appName}/{environment}
     * Shutters/un-shutters the application in the given environment
     */
-  def updateShutterStatus(appName: String, env: Environment, status: ShutterStatus)(implicit hc: HeaderCarrier): Future[Unit] = {
+  def updateShutterStatus(
+      appName      : String
+    , env          : Environment
+    , status       : ShutterStatus
+    , reason       : String
+    , outageMessage: String
+    )(implicit hc: HeaderCarrier): Future[Unit] = {
     implicit val isf = ShutterStatus.format
 
     implicit val ur = new uk.gov.hmrc.http.HttpReads[Unit] {
       def read(method: String, url: String, response: uk.gov.hmrc.http.HttpResponse): Unit = ()
     }
 
+    // TODO at some point, payload will take reason/outageMessage
+
     http.PUT[ShutterStatus, Unit](s"$urlStates/$appName/${env.asString}", status)
+  }
+
+
+  /**
+    * GET
+    * /shutter-api/outage-pages/{appName}/{environment}
+    * Retrieves the current shutter state for the given application in the given environment
+    */
+  def outagePageByAppAndEnv(appName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] = {
+    implicit val ssf = OutagePage.reads
+    http.GET[Option[OutagePage]](s"$urlOutagePages/$appName/${env.asString}")
   }
 }

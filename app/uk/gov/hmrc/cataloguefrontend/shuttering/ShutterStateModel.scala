@@ -284,3 +284,55 @@ object ShutterEvent {
     )(ShutterEvent.apply _)
   }
 }
+
+case class TemplatedContent(
+    elementId: String
+  , innerHtml: String
+  )
+
+object TemplatedContent {
+  val format: Format[TemplatedContent] =
+    ( (__ \ "elementID").format[String]
+    ~ (__ \ "innerHTML").format[String]
+    )( TemplatedContent.apply
+     , unlift(TemplatedContent.unapply)
+     )
+}
+
+case class OutagePageWarning(
+    name   : String
+  , message: String
+  )
+
+object OutagePageWarning {
+  val reads: Reads[OutagePageWarning] =
+    ( (__ \ "type"   ).read[String]
+    ~ (__ \ "message").read[String]
+    )(OutagePageWarning.apply _)
+}
+
+case class OutagePage(
+    serviceName      : String
+  , environment      : Environment
+  , outagePageURL    : String
+  , warnings         : List[OutagePageWarning]
+  , templatedElements: List[TemplatedContent]
+  ) {
+    def templatedMessages: List[TemplatedContent] =
+      templatedElements
+        .filter(_.elementId == "templatedMessage")
+  }
+
+object OutagePage {
+  val reads: Reads[OutagePage] = {
+    implicit val ef   = Environment.format
+    implicit val tcf  = TemplatedContent.format
+    implicit val opwr = OutagePageWarning.reads
+    ( (__ \ "serviceName"      ).read[String]
+    ~ (__ \ "environment"      ).read[Environment]
+    ~ (__ \ "outagePageURL"    ).read[String]
+    ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
+    ~ (__ \ "templatedElements").read[List[TemplatedContent]]
+    )(OutagePage.apply _)
+  }
+}

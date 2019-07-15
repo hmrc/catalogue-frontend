@@ -23,6 +23,7 @@
 
 @( step1Out: ShutterServiceController.Step1Out
  , step2Out: ShutterServiceController.Step2Out
+ , back    : Call
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -45,43 +46,47 @@
 
           @CSRF.formField
 
-          <div class="alert alert-warning" role="alert">
-            <span class="glyphicon glyphicon-warning-sign"></span>
-            You are about to <b>@valueFor(step1Out.status)</b> the following services in <b>@step1Out.env</b>:
-          </div>
-
-          <table class="padded-table" style="width: 100%">
-            <tr>
-              <td>
+          <div class="panel @if(step1Out.env == Environment.Production) {panel-danger} else {panel-warning}">
+            <div class="panel-heading">
+              <span class="glyphicon glyphicon-warning-sign"></span>
+              You are about to <b>@valueFor(step1Out.status)</b> the following services in <b>@step1Out.env</b>:
+            </div>
+            <div class="panel-body">
                 <ul style="list-style: disc;">
                   @step1Out.serviceNames.map { serviceName =>
                     <li>@serviceName</li>
                   }
                 </ul>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                Outage Message:<br/>
-                <p>@Html(step2Out.outageMessage)</p>
-              </td>
-            </tr>
-            <tr><td colspan="2">
-              @if(step1Out.env == Environment.Production) {
-                <div class="alert alert-danger" role="alert">
-                  <span class="glyphicon glyphicon-warning-sign"></span>
-                  <b>Production</b> means it will impact real users!
-                </div>
-              }
-            </td></tr>
+            </div>
+          </div>
+
+          <table class="padded-table" style="width: 100%">
+            @if(step1Out.status == ShutterStatus.Shuttered) {
+              <tr>
+                <td colspan="2">
+                  Outage Message:
+                  <div class="jumbotron">@Html(step2Out.outageMessage)</div>
+                </td>
+              </tr>
+            }
             <tr><td colspan="2">&nbsp;</td></tr>
             <tr>
               <td>Please check this is correct before continuing.</td>
             </tr>
             <tr><td colspan="2">&nbsp;</td></tr>
+            @if(step1Out.env == Environment.Production) {
+              <tr>
+                <td colspan="2">
+                  <div class="alert alert-danger" role="alert">
+                    <span class="glyphicon glyphicon-warning-sign"></span>
+                    <b>Production</b> means it will impact real users!<br/>
+                  </div>
+                </td>
+              </tr>
+            }
             <tr>
               <td>
-                <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step2Get" class="btn btn-default">
+                <a href="@back" class="btn btn-default">
                   <span class="glyphicon glyphicon-chevron-left"></span>
                   Back
                 </a>
@@ -93,7 +98,6 @@
               </td>
             </tr>
           </table>
-
         }
       </div>
     </div>
