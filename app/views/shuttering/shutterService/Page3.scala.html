@@ -16,13 +16,15 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatus, ShutterServiceController, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Out, Step3Form}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@( step1Out: ShutterServiceController.Step1Out
- , step2Out: ShutterServiceController.Step2Out
+@( form    : Form[Step3Form]
+ , step1Out: Step1Out
+ , step2Out: Step2Out
  , back    : Call
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
@@ -35,6 +37,18 @@
   </header>
 
   <div id="service-list">
+
+    @if(form.hasGlobalErrors) {
+      <div class="alert alert-error error">
+        <a class="close" data-dismiss="alert">×</a>
+        <ul>
+          @form.globalErrors.map { error =>
+            <li>@error.format</li>
+          }
+        </ul>
+      </div>
+    }
+
 
     <div class="board">
       <div class="board__body">
@@ -80,9 +94,13 @@
                   <div class="alert alert-danger" role="alert">
                     <span class="glyphicon glyphicon-warning-sign"></span>
                     <b>Production</b> means it will impact real users!<br/>
+                    <input type="checkbox" id="confirm" name="confirm" value="true">
+                    <label for="confirm">I confirm</label>
                   </div>
                 </td>
               </tr>
+            } else {
+             <input type="hidden" name="confirm" value="true">
             }
             <tr>
               <td>

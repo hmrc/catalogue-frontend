@@ -195,16 +195,21 @@ class ShutterServiceController @Inject()(
   //
   // --------------------------------------------------------------------------
 
+  private def showPage3(form3: Form[Step3Form], step1Out: Step1Out, step2Out: Step2Out)(implicit request: Request[Any]): Html = {
+    val back      =  if (step1Out.status == ShutterStatus.Shuttered)
+                       appRoutes.ShutterServiceController.step2Get
+                     else appRoutes.ShutterServiceController.step1Post
+    page3(form3, step1Out, step2Out, back)
+  }
+
   def step3Get =
     umpAuthenticated { implicit request =>
       (for {
          flowState <- fromSession(request.session)
          step1Out  <- flowState.step1
          step2Out  <- flowState.step2
-         back      =  if (step1Out.status == ShutterStatus.Shuttered)
-                           appRoutes.ShutterServiceController.step2Get
-                      else appRoutes.ShutterServiceController.step1Post
-       } yield Ok(page3(step1Out, step2Out, back))
+         html      =  showPage3(step3Form.fill(Step3Form(confirm = false)), step1Out, step2Out)
+       } yield Ok(html)
       ).getOrElse(Redirect(appRoutes.ShutterServiceController.step1Post))
     }
 
@@ -219,6 +224,12 @@ class ShutterServiceController @Inject()(
                          fromSession(request.session).flatMap(_.step2)
                        , Redirect(appRoutes.ShutterServiceController.step2Get)
                        )
+         _        <- step3Form
+                       .bindFromRequest
+                       .fold(
+                           hasErrors = formWithErrors => EitherT.left(Future(showPage3(formWithErrors, step1Out, step2Out)).map(BadRequest(_)))
+                         , success   = data           => EitherT.pure[Future, Result](())
+                         )
          _        <- step1Out.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
                        EitherT.right[Result] {
                          shutterService
@@ -301,6 +312,19 @@ object ShutterServiceController {
 
   private implicit val step2OutFormats =
     Json.format[Step2Out]
+
+  // -- Step 3 -------------------------
+
+  def step3Form(implicit messagesProvider: MessagesProvider) =
+    Form(
+      Forms.mapping(
+          "confirm"        -> Forms.boolean
+        )(Step3Form.apply)(Step3Form.unapply).verifying("You must check confirmation for Production", _.confirm == true)
+    )
+
+  case class Step3Form(
+      confirm      : Boolean
+    )
 
 
   // -- Flow State -------------------------
