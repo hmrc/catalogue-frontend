@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, OutagePage, ShutterStatus, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, OutagePageStatus, ShutterStatus, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Form}
 @import helper._
 
@@ -24,7 +24,7 @@
 @( form                  : Form[Step2Form]
  , step1Out              : Step1Out
  , requiresOutageMessage : Boolean
- , outagePages           : List[OutagePage]
+ , outagePages           : Seq[OutagePageStatus]
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -86,7 +86,7 @@
               </td>
             </tr>
             @if(requiresOutageMessage) {
-              @if(!outagePages.flatMap(_.warnings).isEmpty) {
+              @if(outagePages.find(_.warning.isDefined)) {
                 <tr>
                   <td>
                     <div class="panel panel-warning">
@@ -95,33 +95,27 @@
                         <div class="panel-body">
                           Please review, you can still continue to shutter.
                           <br/><br/>
-                          <table>
-                            @step1Out.serviceNames.map { serviceName =>
-                              <tr>
-                                <td  style="border: 1px solid black;">@serviceName</td>
-                                  @outagePages.find(_.serviceName == serviceName) match {
-                                    case Some(outagePage) if outagePage.warnings.nonEmpty => {
-                                      <td style="border: 1px solid black;" class="alert-warning">
-                                        @Html(outagePage.warnings.map(_.message).mkString("<br/>"))
-                                      </td>
-                                    }
-                                    case Some(outagePage) if outagePage.templatedMessages.isEmpty => {
-                                      <td style="border: 1px solid black;" class="alert-warning">
-                                        No templatedMessage Element in outage-page
-                                      </td>
-                                    }
-                                    case Some(outagePage) if outagePage.templatedMessages.length > 1 => {
-                                      <td style="border: 1px solid black;" class="alert-warning">
-                                        Multiple templatedMessage Element in outage-page
-                                      </td>
-                                    }
-                                    case Some(_) => { <td style="border: 1px solid black;">Ok</td }
-                                    case None => {
-                                      <td style="border: 1px solid black;" class="alert-warning">
-                                        No templatedMessage Element no outage-page
-                                      </td>
-                                    }
+                          <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                              <td>Service</td>
+                              <td>Observation</td>
+                              <td>Consequence</td>
+                            </tr>
+                            </thead>
+                            @outagePages.map { outagePageStatus =>
+                              <tr class="@if(outagePageStatus.warning.isDefined) { alert-warning } else {}">
+                                <td>@outagePageStatus.serviceName</td>
+                                @outagePageStatus.warning match {
+                                  case Some((warning, consequence)) => {
+                                    <td>@Html(warning)</td>
+                                    <td>@consequence</td>
                                   }
+                                  case None => {
+                                    <td>None</td>
+                                    <td></td>
+                                  }
+                                }
                               </tr>
                             }
                           </table>

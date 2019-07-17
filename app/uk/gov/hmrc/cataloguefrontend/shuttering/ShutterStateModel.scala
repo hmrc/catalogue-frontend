@@ -336,3 +336,8 @@ object OutagePage {
     )(OutagePage.apply _)
   }
 }
+
+case class OutagePageStatus(
+    serviceName : String
+  , warning     : Option[(String, String)]
+  )

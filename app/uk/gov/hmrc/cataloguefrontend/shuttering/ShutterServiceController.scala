@@ -138,12 +138,13 @@ class ShutterServiceController @Inject()(
                                 .flatMap(_.templatedMessages)
                                 .headOption
       requiresOutageMessage = outageMessageTemplate.isDefined || outagePages.flatMap(_.warnings).nonEmpty
+      outagePageStatus      = shutterService.toOutagePageStatus(step1Out.serviceNames, outagePages)
       form2                 = step2Form.fill {
                                 val s2f = form.get
                                 lazy val defaultOutageMessage = outageMessageTemplate.fold("")(_.innerHtml)
                                 if (s2f.outageMessage.isEmpty) s2f.copy(outageMessage = defaultOutageMessage) else s2f
                               }
-    } yield page2(form2, step1Out, requiresOutageMessage, outagePages)
+    } yield page2(form2, step1Out, requiresOutageMessage, outagePageStatus)
 
 
   def step2Get =

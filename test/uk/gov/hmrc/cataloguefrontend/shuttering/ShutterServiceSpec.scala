@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{Matchers, WordSpec}
 import org.mockito.Matchers._
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -29,7 +29,7 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
-class ShutterServiceSpec extends FlatSpec with MockitoSugar with Matchers {
+class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
 
   val mockEvents = Seq(
       ShutterStateChangeEvent(
@@ -58,18 +58,124 @@ class ShutterServiceSpec extends FlatSpec with MockitoSugar with Matchers {
         )
     )
 
-  "findCurrentState" should "return a list of shutter events ordered by shutter status" in {
+  "findCurrentState" should {
+    "return a list of shutter events ordered by shutter status" in {
+      val boot = Boot.init
+      implicit val hc = new HeaderCarrier()
 
-    val mockShutterConnector = mock[ShutterConnector]
-    implicit val hc = new HeaderCarrier()
+      when(boot.mockShutterConnector.latestShutterEvents(Environment.Production)).thenReturn(Future(mockEvents))
 
-    when(mockShutterConnector.latestShutterEvents(Environment.Production)).thenReturn(Future(mockEvents))
-    val ss = new ShutterService(mockShutterConnector)
+      val Seq(a,b,c) = Await.result(boot.shutterService.findCurrentState(Environment.Production), Duration(10, "seconds"))
 
-    val Seq(a,b,c) = Await.result(ss.findCurrentState(Environment.Production), Duration(10, "seconds"))
-
-    a.status shouldBe ShutterStatus.Shuttered
-    b.status shouldBe ShutterStatus.Shuttered
-    c.status shouldBe ShutterStatus.Unshuttered
+      a.status shouldBe ShutterStatus.Shuttered
+      b.status shouldBe ShutterStatus.Shuttered
+      c.status shouldBe ShutterStatus.Unshuttered
+    }
   }
+
+  "toOutagePageStatus" should {
+    val boot = Boot.init
+
+    "handle missing OutagePage" in {
+      boot.shutterService.toOutagePageStatus(
+          serviceNames = Seq("service1")
+        , outagePages  = List.empty
+        ) shouldBe List(OutagePageStatus(
+            serviceName = "service1"
+          , warning     = Some(( "No templatedMessage Element no outage-page"
+                               , "Default outage page will be displayed."
+                              ))
+          ))
+    }
+
+    "handle multiple missing OutagePages" in {
+      boot.shutterService.toOutagePageStatus(
+          serviceNames = Seq("service1", "service2")
+        , outagePages  = List.empty
+        ) shouldBe List(
+            OutagePageStatus(
+                serviceName = "service1"
+              , warning     = Some(( "No templatedMessage Element no outage-page"
+                                   , "Default outage page will be displayed."
+                                  ))
+              )
+          , OutagePageStatus(
+                serviceName = "service2"
+              , warning     = Some(( "No templatedMessage Element no outage-page"
+                                   , "Default outage page will be displayed."
+                                  ))
+              )
+          )
+    }
+
+    "handle warnings" in {
+      boot.shutterService.toOutagePageStatus(
+          serviceNames = Seq("service1", "service2", "service3")
+        , outagePages  = List(
+                             mkOutagePage(
+                                 serviceName = "service1"
+                               , warnings    = List(OutagePageWarning(
+                                                   name    = "UnableToRetrievePage"
+                                                 , message = "Unable to retrieve outage-page from Github"
+                                                 ))
+
+                               )
+                           , mkOutagePage(
+                                 serviceName = "service2"
+                               , warnings    = List(OutagePageWarning(
+                                                   name    = "MalformedHTML"
+                                                 , message = "The outage page was found to have some malformed html content"
+                                                 ))
+                               )
+                           , mkOutagePage(
+                                 serviceName = "service3"
+                               , warnings    = List(OutagePageWarning(
+                                                   name    = "DuplicateTemplateElementIDs"
+                                                 , message = "More than one template ID was found in the content for: templatedMessage"
+                                                 ))
+                               )
+                           )
+        ) shouldBe List(
+            OutagePageStatus(
+                serviceName = "service1"
+              , warning     = Some(( "Unable to retrieve outage-page from Github"
+                                   , "Default outage page will be displayed."
+                                  ))
+              )
+          , OutagePageStatus(
+                serviceName = "service2"
+              , warning     = Some(( "The outage page was found to have some malformed html content"
+                                   , "Outage page will be sent as is, without updating templates."
+                                  ))
+              )
+          , OutagePageStatus(
+                serviceName = "service3"
+              , warning     = Some(( "More than one template ID was found in the content for: templatedMessage"
+                                   , "All matching elements will be updated"
+                                  ))
+              )
+          )
+    }
+  }
+
+  def mkOutagePage(serviceName: String, warnings: List[OutagePageWarning]): OutagePage =
+    OutagePage(
+        serviceName      = serviceName
+      , environment      = Environment.Production
+      , outagePageURL    = ""
+      , warnings         = warnings
+      , templatedElements = List.empty
+      )
+
+  case class Boot(shutterService: ShutterService, mockShutterConnector: ShutterConnector)
+
+  object Boot {
+    def init: Boot = {
+      val mockShutterConnector = mock[ShutterConnector]
+      val shutterService       = new ShutterService(mockShutterConnector)
+      Boot(shutterService, mockShutterConnector)
+    }
+  }
+
+
 }
