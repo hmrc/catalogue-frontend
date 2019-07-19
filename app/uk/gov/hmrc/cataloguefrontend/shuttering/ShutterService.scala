@@ -43,7 +43,7 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
     for {
       events <- shutterConnector.latestShutterEvents(env)
       sorted =  events.sortWith {
-                  case (l, r) => l.status.value == ShutterStatusValue.Shuttered ||
+                  case (l, r) => l.status == ShutterStatusValue.Shuttered ||
                                  l.serviceName <  r.serviceName
                 }
     } yield sorted

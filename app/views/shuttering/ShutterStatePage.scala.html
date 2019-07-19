@@ -86,7 +86,7 @@
 }
 
 @shutterRow(event: ShutterStateChangeEvent) = {
-  <tr class="shutter-row @classFor(event.status.value)">
+  <tr class="shutter-row @classFor(event.status)">
       <td class="shutter-service">@event.serviceName</td>
       <td class="shutter-state">@event.status</td>
       <td class="shutter-user">@event.username</td>
@@ -94,7 +94,7 @@
       @if(isSignedIn) {
         <td>
           <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.environment.asString), Some(event.serviceName))">
-            @changeValueFor(event.status.value)
+            @changeValueFor(event.status)
           </a>
         </td>
       }
