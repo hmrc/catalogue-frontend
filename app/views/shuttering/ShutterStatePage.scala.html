@@ -43,7 +43,7 @@
   <div class="row tabs-bottom">
 
 
-      <table class="table table-striped">
+      <table id="shutter-state-table" class="table table-striped">
           <thead>
               <tr>
                   <th>Service</th>
@@ -93,7 +93,7 @@
       <td class="shutter-date">@DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:SS z").withZone(ZoneId.systemDefault).format(event.timestamp)</td>
       @if(isSignedIn) {
         <td>
-          <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.environment.asString), Some(event.serviceName))">
+          <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.environment.asString), Some(event.serviceName))">
             @changeValueFor(event.status)
           </a>
         </td>

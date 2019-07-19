@@ -36,7 +36,7 @@
     <h1>Shutter Service</h1>
   </header>
 
-  <div id="service-list">
+  <div>
 
     @if(form.hasGlobalErrors) {
       <div class="alert alert-error error">
@@ -63,10 +63,10 @@
           <div class="panel @if(step1Out.env == Environment.Production) {panel-danger} else {panel-warning}">
             <div class="panel-heading">
               <span class="glyphicon glyphicon-warning-sign"></span>
-              You are about to <b>@valueFor(step1Out.status)</b> the following services in <b>@step1Out.env</b>:
+              You are about to <b id="shutterStatus">@valueFor(step1Out.status)</b> the following services in <b>@step1Out.env</b>:
             </div>
             <div class="panel-body">
-                <ul style="list-style: disc;">
+                <ul id="service-list" style="list-style: disc;">
                   @step1Out.serviceNames.map { serviceName =>
                     <li>@serviceName</li>
                   }
@@ -79,7 +79,7 @@
               <tr>
                 <td colspan="2">
                   Outage Message:
-                  <div class="jumbotron">@Html(step2Out.outageMessage)</div>
+                  <div id="outageMessage" class="jumbotron">@Html(step2Out.outageMessage)</div>
                 </td>
               </tr>
             }
@@ -104,13 +104,13 @@
             }
             <tr>
               <td>
-                <a href="@back" class="btn btn-default">
+                <a id="back-btn" href="@back" class="btn btn-default">
                   <span class="glyphicon glyphicon-chevron-left"></span>
                   Back
                 </a>
               </td>
               <td style="text-align:right;">
-                <button id="search-button" class="btn btn-primary" type="submit">
+                <button id="next-btn" class="btn btn-primary" type="submit">
                   Submit
                 </button>
               </td>
