@@ -231,11 +231,13 @@ class ShutterServiceController @Inject()(
                            hasErrors = formWithErrors => EitherT.left(Future(showPage3(formWithErrors, step1Out, step2Out)).map(BadRequest(_)))
                          , success   = data           => EitherT.pure[Future, Result](())
                          )
-         status   =  ShutterStatus(
-                         value         = step1Out.status
-                       , reason        = Some(step2Out.reason).filter(_.nonEmpty)
-                       , outageMessage = Some(step2Out.outageMessage).filter(_.nonEmpty)
-                       )
+         status   =  step1Out.status match {
+                        case ShutterStatusValue.Shuttered => ShutterStatus.Shuttered(
+                                                                 reason        = Some(step2Out.reason).filter(_.nonEmpty)
+                                                               , outageMessage = Some(step2Out.outageMessage).filter(_.nonEmpty)
+                                                               )
+                        case ShutterStatusValue.Unshuttered => ShutterStatus.Unshuttered
+                     }
          _        <- step1Out.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
                        EitherT.right[Result] {
                          shutterService

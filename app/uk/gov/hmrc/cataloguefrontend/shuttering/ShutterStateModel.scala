@@ -75,23 +75,45 @@ object ShutterStatusValue {
   }
 }
 
-case class ShutterStatus(
-    value        : ShutterStatusValue
-  , reason       : Option[String]
-  , outageMessage: Option[String]
-  )
-
+sealed trait ShutterStatus { def value: ShutterStatusValue }
 object ShutterStatus {
-  val format: Format[ShutterStatus] = {
-    implicit val ssvf = ShutterStatusValue.format
+  case class Shuttered(
+      reason       : Option[String]
+    , outageMessage: Option[String]
+    ) extends ShutterStatus  { def value = ShutterStatusValue.Shuttered }
+  case object Unshuttered extends ShutterStatus { def value = ShutterStatusValue.Unshuttered }
 
-    ( ( __ \ "state"        ).format[ShutterStatusValue] // TODO value should be "status"?
-    ~ ( __ \ "reason"       ).formatNullable[String]
-    ~ ( __ \ "outageMessage").formatNullable[String]
-    )( ShutterStatus.apply
-    , unlift(ShutterStatus.unapply)
-    )
-  }
+  val format: Format[ShutterStatus] =
+    new Format[ShutterStatus] {
+      override def reads(json: JsValue) = {
+        implicit val ssvf = ShutterStatusValue.format
+        (json \ "state").validate[ShutterStatusValue]
+          .flatMap {
+            case ShutterStatusValue.Unshuttered => JsSuccess(Unshuttered)
+            case ShutterStatusValue.Shuttered   => JsSuccess(Shuttered(
+                                                       reason        = (json \ "reason"       ).asOpt[String]
+                                                     , outageMessage = (json \ "outageMessage").asOpt[String]
+                                                     ))
+            case s             => JsError(__, s"Invalid ShutterCause '$s'")
+          }
+      }
+
+      override def writes(ss: ShutterStatus) = {
+        implicit val ssvf = ShutterStatusValue.format
+        ss match {
+          case Shuttered(reason, outageMessage) =>
+            Json.obj(
+                "state"         -> Json.toJson(ss.value)
+              , "reason"        -> reason
+              , "outageMessage" -> outageMessage
+              )
+          case Unshuttered =>
+            Json.obj(
+                "state" -> Json.toJson(ss.value)
+              )
+        }
+      }
+    }
 }
 
 
