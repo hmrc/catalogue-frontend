@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, OutagePageStatus, ShutterStatus, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, OutagePageStatus, ShutterStatusValue, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Form}
 @import helper._
 
@@ -160,9 +160,9 @@
 
 }
 
-@valueFor(status: ShutterStatus) = {
+@valueFor(status: ShutterStatusValue) = {
   @status match {
-    case ShutterStatus.Shuttered   => { Shutter   }
-    case ShutterStatus.Unshuttered => { Unshutter }
+    case ShutterStatusValue.Shuttered   => { Shutter   }
+    case ShutterStatusValue.Unshuttered => { Unshutter }
   }
 }

@@ -49,31 +49,51 @@ object Environment {
   }
 }
 
-sealed trait ShutterStatus { def asString: String }
-object ShutterStatus {
-  case object Shuttered   extends ShutterStatus { val asString = "shuttered"   }
-  case object Unshuttered extends ShutterStatus { val asString = "unshuttered" }
+sealed trait ShutterStatusValue { def asString: String }
+object ShutterStatusValue {
+  case object Shuttered   extends ShutterStatusValue { val asString = "shuttered"   }
+  case object Unshuttered extends ShutterStatusValue { val asString = "unshuttered" }
 
   val values = List(Shuttered, Unshuttered)
 
-  def parse(s: String): Option[ShutterStatus] =
+  def parse(s: String): Option[ShutterStatusValue] =
     values.find(_.asString == s)
 
 
-  val format: Format[ShutterStatus] = new Format[ShutterStatus] {
+  val format: Format[ShutterStatusValue] = new Format[ShutterStatusValue] {
     override def reads(json: JsValue) =
       json.validate[String]
         .flatMap { s =>
             parse(s) match {
               case Some(env) => JsSuccess(env)
-              case None      => JsError(__, s"Invalid ShutterStatus '$s'")
+              case None      => JsError(__, s"Invalid ShutterStatusValue '$s'")
             }
           }
 
-    override def writes(e: ShutterStatus) =
+    override def writes(e: ShutterStatusValue) =
       JsString(e.asString)
   }
 }
+
+case class ShutterStatus(
+    value        : ShutterStatusValue
+  , reason       : Option[String]
+  , outageMessage: Option[String]
+  )
+
+object ShutterStatus {
+  val format: Format[ShutterStatus] = {
+    implicit val ssvf = ShutterStatusValue.format
+
+    ( ( __ \ "state"        ).format[ShutterStatusValue] // TODO value should be "status"?
+    ~ ( __ \ "reason"       ).formatNullable[String]
+    ~ ( __ \ "outageMessage").formatNullable[String]
+    )( ShutterStatus.apply
+    , unlift(ShutterStatus.unapply)
+    )
+  }
+}
+
 
 case class ShutterState(
     name        : String

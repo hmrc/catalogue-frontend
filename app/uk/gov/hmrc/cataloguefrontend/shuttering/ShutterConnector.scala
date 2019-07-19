@@ -84,16 +84,12 @@ class ShutterConnector @Inject()(
       appName      : String
     , env          : Environment
     , status       : ShutterStatus
-    , reason       : String
-    , outageMessage: String
     )(implicit hc: HeaderCarrier): Future[Unit] = {
     implicit val isf = ShutterStatus.format
 
     implicit val ur = new uk.gov.hmrc.http.HttpReads[Unit] {
       def read(method: String, url: String, response: uk.gov.hmrc.http.HttpResponse): Unit = ()
     }
-
-    // TODO at some point, payload will take reason/outageMessage
 
     http.PUT[ShutterStatus, Unit](s"$urlStates/$appName/${env.asString}", status)
   }

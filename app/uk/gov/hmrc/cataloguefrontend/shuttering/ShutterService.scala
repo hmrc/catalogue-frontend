@@ -33,10 +33,8 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
       serviceName: String
     , env          : Environment
     , status       : ShutterStatus
-    , reason       : String
-    , outageMessage: String
     )(implicit hc: HeaderCarrier): Future[Unit] =
-      shutterConnector.updateShutterStatus(serviceName, env, status, reason, outageMessage)
+      shutterConnector.updateShutterStatus(serviceName, env, status)
 
   def outagePageByAppAndEnv(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] =
     shutterConnector.outagePageByAppAndEnv(serviceName, env)
@@ -45,7 +43,7 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
     for {
       events <- shutterConnector.latestShutterEvents(env)
       sorted =  events.sortWith {
-                  case (l, r) => l.status      == ShutterStatus.Shuttered ||
+                  case (l, r) => l.status.value == ShutterStatusValue.Shuttered ||
                                  l.serviceName <  r.serviceName
                 }
     } yield sorted

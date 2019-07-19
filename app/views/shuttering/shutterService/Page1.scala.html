@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatus, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.Step1Form
 @import helper._
 
@@ -24,7 +24,7 @@
 @( form         : Form[Step1Form]
  , shutterStates: Seq[ShutterState]
  , envs         : Seq[Environment]
- , statusValues : Seq[ShutterStatus]
+ , statusValues : Seq[ShutterStatusValue]
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -84,8 +84,8 @@
                 @select(
                     field     =  form("status")
                   , options   =  Seq("" -> "Please select") ++ statusValues.map {
-                                    case ShutterStatus.Shuttered   => (ShutterStatus.Shuttered  .asString, "Shutter"  )
-                                    case ShutterStatus.Unshuttered => (ShutterStatus.Unshuttered.asString, "Unshutter")
+                                    case ShutterStatusValue.Shuttered   => (ShutterStatusValue.Shuttered  .asString, "Shutter"  )
+                                    case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
                                  }
                   , '_label   -> "Status"
                   )
