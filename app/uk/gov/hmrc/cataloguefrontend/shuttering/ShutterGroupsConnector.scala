@@ -20,8 +20,9 @@ import cats.instances.all._
 import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
+import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.config.GithubConfig
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,11 +33,17 @@ class ShutterGroupsConnector @Inject()(
   githubConf: GithubConfig
 )(implicit val ec: ExecutionContext) {
 
+  val logger = Logger(this.getClass)
+
   def shutterGroups: Future[List[ShutterGroup]] = {
     val url = s"${githubConf.rawUrl}/hmrc/outage-pages/master/conf/shutter-groups.json"
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(("Authorization", s"token ${githubConf.token}"))
     implicit val gr = ShutterGroup.reads
     http.GET[List[ShutterGroup]](url)
+      .recover { case _: NotFoundException =>
+        logger.info(s"No groups found at $url")
+        List.empty
+      }
   }
 }
 

@@ -94,7 +94,7 @@ object ShutterStatus {
                                                        reason        = (json \ "reason"       ).asOpt[String]
                                                      , outageMessage = (json \ "outageMessage").asOpt[String]
                                                      ))
-            case s             => JsError(__, s"Invalid ShutterCause '$s'")
+            case s             => JsError(__, s"Invalid ShutterStatus '$s'")
           }
       }
 

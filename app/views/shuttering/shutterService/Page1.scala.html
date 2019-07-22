@@ -56,54 +56,189 @@
           , 'class -> "form-inline"
           , 'id    -> "shutter-service-form"
           , 'style -> "padding-left: 20px; padding-right: 20px"
+          , 'onsubmit -> "selectAllOptions();"
           ) {
 
           @CSRF.formField
 
-         @shutterGroups
-
-          <table class="padded-table" width="100%">
-            <tr>
-              <td style="vertical-align: top;">
+          <div class="row" style="display: table;">
+            <div class="col-sm-5" style="display:table-cell; float:none;">
+              @select(
+                  field     =  form("allServices")
+                , options   =  shutterStates.map(s => (s.name, s.name))
+                , '_label   -> "Available Services"
+                , 'multiple -> "multiple"
+                , 'size     -> 10
+                , 'style    -> "min-width: 100%;"
+                )
+            </div>
+            <div class="col-sm-2" style="display:table-cell; float:none; text-align: center; display:table-cell; vertical-align: middle;">
+              <input type="button" id="btnRight" value="&gt;" class="btn btn-default" /><br />
+              <input type="button" id="btnLeft" value="&lt;" class="btn btn-default" /><br />
+              @if(shutterGroups.nonEmpty) {
                 @select(
-                    field     =  form("serviceName")
-                  , options   =  shutterStates.map(s => (s.name, s.name))
-                  , '_label   -> "Service"
-                  , 'multiple -> "multiple"
+                    field     =  form("shutterGroup")
+                  , options   =  Seq("" -> "Add from Group") ++ shutterGroups.map(s => (s.name, s.name))
+                  , '_label   -> ""
+                  , 'onChange -> "onChangeGroup(this)"
                   )
-              </td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">
-                @select(
-                    field     =  form("env")
-                  , options   =  Seq("" -> "Please select") ++ envs.map(s => (s.asString, s.toString))
-                  , '_label   -> "Environment"
-                  )
-              </td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">
-                @select(
-                    field     =  form("status")
-                  , options   =  Seq("" -> "Please select") ++ statusValues.map {
-                                    case ShutterStatusValue.Shuttered   => (ShutterStatusValue.Shuttered  .asString, "Shutter"  )
-                                    case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
-                                 }
-                  , '_label   -> "Status"
-                  )
-              </td>
-            </tr>
-            <tr>
-              <td colspan="2" style="text-align:right;">
+              }
+            </div>
+            <div class="col-sm-5" style="display:table-cell; float:none;">
+              @select(
+                  field     =  form("serviceName")
+                , options   =  form("serviceName").indexes.map(i => form("serviceName")("[%s]".format(i)).value).collect { case Some(v) => (v, v) }
+                , '_label   -> "Selected Services"
+                , 'multiple -> "multiple"
+                , 'size     -> 10
+                , 'style    -> "min-width: 100%;"
+                )
+            </div>
+          </div>
+          <div id="group-warning-row" class="row" style="visibility: hidden;">
+            <div class="col-sm-12">
+              <div class="alert alert-warning" role="alert">
+                <span class="glyphicon glyphicon-warning-sign"></span>
+                <span id="group-warning"></span>
+                <ul id="missing-services"></ul>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              @select(
+                  field     =  form("env")
+                , options   =  Seq("" -> "Please select") ++ envs.map(s => (s.asString, s.toString))
+                , '_label   -> "Environment"
+                )
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              @select(
+                  field     =  form("status")
+                , options   =  Seq("" -> "Please select") ++ statusValues.map {
+                                  case ShutterStatusValue.Shuttered   => (ShutterStatusValue.Shuttered  .asString, "Shutter"  )
+                                  case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
+                               }
+                , '_label   -> "Status"
+                )
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <div style="text-align:right;">
                 <button id="next-btn" class="btn btn-primary" type="submit">Next</button>
-              </td>
-            </tr>
-          </table>
+              </div>
+            </div>
+          </div>
         }
       </div>
     </div>
 
   </div>
 
+  <script type="text/javascript">
+    function onChangeGroup(selectElmt) {
+      var group = selectElmt.options[selectElmt.selectedIndex].value;
+
+      var groupData = @Html(shutterGroups.map { g =>
+                         defining(g.services.map("\"" + _ + "\"").mkString("[", ",", "]")){ values =>
+                           "\"" + g.name + "\": " + values
+                         }
+                       }.mkString("{", ",", "}"));
+
+
+      var selectedServices = groupData[group];
+
+      var allServices = document.getElementById('allServices');
+      var serviceName = document.getElementById('serviceName');
+      var missingServices = [];
+      for (let selectedService of selectedServices) {
+        var i = indexOf(allServices, selectedService);
+        if (i == -1) {
+          missingServices.push(selectedService);
+        } else {
+          var option = document.createElement("option");
+          option.text = selectedService;
+          serviceName.add(option);
+
+          allServices.remove(i);
+        }
+      };
+      sort('serviceName');
+      selectElmt.selectedIndex = 0;
+
+      if (missingServices.length > 0) {
+        addGroupWarning(group, missingServices);
+      }
+    }
+
+    $('#btnRight').click(function (e) {
+      move(e, 'allServices', 'serviceName');
+    });
+
+    $('#btnLeft').click(function (e) {
+      move(e, 'serviceName', 'allServices');
+    });
+
+    function selectAllOptions() {
+      $('#serviceName option').prop('selected', true);
+    }
+
+    function indexOf(selectElement, value) {
+      var options = selectElement.options;
+      for (var i = 0, optionsLength = options.length; i < optionsLength; i++) {
+        if (options[i].value == value) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    function move(e, from, to) {
+      var selectedOpts = $('#' + from + ' option:selected');
+      if (selectedOpts.length == 0) {
+        alert("Nothing to move.");
+        e.preventDefault();
+      }
+      $('#' + to).append($(selectedOpts).clone());
+      sort(to);
+      $(selectedOpts).remove();
+      e.preventDefault();
+    };
+
+    function sort(listId) {
+      var selectList = $('#' + listId + ' option');
+      selectList.sort(function(a,b){
+        return a.value > b.value ? 1 : -1;
+     });
+     $('#' + listId).html(selectList);
+    }
+
+    function addGroupWarning(group, missingServices) {
+      $('#group-warning').text('The following services in group \'' + group + '\' could not be added since do not exist: ');
+      var out = '';
+      for (let missingService of missingServices) {
+        out += "<li>" + missingService + "</li>";
+      };
+      $('#missing-services').html(out);
+      $('#group-warning-row').css("visibility", "visible");
+    }
+
+    $(document).ready(function() {
+      // remove options in serviceName from allServices
+      var selectedOpts = $('#serviceName option:selected');
+      selectedOpts.prop('selected', false);
+
+      var allServices = document.getElementById('allServices');
+
+      selectedOpts.each(function()
+      {
+        var value = $(this).val();
+        var i = indexOf(allServices, value);
+        allServices.remove(i);
+      });
+    });
+  </script>
 }

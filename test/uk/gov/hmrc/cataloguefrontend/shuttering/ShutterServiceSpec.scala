@@ -171,11 +171,10 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
 
   object Boot {
     def init: Boot = {
-      val mockShutterConnector = mock[ShutterConnector]
-      val shutterService       = new ShutterService(mockShutterConnector)
+      val mockShutterConnector       = mock[ShutterConnector]
+      val mockShutterGroupsConnector = mock[ShutterGroupsConnector]
+      val shutterService             = new ShutterService(mockShutterConnector, mockShutterGroupsConnector)
       Boot(shutterService, mockShutterConnector)
     }
   }
-
-
 }
