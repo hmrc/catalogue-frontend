@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterGroup, ShutterStatusValue, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.Step1Form
 @import helper._
 
@@ -25,6 +25,7 @@
  , shutterStates: Seq[ShutterState]
  , envs         : Seq[Environment]
  , statusValues : Seq[ShutterStatusValue]
+ , shutterGroups: Seq[ShutterGroup]
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -58,6 +59,8 @@
           ) {
 
           @CSRF.formField
+
+         @shutterGroups
 
           <table class="padded-table" width="100%">
             <tr>

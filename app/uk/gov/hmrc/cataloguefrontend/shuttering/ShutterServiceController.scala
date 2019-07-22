@@ -59,7 +59,8 @@ class ShutterServiceController @Inject()(
       shutterStates <- shutterService.getShutterStates
       envs          =  Environment.values
       statusValues  =  ShutterStatusValue.values
-    } yield page1(form, shutterStates, envs, statusValues)
+      shutterGroups <- shutterService.shutterGroups
+    } yield page1(form, shutterStates, envs, statusValues, shutterGroups)
 
   def step1Get(env: Option[String], serviceName: Option[String]) =
     umpAuthenticated.async { implicit request =>

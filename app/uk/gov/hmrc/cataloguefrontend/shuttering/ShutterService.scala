@@ -24,7 +24,10 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val ec: ExecutionContext) {
+class ShutterService @Inject()(
+    shutterConnector      : ShutterConnector
+  , shutterGroupsConnector: ShutterGroupsConnector
+  )(implicit val ec: ExecutionContext) {
 
   def getShutterStates(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
     shutterConnector.shutterStates
@@ -91,4 +94,7 @@ class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val 
             )
       }
     }
+
+  def shutterGroups: Future[Seq[ShutterGroup]] =
+    shutterGroupsConnector.shutterGroups
 }

@@ -15,3 +15,15 @@
  */
 
 package uk.gov.hmrc.cataloguefrontend.config
+
+import java.io.File
+
+import com.google.inject.{Inject, Singleton}
+import play.api.Configuration
+
+@Singleton
+class GithubConfig @Inject()(configuration: Configuration) {
+
+  val rawUrl = configuration.get[String]("github.open.api.rawurl")
+  val token  = configuration.get[String]("github.open.api.key")
+}
