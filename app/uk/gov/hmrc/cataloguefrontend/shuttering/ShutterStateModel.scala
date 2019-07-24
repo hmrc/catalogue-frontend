@@ -219,10 +219,12 @@ object EventData {
     ) extends EventData
 
   case class ShutterStateChangeData(
-      serviceName: String
-    , environment: Environment
-    , status     : ShutterStatusValue
-    , cause      : ShutterCause
+      serviceName  : String
+    , environment  : Environment
+    , status       : ShutterStatusValue
+    , cause        : ShutterCause
+    , reason       : Option[String]
+    , outageMessage: Option[String]
     ) extends EventData
 
   case class KillSwitchStateChangeData(
@@ -248,10 +250,12 @@ object EventData {
     implicit val ssvf = ShutterStatusValue.format
     implicit val scf  = ShutterCause.format
 
-    ( (__ \ "serviceName").format[String]
-    ~ (__ \ "environment").format[Environment]
-    ~ (__ \ "status"     ).format[ShutterStatusValue]
-    ~ (__ \ "cause"      ).format[ShutterCause]
+    ( (__ \ "serviceName"  ).format[String]
+    ~ (__ \ "environment"  ).format[Environment]
+    ~ (__ \ "status"       ).format[ShutterStatusValue]
+    ~ (__ \ "cause"        ).format[ShutterCause]
+    ~ (__ \ "reason"       ).formatNullable[String]
+    ~ (__ \ "outageMessage").formatNullable[String]
     )( ShutterStateChangeData.apply
      , unlift(ShutterStateChangeData.unapply)
      )
