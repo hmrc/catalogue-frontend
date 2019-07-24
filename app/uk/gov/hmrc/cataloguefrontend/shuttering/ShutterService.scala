@@ -24,20 +24,77 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ShutterService @Inject()(shutterConnector: ShutterConnector)(implicit val ec: ExecutionContext) {
+class ShutterService @Inject()(
+    shutterConnector      : ShutterConnector
+  , shutterGroupsConnector: ShutterGroupsConnector
+  )(implicit val ec: ExecutionContext) {
 
   def getShutterStates(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
     shutterConnector.shutterStates
 
-  def updateShutterStatus(serviceName: String, env: Environment, status: ShutterStatus)(implicit hc: HeaderCarrier): Future[Unit] =
-    shutterConnector.updateShutterStatus(serviceName, env, status)
+  def updateShutterStatus(
+      serviceName: String
+    , env          : Environment
+    , status       : ShutterStatus
+    )(implicit hc: HeaderCarrier): Future[Unit] =
+      shutterConnector.updateShutterStatus(serviceName, env, status)
+
+  def outagePageByAppAndEnv(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] =
+    shutterConnector.outagePageByAppAndEnv(serviceName, env)
 
   def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     for {
       events <- shutterConnector.latestShutterEvents(env)
       sorted =  events.sortWith {
-                  case (l, r) => l.status      == ShutterStatus.Shuttered ||
+                  case (l, r) => l.status == ShutterStatusValue.Shuttered ||
                                  l.serviceName <  r.serviceName
                 }
     } yield sorted
+
+  /** Creates an [[OutagePageStatus]] for each service based on the contents of [[OutagePage]] */
+  def toOutagePageStatus(serviceNames: Seq[String], outagePages: List[OutagePage]): Seq[OutagePageStatus] =
+    serviceNames.map { serviceName =>
+      outagePages.find(_.serviceName == serviceName) match {
+        case Some(outagePage) if outagePage.warnings.nonEmpty =>
+          OutagePageStatus(
+              serviceName = serviceName
+            , warning     = Some(( outagePage.warnings.map(_.message).mkString("<br/>")
+                                 , outagePage.warnings.head.name match {
+                                     case "UnableToRetrievePage"        => "Default outage page will be displayed."
+                                     case "MalformedHTML"               => "Outage page will be sent as is, without updating templates."
+                                     case "DuplicateTemplateElementIDs" => "All matching elements will be updated"
+                                   }
+                                ))
+            )
+        case Some(outagePage) if outagePage.templatedMessages.isEmpty =>
+          OutagePageStatus(
+              serviceName = serviceName
+            , warning     = Some(( "No templatedMessage Element in outage-page"
+                                 , "Outage page will be sent as is."
+                                ))
+            )
+        case Some(outagePage) if outagePage.templatedMessages.length > 1 =>
+          OutagePageStatus(
+              serviceName = serviceName
+            , warning     = Some(( "Multiple templatedMessage Element in outage-page"
+                                 , "All matching elements will be updated."
+                                ))
+            )
+        case Some(_) =>
+          OutagePageStatus(
+              serviceName = serviceName
+            , warning     = None
+            )
+        case None =>
+          OutagePageStatus(
+              serviceName = serviceName
+            , warning     = Some(( "No templatedMessage Element no outage-page"
+                                 , "Default outage page will be displayed."
+                                ))
+            )
+      }
+    }
+
+  def shutterGroups: Future[Seq[ShutterGroup]] =
+    shutterGroupsConnector.shutterGroups
 }

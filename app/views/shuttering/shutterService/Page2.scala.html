@@ -15,13 +15,17 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatus, ShutterServiceController, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, OutagePageStatus, ShutterStatusValue, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Form}
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@( shutter: ShutterServiceController.Shutter
+@( form                  : Form[Step2Form]
+ , step1Out              : Step1Out
+ , requiresOutageMessage : Boolean
+ , defaultOutageMessage  : String
+ , outagePages           : Seq[OutagePageStatus]
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -34,62 +38,144 @@
 
   <div id="service-list">
 
+    @if(form.hasGlobalErrors) {
+      <div class="alert alert-error error">
+        <a class="close" data-dismiss="alert">×</a>
+        <ul>
+          @form.globalErrors.map { error =>
+            <li>@error.format</li>
+          }
+        </ul>
+      </div>
+    }
+
     <div class="board">
       <div class="board__body">
+
         @helper.form(
             action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step2Post
+          , 'class -> "form-inline"
           , 'id    -> "shutter-service-form"
           , 'style -> "padding-left: 20px; padding-right: 20px"
           ) {
 
           @CSRF.formField
 
-          <div class="alert alert-warning" role="alert">
-            <span class="glyphicon glyphicon-warning-sign"></span>
-            You are about to <b>@valueFor(shutter.status)</b> the following services in <b>@shutter.env</b>:
-          </div>
-
-          <table class="padded-table" style="width: 100%">
-            <tr>
-              <td>
+          <div class="panel @if(step1Out.env == Environment.Production) {panel-danger} else {panel-warning}">
+            <div class="panel-heading">
+              <span class="glyphicon glyphicon-warning-sign"></span>
+              You are about to <b>@valueFor(step1Out.status)</b> the following services in <b>@step1Out.env</b>:
+            </div>
+            <div class="panel-body">
                 <ul style="list-style: disc;">
-                  @shutter.serviceNames.map { serviceName =>
+                  @step1Out.serviceNames.map { serviceName =>
                     <li>@serviceName</li>
                   }
                 </ul>
-              </td>
-            </tr>
-            <tr><td colspan="2">
-              @if(shutter.env == Environment.Production) {
-                <div class="alert alert-danger" role="alert">
-                  <span class="glyphicon glyphicon-warning-sign"></span>
-                  <b>Production</b> means it will impact real users!
-                </div>
-              }
-            </td></tr>
-            <tr><td colspan="2">&nbsp;</td></tr>
-            <tr>
-              <td>Please check this is correct before continuing.</td>
-            </tr>
-            <tr><td colspan="2">&nbsp;</td></tr>
-            <tr>
-              <td colspan="2" style="text-align:right;">
-                <button id="search-button" class="btn btn-primary" type="submit">Submit</button>
-              </td>
-            </tr>
-          </table>
+            </div>
+          </div>
 
+          <div class="row">
+            <div class="col-sm-12">
+              @textarea(
+                  field        =  form("reason")
+                , '_label      -> "Reason"
+                , 'placeholder -> "You may optionally provide a reason for auditing purposes."
+                , 'rows        -> 2
+                , 'cols        -> 60
+                )
+            </div>
+          </div>
+          @if(requiresOutageMessage) {
+            @if(outagePages.find(_.warning.isDefined)) {
+              <div class="row">
+                <div class="col-sm-12">
+                  <div class="panel panel-warning">
+                    <div class="panel-heading"><span class="glyphicon glyphicon-warning-sign"></span>
+                      There were some issues with the Outage pages.</div>
+                      <div class="panel-body">
+                        Please review, you can still continue to shutter.
+                        <br/><br/>
+                        <table class="table table-bordered">
+                          <thead>
+                          <tr>
+                            <td>Service</td>
+                            <td>Observation</td>
+                            <td>Consequence</td>
+                          </tr>
+                          </thead>
+                          @outagePages.map { outagePageStatus =>
+                            <tr class="@if(outagePageStatus.warning.isDefined) { alert-warning } else {}">
+                              <td>@outagePageStatus.serviceName</td>
+                              @outagePageStatus.warning match {
+                                case Some((warning, consequence)) => {
+                                  <td>@Html(warning)</td>
+                                  <td>@consequence</td>
+                                }
+                                case None => {
+                                  <td>None</td>
+                                  <td></td>
+                                }
+                              }
+                            </tr>
+                          }
+                        </table>
+                      </div>
+                  </div>
+                </div>
+              </div>
+            }
+            <div class="row" style="display: table;">
+              <div class="col-sm-8" style="display:table-cell; float:none;">
+                @textarea(
+                    field   =  form("outageMessage")
+                  , '_label -> "Outage Message"
+                  , '_help  -> "The outage message will replace any 'templatedMessage' placeholder found in the outage-page."
+                  , 'rows   -> 5
+                  , 'cols   -> 60
+                  )
+              </div>
+              <div class="col-sm-4" style="display:table-cell; float:none; vertical-align: middle;">
+                <a id="back-btn" href="javascript:revertTemplate()" class="btn btn-default">
+                  Revert to template
+                </a>
+              </div>
+            </div>
+          } else {
+            <input type="hidden" name="outageMessage" value=""/>
+          }
+          <div class="row">
+            <div class="col-sm-6">
+              <a id="back-btn" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(None, None)" class="btn btn-default">
+                <span class="glyphicon glyphicon-chevron-left"></span>
+                Back
+              </a>
+            </div>
+            <div class="col-sm-6" style="text-align:right;">
+              <button id="next-btn" class="btn btn-primary" type="submit">
+                Next
+                <span class="glyphicon glyphicon-chevron-right"></span>
+              </button>
+            </div>
+          </div>
         }
       </div>
     </div>
 
   </div>
 
+  <script type="text/javascript">
+    function revertTemplate() {
+      $('#outageMessage').val('@defaultOutageMessage')
+    }
+  </script>
+
+
 }
 
-@valueFor(status: ShutterStatus) = {
+@valueFor(status: ShutterStatusValue) = {
   @status match {
-    case ShutterStatus.Shuttered   => { Shutter   }
-    case ShutterStatus.Unshuttered => { Unshutter }
+    case ShutterStatusValue.Shuttered   => { Shutter   }
+    case ShutterStatusValue.Unshuttered => { Unshutter }
   }
 }

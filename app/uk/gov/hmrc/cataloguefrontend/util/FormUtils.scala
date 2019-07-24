@@ -14,4 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.config
+package uk.gov.hmrc.cataloguefrontend.util
+
+trait FormUtils {
+  /** Like Forms.nonEmpty, but has no constraint info label */
+  def notEmpty = {
+    import play.api.data.validation._
+    Constraint[String]("") { o =>
+      if (o == null || o.trim.isEmpty) Invalid(ValidationError("error.required")) else Valid
+    }
+  }
+
+  def notEmptySeq = {
+    import play.api.data.validation._
+    Constraint[Seq[String]]("") { o =>
+      if (o == null || o.isEmpty) Invalid(ValidationError("error.required")) else Valid
+    }
+  }
+}
+
+object FormUtils extends FormUtils

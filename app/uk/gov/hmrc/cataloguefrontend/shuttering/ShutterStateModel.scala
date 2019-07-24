@@ -49,31 +49,73 @@ object Environment {
   }
 }
 
-sealed trait ShutterStatus { def asString: String }
-object ShutterStatus {
-  case object Shuttered   extends ShutterStatus { val asString = "shuttered"   }
-  case object Unshuttered extends ShutterStatus { val asString = "unshuttered" }
+sealed trait ShutterStatusValue { def asString: String }
+object ShutterStatusValue {
+  case object Shuttered   extends ShutterStatusValue { val asString = "shuttered"   }
+  case object Unshuttered extends ShutterStatusValue { val asString = "unshuttered" }
 
   val values = List(Shuttered, Unshuttered)
 
-  def parse(s: String): Option[ShutterStatus] =
+  def parse(s: String): Option[ShutterStatusValue] =
     values.find(_.asString == s)
 
 
-  val format: Format[ShutterStatus] = new Format[ShutterStatus] {
+  val format: Format[ShutterStatusValue] = new Format[ShutterStatusValue] {
     override def reads(json: JsValue) =
       json.validate[String]
         .flatMap { s =>
             parse(s) match {
               case Some(env) => JsSuccess(env)
-              case None      => JsError(__, s"Invalid ShutterStatus '$s'")
+              case None      => JsError(__, s"Invalid ShutterStatusValue '$s'")
             }
           }
 
-    override def writes(e: ShutterStatus) =
+    override def writes(e: ShutterStatusValue) =
       JsString(e.asString)
   }
 }
+
+sealed trait ShutterStatus { def value: ShutterStatusValue }
+object ShutterStatus {
+  case class Shuttered(
+      reason       : Option[String]
+    , outageMessage: Option[String]
+    ) extends ShutterStatus  { def value = ShutterStatusValue.Shuttered }
+  case object Unshuttered extends ShutterStatus { def value = ShutterStatusValue.Unshuttered }
+
+  val format: Format[ShutterStatus] =
+    new Format[ShutterStatus] {
+      override def reads(json: JsValue) = {
+        implicit val ssvf = ShutterStatusValue.format
+        (json \ "status").validate[ShutterStatusValue]
+          .flatMap {
+            case ShutterStatusValue.Unshuttered => JsSuccess(Unshuttered)
+            case ShutterStatusValue.Shuttered   => JsSuccess(Shuttered(
+                                                       reason        = (json \ "reason"       ).asOpt[String]
+                                                     , outageMessage = (json \ "outageMessage").asOpt[String]
+                                                     ))
+            case s             => JsError(__, s"Invalid ShutterStatus '$s'")
+          }
+      }
+
+      override def writes(ss: ShutterStatus) = {
+        implicit val ssvf = ShutterStatusValue.format
+        ss match {
+          case Shuttered(reason, outageMessage) =>
+            Json.obj(
+                "status"        -> Json.toJson(ss.value)
+              , "reason"        -> reason
+              , "outageMessage" -> outageMessage
+              )
+          case Unshuttered =>
+            Json.obj(
+                "status" -> Json.toJson(ss.value)
+              )
+        }
+      }
+    }
+}
+
 
 case class ShutterState(
     name        : String
@@ -185,7 +227,7 @@ object EventData {
 
   case class KillSwitchStateChangeData(
       environment: Environment
-    , status     : ShutterStatus
+    , status     : ShutterStatusValue
     ) extends EventData
 
 
@@ -202,9 +244,9 @@ object EventData {
             )
 
   val shutterStateChangeDataFormat: Format[ShutterStateChangeData] = {
-    implicit val ef  = Environment.format
-    implicit val ssf = ShutterStatus.format
-    implicit val scf = ShutterCause.format
+    implicit val ef   = Environment.format
+    implicit val ssvf = ShutterStatus.format
+    implicit val scf  = ShutterCause.format
 
     ( (__ \ "serviceName").format[String]
     ~ (__ \ "environment").format[Environment]
@@ -216,11 +258,11 @@ object EventData {
   }
 
   val killSwitchStateChangeDataFormat: Format[KillSwitchStateChangeData] = {
-    implicit val ef  = Environment.format
-    implicit val ssf = ShutterStatus.format
+    implicit val ef   = Environment.format
+    implicit val ssvf = ShutterStatusValue.format
 
     ( (__ \ "environment").format[Environment]
-    ~ (__ \ "status"     ).format[ShutterStatus]
+    ~ (__ \ "status"     ).format[ShutterStatusValue]
     )( KillSwitchStateChangeData.apply
      , unlift(KillSwitchStateChangeData.unapply
      ))
@@ -284,3 +326,60 @@ object ShutterEvent {
     )(ShutterEvent.apply _)
   }
 }
+
+case class TemplatedContent(
+    elementId: String
+  , innerHtml: String
+  )
+
+object TemplatedContent {
+  val format: Format[TemplatedContent] =
+    ( (__ \ "elementID").format[String]
+    ~ (__ \ "innerHTML").format[String]
+    )( TemplatedContent.apply
+     , unlift(TemplatedContent.unapply)
+     )
+}
+
+case class OutagePageWarning(
+    name   : String
+  , message: String
+  )
+
+object OutagePageWarning {
+  val reads: Reads[OutagePageWarning] =
+    ( (__ \ "type"   ).read[String]
+    ~ (__ \ "message").read[String]
+    )(OutagePageWarning.apply _)
+}
+
+case class OutagePage(
+    serviceName      : String
+  , environment      : Environment
+  , outagePageURL    : String
+  , warnings         : List[OutagePageWarning]
+  , templatedElements: List[TemplatedContent]
+  ) {
+    def templatedMessages: List[TemplatedContent] =
+      templatedElements
+        .filter(_.elementId == "templatedMessage")
+  }
+
+object OutagePage {
+  val reads: Reads[OutagePage] = {
+    implicit val ef   = Environment.format
+    implicit val tcf  = TemplatedContent.format
+    implicit val opwr = OutagePageWarning.reads
+    ( (__ \ "serviceName"      ).read[String]
+    ~ (__ \ "environment"      ).read[Environment]
+    ~ (__ \ "outagePageURL"    ).read[String]
+    ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
+    ~ (__ \ "templatedElements").read[List[TemplatedContent]]
+    )(OutagePage.apply _)
+  }
+}
+
+case class OutagePageStatus(
+    serviceName : String
+  , warning     : Option[(String, String)]
+  )
