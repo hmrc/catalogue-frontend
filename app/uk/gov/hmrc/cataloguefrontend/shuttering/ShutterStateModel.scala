@@ -87,7 +87,7 @@ object ShutterStatus {
     new Format[ShutterStatus] {
       override def reads(json: JsValue) = {
         implicit val ssvf = ShutterStatusValue.format
-        (json \ "state").validate[ShutterStatusValue]
+        (json \ "status").validate[ShutterStatusValue]
           .flatMap {
             case ShutterStatusValue.Unshuttered => JsSuccess(Unshuttered)
             case ShutterStatusValue.Shuttered   => JsSuccess(Shuttered(
@@ -103,13 +103,13 @@ object ShutterStatus {
         ss match {
           case Shuttered(reason, outageMessage) =>
             Json.obj(
-                "state"         -> Json.toJson(ss.value)
+                "status"        -> Json.toJson(ss.value)
               , "reason"        -> reason
               , "outageMessage" -> outageMessage
               )
           case Unshuttered =>
             Json.obj(
-                "state" -> Json.toJson(ss.value)
+                "status" -> Json.toJson(ss.value)
               )
         }
       }
@@ -219,12 +219,10 @@ object EventData {
     ) extends EventData
 
   case class ShutterStateChangeData(
-      serviceName  : String
-    , environment  : Environment
-    , status       : ShutterStatusValue
-    , cause        : ShutterCause
-    , reason       : Option[String]
-    , outageMessage: Option[String]
+      serviceName: String
+    , environment: Environment
+    , status     : ShutterStatus
+    , cause      : ShutterCause
     ) extends EventData
 
   case class KillSwitchStateChangeData(
@@ -247,15 +245,13 @@ object EventData {
 
   val shutterStateChangeDataFormat: Format[ShutterStateChangeData] = {
     implicit val ef   = Environment.format
-    implicit val ssvf = ShutterStatusValue.format
+    implicit val ssvf = ShutterStatus.format
     implicit val scf  = ShutterCause.format
 
-    ( (__ \ "serviceName"  ).format[String]
-    ~ (__ \ "environment"  ).format[Environment]
-    ~ (__ \ "status"       ).format[ShutterStatusValue]
-    ~ (__ \ "cause"        ).format[ShutterCause]
-    ~ (__ \ "reason"       ).formatNullable[String]
-    ~ (__ \ "outageMessage").formatNullable[String]
+    ( (__ \ "serviceName").format[String]
+    ~ (__ \ "environment").format[Environment]
+    ~ (__ \ "status"     ).format[ShutterStatus]
+    ~ (__ \ "cause"      ).format[ShutterCause]
     )( ShutterStateChangeData.apply
      , unlift(ShutterStateChangeData.unapply)
      )
@@ -314,7 +310,7 @@ case class ShutterStateChangeEvent(
   , timestamp  : Instant
   , serviceName: String
   , environment: Environment
-  , status     : ShutterStatusValue
+  , status     : ShutterStatus
   , cause      : ShutterCause
   )
 
