@@ -23,11 +23,16 @@ import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.http.Token
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import play.api.mvc.Results._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
+
+final case class UmpAuthenticatedRequest[A](request: Request[A], token: Token)
+  extends WrappedRequest(request)
+
 
 /** Creates an Action will only proceed to invoke the action body, if there is a valid [[UmpToken]] in session.
   * If there isn't, it will short circuit with a Redirect to SignIn page.
@@ -39,15 +44,15 @@ class UmpAuthenticated @Inject()(
   userManagementAuthConnector: UserManagementAuthConnector,
   cc                         : MessagesControllerComponents
 )(implicit val ec: ExecutionContext)
-  extends ActionBuilder[Request, AnyContent] {
+  extends ActionBuilder[UmpAuthenticatedRequest, AnyContent] {
 
-  def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
+  def invokeBlock[A](request: Request[A], block: UmpAuthenticatedRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
     OptionT(
         request.session.get(UmpToken.SESSION_KEY_NAME)
           .filterA(token => userManagementAuthConnector.isValid(UmpToken(token)))
       )
-      .semiflatMap(_ => block(request))
+      .semiflatMap(token => block(UmpAuthenticatedRequest(request, token = Token(token))))
       .getOrElse(Redirect(appRoutes.AuthController.showSignInPage(targetUrl = Some(request.target.uriString).filter(_ => request.method == "GET"))))
   }
 

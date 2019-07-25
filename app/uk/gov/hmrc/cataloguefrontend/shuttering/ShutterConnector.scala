@@ -18,10 +18,11 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.Reads
-import uk.gov.hmrc.http.HeaderCarrier
+import play.api.libs.json.{Reads, Writes}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, Token}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -81,17 +82,20 @@ class ShutterConnector @Inject()(
     * Shutters/un-shutters the application in the given environment
     */
   def updateShutterStatus(
-      appName      : String
+      umpToken     : Token
+    , appName      : String
     , env          : Environment
     , status       : ShutterStatus
     )(implicit hc: HeaderCarrier): Future[Unit] = {
     implicit val isf = ShutterStatus.format
 
-    implicit val ur = new uk.gov.hmrc.http.HttpReads[Unit] {
-      def read(method: String, url: String, response: uk.gov.hmrc.http.HttpResponse): Unit = ()
-    }
-
-    http.PUT[ShutterStatus, Unit](s"$urlStates/$appName/${env.asString}", status)
+    http.PUT[ShutterStatus, HttpResponse](s"$urlStates/$appName/${env.asString}", status)(
+        implicitly[Writes[ShutterStatus]]
+      , implicitly[HttpReads[HttpResponse]]
+      , hc.copy(token = Some(umpToken))
+      , implicitly[ExecutionContext]
+      )
+      .map(_ => ())
   }
 
 

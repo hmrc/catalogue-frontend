@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.actions
 
 import play.api.mvc.{MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
+import uk.gov.hmrc.http.Token
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,8 +29,8 @@ trait ActionsSupport {
     umac: UserManagementAuthConnector,
     cc: MessagesControllerComponents
   ) extends UmpAuthenticated(umac, cc) {
-    override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] =
-      block(request)
+    override def invokeBlock[A](request: Request[A], block: UmpAuthenticatedRequest[A] => Future[Result]): Future[Result] =
+      block(UmpAuthenticatedRequest(request, token = Token("asdasdasd")))
   }
 
   class VerifySignInStatusPassThrough(

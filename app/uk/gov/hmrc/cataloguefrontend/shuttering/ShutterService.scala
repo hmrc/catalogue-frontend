@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import java.time.LocalDateTime
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, Token}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -33,11 +33,12 @@ class ShutterService @Inject()(
     shutterConnector.shutterStates
 
   def updateShutterStatus(
-      serviceName: String
-    , env          : Environment
-    , status       : ShutterStatus
+      umpToken   : Token
+    , serviceName: String
+    , env        : Environment
+    , status     : ShutterStatus
     )(implicit hc: HeaderCarrier): Future[Unit] =
-      shutterConnector.updateShutterStatus(serviceName, env, status)
+      shutterConnector.updateShutterStatus(umpToken, serviceName, env, status)
 
   def outagePageByAppAndEnv(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] =
     shutterConnector.outagePageByAppAndEnv(serviceName, env)
