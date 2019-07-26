@@ -43,11 +43,21 @@ class ShutterService @Inject()(
   def outagePageByAppAndEnv(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] =
     shutterConnector.outagePageByAppAndEnv(serviceName, env)
 
-  def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
+
+  def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateData]] =
     for {
+      states <- shutterConnector.shutterStates
       events <- shutterConnector.latestShutterEvents(env)
-      sorted =  events.sortWith {
-                  case (l, r) => l.status == ShutterStatusValue.Shuttered ||
+      status =  states.map { state =>
+                  ShutterStateData(
+                      serviceName = state.name
+                    , environment = env
+                    , status      = state.statusFor(env)
+                    , lastEvent   = events.find(_.serviceName == state.name)
+                    )
+                }
+      sorted =  status.sortWith {
+                  case (l, r) => l.status      == ShutterStatusValue.Shuttered ||
                                  l.serviceName <  r.serviceName
                 }
     } yield sorted
@@ -99,3 +109,10 @@ class ShutterService @Inject()(
   def shutterGroups: Future[Seq[ShutterGroup]] =
     shutterGroupsConnector.shutterGroups
 }
+
+case class ShutterStateData(
+    serviceName: String
+  , environment: Environment
+  , status     : ShutterStatus
+  , lastEvent  : Option[ShutterStateChangeEvent]
+  )
