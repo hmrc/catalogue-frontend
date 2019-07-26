@@ -14,14 +14,14 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, EventData, ShutterStatusValue, ShutterStateChangeEvent}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, EventData, ShutterStatusValue, ShutterStateData}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import java.time.ZoneId
 @import java.time.format.DateTimeFormatter
 
 @this(viewMessages: ViewMessages)
 
-@( shutterStates: Seq[ShutterStateChangeEvent]
+@( shutterStates: Seq[ShutterStateData]
  , selectedEnv  : Environment
  , isSignedIn   : Boolean
  )(implicit request: Request[_])
@@ -48,7 +48,7 @@
               <tr>
                   <th>Service</th>
                   <th>Status</th>
-                  <th>Shuttered by</th>
+                  <th>Last updated by</th>
                   <th>Date</th>
                   @if(isSignedIn) { <th>Update</th> }
               </tr>
@@ -85,16 +85,16 @@
   }
 }
 
-@shutterRow(event: ShutterStateChangeEvent) = {
-  <tr class="shutter-row @classFor(event.status.value)">
-      <td class="shutter-service">@event.serviceName</td>
-      <td class="shutter-state">@event.status.value</td>
-      <td class="shutter-user">@event.username</td>
-      <td class="shutter-date">@DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:SS z").withZone(ZoneId.systemDefault).format(event.timestamp)</td>
+@shutterRow(state: ShutterStateData) = {
+  <tr class="shutter-row @classFor(state.status.value)">
+      <td class="shutter-service">@state.serviceName</td>
+      <td class="shutter-state">@state.status.value</td>
+      <td class="shutter-user">@state.lastEvent.map(_.username).getOrElse("")</td>
+      <td class="shutter-date">@state.lastEvent.map(e => DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:SS z").withZone(ZoneId.systemDefault).format(e.timestamp)).getOrElse("")</td>
       @if(isSignedIn) {
         <td>
-          <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(event.environment.asString), Some(event.serviceName))">
-            @changeValueFor(event.status.value)
+          <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(state.environment.asString), Some(state.serviceName))">
+            @changeValueFor(state.status.value)
           </a>
         </td>
       }
