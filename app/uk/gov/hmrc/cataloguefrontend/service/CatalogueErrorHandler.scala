@@ -33,4 +33,7 @@ class CatalogueErrorHandler @Inject()(val messagesApi: MessagesApi) extends Fron
   override def notFoundTemplate(implicit request: Request[_]): Html =
     error_404_template()
 
+  def forbiddenTemplate(implicit request: Request[_]): Html =
+    error_403_template()
+
 }

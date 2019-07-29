@@ -27,8 +27,10 @@ import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, ControllerComponents, MessagesControllerComponents, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -95,19 +97,24 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
       val umpToken = UmpToken("token")
       val group    = "dev-tools"
       val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
+      val expectedBody = "forbidden html"
 
       when(userManagementAuthConnector.hasGroup(is(umpToken), is(group))(any())).thenReturn(Future(false))
+      when(catalogueErrorHandler.forbiddenTemplate(any())).thenReturn(Html(expectedBody))
 
-      val result = withGroup(group).invokeBlock(request, (_: Request[AnyContent]) => Future(Ok)).futureValue
+      val result = withGroup(group).invokeBlock(request, (_: Request[AnyContent]) => Future(Ok))
 
-      result.header.status shouldBe 403
+      status(result) shouldBe 403
+      contentAsString(result) shouldBe expectedBody
     }
   }
 
   private trait Setup {
     val userManagementAuthConnector = mock[UserManagementAuthConnector]
     val cc                          = app.injector.instanceOf[MessagesControllerComponents]
-    val whenAuthenticated           = new UmpAuthActionBuilder(userManagementAuthConnector, cc).whenAuthenticated
-    def withGroup(group: String)    = new UmpAuthActionBuilder(userManagementAuthConnector, cc).withGroup(group)
+    val catalogueErrorHandler       = mock[CatalogueErrorHandler]
+    val actionBuilder               = new UmpAuthActionBuilder(userManagementAuthConnector, cc, catalogueErrorHandler)
+    val whenAuthenticated           = actionBuilder.whenAuthenticated
+    def withGroup(group: String)    = actionBuilder.withGroup(group)
   }
 }

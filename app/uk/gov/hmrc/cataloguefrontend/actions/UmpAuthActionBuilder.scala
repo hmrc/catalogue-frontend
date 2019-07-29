@@ -23,6 +23,7 @@ import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 import uk.gov.hmrc.http.Token
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import play.api.mvc.Results._
@@ -42,7 +43,8 @@ final case class UmpAuthenticatedRequest[A](request: Request[A], token: Token)
 @Singleton
 class UmpAuthActionBuilder @Inject()(
   userManagementAuthConnector: UserManagementAuthConnector,
-  cc                         : MessagesControllerComponents
+  cc                         : MessagesControllerComponents,
+  catalogueErrorHandler      : CatalogueErrorHandler
 )(implicit val ec: ExecutionContext) {
 
   val whenAuthenticated =
@@ -73,7 +75,7 @@ class UmpAuthActionBuilder @Inject()(
               .filterA(token => userManagementAuthConnector.hasGroup(UmpToken(token), group))
           )
           .semiflatMap(token => block(UmpAuthenticatedRequest(request, token = Token(token))))
-          .getOrElse(Forbidden(""))
+          .getOrElse(Forbidden(catalogueErrorHandler.forbiddenTemplate(request)))
       }
 
       override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser

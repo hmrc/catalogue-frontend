@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.ActionsSupport
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{CatalogueErrorHandler, ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -154,6 +154,7 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
     private val userManagementPortalConfig = mock[UserManagementPortalConfig]
     private val umac                       = mock[UserManagementAuthConnector]
     private val controllerComponents       = stubMessagesControllerComponents()
+    private val catalogueErrorHandler      = mock[CatalogueErrorHandler]
 
     val profileBaseUrl = "http://things.things.com"
     when(userManagementPortalConfig.userManagementProfileBaseUrl) thenReturn profileBaseUrl
@@ -170,7 +171,7 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       mockedEventService,
       mockedModelService,
       new VerifySignInStatusPassThrough(umac, controllerComponents),
-      new UmpAuthenticatedPassThrough(umac, controllerComponents),
+      new UmpAuthenticatedPassThrough(umac, controllerComponents, catalogueErrorHandler),
       userManagementPortalConfig,
       controllerComponents,
       mock[DigitalServiceInfoPage],

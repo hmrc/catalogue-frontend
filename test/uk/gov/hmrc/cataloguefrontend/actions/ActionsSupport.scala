@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.actions
 
 import play.api.mvc.{ActionBuilder, AnyContent, BodyParser, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
+import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 import uk.gov.hmrc.http.Token
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,8 +28,9 @@ trait ActionsSupport {
 
   class UmpAuthenticatedPassThrough(
     umac: UserManagementAuthConnector,
-    cc  : MessagesControllerComponents
-  ) extends UmpAuthActionBuilder(umac, cc) {
+    cc  : MessagesControllerComponents,
+    catalogueErrorHandler : CatalogueErrorHandler
+  ) extends UmpAuthActionBuilder(umac, cc, catalogueErrorHandler) {
 
     override val whenAuthenticated = passThrough
 
