@@ -32,10 +32,10 @@ class RouteRulesService @Inject()(
     )
 
   def serviceUrl(serviceName: String, environment: String = "production")(implicit hc: HeaderCarrier): Future[Option[EnvironmentRoute]] =
-    routeRulesConnector.serviceRoutes(serviceName).map(environmentRoutes => {
+    routeRulesConnector.serviceRoutes(serviceName).map(environmentRoutes =>
       environmentRoutes
         .find(environmentRoute => environmentRoute.environment == environment)
-    })
+    )
 }
 
 @Singleton

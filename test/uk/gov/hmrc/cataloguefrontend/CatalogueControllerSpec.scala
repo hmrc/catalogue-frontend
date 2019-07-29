@@ -28,7 +28,7 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
+import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service._
@@ -159,7 +159,7 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
       mock[EventService],
       mock[ReadModelService],
       mock[VerifySignInStatus],
-      mock[UmpAuthenticated],
+      mock[UmpAuthActionBuilder],
       userManagementPortalConfig,
       stubMessagesControllerComponents(),
       mock[DigitalServiceInfoPage],

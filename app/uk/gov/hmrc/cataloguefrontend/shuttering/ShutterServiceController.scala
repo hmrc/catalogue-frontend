@@ -26,7 +26,7 @@ import play.api.libs.json.{Format, Json}
 import play.api.mvc.{Action, MessagesControllerComponents, Request, Result, Session}
 import play.twirl.api.Html
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
-import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticated
+import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthActionBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ routes => appRoutes }
 import views.html.shuttering.shutterService.{Page1, Page2, Page3, Page4}
@@ -35,18 +35,20 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ShutterServiceController @Inject()(
-     mcc             : MessagesControllerComponents
-   , shutterService  : ShutterService
-   , page1           : Page1
-   , page2           : Page2
-   , page3           : Page3
-   , page4           : Page4
-   , umpAuthenticated: UmpAuthenticated
+     mcc                 : MessagesControllerComponents
+   , shutterService      : ShutterService
+   , page1               : Page1
+   , page2               : Page2
+   , page3               : Page3
+   , page4               : Page4
+   , umpAuthActionBuilder: UmpAuthActionBuilder
    )(implicit val ec : ExecutionContext
    ) extends FrontendController(mcc)
         with play.api.i18n.I18nSupport {
 
   import ShutterServiceController._
+
+  val withGroup = umpAuthActionBuilder.withGroup("dev-tools")
 
   // --------------------------------------------------------------------------
   // Step1
@@ -63,26 +65,26 @@ class ShutterServiceController @Inject()(
     } yield page1(form, shutterStates, envs, statusValues, shutterGroups)
 
   def step1Get(env: Option[String], serviceName: Option[String]) =
-    umpAuthenticated.async { implicit request =>
-    for {
-      shutterStates <- shutterService.getShutterStates
-      step1f        =  if (serviceName.isDefined || env.isDefined) {
-                         Step1Form(
-                             serviceNames = serviceName.toSeq
-                           , env          = env.getOrElse("")
-                           , status       = statusFor(shutterStates)(serviceName, env).fold("")(_.asString)
-                           )
-                       } else fromSession(request.session).flatMap(_.step1) match {
-                         case Some(step1Out) => Step1Form(
-                                                    serviceNames = step1Out.serviceNames
-                                                  , env          = step1Out.env.asString
-                                                  , status       = step1Out.status.asString
-                                                  )
-                         case None          => Step1Form(serviceNames = Seq.empty, env = "", status = "")
-                       }
-      html          <- showPage1(step1Form.fill(step1f)).map(Ok(_))
-    } yield html
-  }
+    withGroup.async { implicit request =>
+      for {
+        shutterStates <- shutterService.getShutterStates
+        step1f        =  if (serviceName.isDefined || env.isDefined) {
+                           Step1Form(
+                               serviceNames = serviceName.toSeq
+                             , env          = env.getOrElse("")
+                             , status       = statusFor(shutterStates)(serviceName, env).fold("")(_.asString)
+                             )
+                         } else fromSession(request.session).flatMap(_.step1) match {
+                           case Some(step1Out) => Step1Form(
+                                                      serviceNames = step1Out.serviceNames
+                                                    , env          = step1Out.env.asString
+                                                    , status       = step1Out.status.asString
+                                                    )
+                           case None          => Step1Form(serviceNames = Seq.empty, env = "", status = "")
+                         }
+        html          <- showPage1(step1Form.fill(step1f)).map(Ok(_))
+      } yield html
+    }
 
   def statusFor(shutterStates: Seq[ShutterState])(optServiceName: Option[String], optEnv: Option[String]): Option[ShutterStatusValue] =
     for {
@@ -96,7 +98,7 @@ class ShutterServiceController @Inject()(
     }
 
   def step1Post =
-    umpAuthenticated.async { implicit request =>
+    withGroup.async { implicit request =>
       (for {
          sf       <- step1Form
                        .bindFromRequest
@@ -149,7 +151,7 @@ class ShutterServiceController @Inject()(
 
 
   def step2Get =
-    umpAuthenticated.async { implicit request =>
+    withGroup.async { implicit request =>
       (for {
          step1Out      <- EitherT.fromOption[Future](
                               fromSession(request.session)
@@ -169,7 +171,7 @@ class ShutterServiceController @Inject()(
   }
 
   def step2Post =
-    umpAuthenticated.async { implicit request =>
+    withGroup.async { implicit request =>
       val envs          =  Environment.values
       val statusValues  =  ShutterStatusValue.values
       (for {
@@ -205,7 +207,7 @@ class ShutterServiceController @Inject()(
   }
 
   def step3Get =
-    umpAuthenticated { implicit request =>
+    withGroup { implicit request =>
       (for {
          flowState <- fromSession(request.session)
          step1Out  <- flowState.step1
@@ -216,7 +218,7 @@ class ShutterServiceController @Inject()(
     }
 
   def step3Post =
-    umpAuthenticated.async { implicit request =>
+    withGroup.async { implicit request =>
       (for {
          step1Out <- EitherT.fromOption[Future](
                          fromSession(request.session).flatMap(_.step1)
@@ -258,7 +260,7 @@ class ShutterServiceController @Inject()(
   // --------------------------------------------------------------------------
 
   def step4Get =
-    umpAuthenticated { implicit request =>
+    withGroup { implicit request =>
       fromSession(request.session)
         .flatMap(_.step1)
         .map(step1Out => Ok(page4(step1Out)).withSession(request.session - SessionKey))

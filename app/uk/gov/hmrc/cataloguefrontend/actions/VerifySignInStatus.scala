@@ -32,7 +32,7 @@ final case class UmpVerifiedRequest[A](request: Request[A], override val message
 /** Creates an Action to check if there is a UmpToken, and if it is valid.
   * It will continue to invoke the action body, with a [[UmpVerifiedRequest]] representing this status.
   *
-  * Use [[UmpAuthenticated]] Action if it should only proceed when there is a valid UmpToken.
+  * Use [[UmpAuthActionBuilder]] Action if it should only proceed when there is a valid UmpToken.
   */
 @Singleton
 class VerifySignInStatus @Inject()(

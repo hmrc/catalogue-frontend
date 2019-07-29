@@ -33,9 +33,9 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UmpAuthenticatedSpec extends WordSpec with MockitoSugar with ScalaFutures with GuiceOneAppPerSuite {
+class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutures with GuiceOneAppPerSuite {
 
-  "Action" should {
+  "WhenAuthenticated Action" should {
 
     "allow the request to proceed if user is signed-in (checking UMP)" in new Setup {
       val expectedStatus = Ok
@@ -44,7 +44,7 @@ class UmpAuthenticatedSpec extends WordSpec with MockitoSugar with ScalaFutures 
 
       when(userManagementAuthConnector.isValid(is(umpToken))(any())).thenReturn(Future(true))
 
-      action
+      whenAuthenticated
         .invokeBlock(request, (_: Request[AnyContent]) => Future(expectedStatus))
         .futureValue shouldBe expectedStatus
     }
@@ -55,30 +55,59 @@ class UmpAuthenticatedSpec extends WordSpec with MockitoSugar with ScalaFutures 
 
       when(userManagementAuthConnector.isValid(is(umpToken))(any())).thenReturn(Future(false))
 
-      val result = action.invokeBlock(request, (_: Request[AnyContent]) => Future(Ok)).futureValue
+      val result = whenAuthenticated.invokeBlock(request, (_: Request[AnyContent]) => Future(Ok)).futureValue
 
       result.header.status shouldBe 303
       result.header.headers.get("Location") shouldBe Some("/sign-in?targetUrl=requestedPage")
     }
 
     "return 303 REDIRECT if user is not signed-in (no token in the session)" in new Setup {
-      val result = action.invokeBlock(FakeRequest(GET, "requestedPage"), (_: Request[AnyContent]) => Future(Ok)).futureValue
+      val result = whenAuthenticated.invokeBlock(FakeRequest(GET, "requestedPage"), (_: Request[AnyContent]) => Future(Ok)).futureValue
 
       result.header.status shouldBe 303
       result.header.headers.get("Location") shouldBe Some("/sign-in?targetUrl=requestedPage")
     }
 
     "return 303 REDIRECT with no targetUrl if request is not GET" in new Setup {
-      val result = action.invokeBlock(FakeRequest(POST, "requestedPage"), (_: Request[AnyContent]) => Future(Ok)).futureValue
+      val result = whenAuthenticated.invokeBlock(FakeRequest(POST, "requestedPage"), (_: Request[AnyContent]) => Future(Ok)).futureValue
 
       result.header.status shouldBe 303
       result.header.headers.get("Location") shouldBe Some("/sign-in")
     }
   }
 
+  "WithGroup Action" should {
+
+    "allow the request to proceed if user has group (checking UMP)" in new Setup {
+      val expectedStatus = Ok
+      val umpToken       = UmpToken("token")
+      val group          = "dev-tools"
+      val request        = FakeRequest().withSession("ump.token" -> umpToken.value)
+
+      when(userManagementAuthConnector.hasGroup(is(umpToken), is(group))(any())).thenReturn(Future(true))
+
+      withGroup(group)
+        .invokeBlock(request, (_: Request[AnyContent]) => Future(expectedStatus))
+        .futureValue shouldBe expectedStatus
+    }
+
+    "return 403 FORBIDDEN if user does not have group" in new Setup {
+      val umpToken = UmpToken("token")
+      val group    = "dev-tools"
+      val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
+
+      when(userManagementAuthConnector.hasGroup(is(umpToken), is(group))(any())).thenReturn(Future(false))
+
+      val result = withGroup(group).invokeBlock(request, (_: Request[AnyContent]) => Future(Ok)).futureValue
+
+      result.header.status shouldBe 403
+    }
+  }
+
   private trait Setup {
     val userManagementAuthConnector = mock[UserManagementAuthConnector]
-    val cc = app.injector.instanceOf[MessagesControllerComponents]
-    val action                      = new UmpAuthenticated(userManagementAuthConnector, cc)
+    val cc                          = app.injector.instanceOf[MessagesControllerComponents]
+    val whenAuthenticated           = new UmpAuthActionBuilder(userManagementAuthConnector, cc).whenAuthenticated
+    def withGroup(group: String)    = new UmpAuthActionBuilder(userManagementAuthConnector, cc).withGroup(group)
   }
 }

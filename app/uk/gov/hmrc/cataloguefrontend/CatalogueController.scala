@@ -25,7 +25,7 @@ import play.api.libs.json.Json.toJson
 import play.api.libs.json.{Format, Json}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
-import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthenticated, VerifySignInStatus}
+import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
@@ -63,7 +63,7 @@ class CatalogueController @Inject()(
    eventService: EventService,
    readModelService: ReadModelService,
    verifySignInStatus: VerifySignInStatus,
-   umpAuthenticated: UmpAuthenticated,
+   umpAuthActionBuilder: UmpAuthActionBuilder,
    userManagementPortalConfig: UserManagementPortalConfig,
    mcc: MessagesControllerComponents,
    digitalServiceInfoPage: DigitalServiceInfoPage,
@@ -102,31 +102,31 @@ class CatalogueController @Inject()(
       .fold(NotFound(toJson(s"owner for $digitalService not found")))(ds => Ok(toJson(ds)))
   }
 
-  def saveServiceOwner(): Action[AnyContent] = umpAuthenticated.async { implicit request =>
-    request.body.asJson
-      .map { payload =>
-        val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
-        val serviceOwnerDisplayName: String                      = serviceOwnerSaveEventData.displayName
-        val optTeamMember: Option[TeamMember] =
-          readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
+  def saveServiceOwner(): Action[AnyContent] =
+    umpAuthActionBuilder.whenAuthenticated.async { implicit request =>
+      request.body.asJson
+        .map { payload =>
+          val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
+          val serviceOwnerDisplayName: String                      = serviceOwnerSaveEventData.displayName
+          val optTeamMember: Option[TeamMember] =
+            readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
 
-        optTeamMember.fold {
-          Future.successful(NotAcceptable(toJson(s"Invalid user: $serviceOwnerDisplayName")))
-        } { member =>
-          member.username.fold(
-            Future.successful(ExpectationFailed(toJson(s"Username was not set (by UMP) for $member!")))) {
-            serviceOwnerUsername =>
-              eventService
-                .saveServiceOwnerUpdatedEvent(
-                  ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
-                .map(_ => Ok(toJson(DisplayableTeamMember(member, userManagementProfileBaseUrl))))
+          optTeamMember.fold {
+            Future.successful(NotAcceptable(toJson(s"Invalid user: $serviceOwnerDisplayName")))
+          } { member =>
+            member.username.fold(
+              Future.successful(ExpectationFailed(toJson(s"Username was not set (by UMP) for $member!")))) {
+              serviceOwnerUsername =>
+                eventService
+                  .saveServiceOwnerUpdatedEvent(
+                    ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
+                  .map(_ => Ok(toJson(DisplayableTeamMember(member, userManagementProfileBaseUrl))))
+            }
           }
         }
-      }
-      .getOrElse(Future.successful(BadRequest(toJson(s"""Unable to parse json: "${request.body.asText
-        .getOrElse("No text in request body!")}""""))))
-
-  }
+        .getOrElse(Future.successful(BadRequest(
+          toJson(s"""Unable to parse json: "${request.body.asText.getOrElse("No text in request body!")}""""))))
+    }
 
   def allTeams(): Action[AnyContent] = Action.async { implicit request =>
     import SearchFiltering._

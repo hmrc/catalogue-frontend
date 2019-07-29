@@ -79,6 +79,21 @@ class UserManagementAuthConnector @Inject()(
     http.GET(s"$baseUrl/v1/login")(responseReads, headerCarrierWithToken, implicitly[ExecutionContext])
   }
 
+  def hasGroup(umpToken: UmpToken, group: String)(implicit headerCarrier: HeaderCarrier): Future[Boolean] = {
+    val responseReads: HttpReads[Boolean] = new HttpReads[Boolean] {
+      def read(method: String, url: String, response: HttpResponse): Boolean =
+        response.status match {
+          case OK                       => val groups = (response.json \ "groups").as[List[String]]
+                                           groups.contains(group)
+          case UNAUTHORIZED | FORBIDDEN => false
+          case other                    => throw new BadGatewayException(s"Received $other from $method to $url")
+        }
+    }
+
+    val headerCarrierWithToken = headerCarrier.withExtraHeaders("Token" -> umpToken.value)
+    http.GET(s"$baseUrl/v1/login")(responseReads, headerCarrierWithToken, implicitly[ExecutionContext])
+  }
+
 }
 
 @Singleton
