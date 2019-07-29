@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.actions
 
-import cats.data.OptionT
+import cats.data.EitherT
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, User}
 import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 import uk.gov.hmrc.http.Token
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -48,34 +48,28 @@ class UmpAuthActionBuilder @Inject()(
 )(implicit val ec: ExecutionContext) {
 
   val whenAuthenticated =
-    new ActionBuilder[UmpAuthenticatedRequest, AnyContent] {
-
-      def invokeBlock[A](request: Request[A], block: UmpAuthenticatedRequest[A] => Future[Result]): Future[Result] = {
-        implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, None)
-        OptionT(
-            request.session.get(UmpToken.SESSION_KEY_NAME)
-              .filterA(token => userManagementAuthConnector.isValid(UmpToken(token)))
-          )
-          .semiflatMap(token => block(UmpAuthenticatedRequest(request, token = Token(token))))
-          .getOrElse(Redirect(appRoutes.AuthController.showSignInPage(targetUrl = Some(request.target.uriString).filter(_ => request.method == "GET"))))
-      }
-
-      override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
-
-      override protected def executionContext: ExecutionContext = cc.executionContext
-    }
+    withCheck(None)
 
   def withGroup(group: String) =
+    withCheck(optGroup = Some(group))
+
+ private def withCheck(optGroup: Option[String]) =
     new ActionBuilder[UmpAuthenticatedRequest, AnyContent] {
 
       def invokeBlock[A](request: Request[A], block: UmpAuthenticatedRequest[A] => Future[Result]): Future[Result] = {
         implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, None)
-        OptionT(
-            request.session.get(UmpToken.SESSION_KEY_NAME)
-              .filterA(token => userManagementAuthConnector.hasGroup(UmpToken(token), group))
-          )
-          .semiflatMap(token => block(UmpAuthenticatedRequest(request, token = Token(token))))
-          .getOrElse(Forbidden(catalogueErrorHandler.forbiddenTemplate(request)))
+        (for {
+           token   <- EitherT.fromOption[Future](request.session.get(UmpToken.SESSION_KEY_NAME)
+                        , Redirect(appRoutes.AuthController.showSignInPage(targetUrl = Some(request.target.uriString).filter(_ => request.method == "GET")))
+                        )
+           user    <- EitherT.fromOptionF[Future, Result, User](userManagementAuthConnector.getUser(UmpToken(token))
+                        , Redirect(appRoutes.AuthController.showSignInPage(targetUrl = Some(request.target.uriString).filter(_ => request.method == "GET")))
+                        )
+           res     <- if (optGroup.map(user.groups.contains(_)).getOrElse(true))
+                          EitherT.right[Result](block(UmpAuthenticatedRequest(request, token = Token(token))))
+                      else EitherT.left[Result](Future(Forbidden(catalogueErrorHandler.forbiddenTemplate(request))))
+         } yield res
+        ).merge
       }
 
       override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser

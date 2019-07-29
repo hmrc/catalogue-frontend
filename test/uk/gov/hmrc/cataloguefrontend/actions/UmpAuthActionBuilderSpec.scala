@@ -29,7 +29,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, User}
 import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -44,7 +44,7 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
       val umpToken       = UmpToken("token")
       val request        = FakeRequest().withSession("ump.token" -> umpToken.value)
 
-      when(userManagementAuthConnector.isValid(is(umpToken))(any())).thenReturn(Future(true))
+      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(Some(User(List.empty))))
 
       whenAuthenticated
         .invokeBlock(request, (_: Request[AnyContent]) => Future(expectedStatus))
@@ -55,7 +55,7 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
       val umpToken = UmpToken("token")
       val request  = FakeRequest(GET, "requestedPage").withSession("ump.token" -> umpToken.value)
 
-      when(userManagementAuthConnector.isValid(is(umpToken))(any())).thenReturn(Future(false))
+      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(None))
 
       val result = whenAuthenticated.invokeBlock(request, (_: Request[AnyContent]) => Future(Ok)).futureValue
 
@@ -80,13 +80,42 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
 
   "WithGroup Action" should {
 
+    "return 303 REDIRECT if user is not signed-in (token exists but not valid)" in new Setup {
+      val umpToken = UmpToken("token")
+      val group          = "dev-tools"
+      val request  = FakeRequest(GET, "requestedPage").withSession("ump.token" -> umpToken.value)
+
+      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(None))
+
+      val result = withGroup(group).invokeBlock(request, (_: Request[AnyContent]) => Future(Ok)).futureValue
+
+      result.header.status shouldBe 303
+      result.header.headers.get("Location") shouldBe Some("/sign-in?targetUrl=requestedPage")
+    }
+
+    "return 303 REDIRECT if user is not signed-in (no token in the session)" in new Setup {
+      val group          = "dev-tools"
+      val result = withGroup(group).invokeBlock(FakeRequest(GET, "requestedPage"), (_: Request[AnyContent]) => Future(Ok)).futureValue
+
+      result.header.status shouldBe 303
+      result.header.headers.get("Location") shouldBe Some("/sign-in?targetUrl=requestedPage")
+    }
+
+    "return 303 REDIRECT with no targetUrl if request is not GET" in new Setup {
+      val group          = "dev-tools"
+      val result = withGroup(group).invokeBlock(FakeRequest(POST, "requestedPage"), (_: Request[AnyContent]) => Future(Ok)).futureValue
+
+      result.header.status shouldBe 303
+      result.header.headers.get("Location") shouldBe Some("/sign-in")
+    }
+
     "allow the request to proceed if user has group (checking UMP)" in new Setup {
       val expectedStatus = Ok
       val umpToken       = UmpToken("token")
       val group          = "dev-tools"
       val request        = FakeRequest().withSession("ump.token" -> umpToken.value)
 
-      when(userManagementAuthConnector.hasGroup(is(umpToken), is(group))(any())).thenReturn(Future(true))
+      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(Some(User(groups = List(group)))))
 
       withGroup(group)
         .invokeBlock(request, (_: Request[AnyContent]) => Future(expectedStatus))
@@ -99,7 +128,7 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
       val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
       val expectedBody = "forbidden html"
 
-      when(userManagementAuthConnector.hasGroup(is(umpToken), is(group))(any())).thenReturn(Future(false))
+      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(Some(User(groups = List.empty))))
       when(catalogueErrorHandler.forbiddenTemplate(any())).thenReturn(Html(expectedBody))
 
       val result = withGroup(group).invokeBlock(request, (_: Request[AnyContent]) => Future(Ok))

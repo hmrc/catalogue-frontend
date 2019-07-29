@@ -65,27 +65,13 @@ class UserManagementAuthConnector @Inject()(
     )
   }
 
-  def isValid(umpToken: UmpToken)(implicit headerCarrier: HeaderCarrier): Future[Boolean] = {
-    val responseReads: HttpReads[Boolean] = new HttpReads[Boolean] {
-      def read(method: String, url: String, response: HttpResponse): Boolean =
-        response.status match {
-          case OK                       => true
-          case UNAUTHORIZED | FORBIDDEN => false
-          case other                    => throw new BadGatewayException(s"Received $other from $method to $url")
-        }
-    }
-
-    val headerCarrierWithToken = headerCarrier.withExtraHeaders("Token" -> umpToken.value)
-    http.GET(s"$baseUrl/v1/login")(responseReads, headerCarrierWithToken, implicitly[ExecutionContext])
-  }
-
-  def hasGroup(umpToken: UmpToken, group: String)(implicit headerCarrier: HeaderCarrier): Future[Boolean] = {
-    val responseReads: HttpReads[Boolean] = new HttpReads[Boolean] {
-      def read(method: String, url: String, response: HttpResponse): Boolean =
+  def getUser(umpToken: UmpToken)(implicit headerCarrier: HeaderCarrier): Future[Option[User]] = {
+    val responseReads = new HttpReads[Option[User]] {
+      def read(method: String, url: String, response: HttpResponse): Option[User] =
         response.status match {
           case OK                       => val groups = (response.json \ "groups").as[List[String]]
-                                           groups.contains(group)
-          case UNAUTHORIZED | FORBIDDEN => false
+                                           Some(User(groups))
+          case UNAUTHORIZED | FORBIDDEN => None
           case other                    => throw new BadGatewayException(s"Received $other from $method to $url")
         }
     }
@@ -93,7 +79,6 @@ class UserManagementAuthConnector @Inject()(
     val headerCarrierWithToken = headerCarrier.withExtraHeaders("Token" -> umpToken.value)
     http.GET(s"$baseUrl/v1/login")(responseReads, headerCarrierWithToken, implicitly[ExecutionContext])
   }
-
 }
 
 @Singleton
@@ -126,5 +111,9 @@ object UserManagementAuthConnector {
 
   type UmpUnauthorized = UmpUnauthorized.type
   case object UmpUnauthorized
+
+  final case class User(
+    groups: List[String]
+  )
 
 }

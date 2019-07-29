@@ -47,8 +47,8 @@ class VerifySignInStatus @Inject()(
 
     request.session.get(UmpToken.SESSION_KEY_NAME) match {
       case Some(token) =>
-        userManagementAuthConnector.isValid(UmpToken(token)).flatMap { isValid =>
-          block(UmpVerifiedRequest(request, cc.messagesApi, isSignedIn = isValid))
+        userManagementAuthConnector.getUser(UmpToken(token)).flatMap { optUser =>
+          block(UmpVerifiedRequest(request, cc.messagesApi, isSignedIn = optUser.isDefined))
         }
       case None =>
         block(UmpVerifiedRequest(request, cc.messagesApi, isSignedIn = false))
