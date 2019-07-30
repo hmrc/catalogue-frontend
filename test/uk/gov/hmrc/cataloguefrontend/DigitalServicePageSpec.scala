@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{CatalogueErrorHandler, ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -335,10 +335,11 @@ class DigitalServicePageSpec
     private val mockedModelService          = mock[ReadModelService]
     private val userManagementAuthConnector = mock[UserManagementAuthConnector]
     private val controllerComponents        = stubMessagesControllerComponents()
+    private val catalogueErrorHandler       = mock[CatalogueErrorHandler]
     private val verifySignInStatusPassThrough =
       new VerifySignInStatusPassThrough(userManagementAuthConnector, controllerComponents)
     private val umpAuthenticatedPassThrough =
-      new UmpAuthenticatedPassThrough(userManagementAuthConnector, controllerComponents)
+      new UmpAuthenticatedPassThrough(userManagementAuthConnector, controllerComponents, catalogueErrorHandler)
 
     when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwner))
     when(userManagementPortalConfig.userManagementProfileBaseUrl) thenReturn "http://things.things.com"

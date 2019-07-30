@@ -75,24 +75,13 @@
             </div>
           </div>
 
-          <div class="row">
-            <div class="col-sm-12">
-              @textarea(
-                  field        =  form("reason")
-                , '_label      -> "Reason"
-                , 'placeholder -> "You may optionally provide a reason for auditing purposes."
-                , 'rows        -> 2
-                , 'cols        -> 60
-                )
-            </div>
-          </div>
           @if(requiresOutageMessage) {
             @if(outagePages.find(_.warning.isDefined)) {
               <div class="row">
                 <div class="col-sm-12">
                   <div class="panel panel-warning">
                     <div class="panel-heading"><span class="glyphicon glyphicon-warning-sign"></span>
-                      There were some issues with the Outage pages.</div>
+                      There were some warnings with the Outage pages.</div>
                       <div class="panel-body">
                         Please review, you can still continue to shutter.
                         <br/><br/>
@@ -100,7 +89,7 @@
                           <thead>
                           <tr>
                             <td>Service</td>
-                            <td>Observation</td>
+                            <td>Warning</td>
                             <td>Consequence</td>
                           </tr>
                           </thead>
@@ -130,7 +119,7 @@
                 @textarea(
                     field   =  form("outageMessage")
                   , '_label -> "Outage Message"
-                  , '_help  -> "The outage message will replace any 'templatedMessage' placeholder found in the outage-page."
+                  , '_help  -> "The outage message will replace any 'templatedMessage' placeholder found in the outage-page(s)."
                   , 'rows   -> 5
                   , 'cols   -> 60
                   )
@@ -144,6 +133,17 @@
           } else {
             <input type="hidden" name="outageMessage" value=""/>
           }
+          <div class="row">
+            <div class="col-sm-12">
+              @textarea(
+                  field        =  form("reason")
+                , '_label      -> "Reason (internal use only)"
+                , 'placeholder -> "You may optionally provide a reason for auditing purposes."
+                , 'rows        -> 2
+                , 'cols        -> 60
+                )
+            </div>
+          </div>
           <div class="row">
             <div class="col-sm-6">
               <a id="back-btn" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(None, None)" class="btn btn-default">

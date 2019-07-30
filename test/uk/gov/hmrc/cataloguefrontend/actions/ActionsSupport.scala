@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.actions
 
-import play.api.mvc.{MessagesControllerComponents, Request, Result}
+import play.api.mvc.{ActionBuilder, ActionRefiner, AnyContent, BodyParser, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
+import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 import uk.gov.hmrc.http.Token
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,10 +28,25 @@ trait ActionsSupport {
 
   class UmpAuthenticatedPassThrough(
     umac: UserManagementAuthConnector,
-    cc: MessagesControllerComponents
-  ) extends UmpAuthenticated(umac, cc) {
-    override def invokeBlock[A](request: Request[A], block: UmpAuthenticatedRequest[A] => Future[Result]): Future[Result] =
-      block(UmpAuthenticatedRequest(request, token = Token("asdasdasd")))
+    cc  : MessagesControllerComponents,
+    catalogueErrorHandler : CatalogueErrorHandler
+  ) extends UmpAuthActionBuilder(umac, cc, catalogueErrorHandler) {
+
+    override val whenAuthenticated = passThrough
+
+    override def withGroup(group: String) = passThrough
+
+    private def passThrough =
+      new ActionBuilder[UmpAuthenticatedRequest, AnyContent]
+        with ActionRefiner[Request, UmpAuthenticatedRequest] {
+
+        def refine[A](request: Request[A]): Future[Either[Result, UmpAuthenticatedRequest[A]]] =
+          Future(Right(UmpAuthenticatedRequest(request, token = Token("asdasdasd"))))
+
+        override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
+
+        override protected def executionContext: ExecutionContext = cc.executionContext
+      }
   }
 
   class VerifySignInStatusPassThrough(
@@ -40,5 +56,4 @@ trait ActionsSupport {
     override def invokeBlock[A](request: Request[A], block: UmpVerifiedRequest[A] => Future[Result]): Future[Result] =
       block(UmpVerifiedRequest(request, cc.messagesApi, isSignedIn = true))
   }
-
 }

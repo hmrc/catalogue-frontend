@@ -157,7 +157,10 @@
       for (let selectedService of selectedServices) {
         var i = indexOf(allServices, selectedService);
         if (i == -1) {
-          missingServices.push(selectedService);
+          var j = indexOf(serviceName, selectedService);
+          if (j == -1) {
+            missingServices.push(selectedService);
+          }
         } else {
           var option = document.createElement("option");
           option.text = selectedService;
@@ -217,7 +220,7 @@
     }
 
     function addGroupWarning(group, missingServices) {
-      $('#group-warning').text('The following services in group \'' + group + '\' could not be added since do not exist: ');
+      $('#group-warning').text('The following services in group \'' + group + '\' could not be added since they do not exist: ');
       var out = '';
       for (let missingService of missingServices) {
         out += "<li>" + missingService + "</li>";
@@ -228,10 +231,12 @@
 
     $(document).ready(function() {
       // remove options in serviceName from allServices
-      var selectedOpts = $('#serviceName option:selected');
+      var selectedOpts = $('#serviceName option');
       selectedOpts.prop('selected', false);
 
       var allServices = document.getElementById('allServices');
+      sort('allServices');
+      sort('serviceName');
 
       selectedOpts.each(function()
       {

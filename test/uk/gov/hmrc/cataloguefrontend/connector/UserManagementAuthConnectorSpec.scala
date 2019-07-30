@@ -23,9 +23,9 @@ import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, JsArray}
 import play.api.test.Helpers._
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId, User}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 
 import scala.concurrent.ExecutionContext
@@ -84,13 +84,16 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
   }
 
   "isValid" should {
-    "return true if UMP Auth service returns 200 OK" in new Setup {
+    "return User if UMP Auth service returns 200 OK" in new Setup {
       val umpToken = UmpToken("value")
       expect
         .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
-        .returning(OK)
+        .returning(
+          status = OK,
+          body   = Json.obj("groups" -> JsArray(Seq.empty))
+        )
 
-      connector.isValid(umpToken).futureValue shouldBe true
+      connector.getUser(umpToken).futureValue shouldBe Some(User(groups = List.empty))
     }
 
     UNAUTHORIZED :: FORBIDDEN :: Nil foreach { status =>
@@ -100,7 +103,7 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
           .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
           .returning(status)
 
-        connector.isValid(umpToken).futureValue shouldBe false
+        connector.getUser(umpToken).futureValue shouldBe None
       }
     }
 
@@ -117,7 +120,7 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
           .returning(unsupportedStatus)
 
         intercept[BadGatewayException] {
-          await(connector.isValid(umpToken))
+          await(connector.getUser(umpToken))
         }.message shouldBe s"Received $unsupportedStatus from GET to $userMgtAuthUrl/v1/login"
       }
 

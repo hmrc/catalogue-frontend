@@ -27,7 +27,7 @@ import play.api.mvc.{ControllerComponents, MessagesControllerComponents, Result}
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, User}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,13 +40,22 @@ class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFuture
       val umpToken = UmpToken("token")
       val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
 
-      true :: false :: Nil foreach { isValid =>
-        when(userManagementAuthConnector.isValid(is(umpToken))(any())).thenReturn(Future.successful(isValid))
+      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(Some(User(groups = List.empty))))
 
-        action
-          .invokeBlock(request, actionBodyExpecting(isValid))
-          .futureValue shouldBe expectedStatus
-      }
+      action
+        .invokeBlock(request, actionBodyExpecting(isValid = true))
+        .futureValue shouldBe expectedStatus
+    }
+
+    "verify with UMP auth service if token in the session is invalid" in new Setup {
+      val umpToken = UmpToken("token")
+      val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
+
+      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(None))
+
+      action
+        .invokeBlock(request, actionBodyExpecting(isValid = false))
+        .futureValue shouldBe expectedStatus
     }
 
     "indicate that user is not signed-in if token is not present in the session " +
