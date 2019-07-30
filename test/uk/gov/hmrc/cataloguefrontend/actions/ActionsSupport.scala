@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.actions
 
-import play.api.mvc.{ActionBuilder, AnyContent, BodyParser, MessagesControllerComponents, Request, Result}
+import play.api.mvc.{ActionBuilder, ActionRefiner, AnyContent, BodyParser, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 import uk.gov.hmrc.http.Token
@@ -37,10 +37,11 @@ trait ActionsSupport {
     override def withGroup(group: String) = passThrough
 
     private def passThrough =
-      new ActionBuilder[UmpAuthenticatedRequest, AnyContent] {
+      new ActionBuilder[UmpAuthenticatedRequest, AnyContent]
+        with ActionRefiner[Request, UmpAuthenticatedRequest] {
 
-        def invokeBlock[A](request: Request[A], block: UmpAuthenticatedRequest[A] => Future[Result]): Future[Result] =
-          block(UmpAuthenticatedRequest(request, token = Token("asdasdasd")))
+        def refine[A](request: Request[A]): Future[Either[Result, UmpAuthenticatedRequest[A]]] =
+          Future(Right(UmpAuthenticatedRequest(request, token = Token("asdasdasd"))))
 
         override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
 

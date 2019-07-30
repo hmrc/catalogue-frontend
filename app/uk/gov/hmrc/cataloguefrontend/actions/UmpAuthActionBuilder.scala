@@ -54,9 +54,10 @@ class UmpAuthActionBuilder @Inject()(
     withCheck(optGroup = Some(group))
 
  private def withCheck(optGroup: Option[String]) =
-    new ActionBuilder[UmpAuthenticatedRequest, AnyContent] {
+    new ActionBuilder[UmpAuthenticatedRequest, AnyContent]
+     with ActionRefiner[Request, UmpAuthenticatedRequest] {
 
-      def invokeBlock[A](request: Request[A], block: UmpAuthenticatedRequest[A] => Future[Result]): Future[Result] = {
+      def refine[A](request: Request[A]): Future[Either[Result, UmpAuthenticatedRequest[A]]] = {
         implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, None)
         (for {
            token   <- EitherT.fromOption[Future](request.session.get(UmpToken.SESSION_KEY_NAME)
@@ -65,14 +66,14 @@ class UmpAuthActionBuilder @Inject()(
            user    <- EitherT.fromOptionF[Future, Result, User](userManagementAuthConnector.getUser(UmpToken(token))
                         , Redirect(appRoutes.AuthController.showSignInPage(targetUrl = Some(request.target.uriString).filter(_ => request.method == "GET")))
                         )
-           res     <- if (optGroup.map(user.groups.contains(_)).getOrElse(true))
-                          EitherT.right[Result](block(UmpAuthenticatedRequest(request, token = Token(token))))
+           _       <- if (optGroup.map(user.groups.contains(_)).getOrElse(true))
+                        EitherT.pure[Future, Result](())
                       else EitherT.left[Result](Future(Forbidden(catalogueErrorHandler.forbiddenTemplate(request))))
-         } yield res
-        ).merge
+         } yield UmpAuthenticatedRequest(request, token = Token(token))
+        ).value
       }
 
-      override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
+      override def parser: BodyParser[AnyContent] = cc.parsers.anyContent
 
       override protected def executionContext: ExecutionContext = cc.executionContext
     }

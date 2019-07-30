@@ -83,8 +83,6 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
             .withHeaders("Content-Type" -> "application/json")
             .withJsonBody(Json.toJson(serviceOwnerSaveEventData)))
 
-      verify(mockedEventService).saveServiceOwnerUpdatedEvent(ServiceOwnerUpdatedEventData("service-abc", "member.1"))
-
       status(response) shouldBe 200
 
       contentAsJson(response).as[DisplayableTeamMember] shouldBe DisplayableTeamMember(
@@ -92,6 +90,8 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
         isServiceOwner = false,
         s"$profileBaseUrl/${teamMember1.username.get}"
       )
+
+      verify(mockedEventService).saveServiceOwnerUpdatedEvent(ServiceOwnerUpdatedEventData("service-abc", "member.1"))
     }
 
     "not save the service owner if it doesn't contain a username" in new Setup {
