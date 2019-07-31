@@ -117,9 +117,11 @@ class ShutterServiceController @Inject()(
          step1Out =  Step1Out(sf.serviceNames, env, status)
        } yield status match {
          case ShutterStatusValue.Shuttered   => Redirect(appRoutes.ShutterServiceController.step2Get)
-                                                 .withSession(request.session + updateFlowState(request.session)(_.copy(step1 = Some(step1Out))))
+                                                  .withSession(request.session + updateFlowState(request.session)(_.copy(step1 = Some(step1Out))))
          case ShutterStatusValue.Unshuttered => Redirect(appRoutes.ShutterServiceController.step3Get)
-                                                 .withSession(request.session + updateFlowState(request.session)(_.copy(step1 = Some(step1Out) , step2 = Some(Step2Out(reason = "", outageMessage = "")))))
+                                                  .withSession(request.session + updateFlowState(request.session)(_.copy( step1 = Some(step1Out)
+                                                                                                                        , step2 = Some(Step2Out(reason = "", outageMessage = "", requiresOutageMessage = false))
+                                                                                                                        )))
        }
       ).merge
     }
@@ -160,10 +162,11 @@ class ShutterServiceController @Inject()(
                             )
          step2f        =  fromSession(request.session).flatMap(_.step2) match {
                             case Some(step2Out) => Step2Form(
-                                                       reason        = step2Out.reason
-                                                     , outageMessage = step2Out.outageMessage
+                                                       reason                = step2Out.reason
+                                                     , outageMessage         = step2Out.outageMessage
+                                                     , requiresOutageMessage = step2Out.requiresOutageMessage
                                                      )
-                            case None           => Step2Form(reason = "", outageMessage = "")
+                            case None           => Step2Form(reason = "", outageMessage = "", requiresOutageMessage = true)
                           }
          html          <- EitherT.right[Result](showPage2(step2Form.fill(step2f), step1Out).map(Ok(_)))
        } yield html
@@ -186,7 +189,7 @@ class ShutterServiceController @Inject()(
                            hasErrors = formWithErrors => EitherT.left(showPage2(formWithErrors, step1Out).map(BadRequest(_)))
                          , success   = data           => EitherT.pure[Future, Result](data)
                          )
-         step2Out =  Step2Out(sf.reason, sf.outageMessage)
+         step2Out =  Step2Out(sf.reason, sf.outageMessage, sf.requiresOutageMessage)
        } yield Redirect(appRoutes.ShutterServiceController.step3Get)
                 .withSession(request.session + updateFlowState(request.session)(fs => fs.copy(step2 = Some(step2Out))))
       ).merge
@@ -200,9 +203,9 @@ class ShutterServiceController @Inject()(
   // --------------------------------------------------------------------------
 
   private def showPage3(form3: Form[Step3Form], step1Out: Step1Out, step2Out: Step2Out)(implicit request: Request[Any]): Html = {
-    val back      =  if (step1Out.status == ShutterStatusValue.Shuttered)
-                       appRoutes.ShutterServiceController.step2Get
-                     else appRoutes.ShutterServiceController.step1Post
+    val back = if (step1Out.status == ShutterStatusValue.Shuttered)
+                 appRoutes.ShutterServiceController.step2Get
+               else appRoutes.ShutterServiceController.step1Post
     page3(form3, step1Out, step2Out, back)
   }
 
@@ -306,19 +309,22 @@ object ShutterServiceController {
   def step2Form(implicit messagesProvider: MessagesProvider) =
     Form(
       Forms.mapping(
-          "reason"        -> Forms.text
-        , "outageMessage" -> Forms.text
+          "reason"                -> Forms.text
+        , "outageMessage"         -> Forms.text
+        , "requiresOutageMessage" -> Forms.boolean
         )(Step2Form.apply)(Step2Form.unapply)
     )
 
   case class Step2Form(
-      reason       : String
-    , outageMessage: String
+      reason               : String
+    , outageMessage        : String
+    , requiresOutageMessage: Boolean
     )
 
   case class Step2Out(
-      reason       : String
-    , outageMessage: String
+      reason               : String
+    , outageMessage        : String
+    , requiresOutageMessage: Boolean
     )
 
   private implicit val step2OutFormats =

@@ -75,6 +75,7 @@
             </div>
           </div>
 
+          <input type="hidden" name="requiresOutageMessage" value="@requiresOutageMessage"/>
           @if(requiresOutageMessage) {
             @if(outagePages.find(_.warning.isDefined)) {
               <div class="row">

@@ -22,10 +22,10 @@
 
 @this(viewMessages: ViewMessages)
 
-@( form    : Form[Step3Form]
- , step1Out: Step1Out
- , step2Out: Step2Out
- , back    : Call
+@( form                 : Form[Step3Form]
+ , step1Out             : Step1Out
+ , step2Out             : Step2Out
+ , back                 : Call
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -75,7 +75,7 @@
           </div>
 
           <table class="padded-table" style="width: 100%">
-            @if(step1Out.status == ShutterStatusValue.Shuttered) {
+            @if(step1Out.status == ShutterStatusValue.Shuttered && step2Out.requiresOutageMessage) {
               <tr>
                 <td colspan="2">
                   Outage Message:
