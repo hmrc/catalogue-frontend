@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.instances.all._
 import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
@@ -199,20 +199,28 @@ class ShutterServiceController @Inject()(
   //
   // --------------------------------------------------------------------------
 
-  private def showPage3(form3: Form[Step3Form], step1Out: Step1Out, step2Out: Step2Out)(implicit request: Request[Any]): Html = {
-    val back      =  if (step1Out.status == ShutterStatusValue.Shuttered)
-                       appRoutes.ShutterServiceController.step2Get
-                     else appRoutes.ShutterServiceController.step1Post
-    page3(form3, step1Out, step2Out, back)
-  }
+  private def showPage3(form3: Form[Step3Form], step1Out: Step1Out, step2Out: Step2Out)(implicit request: Request[Any]): Future[Html] =
+    for {
+      outagePages           <- step1Out.serviceNames.toList.traverse[Future, Option[OutagePage]](serviceName =>
+                                 shutterService
+                                   .outagePageByAppAndEnv(serviceName, step1Out.env)
+                               ).map(_.collect { case Some(op) => op })
+      outageMessageTemplate = outagePages
+                                .flatMap(_.templatedMessages)
+                                .headOption
+      requiresOutageMessage = outageMessageTemplate.isDefined || outagePages.flatMap(_.warnings).nonEmpty
+      back                  =  if (step1Out.status == ShutterStatusValue.Shuttered)
+                                 appRoutes.ShutterServiceController.step2Get
+                               else appRoutes.ShutterServiceController.step1Post
+  } yield page3(form3, step1Out, step2Out, requiresOutageMessage, back)
 
   def step3Get =
-    withGroup { implicit request =>
+    withGroup.async { implicit request =>
       (for {
-         flowState <- fromSession(request.session)
-         step1Out  <- flowState.step1
-         step2Out  <- flowState.step2
-         html      =  showPage3(step3Form.fill(Step3Form(confirm = false)), step1Out, step2Out)
+         flowState <- OptionT.fromOption[Future](fromSession(request.session))
+         step1Out  <- OptionT.fromOption[Future](flowState.step1)
+         step2Out  <- OptionT.fromOption[Future](flowState.step2)
+         html      <- OptionT.liftF(showPage3(step3Form.fill(Step3Form(confirm = false)), step1Out, step2Out))
        } yield Ok(html)
       ).getOrElse(Redirect(appRoutes.ShutterServiceController.step1Post))
     }
@@ -231,7 +239,7 @@ class ShutterServiceController @Inject()(
          _        <- step3Form
                        .bindFromRequest
                        .fold(
-                           hasErrors = formWithErrors => EitherT.left(Future(showPage3(formWithErrors, step1Out, step2Out)).map(BadRequest(_)))
+                           hasErrors = formWithErrors => EitherT.left(showPage3(formWithErrors, step1Out, step2Out).map(BadRequest(_)))
                          , success   = data           => EitherT.pure[Future, Result](())
                          )
          status   =  step1Out.status match {
