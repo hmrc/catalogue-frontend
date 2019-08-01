@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, OutagePageStatus, ShutterStatusValue, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, OutagePage, OutagePageStatus, ShutterStatusValue, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Form}
 @import helper._
 
@@ -24,6 +24,7 @@
 @( form                  : Form[Step2Form]
  , step1Out              : Step1Out
  , requiresOutageMessage : Boolean
+ , outageMessageSrc      : Option[OutagePage]
  , defaultOutageMessage  : String
  , outagePages           : Seq[OutagePageStatus]
  )(implicit request         : Request[_]
@@ -124,6 +125,7 @@
                   , 'rows   -> 5
                   , 'cols   -> 60
                   )
+                  <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the <a target='_blank' href='${src.outagePageURL}'>${src.serviceName} outage page</a>.").getOrElse(""))</p>
               </div>
               <div class="col-sm-4" style="display:table-cell; float:none; vertical-align: middle;">
                 <a id="back-btn" href="javascript:revertTemplate()" class="btn btn-default">
