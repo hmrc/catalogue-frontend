@@ -36,14 +36,17 @@ class JDKVersionPageSpec extends WordSpec with MockitoSugar with Matchers {
     "show a list of slugs and what JDK they're using" in {
       implicit val request = FakeRequest()
 
-      val versions = List(JDKVersion("test-slug", "1.181.0"), JDKVersion("thing-service", "1.171.0"))
+      val versions = List(
+          JDKVersion(name = "test-slug",     version = "1.181.0", vendor = "OpenJDK", kind = "JDK")
+        , JDKVersion(name = "thing-service", version = "1.171.0", vendor = "Oracle", kind = "JRE"  ))
+
       val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, Latest))
 
       val slug1 = document.select("#jdk-slug-test-slug")
       val slug2 = document.select("#jdk-slug-thing-service")
 
-      slug1.select("#jdk-slug-test-slug").text() shouldBe "test-slug 1.181.0"
-      slug2.select("#jdk-slug-thing-service").text() shouldBe "thing-service 1.171.0"
+      slug1.select("#jdk-slug-test-slug").text() shouldBe "test-slug OpenJDK 1.181.0"
+      slug2.select("#jdk-slug-thing-service").text() shouldBe "thing-service Oracle 1.171.0"
 
     }
 
@@ -51,7 +54,7 @@ class JDKVersionPageSpec extends WordSpec with MockitoSugar with Matchers {
     "include a link to the repository" in {
       implicit val request = FakeRequest()
 
-      val versions = List(JDKVersion("thing-service", "1.171.0"))
+      val versions = List(JDKVersion(name= "thing-service", version = "1.171.0", vendor = "Oracle", kind = "JDK"))
       val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, Latest))
 
       val slug = document.select("#jdk-slug-thing-service")

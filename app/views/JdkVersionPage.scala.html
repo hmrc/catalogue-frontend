@@ -36,7 +36,17 @@
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
-    <div id="chart_div"></div>
+    <div class="row">
+        <div class="col-sm-6" >
+            <h4>Versions</h4>
+            <div id="chart_div"></div>
+        </div>
+        <div class="col-sm-6" >
+            <h4>Vendors</h4>
+            <div id="chart_vendor_div"></div>
+        </div>
+    </div>
+
     <hr>
     <div>
     <form class="form-inline">
@@ -55,6 +65,7 @@
             <thead>
                 <tr>
                     <th>Service</th>
+                    <th>JDK Vendor</th>
                     <th>JDK Version</th>
                 </tr>
             </thead>
@@ -67,7 +78,14 @@
 
     <script type="text/javascript">
             google.charts.load('current', {'packages': ['corechart']});
-            google.charts.setOnLoadCallback(drawChart);
+            google.charts.setOnLoadCallback(drawAll);
+
+            function drawAll() {
+                drawChart();
+                drawVendorChart()
+            }
+
+            // draw jdk version chart
             function drawChart() {
 
                 var data = new google.visualization.DataTable();
@@ -79,14 +97,40 @@
                     }
                 ].sort());
 
-                var options = { 'title'    : 'JDK Usage',
-                    'width'    : "80%",
+                var options = {
+                    'width'    : "40%",
                     'height'   : 200,
-                    'chartArea': { 'width': '100%',
-                        'height': '100%'}};
+                    'chartArea': {
+                        'width': '100%',
+                        'height': '95%'
+                    }
+                };
                 var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
                 chart.draw(data, options);
             }
+
+            function drawVendorChart() {
+                var data = new google.visualization.DataTable();
+                data.addColumn('string', 'Version');
+                data.addColumn('number', 'Count');
+                data.addRows([
+                    @for(r <- jdkVersions.groupBy(_.vendor).mapValues(_.length)) {
+                    ['@r._1', @r._2],
+                    }
+                ].sort());
+
+                var options = {
+                    'width'    : "40%",
+                    'height'   : 200,
+                    'chartArea': {
+                        'width': '100%',
+                        'height': '95%'
+                    }
+                };
+                var chart = new google.visualization.PieChart(document.getElementById('chart_vendor_div'));
+                chart.draw(data, options);
+            }
+
 
     </script>
 }
@@ -94,6 +138,7 @@
 @jdkVersion(version: JDKVersion) = {
     <tr id="jdk-slug-@version.name">
         <td><a href="@routes.CatalogueController.repository(version.name)">@version.name</a></td>
+        <td>@version.vendor</td>
         <td>@version.version</td>
     </tr>
 }

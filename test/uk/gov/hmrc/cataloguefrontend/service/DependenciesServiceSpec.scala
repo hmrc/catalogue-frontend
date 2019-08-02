@@ -85,10 +85,10 @@ class SlugInfoServiceSpec
 
       when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
         .thenReturn(Future(List(
-          JDKVersion("test1", "1.181.1"),
-          JDKVersion("test2", "1.181.1"),
-          JDKVersion("test3", "1.191.1"),
-          JDKVersion("test4", "1.121.1"))))
+          JDKVersion(name = "test1", version = "1.181.1", vendor = "Oracle", kind = "JDK"),
+          JDKVersion(name = "test2", version = "1.181.1", vendor = "Oracle", kind = "JDK"),
+          JDKVersion(name = "test3", version = "1.191.1", vendor = "OpenJDK", kind = "JRE"),
+          JDKVersion(name = "test4", version = "1.121.1", vendor = "OpenJDK", kind = "JRE"))))
 
       await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.asString, Map("1.181.1"-> 2, "1.191.1"->1, "1.121.1" -> 1))
     }

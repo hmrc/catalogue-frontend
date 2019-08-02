@@ -322,6 +322,32 @@ class ServiceDependenciesConnectorSpec
     }
   }
 
+  "getJDKVersions" - {
+    "returns JDK versions with vendor" in new Setup {
+      serviceEndpoint(
+        GET,
+        s"/api/jdkVersions?flag=${SlugInfoFlag.Production.asString}",
+        willRespondWith = (
+          200,
+          Some(
+            """[
+              | {"name":"something-api",  "version":"1.8.0_181", "vendor": "Oracle", "kind": "JDK"}
+              |,{"name":"service-backend","version":"1.8.0_191", "vendor": "OpenJDK", "kind": "JRE"}
+              |]""".stripMargin)))
+
+      val response = serviceDependenciesConnector.getJDKVersions(SlugInfoFlag.Production).futureValue
+
+      response.head.name    shouldBe "something-api"
+      response.head.version shouldBe "1.8.0_181"
+      response.head.vendor  shouldBe "Oracle"
+
+      response(1).name    shouldBe "service-backend"
+      response(1).version shouldBe "1.8.0_191"
+      response(1).vendor  shouldBe "OpenJDK"
+
+    }
+  }
+
   private trait Setup {
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   }

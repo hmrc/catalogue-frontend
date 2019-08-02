@@ -19,14 +19,16 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 import play.api.libs.json.{OFormat, __}
 import play.api.libs.functional.syntax._
 
-case class JDKVersion(name:String, version: String)
+case class JDKVersion(name:String, version: String, vendor: String, kind: String)
 
 trait JDKVersionFormats {
 
   val jdkFormat: OFormat[JDKVersion] =
     (
-      (__ \ "name"     ).format[String]
-    ~ (__ \ "jdkVersion" ).format[String]
+      (__ \ "name"    ).format[String]
+    ~ (__ \ "version" ).format[String]
+    ~ (__ \ "vendor"  ).format[String]
+    ~ (__ \ "kind"    ).format[String]
     )(JDKVersion.apply, unlift(JDKVersion.unapply))
 }
 
