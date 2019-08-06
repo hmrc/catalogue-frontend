@@ -52,11 +52,9 @@
     <form class="form-inline">
         <div class="form-inline">
             <label for="flag">Environment:</label>
-            <select name="flag">
+            <select name="flag" onchange="this.options[this.selectedIndex].value && (window.location = this.options[this.selectedIndex].value);">
             @flags.map(flagSelect)
             </select>
-
-            <input class="btn btn-primary" type="submit"/>
         </div>
     </form>
     </div>
@@ -144,7 +142,7 @@
 }
 
 @flagSelect(flag: SlugInfoFlag) = {
-    <option value=@{flag.asString.toLowerCase.trim} @{if(flag == selected) "selected"}>
+    <option value="@{flag.asString.toLowerCase.trim}" @{if(flag.asString == selected.asString) "selected"}>
         @flag.asString.trim
     </option>
 }
