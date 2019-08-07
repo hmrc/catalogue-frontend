@@ -83,14 +83,15 @@ class SlugInfoServiceSpec
     "return totals of each jdk in an environment" in {
       val boot = Boot.init
 
-      when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
-        .thenReturn(Future(List(
-          JDKVersion(name = "test1", version = "1.181.1", vendor = "Oracle", kind = "JDK"),
-          JDKVersion(name = "test2", version = "1.181.1", vendor = "Oracle", kind = "JDK"),
-          JDKVersion(name = "test3", version = "1.191.1", vendor = "OpenJDK", kind = "JRE"),
-          JDKVersion(name = "test4", version = "1.121.1", vendor = "OpenJDK", kind = "JRE"))))
+      val jdk1 = JDKVersion(name = "test1", version = "1.181.1", vendor = "Oracle", kind = "JDK")
+      val jdk2 = JDKVersion(name = "test2", version = "1.181.1", vendor = "Oracle", kind = "JDK")
+      val jdk3 = JDKVersion(name = "test3", version = "1.191.1", vendor = "OpenJDK", kind = "JRE")
+      val jdk4 = JDKVersion(name = "test4", version = "1.121.1", vendor = "OpenJDK", kind = "JRE")
 
-      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.asString, Map("1.181.1"-> 2, "1.191.1"->1, "1.121.1" -> 1))
+      when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
+        .thenReturn(Future(List(jdk1, jdk2, jdk3, jdk4)))
+
+      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.asString, Map(jdk1.copy(name="") -> 2, jdk3.copy(name="") ->1, jdk4.copy(name="") -> 1))
     }
 
     "still returns a value when no matches are found for env" in {
@@ -99,7 +100,7 @@ class SlugInfoServiceSpec
       when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
         .thenReturn(Future(List.empty[JDKVersion]))
 
-      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.asString, Map.empty[String, Int])
+      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.asString, Map.empty[JDKVersion, Int])
     }
   }
 
