@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.ControllerComponents
-import uk.gov.hmrc.cataloguefrontend.connector.model.{ JDKVersion, JDKVersionFormats}
+import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import views.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
@@ -36,8 +36,6 @@ class JDKVersionController @Inject()(
     extends BackendController(cc) {
 
   def findLatestVersions(flag: String) = Action.async { implicit request =>
-    implicit val r = JDKVersionFormats.jdkFormat
-
     for {
         flag        <- Future.successful(SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest))
         jdkVersions <- dependenciesService.getJDKVersions(flag)
@@ -45,7 +43,6 @@ class JDKVersionController @Inject()(
   }
 
   def compareAllEnvironments() = Action.async { implicit request =>
-    //implicit val r = JDKUsageByEnvFormat.jdkUsageByEnvFormat
 
     for {
        envs      <- Future.sequence(SlugInfoFlag.values.map(dependenciesService.getJDKCountsForEnv))
