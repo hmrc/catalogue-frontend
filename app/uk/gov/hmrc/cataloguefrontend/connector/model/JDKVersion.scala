@@ -35,17 +35,4 @@ trait JDKVersionFormats {
 object JDKVersionFormats extends JDKVersionFormats
 
 
-case class JDKUsageByEnv(env: String, usage: Map[String, Int])
-
-
-trait JDKUsageByEnvFormat {
-
-  val jdkUsageByEnvFormat: OFormat[JDKUsageByEnv] =
-    (
-      (__ \ "env").format[String]
-    ~ (__ \ "usage").format[Map[String, Int]]
-    )(JDKUsageByEnv.apply, unlift(JDKUsageByEnv.unapply))
-
-}
-
-object JDKUsageByEnvFormat extends JDKUsageByEnvFormat
+case class JDKUsageByEnv(env: String, usage: Map[JDKVersion, Int])

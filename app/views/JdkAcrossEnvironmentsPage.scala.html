@@ -24,10 +24,13 @@
 @import uk.gov.hmrc.cataloguefrontend.routes
 @import uk.gov.hmrc.cataloguefrontend.connector.model.JDKUsageByEnv
 
+
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+
 @this(viewMessages: ViewMessages)
 
-@(data: List[JDKUsageByEnv],
-  jdks: List[String])(implicit request: Request[_])
+@(envdata: List[JDKUsageByEnv],
+  jdks: List[JDKVersion])(implicit request: Request[_])
 
 @standard_layout(s"JDK Versions", "dependencies") {
     <header>
@@ -45,13 +48,28 @@
         <thead>
             <tr>
                 <th>Environment</th>
-                @jdks.map(jdk => {<th>{jdk}</th>})
+                @jdks.map(jdk => {
+
+                {if(jdk.vendor.equalsIgnoreCase("Oracle")){
+                      <th>
+                         <img src="/assets/img/oracle2.gif" width="68px" alt="Oracle"/>
+                           {jdk.version}
+                     </th>
+                }else {
+                     <th>
+                        <img src="/assets/img/openjdk.png" width="55px" alt="OpenJDK"/>
+                        {jdk.version}
+                    </th>
+                }
+                }
+
+                })
             </tr>
 
         </thead>
         <tbody>
 
-        @for(d <- data) {
+        @for(d <- envdata) {
           <tr>
               <td><a href="@routes.JDKVersionController.findLatestVersions(d.env)">@d.env</a></td>
               @for(jdk <- jdks) { <td>@{d.usage.getOrElse(jdk, 0)}</td>}
@@ -93,11 +111,11 @@
                 var data = new google.visualization.DataTable();
                 data.addColumn('string', 'Environment');
                 @for(jdk <- jdks) {
-                  data.addColumn('number','@jdk');
+                  data.addColumn('number','@{jdk.version} @{jdk.vendor}');
                 }
 
                 data.addRows([
-                    @for(d <- data) {
+                    @for(d <- envdata) {
                         ['@d.env' @for(jdk <- jdks) {,@{d.usage.getOrElse(jdk, 0)}}],
                     }
                 ]);

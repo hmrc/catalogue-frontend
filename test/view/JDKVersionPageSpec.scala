@@ -45,9 +45,10 @@ class JDKVersionPageSpec extends WordSpec with MockitoSugar with Matchers {
       val slug1 = document.select("#jdk-slug-test-slug")
       val slug2 = document.select("#jdk-slug-thing-service")
 
-      slug1.select("#jdk-slug-test-slug").text() shouldBe "test-slug OpenJDK 1.181.0"
-      slug2.select("#jdk-slug-thing-service").text() shouldBe "thing-service Oracle 1.171.0"
-
+      slug1.select("#jdk-slug-test-slug").text() shouldBe "test-slug 1.181.0 JDK"
+      slug1.select("#jdk-slug-test-slug img").attr("src") shouldBe "/assets/img/openjdk.png"
+      slug2.select("#jdk-slug-thing-service").text() shouldBe "thing-service 1.171.0 JRE"
+      slug2.select("#jdk-slug-thing-service img").attr("src") shouldBe "/assets/img/oracle2.gif"
     }
 
 

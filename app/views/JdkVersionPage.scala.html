@@ -63,8 +63,9 @@
             <thead>
                 <tr>
                     <th>Service</th>
-                    <th>JDK Vendor</th>
+                    <th>Vendor</th>
                     <th>JDK Version</th>
+                    <th>Type</th>
                 </tr>
             </thead>
             <tbody>
@@ -90,10 +91,10 @@
                 data.addColumn('string', 'Version');
                 data.addColumn('number', 'Count');
                 data.addRows([
-                    @for(r <- jdkVersions.groupBy(_.version).mapValues(_.length)) {
-                    ['JDK @r._1', @r._2],
+                    @for(r <- jdkVersions.groupBy(v => s"${v.version} ${v.vendor}").mapValues(_.length).toList.sortBy( _._1.replaceAll("\\D", "").toInt)) {
+                    ['@r._1', @r._2],
                     }
-                ].sort());
+                ]);
 
                 var options = {
                     'width'    : "40%",
@@ -112,7 +113,7 @@
                 data.addColumn('string', 'Version');
                 data.addColumn('number', 'Count');
                 data.addRows([
-                    @for(r <- jdkVersions.groupBy(_.vendor).mapValues(_.length)) {
+                    @for(r <- jdkVersions.groupBy(j => j.vendor + "(" + j.kind + ")").mapValues(_.length)) {
                     ['@r._1', @r._2],
                     }
                 ].sort());
@@ -136,8 +137,14 @@
 @jdkVersion(version: JDKVersion) = {
     <tr id="jdk-slug-@version.name">
         <td><a href="@routes.CatalogueController.repository(version.name)">@version.name</a></td>
-        <td>@version.vendor</td>
+        <td>@{version.vendor match {
+            case "Oracle"  => <img src="/assets/img/oracle2.gif" width="70px" alt="Oracle"/>
+            case "OpenJDK" => <img src="/assets/img/openjdk.png" width="70px" alt="OpenJDK"/>
+            }
+        }
+        </td>
         <td>@version.version</td>
+        <td>@version.kind</td>
     </tr>
 }
 
