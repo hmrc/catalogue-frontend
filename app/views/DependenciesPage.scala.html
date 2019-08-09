@@ -36,7 +36,7 @@
                     }</label>
                 </div>
                 <div id="collapsible-area-@index" class="@if(collapsable) {collapse}">
-                    <span class="jdk-version">JDK: @{serviceDependency.jdkVersion}</span>
+                    <span class="jdk-version">@{serviceDependency.java.kind}: @{serviceDependency.java.version} @{serviceDependency.java.vendor}</span>
                     <table id="dependencies-list" class="table table-condensed table-striped">
                         <thead>
                             <tr>

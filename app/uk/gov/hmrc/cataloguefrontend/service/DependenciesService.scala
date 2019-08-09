@@ -36,7 +36,7 @@ class DependenciesService @Inject()(
       _.map { serviceDependency =>
         val environmentMappingName =
           deployments
-            .find(deploymentVO => serviceDependency.version.map(_ == deploymentVO.version).getOrElse(false))
+            .find(deploymentVO => serviceDependency.version.contains(deploymentVO.version))
             .map(_.environmentMapping.name)
 
         environmentMappingName match {
@@ -103,7 +103,7 @@ case class ServiceDependencies(
     , name         : String
     , version      : Option[String]
     , runnerVersion: String
-    , jdkVersion   : String
+    , java         : JDKVersion
     , classpath    : String
     , dependencies : Seq[ServiceDependency]
     , environment  : Option[String] = None
@@ -117,8 +117,26 @@ case class ServiceDependencies(
 }
 
 object ServiceDependencies {
+  import play.api.libs.json.{__}
+  import play.api.libs.functional.syntax._
+
+  implicit val jdkr = (
+        Reads.pure("") // skip name field
+      ~ (__ \ "version").read[String]
+      ~ (__ \ "vendor" ).read[String]
+      ~ (__ \ "kind"   ).read[String]
+    )(JDKVersion)
 
   implicit val dependencyReads: Reads[ServiceDependency] = Json.using[Json.WithDefaultValues].reads[ServiceDependency]
-  implicit val serviceDependenciesReads: Reads[ServiceDependencies] = Json.using[Json.WithDefaultValues].reads[ServiceDependencies]
+  implicit val serviceDependenciesReads: Reads[ServiceDependencies] = (
+    (__ \ "uri"          ).read[String]
+  ~ (__ \ "name"         ).read[String]
+  ~ (__ \ "version"      ).readNullable[String]
+  ~ (__ \ "runnerVersion").read[String]
+  ~ (__ \ "java"         ).read[JDKVersion]
+  ~ (__ \ "classpath"    ).read[String]
+  ~ (__ \ "dependencies" ).read[Seq[ServiceDependency]]
+  ~ (__ \ "environment"  ).readNullable[String]
+  )(ServiceDependencies.apply _)
 
 }
