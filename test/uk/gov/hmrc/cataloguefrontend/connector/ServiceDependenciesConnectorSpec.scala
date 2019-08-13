@@ -25,8 +25,10 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
+import uk.gov.hmrc.cataloguefrontend.service.{DependenciesService, ServiceDependencies}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -348,6 +350,51 @@ class ServiceDependenciesConnectorSpec
     }
   }
 
+  "JSON Reader" - {
+    "read json with java section" in {
+      import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies.serviceDependenciesReads
+      val json =""" {
+    "uri" : "https://artefactory/slugs/mobile-stub/mobile-stub_0.12.0_0.5.2.tgz",
+    "name" : "mobile-auth-stub",
+    "version" : "0.12.0",
+    "semanticVersion" : {
+        "major" : 0,
+        "minor" : 12,
+        "patch" : 0
+    },
+    "versionLong" : 12000,
+    "runnerVersion" : "0.5.2",
+    "classpath" : "",
+    "jdkVersion" : "1.8.0_191",
+    "dependencies" : [
+        {
+            "path" : "./mobile-auth-stub-0.12.0/lib/org.slf4j.slf4j-api-1.7.25.jar",
+            "version" : "1.7.25",
+            "group" : "org.slf4j",
+            "artifact" : "slf4j-api",
+            "meta" : "fromPom"
+        }
+    ],
+    "latest" : false,
+    "qa" : false,
+    "production" : false,
+    "development" : false,
+    "external test" : false,
+    "staging" : false,
+    "java" : {
+        "version" : "1.8.0_191",
+        "kind" : "JDK",
+        "vendor" : "OpenJDK"
+    }
+} """
+      val res = Json.fromJson[ServiceDependencies](Json.parse(json)).get
+
+      res.java.version shouldBe "1.8.0_191"
+      res.java.vendor  shouldBe "OpenJDK"
+      res.java.kind    shouldBe "JDK"
+    }
+
+  }
   private trait Setup {
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   }

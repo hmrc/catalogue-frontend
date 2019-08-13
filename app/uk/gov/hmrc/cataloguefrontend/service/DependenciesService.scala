@@ -36,7 +36,7 @@ class DependenciesService @Inject()(
       _.map { serviceDependency =>
         val environmentMappingName =
           deployments
-            .find(deploymentVO => serviceDependency.version.map(_ == deploymentVO.version).getOrElse(false))
+            .find(deploymentVO => serviceDependency.version.contains(deploymentVO.version))
             .map(_.environmentMapping.name)
 
         environmentMappingName match {
@@ -90,6 +90,9 @@ object DependenciesService {
     dependencies.sortBy(serviceDependency => (serviceDependency.group, serviceDependency.artifact))
 }
 
+
+case class ServiceJDKVersion(version: String, vendor: String, kind:String)
+
 case class ServiceDependency(
     path    : String
   , group   : String
@@ -103,7 +106,7 @@ case class ServiceDependencies(
     , name         : String
     , version      : Option[String]
     , runnerVersion: String
-    , jdkVersion   : String
+    , java         : ServiceJDKVersion
     , classpath    : String
     , dependencies : Seq[ServiceDependency]
     , environment  : Option[String] = None
@@ -117,8 +120,25 @@ case class ServiceDependencies(
 }
 
 object ServiceDependencies {
+  import play.api.libs.json.__
+  import play.api.libs.functional.syntax._
+
+  implicit val jdkr = (
+        (__ \ "version").read[String]
+      ~ (__ \ "vendor" ).read[String]
+      ~ (__ \ "kind"   ).read[String]
+    )(ServiceJDKVersion)
 
   implicit val dependencyReads: Reads[ServiceDependency] = Json.using[Json.WithDefaultValues].reads[ServiceDependency]
-  implicit val serviceDependenciesReads: Reads[ServiceDependencies] = Json.using[Json.WithDefaultValues].reads[ServiceDependencies]
+  implicit val serviceDependenciesReads: Reads[ServiceDependencies] = (
+    (__ \ "uri"          ).read[String]
+  ~ (__ \ "name"         ).read[String]
+  ~ (__ \ "version"      ).readNullable[String]
+  ~ (__ \ "runnerVersion").read[String]
+  ~ (__ \ "java"         ).read[ServiceJDKVersion]
+  ~ (__ \ "classpath"    ).read[String]
+  ~ (__ \ "dependencies" ).read[Seq[ServiceDependency]]
+  ~ (__ \ "environment"  ).readNullable[String]
+  )(ServiceDependencies.apply _)
 
 }
