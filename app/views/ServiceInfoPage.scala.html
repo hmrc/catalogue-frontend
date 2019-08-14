@@ -26,6 +26,7 @@
 @import views.partials.githubBadgeType
 @import partials.DependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 
@@ -37,7 +38,8 @@
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
   linkToLeakDetection: Option[String],
   productionEnvironmentRoute: Option[EnvironmentRoute],
-  serviceRoutes: ServiceRoutes
+  serviceRoutes: ServiceRoutes,
+  shutterState: Option[ShutterState]
 )(implicit messages: Messages, request: Request[_])
 
 @datacentreMappings(datacentreLongName: String) = @{
@@ -89,7 +91,7 @@
                             @for(environmentDeployment <- environmentDeployments) {
                                 <div class="small" style="margin-top: 0.1em;">
                                     @environmentDeployment.version
-                                <span title="@environmentDeployment.datacentre">(@datacentreMappings(environmentDeployment.datacentre))</span>
+                                    <span title="@environmentDeployment.datacentre">(@datacentreMappings(environmentDeployment.datacentre))</span>
                                 </div>
                             }
                         }

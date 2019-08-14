@@ -29,6 +29,9 @@ class ShutterService @Inject()(
   , shutterGroupsConnector: ShutterGroupsConnector
   )(implicit val ec: ExecutionContext) {
 
+  def getShutterState(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
+    shutterConnector.shutterStateByApp(serviceName)
+
   def getShutterStates(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
     shutterConnector.shutterStates
 

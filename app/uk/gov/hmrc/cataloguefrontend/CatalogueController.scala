@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import cats.implicits._
 import java.time.{LocalDateTime, ZoneOffset}
+
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
@@ -29,14 +30,13 @@ import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignIn
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
 
-import scala.collection.SortedMap
 import scala.concurrent.{ExecutionContext, Future}
 
 case class TeamActivityDates(
@@ -62,6 +62,7 @@ class CatalogueController @Inject()(
    deploymentsService: DeploymentsService,
    eventService: EventService,
    readModelService: ReadModelService,
+   shutterService: ShutterService,
    verifySignInStatus: VerifySignInStatus,
    umpAuthActionBuilder: UmpAuthActionBuilder,
    userManagementPortalConfig: UserManagementPortalConfig,
@@ -255,7 +256,7 @@ class CatalogueController @Inject()(
     } yield Ok(serviceConfigRawPage(serviceName, configByEnvironment))
   }
 
-  def service(name: String): Action[AnyContent] = Action.async { implicit request =>
+  def service(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
     def getDeployedEnvs(
       deployedToEnvs: Seq[DeploymentVO],
       optRefEnvironments: Option[Seq[TargetEnvironment]]): Option[Seq[TargetEnvironment]] = {
@@ -272,16 +273,17 @@ class CatalogueController @Inject()(
                 refEnvironment.copy(services = Nil)
             }
         }
-    }
+      }
 
-    ( teamsAndRepositoriesConnector.repositoryDetails(name)
-    , indicatorsConnector.deploymentIndicatorsForService(name)
-    , deploymentsService.getWhatsRunningWhere(name).map(_.deployments)
-    , serviceDependencyConnector.getDependencies(name)
-    , leakDetectionService.urlIfLeaksFound(name)
-    , routeRulesService.serviceUrl(name)
-    , routeRulesService.serviceRoutes(name)
-    ).mapN { case (service, optDataPoints, deployments, optDependencies, urlIfLeaksFound, serviceUrl, serviceRoutes) =>
+    ( teamsAndRepositoriesConnector.repositoryDetails(serviceName)
+    , indicatorsConnector.deploymentIndicatorsForService(serviceName)
+    , deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
+    , serviceDependencyConnector.getDependencies(serviceName)
+    , leakDetectionService.urlIfLeaksFound(serviceName)
+    , routeRulesService.serviceUrl(serviceName)
+    , routeRulesService.serviceRoutes(serviceName)
+    , shutterService.getShutterState(serviceName)
+    ).mapN { case (service, optDataPoints, deployments, optDependencies, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
       service match {
         case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
           val optDeployedEnvironments =
@@ -306,7 +308,8 @@ class CatalogueController @Inject()(
               deploymentsByEnvironmentName,
               urlIfLeaksFound,
               serviceUrl,
-              serviceRoutes
+              serviceRoutes,
+              shutterState
             )
           )
         case _ => NotFound(error_404_template())
