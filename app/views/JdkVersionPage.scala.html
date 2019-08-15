@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
 @import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-@import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKVersion, Oracle, OpenJDK}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.routes
@@ -138,8 +138,8 @@
     <tr id="jdk-slug-@version.name">
         <td><a href="@routes.CatalogueController.repository(version.name)">@version.name</a></td>
         <td>@{version.vendor match {
-            case "Oracle"  => <img src="/assets/img/oracle2.gif" width="70px" alt="Oracle"/>
-            case "OpenJDK" => <img src="/assets/img/openjdk.png" width="70px" alt="OpenJDK"/>
+            case Oracle  => <img src="/assets/img/oracle2.gif" width="70px" alt="Oracle"/>
+            case OpenJDK => <img src="/assets/img/openjdk.png" width="70px" alt="OpenJDK"/>
             }
         }
         </td>

@@ -27,7 +27,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, JDK, JRE, OpenJDK, Oracle, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{DependenciesService, ServiceDependencies}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -341,11 +341,13 @@ class ServiceDependenciesConnectorSpec
 
       response.head.name    shouldBe "something-api"
       response.head.version shouldBe "1.8.0_181"
-      response.head.vendor  shouldBe "Oracle"
+      response.head.vendor  shouldBe Oracle
+      response.head.kind    shouldBe JDK
 
       response(1).name    shouldBe "service-backend"
       response(1).version shouldBe "1.8.0_191"
-      response(1).vendor  shouldBe "OpenJDK"
+      response(1).vendor  shouldBe OpenJDK
+      response(1).kind    shouldBe JRE
 
     }
   }
