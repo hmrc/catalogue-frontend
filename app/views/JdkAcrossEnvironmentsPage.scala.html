@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
 @import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-@import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKVersion, Vendor, Oracle, OpenJDK}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.routes
@@ -49,21 +49,10 @@
             <tr>
                 <th>Environment</th>
                 @jdks.map(jdk => {
-
-                {if(jdk.vendor.equalsIgnoreCase("Oracle")){
-                      <th>
-                         <img src="/assets/img/oracle2.gif" width="68px" alt="Oracle"/>
-                           {jdk.version}
-                     </th>
-                }else {
-                     <th>
-                        <img src="/assets/img/openjdk.png" width="55px" alt="OpenJDK"/>
-                        {jdk.version}
-                    </th>
-                }
-                }
-
-                })
+                  jdk.vendor match {
+                      case Oracle => <th> <img src="/assets/img/oracle2.gif" width="68px" alt="Oracle"/> {jdk.version} </th>
+                      case OpenJDK => <th> <img src="/assets/img/openjdk.png" width="55px" alt="OpenJDK"/> {jdk.version} </th>
+                  }})
             </tr>
 
         </thead>
@@ -134,4 +123,3 @@
 
     </script>
 }
-

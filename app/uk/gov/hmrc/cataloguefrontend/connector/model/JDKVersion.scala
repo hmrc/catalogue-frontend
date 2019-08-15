@@ -16,23 +16,59 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import play.api.libs.json.{OFormat, __}
 import play.api.libs.functional.syntax._
 
-case class JDKVersion(name:String, version: String, vendor: String, kind: String)
+case class JDKVersion(name: String, version: String, vendor: Vendor, kind: Kind)
 
 trait JDKVersionFormats {
 
-  val jdkFormat: OFormat[JDKVersion] =
+  import play.api.libs.json._
+
+  val vendorRead: Reads[Vendor] = JsPath
+    .read[String]
+    .map(_.toUpperCase match {
+      case "OPENJDK" => OpenJDK
+      case "ORACLE"  => Oracle
+      case _         => Oracle // default to oracle
+    })
+
+  val kindRead: Reads[Kind] = JsPath
+    .read[String]
+    .map(_.toUpperCase match {
+      case "JRE" => JRE
+      case "JDK" => JDK
+      case _     => JDK // default to JDK
+    })
+
+  val jdkFormat: Reads[JDKVersion] =
     (
-      (__ \ "name"    ).format[String]
-    ~ (__ \ "version" ).format[String]
-    ~ (__ \ "vendor"  ).format[String]
-    ~ (__ \ "kind"    ).format[String]
-    )(JDKVersion.apply, unlift(JDKVersion.unapply))
+      (__ \ "name").read[String]
+        ~ (__ \ "version").read[String]
+        ~ (__ \ "vendor").read[Vendor](vendorRead)
+        ~ (__ \ "kind").read[Kind](kindRead)
+    )(JDKVersion)
 }
 
 object JDKVersionFormats extends JDKVersionFormats
 
-
 case class JDKUsageByEnv(env: String, usage: Map[JDKVersion, Int])
+
+sealed trait Vendor
+
+case object Oracle extends Vendor {
+  override def toString: String = "Oracle"
+}
+
+case object OpenJDK extends Vendor {
+  override def toString: String = "OpenJDK"
+}
+
+sealed trait Kind
+
+case object JRE extends Kind {
+  override def toString: String = "JRE"
+}
+
+case object JDK extends Kind {
+  override def toString: String = "JDK"
+}

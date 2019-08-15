@@ -83,15 +83,19 @@ class SlugInfoServiceSpec
     "return totals of each jdk in an environment" in {
       val boot = Boot.init
 
-      val jdk1 = JDKVersion(name = "test1", version = "1.181.1", vendor = "Oracle", kind = "JDK")
-      val jdk2 = JDKVersion(name = "test2", version = "1.181.1", vendor = "Oracle", kind = "JDK")
-      val jdk3 = JDKVersion(name = "test3", version = "1.191.1", vendor = "OpenJDK", kind = "JRE")
-      val jdk4 = JDKVersion(name = "test4", version = "1.121.1", vendor = "OpenJDK", kind = "JRE")
+      val jdk1 = JDKVersion(name = "test1", version = "1.181.1", vendor = Oracle, kind = JDK)
+      val jdk2 = JDKVersion(name = "test2", version = "1.181.1", vendor = Oracle, kind = JDK)
+      val jdk3 = JDKVersion(name = "test3", version = "1.191.1", vendor = OpenJDK, kind = JRE)
+      val jdk4 = JDKVersion(name = "test4", version = "1.121.1", vendor = OpenJDK, kind = JRE)
 
       when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
         .thenReturn(Future(List(jdk1, jdk2, jdk3, jdk4)))
 
-      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.asString, Map(jdk1.copy(name="") -> 2, jdk3.copy(name="") ->1, jdk4.copy(name="") -> 1))
+      val res = await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest))
+
+      res.usage(JDKVersion("", "1.181.1", Oracle, JDK)) shouldBe 2
+      res.usage(JDKVersion("", "1.191.1", OpenJDK, JDK)) shouldBe 1
+      res.usage(JDKVersion("", "1.121.1", OpenJDK, JDK)) shouldBe 1
     }
 
     "still returns a value when no matches are found for env" in {
