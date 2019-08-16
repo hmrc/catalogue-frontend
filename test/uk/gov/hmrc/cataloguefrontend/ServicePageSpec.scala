@@ -46,6 +46,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       "microservice.services.leak-detection.host"       -> host,
       "microservice.services.service-configs.port"      -> endpointPort,
       "microservice.services.service-configs.host"      -> host,
+      "microservice.services.shutter-api.port"          -> endpointPort,
+      "microservice.services.shutter-api.host"          -> host,
       "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler",
       "metrics.jvm"                                     -> false
     )
@@ -75,10 +77,9 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     "return a 404 when a Library is viewed as a service" in {
       serviceEndpoint(GET, "/frontend-route/serv", willRespondWith = (200, Some(configServiceEmpty)))
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
-      serviceEndpoint(
-        GET,
-        "/api/whatsrunningwhere/serv",
+      serviceEndpoint(GET, "/api/whatsrunningwhere/serv",
         willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("serv", Nil))).toString())))
+      serviceEndpoint(GET, "/shutter-api/states/serv", willRespondWith = (200, Some(shutterApiData)))
 
       val response = await(ws.url(s"http://localhost:$port/service/serv").get)
       response.status shouldBe 404
@@ -106,6 +107,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
               )))
               .toString()))
       )
+      serviceEndpoint(GET, "/shutter-api/states/serv", willRespondWith = (200, Some(shutterApiData)))
 
       val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
       response.status shouldBe 200
@@ -149,6 +151,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
                   Seq(DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1")))))
                 .toString()))
         )
+
 
         val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
         response.status shouldBe 200
