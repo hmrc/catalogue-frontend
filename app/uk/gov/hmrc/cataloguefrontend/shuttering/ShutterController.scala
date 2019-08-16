@@ -23,29 +23,48 @@ import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 @Singleton
 class ShutterController @Inject()(
-    mcc               : MessagesControllerComponents
-  , verifySignInStatus: VerifySignInStatus
-  , shutterStatePage  : ShutterStatePage
-  , shutterService    : ShutterService
-  )(implicit val ec: ExecutionContext)
+  mcc: MessagesControllerComponents,
+  verifySignInStatus: VerifySignInStatus,
+  shutterStatePage: ShutterStatePage,
+  frontendRoutesWarningPage: FrontendRouteWarningsPage,
+  shutterService: ShutterService
+)(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
-    def allStates(envParam: String): Action[AnyContent] =
-      verifySignInStatus.async { implicit request =>
-        val env = Environment.parse(envParam).getOrElse(Environment.Production)
-        for {
-          currentState <- shutterService.findCurrentState(env)
-                            .recover {
-                              case NonFatal(ex) =>
-                                Logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
-                                Seq.empty
-                            }
-          page         =  shutterStatePage(currentState, env, request.isSignedIn)
-        } yield Ok(page)
+  def allStates(envParam: String): Action[AnyContent] =
+    verifySignInStatus.async { implicit request =>
+      val env = Environment.parse(envParam).getOrElse(Environment.Production)
+      for {
+        currentState <- shutterService
+                         .findCurrentState(env)
+                         .recover {
+                           case NonFatal(ex) =>
+                             Logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
+                             Seq.empty
+                         }
+        page = shutterStatePage(currentState, env, request.isSignedIn)
+      } yield Ok(page)
+    }
+
+  def frontendRouteWarnings(envParam: String, serviceName: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      val env = Environment.parse(envParam).getOrElse(Environment.Production)
+      for {
+        warnings <- shutterService
+                         .frontendRouteWarningsByAppAndEnv(serviceName, env)
+                         .recover {
+                           case NonFatal(ex) =>
+                             Logger.error(
+                               s"Could not retrieve frontend route warnings for service '$serviceName' in env: '$envParam': ${ex.getMessage}",
+                               ex)
+                             Seq.empty
+                         }
+        page = frontendRoutesWarningPage(warnings, env, serviceName)
+      } yield Ok(page)
     }
 }

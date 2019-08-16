@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import java.time.LocalDateTime
-
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.{HeaderCarrier, Token}
 
@@ -46,6 +44,8 @@ class ShutterService @Inject()(
   def outagePageByAppAndEnv(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] =
     shutterConnector.outagePageByAppAndEnv(serviceName, env)
 
+  def frontendRouteWarningsByAppAndEnv(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] =
+    shutterConnector.frontendRouteWarningsByAppAndEnv(serviceName, env)
 
   def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateData]] =
     for {

@@ -17,8 +17,9 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import java.time.Instant
-import play.api.libs.json.{Format, Json, JsError, JsObject, JsValue, JsPath, JsResult, JsString, JsSuccess, Reads, Writes, __}
+
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 
 sealed trait Environment { def asString: String }
@@ -386,3 +387,14 @@ case class OutagePageStatus(
     serviceName : String
   , warning     : Option[(String, String)]
   )
+
+case class FrontendRouteWarning(name: String, message: String, consequence: String, ruleConfigurationURL: String)
+
+object FrontendRouteWarning {
+  val reads: Reads[FrontendRouteWarning] =
+    ( (__ \ "name"   ).read[String]
+      ~ (__ \ "message").read[String]
+      ~ (__ \ "consequence").read[String]
+      ~ (__ \ "ruleConfigurationURL").read[String]
+      )(FrontendRouteWarning.apply _)
+}

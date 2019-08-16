@@ -1,0 +1,77 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, FrontendRouteWarning}
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+
+@this(viewMessages: ViewMessages)
+
+@( warnings: Seq[FrontendRouteWarning]
+ , selectedEnv  : Environment
+ , selectedService : String
+ )(implicit request: Request[_])
+
+@standard_layout(s"Frontend Route Warnings: ${selectedEnv.asString}") {
+
+  <header>
+      <h1>Frontend Route Warnings for: @selectedService</h1>
+  </header>
+
+  <section>
+
+    <div class="row">
+      <ul id="environment" class="nav nav-tabs">
+          @Environment.values.map(envOption)
+      </ul>
+  </div>
+
+  <div class="row tabs-bottom">
+
+      <table id="frontend-route-warnings-table" class="table table-striped">
+          <thead>
+              <tr>
+                  <th>Name</th>
+                  <th>Message</th>
+                  <th>Consequence</th>
+                  <th>Source</th>
+              </tr>
+          </thead>
+
+          <tbody>
+              @warnings.map(routeWarningRow)
+          </tbody>
+
+      </table>
+
+  </div>
+  </section>
+
+}
+
+@envOption(env: Environment) = {
+  <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterController.frontendRouteWarnings(env.asString, selectedService)" class="navbar-link">@env.toString</a>
+  </li>
+}
+
+@routeWarningRow(warning: FrontendRouteWarning) = {
+  <tr class="shutter-row frontend-route-warning">
+      <td class="frontend-route-warning-name">@warning.name</td>
+      <td class="frontend-route-warning-message">@warning.message</td>
+      <td class="frontend-route-warning-consequence">@warning.consequence</td>
+      <td class="frontend-route-warning-ruleConfigurationURL"><a href="@warning.ruleConfigurationURL">Link</a></td>
+  </tr>
+}
