@@ -171,7 +171,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
               Json
                 .toJson(Some(ServiceDeploymentInformation(
                   "service-1",
-                  Seq(DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1")))))
+                  Seq(DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"),
+                    DeploymentVO(EnvironmentMapping("development", "development"), "skyscape-farnborough", "0.0.1")))))
                 .toString()))
         )
 
@@ -203,8 +204,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         response.body should not include ("https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
       }
 
-      ""
-
       "show show links to devs by default" in {
         import ServiceDeploymentInformation._
 
@@ -232,7 +231,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         response.body should include("https://grafana-dev.co.uk/#/dashboard")
       }
 
-      "show show 'Not deployed' for envs in which the service is not deployed" in {
+      "show 'Not deployed' for envs in which the service is not deployed" in {
         serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (404, None))
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith      = (200, Some(serviceDetailsData)))
         serviceEndpoint(

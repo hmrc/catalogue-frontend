@@ -113,7 +113,7 @@ object JsonData {
        |	     ],
        |      "environments" : [
        |      {
-       |        "name" : "Development",
+       |        "name" : "Dev",
        |        "services" : [{
        |          "name": "jenkins",
        |		       "displayName": "Jenkins",
