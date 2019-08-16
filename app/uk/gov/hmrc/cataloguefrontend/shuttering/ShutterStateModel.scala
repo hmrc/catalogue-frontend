@@ -133,6 +133,17 @@ case class ShutterState(
         case Environment.Staging      => staging
         case Environment.Dev          => development
       }
+
+    def isShuttered(env: String): Option[Boolean] =
+      env match {
+        case "Production"    => Some(production.isInstanceOf[ShutterStatus.Shuttered])
+        case "External Test" => Some(externalTest.isInstanceOf[ShutterStatus.Shuttered])
+        case "QA"            => Some(qa.isInstanceOf[ShutterStatus.Shuttered])
+        case "Staging"       => Some(staging.isInstanceOf[ShutterStatus.Shuttered])
+        case "Development"   => Some(development.isInstanceOf[ShutterStatus.Shuttered])
+        case _               => None
+      }
+
   }
 
 object ShutterState {
