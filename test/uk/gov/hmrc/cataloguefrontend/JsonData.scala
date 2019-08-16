@@ -113,7 +113,7 @@ object JsonData {
        |	     ],
        |      "environments" : [
        |      {
-       |        "name" : "Dev",
+       |        "name" : "Development",
        |        "services" : [{
        |          "name": "jenkins",
        |		       "displayName": "Jenkins",
@@ -596,10 +596,10 @@ object JsonData {
           "status": "shuttered"
         },
         "qa": {
-          "status": "unshuttered"
+          "status": "shuttered"
         },
         "staging": {
-          "status": "shuttered"
+          "status": "unshuttered"
         },
         "development": {
           "status": "shuttered"

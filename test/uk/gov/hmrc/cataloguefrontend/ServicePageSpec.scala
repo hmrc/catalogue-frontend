@@ -129,6 +129,29 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       response.body should include(lastActiveAt.displayFormat)
     }
 
+    "show shuttered environments when they are shuttered" in {
+      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(
+        GET,
+        "/api/indicators/service/service-1/throughput",
+        willRespondWith = (200, Some(deploymentThroughputData)))
+      serviceEndpoint(
+        GET,
+        "/api/whatsrunningwhere/service-1",
+        willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("service-1",
+                Seq(
+                  DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"),
+                  DeploymentVO(EnvironmentMapping("qa", "qa"), "skyscape-farnborough", "0.0.1")
+                )))).toString())))
+      serviceEndpoint(GET, "/shutter-api/states/service-1", willRespondWith = (200, Some(shutterApiData)))
+
+      val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
+      response.status shouldBe 200
+      val document = Jsoup.parse(response.body)
+      document.getElementById("qa-environment").html().contains("shutter_label") shouldBe true
+      document.getElementById("production-environment").html().contains("shutter_label") shouldBe false
+    }
+
     "link to environments" should {
 
       "show only show links to envs for which the service is deployed to" in {
@@ -179,6 +202,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         response.body should not include ("https://deploy-qa.co.uk/job/deploy-microservice")
         response.body should not include ("https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
       }
+
+      ""
 
       "show show links to devs by default" in {
         import ServiceDeploymentInformation._
