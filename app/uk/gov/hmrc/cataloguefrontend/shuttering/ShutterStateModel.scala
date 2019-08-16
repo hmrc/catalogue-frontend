@@ -98,7 +98,7 @@ object ShutterStatus {
           }
       }
 
-      override def writes(ss: ShutterStatus) = {
+      override def writes(ss: ShutterStatus): JsValue = {
         implicit val ssvf = ShutterStatusValue.format
         ss match {
           case Shuttered(reason, outageMessage) =>
@@ -134,16 +134,8 @@ case class ShutterState(
         case Environment.Dev          => development
       }
 
-    def isShuttered(env: String): Option[Boolean] =
-      env match {
-        case "Production"    => Some(production.isInstanceOf[ShutterStatus.Shuttered])
-        case "External Test" => Some(externalTest.isInstanceOf[ShutterStatus.Shuttered])
-        case "QA"            => Some(qa.isInstanceOf[ShutterStatus.Shuttered])
-        case "Staging"       => Some(staging.isInstanceOf[ShutterStatus.Shuttered])
-        case "Development"   => Some(development.isInstanceOf[ShutterStatus.Shuttered])
-        case _               => None
-      }
-
+    def isShuttered(env: String): Boolean =
+      Environment.parse(env).exists(e => statusFor(e).value.asString == ShutterStatusValue.Shuttered.asString)
   }
 
 object ShutterState {

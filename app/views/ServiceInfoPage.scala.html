@@ -197,7 +197,7 @@
 }
 
 @renderEnvironmentBoardHeading(deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]], shutterStateOpt: Option[ShutterState], environment: TargetEnvironment) = {
-    @if(shutterStateOpt.flatMap(_.isShuttered(environment.name)).getOrElse(false)) {
+    @if(shutterStateOpt.map(_.isShuttered(environment.name.toLowerCase)).getOrElse(false)) {
         <div class="shutter_label shuttered">shuttered</div>
         <h3 class="board__heading shuttered_board">
             <div class="env-status shuttered"><p class="environment-header shuttered">@environment.name</p></div>
