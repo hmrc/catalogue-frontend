@@ -32,6 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignIn
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service._
+import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import views.html._
@@ -158,6 +159,7 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
       deploymentsService,
       mock[EventService],
       mock[ReadModelService],
+      mock[ShutterService],
       mock[VerifySignInStatus],
       mock[UmpAuthActionBuilder],
       userManagementPortalConfig,

@@ -23,6 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignIn
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.play.bootstrap.tools.Stubs._
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -53,6 +54,7 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
     mock[DeploymentsService],
     mock[EventService],
     mock[ReadModelService],
+    mock[ShutterService],
     mock[VerifySignInStatus],
     mock[UmpAuthActionBuilder],
     mock[UserManagementPortalConfig],
