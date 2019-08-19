@@ -12110,26 +12110,29 @@ section span.other-teams-message {
     height: 70px;
 }
 
-div.board__heading.shuttered_board {
+.shuttered_board {
     background: repeating-linear-gradient(-45deg, black, black 10px, #ffbc00 10px, rgb(255, 212, 0) 20px);
 }
 
-.board__heading .shuttered {
-    background: #333333db;
-    color: white;
-    border: solid 1px white;
-    border-radius: 3px;
+tr.shuttered {
+    background: repeating-linear-gradient(-45deg, black, black 10px, #ffbc00 10px, rgb(255, 212, 0) 20px);
 }
 
-div.environment-name.shuttered {
-    margin-bottom: 5px;
-    padding: 0px 3px 0px 3px;
+.shuttered {
+    background: #333333db;
+    color: #fff;
+    border: solid 1px white;
+    border-radius: 3px;
+    padding: 0px 5px;
+}
+
+p.shuttered {
+    display: inline-block;
+    margin: 0px;
 }
 
 div.shutter_label {
     font-size: 8pt;
-    border-radius: 3px;
-    padding: 0px 2px;
     position: absolute;
     right: 0px;
     top: 0px;
@@ -12137,11 +12140,10 @@ div.shutter_label {
 
 .environment-name h3 {
     margin: 5px 0px 0px 0px;
-    padding: 0 3px;
 }
 
 .environment-name h3.shuttered {
-    color: white;
+    color: #fff;
     display: inline-block;
 }
 
@@ -12150,6 +12152,9 @@ div.service-version {
     position: absolute;
     bottom: 4px;
     left: 13px;
-    padding: 0px 3px;
     margin: 0px;
+}
+
+p.shuttered:empty {
+    display: none
 }
