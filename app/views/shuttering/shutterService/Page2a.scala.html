@@ -1,0 +1,152 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2aForm, ServiceAndRouteWarnings}
+@import helper._
+
+@this(viewMessages: ViewMessages)
+
+@( form                  : Form[Step2aForm]
+, step1Out               : Step1Out
+, frontendRouteWarnings  : Seq[ServiceAndRouteWarnings]
+)(implicit request       : Request[_]
+, messagesProvider: MessagesProvider
+)
+
+@standard_layout(s"Shutter Service") {
+
+<header>
+    <h1>Shutter Service: Check Frontend Routes</h1>
+</header>
+
+<div id="service-list">
+
+    @if(form.hasGlobalErrors) {
+    <div class="alert alert-error error">
+        <a class="close" data-dismiss="alert">×</a>
+        <ul>
+            @form.globalErrors.map { error =>
+            <li>@error.format</li>
+            }
+        </ul>
+    </div>
+    }
+
+    <div class="board">
+        <div class="board__body">
+
+            @helper.form(
+            action = uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step2aPost
+            , 'class -> "form-inline"
+            , 'id -> "shutter-service-form"
+            , 'style -> "padding-left: 20px; padding-right: 20px"
+            ) {
+
+            @CSRF.formField
+
+            <div class="panel @if(step1Out.env == Environment.Production) {panel-danger} else {panel-warning}">
+                <div class="panel-heading">
+                    <span class="glyphicon glyphicon-warning-sign"></span>
+                    You are about to <b>Shutter</b> the following services in <b>@step1Out.env</b>:
+                </div>
+                <div class="panel-body">
+                    <ul style="list-style: disc;">
+                        @step1Out.serviceNames.map { serviceName =>
+                        <li>@serviceName</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            @if(frontendRouteWarnings.nonEmpty) {
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="panel panel-warning">
+                        <div class="panel-heading"><span class="glyphicon glyphicon-warning-sign"></span>
+                            There were some (@{frontendRouteWarnings.map(_.warnings.size).sum}) warnings found with the Frontend Routes.
+                        </div>
+                        <div class="panel-body">
+                            Please review, you can still continue to shutter.
+                            <br/><br/>
+                            <table class="table table-bordered">
+                                <thead>
+                                <tr>
+                                    <td>Service</td>
+                                    <td>Warning</td>
+                                    <td>Description</td>
+                                    <td>Consequence</td>
+                                </tr>
+                                </thead>
+                                @frontendRouteWarnings.map { frw =>
+                                @frw.warnings.map { warning =>
+                                <tr class="alert-warning">
+                                    <td>@frw.serviceName</td>
+                                    <td>@warning.name</td>
+                                    <td>@warning.message</td>
+                                    <td>@warning.consequence</td>
+                                </tr>
+                                }
+                                }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="panel panel-warning">
+                        <div class="panel-heading">
+                            <span class="glyphicon glyphicon-warning-sign"></span>
+                            Please confirm you have checked the above frontend route warnings:
+                        </div>
+                        <div class="panel-body">
+                            <input type="checkbox" id="confirm" name="confirm" value="true">
+                            <label for="confirm">I confirm</label>
+                        </div>
+
+                    </div>
+                    </td>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <a id="back-btn"
+                       href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(None, None)"
+                       class="btn btn-default">
+                        <span class="glyphicon glyphicon-chevron-left"></span>
+                        Back
+                    </a>
+                </div>
+                <div class="col-sm-6" style="text-align:right;">
+                    <button id="next-btn" class="btn btn-primary" type="submit">
+                        Next
+                        <span class="glyphicon glyphicon-chevron-right"></span>
+                    </button>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+}

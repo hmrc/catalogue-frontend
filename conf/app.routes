@@ -51,6 +51,8 @@ GET        /frontend-route-warnings/:env/:serviceName   uk.gov.hmrc.cataloguefro
 
 GET        /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step1Get(env: Option[String], serviceName: Option[String])
 POST       /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step1Post
+GET        /shuttering/2a                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2aGet
+POST       /shuttering/2a                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2aPost
 GET        /shuttering/2                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2Get
 POST       /shuttering/2                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2Post
 GET        /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step3Get

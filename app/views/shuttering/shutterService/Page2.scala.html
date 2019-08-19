@@ -27,6 +27,7 @@
  , outageMessageSrc      : Option[OutagePage]
  , defaultOutageMessage  : String
  , outagePages           : Seq[OutagePageStatus]
+ , back                  : Call
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -34,7 +35,7 @@
 @standard_layout(s"Shutter Service") {
 
   <header>
-    <h1>Shutter Service</h1>
+    <h1>Shutter Service: Check outage-pages</h1>
   </header>
 
   <div id="service-list">
@@ -128,7 +129,7 @@
                   <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the <a target='_blank' href='${src.outagePageURL}'>${src.serviceName} outage page</a>.").getOrElse(""))</p>
               </div>
               <div class="col-sm-4" style="display:table-cell; float:none; vertical-align: middle;">
-                <a id="back-btn" href="javascript:revertTemplate()" class="btn btn-default">
+                <a href="javascript:revertTemplate()" class="btn btn-default">
                   Revert to template
                 </a>
               </div>
@@ -149,7 +150,7 @@
           </div>
           <div class="row">
             <div class="col-sm-6">
-              <a id="back-btn" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(None, None)" class="btn btn-default">
+              <a id="back-btn" href="@back" class="btn btn-default">
                 <span class="glyphicon glyphicon-chevron-left"></span>
                 Back
               </a>
