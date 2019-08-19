@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterServiceController, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Out, Step3Form}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2bOut, Step3Form}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import helper._
 @import partials.form_warnings
@@ -25,7 +25,7 @@
 
 @( form                 : Form[Step3Form]
  , step1Out             : Step1Out
- , step2Out             : Step2Out
+ , step2Out             : Step2bOut
  , back                 : Call
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider

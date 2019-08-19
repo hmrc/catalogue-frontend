@@ -38,7 +38,7 @@ class ShutterServiceController @Inject()(
   shutterService: ShutterService,
   page1: Page1,
   page2a: Page2a,
-  page2: Page2,
+  page2b: Page2b,
   page3: Page3,
   page4: Page4,
   umpAuthActionBuilder: UmpAuthActionBuilder
@@ -129,8 +129,8 @@ class ShutterServiceController @Inject()(
               .withSession(
                 request.session + updateFlowState(request.session)(
                   _.copy(
-                    step1 = Some(step1Out),
-                    step2 = Some(Step2Out(reason = "", outageMessage = "", requiresOutageMessage = false)))))
+                    step1  = Some(step1Out),
+                    step2b = Some(Step2bOut(reason = "", outageMessage = "", requiresOutageMessage = false)))))
         }).merge
     }
 
@@ -185,18 +185,18 @@ class ShutterServiceController @Inject()(
                )
         step2aOut = Step2aOut(sf.confirm)
       } yield
-        Redirect(appRoutes.ShutterServiceController.step2Get)
+        Redirect(appRoutes.ShutterServiceController.step2bGet)
           .withSession(request.session + updateFlowState(request.session)(fs => fs.copy(step2a = Some(step2aOut))))).merge
     }
 
   // --------------------------------------------------------------------------
-  // Step2
+  // Step2b
   //
   // Review outage pages (only applies to Shutter - not Unshutter)
   //
   // --------------------------------------------------------------------------
 
-  private def showPage2(form: Form[Step2Form], step1Out: Step1Out)(implicit request: Request[Any]): Future[Html] =
+  private def showPage2b(form: Form[Step2bForm], step1Out: Step1Out)(implicit request: Request[Any]): Future[Html] =
     for {
       outagePages <- step1Out.serviceNames.toList
                       .traverse[Future, Option[OutagePage]](serviceName =>
@@ -213,13 +213,14 @@ class ShutterServiceController @Inject()(
       back = if (step1Out.status == ShutterStatusValue.Shuttered)
         appRoutes.ShutterServiceController.step2aGet
       else appRoutes.ShutterServiceController.step1Post
-      form2 = step2Form.fill {
+      form2b = step2bForm.fill {
         val s2f = form.get
         if (s2f.outageMessage.isEmpty) s2f.copy(outageMessage = defaultOutageMessage) else s2f
       }
-    } yield page2(form2, step1Out, requiresOutageMessage, outageMessageSrc, defaultOutageMessage, outagePageStatus, back)
+    } yield
+      page2b(form2b, step1Out, requiresOutageMessage, outageMessageSrc, defaultOutageMessage, outagePageStatus, back)
 
-  def step2Get =
+  def step2bGet =
     withGroup.async { implicit request =>
       (for {
         step1Out <- EitherT.fromOption[Future](
@@ -227,20 +228,20 @@ class ShutterServiceController @Inject()(
                        .flatMap(_.step1),
                      Redirect(appRoutes.ShutterServiceController.step1Post)
                    )
-        step2f = fromSession(request.session).flatMap(_.step2) match {
-          case Some(step2Out) =>
-            Step2Form(
-              reason                = step2Out.reason,
-              outageMessage         = step2Out.outageMessage,
-              requiresOutageMessage = step2Out.requiresOutageMessage
+        step2bf = fromSession(request.session).flatMap(_.step2b) match {
+          case Some(step2bOut) =>
+            Step2bForm(
+              reason                = step2bOut.reason,
+              outageMessage         = step2bOut.outageMessage,
+              requiresOutageMessage = step2bOut.requiresOutageMessage
             )
-          case None => Step2Form(reason = "", outageMessage = "", requiresOutageMessage = true)
+          case None => Step2bForm(reason = "", outageMessage = "", requiresOutageMessage = true)
         }
-        html <- EitherT.right[Result](showPage2(step2Form.fill(step2f), step1Out).map(Ok(_)))
+        html <- EitherT.right[Result](showPage2b(step2bForm.fill(step2bf), step1Out).map(Ok(_)))
       } yield html).merge
     }
 
-  def step2Post =
+  def step2bPost =
     withGroup.async { implicit request =>
       (for {
         step1Out <- EitherT.fromOption[Future](
@@ -248,15 +249,15 @@ class ShutterServiceController @Inject()(
                        .flatMap(_.step1),
                      Redirect(appRoutes.ShutterServiceController.step1Post)
                    )
-        sf <- step2Form.bindFromRequest
+        sf <- step2bForm.bindFromRequest
                .fold(
-                 hasErrors = formWithErrors => EitherT.left(showPage2(formWithErrors, step1Out).map(BadRequest(_))),
+                 hasErrors = formWithErrors => EitherT.left(showPage2b(formWithErrors, step1Out).map(BadRequest(_))),
                  success   = data => EitherT.pure[Future, Result](data)
                )
-        step2Out = Step2Out(sf.reason, sf.outageMessage, sf.requiresOutageMessage)
+        step2bOut = Step2bOut(sf.reason, sf.outageMessage, sf.requiresOutageMessage)
       } yield
         Redirect(appRoutes.ShutterServiceController.step3Get)
-          .withSession(request.session + updateFlowState(request.session)(fs => fs.copy(step2 = Some(step2Out))))).merge
+          .withSession(request.session + updateFlowState(request.session)(fs => fs.copy(step2b = Some(step2bOut))))).merge
     }
 
   // --------------------------------------------------------------------------
@@ -266,11 +267,11 @@ class ShutterServiceController @Inject()(
   //
   // --------------------------------------------------------------------------
 
-  private def showPage3(form3: Form[Step3Form], step1Out: Step1Out, step2Out: Step2Out)(
+  private def showPage3(form3: Form[Step3Form], step1Out: Step1Out, step2Out: Step2bOut)(
     implicit request: Request[Any]): Html = {
     val back =
       if (step1Out.status == ShutterStatusValue.Shuttered)
-        appRoutes.ShutterServiceController.step2Get
+        appRoutes.ShutterServiceController.step2bGet
       else appRoutes.ShutterServiceController.step1Post
     page3(form3, step1Out, step2Out, back)
   }
@@ -280,8 +281,8 @@ class ShutterServiceController @Inject()(
       (for {
         flowState <- fromSession(request.session)
         step1Out  <- flowState.step1
-        step2Out  <- flowState.step2
-        html = showPage3(step3Form.fill(Step3Form(confirm = false)), step1Out, step2Out)
+        step2bOut <- flowState.step2b
+        html = showPage3(step3Form.fill(Step3Form(confirm = false)), step1Out, step2bOut)
       } yield Ok(html)).getOrElse(Redirect(appRoutes.ShutterServiceController.step1Post))
     }
 
@@ -292,21 +293,21 @@ class ShutterServiceController @Inject()(
                      fromSession(request.session).flatMap(_.step1),
                      Redirect(appRoutes.ShutterServiceController.step1Post)
                    )
-        step2Out <- EitherT.fromOption[Future](
-                     fromSession(request.session).flatMap(_.step2),
-                     Redirect(appRoutes.ShutterServiceController.step2Get)
-                   )
+        step2bOut <- EitherT.fromOption[Future](
+                      fromSession(request.session).flatMap(_.step2b),
+                      Redirect(appRoutes.ShutterServiceController.step2bGet)
+                    )
         _ <- step3Form.bindFromRequest
               .fold(
                 hasErrors = formWithErrors =>
-                  EitherT.left(Future(showPage3(formWithErrors, step1Out, step2Out)).map(BadRequest(_))),
+                  EitherT.left(Future(showPage3(formWithErrors, step1Out, step2bOut)).map(BadRequest(_))),
                 success = data => EitherT.pure[Future, Result](())
               )
         status = step1Out.status match {
           case ShutterStatusValue.Shuttered =>
             ShutterStatus.Shuttered(
-              reason        = Some(step2Out.reason).filter(_.nonEmpty),
-              outageMessage = Some(step2Out.outageMessage).filter(_.nonEmpty)
+              reason        = Some(step2bOut.reason).filter(_.nonEmpty),
+              outageMessage = Some(step2bOut.outageMessage).filter(_.nonEmpty)
             )
           case ShutterStatusValue.Unshuttered => ShutterStatus.Unshuttered
         }
@@ -368,7 +369,7 @@ object ShutterServiceController {
     Json.format[Step1Out]
   }
 
-  // -- Step 2a -------------------------
+  // -- Step 2a Review frontend-route warnings (if any) -------------------------
   def step2aForm(implicit messagesProvider: MessagesProvider) =
     Form(
       Forms
@@ -387,31 +388,31 @@ object ShutterServiceController {
     Json.format[Step2aOut]
   }
 
-  // -- Step 2 -------------------------
+  // -- Step 2b Review outage-page message and warnings -------------------------
 
-  def step2Form(implicit messagesProvider: MessagesProvider) =
+  def step2bForm(implicit messagesProvider: MessagesProvider) =
     Form(
       Forms.mapping(
         "reason"                -> Forms.text,
         "outageMessage"         -> Forms.text,
         "requiresOutageMessage" -> Forms.boolean
-      )(Step2Form.apply)(Step2Form.unapply)
+      )(Step2bForm.apply)(Step2bForm.unapply)
     )
 
-  case class Step2Form(
+  case class Step2bForm(
     reason: String,
     outageMessage: String,
     requiresOutageMessage: Boolean
   )
 
-  case class Step2Out(
+  case class Step2bOut(
     reason: String,
     outageMessage: String,
     requiresOutageMessage: Boolean
   )
 
-  private implicit val step2OutFormats =
-    Json.format[Step2Out]
+  private implicit val step2bOutFormats =
+    Json.format[Step2bOut]
 
   // -- Step 3 -------------------------
 
@@ -421,7 +422,9 @@ object ShutterServiceController {
         .mapping(
           "confirm" -> Forms.boolean
         )(Step3Form.apply)(Step3Form.unapply)
-        .verifying("You must tick to confirm you have acknowledged you are changing production services!", _.confirm == true)
+        .verifying(
+          "You must tick to confirm you have acknowledged you are changing production services!",
+          _.confirm == true)
     )
 
   case class Step3Form(
@@ -435,7 +438,7 @@ object ShutterServiceController {
   case class FlowState(
     step1: Option[Step1Out],
     step2a: Option[Step2aOut],
-    step2: Option[Step2Out]
+    step2b: Option[Step2bOut]
   )
 
   case class ServiceAndRouteWarnings(serviceName: String, warnings: Seq[FrontendRouteWarning])

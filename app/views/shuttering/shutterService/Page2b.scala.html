@@ -16,13 +16,13 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, OutagePage, OutagePageStatus, ShutterStatusValue, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Form}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2bForm}
 @import helper._
 @import partials.form_warnings
 
 @this(viewMessages: ViewMessages)
 
-@( form                  : Form[Step2Form]
+@( form                  : Form[Step2bForm]
  , step1Out              : Step1Out
  , requiresOutageMessage : Boolean
  , outageMessageSrc      : Option[OutagePage]
@@ -47,7 +47,7 @@
       <div class="board__body">
 
         @helper.form(
-            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step2Post
+            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step2bPost
           , 'class -> "form-inline"
           , 'id    -> "shutter-service-form"
           , 'style -> "padding-left: 20px; padding-right: 20px"
