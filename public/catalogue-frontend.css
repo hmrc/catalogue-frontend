@@ -11867,7 +11867,7 @@ section span.other-teams-message {
   padding: .8em;
   background-color: #f5f5f5;
   border-bottom: 1px solid #dddddd;
-  color: #191717; }
+  color: #191717;}
 
 .sub__heading {
   margin-left: 1em;
@@ -12098,35 +12098,58 @@ section span.other-teams-message {
   border-top-color: transparent;
 }
 
-.shuttered_board {
+.board__heading {
+    position: relative;
+}
+
+.board__heading h3 {
+    color: black;
+}
+
+.board__heading.environment {
+    height: 70px;
+}
+
+div.board__heading.shuttered_board {
     background: repeating-linear-gradient(-45deg, black, black 10px, #ffbc00 10px, rgb(255, 212, 0) 20px);
 }
 
-.shuttered {
+.board__heading .shuttered {
     background: #333333db;
     color: white;
-    display: inline;
     border: solid 1px white;
+    border-radius: 3px;
 }
 
-.shuttered.small {
-    background: #333333db;
-    color: white;
-    display: inline;
-    border: solid 1px white;
-}
-
-div.env-status.shuttered {
-    margin-bottom: 10px;
-}
-
-p.environment-header {
-   padding: 0px 3px 0px 3px;
+div.environment-name.shuttered {
+    margin-bottom: 5px;
+    padding: 0px 3px 0px 3px;
 }
 
 div.shutter_label {
     font-size: 8pt;
     border-radius: 3px;
-    padding: 2px;
-    float: right;
+    padding: 0px 2px;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+}
+
+.environment-name h3 {
+    margin: 5px 0px 0px 0px;
+    padding: 0 3px;
+}
+
+.environment-name h3.shuttered {
+    color: white;
+    display: inline-block;
+}
+
+div.service-version {
+    display: inline-block;
+    position: absolute;
+    bottom: 4px;
+    left: 13px;
+    padding: 0px 3px;
+    margin: 0px;
 }

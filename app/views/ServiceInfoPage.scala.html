@@ -198,23 +198,23 @@
 
 @renderEnvironmentBoardHeading(deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]], shutterStateOpt: Option[ShutterState], environment: TargetEnvironment) = {
     @if(shutterStateOpt.map(_.isShuttered(environment.name.toLowerCase)).getOrElse(false)) {
-        <div class="shutter_label shuttered">shuttered</div>
-        <h3 class="board__heading shuttered_board">
-            <div class="env-status shuttered"><p class="environment-header shuttered">@environment.name</p></div>
+        <div class="board__heading environment shuttered_board">
+            <div class="shutter_label shuttered">shuttered</div>
+            <div class="environment-name"><h3 class="shuttered">@environment.name</h3></div>
             @for(environmentDeployments <- deploymentsByEnvironmentName.get(environment.name.toLowerCase)) {
                 @for(environmentDeployment <- environmentDeployments) {
-                    <div class="shuttered small" style="margin-top: 0.1em;">@environmentDeployment.version</div>
+                    <div class="service-version shuttered small" style="margin-top: 0.1em;">@environmentDeployment.version</div>
                 }
             }
-        </h3>
+        </div>
     } else {
-        <h3 class="board__heading">
-            <div class="env-status"><p class="environment-header">@environment.name</p></div>
+        <div class="board__heading environment">
+            <div class="environment-name"><h3>@environment.name</h3></div>
             @for(environmentDeployments <- deploymentsByEnvironmentName.get(environment.name.toLowerCase)) {
                 @for(environmentDeployment <- environmentDeployments) {
-                    <div class="small" style="margin-top: 0.1em;">@environmentDeployment.version</div>
+                    <div class="service-version small" style="margin-top: 0.1em;">@environmentDeployment.version</div>
                 }
             }
-        </h3>
+        </div>
     }
 }
