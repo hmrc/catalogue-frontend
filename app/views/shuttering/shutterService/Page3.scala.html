@@ -19,6 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Out, Step3Form}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import helper._
+@import partials.form_warnings
 
 @this(viewMessages: ViewMessages)
 
@@ -38,17 +39,7 @@
 
   <div>
 
-    @if(form.hasGlobalErrors) {
-      <div class="alert alert-error error">
-        <a class="close" data-dismiss="alert">×</a>
-        <ul>
-          @form.globalErrors.map { error =>
-            <li>@error.format</li>
-          }
-        </ul>
-      </div>
-    }
-
+    @form_warnings(form)
 
     <div class="board">
       <div class="board__body">

@@ -421,7 +421,7 @@ object ShutterServiceController {
         .mapping(
           "confirm" -> Forms.boolean
         )(Step3Form.apply)(Step3Form.unapply)
-        .verifying("You must check confirmation for Production", _.confirm == true)
+        .verifying("You must tick to confirm you have acknowledged you are changing production services!", _.confirm == true)
     )
 
   case class Step3Form(
