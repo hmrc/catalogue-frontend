@@ -32,7 +32,7 @@ object Environment {
   val values = List(Production, ExternalTest, QA, Staging, Dev)
 
   def parse(s: String): Option[Environment] =
-    values.find(_.asString == s)
+    values.find(_.asString.toLowerCase == s.toLowerCase.replaceAll(" ", ""))
 
   val format: Format[Environment] = new Format[Environment] {
     override def reads(json: JsValue) =
