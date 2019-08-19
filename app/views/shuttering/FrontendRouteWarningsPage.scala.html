@@ -38,23 +38,28 @@
       </ul>
   </div>
 
-  <div class="row tabs-bottom">
+  <div class="row tabs-bottom col-xs-12">
 
-      <table id="frontend-route-warnings-table" class="table table-striped">
-          <thead>
+      @if(warnings.nonEmpty) {
+          <table id="frontend-route-warnings-table" class="table table-striped">
+              <thead>
               <tr>
                   <th>Name</th>
                   <th>Message</th>
                   <th>Consequence</th>
                   <th>Source</th>
               </tr>
-          </thead>
+              </thead>
 
-          <tbody>
-              @warnings.map(routeWarningRow)
-          </tbody>
+              <tbody>
+                @warnings.map(routeWarningRow)
+              </tbody>
 
-      </table>
+          </table>
+
+      } else {
+        <p>There are no frontend-route warnings for this service in this environment</p>
+      }
 
   </div>
   </section>
