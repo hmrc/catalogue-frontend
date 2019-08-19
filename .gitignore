@@ -24,3 +24,5 @@ npm-debug.log
 *.DS_Store
 .bloop/
 .metals/
+
+conf/local.conf
