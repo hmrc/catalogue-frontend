@@ -23,9 +23,13 @@
 @import uk.gov.hmrc.cataloguefrontend.DeploymentVO
 @import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
+@import uk.gov.hmrc.cataloguefrontend.connector.TargetEnvironment
 @import views.partials.githubBadgeType
 @import partials.DependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus._
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 
@@ -37,7 +41,8 @@
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
   linkToLeakDetection: Option[String],
   productionEnvironmentRoute: Option[EnvironmentRoute],
-  serviceRoutes: ServiceRoutes
+  serviceRoutes: ServiceRoutes,
+  shutterState: Option[ShutterState]
 )(implicit messages: Messages, request: Request[_])
 
 @datacentreMappings(datacentreLongName: String) = @{
@@ -83,20 +88,9 @@
                 <div id="@{environment.id}-environmCatalogueControllerent" class="col-md-3">
             }
                 <div class="board">
-                    <h3 class="board__heading">
-                        @environment.name
-                        @for(environmentDeployments <- deploymentsByEnvironmentName.get(environment.name.toLowerCase)) {
-                            @for(environmentDeployment <- environmentDeployments) {
-                                <div class="small" style="margin-top: 0.1em;">
-                                    @environmentDeployment.version
-                                <span title="@environmentDeployment.datacentre">(@datacentreMappings(environmentDeployment.datacentre))</span>
-                                </div>
-                            }
-                        }
-                    </h3>
+                    @renderEnvironmentBoardHeading(deploymentsByEnvironmentName, shutterState, environment)
 
-                    <div class="board__body">
-
+                    <div class="board__body"> 
                         <ul class="list list--minimal">
                             @if(environment.services.isEmpty) {
                                 <li class="list-item">
@@ -200,4 +194,27 @@
             </small>
         </div>
     </div>
+}
+
+@renderEnvironmentBoardHeading(deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]], shutterStateOpt: Option[ShutterState], environment: TargetEnvironment) = {
+    @if(shutterStateOpt.map(_.isShuttered(environment.name.toLowerCase)).getOrElse(false)) {
+        <div class="shutter_label shuttered">shuttered</div>
+        <h3 class="board__heading shuttered_board">
+            <div class="env-status shuttered"><p class="environment-header shuttered">@environment.name</p></div>
+            @for(environmentDeployments <- deploymentsByEnvironmentName.get(environment.name.toLowerCase)) {
+                @for(environmentDeployment <- environmentDeployments) {
+                    <div class="shuttered small" style="margin-top: 0.1em;">@environmentDeployment.version</div>
+                }
+            }
+        </h3>
+    } else {
+        <h3 class="board__heading">
+            <div class="env-status"><p class="environment-header">@environment.name</p></div>
+            @for(environmentDeployments <- deploymentsByEnvironmentName.get(environment.name.toLowerCase)) {
+                @for(environmentDeployment <- environmentDeployments) {
+                    <div class="small" style="margin-top: 0.1em;">@environmentDeployment.version</div>
+                }
+            }
+        </h3>
+    }
 }

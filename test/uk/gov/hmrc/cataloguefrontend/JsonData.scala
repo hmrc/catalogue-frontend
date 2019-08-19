@@ -584,5 +584,28 @@ object JsonData {
    ]
 }
 """
+
+  val shutterApiData =
+    """
+      {
+        "name": "serv",
+        "production": {
+          "status": "unshuttered"
+        },
+        "externalTest": {
+          "status": "shuttered"
+        },
+        "qa": {
+          "status": "shuttered"
+        },
+        "staging": {
+          "status": "unshuttered"
+        },
+        "development": {
+          "status": "shuttered"
+        }
+      }
+    """
+
 }
 

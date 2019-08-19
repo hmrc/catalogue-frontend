@@ -46,6 +46,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       "microservice.services.leak-detection.host"       -> host,
       "microservice.services.service-configs.port"      -> endpointPort,
       "microservice.services.service-configs.host"      -> host,
+      "microservice.services.shutter-api.port"          -> endpointPort,
+      "microservice.services.shutter-api.host"          -> host,
       "play.http.requestHandler"                        -> "play.api.http.DefaultHttpRequestHandler",
       "metrics.jvm"                                     -> false
     )
@@ -75,10 +77,9 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     "return a 404 when a Library is viewed as a service" in {
       serviceEndpoint(GET, "/frontend-route/serv", willRespondWith = (200, Some(configServiceEmpty)))
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
-      serviceEndpoint(
-        GET,
-        "/api/whatsrunningwhere/serv",
+      serviceEndpoint(GET, "/api/whatsrunningwhere/serv",
         willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("serv", Nil))).toString())))
+      serviceEndpoint(GET, "/shutter-api/states/serv", willRespondWith = (200, Some(shutterApiData)))
 
       val response = await(ws.url(s"http://localhost:$port/service/serv").get)
       response.status shouldBe 404
@@ -106,6 +107,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
               )))
               .toString()))
       )
+      serviceEndpoint(GET, "/shutter-api/states/serv", willRespondWith = (200, Some(shutterApiData)))
 
       val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
       response.status shouldBe 200
@@ -127,6 +129,29 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       response.body should include(lastActiveAt.displayFormat)
     }
 
+    "show shuttered environments when they are shuttered" in {
+      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(
+        GET,
+        "/api/indicators/service/service-1/throughput",
+        willRespondWith = (200, Some(deploymentThroughputData)))
+      serviceEndpoint(
+        GET,
+        "/api/whatsrunningwhere/service-1",
+        willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("service-1",
+                Seq(
+                  DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"),
+                  DeploymentVO(EnvironmentMapping("qa", "qa"), "skyscape-farnborough", "0.0.1")
+                )))).toString())))
+      serviceEndpoint(GET, "/shutter-api/states/service-1", willRespondWith = (200, Some(shutterApiData)))
+
+      val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
+      response.status shouldBe 200
+      val document = Jsoup.parse(response.body)
+      document.getElementById("qa-environment").html().contains("shutter_label") shouldBe true
+      document.getElementById("production-environment").html().contains("shutter_label") shouldBe false
+    }
+
     "link to environments" should {
 
       "show only show links to envs for which the service is deployed to" in {
@@ -146,9 +171,11 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
               Json
                 .toJson(Some(ServiceDeploymentInformation(
                   "service-1",
-                  Seq(DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1")))))
+                  Seq(DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"),
+                    DeploymentVO(EnvironmentMapping("development", "development"), "skyscape-farnborough", "0.0.1")))))
                 .toString()))
         )
+
 
         val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
         response.status shouldBe 200
@@ -204,7 +231,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         response.body should include("https://grafana-dev.co.uk/#/dashboard")
       }
 
-      "show show 'Not deployed' for envs in which the service is not deployed" in {
+      "show 'Not deployed' for envs in which the service is not deployed" in {
         serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (404, None))
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith      = (200, Some(serviceDetailsData)))
         serviceEndpoint(
