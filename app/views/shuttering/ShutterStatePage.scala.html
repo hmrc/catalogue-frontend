@@ -93,7 +93,7 @@
       <td class="shutter-date"><p class="@classFor(state.status.value)">@state.lastEvent.map(e => DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z").withZone(ZoneId.systemDefault).format(e.timestamp)).getOrElse("")</p></td>
       @if(isSignedIn) {
         <td>
-          <a id="shutter-link" class="@classFor(state.status.value) href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(state.environment.asString), Some(state.serviceName))">
+          <a id="shutter-link" class="@classFor(state.status.value)" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(state.environment.asString), Some(state.serviceName))">
             @changeValueFor(state.status.value)
           </a>
         </td>
