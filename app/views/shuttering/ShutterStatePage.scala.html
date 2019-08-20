@@ -32,25 +32,25 @@
       <h1>Shutter Status: @selectedEnv.toString</h1>
   </header>
 
-  <section>
+  <section id="shutter-overview">
 
     <div class="row">
-      <ul id="environment" class="nav nav-tabs">
-          @Environment.values.map(envOption)
-      </ul>
-  </div>
+        <ul id="environment" class="nav nav-tabs">
+            @Environment.values.map(envOption)
+        </ul>
+
+        <div class="shuttered-checkbox"><input id="shuttered-only" type="checkbox" name="shuttered-only" value="false" onclick="filterUnshuttered()"> Shuttered Services Only</div>
+    </div>
 
   <div class="row tabs-bottom">
-
-
       <table id="shutter-state-table" class="table table-striped">
           <thead>
               <tr>
-                  <th>Service</th>
-                  <th>Status</th>
-                  <th>Last updated by</th>
-                  <th>Date</th>
-                  @if(isSignedIn) { <th>Update</th> }
+                  <th id="service-header"><p class="shutter-overview-header">Service</p></th>
+                  <th id="status-header"><p class="shutter-overview-header">Status</p></th>
+                  <th id="last-update-by-header"><p class="shutter-overview-header">Last updated by</p></th>
+                  <th id="date-header"><p class="shutter-overview-header">Date</p></th>
+                  @if(isSignedIn) { <th id="update-header"><p class="shutter-overview-header">Update</p></th> }
               </tr>
           </thead>
 
@@ -63,6 +63,22 @@
   </div>
   </section>
 
+  <script>
+    function filterUnshuttered() {
+        var checkBox = document.getElementById("shuttered-only");
+        var unshutteredServices = document.querySelectorAll("tr.unshuttered");
+
+        if (checkBox.checked == true) {
+            unshutteredServices.forEach(function(element) {
+                  element.classList.add("hidden");
+            });
+        } else {
+            unshutteredServices.forEach(function(element) {
+                element.classList.remove("hidden");
+            });
+        }
+    }
+  </script>
 }
 
 @envOption(env: Environment) = {
