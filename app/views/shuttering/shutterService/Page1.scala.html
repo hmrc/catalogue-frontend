@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterGroup, ShutterStatusValue, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.Step1Form
 @import helper._
+@import partials.form_warnings
 
 @this(viewMessages: ViewMessages)
 
@@ -38,16 +39,7 @@
 
   <div id="service-list">
 
-    @if(form.hasGlobalErrors) {
-      <div class="alert alert-error error">
-        <a class="close" data-dismiss="alert">×</a>
-        <ul>
-          @form.globalErrors.map { error =>
-            <li>@error.format</li>
-          }
-        </ul>
-      </div>
-    }
+    @form_warnings(form)
 
     <div class="board">
       <div class="board__body">

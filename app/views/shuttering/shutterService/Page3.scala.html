@@ -16,15 +16,16 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterServiceController, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2Out, Step3Form}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2bOut, Step3Form}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import helper._
+@import partials.form_warnings
 
 @this(viewMessages: ViewMessages)
 
 @( form                 : Form[Step3Form]
  , step1Out             : Step1Out
- , step2Out             : Step2Out
+ , step2Out             : Step2bOut
  , back                 : Call
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
@@ -33,22 +34,12 @@
 @standard_layout(s"Shutter Service") {
 
   <header>
-    <h1>Shutter Service</h1>
+    <h1>Shutter Service: Confirm</h1>
   </header>
 
   <div>
 
-    @if(form.hasGlobalErrors) {
-      <div class="alert alert-error error">
-        <a class="close" data-dismiss="alert">×</a>
-        <ul>
-          @form.globalErrors.map { error =>
-            <li>@error.format</li>
-          }
-        </ul>
-      </div>
-    }
-
+    @form_warnings(form)
 
     <div class="board">
       <div class="board__body">
