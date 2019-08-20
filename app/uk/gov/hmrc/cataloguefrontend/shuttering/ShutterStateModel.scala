@@ -30,7 +30,7 @@ object Environment {
   case object Staging         extends Environment { val asString = "staging"      }
   case object Dev             extends Environment { val asString = "development"  }
 
-  val values = List(Production, ExternalTest, QA, Staging, Dev)
+  val values: List[Environment] = List(Production, ExternalTest, QA, Staging, Dev)
 
   def parse(s: String): Option[Environment] =
     values.find(_.asString.toLowerCase == s.toLowerCase.replaceAll(" ", ""))

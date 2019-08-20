@@ -19,7 +19,7 @@
 
 @this(viewMessages: ViewMessages)
 
-@( warnings: Seq[FrontendRouteWarning]
+@( warningsMap: Map[Environment, Seq[FrontendRouteWarning]]
  , selectedEnv  : Environment
  , selectedService : String
  )(implicit request: Request[_])
@@ -39,28 +39,30 @@
   </div>
 
   <div class="row tabs-bottom col-xs-12">
+      @defining(warningsMap.get(selectedEnv).getOrElse(Seq.empty)) { warnings =>
 
-      @if(warnings.nonEmpty) {
-          <table id="frontend-route-warnings-table" class="table table-striped">
-              <thead>
-              <tr>
-                  <th>Name</th>
-                  <th>Message</th>
-                  <th>Consequence</th>
-                  <th>Source</th>
-              </tr>
-              </thead>
+          @if(warnings.nonEmpty) {
+              <table id="frontend-route-warnings-table" class="table table-striped">
+                  <thead>
+                  <tr>
+                      <th>Name</th>
+                      <th>Message</th>
+                      <th>Consequence</th>
+                      <th>Source</th>
+                  </tr>
+                  </thead>
 
-              <tbody>
-                @warnings.map(routeWarningRow)
-              </tbody>
+                  <tbody>
+                    @warnings.map(routeWarningRow)
+                  </tbody>
 
-          </table>
+              </table>
 
-      } else {
-        <p>There are no frontend-route warnings for this service in this environment</p>
+          } else {
+            <p>There are no frontend-route warnings for this service in this environment</p>
+          }
+
       }
-
   </div>
   </section>
 
@@ -68,8 +70,12 @@
 
 @envOption(env: Environment) = {
   <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterController.frontendRouteWarnings(env.asString, selectedService)" class="navbar-link">@env.toString</a>
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterController.frontendRouteWarnings(env.asString, selectedService)" class="navbar-link">@env.toString (@envWarningCount(env))</a>
   </li>
+}
+
+@envWarningCount(env: Environment) = {
+    @warningsMap.get(env).getOrElse(Seq.empty).size
 }
 
 @routeWarningRow(warning: FrontendRouteWarning) = {

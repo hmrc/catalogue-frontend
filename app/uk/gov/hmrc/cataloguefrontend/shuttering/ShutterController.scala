@@ -25,6 +25,7 @@ import views.html.shuttering._
 
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
+import cats.implicits._
 
 @Singleton
 class ShutterController @Inject()(
@@ -55,16 +56,14 @@ class ShutterController @Inject()(
     Action.async { implicit request =>
       val env = Environment.parse(envParam).getOrElse(Environment.Production)
       for {
-        warnings <- shutterService
-                         .frontendRouteWarningsByAppAndEnv(serviceName, env)
-                         .recover {
-                           case NonFatal(ex) =>
-                             Logger.error(
-                               s"Could not retrieve frontend route warnings for service '$serviceName' in env: '$envParam': ${ex.getMessage}",
-                               ex)
-                             Seq.empty
-                         }
-        page = frontendRoutesWarningPage(warnings, env, serviceName)
+        envsAndWarnings <- Environment.values.map(env => shutterService.frontendRouteWarningsByAppAndEnv(serviceName, env).recover {
+          case NonFatal(ex) =>
+            Logger.error(
+              s"Could not retrieve frontend route warnings for service '$serviceName' in env: '$envParam': ${ex.getMessage}",
+              ex)
+            Seq.empty
+        }.map(ws => (env, ws))).sequence
+        page = frontendRoutesWarningPage(envsAndWarnings.toMap, env, serviceName)
       } yield Ok(page)
     }
 }
