@@ -82,15 +82,10 @@
         </div>
         <div class="row">
         @for((environment, idx) <- service.environments.get.zipWithIndex) {
-            @if(idx < 3) {
-                <div id="@{environment.id}-environment" class="col-md-2">
-            } else {
-                <div id="@{environment.id}-environmCatalogueControllerent" class="col-md-3">
-            }
-                <div class="board">
+            <div id="@{environment.id}-environment" class="col-md-5th-1">
+                <div class="board environment_board">
                     @renderEnvironmentBoardHeading(deploymentsByEnvironmentName, shutterState, environment)
-
-                    <div class="board__body"> 
+                    <div class="board__body">
                         <ul class="list list--minimal">
                             @if(environment.services.isEmpty) {
                                 <li class="list-item">

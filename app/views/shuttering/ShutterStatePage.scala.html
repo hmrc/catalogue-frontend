@@ -80,17 +80,17 @@
 
 @classFor(status: ShutterStatusValue) = {
   @status match {
-    case ShutterStatusValue.Shuttered   => { shuttered   }
+    case ShutterStatusValue.Shuttered   => { shuttered }
     case ShutterStatusValue.Unshuttered => { unshuttered }
   }
 }
 
 @shutterRow(state: ShutterStateData) = {
   <tr class="shutter-row @classFor(state.status.value)">
-      <td class="shutter-service">@state.serviceName</td>
-      <td class="shutter-state">@state.status.value</td>
-      <td class="shutter-user">@state.lastEvent.map(_.username).getOrElse("")</td>
-      <td class="shutter-date">@state.lastEvent.map(e => DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z").withZone(ZoneId.systemDefault).format(e.timestamp)).getOrElse("")</td>
+      <td class="shutter-service"><p class="@classFor(state.status.value)">@state.serviceName</p></td>
+      <td class="shutter-state"><p class="@classFor(state.status.value)">@state.status.value</p></td>
+      <td class="shutter-user"><p class="@classFor(state.status.value)">@state.lastEvent.map(_.username).getOrElse("")</p></td>
+      <td class="shutter-date"><p class="@classFor(state.status.value)">@state.lastEvent.map(e => DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z").withZone(ZoneId.systemDefault).format(e.timestamp)).getOrElse("")</p></td>
       @if(isSignedIn) {
         <td>
           <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(state.environment.asString), Some(state.serviceName))">
