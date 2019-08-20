@@ -12110,6 +12110,10 @@ section span.other-teams-message {
     height: 70px;
 }
 
+.environment_board {
+    height: 190px;
+}
+
 .shuttered_board {
     background: repeating-linear-gradient(-45deg, black, black 10px, #ffbc00 10px, rgb(255, 212, 0) 20px);
 }
@@ -12157,4 +12161,10 @@ div.service-version {
 
 p.shuttered:empty {
     display: none
+}
+
+.col-md-5th-1 {
+    float: left;
+    width: 20%;
+    padding: 0px 15px 0px 15px;
 }
