@@ -12135,6 +12135,10 @@ p.shuttered {
     margin: 0px;
 }
 
+a#shutter-link.shuttered {
+    color: #aaffef;
+}
+
 div.shutter_label {
     font-size: 8pt;
     position: absolute;
