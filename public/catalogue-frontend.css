@@ -12167,6 +12167,11 @@ p.shuttered:empty {
     display: none
 }
 
+p.unshuttered {
+    margin: 0px;
+    padding: 0px 5px;
+}
+
 .col-md-5th-1 {
     float: left;
     width: 20%;
