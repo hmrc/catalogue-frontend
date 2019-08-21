@@ -12181,23 +12181,28 @@ tr.shuttered_row td p {
 }
 
 th#service-header {
-    width: 40%;
+    width: 30%;
+    max-width: 30%;
 }
 
 th#status-header {
     width: 10%;
+    max-width: 10%;
 }
 
 th#last-update-by-header {
     width: 20%;
+    max-width: 20%;
 }
 
 th#date-header {
-    width: 10%;
+    width: 20%;
+    max-width: 20%;
 }
 
 th#update-header {
     width: 10%;
+    max-width: 10%;
 }
 
 section #shutter-overview {
