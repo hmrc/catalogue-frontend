@@ -12167,8 +12167,33 @@ p.shuttered:empty {
     display: none
 }
 
+p.unshuttered {
+    margin: 0px;
+    padding: 0px 5px;
+}
+
+section #shutter-overview {
+    position: relative;
+}
+
+p.shutter-overview-header {
+  margin: 0px;
+  padding-left: 5px;
+}
+
+#shutter-state-table {
+    margin: 0px;
+}
+
+div.shuttered-checkbox {
+    position: absolute;
+    right: 0px;
+    top: 12px;
+}
+
 .col-md-5th-1 {
     float: left;
     width: 20%;
     padding: 0px 15px 0px 15px;
 }
+
