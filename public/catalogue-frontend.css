@@ -12115,17 +12115,12 @@ section span.other-teams-message {
 }
 
 .shuttered_board {
-    background: repeating-linear-gradient(-45deg, black, black 10px, #ffbc00 10px, rgb(255, 212, 0) 20px);
-}
-
-tr.shuttered {
-    background: repeating-linear-gradient(-45deg, black, black 10px, #ffbc00 10px, rgb(255, 212, 0) 20px);
+    background: repeating-linear-gradient(-45deg, #6d6d6d, #6d6d6d 30px, #d0a039a3 30px, #ff990091 60px);
 }
 
 .shuttered {
-    background: #333333db;
+    background: #333333;
     color: #fff;
-    border: solid 1px white;
     border-radius: 3px;
     padding: 0px 5px;
 }
@@ -12167,9 +12162,42 @@ p.shuttered:empty {
     display: none
 }
 
-p.unshuttered {
+tr.shutter-row p {
     margin: 0px;
     padding: 0px 5px;
+}
+
+tr.shuttered_row {
+    background: repeating-linear-gradient(-45deg, #6d6d6d, #6d6d6d 30px, #d0a039a3 30px, #ff990091 60px);
+}
+
+tr.shuttered_row td p {
+    background: #333333;
+    color: #fff;
+    border-radius: 3px;
+    padding: 0px 5px;
+    display: inline-block;
+    margin: 0px;
+}
+
+th#service-header {
+    width: 40%;
+}
+
+th#status-header {
+    width: 10%;
+}
+
+th#last-update-by-header {
+    width: 20%;
+}
+
+th#date-header {
+    width: 10%;
+}
+
+th#update-header {
+    width: 10%;
 }
 
 section #shutter-overview {
