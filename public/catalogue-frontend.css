@@ -12180,6 +12180,15 @@ tr.shuttered_row td p {
     margin: 0px;
 }
 
+tr.shuttered_row td a {
+    background: #333333;
+    color: #fff;
+    border-radius: 3px;
+    padding: 0px 5px;
+    display: inline-block;
+    margin: 0px;
+}
+
 th#service-header {
     width: 30%;
     max-width: 30%;
