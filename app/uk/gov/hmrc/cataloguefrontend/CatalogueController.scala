@@ -57,7 +57,6 @@ class CatalogueController @Inject()(
    configService: ConfigService,
    routeRulesService: RouteRulesService,
    serviceDependencyConnector: ServiceDependenciesConnector,
-   indicatorsConnector: IndicatorsConnector,
    leakDetectionService: LeakDetectionService,
    deploymentsService: DeploymentsService,
    eventService: EventService,
@@ -211,7 +210,6 @@ class CatalogueController @Inject()(
       teamInfo         <- teamsAndRepositoriesConnector.teamInfo(teamName)
       teamMembers      <- userManagementConnector.getTeamMembersFromUMP(teamName)
       teamDetails      <- userManagementConnector.getTeamDetails(teamName)
-      teamIndicators   <- indicatorsConnector.deploymentIndicatorsForTeam(teamName)
       reposWithLeaks   <- leakDetectionService.repositoriesWithLeaks
       teamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
     } yield
@@ -226,8 +224,6 @@ class CatalogueController @Inject()(
               activityDates       = TeamActivityDates(team.firstActiveDate, team.lastActiveDate, team.firstServiceCreationDate),
               errorOrTeamMembers  = convertToDisplayableTeamMembers(team.name, teamMembers),
               errorOrTeamDetails  = teamDetails,
-              throughputChartData = TeamChartData.deploymentThroughput(team.name, teamIndicators.map(_.throughput)),
-              stabilityChartData  = TeamChartData.deploymentStability(team.name, teamIndicators.map(_.stability)),
               umpMyTeamsUrl       = umpMyTeamsPageUrl(team.name),
               leaksFoundForTeam   = leakDetectionService.teamHasLeaks(team, reposWithLeaks),
               hasLeaks            = leakDetectionService.hasLeaks(reposWithLeaks),
@@ -276,14 +272,13 @@ class CatalogueController @Inject()(
       }
 
     ( teamsAndRepositoriesConnector.repositoryDetails(serviceName)
-    , indicatorsConnector.deploymentIndicatorsForService(serviceName)
     , deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
     , serviceDependencyConnector.getDependencies(serviceName)
     , leakDetectionService.urlIfLeaksFound(serviceName)
     , routeRulesService.serviceUrl(serviceName)
     , routeRulesService.serviceRoutes(serviceName)
     , shutterService.getShutterState(serviceName)
-    ).mapN { case (service, optDataPoints, deployments, optDependencies, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
+    ).mapN { case (service, deployments, optDependencies, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
       service match {
         case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
           val optDeployedEnvironments =
@@ -302,8 +297,6 @@ class CatalogueController @Inject()(
             serviceInfoPage(
               repositoryDetails.copy(environments = optDeployedEnvironments),
               optDependencies,
-              ServiceChartData.deploymentThroughput(repositoryDetails.name, optDataPoints.map(_.throughput)),
-              ServiceChartData.deploymentStability(repositoryDetails.name, optDataPoints.map(_.stability)),
               repositoryDetails.createdAt,
               deploymentsByEnvironmentName,
               urlIfLeaksFound,
@@ -350,17 +343,15 @@ class CatalogueController @Inject()(
                                   val (owners, other) = repo.teamNames.partition(s => repo.owningTeams.contains(s))
                                   owners.sorted ++ other.sorted
                                 })))
-      indicators         <- indicatorsConnector.buildIndicatorsForRepository(name)
       optDependencies    <- serviceDependencyConnector.getDependencies(name)
       optUrlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
     } yield
-      (repository, indicators) match {
-        case (Some(repositoryDetails), optDataPoints) =>
+      repository match {
+        case Some(repositoryDetails) =>
           Ok(
             repositoryInfoPage(
               repositoryDetails,
               optDependencies,
-              ServiceChartData.jobExecutionTime(repositoryDetails.name, optDataPoints),
               optUrlIfLeaksFound
             )
           )

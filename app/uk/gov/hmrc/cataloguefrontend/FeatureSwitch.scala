@@ -38,8 +38,5 @@ object FeatureSwitch {
 }
 
 object CatalogueFrontendSwitches {
-
-  def indicators = FeatureSwitch.forName("indicators")
   def bobbytrend = FeatureSwitch.forName("bobbytrend")
-
 }

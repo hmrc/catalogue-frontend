@@ -49,7 +49,6 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     mock[ConfigService],
     mock[RouteRulesService],
     mock[ServiceDependenciesConnector],
-    mock[IndicatorsConnector],
     mock[LeakDetectionService],
     mock[DeploymentsService],
     mock[EventService],

@@ -46,8 +46,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       .configure(
         "microservice.services.teams-and-repositories.host"  -> host,
         "microservice.services.teams-and-repositories.port"  -> endpointPort,
-        "microservice.services.indicators.port"              -> endpointPort,
-        "microservice.services.indicators.host"              -> host,
         "microservice.services.service-dependencies.port"    -> endpointPort,
         "microservice.services.service-dependencies.host"    -> host,
         "microservice.services.leak-detection.port"          -> endpointPort,
@@ -68,7 +66,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    FeatureSwitch.disable(CatalogueFrontendSwitches.indicators)
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/teamA/dependencies", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/CATO/dependencies", willRespondWith = (200, Some("[]")))
@@ -379,59 +376,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
     }
 
-    "Render the frequent production indicators graph with throughput" in {
-      serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith = (200, Some(teamDetailsData)))
-      serviceEndpoint(
-        GET,
-        "/api/indicators/team/teamA/deployments",
-        willRespondWith = (200, Some(deploymentThroughputData)))
-
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
-      response.status shouldBe 200
-      response.body   should include(s"""data.addColumn('string', 'Period');""")
-      response.body   should include(s"""data.addColumn('number', 'Lead Time');""")
-      response.body   should include(s"""data.addColumn('number', 'Interval');""")
-
-      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
-      response.body should include(s"""data.addColumn('number', 'Interval');""")
-      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
-
-      response.body should include(s"""chart.draw(data, options);""")
-
-      response.body should include(s"""data.addColumn('string', 'Period');""")
-      response.body should include(s"""data.addColumn('number', "Hotfix Rate");""")
-      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
-    }
-
-  }
-
-  "Render a message if the indicators service returns 404" in {
-    FeatureSwitch.enable(CatalogueFrontendSwitches.indicators)
-
-    serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith          = (200, Some(teamDetailsData)))
-    serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (404, None))
-
-    val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
-
-    response.status shouldBe 200
-    response.body   should include(s"""No data to show""")
-    response.body   should include(viewMessages.noIndicatorsData)
-
-    response.body shouldNot include(s"""chart.draw(data, options);""")
-  }
-
-  "Render a message if the indicators service encounters an error" in {
-    FeatureSwitch.enable(CatalogueFrontendSwitches.indicators)
-
-    serviceEndpoint(GET, "/api/teams_with_details/teamA", willRespondWith          = (200, Some(teamDetailsData)))
-    serviceEndpoint(GET, "/api/indicators/team/teamA/deployments", willRespondWith = (500, None))
-
-    val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
-    response.status shouldBe 200
-    response.body   should include(s"""The catalogue encountered an error""")
-    response.body   should include(viewMessages.indicatorsServiceError)
-
-    response.body shouldNot include(s"""chart.draw(data, options);""")
   }
 
   def verifyTeamOwnerIndicatorLabel(document: Document): Unit = {

@@ -21,7 +21,6 @@
 @import java.time.LocalDateTime
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 @import uk.gov.hmrc.cataloguefrontend.DeploymentVO
-@import uk.gov.hmrc.cataloguefrontend.ChartDataRows
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import uk.gov.hmrc.cataloguefrontend.connector.TargetEnvironment
 @import views.partials.githubBadgeType
@@ -35,8 +34,6 @@
 
 @(service: RepositoryDetails,
   optDependencies: Option[Dependencies],
-  throughputChartData: Option[ChartDataRows],
-  stabilityChartData: Option[ChartDataRows],
   repositoryCreationDate: LocalDateTime,
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
   linkToLeakDetection: Option[String],
@@ -45,13 +42,7 @@
   shutterState: Option[ShutterState]
 )(implicit messages: Messages, request: Request[_])
 
-@datacentreMappings(datacentreLongName: String) = @{
-    datacentreLongName.toLowerCase match {
-        case "datacentred-sal01" => "DCD"
-        case "skyscape-farnborough" => "SS"
-        case name => name
-    }
-}
+
 
 @standard_layout(service.name, "services") {
     <header class="header-with-github-badge">
@@ -103,91 +94,12 @@
         }
         </div>
         @dependenciesPartial(optDependencies)
-        <div class="row">
-            <div class="col-md-12">
-                <div class="board">
-                    <h3 class="board__heading">Delivery Indicators</h3>
-                    <div class="board__body">
-                        @if(CatalogueFrontendSwitches.indicators.isEnabled) {
-                            @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-                                @renderGraphText
-                                @renderThroughputGraph
-                                @renderStabilityGraph
-                            }
-
-                            @{
-                                if(throughputChartData.isEmpty) {
-                                    {viewMessages.errorMessage}
-                                } else if(throughputChartData.get.isEmpty) {
-                                    {viewMessages.noProductionDeploymentSinceDaysMessage(repositoryCreationDate)}
-                                }
-                            }
-                        } else {
-                            <p>PlatOps are removing the deployment and build indicator graphs as they are thought to be unhelpful. Please voice any objections on <a href="https://hmrcdigital.slack.com/messages/C0GS60DK2/">#team-platops</a>.</p>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
         </div>
     </section>
     <div class="alert alert-success" role="alert" id="@service.name">
         <p>
         @Html(viewMessages.informationalText)
         </p>
-    </div>
-    <script type="text/javascript">
-
-
-        @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-            @views.html.throughputchart_script(throughputChartData)
-        }
-
-        @if(stabilityChartData.isDefined && !stabilityChartData.get.isEmpty) {
-            @views.html.stabilitychart_script(stabilityChartData)
-        }
-
-    </script>
-
-}
-
-@renderThroughputGraph = {
-    <div class="col-md-6">
-        <div id="chart_div"></div>
-        <div>
-            <small>
-                <ul>
-                    <li><strong>Lead Time</strong> - @{
-                        Messages("leadtime.explanation.text")
-                    }</li>
-                    <li><strong>Interval</strong> - @{
-                        Messages("interval.explanation.text")
-                    }</li>
-                </ul>
-            </small>
-        </div>
-    </div>
-}
-
-@renderGraphText = {
-    @{Html(viewMessages.deploymentThroughputAndStabilityGraphText)}
-}
-
-@renderStabilityGraph = {
-    <div class="col-md-6">
-        <div id="chart_div_2"></div>
-        <div>
-            <small>
-                <ul>
-                    <li><strong>Hotfix Rate</strong> - @{
-                        Messages("hotfixrate.explanation.text")
-                    }</li>
-                    <li><strong>Hotfix Interval</strong> - @{
-                        Messages("hotfixinterval.explanation.text")
-                    }</li>
-                </ul>
-            </small>
-        </div>
     </div>
 }
 

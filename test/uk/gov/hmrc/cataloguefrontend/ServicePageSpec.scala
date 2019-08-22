@@ -58,7 +58,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    FeatureSwitch.disable(CatalogueFrontendSwitches.indicators)
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/frontend-route/service-1", willRespondWith = (200, Some(configServiceService1)))
     serviceEndpoint(GET, "/frontend-route/service-name", willRespondWith = (200, Some(configServiceService1)))
@@ -87,10 +86,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
 
     "show the teams owning the service with github, ci and environment links and info box" in {
       serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
-      serviceEndpoint(
-        GET,
-        "/api/indicators/service/service-1/throughput",
-        willRespondWith = (200, Some(deploymentThroughputData)))
       serviceEndpoint(
         GET,
         "/api/whatsrunningwhere/service-1",
@@ -133,10 +128,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(
         GET,
-        "/api/indicators/service/service-1/throughput",
-        willRespondWith = (200, Some(deploymentThroughputData)))
-      serviceEndpoint(
-        GET,
         "/api/whatsrunningwhere/service-1",
         willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("service-1",
                 Seq(
@@ -158,10 +149,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         import ServiceDeploymentInformation._
 
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
-        serviceEndpoint(
-          GET,
-          "/api/indicators/service/service-1/throughput",
-          willRespondWith = (200, Some(deploymentThroughputData)))
         serviceEndpoint(
           GET,
           "/api/whatsrunningwhere/service-1",
@@ -220,10 +207,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
                 .toString()))
         )
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
-        serviceEndpoint(
-          GET,
-          "/api/indicators/service/service-1/throughput",
-          willRespondWith = (200, Some(deploymentThroughputData)))
 
         val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
 
@@ -234,10 +217,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       "show 'Not deployed' for envs in which the service is not deployed" in {
         serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (404, None))
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith      = (200, Some(serviceDetailsData)))
-        serviceEndpoint(
-          GET,
-          "/api/indicators/service/service-1/throughput",
-          willRespondWith = (200, Some(deploymentThroughputData)))
 
         val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
 
@@ -256,72 +235,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       }
 
     }
-
-    "Render the frequent production indicators graph with throughput and stability" in {
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
-      serviceEndpoint(
-        GET,
-        "/api/indicators/service/service-name/deployments",
-        willRespondWith = (200, Some(deploymentThroughputData)))
-      serviceEndpoint(
-        GET,
-        "/api/whatsrunningwhere/service-name",
-        willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("serv", Nil))).toString())))
-
-      val response = await(ws.url(s"http://localhost:$port/service/service-name").get)
-      response.status shouldBe 200
-      response.body   should include(s"""data.addColumn('string', 'Period');""")
-      response.body   should include(s"""data.addColumn('number', 'Lead Time');""")
-      response.body   should include(s"""data.addColumn('number', 'Interval');""")
-
-      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
-      response.body should include(s"""data.addColumn('number', 'Interval');""")
-      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
-
-      response.body should include(s"""chart.draw(data, options);""")
-
-      response.body should include(s"""data.addColumn('string', 'Period');""")
-      response.body should include(s"""data.addColumn('number', "Hotfix Rate");""")
-      response.body should include(s"""data.addColumn({'type': 'string', 'role': 'tooltip', 'p': {'html': true}});""")
-    }
-
-    "Render a message if the indicators service returns 404" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.indicators)
-      val today       = LocalDateTime.now
-      val dayInterval = createdAt.until(today, ChronoUnit.DAYS) + 1
-
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith = (200, Some(serviceDetailsData)))
-      serviceEndpoint(
-        GET,
-        "/api/whatsrunningwhere/service-name",
-        willRespondWith                                                                        = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("xyz", Nil))).toString())))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (404, None))
-
-      val response = await(ws.url(s"http://localhost:$port/service/service-name").get)
-      response.status shouldBe 200
-      response.body   should include(s"""No production deployments for $dayInterval days""")
-      response.body   should include(viewMessages.noIndicatorsData)
-
-      response.body shouldNot include(s"""chart.draw(data, options);""")
-    }
-
-    "Render a message if the indicators service encounters an error" in {
-      FeatureSwitch.enable(CatalogueFrontendSwitches.indicators)
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                   = (200, Some(serviceDetailsData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (500, None))
-      serviceEndpoint(
-        GET,
-        "/api/whatsrunningwhere/service-name",
-        willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("xyz", Nil))).toString())))
-
-      val response = await(ws.url(s"http://localhost:$port/service/service-name").get)
-      response.status shouldBe 200
-      response.body   should include(s"""The catalogue encountered an error""")
-      response.body   should include(viewMessages.indicatorsServiceError)
-
-      response.body shouldNot include(s"""chart.draw(data, options);""")
-    }
-
     "Render platform dependencies section" in {
 
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                   = (200, Some(serviceDetailsData)))

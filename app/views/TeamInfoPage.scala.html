@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, NoData, TeamDetails}
-@import uk.gov.hmrc.cataloguefrontend.{ChartDataRows, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.TeamActivityDates
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
@@ -33,8 +33,6 @@
   activityDates: TeamActivityDates,
   errorOrTeamMembers: Either[UMPError, Seq[DisplayableTeamMember]],
   errorOrTeamDetails: Either[UMPError, TeamDetails],
-  throughputChartData: Option[ChartDataRows],
-  stabilityChartData: Option[ChartDataRows],
   umpMyTeamsUrl: String,
   leaksFoundForTeam: Boolean,
   hasLeaks: String => Boolean,
@@ -155,99 +153,9 @@
             @showRepositories(repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
             @showRepositories(repos, RepoType.Other, "Repositories", "repository", "repositories")
         </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                <div class="board">
-                    <h3 class="board__heading">Delivery Indicators</h3>
-                    <div class="board__body">
-                        @if(CatalogueFrontendSwitches.indicators.isEnabled) {
-                            @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-                                @renderGraphText
-                                @renderThroughputGraph
-                                @renderStabilityGraph
-                            }
-                            @{
-                                if(throughputChartData.isEmpty) {
-                                    {
-                                        viewMessages.errorMessage
-                                    }
-                                } else if(throughputChartData.get.isEmpty) {
-                                    {
-                                        activityDates.firstServiceCreationDate.fold(viewMessages.noDataToShow) { d =>
-                                            viewMessages.noProductionDeploymentSinceDaysMessage(d)
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            <p>PlatOps are removing the deployment and build indicator graphs as they are thought to be unhelpful. Please voice any objections on <a href="https://hmrcdigital.slack.com/messages/C0GS60DK2/">#team-platops</a>.</p>
-                        }
-
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </section>
 
     @dependenciesTeamPartial(teamName, teamDependencies, true)
-}
-
-<script type="text/javascript">
-
-    @if(throughputChartData.isDefined && !throughputChartData.get.isEmpty) {
-        @views.html.throughputchart_script(throughputChartData)
-    }
-
-    @if(stabilityChartData.isDefined && !stabilityChartData.get.isEmpty) {
-        @views.html.stabilitychart_script(stabilityChartData)
-    }
-
-
-</script>
-
-@renderThroughputGraph = {
-    <div class="col-md-6">
-        <div id="chart_div"></div>
-        <div>
-            <small>
-                <ul>
-                    <li><strong>Lead Time</strong> - @{
-                        Messages("leadtime.explanation.text")
-                    }</li>
-                    <li><strong>Interval</strong> - @{
-                        Messages("interval.explanation.text")
-                    }</li>
-                </ul>
-            </small>
-        </div>
-    </div>
-
-}
-
-@renderStabilityGraph = {
-    <div class="col-md-6">
-        <div id="chart_div_2"></div>
-        <div>
-            <small>
-                <ul>
-                    <li><strong>Hotfix Rate</strong> - @{
-                        Messages("hotfixrate.explanation.text")
-                    }
-                    </li>
-                    <li><strong>Hotfix Interval</strong> - @{
-                        Messages("hotfixinterval.explanation.text")
-                    }
-                    </li>
-                </ul>
-            </small>
-        </div>
-    </div>
-}
-
-@renderGraphText = @{
-    Html(viewMessages.deploymentThroughputAndStabilityGraphText)
 }
 
 @umpUpdateLink(isMemberBox: Boolean) = {
