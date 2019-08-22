@@ -154,7 +154,6 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
       mock[ConfigService],
       mock[RouteRulesService],
       mock[ServiceDependenciesConnector],
-      mock[IndicatorsConnector],
       mock[LeakDetectionService],
       deploymentsService,
       mock[EventService],

@@ -166,7 +166,6 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       mock[ConfigService],
       mock[RouteRulesService],
       mock[ServiceDependenciesConnector],
-      mock[IndicatorsConnector],
       mock[LeakDetectionService],
       mock[DeploymentsService],
       mockedEventService,
