@@ -58,20 +58,22 @@ class ShutterServiceController @Inject()(
 
   private def showPage1(form: Form[Step1Form])(implicit request: Request[Any]): Future[Html] =
     for {
-      shutterStates <- shutterService.getShutterStates
-      envs         = Environment.values
-      statusValues = ShutterStatusValue.values
+      env           <- Future(Environment.parse(form.get.env).getOrElse(Environment.Production)) // TODO avoid defaulting to Production?
+      shutterStates <- shutterService.getShutterStates(env)
+      envs          =  Environment.values
+      statusValues  =  ShutterStatusValue.values
       shutterGroups <- shutterService.shutterGroups
     } yield page1(form, shutterStates, envs, statusValues, shutterGroups)
 
   def step1Get(env: Option[String], serviceName: Option[String]) =
     withGroup.async { implicit request =>
       for {
-        shutterStates <- shutterService.getShutterStates
-        step1f = if (serviceName.isDefined || env.isDefined) {
+        env1          <- Future(Environment.parse(env.getOrElse("")).getOrElse(Environment.Production)) // TODO avoid defaulting to Production?
+        shutterStates <- shutterService.getShutterStates(env1)
+        step1f        =  if (serviceName.isDefined || env.isDefined) {
           Step1Form(
             serviceNames = serviceName.toSeq,
-            env          = env.getOrElse(""),
+            env          = env1.asString,
             status       = statusFor(shutterStates)(serviceName, env).fold("")(_.asString)
           )
         } else
@@ -95,7 +97,7 @@ class ShutterServiceController @Inject()(
       serviceName <- optServiceName
       envStr      <- optEnv
       env         <- Environment.parse(envStr)
-      status      <- shutterStates.find(_.name == serviceName).map(_.statusFor(env).value)
+      status      <- shutterStates.find(_.name == serviceName).map(_.status.value)
     } yield
       status match {
         case ShutterStatusValue.Shuttered   => ShutterStatusValue.Unshuttered
@@ -147,7 +149,7 @@ class ShutterServiceController @Inject()(
                                 .map(
                                   serviceName =>
                                     shutterService
-                                      .frontendRouteWarningsByAppAndEnv(serviceName, step1Out.env)
+                                      .frontendRouteWarnings(step1Out.env, serviceName)
                                       .map(w => ServiceAndRouteWarnings(serviceName, w)))
                                 .sequence
     } yield frontendRouteWarnings
@@ -214,7 +216,7 @@ class ShutterServiceController @Inject()(
       outagePages <- step1Out.serviceNames.toList
                       .traverse[Future, Option[OutagePage]](serviceName =>
                         shutterService
-                          .outagePageByAppAndEnv(serviceName, step1Out.env))
+                          .outagePage(step1Out.env, serviceName))
                       .map(_.collect { case Some(op) => op })
       outageMessageTemplate = outagePages
         .flatMap(op => op.templatedMessages.map((op, _)))

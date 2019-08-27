@@ -28,6 +28,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
+import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
@@ -78,7 +79,11 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
       serviceEndpoint(GET, "/api/whatsrunningwhere/serv",
         willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("serv", Nil))).toString())))
-      serviceEndpoint(GET, "/shutter-api/states/serv", willRespondWith = (200, Some(shutterApiData)))
+      serviceEndpoint(GET, "/shutter-api/production/states/serv"  , willRespondWith = (200, Some(shutterApiData(Environment.Production, ShutterStatusValue.Unshuttered))))
+      serviceEndpoint(GET, "/shutter-api/externaltest/states/serv", willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/qa/states/serv"          , willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/staging/states/serv"     , willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/dev/states/serv"         , willRespondWith = (404, None))
 
       val response = await(ws.url(s"http://localhost:$port/service/serv").get)
       response.status shouldBe 404
@@ -102,7 +107,11 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
               )))
               .toString()))
       )
-      serviceEndpoint(GET, "/shutter-api/states/serv", willRespondWith = (200, Some(shutterApiData)))
+      serviceEndpoint(GET, "/shutter-api/production/states/serv"  , willRespondWith = (200, Some(shutterApiData(Environment.Production, ShutterStatusValue.Unshuttered))))
+      serviceEndpoint(GET, "/shutter-api/externaltest/states/serv", willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/qa/states/serv"          , willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/staging/states/serv"     , willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/dev/states/serv"         , willRespondWith = (404, None))
 
       val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
       response.status shouldBe 200
@@ -134,7 +143,11 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
                   DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"),
                   DeploymentVO(EnvironmentMapping("qa", "qa"), "skyscape-farnborough", "0.0.1")
                 )))).toString())))
-      serviceEndpoint(GET, "/shutter-api/states/service-1", willRespondWith = (200, Some(shutterApiData)))
+      serviceEndpoint(GET, "/shutter-api/production/states/service-1"  , willRespondWith = (200, Some(shutterApiData(Environment.Production, ShutterStatusValue.Unshuttered))))
+      serviceEndpoint(GET, "/shutter-api/externaltest/states/service-1", willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/qa/states/service-1"          , willRespondWith = (200, Some(shutterApiData(Environment.QA, ShutterStatusValue.Shuttered))))
+      serviceEndpoint(GET, "/shutter-api/staging/states/service-1"     , willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/dev/states/service-1"         , willRespondWith = (404, None))
 
       val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
       response.status shouldBe 200
@@ -230,11 +243,11 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
 
         countSubstring(response.body, "Not deployed") shouldBe 2
 
-        def countSubstring(str: String, substr: String) = substr.r.findAllMatchIn(str).length
-
+        def countSubstring(str: String, substr: String) =
+          substr.r.findAllMatchIn(str).length
       }
-
     }
+
     "Render platform dependencies section" in {
 
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                   = (200, Some(serviceDetailsData)))
@@ -253,7 +266,5 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       document.select("#platform-dependencies").size() should be > 0
 
     }
-
   }
-
 }

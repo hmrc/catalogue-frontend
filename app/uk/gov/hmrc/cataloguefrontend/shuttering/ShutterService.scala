@@ -27,11 +27,11 @@ class ShutterService @Inject()(
   , shutterGroupsConnector: ShutterGroupsConnector
   )(implicit val ec: ExecutionContext) {
 
-  def getShutterState(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
-    shutterConnector.shutterStateByApp(serviceName)
+  def getShutterState(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
+    shutterConnector.shutterState(env, serviceName)
 
-  def getShutterStates(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
-    shutterConnector.shutterStates
+  def getShutterStates(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
+    shutterConnector.shutterStates(env)
 
   def updateShutterStatus(
       umpToken   : Token
@@ -41,21 +41,21 @@ class ShutterService @Inject()(
     )(implicit hc: HeaderCarrier): Future[Unit] =
       shutterConnector.updateShutterStatus(umpToken, serviceName, env, status)
 
-  def outagePageByAppAndEnv(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] =
-    shutterConnector.outagePageByAppAndEnv(serviceName, env)
+  def outagePage(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] =
+    shutterConnector.outagePage(env, serviceName)
 
-  def frontendRouteWarningsByAppAndEnv(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] =
-    shutterConnector.frontendRouteWarningsByAppAndEnv(serviceName, env)
+  def frontendRouteWarnings(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] =
+    shutterConnector.frontendRouteWarnings(env, serviceName)
 
   def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateData]] =
     for {
-      states <- shutterConnector.shutterStates
+      states <- shutterConnector.shutterStates(env)
       events <- shutterConnector.latestShutterEvents(env)
       status =  states.map { state =>
                   ShutterStateData(
                       serviceName = state.name
-                    , environment = env
-                    , status      = state.statusFor(env)
+                    , environment = state.environment
+                    , status      = state.status
                     , lastEvent   = events.find(_.serviceName == state.name)
                     )
                 }

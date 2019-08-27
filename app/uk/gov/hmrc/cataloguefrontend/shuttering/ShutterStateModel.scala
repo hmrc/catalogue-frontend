@@ -33,7 +33,7 @@ object Environment {
   val values: List[Environment] = List(Production, ExternalTest, QA, Staging, Dev)
 
   def parse(s: String): Option[Environment] =
-    values.find(_.asString.toLowerCase == s.toLowerCase.replaceAll(" ", ""))
+    values.find(_.asString == s)
 
   val format: Format[Environment] = new Format[Environment] {
     override def reads(json: JsValue) =
@@ -88,7 +88,7 @@ object ShutterStatus {
     new Format[ShutterStatus] {
       override def reads(json: JsValue) = {
         implicit val ssvf = ShutterStatusValue.format
-        (json \ "status").validate[ShutterStatusValue]
+        (json \ "value").validate[ShutterStatusValue]
           .flatMap {
             case ShutterStatusValue.Unshuttered => JsSuccess(Unshuttered)
             case ShutterStatusValue.Shuttered   => JsSuccess(Shuttered(
@@ -120,35 +120,18 @@ object ShutterStatus {
 
 case class ShutterState(
     name        : String
-  , production  : ShutterStatus
-  , staging     : ShutterStatus
-  , qa          : ShutterStatus
-  , externalTest: ShutterStatus
-  , development : ShutterStatus
-  ) {
-    def statusFor(env: Environment): ShutterStatus =
-      env match {
-        case Environment.Production   => production
-        case Environment.ExternalTest => externalTest
-        case Environment.QA           => qa
-        case Environment.Staging      => staging
-        case Environment.Dev          => development
-      }
-
-    def isShuttered(env: String): Boolean =
-      Environment.parse(env).exists(e => statusFor(e).value.asString == ShutterStatusValue.Shuttered.asString)
-  }
+  , environment : Environment
+  , status      : ShutterStatus
+  )
 
 object ShutterState {
 
   val reads: Reads[ShutterState] = {
+    implicit val ef  = Environment.format
     implicit val ssf = ShutterStatus.format
     ( (__ \ "name"        ).read[String]
-    ~ (__ \ "production"  ).read[ShutterStatus]
-    ~ (__ \ "staging"     ).read[ShutterStatus]
-    ~ (__ \ "qa"          ).read[ShutterStatus]
-    ~ (__ \ "externalTest").read[ShutterStatus]
-    ~ (__ \ "development" ).read[ShutterStatus]
+    ~ (__ \ "environment" ).read[Environment]
+    ~ (__ \ "status"      ).read[ShutterStatus]
     )(ShutterState.apply _)
   }
 }

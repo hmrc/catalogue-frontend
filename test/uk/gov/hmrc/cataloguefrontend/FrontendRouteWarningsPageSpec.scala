@@ -36,11 +36,11 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with GuiceOneServerPerSuite
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    serviceEndpoint(GET, "/shutter-api/frontend-route-warnings/abc-frontend/development", willRespondWith = (200, Some(emptyJson)))
-    serviceEndpoint(GET, "/shutter-api/frontend-route-warnings/abc-frontend/qa", willRespondWith = (200, Some(emptyJson)))
-    serviceEndpoint(GET, "/shutter-api/frontend-route-warnings/abc-frontend/staging", willRespondWith = (200, Some(emptyJson)))
-    serviceEndpoint(GET, "/shutter-api/frontend-route-warnings/abc-frontend/externalTest", willRespondWith = (200, Some(emptyJson)))
-    serviceEndpoint(GET, "/shutter-api/frontend-route-warnings/abc-frontend/production", willRespondWith = (200, Some(emptyJson)))
+    serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(emptyJson)))
+    serviceEndpoint(GET, "/shutter-api/qa/frontend-route-warnings/abc-frontend"         , willRespondWith = (200, Some(emptyJson)))
+    serviceEndpoint(GET, "/shutter-api/staging/frontend-route-warnings/abc-frontend"     , willRespondWith = (200, Some(emptyJson)))
+    serviceEndpoint(GET, "/shutter-api/externalTest/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(emptyJson)))
+    serviceEndpoint(GET, "/shutter-api/production/frontend-route-warnings/abc-frontend"  , willRespondWith = (200, Some(emptyJson)))
   }
 
   "The frontend route warnings page" should {
@@ -51,7 +51,7 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with GuiceOneServerPerSuite
       response.body.contains("""There are no frontend-route warnings for this service in this environment""") shouldBe true
     }
     "shows the table with route warnings" in {
-      serviceEndpoint(GET, "/shutter-api/frontend-route-warnings/abc-frontend/development", willRespondWith = (200, Some(abcWarnings)))
+      serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(abcWarnings)))
 
       val response = await(ws.url(s"http://localhost:$port/frontend-route-warnings/development/abc-frontend").get)
       response.status shouldBe 200

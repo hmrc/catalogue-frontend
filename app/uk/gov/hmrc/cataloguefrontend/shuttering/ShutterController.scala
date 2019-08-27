@@ -56,7 +56,7 @@ class ShutterController @Inject()(
     Action.async { implicit request =>
       val env = Environment.parse(envParam).getOrElse(Environment.Production)
       for {
-        envsAndWarnings <- Environment.values.map(env => shutterService.frontendRouteWarningsByAppAndEnv(serviceName, env).recover {
+        envsAndWarnings <- Environment.values.map(env => shutterService.frontendRouteWarnings(env, serviceName).recover {
           case NonFatal(ex) =>
             Logger.error(
               s"Could not retrieve frontend route warnings for service '$serviceName' in env: '$envParam': ${ex.getMessage}",
