@@ -30,26 +30,35 @@ class ShutterConnector @Inject()(
   serviceConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
 
-  private val urlStates: String      = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/states"
-  private val urlEvents: String      = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/events"
-  private val urlOutagePages: String = s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/outage-pages"
-  private val urlFrontendRouteWarnings: String =
-    s"${serviceConfig.baseUrl("shutter-api")}/shutter-api/frontend-route-warnings"
+  private val shutterApiBaseUrl = serviceConfig.baseUrl("shutter-api") + "/shutter-api"
+
+  private def urlStates(env: Environment)                = s"$shutterApiBaseUrl/${env.asString}/states"
+  private val urlEvents: String                          = s"$shutterApiBaseUrl/events"
+  private def urlOutagePages(env: Environment)           = s"$shutterApiBaseUrl/${env.asString}/outage-pages"
+  private def urlFrontendRouteWarnings(env: Environment) = s"$shutterApiBaseUrl/${env.asString}/frontend-route-warnings"
 
   private implicit val ssr = ShutterState.reads
   private implicit val ser = ShutterEvent.reads
 
   /**
     * GET
-    * /shutter-api/states
-    * Retrieves the current shutter states for all services in all environments
+    * /shutter-api/{environment}/states
+    * Retrieves the current shutter states for all services in given environment
     */
-  def shutterStates()(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
-    http.GET[Seq[ShutterState]](url = urlStates)
+  def shutterStates(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
+    http.GET[Seq[ShutterState]](url = urlStates(env))
 
   /**
     * GET
-    * /shutter-api/events
+    * /shutter-api/{environment}/states/{serviceName}
+    * Retrieves the current shutter states for the given service in the given environment
+    */
+  def shutterState(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
+    http.GET[Option[ShutterState]](s"${urlStates(env)}/$serviceName")
+
+  /**
+    * GET
+    * /shutter-api/{environment}/events
     * Retrieves the current shutter events for all services for given environment
     */
   def latestShutterEvents(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
@@ -58,28 +67,10 @@ class ShutterConnector @Inject()(
         s"$urlEvents?type=${EventType.ShutterStateChange.asString}&namedFilter=latestByServiceName&data.environment=${env.asString}")
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
-  /**
-    * GET
-    * /shutter-api/states/{serviceName}
-    * Retrieves the current shutter states for the given service in all environments
-    */
-  def shutterStateByApp(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
-    http.GET[Option[ShutterState]](s"$urlStates/$serviceName")
-
-  /**
-    * GET
-    * /shutter-api/states/{serviceName}/{environment}
-    * Retrieves the current shutter state for the given service in the given environment
-    */
-  def shutterStatusByAppAndEnv(serviceName: String, env: Environment)(
-    implicit hc: HeaderCarrier): Future[Option[ShutterStatus]] = {
-    implicit val ssf = ShutterStatus.format
-    http.GET[Option[ShutterStatus]](s"$urlStates/$serviceName/${env.asString}")
-  }
 
   /**
     * PUT
-    * /shutter-api/states/{serviceName}/{environment}
+    * /shutter-api/{environment}/states/{serviceName}
     * Shutters/un-shutters the service in the given environment
     */
   def updateShutterStatus(
@@ -91,7 +82,7 @@ class ShutterConnector @Inject()(
     implicit val isf = ShutterStatus.format
 
     http
-      .PUT[ShutterStatus, HttpResponse](s"$urlStates/$serviceName/${env.asString}", status)(
+      .PUT[ShutterStatus, HttpResponse](s"${urlStates(env)}/$serviceName", status)(
         implicitly[Writes[ShutterStatus]],
         implicitly[HttpReads[HttpResponse]],
         hc.copy(token = Some(umpToken)),
@@ -102,24 +93,24 @@ class ShutterConnector @Inject()(
 
   /**
     * GET
-    * /shutter-api/outage-pages/{serviceName}/{environment}
+    * /shutter-api/{environment}/outage-pages/{serviceName}
     * Retrieves the current shutter state for the given service in the given environment
     */
-  def outagePageByAppAndEnv(serviceName: String, env: Environment)(
+  def outagePage(env: Environment, serviceName: String)(
     implicit hc: HeaderCarrier): Future[Option[OutagePage]] = {
     implicit val ssf = OutagePage.reads
-    http.GET[Option[OutagePage]](s"$urlOutagePages/$serviceName/${env.asString}")
+    http.GET[Option[OutagePage]](s"${urlOutagePages(env)}/$serviceName")
   }
 
   /**
     * GET
-    * /shutter-api/frontend-route-warnings/{serviceName}/{environment}
+    * /shutter-api/{environment}/frontend-route-warnings/{serviceName}
     * Retrieves the warnings (if any) for the given service in the given environment, based on parsing the mdtp-frontend-routes
     */
-  def frontendRouteWarningsByAppAndEnv(serviceName: String, env: Environment)(
+  def frontendRouteWarnings(env: Environment, serviceName: String)(
     implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] = {
     implicit val r = FrontendRouteWarning.reads
     http
-      .GET[Seq[FrontendRouteWarning]](s"$urlFrontendRouteWarnings/$serviceName/${env.asString}")
+      .GET[Seq[FrontendRouteWarning]](s"${urlFrontendRouteWarnings(env)}/$serviceName")
   }
 }

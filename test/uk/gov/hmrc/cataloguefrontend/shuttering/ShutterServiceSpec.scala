@@ -33,28 +33,19 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
 
   val mockShutterStates = Seq(
       ShutterState(
-        name         = "abc-frontend"
-      , production   = ShutterStatus.Shuttered(reason = None, outageMessage = None)
-      , staging      = ShutterStatus.Unshuttered
-      , qa           = ShutterStatus.Unshuttered
-      , externalTest = ShutterStatus.Unshuttered
-      , development  = ShutterStatus.Unshuttered
+        name        = "abc-frontend"
+      , environment = Environment.Production
+      , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None)
       )
     , ShutterState(
-        name         = "zxy-frontend"
-      , production   = ShutterStatus.Unshuttered
-      , staging      = ShutterStatus.Unshuttered
-      , qa           = ShutterStatus.Unshuttered
-      , externalTest = ShutterStatus.Unshuttered
-      , development  = ShutterStatus.Unshuttered
+        name        = "zxy-frontend"
+      , environment = Environment.Production
+      , status      = ShutterStatus.Unshuttered
       )
     , ShutterState(
-        name         = "ijk-frontend"
-      , production   = ShutterStatus.Shuttered(reason = None, outageMessage = None)
-      , staging      = ShutterStatus.Unshuttered
-      , qa           = ShutterStatus.Unshuttered
-      , externalTest = ShutterStatus.Unshuttered
-      , development  = ShutterStatus.Unshuttered
+        name        = "ijk-frontend"
+      , environment = Environment.Production
+      , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None)
       )
     )
 
@@ -90,7 +81,7 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
       val boot = Boot.init
       implicit val hc = new HeaderCarrier()
 
-      when(boot.mockShutterConnector.shutterStates).thenReturn(Future(mockShutterStates))
+      when(boot.mockShutterConnector.shutterStates(Environment.Production)).thenReturn(Future(mockShutterStates))
       when(boot.mockShutterConnector.latestShutterEvents(Environment.Production)).thenReturn(Future(mockEvents))
 
       val Seq(a,b,c) = Await.result(boot.shutterService.findCurrentState(Environment.Production), Duration(10, "seconds"))

@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
-import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
+import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterService, ShutterState}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
@@ -277,7 +277,8 @@ class CatalogueController @Inject()(
     , leakDetectionService.urlIfLeaksFound(serviceName)
     , routeRulesService.serviceUrl(serviceName)
     , routeRulesService.serviceRoutes(serviceName)
-    , shutterService.getShutterState(serviceName)
+    , ShutteringEnvironment.values.traverse(env => shutterService.getShutterState(env, serviceName))
+        .map(_.collect { case Some(s) => s }.groupBy(_.environment).mapValues(_.head))
     ).mapN { case (service, deployments, optDependencies, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
       service match {
         case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>

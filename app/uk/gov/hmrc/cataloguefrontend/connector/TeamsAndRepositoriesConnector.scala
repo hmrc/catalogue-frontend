@@ -26,6 +26,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepo
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -53,6 +54,18 @@ case class Link(name: String, displayName: String, url: String) {
 
 case class TargetEnvironment(name: String, services: Seq[Link]) {
   val id: String = name.toLowerCase.replaceAll(" ", "-")
+}
+
+object TargetEnvironment {
+  def toShutteringEnvironment(targetEnv: TargetEnvironment): Option[ShutteringEnvironment] =
+    targetEnv.name.toLowerCase match {
+      case "production"    => Some(ShutteringEnvironment.Production)
+      case "external test" => Some(ShutteringEnvironment.ExternalTest)
+      case "qa"            => Some(ShutteringEnvironment.QA)
+      case "staging"       => Some(ShutteringEnvironment.Staging)
+      case "development"   => Some(ShutteringEnvironment.Dev)
+      case _               => None
+    }
 }
 
 case class RepositoryDetails(
