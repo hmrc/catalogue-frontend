@@ -76,7 +76,7 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
         )
     )
 
-  "findCurrentState" should {
+  "findCurrentStates" should {
     "return a list of shutter events ordered by shutter status" in {
       val boot = Boot.init
       implicit val hc = new HeaderCarrier()
@@ -84,7 +84,7 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
       when(boot.mockShutterConnector.shutterStates(Environment.Production)).thenReturn(Future(mockShutterStates))
       when(boot.mockShutterConnector.latestShutterEvents(Environment.Production)).thenReturn(Future(mockEvents))
 
-      val Seq(a,b,c) = Await.result(boot.shutterService.findCurrentState(Environment.Production), Duration(10, "seconds"))
+      val Seq(a,b,c) = Await.result(boot.shutterService.findCurrentStates(Environment.Production), Duration(10, "seconds"))
 
       a.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None)
       b.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None)

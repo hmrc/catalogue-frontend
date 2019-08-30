@@ -47,7 +47,7 @@ class ShutterService @Inject()(
   def frontendRouteWarnings(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] =
     shutterConnector.frontendRouteWarnings(env, serviceName)
 
-  def findCurrentState(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateData]] =
+  def findCurrentStates(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateData]] =
     for {
       states <- shutterConnector.shutterStates(env)
       events <- shutterConnector.latestShutterEvents(env)
@@ -59,10 +59,9 @@ class ShutterService @Inject()(
                     , lastEvent   = events.find(_.serviceName == state.name)
                     )
                 }
-      sorted =  status.sortWith {
-                  case (l, r) => l.status      == ShutterStatusValue.Shuttered ||
-                                 l.serviceName <  r.serviceName
-                }
+      sorted =  status
+                  .sortWith(_.serviceName <  _.serviceName)
+                  .sortWith { case (l, _) => l.status.value == ShutterStatusValue.Shuttered }
     } yield sorted
 
   /** Creates an [[OutagePageStatus]] for each service based on the contents of [[OutagePage]] */

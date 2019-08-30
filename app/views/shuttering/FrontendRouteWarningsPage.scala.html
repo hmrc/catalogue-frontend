@@ -70,7 +70,7 @@
 
 @envOption(env: Environment) = {
   <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterController.frontendRouteWarnings(env.asString, selectedService)" class="navbar-link">@env.toString (@envWarningCount(env))</a>
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.frontendRouteWarnings(env.asString, selectedService)" class="navbar-link">@env.toString (@envWarningCount(env))</a>
   </li>
 }
 

@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @(title: String = "Home", active: String = "")(content: Html)(implicit request: Request[_])
 <!DOCTYPE html>
@@ -85,7 +86,9 @@
                             <li><a href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
                             <li><a href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
                             <li><a href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
-
+                            @if(CatalogueFrontendSwitches.shuttering.isEnabled) {
+                              <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates">Shutter Overview</a></li>
+                            }
                         </ul>
                     </li>
                 </ul>

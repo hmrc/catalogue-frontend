@@ -16,15 +16,15 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterGroup, ShutterStatusValue, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.Step1Form
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.Step1Form
 @import helper._
 @import partials.form_warnings
 
 @this(viewMessages: ViewMessages)
 
 @( form         : Form[Step1Form]
+ , env          : Environment
  , shutterStates: Seq[ShutterState]
- , envs         : Seq[Environment]
  , statusValues : Seq[ShutterStatusValue]
  , shutterGroups: Seq[ShutterGroup]
  )(implicit request         : Request[_]
@@ -44,7 +44,7 @@
     <div class="board">
       <div class="board__body">
         @helper.form(
-            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Post
+            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterFrontendController.step1Post
           , 'class -> "form-inline"
           , 'id    -> "shutter-service-form"
           , 'style -> "padding-left: 20px; padding-right: 20px"
@@ -53,6 +53,11 @@
 
           @CSRF.formField
 
+          <div class="row">
+            <div class="col-sm-12">
+              <label>Environment:</label> @env
+            </div>
+          </div>
           <div class="row" style="display: table;">
             <div class="col-sm-5" style="display:table-cell; float:none;">
               @select(
@@ -94,15 +99,6 @@
                 <span id="group-warning"></span>
                 <ul id="missing-services"></ul>
               </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-sm-12">
-              @select(
-                  field     =  form("env")
-                , options   =  Seq("" -> "Please select") ++ envs.map(s => (s.asString, s.toString))
-                , '_label   -> "Environment"
-                )
             </div>
           </div>
           <div class="row">

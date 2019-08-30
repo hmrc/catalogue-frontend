@@ -119,7 +119,9 @@ class ServiceDependenciesConnector @Inject()(
 
   def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] = {
     implicit val r = JDKVersionFormats.jdkFormat
-    http.GET[List[JDKVersion]](url = s"$servicesDependenciesBaseUrl/jdkVersions?flag=${flag.asString}")
+    http.GET[List[JDKVersion]](
+      url = s"$servicesDependenciesBaseUrl/jdkVersions",
+      queryParams = Seq("flag" -> flag.asString))
   }
 
   def getBobbyRuleViolations(implicit hc:HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] = {

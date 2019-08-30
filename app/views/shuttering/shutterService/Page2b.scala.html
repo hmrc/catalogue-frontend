@@ -16,13 +16,14 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, OutagePage, OutagePageStatus, ShutterStatusValue, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.{Step1Out, Step2bForm}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.{Step1Out, Step2bForm}
 @import helper._
 @import partials.form_warnings
 
 @this(viewMessages: ViewMessages)
 
 @( form                  : Form[Step2bForm]
+ , env                   : Environment
  , step1Out              : Step1Out
  , requiresOutageMessage : Boolean
  , outageMessageSrc      : Option[OutagePage]
@@ -47,7 +48,7 @@
       <div class="board__body">
 
         @helper.form(
-            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step2bPost
+            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterFrontendController.step2bPost
           , 'class -> "form-inline"
           , 'id    -> "shutter-service-form"
           , 'style -> "padding-left: 20px; padding-right: 20px"
@@ -55,10 +56,10 @@
 
           @CSRF.formField
 
-          <div class="panel @if(step1Out.env == Environment.Production) {panel-danger} else {panel-warning}">
+          <div class="panel @if(env == Environment.Production) {panel-danger} else {panel-warning}">
             <div class="panel-heading">
               <span class="glyphicon glyphicon-warning-sign"></span>
-              You are about to <b>@valueFor(step1Out.status)</b> the following services in <b>@step1Out.env</b>:
+              You are about to <b>@valueFor(step1Out.status)</b> the following services in <b>@env</b>:
             </div>
             <div class="panel-body">
                 <ul style="list-style: disc;">
