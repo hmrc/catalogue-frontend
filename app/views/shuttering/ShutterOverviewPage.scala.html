@@ -21,7 +21,7 @@
 
 @this(viewMessages: ViewMessages)
 
-@( shutterStates: Seq[ShutterStateData]
+@( shutterStates: Map[Environment, Seq[ShutterStateData]]
  , selectedEnv  : Environment
  , isSignedIn   : Boolean
  )(implicit request: Request[_])
@@ -55,7 +55,7 @@
           </thead>
 
           <tbody>
-              @shutterStates.map(shutterRow)
+              @shutterStates.get(selectedEnv).getOrElse(Seq.empty).map(shutterRow)
           </tbody>
 
       </table>
@@ -83,8 +83,12 @@
 
 @envOption(env: Environment) = {
   <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(env.asString)" class="navbar-link">@env.toString</a>
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(env.asString)" class="navbar-link">@env.toString (@shutteredCount(env))</a>
   </li>
+}
+
+@shutteredCount(env: Environment) = {
+  @shutterStates.get(env).getOrElse(Seq.empty).filter(_.status.value == ShutterStatusValue.Shuttered).size
 }
 
 @changeValueFor(status: ShutterStatusValue) = {
