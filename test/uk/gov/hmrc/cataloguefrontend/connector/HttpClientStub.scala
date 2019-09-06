@@ -143,7 +143,7 @@ trait HttpClientStub {
 
     override val hooks: Seq[HttpHook] = Nil
 
-    override def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    override def doGet(url: String, headers: Seq[(String, String)])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
       val expectation = verbStubbing.popExpectation[NoPayloadResponseExpectation](Verb.GET)
 
       url shouldBe expectation.url
@@ -152,9 +152,7 @@ trait HttpClientStub {
       expectation.httpResponse
     }
 
-    override def doPost[A](url: String, body: A, headers: Seq[(String, String)])(
-      implicit wts: Writes[A],
-      hc: HeaderCarrier): Future[HttpResponse] = {
+    override def doPost[A](url: String, body: A, headers: Seq[(String, String)])(implicit wts: Writes[A], hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
       val expectation = verbStubbing.popExpectation[PayloadResponseExpectation](Verb.POST)
 
       url              shouldBe expectation.url
@@ -164,27 +162,13 @@ trait HttpClientStub {
       expectation.httpResponse
     }
 
-    override def POSTString[O](url: String, body: String, headers: Seq[(String, String)])(
-      implicit rds: HttpReads[O],
-      hc: HeaderCarrier,
-      ec: ExecutionContext): Future[O] = ???
-
-    override def POSTForm[O](
-      url: String,
-      body: Map[String, Seq[String]])(implicit rds: HttpReads[O], hc: HeaderCarrier, ec: ExecutionContext): Future[O] =
+    override def doPatch[A](url: String, body: A, headers: Seq[(String, String)])(implicit wts: Writes[A], hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] =
       ???
 
-    override def POSTEmpty[O](
-      url: String)(implicit rds: HttpReads[O], hc: HeaderCarrier, ec: ExecutionContext): Future[O] =
+    override def doPut[A](url: String, body: A, headers: Seq[(String, String)])(implicit wts: Writes[A], hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] =
       ???
 
-    override def doPatch[A](url: String, body: A)(implicit wts: Writes[A], hc: HeaderCarrier): Future[HttpResponse] =
-      ???
-
-    override def doPut[A](url: String, body: A)(implicit wts: Writes[A], hc: HeaderCarrier): Future[HttpResponse] =
-      ???
-
-    override def doDelete(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    override def doDelete(url: String, headers: Seq[(String, String)])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] =
       ???
 
     override protected def configuration: Option[Config] = None
