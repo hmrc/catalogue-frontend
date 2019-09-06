@@ -28,27 +28,31 @@ import scala.util.control.NonFatal
 import cats.implicits._
 
 @Singleton
-class ShutterController @Inject()(
-  mcc: MessagesControllerComponents,
-  verifySignInStatus: VerifySignInStatus,
-  shutterStatePage: ShutterStatePage,
+class ShutterOverviewController @Inject()(
+  mcc                      : MessagesControllerComponents,
+  verifySignInStatus       : VerifySignInStatus,
+  shutterOverviewPage         : ShutterOverviewPage,
   frontendRoutesWarningPage: FrontendRouteWarningsPage,
-  shutterService: ShutterService
+  shutterService           : ShutterService
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
-  def allStates(envParam: String): Action[AnyContent] =
+
+  def allStates: Action[AnyContent] =
+    allStatesForEnv(envParam = uk.gov.hmrc.cataloguefrontend.shuttering.Environment.Production.asString)
+
+  def allStatesForEnv(envParam: String): Action[AnyContent] =
     verifySignInStatus.async { implicit request =>
       val env = Environment.parse(envParam).getOrElse(Environment.Production)
       for {
         currentState <- shutterService
-                         .findCurrentState(env)
+                         .findCurrentStates(env)
                          .recover {
                            case NonFatal(ex) =>
                              Logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
                              Seq.empty
                          }
-        page = shutterStatePage(currentState, env, request.isSignedIn)
+        page = shutterOverviewPage(currentState, env, request.isSignedIn)
       } yield Ok(page)
     }
 

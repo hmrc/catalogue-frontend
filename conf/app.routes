@@ -46,16 +46,17 @@ GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefro
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()
 
-GET        /shuttering-overview                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterController.allStates(env = uk.gov.hmrc.cataloguefrontend.shuttering.Environment.Production.asString)
-GET        /shuttering-overview/:env                    uk.gov.hmrc.cataloguefrontend.shuttering.ShutterController.allStates(env)
-GET        /frontend-route-warnings/:env/:serviceName   uk.gov.hmrc.cataloguefrontend.shuttering.ShutterController.frontendRouteWarnings(env: String, serviceName: String)
+GET        /shuttering-overview                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStates
+GET        /shuttering-overview/:env                    uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStatesForEnv(env)
+GET        /frontend-route-warnings/:env/:serviceName   uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.frontendRouteWarnings(env: String, serviceName: String)
 
-GET        /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step1Get(env: Option[String], serviceName: Option[String])
-POST       /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step1Post
-GET        /shuttering/2a                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2aGet
-POST       /shuttering/2a                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2aPost
-GET        /shuttering/2b                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2bGet
-POST       /shuttering/2b                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step2bPost
-GET        /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step3Get
-POST       /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step3Post
-GET        /shuttering/4                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterServiceController.step4Get
+GET        /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step1Get(serviceName: Option[String])
+POST       /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step1Post
+GET        /shuttering/2a                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step2aGet
+POST       /shuttering/2a                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step2aPost
+GET        /shuttering/2b                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step2bGet
+POST       /shuttering/2b                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step2bPost
+GET        /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step3Get
+POST       /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step3Post
+GET        /shuttering/4                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step4Get
+GET        /shuttering/:env                             uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.start(env: String, serviceName: Option[String])

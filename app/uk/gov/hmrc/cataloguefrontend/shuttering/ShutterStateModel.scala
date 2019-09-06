@@ -104,13 +104,13 @@ object ShutterStatus {
         ss match {
           case Shuttered(reason, outageMessage) =>
             Json.obj(
-                "status"        -> Json.toJson(ss.value)
+                "value"         -> Json.toJson(ss.value)
               , "reason"        -> reason
               , "outageMessage" -> outageMessage
               )
           case Unshuttered =>
             Json.obj(
-                "status" -> Json.toJson(ss.value)
+                "value" -> Json.toJson(ss.value)
               )
         }
       }

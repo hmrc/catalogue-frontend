@@ -39,4 +39,5 @@ object FeatureSwitch {
 
 object CatalogueFrontendSwitches {
   def bobbytrend = FeatureSwitch.forName("bobbytrend")
+  def shuttering = FeatureSwitch.forName("shuttering")
 }

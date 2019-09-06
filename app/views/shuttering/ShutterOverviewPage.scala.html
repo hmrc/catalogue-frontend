@@ -26,10 +26,10 @@
  , isSignedIn   : Boolean
  )(implicit request: Request[_])
 
-@standard_layout(s"Shutter Status: ${selectedEnv.asString}") {
+@standard_layout(s"Shutter Overview") {
 
   <header>
-      <h1>Shutter Status: @selectedEnv.toString</h1>
+      <h1>Shutter Overview</h1>
   </header>
 
   <section id="shutter-overview">
@@ -83,7 +83,7 @@
 
 @envOption(env: Environment) = {
   <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterController.allStates(env.asString)" class="navbar-link">@env.toString</a>
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(env.asString)" class="navbar-link">@env.toString</a>
   </li>
 }
 
@@ -109,7 +109,7 @@
       <td class="shutter-date"><p>@state.lastEvent.map(e => DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z").withZone(ZoneId.systemDefault).format(e.timestamp)).getOrElse("")</p></td>
       @if(isSignedIn) {
         <td class="shutter-update">
-          <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterServiceController.step1Get(Some(state.environment.asString), Some(state.serviceName))">
+          <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterFrontendController.start(state.environment.asString, Some(state.serviceName))">
             @changeValueFor(state.status.value)
           </a>
         </td>
