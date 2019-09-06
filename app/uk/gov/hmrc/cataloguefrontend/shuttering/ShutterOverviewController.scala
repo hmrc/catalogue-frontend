@@ -45,14 +45,17 @@ class ShutterOverviewController @Inject()(
     verifySignInStatus.async { implicit request =>
       val env = Environment.parse(envParam).getOrElse(Environment.Production)
       for {
-        currentState <- shutterService
-                         .findCurrentStates(env)
-                         .recover {
-                           case NonFatal(ex) =>
-                             Logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
-                             Seq.empty
-                         }
-        page = shutterOverviewPage(currentState, env, request.isSignedIn)
+        envAndCurrentStates <- Environment.values.traverse { env =>
+                                 shutterService
+                                   .findCurrentStates(env)
+                                   .recover {
+                                     case NonFatal(ex) =>
+                                       Logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
+                                       Seq.empty
+                                   }
+                                   .map(ws => (env, ws))
+                               }
+        page                =  shutterOverviewPage(envAndCurrentStates.toMap, env, request.isSignedIn)
       } yield Ok(page)
     }
 
@@ -60,14 +63,17 @@ class ShutterOverviewController @Inject()(
     Action.async { implicit request =>
       val env = Environment.parse(envParam).getOrElse(Environment.Production)
       for {
-        envsAndWarnings <- Environment.values.map(env => shutterService.frontendRouteWarnings(env, serviceName).recover {
-          case NonFatal(ex) =>
-            Logger.error(
-              s"Could not retrieve frontend route warnings for service '$serviceName' in env: '$envParam': ${ex.getMessage}",
-              ex)
-            Seq.empty
-        }.map(ws => (env, ws))).sequence
-        page = frontendRoutesWarningPage(envsAndWarnings.toMap, env, serviceName)
+        envsAndWarnings <- Environment.values.traverse { env =>
+                             shutterService
+                               .frontendRouteWarnings(env, serviceName)
+                               .recover {
+                                  case NonFatal(ex) =>
+                                    Logger.error(s"Could not retrieve frontend route warnings for service '$serviceName' in env: '$envParam': ${ex.getMessage}", ex)
+                                    Seq.empty
+                               }
+                               .map(ws => (env, ws))
+                           }
+        page            =  frontendRoutesWarningPage(envsAndWarnings.toMap, env, serviceName)
       } yield Ok(page)
     }
 }
