@@ -134,6 +134,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     }
 
     "show shuttered environments when they are shuttered" in {
+      FeatureSwitch.enable(CatalogueFrontendSwitches.shuttering)
       serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
       serviceEndpoint(
         GET,

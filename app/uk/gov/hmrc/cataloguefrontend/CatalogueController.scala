@@ -277,8 +277,10 @@ class CatalogueController @Inject()(
     , leakDetectionService.urlIfLeaksFound(serviceName)
     , routeRulesService.serviceUrl(serviceName)
     , routeRulesService.serviceRoutes(serviceName)
-    , ShutteringEnvironment.values.traverse(env => shutterService.getShutterState(env, serviceName))
-        .map(_.collect { case Some(s) => s }.groupBy(_.environment).mapValues(_.head))
+    , if (CatalogueFrontendSwitches.shuttering.isEnabled)
+         ShutteringEnvironment.values.traverse(env => shutterService.getShutterState(env, serviceName))
+           .map(_.collect { case Some(s) => s }.groupBy(_.environment).mapValues(_.head))
+      else Future(Map.empty[ShutteringEnvironment, ShutterState])
     ).mapN { case (service, deployments, optDependencies, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
       service match {
         case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>

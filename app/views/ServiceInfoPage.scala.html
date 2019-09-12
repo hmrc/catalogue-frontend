@@ -26,7 +26,7 @@
 @import views.partials.githubBadgeType
 @import partials.DependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutterEnvironment, ShutterState, ShutterStatus, ShutterStatusValue}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterState, ShutterStatus, ShutterStatusValue}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus._
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
@@ -38,7 +38,7 @@
   linkToLeakDetection: Option[String],
   productionEnvironmentRoute: Option[EnvironmentRoute],
   serviceRoutes: ServiceRoutes,
-  shutterState: Map[ShutterEnvironment, ShutterState]
+  shutterState: Map[ShutteringEnvironment, ShutterState]
 )(implicit messages: Messages, request: Request[_])
 
 
@@ -101,7 +101,7 @@
     </div>
 }
 
-@renderEnvironmentBoardHeading(deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]], shutterState: Map[ShutterEnvironment, ShutterState], environment: TargetEnvironment) = {
+@renderEnvironmentBoardHeading(deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]], shutterState: Map[ShutteringEnvironment, ShutterState], environment: TargetEnvironment) = {
     @if(TargetEnvironment.toShutteringEnvironment(environment)
           .flatMap(shutterState.get)
           .map(_.status.value == ShutterStatusValue.Shuttered)
