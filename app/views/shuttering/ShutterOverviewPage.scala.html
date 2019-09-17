@@ -84,7 +84,7 @@
 
 @envOption(env: Environment) = {
   <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType.asString, env.asString)" class="navbar-link">@env.toString (@shutteredCount(env))</a>
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)" class="navbar-link">@env.toString (@shutteredCount(env))</a>
   </li>
 }
 
@@ -114,7 +114,7 @@
       <td class="shutter-date"><p>@state.lastEvent.map(e => DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z").withZone(ZoneId.systemDefault).format(e.timestamp)).getOrElse("")</p></td>
       @if(isSignedIn) {
         <td class="shutter-update">
-          <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterFrontendController.start(state.environment.asString, Some(state.serviceName))">
+          <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterFrontendController.start(state.environment, Some(state.serviceName))">
             @changeValueFor(state.status.value)
           </a>
         </td>

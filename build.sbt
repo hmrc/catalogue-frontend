@@ -1,5 +1,6 @@
 import play.core.PlayVersion
 import play.sbt.PlayImport.PlayKeys.playDefaultPort
+import play.sbt.routes.RoutesKeys
 import uk.gov.hmrc.SbtArtifactory
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
@@ -15,7 +16,12 @@ lazy val microservice = Project(appName, file("."))
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    resolvers += Resolver.jcenterRepo
+    resolvers += Resolver.jcenterRepo,
+    RoutesKeys.routesImport ++= Seq(
+        "uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterType}",
+        "uk.gov.hmrc.cataloguefrontend.shuttering.Environment.pathBindable",
+        "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType.pathBindable"
+    )
   )
 
 val bootstrapPlayVersion = "1.0.0"

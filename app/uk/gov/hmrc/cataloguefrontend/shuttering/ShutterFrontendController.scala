@@ -15,7 +15,6 @@
  */
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
-
 import cats.data.EitherT
 import cats.instances.all._
 import cats.syntax.all._
@@ -55,14 +54,13 @@ class ShutterFrontendController @Inject()(
   //
   // --------------------------------------------------------------------------
 
-  def start(env: String, serviceName: Option[String]) =
+  def start(env: Environment, serviceName: Option[String]) =
     withGroup { implicit request =>
-      val env1 = Environment.parse(env).getOrElse(Environment.Production)
       Redirect(appRoutes.ShutterFrontendController.step1Get(serviceName))
         .withSession(
           request.session + updateFlowState(request.session)(
             _.copy(
-              step0  = Some(Step0Out(env = env1)))))
+              step0 = Some(Step0Out(env = env)))))
     }
 
   // --------------------------------------------------------------------------
@@ -381,7 +379,7 @@ object ShutterFrontendController {
     EitherT.fromOption[Future](
       fromSession(request.session)
       .flatMap(_.step0)
-    , Redirect(appRoutes.ShutterOverviewController.allStates(ShutterType.Frontend.asString))
+    , Redirect(appRoutes.ShutterOverviewController.allStates(ShutterType.Frontend))
     )
 
 
