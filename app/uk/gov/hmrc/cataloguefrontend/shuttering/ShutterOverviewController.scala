@@ -31,23 +31,27 @@ import cats.implicits._
 class ShutterOverviewController @Inject()(
   mcc                      : MessagesControllerComponents,
   verifySignInStatus       : VerifySignInStatus,
-  shutterOverviewPage         : ShutterOverviewPage,
+  shutterOverviewPage      : ShutterOverviewPage,
   frontendRoutesWarningPage: FrontendRouteWarningsPage,
   shutterService           : ShutterService
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
 
-  def allStates: Action[AnyContent] =
-    allStatesForEnv(envParam = uk.gov.hmrc.cataloguefrontend.shuttering.Environment.Production.asString)
+  def allStates(serviceType: String): Action[AnyContent] =
+    allStatesForEnv(
+        serviceType = serviceType
+      , envParam    = Environment.Production.asString
+      )
 
-  def allStatesForEnv(envParam: String): Action[AnyContent] =
+  def allStatesForEnv(serviceType: String, envParam: String): Action[AnyContent] =
     verifySignInStatus.async { implicit request =>
+      val st  = ShutterType.parse(serviceType).getOrElse(ShutterType.Frontend)
       val env = Environment.parse(envParam).getOrElse(Environment.Production)
       for {
         envAndCurrentStates <- Environment.values.traverse { env =>
                                  shutterService
-                                   .findCurrentStates(env)
+                                   .findCurrentStates(st, env)
                                    .recover {
                                      case NonFatal(ex) =>
                                        Logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
@@ -55,7 +59,7 @@ class ShutterOverviewController @Inject()(
                                    }
                                    .map(ws => (env, ws))
                                }
-        page                =  shutterOverviewPage(envAndCurrentStates.toMap, env, request.isSignedIn)
+        page                =  shutterOverviewPage(envAndCurrentStates.toMap, st, env, request.isSignedIn)
       } yield Ok(page)
     }
 

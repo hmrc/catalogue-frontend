@@ -50,6 +50,31 @@ object Environment {
   }
 }
 
+sealed trait ShutterType { def asString: String }
+object ShutterType {
+  case object Frontend extends ShutterType { val asString = "frontend" }
+  case object Api      extends ShutterType { val asString = "api"      }
+
+  val values: List[ShutterType] = List(Frontend, Api)
+
+  def parse(s: String): Option[ShutterType] =
+    values.find(_.asString == s)
+
+  val format: Format[ShutterType] = new Format[ShutterType] {
+    override def reads(json: JsValue) =
+      json.validate[String]
+        .flatMap { s =>
+            parse(s) match {
+              case Some(st) => JsSuccess(st)
+              case None     => JsError(__, s"Invalid ShutterType '$s'")
+            }
+          }
+
+    override def writes(st: ShutterType) =
+      JsString(st.asString)
+  }
+}
+
 sealed trait ShutterStatusValue { def asString: String }
 object ShutterStatusValue {
   case object Shuttered   extends ShutterStatusValue { val asString = "shuttered"   }

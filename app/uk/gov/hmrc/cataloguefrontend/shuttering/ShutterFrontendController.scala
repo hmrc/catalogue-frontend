@@ -73,7 +73,7 @@ class ShutterFrontendController @Inject()(
 
   private def showPage1(env: Environment, form: Form[Step1Form])(implicit request: Request[Any]): Future[Html] =
     for {
-      shutterStates <- shutterService.getShutterStates(env)
+      shutterStates <- shutterService.getShutterStates(ShutterType.Frontend, env)
       envs          =  Environment.values
       statusValues  =  ShutterStatusValue.values
       shutterGroups <- shutterService.shutterGroups
@@ -83,7 +83,7 @@ class ShutterFrontendController @Inject()(
     withGroup.async { implicit request =>
       (for {
          step0Out      <- getStep0Out
-         shutterStates <- EitherT.liftF(shutterService.getShutterStates(step0Out.env))
+         shutterStates <- EitherT.liftF(shutterService.getShutterStates(ShutterType.Frontend, step0Out.env))
          step1f        =  if (serviceName.isDefined) {
                             Step1Form(
                               serviceNames = serviceName.toSeq,
@@ -336,7 +336,7 @@ class ShutterFrontendController @Inject()(
          _         <- step1Out.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
                        EitherT.right[Result] {
                          shutterService
-                           .updateShutterStatus(request.token, serviceName, step0Out.env, status)
+                           .updateShutterStatus(request.token, serviceName, ShutterType.Frontend, step0Out.env, status)
                        }
                      }
        } yield Redirect(appRoutes.ShutterFrontendController.step4Get)
@@ -381,7 +381,7 @@ object ShutterFrontendController {
     EitherT.fromOption[Future](
       fromSession(request.session)
       .flatMap(_.step0)
-    , Redirect(appRoutes.ShutterOverviewController.allStates)
+    , Redirect(appRoutes.ShutterOverviewController.allStates(ShutterType.Frontend.asString))
     )
 
 

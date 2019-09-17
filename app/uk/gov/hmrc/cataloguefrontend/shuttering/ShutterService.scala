@@ -27,19 +27,20 @@ class ShutterService @Inject()(
   , shutterGroupsConnector: ShutterGroupsConnector
   )(implicit val ec: ExecutionContext) {
 
-  def getShutterState(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
-    shutterConnector.shutterState(env, serviceName)
+  def getShutterState(st: ShutterType, env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
+    shutterConnector.shutterState(st, env, serviceName)
 
-  def getShutterStates(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
-    shutterConnector.shutterStates(env)
+  def getShutterStates(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
+    shutterConnector.shutterStates(st, env)
 
   def updateShutterStatus(
       umpToken   : Token
     , serviceName: String
+    , st         : ShutterType
     , env        : Environment
     , status     : ShutterStatus
     )(implicit hc: HeaderCarrier): Future[Unit] =
-      shutterConnector.updateShutterStatus(umpToken, serviceName, env, status)
+      shutterConnector.updateShutterStatus(umpToken, serviceName, st, env, status)
 
   def outagePage(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] =
     shutterConnector.outagePage(env, serviceName)
@@ -47,10 +48,10 @@ class ShutterService @Inject()(
   def frontendRouteWarnings(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] =
     shutterConnector.frontendRouteWarnings(env, serviceName)
 
-  def findCurrentStates(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateData]] =
+  def findCurrentStates(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateData]] =
     for {
-      states <- shutterConnector.shutterStates(env)
-      events <- shutterConnector.latestShutterEvents(env)
+      states <- shutterConnector.shutterStates(st, env)
+      events <- shutterConnector.latestShutterEvents(st, env)
       status =  states.map { state =>
                   ShutterStateData(
                       serviceName = state.name
