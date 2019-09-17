@@ -32,7 +32,7 @@ class ShutterConnector @Inject()(
 
   private val shutterApiBaseUrl = serviceConfig.baseUrl("shutter-api") + "/shutter-api"
 
-  private def urlStates(env: Environment)                = s"$shutterApiBaseUrl/${env.asString}/states"
+  private def urlStates(env: Environment)                = s"$shutterApiBaseUrl/${env.asString}/frontend/states"
   private val urlEvents: String                          = s"$shutterApiBaseUrl/events"
   private def urlOutagePages(env: Environment)           = s"$shutterApiBaseUrl/${env.asString}/outage-pages"
   private def urlFrontendRouteWarnings(env: Environment) = s"$shutterApiBaseUrl/${env.asString}/frontend-route-warnings"
@@ -42,7 +42,7 @@ class ShutterConnector @Inject()(
 
   /**
     * GET
-    * /shutter-api/{environment}/states
+    * /shutter-api/{environment}/{serviceType}/states
     * Retrieves the current shutter states for all services in given environment
     */
   def shutterStates(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
@@ -50,7 +50,7 @@ class ShutterConnector @Inject()(
 
   /**
     * GET
-    * /shutter-api/{environment}/states/{serviceName}
+    * /shutter-api/{environment}/{serviceType}/states/{serviceName}
     * Retrieves the current shutter states for the given service in the given environment
     */
   def shutterState(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
@@ -64,13 +64,13 @@ class ShutterConnector @Inject()(
   def latestShutterEvents(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     http
       .GET[Seq[ShutterEvent]](url =
-        s"$urlEvents?type=${EventType.ShutterStateChange.asString}&namedFilter=latestByServiceName&data.environment=${env.asString}")
+        s"$urlEvents?type=${EventType.ShutterStateChange.asString}&namedFilter=latestByServiceName&data.environment=${env.asString}&data.serviceType=frontend")
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
 
   /**
     * PUT
-    * /shutter-api/{environment}/states/{serviceName}
+    * /shutter-api/{environment}/{serviceType}/states/{serviceName}
     * Shutters/un-shutters the service in the given environment
     */
   def updateShutterStatus(
