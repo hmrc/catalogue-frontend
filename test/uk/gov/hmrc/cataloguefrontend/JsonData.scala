@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import java.time.{LocalDateTime, ZoneId}
-import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue}
+import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterType}
 
 /**
   * Created by armin.
@@ -589,10 +589,11 @@ object JsonData {
 }
 """
 
-  def shutterApiData(env: Environment, status: ShutterStatusValue) =
+  def shutterApiData(shutterType: ShutterType, env: Environment, status: ShutterStatusValue) =
     s"""
       {
         "name": "serv",
+        "type": "${shutterType.asString}",
         "environment": "${env.asString}",
         "status": { "value": "${status.asString}" }
       }

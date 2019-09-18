@@ -36,20 +36,14 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with GuiceOneServerPerSuite
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(emptyJson)))
-    serviceEndpoint(GET, "/shutter-api/qa/frontend-route-warnings/abc-frontend"         , willRespondWith = (200, Some(emptyJson)))
+    serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend" , willRespondWith = (200, Some(emptyJson)))
+    serviceEndpoint(GET, "/shutter-api/qa/frontend-route-warnings/abc-frontend"          , willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/staging/frontend-route-warnings/abc-frontend"     , willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/externalTest/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/production/frontend-route-warnings/abc-frontend"  , willRespondWith = (200, Some(emptyJson)))
   }
 
   "The frontend route warnings page" should {
-    "defaults to production if a bad environment is specified" in {
-      val response = await(ws.url(s"http://localhost:$port/frontend-route-warnings/something/abc-frontend").get)
-      response.status shouldBe 200
-      response.body.contains("""<li id="tab-production" class="navbar-item active">""") shouldBe true
-      response.body.contains("""There are no frontend-route warnings for this service in this environment""") shouldBe true
-    }
     "shows the table with route warnings" in {
       serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(abcWarnings)))
 

@@ -32,10 +32,10 @@ class ShutterConnector @Inject()(
 
   private val shutterApiBaseUrl = serviceConfig.baseUrl("shutter-api") + "/shutter-api"
 
-  private def urlStates(env: Environment)                = s"$shutterApiBaseUrl/${env.asString}/frontend/states"
-  private val urlEvents: String                          = s"$shutterApiBaseUrl/events"
-  private def urlOutagePages(env: Environment)           = s"$shutterApiBaseUrl/${env.asString}/outage-pages"
-  private def urlFrontendRouteWarnings(env: Environment) = s"$shutterApiBaseUrl/${env.asString}/frontend-route-warnings"
+  private def urlStates(st: ShutterType, env: Environment) = s"$shutterApiBaseUrl/${env.asString}/${st.asString}/states"
+  private val urlEvents: String                            = s"$shutterApiBaseUrl/events"
+  private def urlOutagePages(env: Environment)             = s"$shutterApiBaseUrl/${env.asString}/outage-pages"
+  private def urlFrontendRouteWarnings(env: Environment)   = s"$shutterApiBaseUrl/${env.asString}/frontend-route-warnings"
 
   private implicit val ssr = ShutterState.reads
   private implicit val ser = ShutterEvent.reads
@@ -45,28 +45,16 @@ class ShutterConnector @Inject()(
     * /shutter-api/{environment}/{serviceType}/states
     * Retrieves the current shutter states for all services in given environment
     */
-  def shutterStates(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
-    http.GET[Seq[ShutterState]](url = urlStates(env))
+  def shutterStates(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
+    http.GET[Seq[ShutterState]](url = urlStates(st, env))
 
   /**
     * GET
     * /shutter-api/{environment}/{serviceType}/states/{serviceName}
     * Retrieves the current shutter states for the given service in the given environment
     */
-  def shutterState(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
-    http.GET[Option[ShutterState]](s"${urlStates(env)}/$serviceName")
-
-  /**
-    * GET
-    * /shutter-api/{environment}/events
-    * Retrieves the current shutter events for all services for given environment
-    */
-  def latestShutterEvents(env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
-    http
-      .GET[Seq[ShutterEvent]](url =
-        s"$urlEvents?type=${EventType.ShutterStateChange.asString}&namedFilter=latestByServiceName&data.environment=${env.asString}&data.serviceType=frontend")
-      .map(_.flatMap(_.toShutterStateChangeEvent))
-
+  def shutterState(st: ShutterType, env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
+    http.GET[Option[ShutterState]](s"${urlStates(st, env)}/$serviceName")
 
   /**
     * PUT
@@ -74,15 +62,16 @@ class ShutterConnector @Inject()(
     * Shutters/un-shutters the service in the given environment
     */
   def updateShutterStatus(
-    umpToken: Token,
+    umpToken   : Token,
     serviceName: String,
-    env: Environment,
-    status: ShutterStatus
+    st         : ShutterType,
+    env        : Environment,
+    status     : ShutterStatus
   )(implicit hc: HeaderCarrier): Future[Unit] = {
     implicit val isf = ShutterStatus.format
 
     http
-      .PUT[ShutterStatus, HttpResponse](s"${urlStates(env)}/$serviceName", status)(
+      .PUT[ShutterStatus, HttpResponse](s"${urlStates(st, env)}/$serviceName", status)(
         implicitly[Writes[ShutterStatus]],
         implicitly[HttpReads[HttpResponse]],
         hc.copy(token = Some(umpToken)),
@@ -90,6 +79,18 @@ class ShutterConnector @Inject()(
       )
       .map(_ => ())
   }
+
+  /**
+    * GET
+    * /shutter-api/{environment}/events
+    * Retrieves the current shutter events for all services for given environment
+    */
+  def latestShutterEvents(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
+    http
+      .GET[Seq[ShutterEvent]](url =
+        s"$urlEvents?type=${EventType.ShutterStateChange.asString}&namedFilter=latestByServiceName&data.environment=${env.asString}&data.shutterType=${st.asString}")
+      .map(_.flatMap(_.toShutterStateChangeEvent))
+
 
   /**
     * GET

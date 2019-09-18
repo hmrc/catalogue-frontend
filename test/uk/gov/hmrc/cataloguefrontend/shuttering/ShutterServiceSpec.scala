@@ -34,16 +34,19 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
   val mockShutterStates = Seq(
       ShutterState(
         name        = "abc-frontend"
+      , shutterType = ShutterType.Frontend
       , environment = Environment.Production
       , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None)
       )
     , ShutterState(
         name        = "zxy-frontend"
+      , shutterType = ShutterType.Frontend
       , environment = Environment.Production
       , status      = ShutterStatus.Unshuttered
       )
     , ShutterState(
         name        = "ijk-frontend"
+      , shutterType = ShutterType.Frontend
       , environment = Environment.Production
       , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None)
       )
@@ -81,10 +84,10 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
       val boot = Boot.init
       implicit val hc = new HeaderCarrier()
 
-      when(boot.mockShutterConnector.shutterStates(Environment.Production)).thenReturn(Future(mockShutterStates))
-      when(boot.mockShutterConnector.latestShutterEvents(Environment.Production)).thenReturn(Future(mockEvents))
+      when(boot.mockShutterConnector.shutterStates(ShutterType.Frontend, Environment.Production)).thenReturn(Future(mockShutterStates))
+      when(boot.mockShutterConnector.latestShutterEvents(ShutterType.Frontend, Environment.Production)).thenReturn(Future(mockEvents))
 
-      val Seq(a,b,c) = Await.result(boot.shutterService.findCurrentStates(Environment.Production), Duration(10, "seconds"))
+      val Seq(a,b,c) = Await.result(boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production), Duration(10, "seconds"))
 
       a.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None)
       b.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None)

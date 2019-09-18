@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, EventData, ShutterStatusValue, ShutterStateData}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, EventData, ShutterStatusValue, ShutterStateData, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import java.time.ZoneId
 @import java.time.format.DateTimeFormatter
@@ -22,6 +22,7 @@
 @this(viewMessages: ViewMessages)
 
 @( shutterStates: Map[Environment, Seq[ShutterStateData]]
+ , shutterType  : ShutterType
  , selectedEnv  : Environment
  , isSignedIn   : Boolean
  )(implicit request: Request[_])
@@ -29,7 +30,7 @@
 @standard_layout(s"Shutter Overview") {
 
   <header>
-      <h1>Shutter Overview</h1>
+      <h1>Shutter Overview - @shutterType</h1>
   </header>
 
   <section id="shutter-overview">
@@ -39,7 +40,7 @@
             @Environment.values.map(envOption)
         </ul>
 
-        <div class="shuttered-checkbox"><input id="shuttered-only" type="checkbox" name="shuttered-only" value="false" onclick="filterUnshuttered()"> Shuttered Services Only</div>
+        <div class="shuttered-checkbox"><input id="shuttered-only" type="checkbox" name="shuttered-only" value="false" onclick="filterUnshuttered()"> Shuttered @{shutterType}s Only</div>
     </div>
 
   <div class="row tabs-bottom">
@@ -83,8 +84,12 @@
 
 @envOption(env: Environment) = {
   <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(env.asString)" class="navbar-link">@env.toString (@shutteredCount(env))</a>
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)" class="navbar-link">@env.toString (@shutteredCount(env) / @serviceCount(env))</a>
   </li>
+}
+
+@serviceCount(env: Environment) = {
+  @shutterStates.get(env).getOrElse(Seq.empty).size
 }
 
 @shutteredCount(env: Environment) = {
@@ -113,7 +118,7 @@
       <td class="shutter-date"><p>@state.lastEvent.map(e => DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z").withZone(ZoneId.systemDefault).format(e.timestamp)).getOrElse("")</p></td>
       @if(isSignedIn) {
         <td class="shutter-update">
-          <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterFrontendController.start(state.environment.asString, Some(state.serviceName))">
+          <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
             @changeValueFor(state.status.value)
           </a>
         </td>

@@ -15,7 +15,6 @@
  */
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
-
 import cats.data.EitherT
 import cats.instances.all._
 import cats.syntax.all._
@@ -33,7 +32,7 @@ import views.html.shuttering.shutterService._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ShutterFrontendController @Inject()(
+class ShutterWizardController @Inject()(
   mcc: MessagesControllerComponents,
   shutterService: ShutterService,
   page1: Page1,
@@ -46,7 +45,7 @@ class ShutterFrontendController @Inject()(
     extends FrontendController(mcc)
     with play.api.i18n.I18nSupport {
 
-  import ShutterFrontendController._
+  import ShutterWizardController._
 
   val withGroup = umpAuthActionBuilder.withGroup("dev-tools")
 
@@ -55,14 +54,17 @@ class ShutterFrontendController @Inject()(
   //
   // --------------------------------------------------------------------------
 
-  def start(env: String, serviceName: Option[String]) =
+  def start(shutterType: ShutterType, env: Environment, serviceName: Option[String]) =
     withGroup { implicit request =>
-      val env1 = Environment.parse(env).getOrElse(Environment.Production)
-      Redirect(appRoutes.ShutterFrontendController.step1Get(serviceName))
+      Redirect(appRoutes.ShutterWizardController.step1Get(serviceName))
         .withSession(
           request.session + updateFlowState(request.session)(
             _.copy(
-              step0  = Some(Step0Out(env = env1)))))
+              step0 = Some(Step0Out(
+                  shutterType = shutterType
+                , env         = env
+                ))
+            )))
     }
 
   // --------------------------------------------------------------------------
@@ -71,19 +73,19 @@ class ShutterFrontendController @Inject()(
   // Select Services, Environment, and shutter action
   // --------------------------------------------------------------------------
 
-  private def showPage1(env: Environment, form: Form[Step1Form])(implicit request: Request[Any]): Future[Html] =
+  private def showPage1(shutterType: ShutterType, env: Environment, form: Form[Step1Form])(implicit request: Request[Any]): Future[Html] =
     for {
-      shutterStates <- shutterService.getShutterStates(env)
+      shutterStates <- shutterService.getShutterStates(shutterType, env)
       envs          =  Environment.values
       statusValues  =  ShutterStatusValue.values
       shutterGroups <- shutterService.shutterGroups
-    } yield page1(form, env, shutterStates, statusValues, shutterGroups)
+    } yield page1(form, shutterType, env, shutterStates, statusValues, shutterGroups)
 
   def step1Get(serviceName: Option[String]) =
     withGroup.async { implicit request =>
       (for {
          step0Out      <- getStep0Out
-         shutterStates <- EitherT.liftF(shutterService.getShutterStates(step0Out.env))
+         shutterStates <- EitherT.liftF(shutterService.getShutterStates(step0Out.shutterType, step0Out.env))
          step1f        =  if (serviceName.isDefined) {
                             Step1Form(
                               serviceNames = serviceName.toSeq,
@@ -98,7 +100,9 @@ class ShutterFrontendController @Inject()(
                                 )
                               case None => Step1Form(serviceNames = Seq.empty, status = "")
                             }
-         html          <- EitherT.liftF[Future, Result, Result](showPage1(step0Out.env, step1Form.fill(step1f)).map(Ok(_)))
+         html          <- EitherT.liftF[Future, Result, Result] {
+                            showPage1(step0Out.shutterType, step0Out.env, step1Form.fill(step1f)).map(Ok(_))
+                          }
        } yield html
       ).merge
     }
@@ -119,21 +123,21 @@ class ShutterFrontendController @Inject()(
          step0Out <- getStep0Out
          sf       <- step1Form.bindFromRequest
                        .fold(
-                         hasErrors = formWithErrors => EitherT.left(showPage1(step0Out.env, formWithErrors).map(BadRequest(_)))
+                         hasErrors = formWithErrors => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, formWithErrors).map(BadRequest(_)))
                        , success   = data           => EitherT.pure[Future, Result](data)
                        )
          status   <- ShutterStatusValue.parse(sf.status) match {
                        case Some(status) => EitherT.pure[Future, Result](status)
-                       case None         => EitherT.left(showPage1(step0Out.env, step1Form.bindFromRequest).map(BadRequest(_)))
+                       case None         => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, step1Form.bindFromRequest).map(BadRequest(_)))
                      }
          step1Out =  Step1Out(sf.serviceNames, status)
        } yield
          status match {
-           case ShutterStatusValue.Shuttered =>
-             Redirect(appRoutes.ShutterFrontendController.step2aGet)
+           case ShutterStatusValue.Shuttered if step0Out.shutterType == ShutterType.Frontend =>
+             Redirect(appRoutes.ShutterWizardController.step2aGet)
                .withSession(request.session + updateFlowState(request.session)(_.copy(step1 = Some(step1Out))))
-           case ShutterStatusValue.Unshuttered =>
-             Redirect(appRoutes.ShutterFrontendController.step3Get)
+           case _ =>
+             Redirect(appRoutes.ShutterWizardController.step3Get)
                .withSession(
                  request.session + updateFlowState(request.session)(
                    _.copy(
@@ -166,7 +170,7 @@ class ShutterFrontendController @Inject()(
     , step1Out: Step1Out
     )(implicit request: Request[Any]): Future[Html] =
     frontendRouteWarnings(env, step1Out)
-      .map(w => page2a(form2a, env, step1Out, w, appRoutes.ShutterFrontendController.step1Get(None)))
+      .map(w => page2a(form2a, env, step1Out, w, appRoutes.ShutterWizardController.step1Get(None)))
 
   def step2aGet =
     withGroup.async { implicit request =>
@@ -183,7 +187,7 @@ class ShutterFrontendController @Inject()(
                          showPage2a(step2aForm.fill(step2af), step0Out.env, step1Out).map(Ok(_))
                        else
                          //Skip straight to outage-page screen if there are no route warnings
-                         Future(Redirect(appRoutes.ShutterFrontendController.step2bGet())
+                         Future(Redirect(appRoutes.ShutterWizardController.step2bGet())
                            .withSession(request.session + updateFlowState(request.session)(fs =>
                              fs.copy(step2a = Some(Step2aOut(confirmed = false, skipped = true))))))
                      )
@@ -203,7 +207,7 @@ class ShutterFrontendController @Inject()(
                         )
          step2aOut = Step2aOut(sf.confirm, skipped = false)
        } yield
-         Redirect(appRoutes.ShutterFrontendController.step2bGet)
+         Redirect(appRoutes.ShutterWizardController.step2bGet)
            .withSession(request.session + updateFlowState(request.session)(fs => fs.copy(step2a = Some(step2aOut))))
       ).merge
     }
@@ -237,8 +241,8 @@ class ShutterFrontendController @Inject()(
       defaultOutageMessage  =  outageMessageTemplate.fold("")(_._2.innerHtml)
       outagePageStatus      =  shutterService.toOutagePageStatus(step1Out.serviceNames, outagePages)
       back                  =  if (step1Out.status == ShutterStatusValue.Shuttered && !step2aOut.map(_.skipped).getOrElse(true))
-                                 appRoutes.ShutterFrontendController.step2aGet
-                               else appRoutes.ShutterFrontendController.step1Post
+                                 appRoutes.ShutterWizardController.step2aGet
+                               else appRoutes.ShutterWizardController.step1Post
       form2b                =  step2bForm.fill {
                                  val s2f = form.get
                                  if (s2f.outageMessage.isEmpty) s2f.copy(outageMessage = defaultOutageMessage) else s2f
@@ -277,7 +281,7 @@ class ShutterFrontendController @Inject()(
                   )
          step2bOut = Step2bOut(sf.reason, sf.outageMessage, sf.requiresOutageMessage)
        } yield
-         Redirect(appRoutes.ShutterFrontendController.step3Get)
+         Redirect(appRoutes.ShutterWizardController.step3Get)
            .withSession(request.session + updateFlowState(request.session)(fs => fs.copy(step2b = Some(step2bOut))))
       ).merge
     }
@@ -289,13 +293,13 @@ class ShutterFrontendController @Inject()(
   //
   // --------------------------------------------------------------------------
 
-  private def showPage3(form3: Form[Step3Form], env: Environment, step1Out: Step1Out, step2Out: Step2bOut)(
+  private def showPage3(form3: Form[Step3Form], shutterType: ShutterType, env: Environment, step1Out: Step1Out, step2Out: Step2bOut)(
     implicit request: Request[Any]): Html = {
     val back =
-      if (step1Out.status == ShutterStatusValue.Shuttered)
-        appRoutes.ShutterFrontendController.step2bGet
-      else appRoutes.ShutterFrontendController.step1Post
-    page3(form3, env, step1Out, step2Out, back)
+      if (step1Out.status == ShutterStatusValue.Shuttered && shutterType == ShutterType.Frontend)
+        appRoutes.ShutterWizardController.step2bGet
+      else appRoutes.ShutterWizardController.step1Post
+    page3(form3, shutterType, env, step1Out, step2Out, back)
   }
 
   def step3Get =
@@ -305,9 +309,9 @@ class ShutterFrontendController @Inject()(
          step0Out  <- flowState.step0
          step1Out  <- flowState.step1
          step2bOut <- flowState.step2b
-         html      =  showPage3(step3Form.fill(Step3Form(confirm = false)), step0Out.env, step1Out, step2bOut)
+         html      =  showPage3(step3Form.fill(Step3Form(confirm = false)), step0Out.shutterType, step0Out.env, step1Out, step2bOut)
        } yield Ok(html)
-      ).getOrElse(Redirect(appRoutes.ShutterFrontendController.step1Post))
+      ).getOrElse(Redirect(appRoutes.ShutterWizardController.step1Post))
     }
 
   def step3Post =
@@ -317,12 +321,12 @@ class ShutterFrontendController @Inject()(
          step1Out  <- getStep1Out
          step2bOut <- EitherT.fromOption[Future](
                         fromSession(request.session).flatMap(_.step2b)
-                      , Redirect(appRoutes.ShutterFrontendController.step2bGet)
+                      , Redirect(appRoutes.ShutterWizardController.step2bGet)
                       )
          _         <- step3Form.bindFromRequest
                        .fold(
                          hasErrors = formWithErrors =>
-                           EitherT.left(Future(showPage3(formWithErrors, step0Out.env, step1Out, step2bOut)).map(BadRequest(_))),
+                           EitherT.left(Future(showPage3(formWithErrors, step0Out.shutterType, step0Out.env, step1Out, step2bOut)).map(BadRequest(_))),
                          success = data => EitherT.pure[Future, Result](())
                        )
          status    =  step1Out.status match {
@@ -336,10 +340,10 @@ class ShutterFrontendController @Inject()(
          _         <- step1Out.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
                        EitherT.right[Result] {
                          shutterService
-                           .updateShutterStatus(request.token, serviceName, step0Out.env, status)
+                           .updateShutterStatus(request.token, serviceName, step0Out.shutterType, step0Out.env, status)
                        }
                      }
-       } yield Redirect(appRoutes.ShutterFrontendController.step4Get)
+       } yield Redirect(appRoutes.ShutterWizardController.step4Get)
       ).merge
     }
 
@@ -355,13 +359,13 @@ class ShutterFrontendController @Inject()(
       (for {
         step0Out  <- getStep0Out
          step1Out <- getStep1Out
-         html     = page4(step0Out.env, step1Out)
+         html     = page4(step0Out.shutterType, step0Out.env, step1Out)
        } yield Ok(html).withSession(request.session - SessionKey)
       ).merge
     }
 }
 
-object ShutterFrontendController {
+object ShutterWizardController {
 
   import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmpty, notEmptySeq}
   import play.api.mvc.Results._
@@ -369,10 +373,12 @@ object ShutterFrontendController {
   // -- Step 0 -------------------------
 
   case class Step0Out(
-    env: Environment
+    shutterType: ShutterType
+  , env        : Environment
   )
 
   private implicit val step0OutFormats = {
+    implicit val stf = ShutterType.format
     implicit val ef  = Environment.format
     Json.format[Step0Out]
   }
@@ -381,7 +387,7 @@ object ShutterFrontendController {
     EitherT.fromOption[Future](
       fromSession(request.session)
       .flatMap(_.step0)
-    , Redirect(appRoutes.ShutterOverviewController.allStates)
+    , Redirect(appRoutes.ShutterOverviewController.allStates(ShutterType.Frontend))
     )
 
 
@@ -397,12 +403,12 @@ object ShutterFrontendController {
 
   case class Step1Form(
     serviceNames: Seq[String],
-    status: String
+    status      : String
   )
 
   case class Step1Out(
     serviceNames: Seq[String],
-    status: ShutterStatusValue
+    status      : ShutterStatusValue
   )
 
   private implicit val step1OutFormats = {
@@ -414,7 +420,7 @@ object ShutterFrontendController {
     EitherT.fromOption[Future](
         fromSession(request.session)
           .flatMap(_.step1)
-      , Redirect(appRoutes.ShutterFrontendController.step1Post)
+      , Redirect(appRoutes.ShutterWizardController.step1Post)
       )
 
   // -- Step 2a Review frontend-route warnings (if any) -------------------------
@@ -482,7 +488,7 @@ object ShutterFrontendController {
 
   // -- Flow State -------------------------
 
-  val SessionKey = "ShutterFrontendController"
+  val SessionKey = "ShutterWizardController"
 
   case class FlowState(
     step0: Option[Step0Out],

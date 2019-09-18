@@ -20,6 +20,7 @@ import java.time.Instant
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import play.api.mvc.PathBindable
 
 
 sealed trait Environment { def asString: String }
@@ -28,26 +29,71 @@ object Environment {
   case object ExternalTest    extends Environment { val asString = "externalTest" }
   case object QA              extends Environment { val asString = "qa"           }
   case object Staging         extends Environment { val asString = "staging"      }
-  case object Dev             extends Environment { val asString = "development"  }
+  case object Development     extends Environment { val asString = "development"  }
 
-  val values: List[Environment] = List(Production, ExternalTest, QA, Staging, Dev)
+  val values: List[Environment] = List(Production, ExternalTest, QA, Staging, Development)
 
   def parse(s: String): Option[Environment] =
     values.find(_.asString == s)
 
-  val format: Format[Environment] = new Format[Environment] {
-    override def reads(json: JsValue) =
-      json.validate[String]
-        .flatMap { s =>
-            parse(s) match {
-              case Some(env) => JsSuccess(env)
-              case None      => JsError(__, s"Invalid Environment '$s'")
+  val format: Format[Environment] =
+    new Format[Environment] {
+      override def reads(json: JsValue) =
+        json.validate[String]
+          .flatMap { s =>
+              parse(s) match {
+                case Some(env) => JsSuccess(env)
+                case None      => JsError(__, s"Invalid Environment '$s'")
+              }
             }
-          }
 
-    override def writes(e: Environment) =
-      JsString(e.asString)
-  }
+      override def writes(e: Environment) =
+        JsString(e.asString)
+    }
+
+  implicit val pathBindable: PathBindable[Environment] =
+    new PathBindable[Environment] {
+      override def bind(key: String, value: String): Either[String, Environment] =
+        parse(value).toRight(s"Invalid Environment '$value'")
+
+      override def unbind(key: String, value: Environment): String =
+        value.asString
+    }
+}
+
+sealed trait ShutterType { def asString: String }
+object ShutterType {
+  case object Frontend extends ShutterType { val asString = "frontend" }
+  case object Api      extends ShutterType { val asString = "api"      }
+
+  val values: List[ShutterType] = List(Frontend, Api)
+
+  def parse(s: String): Option[ShutterType] =
+    values.find(_.asString == s)
+
+  val format: Format[ShutterType] =
+    new Format[ShutterType] {
+      override def reads(json: JsValue) =
+        json.validate[String]
+          .flatMap { s =>
+              parse(s) match {
+                case Some(st) => JsSuccess(st)
+                case None     => JsError(__, s"Invalid ShutterType '$s'")
+              }
+            }
+
+      override def writes(st: ShutterType) =
+        JsString(st.asString)
+    }
+
+  implicit val pathBindable: PathBindable[ShutterType] =
+    new PathBindable[ShutterType] {
+      override def bind(key: String, value: String): Either[String, ShutterType] =
+        parse(value).toRight(s"Invalid ShutterType '$value'")
+
+      override def unbind(key: String, value: ShutterType): String =
+        value.asString
+    }
 }
 
 sealed trait ShutterStatusValue { def asString: String }
@@ -120,6 +166,7 @@ object ShutterStatus {
 
 case class ShutterState(
     name        : String
+  , shutterType : ShutterType
   , environment : Environment
   , status      : ShutterStatus
   )
@@ -127,9 +174,11 @@ case class ShutterState(
 object ShutterState {
 
   val reads: Reads[ShutterState] = {
+    implicit val stf = ShutterType.format
     implicit val ef  = Environment.format
     implicit val ssf = ShutterStatus.format
     ( (__ \ "name"        ).read[String]
+    ~ (__ \ "type"        ).read[ShutterType]
     ~ (__ \ "environment" ).read[Environment]
     ~ (__ \ "status"      ).read[ShutterStatus]
     )(ShutterState.apply _)
