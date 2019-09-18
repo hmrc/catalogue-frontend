@@ -166,6 +166,7 @@ object ShutterStatus {
 
 case class ShutterState(
     name        : String
+  , shutterType : ShutterType
   , environment : Environment
   , status      : ShutterStatus
   )
@@ -173,9 +174,11 @@ case class ShutterState(
 object ShutterState {
 
   val reads: Reads[ShutterState] = {
+    implicit val stf = ShutterType.format
     implicit val ef  = Environment.format
     implicit val ssf = ShutterStatus.format
     ( (__ \ "name"        ).read[String]
+    ~ (__ \ "type"        ).read[ShutterType]
     ~ (__ \ "environment" ).read[Environment]
     ~ (__ \ "status"      ).read[ShutterStatus]
     )(ShutterState.apply _)

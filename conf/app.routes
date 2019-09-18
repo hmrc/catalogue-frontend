@@ -59,4 +59,4 @@ POST       /shuttering/2b                               uk.gov.hmrc.cataloguefro
 GET        /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step3Get
 POST       /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step3Post
 GET        /shuttering/4                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.step4Get
-GET        /shuttering/:env                             uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.start(env: ShutteringEnvironment, serviceName: Option[String])
+GET        /shuttering/:shutterType/:env                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.start(shutterType: ShutterType, env: ShutteringEnvironment, serviceName: Option[String])

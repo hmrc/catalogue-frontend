@@ -54,13 +54,17 @@ class ShutterFrontendController @Inject()(
   //
   // --------------------------------------------------------------------------
 
-  def start(env: Environment, serviceName: Option[String]) =
+  def start(shutterType: ShutterType, env: Environment, serviceName: Option[String]) =
     withGroup { implicit request =>
       Redirect(appRoutes.ShutterFrontendController.step1Get(serviceName))
         .withSession(
           request.session + updateFlowState(request.session)(
             _.copy(
-              step0 = Some(Step0Out(env = env)))))
+              step0 = Some(Step0Out(
+                  shutterType = shutterType
+                , env         = env
+                ))
+            )))
     }
 
   // --------------------------------------------------------------------------
@@ -69,19 +73,19 @@ class ShutterFrontendController @Inject()(
   // Select Services, Environment, and shutter action
   // --------------------------------------------------------------------------
 
-  private def showPage1(env: Environment, form: Form[Step1Form])(implicit request: Request[Any]): Future[Html] =
+  private def showPage1(shutterType: ShutterType, env: Environment, form: Form[Step1Form])(implicit request: Request[Any]): Future[Html] =
     for {
-      shutterStates <- shutterService.getShutterStates(ShutterType.Frontend, env)
+      shutterStates <- shutterService.getShutterStates(shutterType, env)
       envs          =  Environment.values
       statusValues  =  ShutterStatusValue.values
       shutterGroups <- shutterService.shutterGroups
-    } yield page1(form, env, shutterStates, statusValues, shutterGroups)
+    } yield page1(form, shutterType, env, shutterStates, statusValues, shutterGroups)
 
   def step1Get(serviceName: Option[String]) =
     withGroup.async { implicit request =>
       (for {
          step0Out      <- getStep0Out
-         shutterStates <- EitherT.liftF(shutterService.getShutterStates(ShutterType.Frontend, step0Out.env))
+         shutterStates <- EitherT.liftF(shutterService.getShutterStates(step0Out.shutterType, step0Out.env))
          step1f        =  if (serviceName.isDefined) {
                             Step1Form(
                               serviceNames = serviceName.toSeq,
@@ -96,7 +100,9 @@ class ShutterFrontendController @Inject()(
                                 )
                               case None => Step1Form(serviceNames = Seq.empty, status = "")
                             }
-         html          <- EitherT.liftF[Future, Result, Result](showPage1(step0Out.env, step1Form.fill(step1f)).map(Ok(_)))
+         html          <- EitherT.liftF[Future, Result, Result] {
+                            showPage1(step0Out.shutterType, step0Out.env, step1Form.fill(step1f)).map(Ok(_))
+                          }
        } yield html
       ).merge
     }
@@ -117,20 +123,20 @@ class ShutterFrontendController @Inject()(
          step0Out <- getStep0Out
          sf       <- step1Form.bindFromRequest
                        .fold(
-                         hasErrors = formWithErrors => EitherT.left(showPage1(step0Out.env, formWithErrors).map(BadRequest(_)))
+                         hasErrors = formWithErrors => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, formWithErrors).map(BadRequest(_)))
                        , success   = data           => EitherT.pure[Future, Result](data)
                        )
          status   <- ShutterStatusValue.parse(sf.status) match {
                        case Some(status) => EitherT.pure[Future, Result](status)
-                       case None         => EitherT.left(showPage1(step0Out.env, step1Form.bindFromRequest).map(BadRequest(_)))
+                       case None         => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, step1Form.bindFromRequest).map(BadRequest(_)))
                      }
          step1Out =  Step1Out(sf.serviceNames, status)
        } yield
          status match {
-           case ShutterStatusValue.Shuttered =>
+           case ShutterStatusValue.Shuttered if step0Out.shutterType == ShutterType.Frontend =>
              Redirect(appRoutes.ShutterFrontendController.step2aGet)
                .withSession(request.session + updateFlowState(request.session)(_.copy(step1 = Some(step1Out))))
-           case ShutterStatusValue.Unshuttered =>
+           case _ =>
              Redirect(appRoutes.ShutterFrontendController.step3Get)
                .withSession(
                  request.session + updateFlowState(request.session)(
@@ -287,13 +293,13 @@ class ShutterFrontendController @Inject()(
   //
   // --------------------------------------------------------------------------
 
-  private def showPage3(form3: Form[Step3Form], env: Environment, step1Out: Step1Out, step2Out: Step2bOut)(
+  private def showPage3(form3: Form[Step3Form], shutterType: ShutterType, env: Environment, step1Out: Step1Out, step2Out: Step2bOut)(
     implicit request: Request[Any]): Html = {
     val back =
-      if (step1Out.status == ShutterStatusValue.Shuttered)
+      if (step1Out.status == ShutterStatusValue.Shuttered && shutterType == ShutterType.Frontend)
         appRoutes.ShutterFrontendController.step2bGet
       else appRoutes.ShutterFrontendController.step1Post
-    page3(form3, env, step1Out, step2Out, back)
+    page3(form3, shutterType, env, step1Out, step2Out, back)
   }
 
   def step3Get =
@@ -303,7 +309,7 @@ class ShutterFrontendController @Inject()(
          step0Out  <- flowState.step0
          step1Out  <- flowState.step1
          step2bOut <- flowState.step2b
-         html      =  showPage3(step3Form.fill(Step3Form(confirm = false)), step0Out.env, step1Out, step2bOut)
+         html      =  showPage3(step3Form.fill(Step3Form(confirm = false)), step0Out.shutterType, step0Out.env, step1Out, step2bOut)
        } yield Ok(html)
       ).getOrElse(Redirect(appRoutes.ShutterFrontendController.step1Post))
     }
@@ -320,7 +326,7 @@ class ShutterFrontendController @Inject()(
          _         <- step3Form.bindFromRequest
                        .fold(
                          hasErrors = formWithErrors =>
-                           EitherT.left(Future(showPage3(formWithErrors, step0Out.env, step1Out, step2bOut)).map(BadRequest(_))),
+                           EitherT.left(Future(showPage3(formWithErrors, step0Out.shutterType, step0Out.env, step1Out, step2bOut)).map(BadRequest(_))),
                          success = data => EitherT.pure[Future, Result](())
                        )
          status    =  step1Out.status match {
@@ -334,7 +340,7 @@ class ShutterFrontendController @Inject()(
          _         <- step1Out.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
                        EitherT.right[Result] {
                          shutterService
-                           .updateShutterStatus(request.token, serviceName, ShutterType.Frontend, step0Out.env, status)
+                           .updateShutterStatus(request.token, serviceName, step0Out.shutterType, step0Out.env, status)
                        }
                      }
        } yield Redirect(appRoutes.ShutterFrontendController.step4Get)
@@ -353,7 +359,7 @@ class ShutterFrontendController @Inject()(
       (for {
         step0Out  <- getStep0Out
          step1Out <- getStep1Out
-         html     = page4(step0Out.env, step1Out)
+         html     = page4(step0Out.shutterType, step0Out.env, step1Out)
        } yield Ok(html).withSession(request.session - SessionKey)
       ).merge
     }
@@ -367,10 +373,12 @@ object ShutterFrontendController {
   // -- Step 0 -------------------------
 
   case class Step0Out(
-    env: Environment
+    shutterType: ShutterType
+  , env        : Environment
   )
 
   private implicit val step0OutFormats = {
+    implicit val stf = ShutterType.format
     implicit val ef  = Environment.format
     Json.format[Step0Out]
   }
@@ -395,12 +403,12 @@ object ShutterFrontendController {
 
   case class Step1Form(
     serviceNames: Seq[String],
-    status: String
+    status      : String
   )
 
   case class Step1Out(
     serviceNames: Seq[String],
-    status: ShutterStatusValue
+    status      : ShutterStatusValue
   )
 
   private implicit val step1OutFormats = {

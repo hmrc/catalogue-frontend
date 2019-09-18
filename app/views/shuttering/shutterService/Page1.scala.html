@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterGroup, ShutterStatusValue, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterGroup, ShutterStatusValue, ShutterState, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.Step1Form
 @import helper._
 @import partials.form_warnings
@@ -23,6 +23,7 @@
 @this(viewMessages: ViewMessages)
 
 @( form         : Form[Step1Form]
+ , shutterType  : ShutterType
  , env          : Environment
  , shutterStates: Seq[ShutterState]
  , statusValues : Seq[ShutterStatusValue]
@@ -34,7 +35,7 @@
 @standard_layout(s"Shutter Service") {
 
   <header>
-    <h1>Shutter Service</h1>
+    <h1>Shutter @shutterType</h1>
   </header>
 
   <div id="service-list">

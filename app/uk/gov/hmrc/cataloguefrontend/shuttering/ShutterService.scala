@@ -55,6 +55,7 @@ class ShutterService @Inject()(
       status =  states.map { state =>
                   ShutterStateData(
                       serviceName = state.name
+                    , shutterType = state.shutterType
                     , environment = state.environment
                     , status      = state.status
                     , lastEvent   = events.find(_.serviceName == state.name)
@@ -115,6 +116,7 @@ class ShutterService @Inject()(
 
 case class ShutterStateData(
     serviceName: String
+  , shutterType: ShutterType
   , environment: Environment
   , status     : ShutterStatus
   , lastEvent  : Option[ShutterStateChangeEvent]

@@ -15,15 +15,16 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterFrontendController, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterFrontendController, ShutterState, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import helper._
 @import partials.form_warnings
 
 @this(viewMessages: ViewMessages)
 
-@( env     : Environment
- , step1Out: ShutterFrontendController.Step1Out
+@( shutterType: ShutterType
+ , env        : Environment
+ , step1Out   : ShutterFrontendController.Step1Out
  )(implicit request         : Request[_]
           , messagesProvider: MessagesProvider
           )
@@ -31,7 +32,7 @@
 @standard_layout(s"Shutter Service") {
 
   <header>
-    <h1>Shutter Service: Confirmation</h1>
+    <h1>Shutter @shutterType: Confirmation</h1>
   </header>
 
   <div id="service-list">
