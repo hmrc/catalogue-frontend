@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterGroup, ShutterStatusValue, ShutterState, ShutterType}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterFrontendController.Step1Form
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.Step1Form
 @import helper._
 @import partials.form_warnings
 
@@ -45,7 +45,7 @@
     <div class="board">
       <div class="board__body">
         @helper.form(
-            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterFrontendController.step1Post
+            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step1Post
           , 'class -> "form-inline"
           , 'id    -> "shutter-service-form"
           , 'style -> "padding-left: 20px; padding-right: 20px"
@@ -64,7 +64,7 @@
               @select(
                   field     =  form("allServices")
                 , options   =  shutterStates.map(s => (s.name, s.name))
-                , '_label   -> "Available Services"
+                , '_label   -> s"Available ${shutterType}s"
                 , 'multiple -> "multiple"
                 , 'size     -> 10
                 , 'style    -> "min-width: 100%;"
@@ -86,7 +86,7 @@
               @select(
                   field     =  form("serviceName")
                 , options   =  form("serviceName").indexes.map(i => form("serviceName")("[%s]".format(i)).value).collect { case Some(v) => (v, v) }
-                , '_label   -> "Selected Services"
+                , '_label   -> s"Selected ${shutterType}s"
                 , 'multiple -> "multiple"
                 , 'size     -> 10
                 , 'style    -> "min-width: 100%;"

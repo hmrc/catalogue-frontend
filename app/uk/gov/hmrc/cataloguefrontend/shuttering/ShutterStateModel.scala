@@ -29,9 +29,9 @@ object Environment {
   case object ExternalTest    extends Environment { val asString = "externalTest" }
   case object QA              extends Environment { val asString = "qa"           }
   case object Staging         extends Environment { val asString = "staging"      }
-  case object Dev             extends Environment { val asString = "development"  }
+  case object Development     extends Environment { val asString = "development"  }
 
-  val values: List[Environment] = List(Production, ExternalTest, QA, Staging, Dev)
+  val values: List[Environment] = List(Production, ExternalTest, QA, Staging, Development)
 
   def parse(s: String): Option[Environment] =
     values.find(_.asString == s)

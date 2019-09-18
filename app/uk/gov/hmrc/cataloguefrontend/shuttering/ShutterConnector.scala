@@ -88,7 +88,7 @@ class ShutterConnector @Inject()(
   def latestShutterEvents(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     http
       .GET[Seq[ShutterEvent]](url =
-        s"$urlEvents?type=${EventType.ShutterStateChange.asString}&namedFilter=latestByServiceName&data.environment=${env.asString}&data.serviceType=${st.asString}")
+        s"$urlEvents?type=${EventType.ShutterStateChange.asString}&namedFilter=latestByServiceName&data.environment=${env.asString}&data.shutterType=${st.asString}")
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
 
