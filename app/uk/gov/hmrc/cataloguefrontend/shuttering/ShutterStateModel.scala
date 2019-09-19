@@ -27,11 +27,11 @@ sealed trait Environment { def asString: String }
 object Environment {
   case object Production      extends Environment { val asString = "production"   }
   case object ExternalTest    extends Environment { val asString = "externalTest" }
-  case object QA              extends Environment { val asString = "qa"           }
   case object Staging         extends Environment { val asString = "staging"      }
+  case object QA              extends Environment { val asString = "qa"           }
   case object Development     extends Environment { val asString = "development"  }
 
-  val values: List[Environment] = List(Production, ExternalTest, QA, Staging, Development)
+  val values: List[Environment] = List(Production, ExternalTest, Staging, QA, Development)
 
   def parse(s: String): Option[Environment] =
     values.find(_.asString == s)
