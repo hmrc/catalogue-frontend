@@ -27,10 +27,10 @@
  , isSignedIn   : Boolean
  )(implicit request: Request[_])
 
-@standard_layout(s"Shutter Overview") {
+@standard_layout(s"Shutter Overview - ${shutterType.asString.capitalize}") {
 
   <header>
-      <h1>Shutter Overview - @shutterType</h1>
+      <h1>Shutter Overview - @{shutterType.asString.capitalize}</h1>
   </header>
 
   <section id="shutter-overview">
