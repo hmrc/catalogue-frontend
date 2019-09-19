@@ -29,10 +29,10 @@
           , messagesProvider: MessagesProvider
           )
 
-@standard_layout(s"Shutter $shutterType") {
+@standard_layout(s"Shutter ${shutterType.asString.capitalize}") {
 
   <header>
-    <h1>Shutter @shutterType: Confirmation</h1>
+    <h1>Shutter @{shutterType.asString.capitalize}: Confirmation</h1>
   </header>
 
   <div id="service-list">
