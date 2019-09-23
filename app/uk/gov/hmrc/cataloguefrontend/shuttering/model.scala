@@ -65,8 +65,9 @@ sealed trait ShutterType { def asString: String }
 object ShutterType {
   case object Frontend extends ShutterType { val asString = "frontend" }
   case object Api      extends ShutterType { val asString = "api"      }
+  case object Rate     extends ShutterType { val asString = "rate"     }
 
-  val values: List[ShutterType] = List(Frontend, Api)
+  val values: List[ShutterType] = List(Frontend, Api, Rate)
 
   def parse(s: String): Option[ShutterType] =
     values.find(_.asString == s)
