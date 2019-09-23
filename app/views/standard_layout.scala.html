@@ -88,6 +88,7 @@
                             <li><a href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
                             <li><a href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
                             @if(CatalogueFrontendSwitches.shuttering.isEnabled) {
+                              <li role="separator" class="divider"></li>
                               <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Frontend)">Shutter Frontend</a></li>
                               <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Api)">Shutter Api</a></li>
                               <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Rate)">Shutter Rate</a></li>
