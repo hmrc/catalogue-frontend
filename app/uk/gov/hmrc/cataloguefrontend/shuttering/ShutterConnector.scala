@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
+import java.net.URLEncoder
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Writes
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, Token}
@@ -54,7 +55,7 @@ class ShutterConnector @Inject()(
     * Retrieves the current shutter states for the given service in the given environment
     */
   def shutterState(st: ShutterType, env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
-    http.GET[Option[ShutterState]](s"${urlStates(st, env)}/$serviceName")
+    http.GET[Option[ShutterState]](s"${urlStates(st, env)}/${URLEncoder.encode(serviceName)}")
 
   /**
     * PUT
@@ -71,7 +72,7 @@ class ShutterConnector @Inject()(
     implicit val isf = ShutterStatus.format
 
     http
-      .PUT[ShutterStatus, HttpResponse](s"${urlStates(st, env)}/$serviceName", status)(
+      .PUT[ShutterStatus, HttpResponse](s"${urlStates(st, env)}/${URLEncoder.encode(serviceName)}", status)(
         implicitly[Writes[ShutterStatus]],
         implicitly[HttpReads[HttpResponse]],
         hc.copy(token = Some(umpToken)),
@@ -100,7 +101,7 @@ class ShutterConnector @Inject()(
   def outagePage(env: Environment, serviceName: String)(
     implicit hc: HeaderCarrier): Future[Option[OutagePage]] = {
     implicit val ssf = OutagePage.reads
-    http.GET[Option[OutagePage]](s"${urlOutagePages(env)}/$serviceName")
+    http.GET[Option[OutagePage]](s"${urlOutagePages(env)}/${URLEncoder.encode(serviceName)}")
   }
 
   /**
@@ -112,6 +113,6 @@ class ShutterConnector @Inject()(
     implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] = {
     implicit val r = FrontendRouteWarning.reads
     http
-      .GET[Seq[FrontendRouteWarning]](s"${urlFrontendRouteWarnings(env)}/$serviceName")
+      .GET[Seq[FrontendRouteWarning]](s"${urlFrontendRouteWarnings(env)}/${URLEncoder.encode(serviceName)}")
   }
 }
