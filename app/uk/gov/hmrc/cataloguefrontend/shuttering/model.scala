@@ -126,8 +126,9 @@ object ShutterStatusValue {
 sealed trait ShutterStatus { def value: ShutterStatusValue }
 object ShutterStatus {
   case class Shuttered(
-      reason       : Option[String]
-    , outageMessage: Option[String]
+      reason              : Option[String]
+    , outageMessage       : Option[String]
+    , useDefaultOutagePage: Boolean
     ) extends ShutterStatus  { def value = ShutterStatusValue.Shuttered }
   case object Unshuttered extends ShutterStatus { def value = ShutterStatusValue.Unshuttered }
 
@@ -139,8 +140,9 @@ object ShutterStatus {
           .flatMap {
             case ShutterStatusValue.Unshuttered => JsSuccess(Unshuttered)
             case ShutterStatusValue.Shuttered   => JsSuccess(Shuttered(
-                                                       reason        = (json \ "reason"       ).asOpt[String]
-                                                     , outageMessage = (json \ "outageMessage").asOpt[String]
+                                                       reason               = (json \ "reason"              ).asOpt[String]
+                                                     , outageMessage        = (json \ "outageMessage"       ).asOpt[String]
+                                                     , useDefaultOutagePage = (json \ "useDefaultOutagePage").as[Boolean]
                                                      ))
             case s             => JsError(__, s"Invalid ShutterStatus '$s'")
           }
@@ -149,11 +151,12 @@ object ShutterStatus {
       override def writes(ss: ShutterStatus): JsValue = {
         implicit val ssvf = ShutterStatusValue.format
         ss match {
-          case Shuttered(reason, outageMessage) =>
+          case Shuttered(reason, outageMessage, useDefaultOutagePage) =>
             Json.obj(
-                "value"         -> Json.toJson(ss.value)
-              , "reason"        -> reason
-              , "outageMessage" -> outageMessage
+                "value"                -> Json.toJson(ss.value)
+              , "reason"               -> reason
+              , "outageMessage"        -> outageMessage
+              , "useDefaultOutagePage" -> useDefaultOutagePage
               )
           case Unshuttered =>
             Json.obj(

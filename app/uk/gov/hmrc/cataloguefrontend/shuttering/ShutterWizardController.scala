@@ -141,8 +141,14 @@ class ShutterWizardController @Inject()(
                .withSession(
                  request.session + updateFlowState(request.session)(
                    _.copy(
-                     step1  = Some(step1Out),
-                     step2b = Some(Step2bOut(reason = "", outageMessage = "", requiresOutageMessage = false)))))
+                       step1  = Some(step1Out)
+                     , step2b = Some(Step2bOut(
+                                  reason                = ""
+                                , outageMessage         = ""
+                                , requiresOutageMessage = false
+                                , useDefaultOutagePage  = false
+                                ))
+                     )))
          }
       ).merge
     }
@@ -256,13 +262,18 @@ class ShutterWizardController @Inject()(
          step1Out  <- getStep1Out
          step2aOut =  fromSession(request.session).flatMap(_.step2a)
          step2bf   =  fromSession(request.session).flatMap(_.step2b) match {
-                        case Some(step2bOut) =>
-                          Step2bForm(
-                            reason                = step2bOut.reason,
-                            outageMessage         = step2bOut.outageMessage,
-                            requiresOutageMessage = step2bOut.requiresOutageMessage
-                          )
-                        case None => Step2bForm(reason = "", outageMessage = "", requiresOutageMessage = true)
+                        case Some(step2bOut) => Step2bForm(
+                                                    reason                = step2bOut.reason
+                                                  , outageMessage         = step2bOut.outageMessage
+                                                  , requiresOutageMessage = step2bOut.requiresOutageMessage
+                                                  , useDefaultOutagePage  = step2bOut.useDefaultOutagePage
+                                                  )
+                        case None            => Step2bForm(
+                                                    reason                = ""
+                                                  , outageMessage         = ""
+                                                  , requiresOutageMessage = true
+                                                  , useDefaultOutagePage  = false
+                                                  )
                       }
          html      <- showPage2b(step2bForm.fill(step2bf), step1Out, step2aOut)
        } yield Ok(html)
@@ -272,14 +283,14 @@ class ShutterWizardController @Inject()(
   def step2bPost =
     withGroup.async { implicit request =>
       (for {
-         step1Out <- getStep1Out
-         step2aOut = fromSession(request.session).flatMap(_.step2a)
-         sf <- step2bForm.bindFromRequest
-                .fold(
-                    hasErrors = formWithErrors => EitherT.left(showPage2b(formWithErrors, step1Out, step2aOut).map(BadRequest(_)).merge)
-                  , success   = data           => EitherT.pure[Future, Result](data)
-                  )
-         step2bOut = Step2bOut(sf.reason, sf.outageMessage, sf.requiresOutageMessage)
+         step1Out  <- getStep1Out
+         step2aOut =  fromSession(request.session).flatMap(_.step2a)
+         sf        <- step2bForm.bindFromRequest
+                        .fold(
+                            hasErrors = formWithErrors => EitherT.left(showPage2b(formWithErrors, step1Out, step2aOut).map(BadRequest(_)).merge)
+                          , success   = data           => EitherT.pure[Future, Result](data)
+                          )
+         step2bOut =  Step2bOut(sf.reason, sf.outageMessage, sf.requiresOutageMessage, sf.useDefaultOutagePage)
        } yield
          Redirect(appRoutes.ShutterWizardController.step3Get)
            .withSession(request.session + updateFlowState(request.session)(fs => fs.copy(step2b = Some(step2bOut))))
@@ -332,9 +343,10 @@ class ShutterWizardController @Inject()(
          status    =  step1Out.status match {
                         case ShutterStatusValue.Shuttered =>
                           ShutterStatus.Shuttered(
-                            reason        = Some(step2bOut.reason).filter(_.nonEmpty),
-                            outageMessage = Some(step2bOut.outageMessage).filter(_.nonEmpty)
-                          )
+                              reason               = Some(step2bOut.reason).filter(_.nonEmpty)
+                            , outageMessage        = Some(step2bOut.outageMessage).filter(_.nonEmpty)
+                            , useDefaultOutagePage = step2bOut.useDefaultOutagePage
+                            )
                         case ShutterStatusValue.Unshuttered => ShutterStatus.Unshuttered
                       }
          _         <- step1Out.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
@@ -402,14 +414,14 @@ object ShutterWizardController {
     )
 
   case class Step1Form(
-    serviceNames: Seq[String],
-    status      : String
-  )
+      serviceNames: Seq[String]
+    , status      : String
+    )
 
   case class Step1Out(
-    serviceNames: Seq[String],
-    status      : ShutterStatusValue
-  )
+      serviceNames: Seq[String]
+    , status      : ShutterStatusValue
+    )
 
   private implicit val step1OutFormats = {
     implicit val ssf = ShutterStatusValue.format
@@ -435,9 +447,9 @@ object ShutterWizardController {
   case class Step2aForm(confirm: Boolean)
 
   case class Step2aOut(
-    confirmed: Boolean,
-    skipped: Boolean
-  )
+      confirmed: Boolean
+    , skipped: Boolean
+    )
 
   private implicit val step2aOutFormats = {
     Json.format[Step2aOut]
@@ -448,23 +460,26 @@ object ShutterWizardController {
   def step2bForm(implicit messagesProvider: MessagesProvider) =
     Form(
       Forms.mapping(
-        "reason"                -> Forms.text,
-        "outageMessage"         -> Forms.text,
-        "requiresOutageMessage" -> Forms.boolean
-      )(Step2bForm.apply)(Step2bForm.unapply)
+          "reason"                -> Forms.text
+        , "outageMessage"         -> Forms.text
+        , "requiresOutageMessage" -> Forms.boolean
+        , "useDefaultOutagePage"  -> Forms.boolean
+        )(Step2bForm.apply)(Step2bForm.unapply)
     )
 
   case class Step2bForm(
-    reason: String,
-    outageMessage: String,
-    requiresOutageMessage: Boolean
-  )
+      reason               : String
+    , outageMessage        : String
+    , requiresOutageMessage: Boolean
+    , useDefaultOutagePage : Boolean
+    )
 
   case class Step2bOut(
-    reason: String,
-    outageMessage: String,
-    requiresOutageMessage: Boolean
-  )
+      reason               : String
+    , outageMessage        : String
+    , requiresOutageMessage: Boolean
+    , useDefaultOutagePage : Boolean
+    )
 
   private implicit val step2bOutFormats =
     Json.format[Step2bOut]
@@ -491,11 +506,11 @@ object ShutterWizardController {
   val SessionKey = "ShutterWizardController"
 
   case class FlowState(
-    step0: Option[Step0Out],
-    step1: Option[Step1Out],
-    step2a: Option[Step2aOut],
-    step2b: Option[Step2bOut]
-  )
+      step0 : Option[Step0Out]
+    , step1 : Option[Step1Out]
+    , step2a: Option[Step2aOut]
+    , step2b: Option[Step2bOut]
+    )
 
   case class ServiceAndRouteWarnings(serviceName: String, warnings: Seq[FrontendRouteWarning])
 
