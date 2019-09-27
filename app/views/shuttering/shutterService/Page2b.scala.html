@@ -98,7 +98,7 @@
           <div class="panel panel-warning" id="defaultOutagePagePanel">
             <div class="panel-heading">
               <span class="glyphicon glyphicon-warning-sign"></span>
-              No outage page
+              No outage page selected
             </div>
             <div class="panel-body">
               The service will be shuttered with the platform default page, rather than any outage page defined in github.
@@ -160,7 +160,7 @@
                       , 'rows   -> 2
                       , 'cols   -> 60
                       )
-                      <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the <a target='_blank' href='${src.outagePageURL}'>${src.serviceName} outage page</a>.").getOrElse(""))</p>
+                      <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the ${src.serviceName} outage page for ${env.asString}.").getOrElse(""))</p>
                   </div>
                   <div class="col-sm-4" style="display:table-cell; float:none; vertical-align: middle;">
                     <a href="javascript:revertTemplate()" class="btn btn-default">
@@ -170,10 +170,15 @@
                 </div>
               } else {
                 <input type="hidden" name="outageMessage" value=""/>
+                <div class="row">
+                  <div class="col-sm-12">
+                    Outage page(s) will be sent as is.
+                  </div>
+                </div>
               }
-
             </div>
           </div>
+
           <div class="row">
             <div class="col-sm-6">
               <a id="back-btn" href="@back" class="btn btn-default">
