@@ -595,7 +595,10 @@ object JsonData {
         "name": "serv",
         "type": "${shutterType.asString}",
         "environment": "${env.asString}",
-        "status": { "value": "${status.asString}" }
+        "status": {
+           "value": "${status.asString}",
+           "useDefaultOutagePage": false
+        }
       }
     """
 

@@ -112,10 +112,20 @@
 
 @shutterRow(state: ShutterStateData) = {
   <tr class="shutter-row @classFor(state.status.value)">
-      <td class="shutter-service"><p>@state.serviceName</p></td>
-      <td class="shutter-state"><p>@state.status.value</p></td>
-      <td class="shutter-user"><p>@state.lastEvent.map(_.username).getOrElse("")</p></td>
-      <td class="shutter-date"><p>@state.lastEvent.map(e => DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z").withZone(ZoneId.systemDefault).format(e.timestamp)).getOrElse("")</p></td>
+      <td class="shutter-service">
+        <a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
+          @state.serviceName
+        </a>
+      </td>
+      <td class="shutter-state">
+        @state.status.value
+      </td>
+      <td class="shutter-user">
+        @state.lastEvent.map(_.username).getOrElse("")
+      </td>
+      <td class="shutter-date">
+        @state.lastEvent.map(e => DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z").withZone(ZoneId.systemDefault).format(e.timestamp)).getOrElse("")
+      </td>
       @if(isSignedIn) {
         <td class="shutter-update">
           <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">

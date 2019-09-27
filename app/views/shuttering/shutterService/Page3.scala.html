@@ -71,8 +71,12 @@
             @if(step1Out.status == ShutterStatusValue.Shuttered && step2Out.requiresOutageMessage) {
               <tr>
                 <td colspan="2">
-                  Outage Message:
-                  <div id="outageMessage" class="jumbotron">@Html(step2Out.outageMessage)</div>
+                  @if(step2Out.useDefaultOutagePage) {
+                    <label>Outage Message:</label> None - will use platform default outage page.
+                  } else {
+                    Outage Message:
+                    <div id="outageMessage" class="jumbotron">@Html(step2Out.outageMessage)</div>
+                  }
                 </td>
               </tr>
             }

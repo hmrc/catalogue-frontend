@@ -36,7 +36,7 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
         name        = "abc-frontend"
       , shutterType = ShutterType.Frontend
       , environment = Environment.Production
-      , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None)
+      , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
       )
     , ShutterState(
         name        = "zxy-frontend"
@@ -48,7 +48,7 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
         name        = "ijk-frontend"
       , shutterType = ShutterType.Frontend
       , environment = Environment.Production
-      , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None)
+      , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
       )
     )
 
@@ -58,7 +58,7 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
         , timestamp   = Instant.now().minus(2, ChronoUnit.DAYS)
         , serviceName = "abc-frontend"
         , environment = Environment.Production
-        , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None)
+        , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
         , cause       = ShutterCause.UserCreated
         )
     , ShutterStateChangeEvent(
@@ -74,7 +74,7 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
         , timestamp   = Instant.now().minus(1, ChronoUnit.DAYS)
         , serviceName = "ijk-frontend"
         , environment = Environment.Production
-        , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None)
+        , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
         , cause       = ShutterCause.UserCreated
         )
     )
@@ -89,8 +89,8 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
 
       val Seq(a,b,c) = Await.result(boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production), Duration(10, "seconds"))
 
-      a.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None)
-      b.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None)
+      a.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+      b.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
       c.status shouldBe ShutterStatus.Unshuttered
     }
   }
