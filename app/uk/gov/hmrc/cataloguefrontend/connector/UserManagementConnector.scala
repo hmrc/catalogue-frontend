@@ -218,4 +218,10 @@ object UserManagementConnector {
   object DisplayName {
     val SESSION_KEY_NAME = "ump.displayName"
   }
+
+  case class Username(value: String) extends AnyVal
+
+  object Username {
+    val SESSION_KEY_NAME = "ump.username"
+  }
 }

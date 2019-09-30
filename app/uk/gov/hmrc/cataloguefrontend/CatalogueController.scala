@@ -220,7 +220,7 @@ class CatalogueController @Inject()(
           Ok(
             teamInfoPage(
               teamName            = team.name,
-              repos               = team.repos.getOrElse(Map()),
+              repos               = team.repos.getOrElse(Map.empty),
               activityDates       = TeamActivityDates(team.firstActiveDate, team.lastActiveDate, team.firstServiceCreationDate),
               errorOrTeamMembers  = convertToDisplayableTeamMembers(team.name, teamMembers),
               errorOrTeamDetails  = teamDetails,
