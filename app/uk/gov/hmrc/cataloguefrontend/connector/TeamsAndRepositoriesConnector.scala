@@ -95,7 +95,7 @@ case class Team(
   firstActiveDate: Option[LocalDateTime],
   lastActiveDate: Option[LocalDateTime],
   firstServiceCreationDate: Option[LocalDateTime],
-  repos: Option[Map[String, Seq[String]]] // TODO replace with Map[RepoType, Seq[String]] (where Map.empty instead of None)
+  repos: Option[Map[String, Seq[String]]]
 )
 
 object Team {

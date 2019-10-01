@@ -21,11 +21,11 @@ import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, User}
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, Username}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
-import uk.gov.hmrc.http.Token
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import play.api.mvc.Results._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 final case class UmpAuthenticatedRequest[A](
     request    : Request[A]
-  , token      : Token
+  , token      : UmpToken
   , username   : Username
   , displayName: DisplayName
   ) extends WrappedRequest(request)
@@ -77,10 +77,9 @@ class UmpAuthActionBuilder @Inject()(
             )
 
         (for {
-           token       <- fromSession(UmpToken.SESSION_KEY_NAME)
-           username    <- fromSession(Username.SESSION_KEY_NAME)
-           displayName <- fromSession(DisplayName.SESSION_KEY_NAME)
-           user        <- EitherT.fromOptionF[Future, Result, User](userManagementAuthConnector.getUser(UmpToken(token))
+           token       <- fromSession(UmpToken.SESSION_KEY_NAME).map(UmpToken.apply)
+           displayName <- fromSession(DisplayName.SESSION_KEY_NAME).map(DisplayName.apply)
+           user        <- EitherT.fromOptionF[Future, Result, User](userManagementAuthConnector.getUser(token)
                             , Redirect(signInPage)
                             )
            _           <- if (optGroup.map(user.groups.contains(_)).getOrElse(true))
@@ -89,9 +88,9 @@ class UmpAuthActionBuilder @Inject()(
                             EitherT.left[Result](Future(Forbidden(catalogueErrorHandler.forbiddenTemplate(request))))
          } yield UmpAuthenticatedRequest(
              request
-           , token       = Token(token)
-           , username    = Username(username)
-           , displayName = DisplayName(displayName)
+           , token       = token
+           , username    = user.username
+           , displayName = displayName
            )
         ).value
       }

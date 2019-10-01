@@ -143,7 +143,7 @@ class ShutterWizardController @Inject()(
          serviceNames  <- EitherT.fromOption[Future](NonEmptyList.fromList(sf.serviceNames.toList), ())
                            .leftFlatMap(_=> EitherT.left[NonEmptyList[String]](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages("No services selected"))).map(BadRequest(_))))
          hasGlobalPerm <- EitherT.liftF {
-                            userManagementAuthConnector.getUser(UserManagementAuthConnector.UmpToken(request.token.value)) // TODO reconcile http-verbs Token and UmpToken?
+                            userManagementAuthConnector.getUser(request.token)
                               .map(_.map(_.groups.contains("mdtp-platform-shuttering")).getOrElse(false))
                           }
          _             <- if (hasGlobalPerm)

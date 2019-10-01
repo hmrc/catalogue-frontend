@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import java.net.URLEncoder
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Writes
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, Token}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -55,7 +56,7 @@ class ShutterConnector @Inject()(
     * Retrieves the current shutter states for the given service in the given environment
     */
   def shutterState(st: ShutterType, env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
-    http.GET[Option[ShutterState]](s"${urlStates(st, env)}/${URLEncoder.encode(serviceName)}")
+    http.GET[Option[ShutterState]](s"${urlStates(st, env)}/${URLEncoder.encode(serviceName, "UTF-8")}")
 
   /**
     * PUT
@@ -63,22 +64,22 @@ class ShutterConnector @Inject()(
     * Shutters/un-shutters the service in the given environment
     */
   def updateShutterStatus(
-    umpToken   : Token,
-    serviceName: String,
-    st         : ShutterType,
-    env        : Environment,
-    status     : ShutterStatus
-  )(implicit hc: HeaderCarrier): Future[Unit] = {
+      umpToken   : UmpToken
+    , serviceName: String
+    , st         : ShutterType
+    , env        : Environment
+    , status     : ShutterStatus
+    )(implicit hc: HeaderCarrier): Future[Unit] = {
     implicit val isf = ShutterStatus.format
 
     http
-      .PUT[ShutterStatus, HttpResponse](s"${urlStates(st, env)}/${URLEncoder.encode(serviceName)}", status)(
-        implicitly[Writes[ShutterStatus]],
-        implicitly[HttpReads[HttpResponse]],
-        hc.copy(token = Some(umpToken)),
-        implicitly[ExecutionContext]
-      )
-      .map(_ => ())
+      .PUT[ShutterStatus, HttpResponse](s"${urlStates(st, env)}/${URLEncoder.encode(serviceName, "UTF-8")}", status)(
+          implicitly[Writes[ShutterStatus]]
+        , implicitly[HttpReads[HttpResponse]]
+        , hc.copy(token = Some(Token(umpToken.value)))
+        , implicitly[ExecutionContext]
+        )
+        .map(_ => ())
   }
 
   /**
@@ -101,7 +102,7 @@ class ShutterConnector @Inject()(
   def outagePage(env: Environment, serviceName: String)(
     implicit hc: HeaderCarrier): Future[Option[OutagePage]] = {
     implicit val ssf = OutagePage.reads
-    http.GET[Option[OutagePage]](s"${urlOutagePages(env)}/${URLEncoder.encode(serviceName)}")
+    http.GET[Option[OutagePage]](s"${urlOutagePages(env)}/${URLEncoder.encode(serviceName, "UTF-8")}")
   }
 
   /**
@@ -113,6 +114,6 @@ class ShutterConnector @Inject()(
     implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] = {
     implicit val r = FrontendRouteWarning.reads
     http
-      .GET[Seq[FrontendRouteWarning]](s"${urlFrontendRouteWarnings(env)}/${URLEncoder.encode(serviceName)}")
+      .GET[Seq[FrontendRouteWarning]](s"${urlFrontendRouteWarnings(env)}/${URLEncoder.encode(serviceName, "UTF-8")}")
   }
 }

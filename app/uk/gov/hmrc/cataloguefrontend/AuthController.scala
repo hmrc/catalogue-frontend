@@ -22,7 +22,8 @@ import play.api.data.Form
 import play.api.data.Forms
 import play.api.i18n.Messages
 import play.api.mvc._
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, Username}
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
@@ -61,7 +62,6 @@ class AuthController @Inject()(
                   .withSession(
                       UmpToken.SESSION_KEY_NAME    -> token
                     , DisplayName.SESSION_KEY_NAME -> displayName
-                    , Username.SESSION_KEY_NAME    -> signInData.username
                     )
               case Left(_) =>
                 BadRequest(sign_in(boundForm.withGlobalError(Messages("sign-in.wrong-credentials")), selfServiceUrl))

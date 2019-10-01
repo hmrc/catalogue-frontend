@@ -23,6 +23,7 @@ import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -69,8 +70,9 @@ class UserManagementAuthConnector @Inject()(
     val responseReads = new HttpReads[Option[User]] {
       def read(method: String, url: String, response: HttpResponse): Option[User] =
         response.status match {
-          case OK                       => val groups = (response.json \ "groups").as[List[String]]
-                                           Some(User(groups))
+          case OK                       => val username = (response.json \ "uid"   ).as[String]
+                                           val groups   = (response.json \ "groups").as[List[String]]
+                                           Some(User(Username(username), groups))
           case UNAUTHORIZED | FORBIDDEN => None
           case other                    => throw new BadGatewayException(s"Received $other from $method to $url")
         }
@@ -113,7 +115,7 @@ object UserManagementAuthConnector {
   case object UmpUnauthorized
 
   final case class User(
-    groups: List[String]
-  )
-
+      username: Username
+    , groups  : List[String]
+    )
 }

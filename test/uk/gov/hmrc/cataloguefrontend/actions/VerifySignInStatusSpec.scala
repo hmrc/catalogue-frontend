@@ -26,6 +26,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{ControllerComponents, MessagesControllerComponents, Result}
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, User}
 
@@ -40,7 +41,7 @@ class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFuture
       val umpToken = UmpToken("token")
       val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
 
-      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(Some(User(groups = List.empty))))
+      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(Some(User(Username("username"), groups = List.empty))))
 
       action
         .invokeBlock(request, actionBodyExpecting(isValid = true))

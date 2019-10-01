@@ -17,7 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.http.{HeaderCarrier, Token}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +35,7 @@ class ShutterService @Inject()(
     shutterConnector.shutterStates(st, env)
 
   def updateShutterStatus(
-      umpToken   : Token
+      umpToken   : UmpToken
     , serviceName: String
     , st         : ShutterType
     , env        : Environment
