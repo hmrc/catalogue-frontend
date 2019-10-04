@@ -54,7 +54,7 @@ class AuthService @Inject()(
              , hc     : HeaderCarrier
              ): Future[Either[ServiceForbidden, Unit]] =
     for {
-      teams <- teamsAndRepositoriesConnector.allTeams.map(_.toList)
+      teams <- teamsAndRepositoriesConnector.teamsWithRepositories.map(_.toList)
 
       teamServicesMap: Map[String/*#TeamName*/, List[String/*#ServiceName*/]]
             = teams.map { team =>

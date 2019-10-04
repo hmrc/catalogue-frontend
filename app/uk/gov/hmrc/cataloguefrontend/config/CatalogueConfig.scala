@@ -20,8 +20,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
 
 @Singleton
-class GithubConfig @Inject()(configuration: Configuration) {
-
-  val rawUrl = configuration.get[String]("github.open.api.rawurl")
-  val token  = configuration.get[String]("github.open.api.key")
+class CatalogueConfig @Inject()(configuration: Configuration) {
+  val shutterGroup    = configuration.get[String]("perms.shutter.group")
+  val shutterAnyGroup = configuration.get[String]("perms.shutter-any.group")
 }

@@ -26,6 +26,7 @@ import play.api.mvc.{MessagesControllerComponents, Request, Result, Session}
 import play.api.Logger
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthActionBuilder
+import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
@@ -47,13 +48,14 @@ class ShutterWizardController @Inject()(
   , umpAuthActionBuilder         : UmpAuthActionBuilder
   , userManagementAuthConnector  : UserManagementAuthConnector
   , authService                  : AuthService
+  , catalogueConfig              : CatalogueConfig
   )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc)
        with play.api.i18n.I18nSupport {
 
   import ShutterWizardController._
 
-  val withGroup = umpAuthActionBuilder.withGroup("dev-tools")
+  val withGroup = umpAuthActionBuilder.withGroup(catalogueConfig.shutterGroup)
 
   // --------------------------------------------------------------------------
   // Start
@@ -139,20 +141,20 @@ class ShutterWizardController @Inject()(
                             case None         => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, boundForm).map(BadRequest(_)))
                           }
 
-         // check has `mdtp-platform-shuttering` group or is authorized for selected services
+         // check has `shutter-any` group or is authorized for selected services
          serviceNames  <- EitherT.fromOption[Future](NonEmptyList.fromList(sf.serviceNames.toList), ())
                            .leftFlatMap(_=> EitherT.left[NonEmptyList[String]](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages("No services selected"))).map(BadRequest(_))))
          hasGlobalPerm <- EitherT.liftF {
                             userManagementAuthConnector.getUser(request.token)
-                              .map(_.map(_.groups.contains("mdtp-platform-shuttering")).getOrElse(false))
+                              .map(_.map(_.groups.contains(catalogueConfig.shutterAnyGroup)).getOrElse(false))
                           }
          _             <- if (hasGlobalPerm)
                             EitherT.pure[Future, Result](())
                           else
                             EitherT(authService.authorizeServices(serviceNames))
-                              .leftFlatMap {
-                                case AuthService.ServiceForbidden(s) => val errorMessage = s"You do not have permission to shutter service(s): ${s.toList.mkString(", ")}"
-                                                                        EitherT.left[Unit](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_)))
+                              .leftFlatMap { case AuthService.ServiceForbidden(s) =>
+                                val errorMessage = s"You do not have permission to shutter service(s): ${s.toList.mkString(", ")}"
+                                EitherT.left[Unit](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_)))
                               }
 
          step1Out      =  Step1Out(sf.serviceNames, status)
