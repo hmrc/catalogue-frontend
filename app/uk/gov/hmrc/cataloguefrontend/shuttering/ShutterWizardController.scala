@@ -149,14 +149,10 @@ class ShutterWizardController @Inject()(
          _             <- if (hasGlobalPerm)
                             EitherT.pure[Future, Result](())
                           else
-                            authService.authorizeServices(serviceNames)
-                              .leftMap {
-                                case AuthService.Error(e) => InternalServerError(e)
-                              }
-                              .flatMap {
-                                case Left(AuthService.ServiceForbidden(s)) => val errorMessage = s"You do not have permission to shutter service(s): ${s.toList.mkString(", ")}"
-                                                                              EitherT.left[Unit](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_)))
-                                case Right(())                             => EitherT.pure[Future, Result](())
+                            EitherT(authService.authorizeServices(serviceNames))
+                              .leftFlatMap {
+                                case AuthService.ServiceForbidden(s) => val errorMessage = s"You do not have permission to shutter service(s): ${s.toList.mkString(", ")}"
+                                                                        EitherT.left[Unit](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_)))
                               }
 
          step1Out      =  Step1Out(sf.serviceNames, status)

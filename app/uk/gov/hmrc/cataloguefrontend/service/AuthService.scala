@@ -20,6 +20,7 @@ import cats.data.{EitherT, NonEmptyList, OptionT}
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticatedRequest
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, Team, TeamsAndRepositoriesConnector, UserManagementAuthConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized, UmpUserId}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
@@ -51,48 +52,42 @@ class AuthService @Inject()(
       serviceNames: NonEmptyList[String]
     )(implicit request: UmpAuthenticatedRequest[A]
              , hc     : HeaderCarrier
-             ): EitherT[Future, Error, Either[ServiceForbidden, Unit]] =
+             ): Future[Either[ServiceForbidden, Unit]] =
     for {
-      teams <- EitherT.liftF[Future, Error, List[Team]](
-                 teamsAndRepositoriesConnector.allTeams.map(_.toList
-                   .map(_.copy(repos = Some(Map("Service" -> Seq("zxy-frontend"))))) // TODO delete this
-                 )
-               )
+      teams <- teamsAndRepositoriesConnector.allTeams.map(_.toList)
 
-      //teamServicesMap :: Map[String#TeamName, List[String#ServiceName]]
-      teamServicesMap
+      teamServicesMap: Map[String/*#TeamName*/, List[String/*#ServiceName*/]]
             = teams.map { team =>
-                val teamServiceNames = team.repos.getOrElse(Map.empty).get(RepoType.Service.toString).getOrElse(Seq.empty).toList // List[String]
+                val teamServiceNames = team.repos.getOrElse(Map.empty).get(RepoType.Service.toString).getOrElse(Seq.empty).toList
                 (team.name, teamServiceNames)
               }.toMap
 
-      //requiredTeamsForServices :: Map[String#TeamName, List[String#ServiceName]]
-      requiredTeamsForServices
-            <- EitherT.fromEither[Future](
-                 serviceNames.traverse[Either[Error, ?], (String, String)] { serviceName =>
-                   teamServicesMap.find { case (teamName, teamServiceNames) => teamServiceNames.contains(serviceName) } match {
-                     case None                => Left(Error(s"Couldn't find owning team for service `$serviceName`"))
-                     case Some((teamName, _)) => Right((serviceName, teamName))
-                   }
+      // filter the above map for only the applicable teams and services
+      // we can then check that the user belongs to all the teams (and report which services required it)
+      requiredTeamsForServices : Map[String/*#TeamName*/, NonEmptyList[String/*#ServiceName*/]]
+            = serviceNames.map { serviceName =>
+                 teamServicesMap.find { case (teamName, teamServiceNames) => teamServiceNames.contains(serviceName) } match {
+                   case None                => sys.error(s"Couldn't find owning team for service `$serviceName`")
+                   case Some((teamName, _)) => (serviceName, teamName)
                  }
-               )
-               .map(_.groupBy(_._2).mapValues(_.map(_._1)))
+               }
+               .groupBy(_._2).mapValues(_.map(_._1))
 
-      res   <- requiredTeamsForServices.toList.foldM[EitherT[Future, Error, ?], Either[ServiceForbidden, Unit]](Either.right[ServiceForbidden, Unit](())) { case (acc, (teamName, teamServiceNames)) =>
-                 EitherT {
+      // check user belongs to each team, and if not, report forbidden services
+      res   <- requiredTeamsForServices.toList.foldM[Future, Either[ServiceForbidden, Unit]](Either.right[ServiceForbidden, Unit](())) {
+                 case (acc, (teamName, teamServiceNames)) =>
                    userManagementConnector.getTeamMembersFromUMP(teamName)
                       .map {
-                        case Left(umpErr)       => Left(Error(s"Failed to lookup team members from ump: $umpErr"))
+                        case Left(umpErr)       => sys.error(s"Failed to lookup team members from ump: $umpErr")
                         case Right(teamMembers) =>
-                          val teamMemberNames = teamMembers.map(_.username).collect { case Some(username) => username }.toList
-                          if (teamMemberNames.contains(request.username.value))
-                            Right(acc)
+                          val teamMemberNames = teamMembers.map(_.username).collect { case Some(username) => Username(username) }.toList
+                          if (teamMemberNames.contains(request.username))
+                            acc
                           else acc match {
-                            case Right(())                  => Right(Left(ServiceForbidden(teamServiceNames)))
-                            case Left(ServiceForbidden(s1)) => Right(Left(ServiceForbidden(teamServiceNames ::: s1)))
+                            case Right(())                  => Left(ServiceForbidden(teamServiceNames))
+                            case Left(ServiceForbidden(s1)) => Left(ServiceForbidden(teamServiceNames ::: s1))
                           }
                        }
-                 }
                }
       } yield res
 }
@@ -105,6 +100,4 @@ object AuthService {
     )
 
   case class ServiceForbidden(serviceName: NonEmptyList[String])
-
-  case class Error(error: String)
 }
