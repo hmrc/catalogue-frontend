@@ -68,45 +68,43 @@
                                 <label>Last Active: </label>
                                 @activityDates.lastActive.map(_.displayFormat).getOrElse("None")
                             </li>
-                            @if(errorOrTeamDetails.isRight) {
-                                @for(teamDetails <- errorOrTeamDetails.right.toOption) {
-                                    <li id="team-description">
-                                        <label>Description: </label>
-                                        @teamDetails.description
-                                    </li>
-                                    <li id="team-documentation">
-                                        <label>Documentation: </label>
-                                        @teamDetails.documentation.map { d =>
-                                            <a href="@d" target="_blank">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
-                                        }
-                                    </li>
-                                    <li id="team-organisation">
-                                        <label>Organisation: </label>
-                                        @teamDetails.organisation
-                                    </li>
-                                    <li id="team-slack-channels">
-                                        <label>Slack: </label>
+                            @errorOrTeamDetails match {
+                              case Right(teamDetails) => {
+                                <li id="team-description">
+                                  <label>Description: </label>
+                                  @teamDetails.description
+                                </li>
+                                <li id="team-documentation">
+                                  <label>Documentation: </label>
+                                  @teamDetails.documentation.map { d =>
+                                    <a href="@d" target="_blank">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
+                                  }
+                                </li>
+                                <li id="team-organisation">
+                                  <label>Organisation: </label>
+                                  @teamDetails.organisation
+                                </li>
+                                <li id="team-slack-channels">
+                                  <label>Slack: </label>
 
-                                        <ul id="slack-channels" class="list list--minimal">
-                                            @teamDetails.slack.map { d =>
-                                                <li class="list-item"><a href="@d" target="_blank">Go to team channel<span class="glyphicon glyphicon-new-window"/></a></li>
-                                            }
-                                            @teamDetails.slackNotification.map { d =>
-                                            <li class="list-item"><a href="@d" target="_blank">Go to notification channel<span class="glyphicon glyphicon-new-window"/></a></li>
-                                            }
-                                        </ul>
-                                    </li>
-                                    <li id="team-location">
-                                        <label>Location: </label>
-                                        @teamDetails.location
-                                    </li>
-                                }
-
-
-                            } else {
-                                <div>@showError(errorOrTeamDetails.left.get)</div>
+                                  <ul id="slack-channels" class="list list--minimal">
+                                    @teamDetails.slack.map { d =>
+                                      <li class="list-item"><a href="@d" target="_blank">Go to team channel<span class="glyphicon glyphicon-new-window"/></a></li>
+                                    }
+                                    @teamDetails.slackNotification.map { d =>
+                                      <li class="list-item"><a href="@d" target="_blank">Go to notification channel<span class="glyphicon glyphicon-new-window"/></a></li>
+                                    }
+                                  </ul>
+                                </li>
+                                <li id="team-location">
+                                  <label>Location: </label>
+                                  @teamDetails.location
+                                </li>
+                              }
+                              case Left(error) => {
+                                <div>@showError(error)</div>
+                              }
                             }
-
                         </ul>
 
                         @if(errorOrTeamDetails.isRight) {
@@ -123,18 +121,20 @@
                     <div class="board__body">
                         <div>
                             <ul class="list list--minimal" id="team_members">
-                            @if(errorOrTeamMembers.isRight) {
-                                @for(teamMember <- errorOrTeamMembers.right.get) {
+                              @errorOrTeamMembers match {
+                                case Right(teamMembers) => {
+                                  @for(teamMember <- teamMembers) {
                                     <li class="col-xs-6">
-                                        <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
+                                      <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
                                     </li>
+                                  }
                                 }
-
-                            } else {
-                                <li id="linkToRectify">
-                                @showError(errorOrTeamMembers.left.get)
-                                </li>
-                            }
+                                case Left(error) => {
+                                  <li id="linkToRectify">
+                                    @showError(error)
+                                  </li>
+                                }
+                              }
                             </ul>
 
                             @if(errorOrTeamMembers.isRight) {
@@ -159,24 +159,24 @@
 }
 
 @umpUpdateLink(isMemberBox: Boolean) = {
-    <div id="ump-correct-data-link" class="list list--minimal">
+  <div id="ump-correct-data-link" class="list list--minimal">
     @if(isMemberBox) {
         To update @teamName team members, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
     } else {
         To update @teamName team details, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
     }
-    </div>
+  </div>
 }
 
 @showError(error: UMPError) = {
-@error match {
+  @error match {
     case NoData(linkToRectify) => {
         @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
     }
     case _ => {
         Sorry, the User Management Portal is not available
     }
-}
+  }
 }
 
 @showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {

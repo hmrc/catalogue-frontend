@@ -15,17 +15,22 @@
  */
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
-import cats.data.EitherT
+import cats.data.{EitherT, NonEmptyList}
 import cats.instances.all._
 import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
-import play.api.i18n.MessagesProvider
+import play.api.i18n.{Messages, MessagesProvider}
 import play.api.libs.json.Json
 import play.api.mvc.{MessagesControllerComponents, Request, Result, Session}
+import play.api.Logger
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthActionBuilder
+import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
+import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering.shutterService._
 
@@ -33,21 +38,24 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ShutterWizardController @Inject()(
-  mcc: MessagesControllerComponents,
-  shutterService: ShutterService,
-  page1: Page1,
-  page2a: Page2a,
-  page2b: Page2b,
-  page3: Page3,
-  page4: Page4,
-  umpAuthActionBuilder: UmpAuthActionBuilder
-)(implicit val ec: ExecutionContext)
+    mcc                          : MessagesControllerComponents
+  , shutterService               : ShutterService
+  , page1                        : Page1
+  , page2a                       : Page2a
+  , page2b                       : Page2b
+  , page3                        : Page3
+  , page4                        : Page4
+  , umpAuthActionBuilder         : UmpAuthActionBuilder
+  , userManagementAuthConnector  : UserManagementAuthConnector
+  , authService                  : AuthService
+  , catalogueConfig              : CatalogueConfig
+  )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc)
-    with play.api.i18n.I18nSupport {
+       with play.api.i18n.I18nSupport {
 
   import ShutterWizardController._
 
-  val withGroup = umpAuthActionBuilder.withGroup("dev-tools")
+  val withGroup = umpAuthActionBuilder.withGroup(catalogueConfig.shutterGroup)
 
   // --------------------------------------------------------------------------
   // Start
@@ -120,17 +128,36 @@ class ShutterWizardController @Inject()(
   def step1Post =
     withGroup.async { implicit request =>
       (for {
-         step0Out <- getStep0Out
-         sf       <- step1Form.bindFromRequest
-                       .fold(
-                         hasErrors = formWithErrors => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, formWithErrors).map(BadRequest(_)))
-                       , success   = data           => EitherT.pure[Future, Result](data)
-                       )
-         status   <- ShutterStatusValue.parse(sf.status) match {
-                       case Some(status) => EitherT.pure[Future, Result](status)
-                       case None         => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, step1Form.bindFromRequest).map(BadRequest(_)))
-                     }
-         step1Out =  Step1Out(sf.serviceNames, status)
+         step0Out      <- getStep0Out
+         boundForm     =  step1Form.bindFromRequest
+         sf            <- boundForm
+                            .fold(
+                              hasErrors = formWithErrors => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, formWithErrors).map(BadRequest(_)))
+                            , success   = data           => EitherT.pure[Future, Result](data)
+                            )
+
+         status        <- ShutterStatusValue.parse(sf.status) match {
+                            case Some(status) => EitherT.pure[Future, Result](status)
+                            case None         => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, boundForm).map(BadRequest(_)))
+                          }
+
+         // check has `shutter-platform` group or is authorized for selected services
+         serviceNames  <- EitherT.fromOption[Future](NonEmptyList.fromList(sf.serviceNames.toList), ())
+                           .leftFlatMap(_=> EitherT.left[NonEmptyList[String]](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages("No services selected"))).map(BadRequest(_))))
+         hasGlobalPerm <- EitherT.liftF {
+                            userManagementAuthConnector.getUser(request.token)
+                              .map(_.map(_.groups.contains(catalogueConfig.shutterPlatformGroup)).getOrElse(false))
+                          }
+         _             <- if (step0Out.shutterType != ShutterType.Frontend || hasGlobalPerm)
+                            EitherT.pure[Future, Result](())
+                          else
+                            EitherT(authService.authorizeServices(serviceNames))
+                              .leftFlatMap { case AuthService.ServiceForbidden(s) =>
+                                val errorMessage = s"You do not have permission to shutter service(s): ${s.toList.mkString(", ")}"
+                                EitherT.left[Unit](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_)))
+                              }
+
+         step1Out      =  Step1Out(sf.serviceNames, status)
        } yield
          status match {
            case ShutterStatusValue.Shuttered if step0Out.shutterType == ShutterType.Frontend =>

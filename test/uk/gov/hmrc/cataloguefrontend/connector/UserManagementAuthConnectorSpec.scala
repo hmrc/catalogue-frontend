@@ -25,6 +25,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.{Json, JsArray}
 import play.api.test.Helpers._
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId, User}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 
@@ -90,10 +91,10 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
         .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
         .returning(
           status = OK,
-          body   = Json.obj("groups" -> JsArray(Seq.empty))
+          body   = Json.obj("uid" -> username, "groups" -> JsArray(Seq.empty))
         )
 
-      connector.getUser(umpToken).futureValue shouldBe Some(User(groups = List.empty))
+      connector.getUser(umpToken).futureValue shouldBe Some(User(Username("username"), groups = List.empty))
     }
 
     UNAUTHORIZED :: FORBIDDEN :: Nil foreach { status =>

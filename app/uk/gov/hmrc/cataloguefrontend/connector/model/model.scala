@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.config
+package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import com.google.inject.{Inject, Singleton}
-import play.api.Configuration
-
-@Singleton
-class GithubConfig @Inject()(configuration: Configuration) {
-
-  val rawUrl = configuration.get[String]("github.open.api.rawurl")
-  val token  = configuration.get[String]("github.open.api.key")
-}
+case class Username(value: String) extends AnyVal

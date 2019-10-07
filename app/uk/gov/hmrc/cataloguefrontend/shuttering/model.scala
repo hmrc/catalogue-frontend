@@ -428,9 +428,9 @@ case class FrontendRouteWarning(name: String, message: String, consequence: Stri
 
 object FrontendRouteWarning {
   val reads: Reads[FrontendRouteWarning] =
-    ( (__ \ "name"   ).read[String]
-      ~ (__ \ "message").read[String]
-      ~ (__ \ "consequence").read[String]
-      ~ (__ \ "ruleConfigurationURL").read[String]
-      )(FrontendRouteWarning.apply _)
+    ( (__ \ "name"                ).read[String]
+    ~ (__ \ "message"             ).read[String]
+    ~ (__ \ "consequence"         ).read[String]
+    ~ (__ \ "ruleConfigurationURL").read[String]
+    )(FrontendRouteWarning.apply _)
 }

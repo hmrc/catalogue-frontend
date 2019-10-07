@@ -24,9 +24,8 @@ import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{UserManagementAuthConnector, UserManagementConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId}
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import uk.gov.hmrc.http.HeaderCarrier
@@ -82,8 +81,9 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
     val username = "username"
     val password = "password"
 
-    val userManagementAuthConnector = mock[UserManagementAuthConnector]
-    val userManagementConnector     = mock[UserManagementConnector]
-    val service                     = new AuthService(userManagementAuthConnector, userManagementConnector)
+    val userManagementAuthConnector   = mock[UserManagementAuthConnector]
+    val userManagementConnector       = mock[UserManagementConnector]
+    val teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
+    val service                       = new AuthService(userManagementAuthConnector, userManagementConnector, teamsAndRepositoriesConnector)
   }
 }
