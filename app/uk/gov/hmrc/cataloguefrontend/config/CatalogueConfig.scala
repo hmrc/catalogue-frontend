@@ -21,6 +21,6 @@ import play.api.Configuration
 
 @Singleton
 class CatalogueConfig @Inject()(configuration: Configuration) {
-  val shutterGroup    = configuration.get[String]("perms.shutter.group")
-  val shutterAnyGroup = configuration.get[String]("perms.shutter-any.group")
+  val shutterGroup         = configuration.get[String]("perms.shutter.group")
+  val shutterPlatformGroup = configuration.get[String]("perms.shutter-platform.group")
 }

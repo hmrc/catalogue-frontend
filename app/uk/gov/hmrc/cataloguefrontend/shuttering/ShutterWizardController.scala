@@ -141,12 +141,12 @@ class ShutterWizardController @Inject()(
                             case None         => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, boundForm).map(BadRequest(_)))
                           }
 
-         // check has `shutter-any` group or is authorized for selected services
+         // check has `shutter-platform` group or is authorized for selected services
          serviceNames  <- EitherT.fromOption[Future](NonEmptyList.fromList(sf.serviceNames.toList), ())
                            .leftFlatMap(_=> EitherT.left[NonEmptyList[String]](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages("No services selected"))).map(BadRequest(_))))
          hasGlobalPerm <- EitherT.liftF {
                             userManagementAuthConnector.getUser(request.token)
-                              .map(_.map(_.groups.contains(catalogueConfig.shutterAnyGroup)).getOrElse(false))
+                              .map(_.map(_.groups.contains(catalogueConfig.shutterPlatformGroup)).getOrElse(false))
                           }
          _             <- if (step0Out.shutterType != ShutterType.Frontend || hasGlobalPerm)
                             EitherT.pure[Future, Result](())

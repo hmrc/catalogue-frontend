@@ -146,12 +146,10 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
 
     def initSession[A](request: FakeRequest[A]): (UmpToken, FakeRequest[A]) = {
       val umpToken    = UmpToken("token")
-      val username    = Username("username")
       val displayName = DisplayName("displayname")
       val requestWithSession =
         request.withSession(
             "ump.token"       -> umpToken.value
-          , "ump.username"    -> username.value
           , "ump.displayName" -> displayName.value
           )
       (umpToken, requestWithSession)
