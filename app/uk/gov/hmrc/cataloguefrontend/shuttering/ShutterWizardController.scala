@@ -148,7 +148,7 @@ class ShutterWizardController @Inject()(
                             userManagementAuthConnector.getUser(request.token)
                               .map(_.map(_.groups.contains(catalogueConfig.shutterAnyGroup)).getOrElse(false))
                           }
-         _             <- if (hasGlobalPerm)
+         _             <- if (step0Out.shutterType != ShutterType.Frontend || hasGlobalPerm)
                             EitherT.pure[Future, Result](())
                           else
                             EitherT(authService.authorizeServices(serviceNames))

@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import cats.data.{EitherT, NonEmptyList, OptionT}
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticatedRequest
 import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, Team, TeamsAndRepositoriesConnector, UserManagementAuthConnector, UserManagementConnector}
@@ -47,6 +48,43 @@ class AuthService @Inject()(
      } yield TokenAndDisplayName(umpAuthData.token, displayName)
     ).value
 
+  /* Filter team data to eliminate any teams/servicenames that are not required for authorising.
+   * Also return list of any required services that are not found in any teams
+   */
+  private def process(
+      serviceNames: NonEmptyList[String]
+    , teams       : List[Team]
+    ): ( List[String/*#ServiceName*/]
+       , Map[String/*#TeamName*/, NonEmptyList[String/*#ServiceName*/]]
+       ) = {
+
+    val teamServicesMap: Map[String/*#TeamName*/, List[String/*#ServiceName*/]] =
+      teams.map { team =>
+        val teamServiceNames = team.repos.getOrElse(Map.empty).get(RepoType.Service.toString).getOrElse(Seq.empty).toList
+        (team.name, teamServiceNames)
+      }.toMap
+
+
+    val x: NonEmptyList[Either[String, (String, String)]] =
+      serviceNames.map { serviceName =>
+        teamServicesMap.find { case (teamName, teamServiceNames) => teamServiceNames.contains(serviceName) } match {
+          case None                => Logger.info(s"Couldn't find owning team for service `$serviceName`")
+                                      Left(serviceName)
+          case Some((teamName, _)) => Right((serviceName, teamName))
+         }
+      }
+
+    val missingServices: List[String] =
+        x.collect { case Left(sf) => sf }
+
+    val requiredTeamsForServices: Map[String, NonEmptyList[String]] =
+        NonEmptyList.fromList(x.collect { case Right(pair) => pair })
+          .map(_.groupBy(_._2).mapValues(_.map(_._1))).getOrElse(Map.empty)
+
+    (missingServices, requiredTeamsForServices)
+  }
+
+
   /** Check username belongs to teams which own services */
   def authorizeServices[A](
       serviceNames: NonEmptyList[String]
@@ -56,25 +94,14 @@ class AuthService @Inject()(
     for {
       teams <- teamsAndRepositoriesConnector.teamsWithRepositories.map(_.toList)
 
-      teamServicesMap: Map[String/*#TeamName*/, List[String/*#ServiceName*/]]
-            = teams.map { team =>
-                val teamServiceNames = team.repos.getOrElse(Map.empty).get(RepoType.Service.toString).getOrElse(Seq.empty).toList
-                (team.name, teamServiceNames)
-              }.toMap
-
-      // filter the above map for only the applicable teams and services
+      // filter the team data for only the applicable teams and services
       // we can then check that the user belongs to all the teams (and report which services required it)
-      requiredTeamsForServices : Map[String/*#TeamName*/, NonEmptyList[String/*#ServiceName*/]]
-            = serviceNames.map { serviceName =>
-                 teamServicesMap.find { case (teamName, teamServiceNames) => teamServiceNames.contains(serviceName) } match {
-                   case None                => sys.error(s"Couldn't find owning team for service `$serviceName`")
-                   case Some((teamName, _)) => (serviceName, teamName)
-                 }
-               }
-               .groupBy(_._2).mapValues(_.map(_._1))
+      (missingServices, requiredTeams) =
+        process(serviceNames, teams)
 
       // check user belongs to each team, and if not, report forbidden services
-      res   <- requiredTeamsForServices.toList.foldM[Future, Either[ServiceForbidden, Unit]](Either.right[ServiceForbidden, Unit](())) {
+      init  =  NonEmptyList.fromList(missingServices).map(services => Left(ServiceForbidden(services))).getOrElse(Right(()))
+      res   <- requiredTeams.toList.foldM[Future, Either[ServiceForbidden, Unit]](init) {
                  case (acc, (teamName, teamServiceNames)) =>
                    userManagementConnector.getTeamMembersFromUMP(teamName)
                       .map {
@@ -84,8 +111,8 @@ class AuthService @Inject()(
                           if (teamMemberNames.contains(request.username))
                             acc
                           else acc match {
-                            case Right(())                  => Left(ServiceForbidden(teamServiceNames))
-                            case Left(ServiceForbidden(s1)) => Left(ServiceForbidden(teamServiceNames ::: s1))
+                            case Right(_)                  => Left(ServiceForbidden(teamServiceNames))
+                            case Left(ServiceForbidden(s)) => Left(ServiceForbidden(teamServiceNames ::: s))
                           }
                        }
                }
