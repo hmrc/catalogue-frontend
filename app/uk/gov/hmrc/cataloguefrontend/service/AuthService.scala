@@ -68,7 +68,11 @@ class AuthService @Inject()(
             else
               userManagementConnector.getTeamMembersFromUMP(team.name)
                 .map {
-                  case Left(umpErr)       => sys.error(s"Failed to lookup team members from ump: $umpErr")
+                  case Left(UserManagementConnector.HTTPError(404))
+                                          => // Not all teams returned from TeamsAndRepositories (github) exist in UMP
+                                             Logger.debug(s"Team `${team.name}` not found in UMP")
+                                             List.empty
+                  case Left(umpErr)       => sys.error(s"Failed to lookup team members for team `${team.name}` from ump: $umpErr")
                   case Right(teamMembers) => if (teamMembers.contains(request.username)) providedServices else List.empty
                 }
           }.map(_.flatten)
