@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import java.net.URLEncoder
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Writes
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.{encodePathParam, encodeQueryParam}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, Token}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -34,10 +34,10 @@ class ShutterConnector @Inject()(
 
   private val shutterApiBaseUrl = serviceConfig.baseUrl("shutter-api") + "/shutter-api"
 
-  private def urlStates(st: ShutterType, env: Environment) = s"$shutterApiBaseUrl/${env.asString}/${st.asString}/states"
+  private def urlStates(st: ShutterType, env: Environment) = s"$shutterApiBaseUrl/${encodePathParam(env.asString)}/${encodePathParam(st.asString)}/states"
   private val urlEvents: String                            = s"$shutterApiBaseUrl/events"
-  private def urlOutagePages(env: Environment)             = s"$shutterApiBaseUrl/${env.asString}/outage-pages"
-  private def urlFrontendRouteWarnings(env: Environment)   = s"$shutterApiBaseUrl/${env.asString}/frontend-route-warnings"
+  private def urlOutagePages(env: Environment)             = s"$shutterApiBaseUrl/${encodePathParam(env.asString)}/outage-pages"
+  private def urlFrontendRouteWarnings(env: Environment)   = s"$shutterApiBaseUrl/${encodePathParam(env.asString)}/frontend-route-warnings"
 
   private implicit val ssr = ShutterState.reads
   private implicit val ser = ShutterEvent.reads
@@ -56,7 +56,7 @@ class ShutterConnector @Inject()(
     * Retrieves the current shutter states for the given service in the given environment
     */
   def shutterState(st: ShutterType, env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
-    http.GET[Option[ShutterState]](s"${urlStates(st, env)}/${URLEncoder.encode(serviceName, "UTF-8")}")
+    http.GET[Option[ShutterState]](s"${urlStates(st, env)}/${encodePathParam(serviceName)}")
 
   /**
     * PUT
@@ -73,7 +73,7 @@ class ShutterConnector @Inject()(
     implicit val isf = ShutterStatus.format
 
     http
-      .PUT[ShutterStatus, HttpResponse](s"${urlStates(st, env)}/${URLEncoder.encode(serviceName, "UTF-8")}", status)(
+      .PUT[ShutterStatus, HttpResponse](s"${urlStates(st, env)}/${encodePathParam(serviceName)}", status)(
           implicitly[Writes[ShutterStatus]]
         , implicitly[HttpReads[HttpResponse]]
         , hc.copy(token = Some(Token(umpToken.value)))
@@ -90,7 +90,7 @@ class ShutterConnector @Inject()(
   def latestShutterEvents(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     http
       .GET[Seq[ShutterEvent]](url =
-        s"$urlEvents?type=${EventType.ShutterStateChange.asString}&namedFilter=latestByServiceName&data.environment=${env.asString}&data.shutterType=${st.asString}")
+        s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&namedFilter=latestByServiceName&data.environment=${encodeQueryParam(env.asString)}&data.shutterType=${encodeQueryParam(st.asString)}")
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
 
@@ -102,7 +102,7 @@ class ShutterConnector @Inject()(
   def outagePage(env: Environment, serviceName: String)(
     implicit hc: HeaderCarrier): Future[Option[OutagePage]] = {
     implicit val ssf = OutagePage.reads
-    http.GET[Option[OutagePage]](s"${urlOutagePages(env)}/${URLEncoder.encode(serviceName, "UTF-8")}")
+    http.GET[Option[OutagePage]](s"${urlOutagePages(env)}/${encodePathParam(serviceName)}")
   }
 
   /**
@@ -114,6 +114,6 @@ class ShutterConnector @Inject()(
     implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] = {
     implicit val r = FrontendRouteWarning.reads
     http
-      .GET[Seq[FrontendRouteWarning]](s"${urlFrontendRouteWarnings(env)}/${URLEncoder.encode(serviceName, "UTF-8")}")
+      .GET[Seq[FrontendRouteWarning]](s"${urlFrontendRouteWarnings(env)}/${encodePathParam(serviceName)}")
   }
 }
