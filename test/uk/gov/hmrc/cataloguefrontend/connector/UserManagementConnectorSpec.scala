@@ -122,8 +122,7 @@ class UserManagementConnectorSpec
 
       val userManagementConnector = new UserManagementConnector(
         mockedHttpGet,
-        mock[UserManagementPortalConfig],
-        app.injector.instanceOf[FutureHelpers]
+        mock[UserManagementPortalConfig]
       )
 
       val expectedException = new RuntimeException("some error")
@@ -194,8 +193,7 @@ class UserManagementConnectorSpec
 
       val userManagementConnector = new UserManagementConnector(
         mockedHttpGet,
-        mock[UserManagementPortalConfig],
-        app.injector.instanceOf[FutureHelpers]
+        mock[UserManagementPortalConfig]
       )
 
       val expectedException = new RuntimeException("some error")
@@ -283,8 +281,7 @@ class UserManagementConnectorSpec
 
         val userManagementConnector = new UserManagementConnector(
           mockedHttpGet,
-          mock[UserManagementPortalConfig],
-          app.injector.instanceOf[FutureHelpers]
+          mock[UserManagementPortalConfig]
         )
 
         val teamNames = Seq("Team1", "Team2")
