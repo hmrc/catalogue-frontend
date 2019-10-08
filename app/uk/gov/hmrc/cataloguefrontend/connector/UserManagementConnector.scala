@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 package connector
 
-import java.net.URLEncoder
+import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
@@ -53,7 +53,7 @@ case class UserManagementConnector @Inject()(
   def getTeamMembersFromUMP(teamName: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
 
-    val url = s"$userManagementBaseUrl/v2/organisations/teams/${URLEncoder.encode(teamName, "UTF-8")}/members"
+    val url = s"$userManagementBaseUrl/v2/organisations/teams/${encodePathParam(teamName)}/members"
 
     def isHttpCodeFailure: Option[Either[UMPError, _] => Boolean] =
       Some { errorOrMembers: Either[UMPError, _] =>
@@ -114,7 +114,7 @@ case class UserManagementConnector @Inject()(
 
   def getTeamDetails(teamName: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, TeamDetails]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    val url              = s"$userManagementBaseUrl/v2/organisations/teams/${URLEncoder.encode(teamName, "UTF-8")}"
+    val url              = s"$userManagementBaseUrl/v2/organisations/teams/${encodePathParam(teamName)}"
     futureHelpers.withTimerAndCounter("ump-teamdetails") {
       http
         .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
@@ -134,7 +134,7 @@ case class UserManagementConnector @Inject()(
   }
 
   def getDisplayName(userId: UmpUserId)(implicit hc: HeaderCarrier): Future[Option[DisplayName]] = {
-    val url              = s"$userManagementBaseUrl/v2/organisations/users/${URLEncoder.encode(userId.value, "UTF-8")}"
+    val url              = s"$userManagementBaseUrl/v2/organisations/users/${encodePathParam(userId.value)}"
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
     futureHelpers.withTimerAndCounter("ump-userdetails") {
       http.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec).map { response =>

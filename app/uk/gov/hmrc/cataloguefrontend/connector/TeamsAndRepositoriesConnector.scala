@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import java.net.URLEncoder
 import java.time.LocalDateTime
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
+import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -142,7 +142,7 @@ class TeamsAndRepositoriesConnector @Inject()(
     http.GET[Seq[String]](teamsAndServicesBaseUrl + s"/api/digital-services")
 
   def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[Team]] = {
-    val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${URLEncoder.encode(teamName, "UTF-8")}"
+    val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${encodePathParam(teamName)}"
 
     http
       .GET[Option[Team]](url)
@@ -155,7 +155,7 @@ class TeamsAndRepositoriesConnector @Inject()(
     http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams_with_repositories")
 
   def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[DigitalService]] = {
-    val url = teamsAndServicesBaseUrl + s"/api/digital-services/${URLEncoder.encode(digitalServiceName, "UTF-8")}"
+    val url = teamsAndServicesBaseUrl + s"/api/digital-services/${encodePathParam(digitalServiceName)}"
     http.GET[Option[DigitalService]](url)
   }
 
@@ -163,7 +163,7 @@ class TeamsAndRepositoriesConnector @Inject()(
     http.GET[Seq[RepositoryDisplayDetails]](teamsAndServicesBaseUrl + s"/api/repositories")
 
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] =
-    http.GET[Option[RepositoryDetails]](teamsAndServicesBaseUrl + s"/api/repositories/$name")
+    http.GET[Option[RepositoryDetails]](teamsAndServicesBaseUrl + s"/api/repositories/${encodePathParam(name)}")
 
   def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http.POST[JsValue, Map[ServiceName, Seq[TeamName]]](

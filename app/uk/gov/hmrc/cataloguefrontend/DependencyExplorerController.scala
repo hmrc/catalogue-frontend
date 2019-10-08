@@ -27,6 +27,7 @@ import play.api.i18n.MessagesProvider
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, Version}
+import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodeQueryParam
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
@@ -87,7 +88,7 @@ class DependencyExplorerController @Inject()(
 
          // updating request with new querystring does not update uri!? - build uri manually...
           queryStr      =  queryString.flatMap { case (k, vs) =>
-                             vs.map(v => java.net.URLEncoder.encode(k, "UTF-8") + "=" + java.net.URLEncoder.encode(v, "UTF-8"))
+                             vs.map(v => encodeQueryParam(k) + "=" + encodeQueryParam(v))
                            }.mkString("?", "&", "")
          } yield Redirect(request.path + queryStr)
         ).merge
