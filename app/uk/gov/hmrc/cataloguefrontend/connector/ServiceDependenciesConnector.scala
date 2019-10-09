@@ -35,9 +35,10 @@ object SlugInfoFlag {
   case object ExternalTest    extends SlugInfoFlag { val asString = "external test" }
   case object QA              extends SlugInfoFlag { val asString = "qa"            }
   case object Staging         extends SlugInfoFlag { val asString = "staging"       }
+  case object Integration     extends SlugInfoFlag { val asString = "integration"   }
   case object Dev             extends SlugInfoFlag { val asString = "development"   }
 
-  val values = List(Latest, Production, ExternalTest, QA, Staging, Dev)
+  val values = List(Latest, Production, ExternalTest, QA, Staging, Integration, Dev)
 
   def parse(s: String): Option[SlugInfoFlag] =
     values.find(_.asString == s)

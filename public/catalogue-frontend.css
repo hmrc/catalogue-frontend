@@ -12230,7 +12230,7 @@ p.shutter-overview-header {
 div.shuttered-checkbox {
     position: absolute;
     right: 0px;
-    top: 12px;
+    top: -30px;
 }
 
 .col-md-5th-1 {

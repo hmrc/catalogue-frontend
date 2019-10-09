@@ -63,6 +63,7 @@ object TargetEnvironment {
       case "external test" => Some(ShutteringEnvironment.ExternalTest)
       case "qa"            => Some(ShutteringEnvironment.QA)
       case "staging"       => Some(ShutteringEnvironment.Staging)
+      case "integration"   => Some(ShutteringEnvironment.Integration)
       case "development"   => Some(ShutteringEnvironment.Development)
       case _               => None
     }
