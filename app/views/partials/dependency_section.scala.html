@@ -24,7 +24,7 @@
             <div class="@{getColourClass(dependency)}" id="@{dependency.name}">
                 <span class="col-xs-4 left-aligned">
                     <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}" title="@{getAltText(dependency)}"> </span>
-                    @if(dependency.latestVersion.isDefined) {
+                    @if(dependency.latestVersion.isDefined && !dependency.isExternal) {
                         <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}">@dependency.name</a>
                     } else {
                         @dependency.name
@@ -32,7 +32,7 @@
                 </span>
                 <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion.toString</span>
                 <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">
-                    <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10;"> </span>
+                    <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"> </span>
                     @dependency.latestVersion.map(_.toString).getOrElse("(not found)")
                 </span>
                 <span id="@{dependency.name}-bobbyrule" class="col-xs-2">
