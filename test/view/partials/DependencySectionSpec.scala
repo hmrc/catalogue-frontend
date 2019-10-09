@@ -28,18 +28,20 @@ class DependencySectionSpec extends WordSpec with Matchers {
 
     "display the version suffix when present" in {
       val res = views.html.partials.dependency_section(Seq(dependency1)).body
-      res should include ("""<span id="example-library-current-version" class="col-xs-3">1.2.3-play-25</span>""")
-      res should include ("""<span id="example-library-latestVersion-version" class="col-xs-3">
-        |                    <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10;"> </span>
+      res should include("""<span id="example-library-current-version" class="col-xs-3">1.2.3-play-25</span>""")
+      res should include(
+        """<span id="example-library-latestVersion-version" class="col-xs-3">
+        |                    <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"> </span>
         |                    1.2.3-play-26
         |                </span>""".stripMargin)
     }
 
     "not display the version suffix when missing" in {
       val res = views.html.partials.dependency_section(Seq(dependency2)).body
-      res should include ("""<span id="library4j-current-version" class="col-xs-3">4.0.1</span>""")
-      res should include ("""<span id="library4j-latestVersion-version" class="col-xs-3">
-        |                    <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10;"> </span>
+      res should include("""<span id="library4j-current-version" class="col-xs-3">4.0.1</span>""")
+      res should include(
+        """<span id="library4j-latestVersion-version" class="col-xs-3">
+        |                    <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"> </span>
         |                    4.2.0
         |                </span>""".stripMargin)
     }
