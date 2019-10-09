@@ -83,6 +83,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(GET, "/shutter-api/externaltest/frontend/states/serv", willRespondWith = (404, None))
       serviceEndpoint(GET, "/shutter-api/qa/frontend/states/serv"          , willRespondWith = (404, None))
       serviceEndpoint(GET, "/shutter-api/staging/frontend/states/serv"     , willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/integration/frontend/states/serv"     , willRespondWith = (404, None))
       serviceEndpoint(GET, "/shutter-api/development/frontend/states/serv" , willRespondWith = (404, None))
 
       val response = await(ws.url(s"http://localhost:$port/service/serv").get)
@@ -111,6 +112,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(GET, "/shutter-api/externaltest/frontend/states/serv", willRespondWith = (404, None))
       serviceEndpoint(GET, "/shutter-api/qa/frontend/states/serv"          , willRespondWith = (404, None))
       serviceEndpoint(GET, "/shutter-api/staging/frontend/states/serv"     , willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/integration/frontend/states/serv"     , willRespondWith = (404, None))
       serviceEndpoint(GET, "/shutter-api/development/frontend/states/serv" , willRespondWith = (404, None))
 
       val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
@@ -148,6 +150,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(GET, "/shutter-api/externaltest/frontend/states/service-1", willRespondWith = (404, None))
       serviceEndpoint(GET, "/shutter-api/qa/frontend/states/service-1"          , willRespondWith = (200, Some(shutterApiData(ShutterType.Frontend, Environment.QA, ShutterStatusValue.Shuttered))))
       serviceEndpoint(GET, "/shutter-api/staging/frontend/states/service-1"     , willRespondWith = (404, None))
+      serviceEndpoint(GET, "/shutter-api/integration/frontend/states/service-1" , willRespondWith = (404, None))
       serviceEndpoint(GET, "/shutter-api/development/frontend/states/service-1" , willRespondWith = (404, None))
 
       val response = await(ws.url(s"http://localhost:$port/service/service-1").get)

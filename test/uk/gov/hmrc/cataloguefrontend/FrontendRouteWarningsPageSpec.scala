@@ -37,6 +37,7 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with GuiceOneServerPerSuite
   override def beforeEach(): Unit = {
     super.beforeEach()
     serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend" , willRespondWith = (200, Some(emptyJson)))
+    serviceEndpoint(GET, "/shutter-api/integration/frontend-route-warnings/abc-frontend" , willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/qa/frontend-route-warnings/abc-frontend"          , willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/staging/frontend-route-warnings/abc-frontend"     , willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/externalTest/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(emptyJson)))
