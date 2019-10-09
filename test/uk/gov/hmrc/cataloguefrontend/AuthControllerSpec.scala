@@ -27,7 +27,7 @@ import play.api.Configuration
 import play.api.i18n.{Lang, MessagesApi}
 import play.api.mvc._
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
@@ -46,6 +46,8 @@ class AuthControllerSpec
 
   implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
 
+  import Helpers._
+
   "Authenticating" should {
 
     "redirect to landing page if successful and UMP auth in session" in new Setup {
@@ -60,9 +62,9 @@ class AuthControllerSpec
 
       val result = controller.submit(request)
 
-      redirectLocation(result).get             shouldBe routes.CatalogueController.index().url
-      session(result).apply("ump.token")       shouldBe expectedToken.value
-      session(result).apply("ump.displayName") shouldBe expectedDisplayName.value
+      redirectLocation(result).get                     shouldBe routes.CatalogueController.index().url
+      Helpers.session(result).apply("ump.token")       shouldBe expectedToken.value
+      Helpers.session(result).apply("ump.displayName") shouldBe expectedDisplayName.value
     }
 
     "show 400 BAD_REQUEST and error message when auth service does not recognize user credentials" in new Setup {
@@ -122,5 +124,4 @@ class AuthControllerSpec
     val config         = Configuration("self-service-url" -> selfServiceUrl)
     val controller     = new AuthController(authService, config, mcc)
   }
-
 }
