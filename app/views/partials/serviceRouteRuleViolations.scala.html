@@ -20,7 +20,7 @@
 @if(serviceRoutes.hasInconsistentRoutes) {
     @defining(serviceRoutes.inconsistentRoutes.size > 3) { collapsable =>
         <div id="routing-rule-violations" >
-            <div class="accordion board" class="col-md-12">
+            <div class="accordion board">
                 <h3 class="board__heading red" id="headingSRRV">
                     <div class="@if(collapsable){accordion-toggle collapsed}" data-toggle="@if(collapsable) {collapse}" data-target="#collapseSRRV" aria-expanded="@if(collapsable) {false} else {true}" aria-controls="collapseSRRV">
                         Inconsistent Route Rules

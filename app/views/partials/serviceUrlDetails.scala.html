@@ -17,26 +17,24 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
-@(environmentRoute: Option[EnvironmentRoute] = None)
-@if(environmentRoute.isDefined) {
-    @defining(environmentRoute.get.routes.size > 3) { collapsable =>
-        <div id="service-urls-section" class="board">
-            <h3 class="board__heading" id="headingRSU">
-                <div class="@if(collapsable){accordion-toggle collapsed}" data-toggle="@if(collapsable) {collapse}" data-target="#collapseRSU" aria-expanded="@if(collapsable) {false} else {true}" aria-controls="collapseRSU">
-                    Frontend Routing Configuration
-                </div>
-            </h3>
-            <div class="board__body">
-                <div id="collapseRSU" class="@if(collapsable) {collapse}" aria-labelledby="headingRSU">
-                    <ul id="production-urls" class="list list--minimal">
-                    @for((route, index) <- environmentRoute.get.routes.zipWithIndex) {
-                        <li id="route-rule-@index" class="list-item">
-                            <a target="_blank" title="@route.frontendPath" href="@route.ruleConfigurationUrl">@route.frontendPath<span class="glyphicon glyphicon-new-window"/></a>
-                        </li>
-                    }
-                    </ul>
-                </div>
+@(environmentRoute: EnvironmentRoute)
+@defining(environmentRoute.routes.size > 3) { collapsable =>
+    <div id="service-urls-section" class="board">
+        <h3 class="board__heading" id="headingRSU">
+            <div class="@if(collapsable){accordion-toggle collapsed}" data-toggle="@if(collapsable) {collapse}" data-target="#collapseRSU" aria-expanded="@if(collapsable) {false} else {true}" aria-controls="collapseRSU">
+                Frontend Routing Configuration
+            </div>
+        </h3>
+        <div class="board__body">
+            <div id="collapseRSU" class="@if(collapsable) {collapse}" aria-labelledby="headingRSU">
+                <ul id="production-urls" class="list list--minimal">
+                @for((route, index) <- environmentRoute.routes.zipWithIndex) {
+                    <li id="route-rule-@index" class="list-item">
+                        <a target="_blank" title="@route.frontendPath" href="@route.ruleConfigurationUrl">@route.frontendPath<span class="glyphicon glyphicon-new-window"/></a>
+                    </li>
+                }
+                </ul>
             </div>
         </div>
-    }
+    </div>
 }
