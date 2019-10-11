@@ -87,7 +87,12 @@ case class UserManagementConnector @Inject()(
     httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {
-          case 200      => extractData[TeamDetails](teamName, response)
+          case 200      => response.json.validate[TeamDetails].fold(
+                               errors => { Logger.error(s"Failed to get team details from $url: $errors")
+                                           Left(NoData(umpMyTeamsPageUrl(teamName)))
+                                         }
+                             , Right.apply
+                             )
           case httpCode => Left(HTTPError(httpCode))
         }
       }
@@ -110,12 +115,6 @@ case class UserManagementConnector @Inject()(
         }
       }
   }
-
-  private def extractData[T](team: String, response: HttpResponse)(implicit rd: Reads[T]): Either[UMPError, T] =
-    Option(response.json).flatMap(_.asOpt[T]) match {
-      case Some(x) => Right(x)
-      case _       => Left(NoData(umpMyTeamsPageUrl(team)))
-    }
 
   private def extractMembers(team: String, response: HttpResponse): Either[UMPError, Seq[TeamMember]] = {
     val optList =
