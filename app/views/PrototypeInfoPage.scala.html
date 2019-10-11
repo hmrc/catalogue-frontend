@@ -39,12 +39,20 @@
     @partials.leak_detection_banner(linkToLeakDetection)
 
     <section class="section-wrapper">
-        @prototypeDetailsPartial(prototype)
+        <div class="row">
+            <div class="col-md-12">
+                @prototypeDetailsPartial(prototype)
+            </div>
+        </div>
 
         <div class="row">
-            @partials.repo_owning_teams(prototype)
+            <div class="col-md-6">
+                @partials.repo_owning_teams(prototype)
+            </div>
 
-            @partials.code(prototype)
+            <div class="col-md-6">
+                @partials.code(prototype)
+            </div>
         </div>
     </section>
 

@@ -58,20 +58,40 @@
 
     <section class="section-wrapper">
 
-        @partials.details(service)
+        <div class="row">
+            <div class="col-md-12">
+                @partials.details(service)
+            </div>
+        </div>
 
-        @partials.serviceUrlDetails(productionEnvironmentRoute)
+        @productionEnvironmentRoute.map { envRoute =>
+            <div class="row">
+                <div class="col-md-12">
+                    @partials.serviceUrlDetails(envRoute)
+                </div>
+            </div>
+        }
 
-        @partials.serviceRouteRuleViolations(serviceRoutes)
+        @if(serviceRoutes.hasInconsistentRoutes) {
+            <div class="row">
+                <div class="col-md-12">
+                    @partials.serviceRouteRuleViolations(serviceRoutes)
+                </div>
+            </div>
+        }
 
         <div class="row">
-            @partials.repo_owning_teams(service)
+            <div class="col-md-6">
+                @partials.repo_owning_teams(service)
+            </div>
 
-            @partials.code_and_builds(service)
+            <div class="col-md-6">
+                @partials.code_and_builds(service)
+            </div>
         </div>
         <div class="row">
         @for((environment, idx) <- service.environments.get.zipWithIndex) {
-            <div id="@{environment.id}-environment" class="col-md-5th-1">
+            <div id="@{environment.id}-environment" class="col-md-2">
                 <div class="board environment_board">
                     @renderEnvironmentBoardHeading(deploymentsByEnvironmentName, shutterState, environment)
                     <div class="board__body">
@@ -91,7 +111,11 @@
             </div>
         }
         </div>
-        @dependenciesPartial(optDependencies)
+        <div class="row">
+            <div class="col-md-12">
+                @dependenciesPartial(optDependencies)
+            </div>
+        </div>
         </div>
     </section>
     <div class="alert alert-success" role="alert" id="@service.name">

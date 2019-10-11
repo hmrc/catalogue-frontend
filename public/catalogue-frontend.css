@@ -12233,9 +12233,9 @@ div.shuttered-checkbox {
     top: -30px;
 }
 
-.col-md-5th-1 {
-    float: left;
-    width: 20%;
-    padding: 0px 15px 0px 15px;
+.list-two-columns {
+    columns: 2;
+    -webkit-columns: 2;
+    -moz-columns: 2;
 }
 

@@ -20,11 +20,11 @@
 
 @(repo: RepositoryDetails)
 
-<div id="code-and-build" class="col-md-6">
+<div id="code-and-build">
     <div class="board">
         <h3 class="board__heading">Code and Build</h3>
         <div class="board__body">
-            <ul class="list list--minimal">
+            <ul class="list list--minimal list-two-columns">
                 <li class="list-item"><a id="link-to-@{repo.githubUrl.id}" href="@{repo.githubUrl.url}" target="_blank">@{repo.githubUrl.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
                 <li class="list-item"><a id="link-to-@{repo.name}-config" href="@{repo.name}/config" target="_blank">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
             @for(ciLink <- repo.ci) {
@@ -32,6 +32,7 @@
             }
             @if(repo.repoType == RepoType.Service) {
                 <li class="list-item"><a id="link-to-dependency-explorer" href="/dependencies/@{repo.name}" target="_blank">Service Dependencies<span class="glyphicon glyphicon-new-window"/></a></li>
+                <li class="list-item"><a id="link-to-frontend-route-warnings" href="/frontend-route-warnings/production/@{repo.name}" target="_blank">Frontend Route Warnings<span class="glyphicon glyphicon-new-window"/></a></li>
             }
             </ul>
         </div>

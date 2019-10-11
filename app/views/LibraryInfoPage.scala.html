@@ -40,13 +40,27 @@
     @partials.bobby_pending_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
 
     <section class="section-wrapper">
-        @partials.details(library)
+        <div class="row">
+            <div class="col-md-12">
+                @partials.details(library)
+            </div>
+        </div>
 
         <div class="row">
-            @partials.repo_owning_teams(library)
-            @partials.code_and_builds(library)
+            <div class="col-md-6">
+                @partials.repo_owning_teams(library)
+            </div>
+
+            <div class="col-md-6">
+                @partials.code_and_builds(library)
+            </div>
         </div>
-        @dependenciesPartial(optDependencies)
+
+        <div class="row">
+            <div class="col-md-12">
+                @dependenciesPartial(optDependencies)
+            </div>
+        </div>
     </section>
 
     <div class="alert alert-success" role="alert" id="@library.name">
