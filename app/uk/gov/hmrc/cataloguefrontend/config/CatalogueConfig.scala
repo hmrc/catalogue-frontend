@@ -18,9 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.config
 
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class CatalogueConfig @Inject()(configuration: Configuration) {
-  val shutterGroup         = configuration.get[String]("perms.shutter.group")
-  val shutterPlatformGroup = configuration.get[String]("perms.shutter-platform.group")
+class CatalogueConfig @Inject()(servicesConfig: ServicesConfig) {
+  val shutterGroup         = servicesConfig.getString("perms.shutter.group")
+  val shutterPlatformGroup = servicesConfig.getString("perms.shutter-platform.group")
 }

@@ -98,7 +98,7 @@ class EventRepositorySpec
 
   private def insertEvent(theTimestamp: Int) =
     await(
-      mongoEventRepository.collection.insert(
+      mongoEventRepository.collection.insert(ordered = false).one(
         Json.obj(
           "eventType" -> "ServiceOwnerUpdated",
           "data" -> Json.obj(

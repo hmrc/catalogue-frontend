@@ -30,6 +30,7 @@ val compile = Seq(
   "uk.gov.hmrc"               %% "simple-reactivemongo" % "7.20.0-play-26",
   "uk.gov.hmrc"               %% "bootstrap-play-26"    % bootstrapPlayVersion,
   "uk.gov.hmrc"               %% "url-builder"          % "1.1.0",
+  "uk.gov.hmrc"               %% "mongo-caching"        % "6.6.0-play-26",
   "org.typelevel"             %% "cats-core"            % "1.6.1",
   "org.apache.httpcomponents" %  "httpcore"             % "4.3.2",
   "org.yaml"                  %  "snakeyaml"            % "1.17",
