@@ -53,7 +53,14 @@ case class UserManagementConnector @Inject()(
     httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {
-          case 200      => extractMembers(teamName, response)
+          case 200      => val teamMembers =
+                             (response.json \\ "members").headOption
+                               .map(_.as[List[TeamMember]]
+                             ).getOrElse(List.empty)
+                           if (teamMembers.nonEmpty)
+                             Right(teamMembers)
+                           else
+                             Left(NoData(umpMyTeamsPageUrl(teamName)))
           case httpCode => Left(HTTPError(httpCode))
         }
       }
@@ -70,7 +77,11 @@ case class UserManagementConnector @Inject()(
     httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {
-          case 200      => Right(extractUsers(response))
+          case 200      => val users =
+                             (response.json \\ "users").headOption
+                               .map(_.as[Seq[TeamMember]])
+                               .getOrElse(throw new RuntimeException(s"Unable to parse or extract UMP users: ${response.json}"))
+                           Right(users)
           case httpCode => Left(HTTPError(httpCode))
         }
       }
@@ -115,23 +126,6 @@ case class UserManagementConnector @Inject()(
         }
       }
   }
-
-  private def extractMembers(team: String, response: HttpResponse): Either[UMPError, Seq[TeamMember]] = {
-    val optList =
-      (response.json \\ "members").headOption
-        .map(_.as[List[TeamMember]])
-
-    optList match {
-      case Some(teamMembers) if teamMembers.nonEmpty => Right(teamMembers)
-      case _                                         => Left(NoData(umpMyTeamsPageUrl(team)))
-    }
-  }
-
-  private def extractUsers(response: HttpResponse): Seq[TeamMember] =
-    (response.json \\ "users").headOption
-      .map(_.as[Seq[TeamMember]])
-      .getOrElse(throw new RuntimeException(s"Unable to parse or extract UMP users: ${response.json}"))
-
 }
 
 object UserManagementConnector {
