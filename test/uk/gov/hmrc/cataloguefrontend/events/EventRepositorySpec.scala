@@ -34,8 +34,8 @@ package uk.gov.hmrc.cataloguefrontend.events
 
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, LoneElement, OptionValues}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent

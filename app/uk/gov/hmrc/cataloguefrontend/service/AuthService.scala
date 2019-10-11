@@ -73,7 +73,7 @@ class AuthService @Inject()(
                                              Logger.debug(s"Team `${team.name}` not found in UMP")
                                              List.empty
                   case Left(umpErr)       => sys.error(s"Failed to lookup team members for team `${team.name}` from ump: $umpErr")
-                  case Right(teamMembers) => if (teamMembers.contains(request.username)) providedServices else List.empty
+                  case Right(teamMembers) => if (teamMembers.flatMap(_.username).contains(request.username.value)) providedServices else List.empty
                 }
           }.map(_.flatten)
 

@@ -21,7 +21,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.mockito.Matchers._
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder

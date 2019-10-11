@@ -20,8 +20,8 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{BeforeAndAfter, EitherValues, Matchers, OptionValues, WordSpec}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -201,7 +201,7 @@ class TeamsAndRepositoriesConnectorSpec
 
       val teams: Seq[Team] =
         teamsAndRepositoriesConnector
-          .teamsWithRepositories()(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .teamsWithRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
 
       teams.size shouldBe 2

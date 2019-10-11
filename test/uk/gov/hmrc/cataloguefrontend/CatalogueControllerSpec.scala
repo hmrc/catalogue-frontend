@@ -24,7 +24,7 @@ import org.mockito.Matchers.{eq => is, _}
 import org.mockito.Mockito.when
 import org.scalatest.Matchers._
 import org.scalatest.{BeforeAndAfter, WordSpec}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._

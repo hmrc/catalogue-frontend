@@ -172,22 +172,22 @@ class ShutterWizardController @Inject()(
 
          step1Out      =  Step1Out(sf.serviceNames, status)
 
-         updatedFlowState <- EitherT.liftF[Future, Result, (String, String)] {
-                               status match {
-                                 case ShutterStatusValue.Shuttered if step0Out.shutterType == ShutterType.Frontend =>
-                                   putSession(step1Key, step1Out)
-                                 case _ =>
-                                   for {
-                                     _   <- putSession(step1Key, step1Out)
-                                     res <- putSession(step2bKey, Step2bOut(
-                                                     reason                = ""
-                                                   , outageMessage         = ""
-                                                   , requiresOutageMessage = false
-                                                   , useDefaultOutagePage  = false
-                                                   ))
-                                   } yield res
-                               }
-                             }
+         _             <- EitherT.liftF[Future, Result, (String, String)] {
+                            status match {
+                              case ShutterStatusValue.Shuttered if step0Out.shutterType == ShutterType.Frontend =>
+                                putSession(step1Key, step1Out)
+                              case _ =>
+                                for {
+                                  _   <- putSession(step1Key, step1Out)
+                                  res <- putSession(step2bKey, Step2bOut(
+                                             reason                = ""
+                                           , outageMessage         = ""
+                                           , requiresOutageMessage = false
+                                           , useDefaultOutagePage  = false
+                                           ))
+                                } yield res
+                            }
+                          }
        } yield
          status match {
            case ShutterStatusValue.Shuttered if step0Out.shutterType == ShutterType.Frontend =>
@@ -241,9 +241,7 @@ class ShutterWizardController @Inject()(
                        else
                          //Skip straight to outage-page screen if there are no route warnings
                          putSession(step2aKey, Step2aOut(confirmed = false, skipped = true))
-                           .map { updatedFlowState =>
-                             Redirect(appRoutes.ShutterWizardController.step2bGet())
-                           }
+                           .map(_ => Redirect(appRoutes.ShutterWizardController.step2bGet()))
                      )
        } yield html
       ).merge
@@ -259,10 +257,10 @@ class ShutterWizardController @Inject()(
                           hasErrors = formWithErrors => EitherT.left(showPage2a(formWithErrors, step0Out.env, step1Out).map(BadRequest(_))),
                           success   = data           => EitherT.pure[Future, Result](data)
                         )
-         step2aOut = Step2aOut(sf.confirm, skipped = false)
-         updatedFlowState <- EitherT.liftF[Future, Result, (String, String)] {
-                               putSession(step2aKey, step2aOut)
-                             }
+         step2aOut =  Step2aOut(sf.confirm, skipped = false)
+         _         <- EitherT.liftF[Future, Result, (String, String)] {
+                        putSession(step2aKey, step2aOut)
+                      }
        } yield
          Redirect(appRoutes.ShutterWizardController.step2bGet)
       ).merge
@@ -282,13 +280,13 @@ class ShutterWizardController @Inject()(
     ])(implicit request: Request[Any]): EitherT[Future, Result, Html] =
     for {
       step0Out              <- getStep0Out
-      outagePages           <- EitherT.liftF[Future, Result, List[OutagePage]](
+      outagePages           <- EitherT.liftF[Future, Result, List[OutagePage]] {
                                  step1Out.serviceNames.toList
                                    .traverse[Future, Option[OutagePage]](serviceName =>
                                      shutterService
                                        .outagePage(step0Out.env, serviceName))
                                    .map(_.collect { case Some(op) => op })
-                               )
+                               }
       outageMessageTemplate =  outagePages
                                  .flatMap(op => op.templatedMessages.map((op, _)))
                                  .headOption
@@ -344,9 +342,9 @@ class ShutterWizardController @Inject()(
                           , success   = data           => EitherT.pure[Future, Result](data)
                           )
          step2bOut =  Step2bOut(sf.reason, sf.outageMessage, sf.requiresOutageMessage, sf.useDefaultOutagePage)
-         updatedFlowState <- EitherT.liftF[Future, Result, (String, String)] {
-                               putSession(step2bKey, step2bOut)
-                             }
+         _         <- EitherT.liftF[Future, Result, (String, String)] {
+                        putSession(step2bKey, step2bOut)
+                      }
        } yield
          Redirect(appRoutes.ShutterWizardController.step3Get)
       ).merge
@@ -450,12 +448,9 @@ object ShutterWizardController {
   import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmpty, notEmptySeq}
   import play.api.mvc.Results._
 
-  val step0Key  = SessionController.Key[Step0Out]("step0")
-  val step1Key  = SessionController.Key[Step1Out]("step1")
-  val step2aKey = SessionController.Key[Step2aOut]("step2a")
-  val step2bKey = SessionController.Key[Step2bOut]("step2b")
-
   // -- Step 0 -------------------------
+
+  val step0Key  = SessionController.Key[Step0Out]("step0")
 
   case class Step0Out(
     shutterType: ShutterType
@@ -469,6 +464,8 @@ object ShutterWizardController {
   }
 
   // -- Step 1 -------------------------
+
+  val step1Key  = SessionController.Key[Step1Out]("step1")
 
   def step1Form(implicit messagesProvider: MessagesProvider) =
     Form(
@@ -494,6 +491,9 @@ object ShutterWizardController {
   }
 
   // -- Step 2a Review frontend-route warnings (if any) -------------------------
+
+  val step2aKey = SessionController.Key[Step2aOut]("step2a")
+
   def step2aForm(implicit messagesProvider: MessagesProvider) =
     Form(
       Forms
@@ -513,6 +513,8 @@ object ShutterWizardController {
     Json.format[Step2aOut]
 
   // -- Step 2b Review outage-page message and warnings -------------------------
+
+  val step2bKey = SessionController.Key[Step2bOut]("step2b")
 
   def step2bForm(implicit messagesProvider: MessagesProvider) =
     Form(

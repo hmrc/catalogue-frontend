@@ -70,33 +70,34 @@ object TargetEnvironment {
 }
 
 case class RepositoryDetails(
-  name: String,
-  description: String,
-  createdAt: LocalDateTime,
-  lastActive: LocalDateTime,
-  owningTeams: Seq[String],
-  teamNames: Seq[String],
-  githubUrl: Link,
-  ci: Seq[Link],
+  name        : String,
+  description : String,
+  createdAt   : LocalDateTime,
+  lastActive  : LocalDateTime,
+  owningTeams : Seq[String],
+  teamNames   : Seq[String],
+  githubUrl   : Link,
+  ci          : Seq[Link],
   environments: Option[Seq[TargetEnvironment]],
-  repoType: RepoType.RepoType,
-  isPrivate: Boolean)
+  repoType    : RepoType.RepoType,
+  isPrivate   : Boolean)
 
 case class RepositoryDisplayDetails(
-  name: String,
-  createdAt: LocalDateTime,
+  name         : String,
+  createdAt    : LocalDateTime,
   lastUpdatedAt: LocalDateTime,
-  repoType: RepoType.RepoType)
+  repoType     : RepoType.RepoType)
+
 object RepositoryDisplayDetails {
   implicit val repoDetailsFormat: OFormat[RepositoryDisplayDetails] = Json.format[RepositoryDisplayDetails]
 }
 
 case class Team(
-  name: String,
-  firstActiveDate: Option[LocalDateTime],
-  lastActiveDate: Option[LocalDateTime],
+  name                    : String,
+  firstActiveDate         : Option[LocalDateTime],
+  lastActiveDate          : Option[LocalDateTime],
   firstServiceCreationDate: Option[LocalDateTime],
-  repos: Option[Map[String, Seq[String]]]
+  repos                   : Option[Map[String, Seq[String]]]
 )
 
 object Team {
@@ -107,11 +108,11 @@ case class DigitalService(name: String, lastUpdatedAt: Long, repositories: Seq[D
 
 object DigitalService {
   case class DigitalServiceRepository(
-    name: String,
-    createdAt: LocalDateTime,
+    name         : String,
+    createdAt    : LocalDateTime,
     lastUpdatedAt: LocalDateTime,
-    repoType: RepoType.RepoType,
-    teamNames: Seq[String])
+    repoType     : RepoType.RepoType,
+    teamNames    : Seq[String])
 
   implicit val repoDetailsFormat: OFormat[DigitalServiceRepository] = Json.format[DigitalServiceRepository]
 
@@ -152,7 +153,7 @@ class TeamsAndRepositoriesConnector @Inject()(
       }
   }
 
-  def teamsWithRepositories()(implicit hc: HeaderCarrier): Future[Seq[Team]] =
+  def teamsWithRepositories(implicit hc: HeaderCarrier): Future[Seq[Team]] =
     http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams_with_repositories")
 
   def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[DigitalService]] = {

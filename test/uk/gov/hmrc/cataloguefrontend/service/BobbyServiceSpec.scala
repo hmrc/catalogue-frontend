@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import java.time._
 
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleFactory.aBobbyRule
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet

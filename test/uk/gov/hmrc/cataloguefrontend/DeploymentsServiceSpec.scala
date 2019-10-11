@@ -21,8 +21,8 @@ import java.time.{LocalDateTime, ZoneOffset}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{EitherValues, Matchers, OptionValues, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.connector._

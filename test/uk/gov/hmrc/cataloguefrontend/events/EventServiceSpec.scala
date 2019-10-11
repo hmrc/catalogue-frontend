@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.events
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsString}
 
 import scala.concurrent.{Await, Future}

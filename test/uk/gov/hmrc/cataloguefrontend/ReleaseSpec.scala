@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.LocalDateTime
 
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 
 class ReleaseSpec extends WordSpec with Matchers with MockitoSugar with ScalaFutures {
 

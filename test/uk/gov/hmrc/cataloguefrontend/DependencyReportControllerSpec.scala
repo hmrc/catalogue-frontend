@@ -22,7 +22,7 @@ import akka.stream.Materializer
 import org.mockito.Matchers.{eq => eqTo, _}
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -88,7 +88,7 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Gui
           Some(Map("Service" -> Seq(), "Library" -> Seq(), "Prototype" -> Seq(), "Other" -> repositories))
         )
 
-      when(mockedTeamsAndRepositoriesConnector.teamsWithRepositories()(any()))
+      when(mockedTeamsAndRepositoriesConnector.teamsWithRepositories(any()))
         .thenReturn(Future.successful(Seq(team("team1", Seq("repo-1")), team("team2", Seq("repo-2")))))
     }
 

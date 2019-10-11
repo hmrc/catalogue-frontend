@@ -22,7 +22,7 @@ import org.mockito.Mockito._
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{Json, JsArray}
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector.model.Username

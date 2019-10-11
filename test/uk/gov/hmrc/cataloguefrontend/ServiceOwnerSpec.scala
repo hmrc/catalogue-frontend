@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.mockito.Matchers._
 import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
