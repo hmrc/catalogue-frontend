@@ -26,6 +26,7 @@ import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import play.api.mvc.{Request, Session}
 import reactivemongo.play.json._
+import uk.gov.hmrc.mongo.CurrentTime
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -68,14 +69,21 @@ class SessionStore @Inject()(
     }
 
   def delete(session: Session, sessionKey: String, dataKey: String): Future[Unit] =
-    session.get(sessionKey) match {
-      case None            => Future(())
-      case Some(sessionId) => cacheRepository.collection.update(ordered = false).one(
-                                  q = Json.obj(cacheRepository.Id -> sessionId)
-                                , u = Json.obj("$unset" -> Json.obj(s"${Cache.DATA_ATTRIBUTE_NAME}.$dataKey" -> ""))
-                                )
-                                .map(_ => ())
+    CurrentTime.withCurrentTime { time =>
+      import uk.gov.hmrc.mongo.json.ReactiveMongoFormats._
+      session.get(sessionKey) match {
+        case None            => Future(())
+        case Some(sessionId) => cacheRepository.collection.update(ordered = false).one(
+                                    q = Json.obj(cacheRepository.Id -> sessionId)
+                                  , u = Json.obj( "$unset" -> Json.obj(s"${Cache.DATA_ATTRIBUTE_NAME}.$dataKey" -> "")
+                                                , "$set"   -> Json.obj("modifiedDetails.lastUpdated" -> time)
+                                                )
+                                  )
+                                  .map(_ => ())
+      }
     }
+
+  private object CurrentTime extends CurrentTime
 }
 
 object SessionController {
