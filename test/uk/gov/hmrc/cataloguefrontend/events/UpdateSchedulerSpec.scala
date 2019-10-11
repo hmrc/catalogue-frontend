@@ -18,8 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.events
 
 import akka.actor.ActorSystem
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, FunSpec}
+import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._

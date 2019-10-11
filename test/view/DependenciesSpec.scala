@@ -19,8 +19,8 @@ package view
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest.Matchers._
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Assertion, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
 import uk.gov.hmrc.cataloguefrontend.connector.model._

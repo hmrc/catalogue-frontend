@@ -22,7 +22,7 @@ import java.time.temporal.ChronoUnit
 import org.scalatest.{Matchers, WordSpec}
 import org.mockito.Matchers._
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{Await, Future}

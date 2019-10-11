@@ -44,16 +44,15 @@ val test = Seq(
   "uk.gov.hmrc"            %% "bootstrap-play-26"  % bootstrapPlayVersion % Test classifier "tests",
   "uk.gov.hmrc"            %% "hmrctest"           % "3.2.0"              % Test,
   "uk.gov.hmrc"            %% "reactivemongo-test" % "4.15.0-play-26"     % Test,
-  "org.scalatest"          %% "scalatest"          % "3.0.5"              % Test,
+  "org.scalatest"          %% "scalatest"          % "3.0.8"              % Test,
   "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2"              % Test,
   "org.scalacheck"         %% "scalacheck"         % "1.14.0"             % Test,
-  "org.pegdown"            %  "pegdown"            % "1.6.0"              % Test,
+  "org.pegdown"            %  "pegdown"            % "1.6.0"              % Test, // pegdown dependency needed by scalatest, until this PR is merged: https://github.com/scalatest/scalatest/pull/1229
   "com.typesafe.play"      %% "play-test"          % PlayVersion.current  % Test,
   "com.github.tomakehurst" %  "wiremock"           % "1.55"               % Test,
   "org.jsoup"              %  "jsoup"              % "1.9.2"              % Test,
   "org.mockito"            %  "mockito-all"        % "1.10.19"            % Test,
-  // force dependencies due to security flaws found in xercesImpl 2.11.0
-  "xerces"                 %  "xercesImpl"         % "2.12.0"             % Test,
+  "xerces"                 %  "xercesImpl"         % "2.12.0"             % Test, // force dependencies due to security flaws found in xercesImpl 2.11.0
   ws
 )
 
