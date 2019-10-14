@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{NoData, UMPError}
+@import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 @import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
@@ -91,17 +91,29 @@
                    <div class="board__body">
                        <div>
                            <ul class="list list--minimal" id="team_members">
-                           @if(errorOrMembers.isRight) {
-                               @for(teamMember <- errorOrMembers.right.get) {
-                                   <li class="col-xs-3">
-                                       <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a>
+                           @errorOrMembers match {
+                               case Right(members) if members.isEmpty => {
+                                   <li class="list list--minimal" id="ump-error-@{teamName}">
+                                       @teamName has no members
                                    </li>
                                }
-
-                           } else {
-                               <li class="list list--minimal" id="ump-error-@{teamName}">
-                               @showUmpError(errorOrMembers.left.get, teamName)
-                               </li>
+                               case Right(members) => {
+                                   @for(teamMember <- members) {
+                                       <li class="col-xs-3">
+                                           <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a>
+                                       </li>
+                                   }
+                               }
+                               case Left(UMPError.UnknownTeam) => {
+                                   <li class="list list--minimal" id="ump-error-@{teamName}">
+                                       @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
+                                    </li>
+                               }
+                               case Left(_) => {
+                                   <li class="list list--minimal" id="ump-error-@{teamName}">
+                                         Sorry, the User Management Portal is not available
+                                   </li>
+                               }
                            }
                            </ul>
 
@@ -223,18 +235,6 @@
 
 }
 
-@showUmpError(error: UMPError, teamName: String) = {
-@error match {
-    case NoData(linkToRectify) => {
-        @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
-    }
-    case _ => {
-        Sorry, the User Management Portal is not available
-    }
-}
-}
-
-
 @showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {
     @repos.get(repoType.toString).map { repositories =>
         <div class="col-md-3">
@@ -257,4 +257,3 @@
         </div>
     }
 }
-

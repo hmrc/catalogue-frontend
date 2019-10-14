@@ -31,7 +31,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{ConnectionError, DisplayName, HTTPError, NoData, TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.{FutureHelpers, UserManagementPortalConfig, WireMockEndpoints}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -97,23 +97,27 @@ class UserManagementConnectorSpec
     }
 
     it("has an empty members array in json") {
-
-      val error: UMPError =
-        callExternalMockedService("team-chicken", Some("/user-management-empty-members.json")).futureValue.left.value
-      error should ===(NoData("http://some.ump.com/myTeams/team-chicken?edit"))
+      val res =
+        callExternalMockedService("team-chicken", Some("/user-management-empty-members.json")).futureValue
+      res should ===(Right(Seq.empty))
     }
 
     it("no members field in json") {
-      val error: UMPError =
-        callExternalMockedService("team-chicken", Some("/user-management-no-members.json")).futureValue.left.value
-
-      error should ===(NoData("http://some.ump.com/myTeams/team-chicken?edit"))
+      val res =
+        callExternalMockedService("team-chicken", Some("/user-management-no-members.json")).futureValue
+      res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     it("api returns an error code") {
+      val error: UMPError = callExternalMockedService("team-chicken", None, 500).futureValue.left.value
+
+      error should ===(UMPError.HTTPError(500))
+    }
+
+    it("api returns not found") {
       val error: UMPError = callExternalMockedService("team-chicken", None, 404).futureValue.left.value
 
-      error should ===(HTTPError(404))
+      error should ===(UMPError.UnknownTeam)
     }
 
     it("api returns a connection error") {
@@ -125,16 +129,14 @@ class UserManagementConnectorSpec
         mock[UserManagementPortalConfig]
       )
 
-      val expectedException = new RuntimeException("some error")
-
-      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(expectedException))
+      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
         .getTeamMembersFromUMP("teamName")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
         .left
         .value
-      error should ===(ConnectionError(expectedException))
+      error.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     it("should get the team details from the user-management service") {
@@ -163,20 +165,17 @@ class UserManagementConnectorSpec
         jsonFileNameOpt = Some("/user-management-team-details-nodata-response.json")
       )
 
-      val teamDetails = userManagementConnector
-        .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-        .futureValue
-        .left
-        .value
+      val res = userManagementConnector
+        .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
-      teamDetails should ===(NoData("http://some.ump.com/myTeams/TEAM-A?edit"))
+      res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     it("api returns an error code for team details") {
       stubUserManagementEndPoint(
         url             = "/v2/organisations/teams/TEAM-A",
         jsonFileNameOpt = None,
-        httpCode        = 404
+        httpCode        = 500
       )
       val teamDetails = userManagementConnector
         .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -184,7 +183,7 @@ class UserManagementConnectorSpec
         .left
         .value
 
-      teamDetails should ===(HTTPError(404))
+      teamDetails should ===(UMPError.HTTPError(500))
     }
 
     it("api returns a connection error for team details") {
@@ -196,16 +195,14 @@ class UserManagementConnectorSpec
         mock[UserManagementPortalConfig]
       )
 
-      val expectedException = new RuntimeException("some error")
-
-      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(expectedException))
+      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
         .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
         .left
         .value
-      error should ===(ConnectionError(expectedException))
+      error.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     describe("getTeamMembersForTeams") {
@@ -263,7 +260,7 @@ class UserManagementConnectorSpec
         val team1Result = teamsAndMembers.get("Team1").value
         val team2Result = teamsAndMembers.get("Team2").value
 
-        team2Result should ===(Left(HTTPError(404)))
+        team2Result should ===(Left(UMPError.UnknownTeam))
 
         def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           team1Result.right.value.map(extractor)
@@ -286,8 +283,7 @@ class UserManagementConnectorSpec
 
         val teamNames = Seq("Team1", "Team2")
 
-        val exception = new RuntimeException("Boooom!")
-        when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(exception))
+        when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("Boooom!")))
 
         val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
           .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -298,8 +294,8 @@ class UserManagementConnectorSpec
         val team1Result = teamsAndMembers.get("Team1").value
         val team2Result = teamsAndMembers.get("Team2").value
 
-        team1Result should ===(Left(ConnectionError(exception)))
-        team2Result should ===(Left(ConnectionError(exception)))
+        team1Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
+        team2Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
       }
 
       it("should return a no data error if the json from UMP doesn't conform to the expected shape") {
@@ -324,7 +320,7 @@ class UserManagementConnectorSpec
         val team1Result = teamsAndMembers.get("Team1").value
         val team2Result = teamsAndMembers.get("Team2").value
 
-        team2Result should ===(Left(NoData("http://some.ump.com/myTeams/Team2?edit")))
+        team2Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
 
         def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           team1Result.right.value.map(extractor)
@@ -335,7 +331,6 @@ class UserManagementConnectorSpec
           "joe.black@digital.hmrc.gov.uk",
           "james.roger@hmrc.gsi.gov.uk")
       }
-
     }
 
     describe("getAllUsersFromUMP") {
@@ -353,8 +348,8 @@ class UserManagementConnectorSpec
         def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           allUsers.right.value.map(extractor)
 
-        getMembersDetails(_.displayName.value) shouldBe Seq("Ricky Micky", "Aleks Malkes", "Anand Manand")
-        getMembersDetails(_.username.value)    shouldBe Seq("ricky.micky", "aleks.malkes", "anand.manand")
+        getMembersDetails(_.displayName.value)  shouldBe Seq("Ricky Micky", "Aleks Malkes", "Anand Manand")
+        getMembersDetails(_.username.value)     shouldBe Seq("ricky.micky", "aleks.malkes", "anand.manand")
         getMembersDetails(_.primaryEmail.value) shouldBe Seq(
           "ricky.micky@gov.uk",
           "aleks.malkes@gov.uk",

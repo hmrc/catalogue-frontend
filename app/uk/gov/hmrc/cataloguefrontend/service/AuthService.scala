@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticatedRequest
 import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, Team, TeamsAndRepositoriesConnector, UserManagementAuthConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized, UmpUserId}
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, UMPError}
 import uk.gov.hmrc.http.HeaderCarrier
 
 
@@ -68,7 +68,7 @@ class AuthService @Inject()(
             else
               userManagementConnector.getTeamMembersFromUMP(team.name)
                 .map {
-                  case Left(UserManagementConnector.HTTPError(404))
+                  case Left(UMPError.UnknownTeam)
                                           => // Not all teams returned from TeamsAndRepositories (github) exist in UMP
                                              Logger.debug(s"Team `${team.name}` not found in UMP")
                                              List.empty
