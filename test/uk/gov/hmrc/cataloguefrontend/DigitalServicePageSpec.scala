@@ -29,8 +29,8 @@ import play.api.libs.ws._
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET => _, _}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest}
+import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, UserManagementAuthConnector, UserManagementConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{CatalogueErrorHandler, ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
@@ -269,7 +269,7 @@ class DigitalServicePageSpec
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
-          Map(teamName -> Left(UserManagementConnector.ConnectionError(new RuntimeException("Boooom!"))))
+          Map(teamName -> Left(UMPError.ConnectionError(new RuntimeException("Boooom!"))))
         )
       )
 
@@ -290,7 +290,7 @@ class DigitalServicePageSpec
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
-          Map(teamName -> Left(UserManagementConnector.NoData("https://some-link-to-rectify")))
+          Map(teamName -> Left(UMPError.HTTPError(404)))
         )
       )
 
@@ -312,7 +312,7 @@ class DigitalServicePageSpec
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
-          Map(teamName -> Left(UserManagementConnector.HTTPError(404)))
+          Map(teamName -> Left(UMPError.HTTPError(500)))
         )
       )
 

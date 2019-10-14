@@ -53,21 +53,19 @@ case class UserManagementConnector @Inject()(
     httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {
-          case 200      => val teamMembers =
-                             (response.json \\ "members").headOption
-                               .map(_.as[List[TeamMember]]
-                             ).getOrElse(List.empty)
-                           if (teamMembers.nonEmpty)
-                             Right(teamMembers)
-                           else
-                             Left(NoData(umpMyTeamsPageUrl(teamName)))
-          case httpCode => Left(HTTPError(httpCode))
+          case 200      => (response.json \ "members").validate[List[TeamMember]].fold(
+                               errors => { Logger.error(s"Could not lookup members from $url: $errors")
+                                           Left(UMPError.NoData)
+                                         }
+                             , Right.apply
+                             )
+          case httpCode => Left(UMPError.HTTPError(httpCode))
         }
       }
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
-          Left(ConnectionError(ex))
+          Left(UMPError.ConnectionError(ex))
       }
   }
 
@@ -82,13 +80,13 @@ case class UserManagementConnector @Inject()(
                                .map(_.as[Seq[TeamMember]])
                                .getOrElse(throw new RuntimeException(s"Unable to parse or extract UMP users: ${response.json}"))
                            Right(users)
-          case httpCode => Left(HTTPError(httpCode))
+          case httpCode => Left(UMPError.HTTPError(httpCode))
         }
       }
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          Left(ConnectionError(ex))
+          Left(UMPError.ConnectionError(ex))
       }
   }
 
@@ -99,18 +97,18 @@ case class UserManagementConnector @Inject()(
       .map { response =>
         response.status match {
           case 200      => response.json.validate[TeamDetails].fold(
-                               errors => { Logger.error(s"Failed to get team details from $url: $errors")
-                                           Left(NoData(umpMyTeamsPageUrl(teamName)))
+                               errors => { Logger.error(s"Could not parse response from $url: $errors")
+                                           Left(UMPError.NoData)
                                          }
                              , Right.apply
                              )
-          case httpCode => Left(HTTPError(httpCode))
+          case httpCode => Left(UMPError.HTTPError(httpCode))
         }
       }
       .recover {
         case ex =>
           Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
-          Left(ConnectionError(ex))
+          Left(UMPError.ConnectionError(ex))
       }
   }
 
@@ -131,12 +129,14 @@ case class UserManagementConnector @Inject()(
 object UserManagementConnector {
   sealed trait UMPError
 
-  case class NoData(linkToRectify: String) extends UMPError
+  object UMPError {
+    case object NoData extends UMPError
 
-  case class HTTPError(code: Int) extends UMPError
+    case class HTTPError(code: Int) extends UMPError
 
-  case class ConnectionError(exception: Throwable) extends UMPError {
-    override def toString: String = exception.getMessage
+    case class ConnectionError(exception: Throwable) extends UMPError {
+      override def toString: String = exception.getMessage
+    }
   }
 
   case class TeamMember(

@@ -16,7 +16,8 @@
 
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, NoData, TeamDetails}
+@import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, TeamDetails}
+
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.TeamActivityDates
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
@@ -101,8 +102,15 @@
                                   @teamDetails.location
                                 </li>
                               }
+                              case Left(UMPError.HTTPError(404)) => {
+                                <div>
+                                  @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
+                                </div>
+                              }
                               case Left(error) => {
-                                <div>@showError(error)</div>
+                                <div>
+                                    Sorry, the User Management Portal is not available
+                                </div>
                               }
                             }
                         </ul>
@@ -122,6 +130,9 @@
                         <div>
                             <ul class="list list--minimal" id="team_members">
                               @errorOrTeamMembers match {
+                                case Right(teamMembers) if teamMembers.isEmpty => {
+                                  @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
+                                }
                                 case Right(teamMembers) => {
                                   @for(teamMember <- teamMembers) {
                                     <li class="col-xs-6">
@@ -131,7 +142,7 @@
                                 }
                                 case Left(error) => {
                                   <li id="linkToRectify">
-                                    @showError(error)
+                                    Sorry, the User Management Portal is not available
                                   </li>
                                 }
                               }
@@ -166,17 +177,6 @@
         To update @teamName team details, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
     }
   </div>
-}
-
-@showError(error: UMPError) = {
-  @error match {
-    case NoData(linkToRectify) => {
-        @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
-    }
-    case _ => {
-        Sorry, the User Management Portal is not available
-    }
-  }
 }
 
 @showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {
