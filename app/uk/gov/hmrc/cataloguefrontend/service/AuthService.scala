@@ -68,7 +68,7 @@ class AuthService @Inject()(
             else
               userManagementConnector.getTeamMembersFromUMP(team.name)
                 .map {
-                  case Left(UMPError.HTTPError(404))
+                  case Left(UMPError.UnknownTeam)
                                           => // Not all teams returned from TeamsAndRepositories (github) exist in UMP
                                              Logger.debug(s"Team `${team.name}` not found in UMP")
                                              List.empty

@@ -105,13 +105,19 @@ class UserManagementConnectorSpec
     it("no members field in json") {
       val res =
         callExternalMockedService("team-chicken", Some("/user-management-no-members.json")).futureValue
-      res should ===(Left(UMPError.NoData))
+      res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     it("api returns an error code") {
+      val error: UMPError = callExternalMockedService("team-chicken", None, 500).futureValue.left.value
+
+      error should ===(UMPError.HTTPError(500))
+    }
+
+    it("api returns not found") {
       val error: UMPError = callExternalMockedService("team-chicken", None, 404).futureValue.left.value
 
-      error should ===(UMPError.HTTPError(404))
+      error should ===(UMPError.UnknownTeam)
     }
 
     it("api returns a connection error") {
@@ -123,16 +129,14 @@ class UserManagementConnectorSpec
         mock[UserManagementPortalConfig]
       )
 
-      val expectedException = new RuntimeException("some error")
-
-      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(expectedException))
+      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
         .getTeamMembersFromUMP("teamName")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
         .left
         .value
-      error should ===(UMPError.ConnectionError(expectedException))
+      error.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     it("should get the team details from the user-management service") {
@@ -164,14 +168,14 @@ class UserManagementConnectorSpec
       val res = userManagementConnector
         .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
-      res should ===(Left(UMPError.NoData))
+      res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     it("api returns an error code for team details") {
       stubUserManagementEndPoint(
         url             = "/v2/organisations/teams/TEAM-A",
         jsonFileNameOpt = None,
-        httpCode        = 404
+        httpCode        = 500
       )
       val teamDetails = userManagementConnector
         .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -179,7 +183,7 @@ class UserManagementConnectorSpec
         .left
         .value
 
-      teamDetails should ===(UMPError.HTTPError(404))
+      teamDetails should ===(UMPError.HTTPError(500))
     }
 
     it("api returns a connection error for team details") {
@@ -191,16 +195,14 @@ class UserManagementConnectorSpec
         mock[UserManagementPortalConfig]
       )
 
-      val expectedException = new RuntimeException("some error")
-
-      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(expectedException))
+      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
         .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
         .left
         .value
-      error should ===(UMPError.ConnectionError(expectedException))
+      error.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     describe("getTeamMembersForTeams") {
@@ -258,7 +260,7 @@ class UserManagementConnectorSpec
         val team1Result = teamsAndMembers.get("Team1").value
         val team2Result = teamsAndMembers.get("Team2").value
 
-        team2Result should ===(Left(UMPError.HTTPError(404)))
+        team2Result should ===(Left(UMPError.UnknownTeam))
 
         def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           team1Result.right.value.map(extractor)
@@ -281,8 +283,7 @@ class UserManagementConnectorSpec
 
         val teamNames = Seq("Team1", "Team2")
 
-        val exception = new RuntimeException("Boooom!")
-        when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(exception))
+        when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("Boooom!")))
 
         val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
           .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -293,8 +294,8 @@ class UserManagementConnectorSpec
         val team1Result = teamsAndMembers.get("Team1").value
         val team2Result = teamsAndMembers.get("Team2").value
 
-        team1Result should ===(Left(UMPError.ConnectionError(exception)))
-        team2Result should ===(Left(UMPError.ConnectionError(exception)))
+        team1Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
+        team2Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
       }
 
       it("should return a no data error if the json from UMP doesn't conform to the expected shape") {
@@ -319,7 +320,7 @@ class UserManagementConnectorSpec
         val team1Result = teamsAndMembers.get("Team1").value
         val team2Result = teamsAndMembers.get("Team2").value
 
-        team2Result should ===(Left(UMPError.NoData))
+        team2Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
 
         def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           team1Result.right.value.map(extractor)

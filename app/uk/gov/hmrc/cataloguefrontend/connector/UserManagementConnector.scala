@@ -54,18 +54,17 @@ case class UserManagementConnector @Inject()(
       .map { response =>
         response.status match {
           case 200      => (response.json \ "members").validate[List[TeamMember]].fold(
-                               errors => { Logger.error(s"Could not lookup members from $url: $errors")
-                                           Left(UMPError.NoData)
-                                         }
+                               errors => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors"))
                              , Right.apply
                              )
+          case 404      => Left(UMPError.UnknownTeam)
           case httpCode => Left(UMPError.HTTPError(httpCode))
         }
       }
       .recover {
         case ex =>
-          Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
-          Left(UMPError.ConnectionError(ex))
+          Logger.error(s"An error occurred when connecting to $url", ex)
+          Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
       }
   }
 
@@ -75,18 +74,17 @@ case class UserManagementConnector @Inject()(
     httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {
-          case 200      => val users =
-                             (response.json \\ "users").headOption
-                               .map(_.as[Seq[TeamMember]])
-                               .getOrElse(throw new RuntimeException(s"Unable to parse or extract UMP users: ${response.json}"))
-                           Right(users)
+          case 200      => (response.json \\ "users").headOption
+                             .map(_.as[Seq[TeamMember]])
+                             .fold[Either[UMPError, Seq[TeamMember]]](
+                               ifEmpty = Left(UMPError.ConnectionError(s"Could not parse response from $url")))(Right.apply)
           case httpCode => Left(UMPError.HTTPError(httpCode))
         }
       }
       .recover {
         case ex =>
-          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          Left(UMPError.ConnectionError(ex))
+          Logger.error(s"An error occurred when connecting to $url", ex)
+          Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
       }
   }
 
@@ -97,18 +95,17 @@ case class UserManagementConnector @Inject()(
       .map { response =>
         response.status match {
           case 200      => response.json.validate[TeamDetails].fold(
-                               errors => { Logger.error(s"Could not parse response from $url: $errors")
-                                           Left(UMPError.NoData)
-                                         }
+                               errors => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors"))
                              , Right.apply
                              )
+          case 404      => Left(UMPError.UnknownTeam)
           case httpCode => Left(UMPError.HTTPError(httpCode))
         }
       }
       .recover {
         case ex =>
-          Logger.error(s"An error occurred when connecting to $userManagementBaseUrl: ${ex.getMessage}", ex)
-          Left(UMPError.ConnectionError(ex))
+          Logger.error(s"An error occurred when connecting to $url", ex)
+          Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
       }
   }
 
@@ -130,13 +127,9 @@ object UserManagementConnector {
   sealed trait UMPError
 
   object UMPError {
-    case object NoData extends UMPError
-
-    case class HTTPError(code: Int) extends UMPError
-
-    case class ConnectionError(exception: Throwable) extends UMPError {
-      override def toString: String = exception.getMessage
-    }
+    case object UnknownTeam                   extends UMPError
+    case class HTTPError(code: Int)           extends UMPError
+    case class ConnectionError(error: String) extends UMPError
   }
 
   case class TeamMember(

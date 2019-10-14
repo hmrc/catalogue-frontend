@@ -269,7 +269,7 @@ class DigitalServicePageSpec
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
-          Map(teamName -> Left(UMPError.ConnectionError(new RuntimeException("Boooom!"))))
+          Map(teamName -> Left(UMPError.ConnectionError("Boooom!")))
         )
       )
 
@@ -290,7 +290,7 @@ class DigitalServicePageSpec
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
       when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
         Future.successful(
-          Map(teamName -> Left(UMPError.HTTPError(404)))
+          Map(teamName -> Left(UMPError.UnknownTeam))
         )
       )
 

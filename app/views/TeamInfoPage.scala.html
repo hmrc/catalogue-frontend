@@ -131,7 +131,7 @@
                             <ul class="list list--minimal" id="team_members">
                               @errorOrTeamMembers match {
                                 case Right(teamMembers) if teamMembers.isEmpty => {
-                                  @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
+                                  @teamName has no members
                                 }
                                 case Right(teamMembers) => {
                                   @for(teamMember <- teamMembers) {
@@ -139,6 +139,9 @@
                                       <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
                                     </li>
                                   }
+                                }
+                                case Left(UMPError.UnknownTeam) => {
+                                  @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
                                 }
                                 case Left(error) => {
                                   <li id="linkToRectify">
