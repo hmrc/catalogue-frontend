@@ -26,7 +26,7 @@ import play.api.mvc.PathBindable
 sealed trait Environment { def asString: String }
 object Environment {
   case object Production      extends Environment { val asString = "production"   }
-  case object ExternalTest    extends Environment { val asString = "externalTest" }
+  case object ExternalTest    extends Environment { val asString = "externaltest" }
   case object Staging         extends Environment { val asString = "staging"      }
   case object QA              extends Environment { val asString = "qa"           }
   case object Integration     extends Environment { val asString = "integration"  }

@@ -40,7 +40,7 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with GuiceOneServerPerSuite
     serviceEndpoint(GET, "/shutter-api/integration/frontend-route-warnings/abc-frontend" , willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/qa/frontend-route-warnings/abc-frontend"          , willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/staging/frontend-route-warnings/abc-frontend"     , willRespondWith = (200, Some(emptyJson)))
-    serviceEndpoint(GET, "/shutter-api/externalTest/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(emptyJson)))
+    serviceEndpoint(GET, "/shutter-api/externaltest/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/production/frontend-route-warnings/abc-frontend"  , willRespondWith = (200, Some(emptyJson)))
   }
 
