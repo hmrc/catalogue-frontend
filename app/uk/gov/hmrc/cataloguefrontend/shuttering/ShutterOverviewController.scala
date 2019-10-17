@@ -61,29 +61,10 @@ class ShutterOverviewController @Inject()(
                                    .map(ws => (env, ws))
                                }
         hasGlobalPerm       =  request.optUser.map(_.groups.contains(catalogueConfig.shutterPlatformGroup)).getOrElse(false)
-        killSwitchLink      =  if (hasGlobalPerm) Some(mkKillSwitchLink(shutterType, env)) else None
+        killSwitchLink      =  if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
         page                =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, request.isSignedIn, killSwitchLink)
       } yield Ok(page)
     }
-
-  private def mkKillSwitchLink(shutterType: ShutterType, env: Environment) = {
-    val jobName =
-      shutterType match {
-        case ShutterType.Frontend => "shutter-mdtp"
-        case ShutterType.Api      => "shutter-api-platform"
-        case ShutterType.Rate     => "shutter-rate-platform"
-      }
-    val orchestrator =
-      env match {
-        case Environment.Development  => "https://orchestrator.tools.development.tax.service.gov.uk"
-        case Environment.Integration  => "https://orchestrator.tools.integration.tax.service.gov.uk"
-        case Environment.QA           => "https://orchestrator.tools.qa.tax.service.gov.uk"
-        case Environment.Staging      => "https://orchestrator.tools.staging.tax.service.gov.uk"
-        case Environment.ExternalTest => "https://orchestrator.tools.externaltest.tax.service.gov.uk"
-        case Environment.Production   => "https://orchestrator.tools.production.tax.service.gov.uk"
-      }
-    s"$orchestrator/job/$jobName/"
-  }
 
   def frontendRouteWarnings(env: Environment, serviceName: String): Action[AnyContent] =
     Action.async { implicit request =>
