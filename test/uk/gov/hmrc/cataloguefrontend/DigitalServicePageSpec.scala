@@ -30,6 +30,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET => _, _}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest}
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, UserManagementAuthConnector, UserManagementConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.User
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{CatalogueErrorHandler, ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
@@ -197,10 +199,9 @@ class DigitalServicePageSpec
       serviceOwnerO.get.attr("value") shouldBe serviceOwner.getDisplayName
     }
 
-    "show edit button if user is singed-in" in {
+    "show edit button if user is signed-in" in {
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
-      val request               = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), isSignedIn = true)
-
+      val request               = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), optUser = Some(User(username = Username("username"), groups = List.empty)))
       val document =
         Jsoup.parse(new DigitalServiceInfoPage(mock[ViewMessages])(digitalServiceDetails, None)(request).toString)
 
@@ -209,7 +210,7 @@ class DigitalServicePageSpec
 
     "don't show edit button if user is NOT singed-in" in {
       val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
-      val request               = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), isSignedIn = false)
+      val request               = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), optUser = None)
 
       val document =
         Jsoup.parse(new DigitalServiceInfoPage(mock[ViewMessages])(digitalServiceDetails, None)(request).toString)

@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.actions
 import play.api.mvc.{ActionBuilder, ActionRefiner, AnyContent, BodyParser, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.{UserManagementAuthConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.User
 import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,7 +45,7 @@ trait ActionsSupport {
           Future(Right(UmpAuthenticatedRequest(
               request
             , token       = UserManagementAuthConnector.UmpToken("asdasdasd")
-            , username    = Username("username")
+            , user        = User(username = Username("username"), groups = List.empty)
             , displayName = UserManagementConnector.DisplayName("displayname")
             )))
 
@@ -59,6 +60,6 @@ trait ActionsSupport {
     , cc  : MessagesControllerComponents
     ) extends VerifySignInStatus(umac, cc) {
     override def invokeBlock[A](request: Request[A], block: UmpVerifiedRequest[A] => Future[Result]): Future[Result] =
-      block(UmpVerifiedRequest(request, cc.messagesApi, isSignedIn = true))
+      block(UmpVerifiedRequest(request, cc.messagesApi, optUser = Some(User(username = Username("username"), groups = List.empty))))
   }
 }

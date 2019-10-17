@@ -36,9 +36,8 @@ class ShutterOverviewController @Inject()(
   , shutterOverviewPage        : ShutterOverviewPage
   , frontendRoutesWarningPage  : FrontendRouteWarningsPage
   , shutterService             : ShutterService
-  , userManagementAuthConnector: UserManagementAuthConnector
   , catalogueConfig            : CatalogueConfig
-)(implicit val ec: ExecutionContext)
+  )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
   def allStates(shutterType: ShutterType): Action[AnyContent] =

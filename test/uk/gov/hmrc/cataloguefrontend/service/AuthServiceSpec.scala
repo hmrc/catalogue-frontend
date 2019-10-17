@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticatedRequest
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, Team}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.{UserManagementAuthConnector, UserManagementConnector, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId, User}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember}
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import uk.gov.hmrc.http.HeaderCarrier
@@ -91,7 +91,7 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
     implicit val request = UmpAuthenticatedRequest(
         request     = FakeRequest()
       , token       = UmpToken("token")
-      , username    = Username("username")
+      , user        = User(username = Username("username"), groups = List.empty)
       , displayName = DisplayName("Username")
       )
 
@@ -100,7 +100,7 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
         .thenReturn(Future(List(team("team1", List("service1")))))
 
       when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
-        .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember(request.username.value)))))
+        .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember(request.user.username.value)))))
 
       val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
 
@@ -118,7 +118,7 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
         .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq.empty)))
 
       when(userManagementConnector.getTeamMembersFromUMP(mockEq("team2"))(any()))
-        .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember(request.username.value)))))
+        .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember(request.user.username.value)))))
 
       val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
 

@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 final case class UmpAuthenticatedRequest[A](
     request    : Request[A]
   , token      : UmpToken
-  , username   : Username
+  , user       : User
   , displayName: DisplayName
   ) extends WrappedRequest(request)
 
@@ -89,7 +89,7 @@ class UmpAuthActionBuilder @Inject()(
          } yield UmpAuthenticatedRequest(
              request
            , token       = token
-           , username    = user.username
+           , user        = user
            , displayName = displayName
            )
         ).value
