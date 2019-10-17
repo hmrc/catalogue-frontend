@@ -21,10 +21,11 @@
 
 @this(viewMessages: ViewMessages)
 
-@( shutterStates: Map[Environment, Seq[ShutterStateData]]
- , shutterType  : ShutterType
- , selectedEnv  : Environment
- , isSignedIn   : Boolean
+@( shutterStates : Map[Environment, Seq[ShutterStateData]]
+ , shutterType   : ShutterType
+ , selectedEnv   : Environment
+ , isSignedIn    : Boolean
+ , killSwitchLink: Option[String]
  )(implicit request: Request[_])
 
 @standard_layout(s"Shutter Overview - ${shutterType.asString.capitalize}") {
@@ -32,6 +33,18 @@
   <header>
       <h1>Shutter Overview - @{shutterType.asString.capitalize}</h1>
   </header>
+
+  @killSwitchLink.map { link =>
+    <section id="shutter-overview">
+      <div class="row panel panel-warning">
+        <div class="panel-heading">
+          <span class="glyphicon glyphicon-warning-sign"></span>
+          In the unlikely event you need to shutter the whole platform, go to <a href="@link">Jenkins</a>
+        </div>
+      </div>
+      <div class="row">&nbsp;</div>
+    </section>
+  }
 
   <section id="shutter-overview">
 

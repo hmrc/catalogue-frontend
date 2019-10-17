@@ -20,6 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
+import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering._
 
@@ -29,14 +31,15 @@ import cats.implicits._
 
 @Singleton
 class ShutterOverviewController @Inject()(
-  mcc                      : MessagesControllerComponents,
-  verifySignInStatus       : VerifySignInStatus,
-  shutterOverviewPage      : ShutterOverviewPage,
-  frontendRoutesWarningPage: FrontendRouteWarningsPage,
-  shutterService           : ShutterService
+    mcc                        : MessagesControllerComponents
+  , verifySignInStatus         : VerifySignInStatus
+  , shutterOverviewPage        : ShutterOverviewPage
+  , frontendRoutesWarningPage  : FrontendRouteWarningsPage
+  , shutterService             : ShutterService
+  , userManagementAuthConnector: UserManagementAuthConnector
+  , catalogueConfig            : CatalogueConfig
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
-
 
   def allStates(shutterType: ShutterType): Action[AnyContent] =
     allStatesForEnv(
@@ -57,9 +60,30 @@ class ShutterOverviewController @Inject()(
                                    }
                                    .map(ws => (env, ws))
                                }
-        page                =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, request.isSignedIn)
+        hasGlobalPerm       =  request.optUser.map(_.groups.contains(catalogueConfig.shutterPlatformGroup)).getOrElse(false)
+        killSwitchLink      =  if (hasGlobalPerm) Some(mkKillSwitchLink(shutterType, env)) else None
+        page                =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, request.isSignedIn, killSwitchLink)
       } yield Ok(page)
     }
+
+  private def mkKillSwitchLink(shutterType: ShutterType, env: Environment) = {
+    val jobName =
+      shutterType match {
+        case ShutterType.Frontend => "shutter-mdtp"
+        case ShutterType.Api      => "shutter-api-platform"
+        case ShutterType.Rate     => "shutter-rate-platform"
+      }
+    val orchestrator =
+      env match {
+        case Environment.Development  => "https://orchestrator.tools.development.tax.service.gov.uk"
+        case Environment.Integration  => "https://orchestrator.tools.integration.tax.service.gov.uk"
+        case Environment.QA           => "https://orchestrator.tools.qa.tax.service.gov.uk"
+        case Environment.Staging      => "https://orchestrator.tools.staging.tax.service.gov.uk"
+        case Environment.ExternalTest => "https://orchestrator.tools.externaltest.tax.service.gov.uk"
+        case Environment.Production   => "https://orchestrator.tools.production.tax.service.gov.uk"
+      }
+    s"$orchestrator/job/$jobName/"
+  }
 
   def frontendRouteWarnings(env: Environment, serviceName: String): Action[AnyContent] =
     Action.async { implicit request =>
