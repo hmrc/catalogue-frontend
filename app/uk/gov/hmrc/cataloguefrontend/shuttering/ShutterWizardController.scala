@@ -47,7 +47,6 @@ class ShutterWizardController @Inject()(
   , page3                        : Page3
   , page4                        : Page4
   , umpAuthActionBuilder         : UmpAuthActionBuilder
-  , userManagementAuthConnector  : UserManagementAuthConnector
   , authService                  : AuthService
   , catalogueConfig              : CatalogueConfig
   , val sessionStore             : SessionStore
@@ -157,10 +156,7 @@ class ShutterWizardController @Inject()(
          // check has `shutter-platform` group or is authorized for selected services
          serviceNames  <- EitherT.fromOption[Future](NonEmptyList.fromList(sf.serviceNames.toList), ())
                            .leftFlatMap(_=> EitherT.left[NonEmptyList[String]](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages("No services selected"))).map(BadRequest(_))))
-         hasGlobalPerm <- EitherT.liftF {
-                            userManagementAuthConnector.getUser(request.token)
-                              .map(_.map(_.groups.contains(catalogueConfig.shutterPlatformGroup)).getOrElse(false))
-                          }
+         hasGlobalPerm =  request.user.groups.contains(catalogueConfig.shutterPlatformGroup)
          _             <- if (step0Out.shutterType != ShutterType.Frontend || hasGlobalPerm)
                             EitherT.pure[Future, Result](())
                           else

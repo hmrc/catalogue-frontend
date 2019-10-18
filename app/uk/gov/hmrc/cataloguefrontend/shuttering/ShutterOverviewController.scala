@@ -20,6 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
+import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering._
 
@@ -29,14 +31,14 @@ import cats.implicits._
 
 @Singleton
 class ShutterOverviewController @Inject()(
-  mcc                      : MessagesControllerComponents,
-  verifySignInStatus       : VerifySignInStatus,
-  shutterOverviewPage      : ShutterOverviewPage,
-  frontendRoutesWarningPage: FrontendRouteWarningsPage,
-  shutterService           : ShutterService
-)(implicit val ec: ExecutionContext)
+    mcc                        : MessagesControllerComponents
+  , verifySignInStatus         : VerifySignInStatus
+  , shutterOverviewPage        : ShutterOverviewPage
+  , frontendRoutesWarningPage  : FrontendRouteWarningsPage
+  , shutterService             : ShutterService
+  , catalogueConfig            : CatalogueConfig
+  )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
-
 
   def allStates(shutterType: ShutterType): Action[AnyContent] =
     allStatesForEnv(
@@ -57,7 +59,9 @@ class ShutterOverviewController @Inject()(
                                    }
                                    .map(ws => (env, ws))
                                }
-        page                =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, request.isSignedIn)
+        hasGlobalPerm       =  request.optUser.map(_.groups.contains(catalogueConfig.shutterPlatformGroup)).getOrElse(false)
+        killSwitchLink      =  if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
+        page                =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, request.isSignedIn, killSwitchLink)
       } yield Ok(page)
     }
 

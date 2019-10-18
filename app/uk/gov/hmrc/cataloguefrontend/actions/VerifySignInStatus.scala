@@ -20,14 +20,16 @@ import javax.inject.{Inject, Singleton}
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, User}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.FrontendHeaderCarrierProvider
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final case class UmpVerifiedRequest[A](request: Request[A], override val messagesApi: MessagesApi, isSignedIn: Boolean)
-    extends MessagesRequest[A](request, messagesApi)
+final case class UmpVerifiedRequest[A](request: Request[A], override val messagesApi: MessagesApi, optUser: Option[User])
+    extends MessagesRequest[A](request, messagesApi) {
+  def isSignedIn = optUser.isDefined
+}
 
 /** Creates an Action to check if there is a UmpToken, and if it is valid.
   * It will continue to invoke the action body, with a [[UmpVerifiedRequest]] representing this status.
@@ -48,10 +50,10 @@ class VerifySignInStatus @Inject()(
     request.session.get(UmpToken.SESSION_KEY_NAME) match {
       case Some(token) =>
         userManagementAuthConnector.getUser(UmpToken(token)).flatMap { optUser =>
-          block(UmpVerifiedRequest(request, cc.messagesApi, isSignedIn = optUser.isDefined))
+          block(UmpVerifiedRequest(request, cc.messagesApi, optUser))
         }
       case None =>
-        block(UmpVerifiedRequest(request, cc.messagesApi, isSignedIn = false))
+        block(UmpVerifiedRequest(request, cc.messagesApi, optUser = None))
     }
   }
 
