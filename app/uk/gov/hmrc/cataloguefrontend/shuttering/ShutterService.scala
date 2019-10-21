@@ -63,8 +63,10 @@ class ShutterService @Inject()(
                     )
                 }
       sorted =  status
-                  .sortWith(_.serviceName <  _.serviceName)
-                  .sortWith { case (l, _) => l.status.value == ShutterStatusValue.Shuttered }
+                  .sortWith { (l, r) => if (l.status.value == r.status.value)
+                                          l.serviceName < r.serviceName
+                                        else l.status.value == ShutterStatusValue.Shuttered
+                   }
     } yield sorted
 
   /** Creates an [[OutagePageStatus]] for each service based on the contents of [[OutagePage]] */
