@@ -225,10 +225,12 @@ object EventType {
 
 sealed trait ShutterCause { def asString: String }
 object ShutterCause {
-  case object Scheduled   extends ShutterCause { override val asString = "scheduled"   }
-  case object UserCreated extends ShutterCause { override val asString = "user-shutter"}
+  case object Scheduled      extends ShutterCause { override val asString = "scheduled"      }
+  case object UserCreated    extends ShutterCause { override val asString = "user-shutter"   }
+  case object AutoReconciled extends ShutterCause { override val asString = "auto-reconciled"}
+  case object Legacy         extends ShutterCause { override val asString = "legacy-shutter" }
 
-  val values = List(Scheduled, UserCreated)
+  val values = List(Scheduled, UserCreated, AutoReconciled, Legacy)
 
   def parse(s: String): Option[ShutterCause] =
     values.find(_.asString == s)
