@@ -12168,7 +12168,7 @@ tr.shutter-row p {
 }
 
 tr.shuttered_row {
-    background: repeating-linear-gradient(-45deg, #6d6d6d, #6d6d6d 30px, #d0a039a3 30px, #ff990091 60px);
+    border: 3px dashed #f3c37e;
 }
 
 tr.shuttered_row td p {
