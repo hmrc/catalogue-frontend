@@ -25,28 +25,10 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 class ViewMessages @Inject()(configuration: Configuration) {
-  val noIndicatorsData: String = "<p>There's nothing here - this probably means you haven't released anything yet! Get shipping " +
-    "to see your data. If you think you're seeing this message in error or have any other feedback, please let us know in " +
-    """<a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops<span class="glyphicon glyphicon-new-window"/></a></p>"""
-
   val noJobExecutionData: String = "<p>It's possible that there is no Jenkins job set up for this repository, or a job exists " +
     "but there is no past build data available. If you think you're seeing this message in error or have any other feedback, " +
     "please let us know in " +
     """<a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops<span class="glyphicon glyphicon-new-window"/></a></p>"""
-
-  val indicatorsServiceError: String = "Sorry about that, there was a problem fetching the indicator data. This will " +
-    "hopefully be resolved shortly, but in the meantime feel free to let us know or provide general feedback in " +
-    "<a href=\"https://hmrcdigital.slack.com/messages/team-platops/\" target=\"_blank\">#team-platops<span class=\"glyphicon glyphicon-new-window\"/></a>"
-
-  val deploymentThroughputAndStabilityGraphText: String =
-    "<p>These indicators show the frequency and stability of your production deployments</p>" +
-      "<p>Each monthly measurement has a 3 month sample size. Trending towards lower numbers suggests an improvement; an absence of numbers suggests inactivity</p>" +
-      "<p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>"
-
-  val repositoryBuildDetailsGraphText: String =
-    "<p>These indicators show the duration and stability of your build.</p> " +
-      "<p>Each monthly measurement has a 3 month sample size. Trending towards lower success rate indicates instability in the build. Trending towards higher duration indicates that something is causing your build time to increase.</p>" +
-      "<p><label>N.B.</label> You can click on a data point on a graph to see the underlying deployment data</p>"
 
   val dependenciesText =
     """<p>This report shows the platform dependencies the code in your repository has, what version they are currently at, and highlights if any later versions are available. You should act quickly to rectify the issue when you see a minor version discrepancy, and immediately if you see a major version discrepancy.</p>
@@ -70,15 +52,6 @@ class ViewMessages @Inject()(configuration: Configuration) {
 
   val informationalText: String = configuration.get[String](s"info-panel-text")
 
-  def noDataToShow =
-    Html("""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>$noIndicatorsData</p>")
-
-  def noProductionDeploymentSinceDaysMessage(firstActiveDate: LocalDateTime): Html = {
-    val daysSinceNoProdDeployment = firstActiveDate.until(LocalDateTime.now(), ChronoUnit.DAYS) + 1
-    Html(
-      s"""<h2 class="chart-message text-center">No production deployments for $daysSinceNoProdDeployment days</h2>""" + s"<p>$noIndicatorsData</p>")
-  }
-
   def noJobExecutionTimeDataHtml =
     Html(
       s"""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>$noJobExecutionData</p>")
@@ -89,12 +62,7 @@ class ViewMessages @Inject()(configuration: Configuration) {
       case t                => t.toString
     }
 
-  def errorMessage =
-    Html(
-      """<h2 class="chart-message text-center">The catalogue encountered an error</h2>""" + s"<p>$indicatorsServiceError</p>")
-
   val notSpecifiedText = "Not specified"
 
   val prototypesBaseUrl: String = configuration.get[String](s"prototypes-base-url")
-
 }
