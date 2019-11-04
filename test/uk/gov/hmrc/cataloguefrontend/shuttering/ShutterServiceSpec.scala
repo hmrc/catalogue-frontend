@@ -58,6 +58,7 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
         , timestamp   = Instant.now().minus(2, ChronoUnit.DAYS)
         , serviceName = "abc-frontend"
         , environment = Environment.Production
+        , shutterType = ShutterType.Frontend
         , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
         , cause       = ShutterCause.UserCreated
         )
@@ -66,6 +67,7 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
         , timestamp   = Instant.now()
         , serviceName = "zxy-frontend"
         , environment = Environment.Production
+        , shutterType = ShutterType.Frontend
         , status      = ShutterStatus.Unshuttered
         , cause       = ShutterCause.UserCreated
         )
@@ -74,6 +76,7 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
         , timestamp   = Instant.now().minus(1, ChronoUnit.DAYS)
         , serviceName = "ijk-frontend"
         , environment = Environment.Production
+        , shutterType = ShutterType.Frontend
         , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
         , cause       = ShutterCause.UserCreated
         )

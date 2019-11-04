@@ -60,3 +60,6 @@ GET        /shuttering/3                                uk.gov.hmrc.cataloguefro
 POST       /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step3Post
 GET        /shuttering/4                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step4Get
 GET        /shuttering/:shutterType/:env                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.start(shutterType: ShutterType, env: ShutteringEnvironment, serviceName: Option[String])
+
+GET        /shutter-events                              uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEvents
+GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(env: ShutteringEnvironment, serviceName: Option[String] ?= None)

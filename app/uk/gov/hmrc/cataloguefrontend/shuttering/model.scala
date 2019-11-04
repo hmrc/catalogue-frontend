@@ -20,7 +20,7 @@ import java.time.Instant
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import play.api.mvc.PathBindable
+import play.api.mvc.{PathBindable, QueryStringBindable}
 
 
 sealed trait Environment { def asString: String }
@@ -59,6 +59,23 @@ object Environment {
 
       override def unbind(key: String, value: Environment): String =
         value.asString
+    }
+
+  implicit val queryStringBindable: QueryStringBindable[Environment] =
+    new QueryStringBindable[Environment] {
+      private val Name = "environment"
+
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Environment]] =
+        params.get(Name).map { values =>
+          values.toList match {
+            case Nil => Left("missing environment value")
+            case head :: Nil => pathBindable.bind(key, head)
+            case _ => Left("too many environment values")
+          }
+        }
+
+      override def unbind(key: String, value: Environment): String =
+        s"$Name=${value.asString}"
     }
 }
 
@@ -124,14 +141,22 @@ object ShutterStatusValue {
   }
 }
 
-sealed trait ShutterStatus { def value: ShutterStatusValue }
+sealed trait ShutterStatus {
+  def value: ShutterStatusValue
+  def reason: Option[String]
+}
+
 object ShutterStatus {
   case class Shuttered(
       reason              : Option[String]
     , outageMessage       : Option[String]
     , useDefaultOutagePage: Boolean
-    ) extends ShutterStatus  { def value = ShutterStatusValue.Shuttered }
-  case object Unshuttered extends ShutterStatus { def value = ShutterStatusValue.Unshuttered }
+    ) extends ShutterStatus  { val value = ShutterStatusValue.Shuttered }
+
+  case object Unshuttered extends ShutterStatus {
+    val value = ShutterStatusValue.Unshuttered
+    val reason = None
+  }
 
   val format: Format[ShutterStatus] =
     new Format[ShutterStatus] {
@@ -264,6 +289,7 @@ object EventData {
   case class ShutterStateChangeData(
       serviceName: String
     , environment: Environment
+    , shutterType: ShutterType
     , status     : ShutterStatus
     , cause      : ShutterCause
     ) extends EventData
@@ -288,11 +314,13 @@ object EventData {
 
   val shutterStateChangeDataFormat: Format[ShutterStateChangeData] = {
     implicit val ef   = Environment.format
+    implicit val st   = ShutterType.format
     implicit val ssvf = ShutterStatus.format
     implicit val scf  = ShutterCause.format
 
     ( (__ \ "serviceName").format[String]
     ~ (__ \ "environment").format[Environment]
+    ~ (__ \ "shutterType").format[ShutterType]
     ~ (__ \ "status"     ).format[ShutterStatus]
     ~ (__ \ "cause"      ).format[ShutterCause]
     )( ShutterStateChangeData.apply
@@ -340,6 +368,7 @@ case class ShutterEvent(
                           , timestamp   = timestamp
                           , serviceName = sscd.serviceName
                           , environment = sscd.environment
+                          , shutterType = sscd.shutterType
                           , status      = sscd.status
                           , cause       = sscd.cause
                           ))
@@ -353,6 +382,7 @@ case class ShutterStateChangeEvent(
   , timestamp  : Instant
   , serviceName: String
   , environment: Environment
+  , shutterType: ShutterType
   , status     : ShutterStatus
   , cause      : ShutterCause
   )

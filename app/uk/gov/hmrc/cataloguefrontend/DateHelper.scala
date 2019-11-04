@@ -55,4 +55,11 @@ object DateHelper {
       LocalDate.parse(ds, `yyyy-MM-dd`).atStartOfDay()
     }.toOption
 
+  implicit class InstantToLocalDateTime(instant: Instant) {
+    def asPattern(pattern: String): String =
+      toLocalDateTime.asPattern(pattern)
+
+    def toLocalDateTime: LocalDateTime =
+      LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+  }
 }

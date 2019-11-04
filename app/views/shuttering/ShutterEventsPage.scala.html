@@ -1,0 +1,86 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStateChangeEvent}
+
+@(events: Seq[ShutterStateChangeEvent], form: Form[_], environments: List[Environment])(implicit messages: Messages, request: Request[_])
+
+@standard_layout("Shutter Events", "shuttering") {
+<header>
+ <h1>Shutter Events</h1>
+</header>
+
+<div id="events">
+ <form action="/shutter-events/list" method="get" class="form-inline">
+  <label for="environment">Environment:</label>
+  <select id="environment" name="environment">
+   @for(env <- environments) {
+    <option value="@env.asString" @if(form("environment").value.contains(env.asString)) {selected}>@env.toString</option>
+   }
+  </select>
+  <label>Service: <input type="search" name="serviceName" autofocus value=@{form("serviceName").value}></label>
+  <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+ </form>
+
+ <table class="table table-striped shutter-events" id="events-list">
+  <thead>
+   <tr>
+    <th class="service">
+     <button role="button" class="sort no-border" data-sort="service">Service</button>
+    </th>
+    <th class="type">
+     <button role="button" class="sort no-border" data-sort="type">Type</button>
+    </th>
+    <th class="status">
+     <button role="button" class="sort no-border" data-sort="status">Status</button>
+    </th>
+    <th class="reason">
+     <button role="button" class="sort no-border" data-sort="reason">Reason</button>
+    </th>
+    <th class="cause">
+     <button role="button" class="sort no-border" data-sort="cause">Cause</button>
+    </th>
+    <th class="username">
+     <button role="button" class="sort no-border" data-sort="username">Username</button>
+    </th>
+    <th class="timestamp">
+     <button role="button" class="sort no-border" data-sort="timestamp">Timestamp</button>
+    </th>
+   </tr>
+  </thead>
+  <tbody class="list">
+  @events.zipWithIndex.map { case (event, i) =>
+  <tr id="row@i">
+   <td class="service" id="row@{i}_service">@event.serviceName</td>
+   <td class="type" id="row@{i}_type">@event.shutterType.asString</td>
+   <td class="status" id="row@{i}_status">@event.status.value.asString</td>
+   <td class="reason" id="row@{i}_reason">@event.status.reason.getOrElse("")</td>
+   <td class="cause" id="row@{i}_cause">@event.cause.asString</td>
+   <td class="username" id="row@{i}_username">@event.username</td>
+   <td class="timestamp" id="row@{i}_timestamp">@event.timestamp.asPattern("yyyy-MM-dd HH:mm")</td>
+  </tr>
+  }
+  </tbody>
+ </table>
+</div>
+}
+
+<script>
+  var options = { valueNames: ['service', 'type', 'status', 'reason', 'cause', 'username', 'timestamp'] };
+
+  var eventsList = new List('events', options);
+</script>
