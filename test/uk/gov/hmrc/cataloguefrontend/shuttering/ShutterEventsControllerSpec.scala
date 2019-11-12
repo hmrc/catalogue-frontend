@@ -49,12 +49,12 @@ class ShutterEventsControllerSpec extends WordSpec with MockitoSugar with Matche
     val underTest = new ShutterEventsController(mcc, connector)
 
     def stubConnectorSuccess(forFilter: ShutterEventsFilter, returnEvents: Seq[ShutterStateChangeEvent] = Seq.empty): Unit =
-      when(connector.shutterEventsByTimestampDesc(is(forFilter))(any[HttpReads[Seq[ShutterEvent]]], any[HeaderCarrier])).thenReturn(
+      when(connector.shutterEventsByTimestampDesc(is(forFilter))(any[HeaderCarrier])).thenReturn(
         Future.successful(returnEvents)
       )
 
     def stubConnectorFailure(forFilter: ShutterEventsFilter): Unit =
-      when(connector.shutterEventsByTimestampDesc(is(forFilter))(any[HttpReads[Seq[ShutterEvent]]], any[HeaderCarrier])).thenReturn(
+      when(connector.shutterEventsByTimestampDesc(is(forFilter))(any[HeaderCarrier])).thenReturn(
         Future.failed(new RuntimeException("connector failure"))
       )
 

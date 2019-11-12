@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStateChangeEvent}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterEventsView, ShutterStateChangeEvent}
 
 @(events: Seq[ShutterStateChangeEvent], form: Form[_], environments: List[Environment])(implicit messages: Messages, request: Request[_])
 
@@ -68,7 +68,7 @@
    <td class="service" id="row@{i}_service">@event.serviceName</td>
    <td class="type" id="row@{i}_type">@event.shutterType.asString</td>
    <td class="status" id="row@{i}_status">@event.status.value.asString</td>
-   <td class="reason" id="row@{i}_reason">@event.status.reason.getOrElse("")</td>
+   <td class="reason" id="row@{i}_reason">@ShutterEventsView.reasonFor(event.status)</td>
    <td class="cause" id="row@{i}_cause">@event.cause.asString</td>
    <td class="username" id="row@{i}_username">@event.username</td>
    <td class="timestamp" id="row@{i}_timestamp">@event.timestamp.asPattern("yyyy-MM-dd HH:mm")</td>

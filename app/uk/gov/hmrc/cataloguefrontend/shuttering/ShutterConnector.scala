@@ -94,8 +94,8 @@ class ShutterConnector @Inject()(
         s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&namedFilter=latestByServiceName&data.environment=${encodeQueryParam(env.asString)}&data.shutterType=${encodeQueryParam(st.asString)}")
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
-  def shutterEventsByTimestampDesc(filter: ShutterEventsFilter)(implicit reads: HttpReads[Seq[ShutterEvent]], hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] = {
-    val url = s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}${ShutterEventsFilter.asQuery(filter)}"
+  def shutterEventsByTimestampDesc(filter: ShutterEventsFilter)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] = {
+    val url = s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&${ShutterEventsFilter.asQuery(filter)}"
     http.GET[Seq[ShutterEvent]](url).map {
       _.flatMap(_.toShutterStateChangeEvent)
     }
@@ -130,10 +130,12 @@ object ShutterConnector {
 
   object ShutterEventsFilter {
     private [shuttering] def asQuery(filter: ShutterEventsFilter): String =
-      asQueryParam(key = "data.environment", value = filter.environment.asString) +
-        filter.serviceName.map(asQueryParam(key = "data.serviceName", _)).getOrElse("")
+      Seq(
+        Some(asQueryParam(key = "data.environment", value = filter.environment.asString)),
+        filter.serviceName.map(asQueryParam(key = "data.serviceName", _))
+      ).flatten.mkString("&")
 
     private def asQueryParam(key: String, value: String): String =
-      s"&$key=${encodeQueryParam(value)}"
+      s"$key=${encodeQueryParam(value)}"
   }
 }

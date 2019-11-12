@@ -141,22 +141,15 @@ object ShutterStatusValue {
   }
 }
 
-sealed trait ShutterStatus {
-  def value: ShutterStatusValue
-  def reason: Option[String]
-}
+sealed trait ShutterStatus { def value: ShutterStatusValue }
 
 object ShutterStatus {
   case class Shuttered(
       reason              : Option[String]
     , outageMessage       : Option[String]
     , useDefaultOutagePage: Boolean
-    ) extends ShutterStatus  { val value = ShutterStatusValue.Shuttered }
-
-  case object Unshuttered extends ShutterStatus {
-    val value = ShutterStatusValue.Unshuttered
-    val reason = None
-  }
+    ) extends ShutterStatus  { def value = ShutterStatusValue.Shuttered }
+  case object Unshuttered extends ShutterStatus { def value = ShutterStatusValue.Unshuttered }
 
   val format: Format[ShutterStatus] =
     new Format[ShutterStatus] {

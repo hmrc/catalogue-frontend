@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import org.mockito.Matchers.argThat
+import org.mockito.ArgumentMatcher
+import org.mockito.Matchers.{any, argThat, eq => is}
 import org.mockito.Mockito.when
-import org.mockito.{ArgumentMatcher, Matchers => MockitoMatchers}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
@@ -38,16 +38,15 @@ class ShutterConnectorSpec extends WordSpec with MockitoSugar with Matchers with
     val servicesConfig = mock[ServicesConfig]
     when(servicesConfig.baseUrl("shutter-api")).thenReturn(SomeBaseUrl)
 
-    val reads = mock[HttpReads[Seq[ShutterEvent]]]
-    val headerCarrier = HeaderCarrier()
-    val executionContext = scala.concurrent.ExecutionContext.global
+    implicit val headerCarrier = HeaderCarrier()
+    implicit val executionContext = scala.concurrent.ExecutionContext.global
     val httpClient = mock[HttpClient]
-    val underTest = new ShutterConnector(httpClient, servicesConfig)(executionContext)
+    val underTest = new ShutterConnector(httpClient, servicesConfig)
 
     // unfortunately the test will receive an unhelpful NullPointerException if expectations are not met
     def stubEmptyResponseForGet(withPath: String, withParams: Seq[(String, String)]): Unit =
-      when(httpClient.GET(argThat(new UrlArgumentMatcher(withPath, withParams)))(MockitoMatchers.eq(reads),
-        MockitoMatchers.eq(headerCarrier), MockitoMatchers.eq(executionContext))).thenReturn(Future.successful(Seq.empty))
+      when(httpClient.GET(argThat(new UrlArgumentMatcher(withPath, withParams)))(
+        any[HttpReads[Seq[ShutterEvent]]], is(headerCarrier), is(executionContext))).thenReturn(Future.successful(Seq.empty))
   }
 
   "Shutter Events" should {
@@ -58,7 +57,7 @@ class ShutterConnectorSpec extends WordSpec with MockitoSugar with Matchers with
         "data.environment" -> "qa"
       ))
 
-      underTest.shutterEventsByTimestampDesc(filter)(reads, headerCarrier).futureValue shouldBe empty
+      underTest.shutterEventsByTimestampDesc(filter).futureValue shouldBe empty
     }
 
     "be filtered by serviceName and environment when a service name is specified" in new Fixture {
@@ -69,7 +68,7 @@ class ShutterConnectorSpec extends WordSpec with MockitoSugar with Matchers with
         "data.serviceName" -> "abc-frontend"
       ))
 
-      underTest.shutterEventsByTimestampDesc(filter)(reads, headerCarrier).futureValue shouldBe empty
+      underTest.shutterEventsByTimestampDesc(filter).futureValue shouldBe empty
     }
   }
 }
