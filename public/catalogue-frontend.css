@@ -12239,3 +12239,47 @@ div.shuttered-checkbox {
     -moz-columns: 2;
 }
 
+table.shutter-events {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.shutter-events th.service {
+  width: 20%;
+}
+
+.shutter-events th.type {
+  width: 8%;
+}
+
+.shutter-events th.status {
+  width: 10%;
+}
+
+.shutter-events th.reason {
+  width: 30%;
+}
+
+.shutter-events th.cause {
+  width: 8%;
+}
+
+.shutter-events th.username {
+  width: 10%;
+}
+
+.shutter-events th.timestamp {
+  width: 14%;
+}
+
+.shutter-events td.service {
+  overflow-wrap: anywhere;
+}
+
+.shutter-events td.reason {
+  overflow-wrap: anywhere;
+}
+
+.shutter-events td.username {
+  overflow-wrap: anywhere;
+}

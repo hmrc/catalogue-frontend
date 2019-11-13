@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Writes
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.{encodePathParam, encodeQueryParam}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, Token}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -93,6 +94,12 @@ class ShutterConnector @Inject()(
         s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&namedFilter=latestByServiceName&data.environment=${encodeQueryParam(env.asString)}&data.shutterType=${encodeQueryParam(st.asString)}")
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
+  def shutterEventsByTimestampDesc(filter: ShutterEventsFilter)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] = {
+    val url = s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&${ShutterEventsFilter.asQuery(filter)}"
+    http.GET[Seq[ShutterEvent]](url).map {
+      _.flatMap(_.toShutterStateChangeEvent)
+    }
+  }
 
   /**
     * GET
@@ -115,5 +122,20 @@ class ShutterConnector @Inject()(
     implicit val r = FrontendRouteWarning.reads
     http
       .GET[Seq[FrontendRouteWarning]](s"${urlFrontendRouteWarnings(env)}/${encodePathParam(serviceName)}")
+  }
+}
+
+object ShutterConnector {
+  case class ShutterEventsFilter(environment: Environment, serviceName: Option[String])
+
+  object ShutterEventsFilter {
+    private [shuttering] def asQuery(filter: ShutterEventsFilter): String = {
+      val queryParams = Seq(asQueryParam(key = "data.environment", value = filter.environment.asString)) ++
+        filter.serviceName.map(asQueryParam(key = "data.serviceName", _))
+      queryParams.mkString("&")
+    }
+
+    private def asQueryParam(key: String, value: String): String =
+      s"$key=${encodeQueryParam(value)}"
   }
 }
