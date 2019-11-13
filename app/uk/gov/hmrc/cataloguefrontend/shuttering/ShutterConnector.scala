@@ -129,11 +129,11 @@ object ShutterConnector {
   case class ShutterEventsFilter(environment: Environment, serviceName: Option[String])
 
   object ShutterEventsFilter {
-    private [shuttering] def asQuery(filter: ShutterEventsFilter): String =
-      Seq(
-        Some(asQueryParam(key = "data.environment", value = filter.environment.asString)),
+    private [shuttering] def asQuery(filter: ShutterEventsFilter): String = {
+      val queryParams = Seq(asQueryParam(key = "data.environment", value = filter.environment.asString)) ++
         filter.serviceName.map(asQueryParam(key = "data.serviceName", _))
-      ).flatten.mkString("&")
+      queryParams.mkString("&")
+    }
 
     private def asQueryParam(key: String, value: String): String =
       s"$key=${encodeQueryParam(value)}"
