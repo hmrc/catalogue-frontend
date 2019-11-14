@@ -71,7 +71,7 @@
    <td class="reason" id="row@{i}_reason">@ShutterEventsView.reasonFor(event.status)</td>
    <td class="cause" id="row@{i}_cause">@event.cause.asString</td>
    <td class="username" id="row@{i}_username">@event.username</td>
-   <td class="timestamp" id="row@{i}_timestamp">@event.timestamp.asPattern("yyyy-MM-dd HH:mm")</td>
+   <td class="timestamp" id="row@{i}_timestamp">@event.timestamp.asUTC.format(`yyyy-MM-dd HH:mm z`)</td>
   </tr>
   }
   </tbody>

@@ -26,6 +26,8 @@ object DateHelper {
 
   val `dd-MM-yyyy`: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
   val `yyyy-MM-dd`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+  val `yyyy-MM-dd HH:mm z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z")
+  val `yyyy-MM-dd HH:mm:SS z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z")
 
   implicit class JavaDateToLocalDateTime(d: Date) {
     def toLocalDate = LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault())
@@ -55,11 +57,9 @@ object DateHelper {
       LocalDate.parse(ds, `yyyy-MM-dd`).atStartOfDay()
     }.toOption
 
-  implicit class InstantToLocalDateTime(instant: Instant) {
-    def asPattern(pattern: String): String =
-      toLocalDateTime.asPattern(pattern)
-
-    def toLocalDateTime: LocalDateTime =
-      LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+  implicit class InstantToZonedDateTime(instant: Instant) {
+    def asUTC: ZonedDateTime =
+      // use ZoneId.of("UTC") rather than ZoneOffset.UTC to get "UTC" as short displayName rather than "Z"
+      ZonedDateTime.ofInstant(instant, ZoneId.of("UTC"))
   }
 }
