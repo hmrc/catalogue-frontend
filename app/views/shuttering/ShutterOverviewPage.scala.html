@@ -14,10 +14,9 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, EventData, ShutterStatusValue, ShutterStateData, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import java.time.ZoneId
-@import java.time.format.DateTimeFormatter
 
 @this(viewMessages: ViewMessages)
 
@@ -137,7 +136,7 @@
         @state.lastEvent.map(_.username).getOrElse("")
       </td>
       <td class="shutter-date">
-        @state.lastEvent.map(e => DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z").withZone(ZoneId.systemDefault).format(e.timestamp)).getOrElse("")
+        @state.lastEvent.map(e => e.timestamp.asUTC.format(`yyyy-MM-dd HH:mm:SS z`)).getOrElse("")
       </td>
       @if(isSignedIn) {
         <td class="shutter-update">

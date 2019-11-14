@@ -12257,7 +12257,7 @@ table.shutter-events {
 }
 
 .shutter-events th.reason {
-  width: 30%;
+  width: 32%;
 }
 
 .shutter-events th.cause {
@@ -12265,11 +12265,11 @@ table.shutter-events {
 }
 
 .shutter-events th.username {
-  width: 10%;
+  width: 12%;
 }
 
 .shutter-events th.timestamp {
-  width: 14%;
+  width: 10%;
 }
 
 .shutter-events td.service {
