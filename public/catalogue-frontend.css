@@ -12283,3 +12283,7 @@ table.shutter-events {
 .shutter-events td.username {
   overflow-wrap: anywhere;
 }
+
+#shutter-events-form #serviceName {
+  margin-bottom: 10px;
+}
