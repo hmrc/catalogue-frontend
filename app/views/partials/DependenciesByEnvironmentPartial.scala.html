@@ -1,0 +1,133 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import partials.ServiceDependenciesPartial
+@import uk.gov.hmrc.cataloguefrontend.connector.{RepositoryDetails, TargetEnvironment}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceInfoView, ViewMessages}
+
+
+@this(dependenciesPartial: ServiceDependenciesPartial, viewMessages: ViewMessages)
+
+@(service: RepositoryDetails,
+  optLatestDependencies: Option[Dependencies],
+  dependenciesByVersion: Map[String, Seq[Dependency]],
+  deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
+  shutterState: Map[ShutteringEnvironment, ShutterState]
+)
+
+
+<ul id="environmentTabs" class="nav nav-tabs" role="tablist">
+    <!-- we hard-code 'latest' as it is not a deployment 'environment' -->
+    <li class="nav-item active">
+        <a id="latest-tab" class="nav-link" data-toggle="tab" href="#latest-pane" role="tab" aria-controls="latest" aria-selected="true">
+            <div class="board">
+                <div class="board__heading">
+                    <h4 class="environment-name">Latest</h4>
+                    @renderVersion(None)
+                </div>
+                <div class="board__body">
+                    @renderShutterStatusBadge(false)
+                </div>
+            </div>
+        </a>
+    </li>
+
+    @for(environment <- service.environments.getOrElse(Seq.empty)) {
+    <li class="nav-item">
+        <a id="@{environment.id}-tab" class="nav-link" data-toggle="tab" href="#@{environment.id}-pane" role="tab" aria-controls="@environment.id" aria-selected="false">
+            <div class="board">
+                <div class="board__heading">
+                    <h4 class="environment-name">@environment.name</h4>
+                    @renderVersion(ServiceInfoView.deploymentVersion(withDeployments = deploymentsByEnvironmentName)(forEnvironment = environment))
+                </div>
+                <div class="board__body">
+                    @renderShutterStatusBadge(ServiceInfoView.isShuttered(withShutterState = shutterState)(inEnvironment = environment))
+                </div>
+            </div>
+        </a>
+    </li>
+    }
+</ul>
+
+<div id="environmentPanes" class="tab-content environment-panes">
+    <!-- we hard-code 'latest' as it is not a deployment 'environment' -->
+    <div id="latest-pane" class="tab-pane active" role="tabpanel" aria-labelledby="latest-tab">
+        <!-- no telemetry section for 'latest' -->
+        <div class="row">
+            <div class="col-md-12">
+                @dependenciesPartial(ServiceInfoView.libraryDependenciesOf(optLatestDependencies), "platform-dependencies-latest")
+            </div>
+        </div>
+    </div>
+
+    @for(environment <- service.environments.getOrElse(Seq.empty)) {
+    <div id="@{environment.id}-pane" class="tab-pane" role="tabpanel" aria-labelledby="@{environment.id}-tab">
+        <div class="row">
+            <div class="col-md-12">
+                <div id="@{environment.id}-telemetry" class="board">
+                    <h3 class="board__heading">Telemetry</h3>
+                    <div class="board__body">
+                        <ul class="list list--minimal">
+                            @if(environment.services.isEmpty) {
+                            <li class="list-item">
+                                Not deployed
+                            </li>
+                            } else {
+                            @for(tool <- environment.services) {
+                            <li class="list-item col-xs-4">
+                                <a id="link-to-@{tool.id}-@{environment.id}" href="@{tool.url}" target="_blank">
+                                    @{tool.displayName}<span class="glyphicon glyphicon-new-window"></span>
+                                </a>
+                            </li>
+                            }
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                @dependenciesPartial(ServiceInfoView.slugDependencies(
+                    withDeployments = deploymentsByEnvironmentName,
+                    withDependencies = dependenciesByVersion)(forEnvironment = environment), s"platform-dependencies-${environment.id}"
+                )
+            </div>
+        </div>
+    </div>
+    }
+</div>
+
+@renderVersion(optVersion: Option[String]) = {
+    @if(optVersion.isDefined) {
+        <p class="small">@optVersion.get</p>
+    } else {
+        <!-- needed to ensure each tab nav-item has the same height -->
+        <p class="small">&nbsp;</p>
+    }
+}
+
+@renderShutterStatusBadge(isShuttered: Boolean) = {
+    @if(isShuttered) {
+        <div class="shutter-badge"></div>
+    } else {
+        <!-- needed to ensure each tab nav-item has the same height -->
+        <div class="noshutter-badge"></div>
+    }
+}

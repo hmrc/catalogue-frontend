@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
-import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterService, ShutterState, ShutterType}
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType, Environment => ShutteringEnvironment}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
@@ -234,7 +234,7 @@ class CatalogueController @Inject()(
       }
   }
 
-  def outOfDateTeamDependencies(teamName: String) = Action.async { implicit request =>
+  def outOfDateTeamDependencies(teamName: String): Action[AnyContent] = Action.async { implicit request =>
     for {
       teamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
     } yield Ok(outOfDateTeamDependenciesPage(teamName, teamDependencies))
@@ -253,54 +253,60 @@ class CatalogueController @Inject()(
   }
 
   def service(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
-    def getDeployedEnvs(
-      deployedToEnvs: Seq[DeploymentVO],
-      optRefEnvironments: Option[Seq[TargetEnvironment]]): Option[Seq[TargetEnvironment]] = {
-        val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
-
-        optRefEnvironments.map {
-          _
-            .map(e => (e.name.toLowerCase, e))
-            .map {
-              case (lwrCasedRefEnvName, refEnvironment)
-                  if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
-                refEnvironment
-              case (_, refEnvironment) =>
-                refEnvironment.copy(services = Nil)
-            }
-        }
+    def getDeployedEnvs(deployedToEnvs: Seq[DeploymentVO],
+                        optRefEnvironments: Option[Seq[TargetEnvironment]]): Option[Seq[TargetEnvironment]] = {
+      val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
+      optRefEnvironments.map {
+        _.map(e => (e.name.toLowerCase, e))
+          .map {
+            case (lwrCasedRefEnvName, refEnvironment)
+              if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
+              refEnvironment
+            case (_, refEnvironment) =>
+              refEnvironment.copy(services = Nil)
+          }
       }
+    }
 
-    ( teamsAndRepositoriesConnector.repositoryDetails(serviceName)
-    , teamsAndRepositoriesConnector.lookupLink(serviceName)
-    , deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
-    , serviceDependencyConnector.getDependencies(serviceName)
-    , leakDetectionService.urlIfLeaksFound(serviceName)
-    , routeRulesService.serviceUrl(serviceName)
-    , routeRulesService.serviceRoutes(serviceName)
-    , if (CatalogueFrontendSwitches.shuttering.isEnabled)
-         ShutteringEnvironment.values.traverse(env => shutterService.getShutterState(ShutterType.Frontend, env, serviceName))
-           .map(_.collect { case Some(s) => s }.groupBy(_.environment).mapValues(_.head))
-      else Future(Map.empty[ShutteringEnvironment, ShutterState])
-    ).mapN { case (service, jenkinsLink, deployments, optDependencies, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
+    val futDeployments = deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
+
+    val futSlugDependenciesByVersion = futDeployments.flatMap { deployments =>
+      val versions = deployments.map(_.version).toSet
+      val futSlugDependencies = versions.map { version =>
+        serviceDependencyConnector.getCuratedSlugDependencies(serviceName, version).map(version -> _)
+      }
+      Future.sequence(futSlugDependencies).map(_.toMap)
+    }
+
+    val futShutterStateByEnvironment = if (CatalogueFrontendSwitches.shuttering.isEnabled) {
+      ShutteringEnvironment.values.traverse { env =>
+        shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
+      }.map(_.collect { case Some(s) => s }.groupBy(_.environment).mapValues(_.head))
+    } else Future.successful(Map.empty[ShutteringEnvironment, ShutterState])
+
+    (teamsAndRepositoriesConnector.repositoryDetails(serviceName)
+      , teamsAndRepositoriesConnector.lookupLink(serviceName)
+      , futDeployments
+      , serviceDependencyConnector.getDependencies(serviceName)
+      , futSlugDependenciesByVersion
+      , leakDetectionService.urlIfLeaksFound(serviceName)
+      , routeRulesService.serviceUrl(serviceName)
+      , routeRulesService.serviceRoutes(serviceName)
+      , futShutterStateByEnvironment
+      ).mapN { case (service, jenkinsLink, deployments, optLatestDependencies, dependenciesByVersion, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
       service match {
         case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
-          val optDeployedEnvironments =
-            getDeployedEnvs(deployments, repositoryDetails.environments)
-
-          val deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]] =
-            deployments
-              .map(deployment =>
-                  ( deployment.environmentMapping.name
-                  , deployments.filter(_.environmentMapping.name == deployment.environmentMapping.name)
-                  )
-              )
-              .toMap
+          val optDeployedEnvironments = getDeployedEnvs(deployments, repositoryDetails.environments)
+          val deploymentsByEnvironmentName = deployments.map { deployment =>
+            val envName = deployment.environmentMapping.name
+            envName -> deployments.filter(_.environmentMapping.name == envName)
+          }.toMap
 
           Ok(
             serviceInfoPage(
               repositoryDetails.copy(environments = optDeployedEnvironments, jenkinsURL = jenkinsLink),
-              optDependencies,
+              optLatestDependencies,
+              dependenciesByVersion,
               repositoryDetails.createdAt,
               deploymentsByEnvironmentName,
               urlIfLeaksFound,
@@ -309,6 +315,7 @@ class CatalogueController @Inject()(
               shutterState
             )
           )
+
         case _ => NotFound(error_404_template())
       }
     }
@@ -365,15 +372,15 @@ class CatalogueController @Inject()(
       }
   }
 
-  def allServices = Action {
+  def allServices: Action[AnyContent] = Action {
     Redirect("/repositories?name=&type=Service")
   }
 
-  def allLibraries = Action {
+  def allLibraries: Action[AnyContent] = Action {
     Redirect("/repositories?name=&type=Library")
   }
 
-  def allPrototypes = Action {
+  def allPrototypes: Action[AnyContent] = Action {
     Redirect("/repositories?name=&type=Prototype")
   }
 

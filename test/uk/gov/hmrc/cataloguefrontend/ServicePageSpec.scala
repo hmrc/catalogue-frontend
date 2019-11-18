@@ -17,9 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
-
 import org.jsoup.Jsoup
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
@@ -155,8 +152,13 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
       response.status shouldBe 200
       val document = Jsoup.parse(response.body)
-      document.getElementById("qa-environment").html().contains("shutter_label") shouldBe true
-      document.getElementById("production-environment").html().contains("shutter_label") shouldBe false
+
+      import scala.collection.JavaConverters._
+      val qaTabElements = document.getElementById("qa-tab").children().asScala
+      qaTabElements.exists(_.hasClass("shutter_badge")) && !qaTabElements.exists(_.hasClass("noshutter_badge"))
+
+      val prodTabElements = document.getElementById("production-tab").children().asScala
+      prodTabElements.exists(_.hasClass("noshutter_badge")) && !prodTabElements.exists(_.hasClass("shutter_badge"))
     }
 
     "link to environments" should {
@@ -251,22 +253,20 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     }
 
     "Render platform dependencies section" in {
-
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                   = (200, Some(serviceDetailsData)))
-      serviceEndpoint(GET, "/api/indicators/service/service-name/deployments", willRespondWith = (500, None))
-      serviceEndpoint(
-        GET,
-        "/api/whatsrunningwhere/service-name",
-        willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("xyz", Nil))).toString())))
-
-      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
+      serviceEndpoint(GET, "/api/repositories/service-name",
+        willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/api/indicators/service/service-name/deployments",
+        willRespondWith = (500, None))
+      serviceEndpoint(GET, "/api/whatsrunningwhere/service-name",
+        willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("service-name", Nil))).toString())))
+      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name",
+        willRespondWith = (200, None))
 
       val response = await(ws.url(s"http://localhost:$port/service/service-name").get)
 
       val document = Jsoup.parse(response.body)
 
-      document.select("#platform-dependencies").size() should be > 0
-
+      document.select("#platform-dependencies-latest").size() should be > 0
     }
   }
 }

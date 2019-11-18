@@ -177,20 +177,18 @@ case class BobbyRuleViolation(reason: String, range: BobbyVersionRange, from: Lo
 
 
 object Dependencies {
-  val reads: Reads[Dependencies] = {
-    implicit val dtr = RestFormats.dateTimeFormats
-    implicit val bvf = BobbyVersionRange.format
-    implicit val brvr =
-      ( (__ \ "reason" ).read[String]
-      ~ (__ \ "range"  ).read[BobbyVersionRange]
-      ~ (__ \ "from"   ).read[LocalDate]
-      )(BobbyRuleViolation.apply _)
+  object Implicits {
+    private implicit val vf = Version.format
+    private implicit val dtr = RestFormats.dateTimeFormats
+    private implicit val bvf = BobbyVersionRange.format
+    private implicit val brvr =
+      ((__ \ "reason").read[String]
+        ~ (__ \ "range").read[BobbyVersionRange]
+        ~ (__ \ "from").read[LocalDate]
+        ) (BobbyRuleViolation.apply _)
 
-    implicit val osf = {
-      implicit val vf = Version.format
-      Json.reads[Dependency]
-    }
-    Json.reads[Dependencies]
+    implicit val readsDependency: Reads[Dependency] = Json.reads[Dependency]
+    implicit val reads: Reads[Dependencies] = Json.reads[Dependencies]
   }
 
   def collectViolations(dependenciesSeq: Seq[Dependencies], f: Dependency => Seq[BobbyRuleViolation]): Seq[(String, BobbyRuleViolation)] =
