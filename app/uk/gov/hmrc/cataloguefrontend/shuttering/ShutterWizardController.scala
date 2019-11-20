@@ -96,7 +96,8 @@ class ShutterWizardController @Inject()(
       envs          =  Environment.values
       statusValues  =  ShutterStatusValue.values
       shutterGroups <- shutterService.shutterGroups
-    } yield page1(form, shutterType, env, shutterStates, statusValues, shutterGroups)
+      back = appRoutes.ShutterOverviewController.allStates(shutterType)
+    } yield page1(form, shutterType, env, shutterStates, statusValues, shutterGroups, back)
 
   def step1Get(serviceName: Option[String]) =
     withGroup.async { implicit request =>
