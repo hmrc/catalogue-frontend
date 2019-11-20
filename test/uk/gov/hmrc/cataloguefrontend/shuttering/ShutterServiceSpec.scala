@@ -23,6 +23,7 @@ import org.scalatest.{Matchers, WordSpec}
 import org.mockito.Matchers._
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{Await, Future}
@@ -198,7 +199,8 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
     def init: Boot = {
       val mockShutterConnector       = mock[ShutterConnector]
       val mockShutterGroupsConnector = mock[ShutterGroupsConnector]
-      val shutterService             = new ShutterService(mockShutterConnector, mockShutterGroupsConnector)
+      val routeRulesConnector        = mock[RouteRulesConnector]
+      val shutterService             = new ShutterService(mockShutterConnector, mockShutterGroupsConnector, routeRulesConnector)
       Boot(shutterService, mockShutterConnector)
     }
   }
