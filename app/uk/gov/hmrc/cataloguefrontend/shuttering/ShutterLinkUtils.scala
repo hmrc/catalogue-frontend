@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 object ShutterLinkUtils {
   def hostName(env: Environment) = {
     env match {
-      case Environment.Production => "tax.service.gov.uk"
-      case _ => s"${env.asString}.tax.service.gov.uk"
+      case Environment.Production => "www.tax.service.gov.uk"
+      case _ => s"www.${env.asString}.tax.service.gov.uk"
     }
   }
 

@@ -22,13 +22,13 @@ class ShutterLinkUtilsSpec extends WordSpec with Matchers {
 
   "mkLink" should {
     "make a production url" in {
-        ShutterLinkUtils.mkLink(Environment.Production, "/xyz") shouldBe "https://tax.service.gov.uk/xyz/platops-shutter-testing"
+        ShutterLinkUtils.mkLink(Environment.Production, "/xyz") shouldBe "https://www.tax.service.gov.uk/xyz/platops-shutter-testing"
     }
 
     "make a link for every non-production environment" in {
       val envs = Environment.values.filterNot(_ == Environment.Production)
 
-      envs.foreach(env => ShutterLinkUtils.mkLink(env, "/xyz") shouldBe s"https://${env.asString}.tax.service.gov.uk/xyz/platops-shutter-testing")
+      envs.foreach(env => ShutterLinkUtils.mkLink(env, "/xyz") shouldBe s"https://www.${env.asString}.tax.service.gov.uk/xyz/platops-shutter-testing")
     }
   }
 }
