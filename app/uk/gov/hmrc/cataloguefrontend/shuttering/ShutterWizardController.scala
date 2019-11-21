@@ -562,5 +562,7 @@ object ShutterWizardController {
     confirm: Boolean
   )
 
+  // -- Step 4 -------------------------
+
   case class ServiceAndRouteWarnings(serviceName: String, warnings: Seq[FrontendRouteWarning])
 }
