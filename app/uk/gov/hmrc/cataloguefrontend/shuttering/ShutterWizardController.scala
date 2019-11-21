@@ -21,17 +21,15 @@ import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.i18n.{Messages, MessagesProvider}
-import play.api.libs.json.{Json, Reads, Writes}
-import play.api.mvc.{MessagesControllerComponents, Request, Result, Session}
-import play.api.Logger
+import play.api.libs.json.Json
+import play.api.mvc.{MessagesControllerComponents, Request, Result}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthActionBuilder
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.session.{SessionController, SessionStore}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering.shutterService._
 
@@ -50,6 +48,7 @@ class ShutterWizardController @Inject()(
   , authService                  : AuthService
   , catalogueConfig              : CatalogueConfig
   , val sessionStore             : SessionStore
+  , routeRulesConnector          : RouteRulesConnector
   )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc)
        with play.api.i18n.I18nSupport
@@ -96,7 +95,8 @@ class ShutterWizardController @Inject()(
       envs          =  Environment.values
       statusValues  =  ShutterStatusValue.values
       shutterGroups <- shutterService.shutterGroups
-    } yield page1(form, shutterType, env, shutterStates, statusValues, shutterGroups)
+      back = appRoutes.ShutterOverviewController.allStates(shutterType)
+    } yield page1(form, shutterType, env, shutterStates, statusValues, shutterGroups, back)
 
   def step1Get(serviceName: Option[String]) =
     withGroup.async { implicit request =>
@@ -419,7 +419,14 @@ class ShutterWizardController @Inject()(
       (for {
          step0Out <- getStep0Out
          step1Out <- getStep1Out
-         html     =  page4(step0Out.shutterType, step0Out.env, step1Out)
+
+         serviceLinks <- EitherT.liftF[Future, Result, Map[String, Option[String]]](
+             step1Out.serviceNames.toList
+               .traverse(s => shutterService.lookupShutterRoute(s, step0Out.env).map((s, _)))
+               .map(_.toMap)
+         )
+
+         html     =  page4(step0Out.shutterType, step0Out.env, step1Out, serviceLinks)
        } yield Ok(html).withSession(request.session - sessionIdKey)
       ).merge
     }
@@ -442,7 +449,6 @@ class ShutterWizardController @Inject()(
 object ShutterWizardController {
 
   import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmpty, notEmptySeq}
-  import play.api.mvc.Results._
 
   // -- Step 0 -------------------------
 

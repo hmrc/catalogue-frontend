@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -26,6 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ShutterService @Inject()(
     shutterConnector      : ShutterConnector
   , shutterGroupsConnector: ShutterGroupsConnector
+  , routeRulesConnector   : RouteRulesConnector
   )(implicit val ec: ExecutionContext) {
 
   def getShutterState(st: ShutterType, env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
@@ -115,6 +117,18 @@ class ShutterService @Inject()(
 
   def shutterGroups: Future[Seq[ShutterGroup]] =
     shutterGroupsConnector.shutterGroups
+
+
+  def lookupShutterRoute(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[String]] = {
+    for {
+      baseRoutes      <- routeRulesConnector.serviceRoutes(serviceName)
+      optFrontendPath =  for {
+                           envRoute      <- baseRoutes.find(_.environment == env.asString).map(_.routes)
+                           frontendRoute <- envRoute.find(_.isRegex == false)
+                         } yield ShutterLinkUtils.mkLink(env, frontendRoute.frontendPath)
+
+    } yield optFrontendPath
+  }
 }
 
 case class ShutterStateData(
