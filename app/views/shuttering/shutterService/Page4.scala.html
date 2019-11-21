@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterWizardController, ShutterState, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterWizardController, ShutterState, ShutterType, ShutterLinkUtils}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import helper._
 @import partials.form_warnings
@@ -23,51 +23,74 @@
 @this(viewMessages: ViewMessages)
 
 @( shutterType: ShutterType
- , env        : Environment
- , step1Out   : ShutterWizardController.Step1Out
- )(implicit request         : Request[_]
-          , messagesProvider: MessagesProvider
-          )
+, env          : Environment
+, step1Out     : ShutterWizardController.Step1Out
+, serviceLinks : Map[String, Option[String]]
+)(implicit request         : Request[_]
+, messagesProvider: MessagesProvider
+)
 
 @standard_layout(s"Shutter ${shutterType.asString.capitalize}") {
 
-  <header>
+<header>
     <h1>Shutter @{shutterType.asString.capitalize}: Confirmation</h1>
-  </header>
+</header>
 
-  <div id="service-list">
+<div id="service-list">
 
     <div class="board">
-      <div class="board__body">
+        <div class="board__body">
 
-        <div style="padding-left: 20px; padding-right: 20px">
+            <div style="padding-left: 20px; padding-right: 20px">
 
-          <div class="alert alert-success" role="alert">
-            <span class="glyphicon glyphicon-ok"></span>
-            The following @{shutterType}s have been successfully @valueFor(step1Out.status) in <b>@env</b>:
-          </div>
+                <div class="alert alert-success" role="alert">
+                    <span class="glyphicon glyphicon-ok"></span>
+                    The following @{shutterType}s have been successfully @valueFor(step1Out.status) in <b>@env</b>:
+                </div>
 
-          <ul style="list-style: disc;">
-            @step1Out.serviceNames.map { serviceName =>
-              <li>@serviceName</li>
-            }
-          </ul>
 
-          <p>This may take a few minutes to be applied.</p>
+                @if(shutterType == ShutterType.Frontend && step1Out.status == ShutterStatusValue.Shuttered) {
+                    <ul style="list-style: disc;">
+                        @serviceLinks.map { case (name, optUrl) =>
+                            <li>
+                                @optUrl match {
+                                    case Some(url) => { <a href="@url" target="_blank">@name</a> }
+                                    case _ => { @name }
+                                }
+                            </li>
+                        }
+                    </ul>
 
-          <p>Return to <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)">shuttering overview</a></p>
+                    <p>This may take a few minutes to be applied.</p>
+
+                    @if(serviceLinks.exists(_._2.isDefined)) {
+                        <p>Above links will not work until shuttering has been applied.</p>
+                    }
+                } else {
+                    <ul style="list-style: disc;">
+                        @serviceLinks.keys.map { name =>
+                            <li>@name</li>
+                        }
+                    </ul>
+
+                    <p>This may take a few minutes to be applied.</p>
+                }
+
+                <p>Return to <a
+                        href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)">shuttering
+                    overview</a></p>
+            </div>
+
         </div>
-
-      </div>
     </div>
 
-  </div>
+</div>
 
 }
 
 @valueFor(status: ShutterStatusValue) = {
-  @status match {
-    case ShutterStatusValue.Shuttered   => { shuttered   }
-    case ShutterStatusValue.Unshuttered => { unshuttered }
-  }
+    @status match {
+        case ShutterStatusValue.Shuttered   => { shuttered   }
+        case ShutterStatusValue.Unshuttered => { unshuttered }
+    }
 }
