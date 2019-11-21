@@ -35,7 +35,7 @@ class ReleasesConnector @Inject()(http: HttpClient,
   def releases(profileName: Option[ProfileName])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
     http
-      .GET[Seq[WhatsRunningWhere]](profileName.fold(baseUrl)(profileName => s"$baseUrl?profileName=${profileName.asString}"))
+      .GET[Seq[WhatsRunningWhere]](profileName.fold(baseUrl)(profileName => s"$baseUrl?profile=${profileName.asString}"))
       .recover {
         case NonFatal(ex) =>
           Logger.error(s"An error occurred when connecting to $serviceUrl: ${ex.getMessage}", ex)

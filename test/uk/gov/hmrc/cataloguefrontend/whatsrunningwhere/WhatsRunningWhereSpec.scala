@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
@@ -22,6 +22,7 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
+import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.play.test.UnitSpec
 
 class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
@@ -82,7 +83,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
       response.body   should include("api-documentation")
       response.body   should include("0.44.0")
 
-      response.body   should include("integration-AWS-London")
+      response.body   should include("integration")
     }
   }
 }
