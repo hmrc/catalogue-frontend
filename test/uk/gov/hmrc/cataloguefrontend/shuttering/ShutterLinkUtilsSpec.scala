@@ -20,15 +20,15 @@ import org.scalatest.{Matchers, WordSpec}
 
 class ShutterLinkUtilsSpec extends WordSpec with Matchers {
 
-  "generateLink" should {
-    "generate a production url" in {
-        ShutterLinkUtils.generateLink(Environment.Production, "/xyz") shouldBe "https://tax.service.gov.uk/xyz/platops-shutter-testing"
+  "mkLink" should {
+    "make a production url" in {
+        ShutterLinkUtils.mkLink(Environment.Production, "/xyz") shouldBe "https://tax.service.gov.uk/xyz/platops-shutter-testing"
     }
 
-    "generate a link for every non-production environment" in {
+    "make a link for every non-production environment" in {
       val envs = Environment.values.filterNot(_ == Environment.Production)
 
-      envs.foreach(env => ShutterLinkUtils.generateLink(env, "/xyz") shouldBe s"https://${env.asString}.tax.service.gov.uk/xyz/platops-shutter-testing")
+      envs.foreach(env => ShutterLinkUtils.mkLink(env, "/xyz") shouldBe s"https://${env.asString}.tax.service.gov.uk/xyz/platops-shutter-testing")
     }
   }
 }

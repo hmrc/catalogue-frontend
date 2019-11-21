@@ -17,10 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 object ShutterLinkUtils {
-  def generateLink(env: Environment, serviceLink: String) = {
+  def hostName(env: Environment) = {
     env match {
-      case Environment.Production => s"https://tax.service.gov.uk$serviceLink/platops-shutter-testing"
-      case _ => s"https://${env.asString}.tax.service.gov.uk$serviceLink/platops-shutter-testing"
+      case Environment.Production => "tax.service.gov.uk"
+      case _ => s"${env.asString}.tax.service.gov.uk"
     }
   }
+
+  def mkLink(env: Environment, serviceLink: String) =
+    s"https://${hostName(env)}$serviceLink/platops-shutter-testing"
+
 }

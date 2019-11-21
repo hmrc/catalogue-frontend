@@ -121,10 +121,11 @@ class ShutterService @Inject()(
 
   def lookupShutterRoute(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[String]] = {
     for {
-      baseRoutes <- routeRulesConnector.serviceRoutes(serviceName)
-      envRoute = baseRoutes.find(_.environment == env.asString).map(_.routes)
-      frontendRoute = envRoute.flatMap(_.find(_.isRegex == false))
-      optFrontendPath = frontendRoute.map(f => ShutterLinkUtils.generateLink(env, f.frontendPath))
+      baseRoutes      <- routeRulesConnector.serviceRoutes(serviceName)
+      optFrontendPath =  for {
+                           envRoute      <- baseRoutes.find(_.environment == env.asString).map(_.routes)
+                           frontendRoute <- envRoute.find(_.isRegex == false)
+                         } yield ShutterLinkUtils.mkLink(env, frontendRoute.frontendPath)
 
     } yield optFrontendPath
   }
