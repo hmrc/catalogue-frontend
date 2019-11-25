@@ -89,7 +89,7 @@ class ReleasesConnectorSpec
           ApplicationName("api-definition"),
           List(
             WhatsRunningWhereVersion(
-              Environment("integration-AWS-London"),
+              Environment("integration"),
               VersionNumber("1.57.0"),
               lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
           )
@@ -98,7 +98,7 @@ class ReleasesConnectorSpec
           ApplicationName("api-documentation"),
           List(
             WhatsRunningWhereVersion(
-              Environment("integration-AWS-London"),
+              Environment("integration"),
               VersionNumber("0.44.0"),
               lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:46")))
           )
@@ -112,7 +112,7 @@ class ReleasesConnectorSpec
       serviceEndpoint(
         GET,
         s"/releases-api/whats-running-where",
-        queryParameters = Seq(("profileName", profileName.asString)),
+        queryParameters = Seq(("profile", profileName.asString)),
         willRespondWith = (
           200,
           Some(
@@ -138,7 +138,7 @@ class ReleasesConnectorSpec
           ApplicationName("api-definition"),
           List(
             WhatsRunningWhereVersion(
-              Environment("integration-AWS-London"),
+              Environment("integration"),
               VersionNumber("1.57.0"),
               lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
           )

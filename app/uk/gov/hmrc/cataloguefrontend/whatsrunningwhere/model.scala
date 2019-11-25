@@ -38,7 +38,7 @@ case class WhatsRunningWhereVersion(environment: Environment,
 
 object WhatsRunningWhereVersion {
   implicit val versionFormat: Reads[WhatsRunningWhereVersion] = (
-    (__ \ "environment").read[Environment] and
+    (__ \ "environment").read[Environment].map(env => Environment(env.asString.stripSuffix("-AWS-London"))) and
     (__ \ "versionNumber").read[VersionNumber] and
     (__ \ "lastSeen").read[TimeSeen]
   )(WhatsRunningWhereVersion.apply _)
@@ -58,6 +58,26 @@ case class TimeSeen(time: LocalDateTime)
 case class ApplicationName(asString: String) extends AnyVal
 
 case class Environment(asString: String) extends AnyVal
+
+object Environment {
+  private def precedence(environment: Environment) = environment.asString match {
+    // use `contains` so environments with prefixes/suffixes are sorted too
+    case x if x.contains("production") => 0
+    case x if x.contains("externaltest") => 1
+    case x if x.contains("staging") => 2
+    case x if x.contains("qa") => 3
+    case x if x.contains("integration") => 4
+    case x if x.contains("development") => 5
+    case _ => 6
+  }
+
+  implicit val ordering: Ordering[Environment] = new Ordering[Environment] {
+    override def compare(x: Environment, y: Environment): Int = {
+      val envPrecedence = precedence(x).compare(precedence(y))
+      if (envPrecedence == 0) x.asString.compareTo(y.asString) else envPrecedence
+    }
+  }
+}
 
 case class ProfileName(asString: String) extends AnyVal
 

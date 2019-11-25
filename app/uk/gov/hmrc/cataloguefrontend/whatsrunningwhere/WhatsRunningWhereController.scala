@@ -17,6 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import javax.inject.{Inject, Singleton}
+import play.api.data.Form
+import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.WhatsRunningWherePage
@@ -31,14 +33,31 @@ class WhatsRunningWhereController @Inject()(
   )(implicit val ec: ExecutionContext
   ) extends FrontendController(mcc){
 
-  def landing(profileName: Option[String]): Action[AnyContent] =
+  def landing: Action[AnyContent] =
     Action.async { implicit request =>
 
+      val form = WhatsRunningWhereFilter.form.bindFromRequest()
+      val profileName = form.fold(_ => None, filter => filter.profileName)
+
       for {
-        releases <- releasesConnector.releases(profileName.map(ProfileName.apply))
+        releases <- releasesConnector.releases(profileName)
       } yield {
-        val environments = releases.flatMap(_.versions.map(_.environment)).distinct
-        Ok(page(environments, releases))
+        val environments = releases.flatMap(_.versions.map(_.environment)).distinct.sorted
+        Ok(page(environments, releases, form))
       }
     }
+}
+
+case class WhatsRunningWhereFilter(profileName: Option[ProfileName] = None,
+                                   applicationName: Option[ApplicationName] = None)
+
+object WhatsRunningWhereFilter {
+  private def filterEmptyString(x: Option[String]) = x.filter(_.trim.nonEmpty)
+
+  lazy val form = Form(
+    mapping(
+      "profile_name" -> optional(text).transform[Option[ProfileName]](filterEmptyString(_).map(ProfileName), _.map(_.asString)),
+      "application_name" -> optional(text).transform[Option[ApplicationName]](filterEmptyString(_).map(ApplicationName), _.map(_.asString))
+    )(WhatsRunningWhereFilter.apply)(WhatsRunningWhereFilter.unapply)
+  )
 }
