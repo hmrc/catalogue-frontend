@@ -16,10 +16,11 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Environment, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.routes
 
 @this(viewMessages: ViewMessages)
 @(environments: Seq[Environment], whatsRunning: Seq[WhatsRunningWhere], form: Form[_])(implicit messages: Messages, request: Request[_])
-@standard_layout("What's Running Where?", "whats-running") {
+@standard_layout("What's Running Where?", "whats-running-where") {
 
     <header>
         <h1>What's Running Where?</h1>
@@ -58,7 +59,7 @@
             <tbody class="list">
             @whatsRunning.zipWithIndex.map { case (wrw, i) =>
             <tr role="row" id="row@{i}_name">
-                <td class="application-name">@{wrw.applicationName.asString}</td>
+                <td class="application-name"><a href="@routes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a></td>
                 @environments.map { env =>
                     @wrw.versions.find(_.environment == env).map { version =>
                         <td>@version.versionNumber.asString</td>
@@ -77,8 +78,12 @@
     var options = {valueNames: ['application-name']};
     var serviceList = new List('whats-running-where-list', options);
 
-    $(document).ready(function() {
-      var applicationName = document.getElementById("search").value;
-      serviceList.search(applicationName);
-    });
+    // re-search the list upon page load.
+    var searchBox = document.getElementById("search");
+    serviceList.search(searchBox.value);
+
+    // set autofocus cursor to right of text in search box
+    var length = searchBox.value.length;
+    searchBox.focus();
+    searchBox.setSelectionRange(length, length);
 </script>
