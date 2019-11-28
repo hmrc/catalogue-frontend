@@ -27,6 +27,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeHeaders
+import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
@@ -92,7 +93,8 @@ class TeamsAndRepositoriesConnectorSpec
 
   "repositoryDetails" should {
     "convert the json string to RepositoryDetails" in {
-      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(JsonData.serviceDetailsData)))
+      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(serviceJenkinsData)))
 
       val responseData: RepositoryDetails =
         teamsAndRepositoriesConnector
@@ -106,8 +108,7 @@ class TeamsAndRepositoriesConnectorSpec
       responseData.lastActive  shouldBe lastActiveAt
       responseData.teamNames   should ===(Seq("teamA", "teamB"))
       responseData.githubUrl   should ===(Link("github", "github.com", "https://github.com/hmrc/service-1"))
-      responseData.ci should ===(
-        Seq(Link("open1", "open 1", "http://open1/service-1"), Link("open2", "open 2", "http://open2/service-2")))
+      responseData.jenkinsURL should === (None)
       responseData.environments should ===(
         Some(Seq(
           TargetEnvironment(
@@ -139,25 +140,25 @@ class TeamsAndRepositoriesConnectorSpec
 
   "allRepositories" should {
     "return all the repositories returned by the api" in {
-      serviceEndpoint(GET, "/api/repositories", willRespondWith = 200 -> Some(JsonData.repositoriesData))
+      serviceEndpoint(GET, "/api/repositories", willRespondWith = 200 -> Some(repositoriesData))
 
       val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
         .allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
 
       repositories.headOption.value.name          shouldBe "teamA-serv"
-      repositories.headOption.value.createdAt     shouldBe JsonData.createdAt
-      repositories.headOption.value.lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories.headOption.value.createdAt     shouldBe createdAt
+      repositories.headOption.value.lastUpdatedAt shouldBe lastActiveAt
       repositories.headOption.value.repoType      shouldBe RepoType.Service
 
       repositories(1).name          shouldBe "teamB-library"
-      repositories(1).createdAt     shouldBe JsonData.createdAt
-      repositories(1).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories(1).createdAt     shouldBe createdAt
+      repositories(1).lastUpdatedAt shouldBe lastActiveAt
       repositories(1).repoType      shouldBe RepoType.Library
 
       repositories(2).name          shouldBe "teamB-other"
-      repositories(2).createdAt     shouldBe JsonData.createdAt
-      repositories(2).lastUpdatedAt shouldBe JsonData.lastActiveAt
+      repositories(2).createdAt     shouldBe createdAt
+      repositories(2).lastUpdatedAt shouldBe lastActiveAt
       repositories(2).repoType      shouldBe RepoType.Other
 
     }
@@ -168,7 +169,7 @@ class TeamsAndRepositoriesConnectorSpec
       serviceEndpoint(
         GET,
         "/api/digital-services/service-1",
-        willRespondWith = (200, Some(JsonData.digitalServiceData)))
+        willRespondWith = (200, Some(digitalServiceData)))
 
       val responseData =
         teamsAndRepositoriesConnector
@@ -184,7 +185,7 @@ class TeamsAndRepositoriesConnectorSpec
 
   "allDigitalServices" should {
     "return all the digital service names" in {
-      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
+      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(digitalServiceNamesData)))
 
       val digitalServiceNames: Seq[String] =
         teamsAndRepositoriesConnector
@@ -197,7 +198,7 @@ class TeamsAndRepositoriesConnectorSpec
 
   "teamsWithRepositories" should {
     "return all the teams and their repositories" in {
-      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
+      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(teamsWithRepos)))
 
       val teams: Seq[Team] =
         teamsAndRepositoriesConnector

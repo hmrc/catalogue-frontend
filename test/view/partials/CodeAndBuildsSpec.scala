@@ -26,19 +26,7 @@ import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
 class CodeAndBuildsSpec extends WordSpec with Matchers with GeneratorDrivenPropertyChecks {
 
-  val repo = RepositoryDetails(
-    name         = "reponame",
-    description  = "",
-    createdAt    = LocalDateTime.now(),
-    lastActive   = LocalDateTime.now(),
-    owningTeams  = Seq(),
-    teamNames    = Seq(),
-    githubUrl    = Link("repo1", "repository 1", "http://url"),
-    ci           = Seq(),
-    environments = None,
-    repoType     = RepoType.Service,
-    isPrivate    = true
-  )
+  val repo = RepositoryDetails(name         = "reponame", description  = "", createdAt    = LocalDateTime.now(), lastActive   = LocalDateTime.now(), owningTeams  = Seq(), teamNames    = Seq(), githubUrl    = Link("repo1", "repository 1", "http://url"), jenkinsURL           = None, environments = None, repoType     = RepoType.Service, isPrivate    = true)
 
   val environmentRoute = EnvironmentRoute(
     environment = "EnvName",

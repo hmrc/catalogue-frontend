@@ -22,6 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -52,6 +53,8 @@ case class Link(name: String, displayName: String, url: String) {
   val id: String = displayName.toLowerCase.replaceAll(" ", "-")
 }
 
+case class JenkinsLink(service: String, jenkinsURL: String)
+
 case class TargetEnvironment(name: String, services: Seq[Link]) {
   val id: String = name.toLowerCase.replaceAll(" ", "-")
 }
@@ -77,7 +80,7 @@ case class RepositoryDetails(
   owningTeams : Seq[String],
   teamNames   : Seq[String],
   githubUrl   : Link,
-  ci          : Seq[Link],
+  jenkinsURL  : Option[Link],
   environments: Option[Seq[TargetEnvironment]],
   repoType    : RepoType.RepoType,
   isPrivate   : Boolean)
@@ -130,12 +133,21 @@ class TeamsAndRepositoriesConnector @Inject()(
   private val teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
 
   private implicit val linkFormats         = Json.format[Link]
+  private implicit val jenkinsLinkFormats  = Json.format[JenkinsLink]
   private implicit val environmentsFormats = Json.format[TargetEnvironment]
   private implicit val serviceFormats      = Json.format[RepositoryDetails]
 
   private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
+
+  def lookupLink(service: String)(implicit hc: HeaderCarrier): Future[Option[Link]] =
+    http.GET[JenkinsLink](teamsAndServicesBaseUrl + s"/api/jenkins-url/$service")
+    .map(l => Link(l.service, "Build", l.jenkinsURL))
+      .map(Option.apply)
+      .recover {
+      case ex: Throwable => None
+    }
 
   def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
     http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams")

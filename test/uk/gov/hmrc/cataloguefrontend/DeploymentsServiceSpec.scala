@@ -136,19 +136,7 @@ class DeploymentsServiceSpec
         .thenReturn(Future.successful(Seq(Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
-        Future.successful(Some(RepositoryDetails(
-          name         = "a-service",
-          description  = "some description",
-          createdAt    = now,
-          lastActive   = now,
-          owningTeams  = Seq.empty,
-          teamNames    = Seq("a-team", "b-team"),
-          githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/a-service"),
-          ci           = Seq.empty,
-          environments = None,
-          repoType     = RepoType.Service,
-          isPrivate    = false
-        ))))
+        Future.successful(Some(RepositoryDetails(name         = "a-service", description  = "some description", createdAt    = now, lastActive   = now, owningTeams  = Seq.empty, teamNames    = Seq("a-team", "b-team"), githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/a-service"), jenkinsURL           = None, environments = None, repoType     = RepoType.Service, isPrivate    = false))))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
       val deployments = service.getDeployments(serviceName = Some("a-service"), teamName = None).futureValue
@@ -167,19 +155,7 @@ class DeploymentsServiceSpec
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
         Future.successful(
-          Some(RepositoryDetails(
-            name         = "a-service",
-            description  = "some description",
-            createdAt    = now,
-            lastActive   = now,
-            owningTeams  = Seq(),
-            teamNames    = Seq("a-team", "b-team"),
-            githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/a-service"),
-            ci           = Seq(),
-            environments = None,
-            repoType     = RepoType.Service,
-            isPrivate    = false
-          )))
+          Some(RepositoryDetails(name         = "a-service", description  = "some description", createdAt    = now, lastActive   = now, owningTeams  = Seq(), teamNames    = Seq("a-team", "b-team"), githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/a-service"), jenkinsURL           = None, environments = None, repoType     = RepoType.Service, isPrivate    = false)))
       )
 
       val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
