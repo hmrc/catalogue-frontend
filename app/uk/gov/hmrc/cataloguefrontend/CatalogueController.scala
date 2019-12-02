@@ -272,6 +272,7 @@ class CatalogueController @Inject()(
       }
 
     ( teamsAndRepositoriesConnector.repositoryDetails(serviceName)
+    , teamsAndRepositoriesConnector.lookupLink(serviceName)
     , deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
     , serviceDependencyConnector.getDependencies(serviceName)
     , leakDetectionService.urlIfLeaksFound(serviceName)
@@ -281,7 +282,7 @@ class CatalogueController @Inject()(
          ShutteringEnvironment.values.traverse(env => shutterService.getShutterState(ShutterType.Frontend, env, serviceName))
            .map(_.collect { case Some(s) => s }.groupBy(_.environment).mapValues(_.head))
       else Future(Map.empty[ShutteringEnvironment, ShutterState])
-    ).mapN { case (service, deployments, optDependencies, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
+    ).mapN { case (service, jenkinsLink, deployments, optDependencies, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
       service match {
         case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
           val optDeployedEnvironments =
@@ -298,7 +299,7 @@ class CatalogueController @Inject()(
 
           Ok(
             serviceInfoPage(
-              repositoryDetails.copy(environments = optDeployedEnvironments),
+              repositoryDetails.copy(environments = optDeployedEnvironments, jenkinsURL = jenkinsLink),
               optDependencies,
               repositoryDetails.createdAt,
               deploymentsByEnvironmentName,
@@ -316,12 +317,13 @@ class CatalogueController @Inject()(
   def library(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
       library         <- teamsAndRepositoriesConnector.repositoryDetails(name)
+      jenkinsLink     <- teamsAndRepositoriesConnector.lookupLink(name)
       optDependencies <- serviceDependencyConnector.getDependencies(name)
       urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
     } yield
       library match {
         case Some(s) if s.repoType == Library =>
-          Ok(libraryInfoPage(s, optDependencies, urlIfLeaksFound))
+          Ok(libraryInfoPage(s.copy(jenkinsURL = jenkinsLink), optDependencies, urlIfLeaksFound))
         case _ =>
           NotFound(error_404_template())
       }
@@ -346,6 +348,7 @@ class CatalogueController @Inject()(
                                   val (owners, other) = repo.teamNames.partition(s => repo.owningTeams.contains(s))
                                   owners.sorted ++ other.sorted
                                 })))
+      jenkinsLinks       <- teamsAndRepositoriesConnector.lookupLink(name)
       optDependencies    <- serviceDependencyConnector.getDependencies(name)
       optUrlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
     } yield
@@ -353,7 +356,7 @@ class CatalogueController @Inject()(
         case Some(repositoryDetails) =>
           Ok(
             repositoryInfoPage(
-              repositoryDetails,
+              repositoryDetails.copy(jenkinsURL = jenkinsLinks),
               optDependencies,
               optUrlIfLeaksFound
             )

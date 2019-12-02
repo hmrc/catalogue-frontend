@@ -100,18 +100,6 @@ object JsonData {
        |         "displayName": "github.com",
        |		     "url": "https://github.com/hmrc/service-1"
        |	     },
-       |	     "ci": [
-       |		     {
-       |		       "name": "open1",
-       |		       "displayName": "open 1",
-       |		       "url": "http://open1/service-1"
-       |		     },
-       |		     {
-       |		       "name": "open2",
-       |		       "displayName": "open 2",
-       |		       "url": "http://open2/service-2"
-       |		     }
-       |	     ],
        |      "environments" : [
        |      {
        |        "name" : "Dev",
@@ -149,6 +137,14 @@ object JsonData {
        |       }]
        |     }
     """.stripMargin
+
+  val serviceJenkinsData: String =
+    """
+      |{
+      |   "service": "service-1",
+      |   "jenkinsURL": "http://jenkins/service-1/"
+      |}
+      |""".stripMargin
 
   val teamDetailsData =
     """
@@ -197,7 +193,6 @@ object JsonData {
        |    "displayName": "Github.com",
        |    "url": "https://github.com/HMRC/2fa-prototype"
        |  },
-       |  "ci": [ ],
        |  "environments": [ ]
        |}
     """.stripMargin
@@ -219,19 +214,7 @@ object JsonData {
       |		     "name": "github",
       |        "displayName": "github.com",
       |		     "url": "https://github.com/hmrc/serv"
-      |	     },
-      |	     "ci": [
-      |		     {
-      |		       "name": "open1",
-      |		       "displayName": "open 1",
-      |		       "url": "http://open1/serv"
-      |		     },
-      |		     {
-      |		       "name": "open2",
-      |		       "displayName": "open 2",
-      |		       "url": "http://open2/serv"
-      |		     }
-      |	     ]
+      |	     }
       |     }
     """.stripMargin
 
@@ -588,6 +571,108 @@ object JsonData {
    ]
 }
 """
+
+  val serviceData: String =
+    """
+      |    {
+      |	     "name": "serv",
+      |      "isPrivate": false,
+      |      "repoType": "Service",
+      |      "owningTeams": [ "The True Owners" ],
+      |      "teamNames": ["teamA", "teamB"],
+      |      "description": "some description",
+      |      "createdAt": 1456326530000,
+      |      "lastActive": 1478602555000,
+      |	     "githubUrl": {
+      |		     "name": "github",
+      |        "displayName": "github.com",
+      |		     "url": "https://github.com/hmrc/serv"
+      |	     },
+      |      "environments" : [{
+      |        "name" : "env1",
+      |        "services" : [{
+      |          "name": "ser1",
+      |		       "displayName": "service1",
+      |          "url": "http://ser1/serv"
+      |        }, {
+      |          "name": "ser2",
+      |		       "displayName": "service2",
+      |          "url": "http://ser2/serv"
+      |        }]
+      |      },{
+      |        "name" : "env2",
+      |        "services" : [{
+      |          "name": "ser1",
+      |		       "displayName": "service1",
+      |          "url": "http://ser1/serv"
+      |        }, {
+      |          "name": "ser2",
+      |		       "displayName": "service2",
+      |          "url": "http://ser2/serv"
+      |        }]
+      |       }]
+      |     }
+    """.stripMargin
+
+  val jenkinsData: String =
+    """
+      |{
+      |   "service": "lib",
+      |   "jenkinsURL": "http://jenkins/lib/"
+      |}
+      |""".stripMargin
+
+  val libraryData: String =
+    """
+      |    {
+      |	     "name": "lib",
+      |      "isPrivate": false,
+      |      "description": "some description",
+      |      "createdAt": 1456326530000,
+      |      "lastActive": 1478602555000,
+      |      "repoType": "Library",
+      |      "owningTeams": [ "The True Owners" ],
+      |      "teamNames": ["teamA", "teamB"],
+      |	     "githubUrl": {
+      |		     "name": "github",
+      |        "displayName": "github.com",
+      |		     "url": "https://github.com/hmrc/lib"
+      |	     }
+      |     }
+    """.stripMargin
+
+  val indicatorData: String =
+    """
+      |[
+      |  {
+      |    "period":"2015-11",
+      |    "leadTime":{
+      |      "median":6
+      |    },
+      |    "interval":{
+      |      "median":1
+      |    }
+      |  },
+      |  {
+      |    "period":"2015-12",
+      |    "leadTime":{
+      |      "median":6
+      |    },
+      |    "interval":{
+      |      "median":5
+      |    }
+      |  },
+      |  {
+      |    "period":"2016-01",
+      |    "leadTime":{
+      |      "median":6
+      |    },
+      |    "interval":{
+      |      "median":6
+      |    }
+      |  }
+      |]
+    """.stripMargin
 
   def shutterApiData(shutterType: ShutterType, env: Environment, status: ShutterStatusValue) =
     s"""

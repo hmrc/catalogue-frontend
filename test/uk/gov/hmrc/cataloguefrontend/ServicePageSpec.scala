@@ -92,6 +92,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
 
     "show the teams owning the service with github, ci and environment links and info box" in {
       serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(serviceJenkinsData)))
       serviceEndpoint(
         GET,
         "/api/whatsrunningwhere/service-1",
@@ -120,11 +121,9 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       response.body   should include("links on this page are automatically generated")
       response.body   should include("teamA")
       response.body   should include("teamB")
-      response.body   should include("open 1")
-      response.body   should include("open 2")
+      response.body   should include("service-1")
       response.body   should include("github.com")
-      response.body   should include("http://open1/service-1")
-      response.body   should include("http://open2/service-2")
+      response.body   should include("http://jenkins/service-1/")
       response.body   should include("Jenkins")
       response.body   should include("Grafana")
       response.body   should include("https://deploy-qa.co.uk/job/deploy-microservice")
@@ -166,6 +165,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         import ServiceDeploymentInformation._
 
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
+        serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(serviceJenkinsData)))
         serviceEndpoint(
           GET,
           "/api/whatsrunningwhere/service-1",
@@ -186,11 +186,9 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         response.body   should include("links on this page are automatically generated")
         response.body   should include("teamA")
         response.body   should include("teamB")
-        response.body   should include("open 1")
-        response.body   should include("open 2")
+        response.body   should include("service-1")
         response.body   should include("github.com")
-        response.body   should include("http://open1/service-1")
-        response.body   should include("http://open2/service-2")
+        response.body   should include("http://jenkins/service-1/")
         response.body   should include("Jenkins")
         response.body   should include("Grafana")
 

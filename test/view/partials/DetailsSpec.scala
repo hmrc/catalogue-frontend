@@ -25,19 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
 class DetailsSpec extends WordSpec with Matchers {
 
-  val repo = RepositoryDetails(
-    name         = "reponame",
-    description  = "some description",
-    createdAt    = LocalDateTime.of(2018, 12, 31, 8, 30, 30),
-    lastActive   = LocalDateTime.of(2018, 12, 31, 18, 30, 30),
-    owningTeams  = Seq(),
-    teamNames    = Seq(),
-    githubUrl    = Link("repo1", "repository 1", "http://url"),
-    ci           = Seq(),
-    environments = None,
-    repoType     = RepoType.Other,
-    isPrivate    = true
-  )
+  val repo = RepositoryDetails(name         = "reponame", description  = "some description", createdAt    = LocalDateTime.of(2018, 12, 31, 8, 30, 30), lastActive   = LocalDateTime.of(2018, 12, 31, 18, 30, 30), owningTeams  = Seq(), teamNames    = Seq(), githubUrl    = Link("repo1", "repository 1", "http://url"), jenkinsURL           = None, environments = None, repoType     = RepoType.Other, isPrivate    = true)
 
   val environmentRoute = EnvironmentRoute(
     environment = "EnvName",
