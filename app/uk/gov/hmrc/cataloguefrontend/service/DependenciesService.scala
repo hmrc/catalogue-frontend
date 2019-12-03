@@ -21,6 +21,7 @@ import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.DeploymentVO
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.cataloguefrontend.service.model.Blacklist
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -70,6 +71,7 @@ class DependenciesService @Inject()(
       .getGroupArtefacts
       .map(_.map(g => g.copy(artefacts = g.artefacts.sorted)))
       .map(_.sortBy(_.group))
+      .map(_.filterNot(g => Blacklist.groups.contains(g.group)))
 
   def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier) : Future[List[JDKVersion]] =
     serviceDependenciesConnector

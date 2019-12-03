@@ -108,6 +108,19 @@ class SlugInfoServiceSpec
     }
   }
 
+  "DependenciesService.getGroupArtefacts" should {
+    "return a list of GroupArtefacts filtered by Blacklist" in {
+      val boot = Boot.init
+      val goodGroup = GroupArtefacts("group", List("artefact"))
+      val badGroup = GroupArtefacts(s"$${groupId}", List("filterArtefact"))
+
+      when(boot.mockedServiceDependenciesConnector.getGroupArtefacts)
+        .thenReturn(Future(List(goodGroup, badGroup)))
+
+      await(boot.service.getGroupArtefacts) shouldBe List(goodGroup)
+    }
+  }
+
 
   case class Boot(
     mockedServiceDependenciesConnector: ServiceDependenciesConnector,
