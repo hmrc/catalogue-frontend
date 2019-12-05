@@ -16,32 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
-/*
- * Copyright 2017 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import org.mockito.Mockito.when
+import org.mongodb.scala.bson.collection.immutable.Document
+import org.mongodb.scala.model.IndexModel
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, LoneElement, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers
-import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
+import uk.gov.hmrc.mongo.test.DefaultMongoCollectionSupport
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,27 +33,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class EventRepositorySpec
     extends UnitSpec
     with LoneElement
-    with MongoSpecSupport
+    with DefaultMongoCollectionSupport
     with ScalaFutures
     with OptionValues
     with BeforeAndAfterEach
     with GuiceOneAppPerSuite
     with MockitoSugar {
 
-  val reactiveMongoComponent: ReactiveMongoComponent = new ReactiveMongoComponent() {
-    override def mongoConnector: MongoConnector = {
-      val connector = mock[MongoConnector]
-      when(connector.db).thenReturn(mongo)
-      connector
-    }
-  }
   val futureHelpers: FutureHelpers = app.injector.instanceOf[FutureHelpers]
 
-  val mongoEventRepository = new EventRepository(reactiveMongoComponent, futureHelpers)
-
-  override def beforeEach() {
-    await(mongoEventRepository.drop)
-  }
+  private val eventRepository = new EventRepository(mongoComponent, futureHelpers)
+  override protected val collectionName: String = eventRepository.collectionName
+  override protected val indexes: Seq[IndexModel] = eventRepository.indexes
 
   private val timestamp = 1494625868
 
@@ -79,7 +54,7 @@ class EventRepositorySpec
       insertEvent(timestamp)
       insertEvent(timestamp + 1)
 
-      val events: Seq[Event] = await(mongoEventRepository.getAllEvents)
+      val events: Seq[Event] = await(eventRepository.getAllEvents)
 
       events.size shouldBe 2
       events      should contain theSameElementsAs
@@ -98,16 +73,16 @@ class EventRepositorySpec
 
   private def insertEvent(theTimestamp: Int) =
     await(
-      mongoEventRepository.collection.insert(ordered = false).one(
-        Json.obj(
-          "eventType" -> "ServiceOwnerUpdated",
-          "data" -> Json.obj(
-            "service"  -> "Catalogue",
-            "username" -> "joe.black"
-          ),
-          "timestamp" -> theTimestamp,
-          "metadata"  -> Json.obj()
-        )))
+      insert(
+        Document(
+            "eventType" -> "ServiceOwnerUpdated"
+          , "data"      -> Document(
+                             "service"  -> "Catalogue"
+                           , "username" -> "joe.black"
+                           )
+          , "timestamp" -> theTimestamp
+          , "metadata"  -> Document()
+          )))
 
   "getEventsByType" should {
     "return all the right events" in {
@@ -120,9 +95,9 @@ class EventRepositorySpec
         timestamp = timestamp,
         Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
 
-      await(mongoEventRepository.add(serviceOwnerUpdateEvent))
+      await(eventRepository.add(serviceOwnerUpdateEvent))
 
-      val events: Seq[Event] = await(mongoEventRepository.getEventsByType(EventType.ServiceOwnerUpdated))
+      val events: Seq[Event] = await(eventRepository.getEventsByType(EventType.ServiceOwnerUpdated))
 
       events.size shouldBe 1
       events.head shouldBe Event(
@@ -138,8 +113,8 @@ class EventRepositorySpec
         EventType.ServiceOwnerUpdated,
         timestamp = timestamp,
         Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
-      await(mongoEventRepository.add(event))
-      val all = await(mongoEventRepository.getAllEvents)
+      await(eventRepository.add(event))
+      val all = await(eventRepository.getAllEvents)
 
       all.size shouldBe 1
       val savedEvent: Event = all.loneElement
@@ -147,5 +122,4 @@ class EventRepositorySpec
       savedEvent shouldBe event
     }
   }
-
 }

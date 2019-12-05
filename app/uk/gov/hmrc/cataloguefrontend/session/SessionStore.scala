@@ -19,26 +19,29 @@ package uk.gov.hmrc.cataloguefrontend.session
 import cats.data.OptionT
 import cats.implicits._
 import com.google.inject.{Inject, Singleton}
-import play.api.libs.json.{Json, OFormat, Reads, Writes}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import uk.gov.hmrc.cache.model.Cache
-import uk.gov.hmrc.cache.repository.CacheMongoRepository
+import org.mongodb.scala.model.{Filters, FindOneAndUpdateOptions, ReturnDocument, Updates}
+import play.api.libs.json.{Format, Json, JsValue, OFormat, Reads, Writes}
+import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
+import uk.gov.hmrc.mongo.cache.collection.{CacheItem, PlayMongoCacheCollection}
+import uk.gov.hmrc.mongo.play.json.Codecs
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import play.api.mvc.{Request, Session}
-import reactivemongo.play.json._
-import uk.gov.hmrc.mongo.CurrentTime
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SessionStore @Inject()(
-    mongo         : ReactiveMongoComponent
-  , servicesConfig: ServicesConfig
+    mongoComponent  : MongoComponent
+  , servicesConfig  : ServicesConfig
+  , timestampSupport: TimestampSupport
   )(implicit ec: ExecutionContext) {
 
-  private val cacheRepository = new CacheMongoRepository(
-        collName           = "sessions"
-      , expireAfterSeconds = servicesConfig.getDuration("mongodb.session.expireAfter").toSeconds
-      )(mongo.mongoConnector.db, ec)
+  private val cacheRepository = new PlayMongoCacheCollection(
+        mongoComponent   = mongoComponent
+      , collectionName   = "sessions"
+      , domainFormat     = implicitly[Format[JsValue]]
+      , ttl              = servicesConfig.getDuration("mongodb.session.expireAfter")
+      , timestampSupport = timestampSupport
+      )
 
   def get[T : Reads](
         session   : Session
@@ -47,9 +50,8 @@ class SessionStore @Inject()(
       ): Future[Option[T]] =
     (for {
        sessionId <- OptionT.fromOption[Future](session.get(sessionKey))
-       cache     <- OptionT(cacheRepository.findById(sessionId))
-       data      <- OptionT.fromOption[Future](cache.data)
-       t         <- OptionT.fromOption[Future]((data \ dataKey).asOpt[T])
+       cache     <- OptionT(cacheRepository.find(sessionId))
+       t         <- OptionT.fromOption[Future]((cache.data \ dataKey).asOpt[T])
      } yield t
     ).value
 
@@ -60,30 +62,36 @@ class SessionStore @Inject()(
       , data      : T
       ): Future[String] = {
     val sessionId = session.get(sessionKey).getOrElse(java.util.UUID.randomUUID.toString)
-    cacheRepository.createOrUpdate(
-        id      = sessionId
-      , key     = dataKey
-      , toCache = Json.toJson(data)
+    val timestamp = timestampSupport.timestamp()
+    cacheRepository.collection
+      .findOneAndUpdate(
+          filter = Filters.equal(CacheItem.id, sessionId)
+        , update = Updates.combine(
+                       Updates.set(CacheItem.data + "." + dataKey, Codecs.toBson(data))
+                     , Updates.set(CacheItem.modifiedAt          , timestamp)
+                     , Updates.setOnInsert(CacheItem.id       , sessionId)
+                     , Updates.setOnInsert(CacheItem.createdAt, timestamp)
+                     )
+        , options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
       )
+      .toFuture()
       .map(_ => sessionId)
     }
 
   def delete(session: Session, sessionKey: String, dataKey: String): Future[Unit] =
-    CurrentTime.withCurrentTime { time =>
-      import uk.gov.hmrc.mongo.json.ReactiveMongoFormats._
-      session.get(sessionKey) match {
-        case None            => Future(())
-        case Some(sessionId) => cacheRepository.collection.update(ordered = false).one(
-                                    q = Json.obj(cacheRepository.Id -> sessionId)
-                                  , u = Json.obj( "$unset" -> Json.obj(s"${Cache.DATA_ATTRIBUTE_NAME}.$dataKey" -> "")
-                                                , "$set"   -> Json.obj("modifiedDetails.lastUpdated" -> time)
-                                                )
-                                  )
-                                  .map(_ => ())
-      }
+    session.get(sessionKey) match {
+      case None            => Future(())
+      case Some(sessionId) => cacheRepository.collection
+                                .findOneAndUpdate(
+                                    filter = Filters.equal(CacheItem.id, sessionId)
+                                  , update = Updates.combine(
+                                                 Updates.unset(CacheItem.data + "." + dataKey)
+                                               , Updates.set(CacheItem.modifiedAt, timestampSupport.timestamp())
+                                               )
+                                )
+                                .toFuture
+                                .map(_ => ())
     }
-
-  private object CurrentTime extends CurrentTime
 }
 
 object SessionController {

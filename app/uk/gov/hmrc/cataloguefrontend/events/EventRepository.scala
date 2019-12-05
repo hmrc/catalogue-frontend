@@ -17,50 +17,58 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 import javax.inject.{Inject, Singleton}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
-import reactivemongo.play.json.ImplicitBSONHandlers._
+import com.mongodb.BasicDBObject
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Indexes._
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers
-import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoCollection}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class EventRepository @Inject()(
-  mongo        : ReactiveMongoComponent,
-  futureHelpers: FutureHelpers
-)(implicit val ec: ExecutionContext
-) extends ReactiveRepository[Event, BSONObjectID](
-      collectionName = "events",
-      mongo          = mongo.mongoConnector.db,
-      domainFormat   = Event.format) {
-
-  override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
-    Future.sequence(
-      Seq(
-        collection.indexesManager.ensure(
-          Index(Seq("timestamp" -> IndexType.Descending), name = Some("eventTimestampIdx")))
-      )
-    )
+    mongoComponent: MongoComponent
+  , futureHelpers : FutureHelpers
+  )(implicit ec: ExecutionContext
+  ) extends PlayMongoCollection[Event](
+      mongoComponent = mongoComponent
+    , collectionName = "events"
+    , domainFormat   = Event.format
+    , indexes        = Seq(
+                         IndexModel(descending("timestamp"), IndexOptions().name("dependencyConfigUniqueIdx"))
+                       )
+    ) {
 
   def add(event: Event): Future[Boolean] =
     futureHelpers.withTimerAndCounter("mongo.write") {
-      insert(event) map (_ => true)
-    } recover {
-      case lastError => throw lastError
+      collection
+        .insertOne(event)
+        .toFuture
+        .map(_ => true)
     }
 
   def getEventsByType(eventType: EventType.Value): Future[Seq[Event]] =
     futureHelpers.withTimerAndCounter("mongo.read") {
-      find("eventType" -> BSONDocument("$eq" -> eventType.toString)) map {
-        case Nil  => Nil
-        case data => data.sortBy(_.timestamp)
-      }
+      collection
+        .find(
+            filter = and(equal("eventType", eventType.toString))
+         )
+         .sort(ascending("timestamp"))
+        .toFuture
     }
 
-  def getAllEvents: Future[List[Event]] = findAll()
+  def getAllEvents: Future[List[Event]] =
+    collection
+      .find()
+      .sort(ascending("timestamp"))
+      .toFuture
+      .map(_.toList)
 
-  def clearAllData: Future[Boolean] = super.removeAll().map(_.ok)
-
+  def clearAllData: Future[Boolean] =
+    collection
+      .deleteMany(new BasicDBObject())
+      .toFuture
+      .map(_.wasAcknowledged())
 }
