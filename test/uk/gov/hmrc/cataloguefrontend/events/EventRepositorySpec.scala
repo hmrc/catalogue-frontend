@@ -42,9 +42,9 @@ class EventRepositorySpec
 
   val futureHelpers: FutureHelpers = app.injector.instanceOf[FutureHelpers]
 
-  private val eventRepository = new EventRepository(mongoComponent, futureHelpers)
-  override protected val collectionName: String = eventRepository.collectionName
-  override protected val indexes: Seq[IndexModel] = eventRepository.indexes
+  private lazy val eventRepository = new EventRepository(mongoComponent, futureHelpers)
+  override protected lazy val collectionName: String = eventRepository.collectionName
+  override protected lazy val indexes: Seq[IndexModel] = eventRepository.indexes
 
   private val timestamp = 1494625868
 

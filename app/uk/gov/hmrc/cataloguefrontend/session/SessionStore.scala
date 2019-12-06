@@ -65,12 +65,12 @@ class SessionStore @Inject()(
     val timestamp = timestampSupport.timestamp()
     cacheRepository.collection
       .findOneAndUpdate(
-          filter = Filters.equal(CacheItem.id, sessionId)
+          filter = Filters.equal("_id", sessionId)
         , update = Updates.combine(
-                       Updates.set(CacheItem.data + "." + dataKey, Codecs.toBson(data))
-                     , Updates.set(CacheItem.modifiedAt          , timestamp)
-                     , Updates.setOnInsert(CacheItem.id       , sessionId)
-                     , Updates.setOnInsert(CacheItem.createdAt, timestamp)
+                       Updates.set("data." + dataKey            , Codecs.toBson(data))
+                     , Updates.set("modifiedDetails.lastUpdated", timestamp)
+                     , Updates.setOnInsert("_id"                      , sessionId)
+                     , Updates.setOnInsert("modifiedDetails.createdAt", timestamp)
                      )
         , options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
       )
@@ -83,10 +83,10 @@ class SessionStore @Inject()(
       case None            => Future(())
       case Some(sessionId) => cacheRepository.collection
                                 .findOneAndUpdate(
-                                    filter = Filters.equal(CacheItem.id, sessionId)
+                                    filter = Filters.equal("_id", sessionId)
                                   , update = Updates.combine(
-                                                 Updates.unset(CacheItem.data + "." + dataKey)
-                                               , Updates.set(CacheItem.modifiedAt, timestampSupport.timestamp())
+                                                 Updates.unset("data." + dataKey)
+                                               , Updates.set("modifiedDetails.lastUpdated", timestampSupport.timestamp())
                                                )
                                 )
                                 .toFuture
