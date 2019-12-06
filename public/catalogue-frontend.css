@@ -12283,7 +12283,6 @@ table.shutter-events {
 
 #environmentTabs li a .board .board__heading {
   border: none;
-  padding: 6px;
   padding-top: 2px;
   padding-bottom: 0px;
 }
@@ -12297,6 +12296,10 @@ table.shutter-events {
 }
 
 .nav-tabs > li.active > a > .board > .board__heading {
+  background-color: #f5f5f5;
+}
+
+.nav-tabs > li > a > .board > .board__heading {
   background: inherit;
 }
 
@@ -12306,6 +12309,10 @@ table.shutter-events {
   margin-bottom: 16px;
   border: 1px solid #ddd;
   border-top: none;
+}
+
+.environment-panes .board {
+  border: none;
 }
 
 .shutter-badge {

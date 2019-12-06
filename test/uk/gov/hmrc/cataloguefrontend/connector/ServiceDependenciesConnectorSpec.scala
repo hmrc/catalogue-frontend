@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.apache.http.HttpStatus
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest._
@@ -29,8 +28,8 @@ import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, JDK, JRE, OpenJDK, Oracle, Version}
-import uk.gov.hmrc.cataloguefrontend.service.{DependenciesService, ServiceDependencies}
+import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
