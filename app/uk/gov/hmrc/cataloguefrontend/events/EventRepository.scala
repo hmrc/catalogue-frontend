@@ -37,7 +37,7 @@ class EventRepository @Inject()(
     , collectionName = "events"
     , domainFormat   = Event.format
     , indexes        = Seq(
-                         IndexModel(descending("timestamp"), IndexOptions().name("dependencyConfigUniqueIdx"))
+                         IndexModel(descending("timestamp"), IndexOptions().name("eventTimestampIdx"))
                        )
     ) {
 
