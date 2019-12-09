@@ -18,9 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
+import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -53,7 +53,7 @@ class ServiceDependenciesConnector @Inject()(
   private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies") + "/api"
 
   def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
-    implicit val reads = Dependencies.reads
+    import Dependencies.Implicits.reads
     http
       .GET[Option[Dependencies]](s"$servicesDependenciesBaseUrl/dependencies/$repositoryName")
       .recover {
@@ -64,7 +64,7 @@ class ServiceDependenciesConnector @Inject()(
   }
 
   def getAllDependencies()(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
-    implicit val reads = Dependencies.reads
+    import Dependencies.Implicits.reads
     http
       .GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/dependencies")
       .recover {
@@ -75,7 +75,7 @@ class ServiceDependenciesConnector @Inject()(
   }
 
   def dependenciesForTeam(team: String)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
-    implicit val reads = Dependencies.reads
+    import Dependencies.Implicits.reads
     http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/teams/$team/dependencies")
   }
 
@@ -92,6 +92,17 @@ class ServiceDependenciesConnector @Inject()(
           Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl/sluginfos: ${ex.getMessage}", ex)
           Nil
       }
+  }
+
+  def getCuratedSlugDependencies(serviceName: String, version: String)(implicit hc: HeaderCarrier): Future[Seq[Dependency]] = {
+    import Dependencies.Implicits.readsDependency
+    val url = s"$servicesDependenciesBaseUrl/slug-dependencies/${encodePathParam(serviceName)}/${encodePathParam(version)}"
+
+    http.GET[Seq[Dependency]](url).recover {
+      case NonFatal(ex) =>
+        Logger.error(s"An error occurred when connecting to [$url]: ${ex.getMessage}", ex)
+        Nil
+    }
   }
 
   private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =

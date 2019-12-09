@@ -12141,23 +12141,6 @@ div.shutter_label {
     top: 0px;
 }
 
-.environment-name h3 {
-    margin: 5px 0px 0px 0px;
-}
-
-.environment-name h3.shuttered {
-    color: #fff;
-    display: inline-block;
-}
-
-div.service-version {
-    display: inline-block;
-    position: absolute;
-    bottom: 4px;
-    left: 13px;
-    margin: 0px;
-}
-
 p.shuttered:empty {
     display: none
 }
@@ -12286,4 +12269,67 @@ table.shutter-events {
 
 #shutter-events-form #serviceName {
   margin-bottom: 10px;
+}
+
+#environmentTabs li a {
+  padding: 2px;
+  padding-bottom: 0px;
+}
+
+#environmentTabs li a .board {
+  margin-bottom: 2px;
+  border: none;
+}
+
+#environmentTabs li a .board .board__heading {
+  border: none;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+#environmentTabs li a .board .board__heading p {
+  margin-bottom: 0px;
+}
+
+#environmentTabs li a .board .board__body {
+  padding: 0px;
+}
+
+.nav-tabs > li.active > a > .board > .board__heading {
+  background-color: #f5f5f5;
+}
+
+.nav-tabs > li > a > .board > .board__heading {
+  background: inherit;
+}
+
+.environment-panes {
+  padding: 16px;
+  padding-bottom: 0px;
+  margin-bottom: 16px;
+  border: 1px solid #ddd;
+  border-top: none;
+}
+
+.environment-panes .board {
+  border: none;
+}
+
+.shutter-badge {
+  border-radius: 21%;
+  width: 15px;
+  height: 15px;
+  padding: 2px;
+  margin-top: 2px;
+  background: repeating-linear-gradient(-45deg, #6d6d6d, #6d6d6d 2px, #d0a039a3 3px, #d0a039a3 5px);
+  border: 1px solid #666;
+}
+
+.noshutter-badge {
+  border-radius: 21%;
+  width: 15px;
+  height: 15px;
+  padding: 2px;
+  margin-top: 2px;
+  border: none;
 }

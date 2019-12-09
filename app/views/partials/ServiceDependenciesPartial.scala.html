@@ -1,0 +1,47 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.model._
+
+@this(viewMessages: ViewMessages)
+
+@(dependencies: Seq[Dependency], rootId: String)
+
+
+<div id="@rootId" class="board">
+    <h3 class="board__heading">Platform Dependencies</h3>
+    <div class="board__body">
+    <div class="col-xs-8">
+            <ul class="list list--minimal list-group row">
+                @if(dependencies.nonEmpty) {
+                    <li>
+                        <span class="col-xs-4"><label>Libraries</label></span>
+                        <span class="col-xs-3"><label>Current Version</label></span>
+                        <span class="col-xs-3"><label>Latest Version</label></span>
+                        <span class="col-xs-2"><label>Violation</label></span>
+                    </li>
+                    @partials.dependency_section(dependencies)
+                } else {
+                    <li>No Library dependencies available</li>
+                }
+            </ul>
+        </div>
+        @if(dependencies.nonEmpty) {
+            @partials.dependency_legend(includeUpToDate = true)
+        }
+    </div>
+</div>

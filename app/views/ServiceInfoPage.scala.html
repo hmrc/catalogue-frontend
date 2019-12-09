@@ -14,25 +14,21 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import play.twirl.api.Html
 @import java.time.LocalDateTime
-@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
-@import uk.gov.hmrc.cataloguefrontend.DeploymentVO
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
-@import uk.gov.hmrc.cataloguefrontend.connector.TargetEnvironment
+@import partials.{BuildToolsPartial, DependenciesByEnvironmentPartial}
+@import play.twirl.api.Html
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
+@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterState}
+@import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceInfoView, ViewMessages}
 @import views.partials.githubBadgeType
-@import partials.DependenciesPartial
-@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterState, ShutterStatus, ShutterStatusValue}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus._
 
-@this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
+@this(dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial, buildToolsPartial: BuildToolsPartial, viewMessages: ViewMessages)
 
 @(service: RepositoryDetails,
-  optDependencies: Option[Dependencies],
+  optLatestDependencies: Option[Dependencies],
+  dependenciesByVersion: Map[String, Seq[Dependency]],
   repositoryCreationDate: LocalDateTime,
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
   linkToLeakDetection: Option[String],
@@ -40,7 +36,6 @@
   serviceRoutes: ServiceRoutes,
   shutterState: Map[ShutteringEnvironment, ShutterState]
 )(implicit messages: Messages, request: Request[_])
-
 
 
 @standard_layout(service.name, "services") {
@@ -53,8 +48,8 @@
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
-    @partials.bobby_active_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
-    @partials.bobby_pending_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.bobby_active_violations_banner(optLatestDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.bobby_pending_violations_banner(optLatestDependencies.map(_.toSeq).getOrElse(Seq.empty))
 
     <section class="section-wrapper">
 
@@ -89,64 +84,21 @@
                 @partials.code_and_builds(service)
             </div>
         </div>
-        <div class="row">
-        @for((environment, idx) <- service.environments.get.zipWithIndex) {
-            <div id="@{environment.id}-environment" class="col-md-2">
-                <div class="board environment_board">
-                    @renderEnvironmentBoardHeading(deploymentsByEnvironmentName, shutterState, environment)
-                    <div class="board__body">
-                        <ul class="list list--minimal">
-                            @if(environment.services.isEmpty) {
-                                <li class="list-item">
-                                    Not deployed
-                                </li>
-                            } else {
-                                @for(tool <- environment.services) {
-                                    <li class="list-item"><a id="link-to-@{tool.id}" href="@{tool.url}" target="_blank">@{tool.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
-                                }
-                            }
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        }
-        </div>
+
+        @dependenciesByEnvironmentPartial(
+            service, optLatestDependencies, dependenciesByVersion, deploymentsByEnvironmentName, shutterState
+        )
+
         <div class="row">
             <div class="col-md-12">
-                @dependenciesPartial(optDependencies)
+                @buildToolsPartial(optLatestDependencies)
             </div>
         </div>
-        </div>
     </section>
+
     <div class="alert alert-success" role="alert" id="@service.name">
         <p>
         @Html(viewMessages.informationalText)
         </p>
     </div>
-}
-
-@renderEnvironmentBoardHeading(deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]], shutterState: Map[ShutteringEnvironment, ShutterState], environment: TargetEnvironment) = {
-    @if(TargetEnvironment.toShutteringEnvironment(environment)
-          .flatMap(shutterState.get)
-          .map(_.status.value == ShutterStatusValue.Shuttered)
-          .getOrElse(false)) {
-        <div class="board__heading environment shuttered_board">
-            <div class="shutter_label shuttered">shuttered</div>
-            <div class="environment-name"><h3 class="shuttered">@environment.name</h3></div>
-            @for(environmentDeployments <- deploymentsByEnvironmentName.get(environment.name.toLowerCase)) {
-                @for(environmentDeployment <- environmentDeployments) {
-                    <div class="service-version shuttered small" style="margin-top: 0.1em;">@environmentDeployment.version</div>
-                }
-            }
-        </div>
-    } else {
-        <div class="board__heading environment">
-            <div class="environment-name"><h3>@environment.name</h3></div>
-            @for(environmentDeployments <- deploymentsByEnvironmentName.get(environment.name.toLowerCase)) {
-                @for(environmentDeployment <- environmentDeployments) {
-                    <div class="service-version small" style="margin-top: 0.1em;">@environmentDeployment.version</div>
-                }
-            }
-        </div>
-    }
 }

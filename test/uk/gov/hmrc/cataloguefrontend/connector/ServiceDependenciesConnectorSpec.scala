@@ -24,11 +24,12 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
+import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, JDK, JRE, OpenJDK, Oracle, Version}
-import uk.gov.hmrc.cataloguefrontend.service.{DependenciesService, ServiceDependencies}
+import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -321,6 +322,53 @@ class ServiceDependenciesConnectorSpec
         Seq(
           Dependency("sbt", Version("0.13.8"), Some(Version("0.13.15")))
         )
+    }
+  }
+
+  "GET curated slug dependencies" - {
+    "return a list of curated dependencies for a known slug" in new Setup {
+      val SlugName = "slug-name"
+      val SlugVersion = "slug-version"
+      serviceEndpoint(GET, url = s"/api/slug-dependencies/$SlugName/$SlugVersion",
+        willRespondWith = (Status.OK, Some(
+          """|[{
+             |  "name": "dep1",
+             |  "currentVersion": {"major": 1, "minor": 0, "patch": 0, "original": "1.0.0"},
+             |  "bobbyRuleViolations": [],
+             |  "isExternal": false
+             | },
+             | {"name": "dep2",
+             |  "currentVersion": {"major": 2, "minor": 0, "patch": 0, "original": "2.0.0"},
+             |  "latestVersion": {"major": 2, "minor": 1, "patch": 0, "original": "2.1.0"},
+             |  "bobbyRuleViolations": [],
+             |  "isExternal": false
+             | }]""".stripMargin)))
+
+      val response = serviceDependenciesConnector.getCuratedSlugDependencies(SlugName, SlugVersion).futureValue
+
+      response should contain theSameElementsAs Seq(
+        Dependency(name = "dep1", currentVersion = Version("1.0.0"), latestVersion = None),
+        Dependency(name = "dep2", currentVersion = Version("2.0.0"), latestVersion = Some(Version("2.1.0")))
+      )
+    }
+
+    "return an empty list of dependencies for an unknown slug" in new Setup {
+      val SlugName = "slug-name"
+      val SlugVersion = "slug-version"
+      serviceEndpoint(GET, url = s"/api/slug-dependencies/$SlugName/$SlugVersion",
+        willRespondWith = (Status.NOT_FOUND, None))
+
+      serviceDependenciesConnector.getCuratedSlugDependencies(SlugName, SlugVersion).futureValue shouldBe empty
+    }
+
+    "return an empty list of dependencies when a communication error occurs" in new Setup {
+      val mockedHttpClient = mock[HttpClient]
+      when(mockedHttpClient.GET(any())(any(), any(), any()))
+        .thenReturn(Future.failed(new RuntimeException("Boom!!")))
+
+      val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig])
+
+      connector.getCuratedSlugDependencies("slugName", "slugVersion").futureValue shouldBe empty
     }
   }
 
