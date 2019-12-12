@@ -94,11 +94,13 @@ class ServiceDependenciesConnector @Inject()(
       }
   }
 
-  def getCuratedSlugDependencies(serviceName: String, version: String)(implicit hc: HeaderCarrier): Future[Seq[Dependency]] = {
+  def getCuratedSlugDependencies(serviceName: String, version: Option[String] = None)
+                                (implicit hc: HeaderCarrier): Future[Seq[Dependency]] = {
     import Dependencies.Implicits.readsDependency
-    val url = s"$servicesDependenciesBaseUrl/slug-dependencies/${encodePathParam(serviceName)}/${encodePathParam(version)}"
+    val url = s"$servicesDependenciesBaseUrl/slug-dependencies/${encodePathParam(serviceName)}"
+    val queryParams = buildQueryParams("version" -> version)
 
-    http.GET[Seq[Dependency]](url).recover {
+    http.GET[Seq[Dependency]](url, queryParams).recover {
       case NonFatal(ex) =>
         Logger.error(s"An error occurred when connecting to [$url]: ${ex.getMessage}", ex)
         Nil
