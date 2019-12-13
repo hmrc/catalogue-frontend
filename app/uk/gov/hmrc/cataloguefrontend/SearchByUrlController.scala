@@ -20,7 +20,6 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.SearchByUrlPage

@@ -16,25 +16,21 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
+import java.time.format.DateTimeFormatter
+
 import cats.data.EitherT
 import cats.instances.future._
-import cats.kernel.Semigroup
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
-import play.api.http.HttpEntity
 import play.api.i18n.MessagesProvider
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
-import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, SlugInfoFlag, ServiceDependenciesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyVersionRange}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
+import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ServiceDependenciesConnector, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.BobbyRulesTrendPage
 
 import scala.concurrent.{ExecutionContext, Future}
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @Singleton
 class BobbyRulesTrendController @Inject()(
@@ -45,8 +41,6 @@ class BobbyRulesTrendController @Inject()(
   , page           : BobbyRulesTrendPage
   )(implicit val ec: ExecutionContext
   ) extends FrontendController(mcc) {
-
-  import BobbyRulesTrendController._
 
   def landing: Action[AnyContent] =
     Action.async { implicit request =>

@@ -21,8 +21,8 @@ import javax.inject.{Inject, Singleton}
 import play.Logger
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 @Singleton

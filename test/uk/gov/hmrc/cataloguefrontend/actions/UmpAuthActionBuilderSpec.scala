@@ -24,14 +24,14 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.Results._
-import play.api.mvc.{AnyContent, ControllerComponents, MessagesControllerComponents, Request}
+import play.api.mvc.{AnyContent, MessagesControllerComponents, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, User}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 
 import scala.concurrent.ExecutionContext.Implicits.global

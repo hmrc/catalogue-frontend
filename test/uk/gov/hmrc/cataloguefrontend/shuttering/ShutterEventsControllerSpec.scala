@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterCause.UserCreated
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus.Unshuttered
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType.Frontend
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

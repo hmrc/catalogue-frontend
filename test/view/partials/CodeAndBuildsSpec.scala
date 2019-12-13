@@ -19,8 +19,7 @@ import java.time.LocalDateTime
 
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, RepositoryDetails}
-import uk.gov.hmrc.cataloguefrontend.connector.Link
+import uk.gov.hmrc.cataloguefrontend.connector.{Link, RepoType, RepositoryDetails}
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 

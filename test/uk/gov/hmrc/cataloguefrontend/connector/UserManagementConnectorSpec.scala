@@ -32,7 +32,7 @@ import play.api.test.FakeHeaders
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.{FutureHelpers, UserManagementPortalConfig, WireMockEndpoints}
+import uk.gov.hmrc.cataloguefrontend.{UserManagementPortalConfig, WireMockEndpoints}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.http.HttpClient

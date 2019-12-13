@@ -23,8 +23,8 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
+import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.play.test.UnitSpec
-import JsonData._
 
 class LibraryPageSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 

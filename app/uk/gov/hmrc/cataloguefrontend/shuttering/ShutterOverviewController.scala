@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering._
 
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
-import cats.implicits._
 
 @Singleton
 class ShutterOverviewController @Inject()(

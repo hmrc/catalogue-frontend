@@ -22,12 +22,11 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
+import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment}
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment}
 
 import scala.concurrent.{ExecutionContext, Future}
 

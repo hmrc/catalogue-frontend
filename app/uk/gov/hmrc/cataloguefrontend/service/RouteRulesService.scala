@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class RouteRulesService @Inject()(

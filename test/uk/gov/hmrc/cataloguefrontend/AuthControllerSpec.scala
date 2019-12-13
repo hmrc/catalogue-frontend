@@ -26,8 +26,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.i18n.{Lang, MessagesApi}
 import play.api.mvc._
-import play.api.test.FakeRequest
-import play.api.test.Helpers
+import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.service.AuthService

@@ -23,10 +23,10 @@ import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.libs.json.{Json, JsArray}
+import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.Username
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId, User}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 
 import scala.concurrent.ExecutionContext

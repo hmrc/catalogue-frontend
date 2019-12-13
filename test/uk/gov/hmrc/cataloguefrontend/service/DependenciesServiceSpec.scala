@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import org.scalatestplus.mockito.MockitoSugar
 import org.mockito.Mockito._
-import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class SlugInfoServiceSpec
   extends UnitSpec

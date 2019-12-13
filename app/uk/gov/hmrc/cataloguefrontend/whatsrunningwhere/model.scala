@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import JsonCodecs._
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs._
 
 case class WhatsRunningWhere(applicationName: ApplicationName,
                              versions: List[WhatsRunningWhereVersion])

@@ -23,7 +23,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
 import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
-import uk.gov.hmrc.cataloguefrontend.connector.model.{JDK, JDKVersion, JRE, OpenJDK, Oracle}
+import uk.gov.hmrc.cataloguefrontend.connector.model._
 import views.html.JdkVersionPage
 
 

@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.service.BobbyService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.BobbyExplorerPage

@@ -19,15 +19,14 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.{LocalDate, LocalDateTime}
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json.{JsValue, Json, OFormat, Reads}
-import play.api.Logger
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Success, Try}
 
 case class Deployer(name: String, deploymentDate: LocalDateTime)
 
