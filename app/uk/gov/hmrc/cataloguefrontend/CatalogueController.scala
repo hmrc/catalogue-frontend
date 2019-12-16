@@ -270,13 +270,15 @@ class CatalogueController @Inject()(
 
     val futDeployments = deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
 
-    val futSlugDependenciesByVersion = futDeployments.flatMap { deployments =>
+    val futLibrariesBySlugVersion = futDeployments.flatMap { deployments =>
       val versions = deployments.map(_.version).toSet
-      val futSlugDependencies = versions.map { version =>
-        serviceDependencyConnector.getCuratedSlugDependencies(serviceName, version).map(version -> _)
+      val librariesBySlugVersionFutures = versions.map { version =>
+        serviceDependencyConnector.getCuratedSlugDependencies(serviceName, Some(version)).map(version -> _)
       }
-      Future.sequence(futSlugDependencies).map(_.toMap)
+      Future.sequence(librariesBySlugVersionFutures).map(_.toMap)
     }
+
+    val futLibrariesOfLatestSlug = serviceDependencyConnector.getCuratedSlugDependencies(serviceName)
 
     val futShutterStateByEnvironment = if (CatalogueFrontendSwitches.shuttering.isEnabled) {
       ShutteringEnvironment.values.traverse { env =>
@@ -288,12 +290,13 @@ class CatalogueController @Inject()(
       , teamsAndRepositoriesConnector.lookupLink(serviceName)
       , futDeployments
       , serviceDependencyConnector.getDependencies(serviceName)
-      , futSlugDependenciesByVersion
+      , futLibrariesBySlugVersion
+      , futLibrariesOfLatestSlug
       , leakDetectionService.urlIfLeaksFound(serviceName)
       , routeRulesService.serviceUrl(serviceName)
       , routeRulesService.serviceRoutes(serviceName)
       , futShutterStateByEnvironment
-      ).mapN { case (service, jenkinsLink, deployments, optLatestDependencies, dependenciesByVersion, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
+      ).mapN { case (service, jenkinsLink, deployments, optMasterDependencies, librariesBySlugVersion, librariesOfLatestSlug, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
       service match {
         case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
           val optDeployedEnvironments = getDeployedEnvs(deployments, repositoryDetails.environments)
@@ -302,11 +305,18 @@ class CatalogueController @Inject()(
             envName -> deployments.filter(_.environmentMapping.name == envName)
           }.toMap
 
+          /*
+           * Note that we ignore libraryDependencies obtained from parsing master / GitHub, and instead use those
+           * from the 'latest' slug.  As such, 'Platform Dependencies' on all tabs (including 'Latest') is populated
+           * from slug info.
+           * Slugs do not contain build related information however.  So 'Build Tools' continues to display information
+           * parsed from master / GitHub.
+           */
           Ok(
             serviceInfoPage(
               repositoryDetails.copy(environments = optDeployedEnvironments, jenkinsURL = jenkinsLink),
-              optLatestDependencies,
-              dependenciesByVersion,
+              optMasterDependencies.map(_.copy(libraryDependencies = librariesOfLatestSlug)),
+              librariesBySlugVersion,
               repositoryDetails.createdAt,
               deploymentsByEnvironmentName,
               urlIfLeaksFound,
