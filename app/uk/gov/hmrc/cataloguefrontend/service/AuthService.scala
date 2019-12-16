@@ -62,10 +62,10 @@ class AuthService @Inject()(
       ownedServiceNames: List[String] <-
         teams.traverse { team =>
           val providedServices = requiredServiceNames.toList.intersect(team.allServiceNames)
-          logger.debug(s"checking access for ${request.user.username.value}: Team ${team.name} is found to have GitHub access to services: ${providedServices.mkString(",")}")
           if (providedServices.isEmpty)
             Future(List.empty)
-          else
+          else {
+            logger.debug(s"checking access for ${request.user.username.value}: Team ${team.name} is found to have GitHub access to services: ${providedServices.mkString(",")}")
             userManagementConnector.getTeamMembersFromUMP(team.name)
               .map {
                 case Left(UMPError.UnknownTeam)
@@ -81,6 +81,7 @@ class AuthService @Inject()(
                   List.empty
                 }
               }
+          }
         }.map(_.flatten)
 
       missingServices = requiredServiceNames.toList.diff(ownedServiceNames)
