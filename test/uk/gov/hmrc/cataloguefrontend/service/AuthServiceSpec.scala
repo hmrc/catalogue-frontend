@@ -20,26 +20,26 @@ import java.util.UUID
 
 import cats.data.NonEmptyList
 import cats.implicits._
+import org.mockito.Matchers.{any, eq => mockEq}
 import org.mockito.Mockito._
-import org.mockito.Matchers.{any, eq ⇒ mockEq}
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticatedRequest
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, Team}
-import uk.gov.hmrc.cataloguefrontend.connector.model.Username
-import uk.gov.hmrc.cataloguefrontend.connector.{UserManagementAuthConnector, UserManagementConnector, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{TokenAndUserId, UmpToken, UmpUnauthorized, UmpUserId, User}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember}
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
+import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.util.Generators.repoTypeGen
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
+class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks {
   import AuthService._
 
   import ExecutionContext.Implicits.global
@@ -96,38 +96,42 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
       )
 
     "allow service belonging to team containing user" in new Setup {
-      when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
-        .thenReturn(Future(List(team("team1", List("service1")))))
+      forAll(repoTypeGen) { repoType =>
+        when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
+          .thenReturn(Future(List(team("team1", Map(repoType -> List("service1"))))))
 
-      when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
-        .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember(request.user.username.value)))))
+        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
+          .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember(request.user.username.value)))))
 
-      val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
+        val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
 
-      res shouldBe Right(())
+        res shouldBe Right(())
+      }
     }
 
     "allow service belonging to multiple teams, one of which contains user" in new Setup {
-      when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
-        .thenReturn(Future(List(
-            team("team1", List("service1"))
-          , team("team2", List("service1"))
+      forAll(repoTypeGen) { repoType =>
+        when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
+          .thenReturn(Future(List(
+            team("team1", Map(repoType -> List("service1")))
+            , team("team2", Map(repoType -> List("service1")))
           )))
 
-      when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
-        .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq.empty)))
+        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
+          .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq.empty)))
 
-      when(userManagementConnector.getTeamMembersFromUMP(mockEq("team2"))(any()))
-        .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember(request.user.username.value)))))
+        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team2"))(any()))
+          .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember(request.user.username.value)))))
 
-      val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
+        val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
 
-      res shouldBe Right(())
+        res shouldBe Right(())
+      }
     }
 
     "deny service which are not found in any team" in new Setup {
       when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
-        .thenReturn(Future(List(team("team1", Seq.empty))))
+        .thenReturn(Future(List(team("team1", Map.empty))))
 
       val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
 
@@ -135,33 +139,37 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
     }
 
     "deny service which belong to teams not containing user" in new Setup {
-      when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
-        .thenReturn(Future(List(team("team1", List("service1")))))
+      forAll(repoTypeGen) { repoType =>
+        when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
+          .thenReturn(Future(List(team("team1", Map(repoType -> List("service1"))))))
 
-      when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
-        .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember("another.user")))))
+        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
+          .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember("another.user")))))
 
-      val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
+        val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
 
-      res shouldBe Left(ServiceForbidden(NonEmptyList.of("service1")))
+        res shouldBe Left(ServiceForbidden(NonEmptyList.of("service1")))
+      }
     }
 
     "only report service once if denied from multiple teams" in new Setup {
-      when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
-        .thenReturn(Future(List(
-            team("team1", List("service1"))
-          , team("team2", List("service1"))
-          )))
+      forAll(repoTypeGen) { repoType =>
+        when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
+          .thenReturn(Future(List(
+              team("team1", Map(repoType -> List("service1")))
+            , team("team2", Map(repoType -> List("service1")))
+            )))
 
-      when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
-        .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq.empty)))
+        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
+          .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq.empty)))
 
-      when(userManagementConnector.getTeamMembersFromUMP(mockEq("team2"))(any()))
-        .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq.empty)))
+        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team2"))(any()))
+          .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq.empty)))
 
-      val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
+        val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
 
-      res shouldBe Left(ServiceForbidden(NonEmptyList.of("service1")))
+        res shouldBe Left(ServiceForbidden(NonEmptyList.of("service1")))
+      }
     }
   }
 
@@ -175,12 +183,12 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures {
     val service                       = new AuthService(userManagementAuthConnector, userManagementConnector, teamsAndRepositoriesConnector)
   }
 
-  def team(name: String, services: Seq[String]) = Team(
+  def team(name: String, repoMap: Map[RepoType.RepoType, List[String]]) = Team(
       name                     = name
     , firstActiveDate          = None
     , lastActiveDate           = None
     , firstServiceCreationDate = None
-    , repos                    = Some(Map(RepoType.Service.toString -> services))
+    , repos                    = Some(repoMap.map { case (k, v) => k.toString -> v })
     )
 
   def teamMember(username: String) = TeamMember(
