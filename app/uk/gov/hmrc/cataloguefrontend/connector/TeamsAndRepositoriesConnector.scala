@@ -101,7 +101,10 @@ case class Team(
   lastActiveDate          : Option[LocalDateTime],
   firstServiceCreationDate: Option[LocalDateTime],
   repos                   : Option[Map[String, Seq[String]]]
-)
+) {
+  //Teams and repos lists legacy java services as 'Other', so relaxing the auth check to be agnostic to repo type
+  def allServiceNames: List[String] = repos.getOrElse(Map.empty).values.flatten.toList
+}
 
 object Team {
   implicit val format: OFormat[Team] = Json.format[Team]
