@@ -19,7 +19,7 @@
 @(dependencies: Seq[Dependency])
 
 
-@for(dependency <- dependencies)  {
+@for(dependency <- dependencies.sortBy(_.name))  {
         <li>
             <div class="@{getColourClass(dependency)}" id="@{dependency.name}">
                 <span class="col-xs-4 left-aligned">
