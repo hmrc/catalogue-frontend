@@ -19,28 +19,47 @@
 
 @this(viewMessages: ViewMessages)
 
-@(mayBeDependencies: Option[Dependencies])
+@(mayBeDependencies: Option[Dependencies])(implicit messages: Messages)
 
 
 <div id="build_tools" class="board">
-    <h3 class="board__heading">Build Tools</h3>
+    <h3 class="board__heading">
+        Latest Build
+        <img class="info-icon" src="/assets/infoicon.svg" data-toggle="tooltip" data-placement="right" title="@messages("latestbuild.info")"/>
+    </h3>
     <div class="board__body">
         <div class="col-xs-8">
             <ul class="list list--minimal list-group row">
                 @if(dependencyDataAvailable()) {
-                <li>
-                    <span class="col-xs-4"><label>Sbt plugins</label></span>
-                    <span class="col-xs-3"><label>Current Version</label></span>
-                    <span class="col-xs-3"><label>Latest Version</label></span>
-                    <span class="col-xs-2"><label>Violation</label></span>
-                </li>
-                @partials.dependency_section(mayBeDependencies.get.sbtPluginsDependencies)
 
-                <li><span class="col-xs-12">&nbsp;</span></li>
-                <li><span class="col-xs-12"><label>Other</label></span></li>
-                @partials.dependency_section(mayBeDependencies.get.otherDependencies)
+                    @if(mayBeDependencies.map(_.libraryDependencies.nonEmpty).getOrElse(false)) {
+                    <li>
+                        <span class="col-xs-4"><label>Test libraries</label></span>
+                        <span class="col-xs-3"><label>Current Version</label></span>
+                        <span class="col-xs-3"><label>Latest Version</label></span>
+                        <span class="col-xs-2"><label>Violation</label></span>
+                    </li>
+                    @partials.dependency_section(mayBeDependencies.get.libraryDependencies)
+                    }
+
+                    @if(mayBeDependencies.map(_.libraryDependencies.isEmpty).getOrElse(true)) {
+                    <li>
+                        <span class="col-xs-4"><label>Sbt plugins</label></span>
+                        <span class="col-xs-3"><label>Current Version</label></span>
+                        <span class="col-xs-3"><label>Latest Version</label></span>
+                        <span class="col-xs-2"><label>Violation</label></span>
+                    </li>
+                    } else {
+                    <li><span class="col-xs-12">&nbsp;</span></li>
+                    <li><span class="col-xs-12"><label>Sbt plugins</label></span></li>
+                    }
+                    @partials.dependency_section(mayBeDependencies.get.sbtPluginsDependencies)
+
+                    <li><span class="col-xs-12">&nbsp;</span></li>
+                    <li><span class="col-xs-12"><label>Other</label></span></li>
+                    @partials.dependency_section(mayBeDependencies.get.otherDependencies)
                 } else {
-                <li>No Build Tools available</li>
+                    <li>No Latest Build available</li>
                 }
             </ul>
         </div>
@@ -50,7 +69,6 @@
     </div>
 
     @dependencyDataAvailable() = @{
-        mayBeDependencies.isDefined &&
-        (mayBeDependencies.get.sbtPluginsDependencies.nonEmpty || mayBeDependencies.get.otherDependencies.nonEmpty)
+        mayBeDependencies.toSeq.nonEmpty
     }
 </div>

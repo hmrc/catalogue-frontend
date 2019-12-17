@@ -19,11 +19,14 @@
 
 @this(viewMessages: ViewMessages)
 
-@(dependencies: Seq[Dependency], rootId: String)
+@(dependencies: Seq[Dependency], rootId: String)(implicit messages: Messages)
 
 
 <div id="@rootId" class="board">
-    <h3 class="board__heading">Platform Dependencies</h3>
+    <h3 class="board__heading">
+        Platform Dependencies
+        <img class="info-icon" src="/assets/infoicon.svg" data-toggle="tooltip" data-placement="right" title="@messages("platformdependencies.info")"/>
+    </h3>
     <div class="board__body">
     <div class="col-xs-8">
             <ul class="list list--minimal list-group row">

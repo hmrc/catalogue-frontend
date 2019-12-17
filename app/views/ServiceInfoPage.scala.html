@@ -19,6 +19,7 @@
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
+@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceInfoView, ViewMessages}
@@ -27,7 +28,7 @@
 @this(dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial, buildToolsPartial: BuildToolsPartial, viewMessages: ViewMessages)
 
 @(service: RepositoryDetails,
-  optLatestDependencies: Option[Dependencies],
+  optMasterDependencies: Option[Dependencies],
   dependenciesByVersion: Map[String, Seq[Dependency]],
   repositoryCreationDate: LocalDateTime,
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
@@ -48,8 +49,8 @@
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
-    @partials.bobby_active_violations_banner(optLatestDependencies.map(_.toSeq).getOrElse(Seq.empty))
-    @partials.bobby_pending_violations_banner(optLatestDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.bobby_active_violations_banner(optMasterDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.bobby_pending_violations_banner(optMasterDependencies.map(_.toSeq).getOrElse(Seq.empty))
 
     <section class="section-wrapper">
 
@@ -86,12 +87,16 @@
         </div>
 
         @dependenciesByEnvironmentPartial(
-            service, optLatestDependencies, dependenciesByVersion, deploymentsByEnvironmentName, shutterState
+            service,
+            ServiceInfoView.platformDependenciesFrom(optMasterDependencies, dependenciesByVersion.get(Latest.asString)),
+            dependenciesByVersion,
+            deploymentsByEnvironmentName,
+            shutterState
         )
 
         <div class="row">
             <div class="col-md-12">
-                @buildToolsPartial(optLatestDependencies)
+                @buildToolsPartial(ServiceInfoView.buildToolsFrom(optMasterDependencies, dependenciesByVersion.get(Latest.asString)))
             </div>
         </div>
     </section>
