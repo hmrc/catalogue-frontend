@@ -28,8 +28,7 @@
   dependenciesByVersion: Map[String, Seq[Dependency]],
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
   shutterState: Map[ShutteringEnvironment, ShutterState]
-)
-
+)(implicit messages: Messages)
 
 <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
     <!-- we hard-code 'latest' as it is not a deployment 'environment' -->

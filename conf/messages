@@ -11,3 +11,6 @@ sign-in.wrong-credentials=Invalid username or password
 dependencyexplorer.select.group=Select Group
 dependencyexplorer.select.artefact=Select Artefact
 dependencyexplorer.select.teams.all=All teams
+
+platformdependencies.info=A curated selection of runtime dependencies built into the versioned distributable
+latestbuild.info=A curated selection of development dependencies determined by parsing build files on the master branch

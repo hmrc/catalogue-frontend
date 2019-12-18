@@ -305,18 +305,12 @@ class CatalogueController @Inject()(
             envName -> deployments.filter(_.environmentMapping.name == envName)
           }.toMap
 
-          /*
-           * Note that we ignore libraryDependencies obtained from parsing master / GitHub, and instead use those
-           * from the 'latest' slug.  As such, 'Platform Dependencies' on all tabs (including 'Latest') is populated
-           * from slug info.
-           * Slugs do not contain build related information however.  So 'Build Tools' continues to display information
-           * parsed from master / GitHub.
-           */
           Ok(
             serviceInfoPage(
               repositoryDetails.copy(environments = optDeployedEnvironments, jenkinsURL = jenkinsLink),
-              optMasterDependencies.map(_.copy(libraryDependencies = librariesOfLatestSlug)),
+              optMasterDependencies,
               librariesBySlugVersion,
+              librariesOfLatestSlug,
               repositoryDetails.createdAt,
               deploymentsByEnvironmentName,
               urlIfLeaksFound,
