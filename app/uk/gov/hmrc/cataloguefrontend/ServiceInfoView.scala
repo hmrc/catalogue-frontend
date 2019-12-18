@@ -47,15 +47,12 @@ object ServiceInfoView {
     }
 
   /*
-   * Capture any curated library dependencies from master/Github that are not referenced by the 'latest' slug,
+   * Capture any curated library dependencies from master / Github that are not referenced by the 'latest' slug,
    * and assume that they represent 'test-only' library dependencies.
    */
-  def buildToolsFrom(optMasterDependencies: Option[Dependencies], librariesOfLatestSlug: Option[Seq[Dependency]]): Option[Dependencies] =
+  def buildToolsFrom(optMasterDependencies: Option[Dependencies], librariesOfLatestSlug: Seq[Dependency]): Option[Dependencies] =
     optMasterDependencies.map { masterDependencies =>
-      val libraryNamesInLatestSlug = librariesOfLatestSlug.map { libraries =>
-        libraries.map(_.name)
-      }.getOrElse(Seq.empty).toSet
-
+      val libraryNamesInLatestSlug = librariesOfLatestSlug.map(_.name).toSet
       masterDependencies.copy(
         libraryDependencies = masterDependencies.libraryDependencies.filterNot { library =>
           libraryNamesInLatestSlug.contains(library.name)
@@ -68,10 +65,10 @@ object ServiceInfoView {
    * from the 'latest' slug.  This provides consistency in that 'Platform Dependencies' is always populated from a slug,
    * regardless of the selected tab.
    */
-  def platformDependenciesFrom(optMasterDependencies: Option[Dependencies], librariesOfLatestSlug: Option[Seq[Dependency]]): Option[Dependencies] =
+  def platformDependenciesFrom(optMasterDependencies: Option[Dependencies], librariesOfLatestSlug: Seq[Dependency]): Option[Dependencies] =
     optMasterDependencies.map {
       _.copy(
-        libraryDependencies = librariesOfLatestSlug.getOrElse(Seq.empty)
+        libraryDependencies = librariesOfLatestSlug
       )
     }
 }

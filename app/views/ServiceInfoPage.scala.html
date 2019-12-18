@@ -30,6 +30,7 @@
 @(service: RepositoryDetails,
   optMasterDependencies: Option[Dependencies],
   dependenciesByVersion: Map[String, Seq[Dependency]],
+  librariesOfLatestSlug: Seq[Dependency],
   repositoryCreationDate: LocalDateTime,
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
   linkToLeakDetection: Option[String],
@@ -88,7 +89,7 @@
 
         @dependenciesByEnvironmentPartial(
             service,
-            ServiceInfoView.platformDependenciesFrom(optMasterDependencies, dependenciesByVersion.get(Latest.asString)),
+            ServiceInfoView.platformDependenciesFrom(optMasterDependencies, librariesOfLatestSlug),
             dependenciesByVersion,
             deploymentsByEnvironmentName,
             shutterState
@@ -96,7 +97,7 @@
 
         <div class="row">
             <div class="col-md-12">
-                @buildToolsPartial(ServiceInfoView.buildToolsFrom(optMasterDependencies, dependenciesByVersion.get(Latest.asString)))
+                @buildToolsPartial(ServiceInfoView.buildToolsFrom(optMasterDependencies, librariesOfLatestSlug))
             </div>
         </div>
     </section>

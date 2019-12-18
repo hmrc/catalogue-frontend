@@ -28,7 +28,6 @@ import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
-import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events._
@@ -310,7 +309,8 @@ class CatalogueController @Inject()(
             serviceInfoPage(
               repositoryDetails.copy(environments = optDeployedEnvironments, jenkinsURL = jenkinsLink),
               optMasterDependencies,
-              librariesBySlugVersion + (Latest.asString -> librariesOfLatestSlug),
+              librariesBySlugVersion,
+              librariesOfLatestSlug,
               repositoryDetails.createdAt,
               deploymentsByEnvironmentName,
               urlIfLeaksFound,
