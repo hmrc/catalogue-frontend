@@ -40,8 +40,12 @@ class ShutterGroupsConnector @Inject()(
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(("Authorization", s"token ${githubConf.token}"))
     implicit val gr = ShutterGroup.reads
     http.GET[List[ShutterGroup]](url)
-      .recover { case _: NotFoundException =>
-        logger.info(s"No groups found at $url")
+      .recover {
+        case _: NotFoundException =>
+        logger.info(s"No shutter groups found at $url, defaulting to an empty list")
+        List.empty
+        case e =>
+        logger.error(s"Problem retrieving shutter groups at $url, defaulting to an empty list: ${e.getMessage}", e)
         List.empty
       }
   }
