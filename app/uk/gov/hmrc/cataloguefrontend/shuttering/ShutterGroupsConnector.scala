@@ -45,7 +45,7 @@ class ShutterGroupsConnector @Inject()(
         logger.info(s"No shutter groups found at $url, defaulting to an empty list")
         List.empty
         case e =>
-        logger.error(s"Problem retrieving shutter groups at $url, defaulting to an empty list: ${e.getMessage}")
+        logger.error(s"Problem retrieving shutter groups at $url, defaulting to an empty list: ${e.getMessage}", e)
         List.empty
       }
   }
