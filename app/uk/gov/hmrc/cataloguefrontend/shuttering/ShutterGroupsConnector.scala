@@ -42,7 +42,7 @@ class ShutterGroupsConnector @Inject()(
     http.GET[List[ShutterGroup]](url)
       .recover {
         case _: NotFoundException =>
-        logger.info(s"No shutter groups found at $url, default to an empty list")
+        logger.info(s"No shutter groups found at $url, defaulting to an empty list")
         List.empty
         case e =>
         logger.error(s"Problem retrieving shutter groups at $url, defaulting to an empty list: ${e.getMessage}")
