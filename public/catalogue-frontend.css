@@ -12315,21 +12315,30 @@ table.shutter-events {
   border: none;
 }
 
-.shutter-badge {
+.environment-badge {
   border-radius: 21%;
-  width: 15px;
-  height: 15px;
-  padding: 2px;
+  width: 18px;
+  height: 18px;
+  display: inline-block;
   margin-top: 2px;
+  margin-right: 4px;
+}
+
+.no-badge {
+  border: none;
+}
+
+.shutter-badge {
   background: repeating-linear-gradient(-45deg, #6d6d6d, #6d6d6d 2px, #d0a039a3 3px, #d0a039a3 5px);
   border: 1px solid #666;
 }
 
-.noshutter-badge {
-  border-radius: 21%;
-  width: 15px;
-  height: 15px;
-  padding: 2px;
-  margin-top: 2px;
-  border: none;
+.bobby-violation-active-badge {
+  background-color: #a94442;
+  border: 1px solid #a94442;
+}
+
+.bobby-violation-pending-badge {
+  background-color: #ffbf00;
+  border: 1px solid #ffbf00;
 }
