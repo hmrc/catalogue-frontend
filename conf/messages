@@ -14,3 +14,7 @@ dependencyexplorer.select.teams.all=All teams
 
 platformdependencies.info=A curated selection of runtime dependencies built into the versioned distributable
 latestbuild.info=A curated selection of development dependencies determined by parsing build files on the master branch
+
+shuttered.badge=Shuttered
+bobbyrules.active.badge=Bobby rule violated
+bobbyrules.pending.badge=Bobby rule pending
