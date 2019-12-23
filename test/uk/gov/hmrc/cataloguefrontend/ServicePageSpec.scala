@@ -52,7 +52,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     .build()
 
   private[this] lazy val ws = app.injector.instanceOf[WSClient]
-  private[this] lazy val viewMessages = app.injector.instanceOf[ViewMessages]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -121,10 +120,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       response.body   should include("service-1")
       response.body   should include("github.com")
       response.body   should include("http://jenkins/service-1/")
-      response.body   should include("Jenkins")
       response.body   should include("Grafana")
-      response.body   should include("https://deploy-qa.co.uk/job/deploy-microservice")
-      response.body   should include("https://deploy-prod.co.uk/job/deploy-microservice")
       response.body   should include("some description")
 
       response.body should include(createdAt.displayFormat)
@@ -191,7 +187,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         response.body   should include("service-1")
         response.body   should include("github.com")
         response.body   should include("http://jenkins/service-1/")
-        response.body   should include("Jenkins")
         response.body   should include("Grafana")
 
         response.body should include("some description")
@@ -199,16 +194,12 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         response.body should include(createdAt.displayFormat)
         response.body should include(lastActiveAt.displayFormat)
 
-        response.body should include("https://deploy-prod.co.uk/job/deploy-microservice")
         response.body should include("https://grafana-prod.co.uk/#/dashboard")
-        response.body should include("https://deploy-dev.co.uk/job/deploy-microservice")
         response.body should include("https://grafana-dev.co.uk/#/dashboard")
-
-        response.body should not include ("https://deploy-qa.co.uk/job/deploy-microservice")
-        response.body should not include ("https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
+        response.body should not include "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard"
       }
 
-      "show show links to devs by default" in {
+      "show links to devs by default" in {
         import ServiceDeploymentInformation._
 
         serviceEndpoint(
@@ -227,7 +218,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
 
         val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
 
-        response.body should include("https://deploy-dev.co.uk/job/deploy-microservice")
         response.body should include("https://grafana-dev.co.uk/#/dashboard")
       }
 
@@ -238,17 +228,25 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
 
         // Dev links should always be present
-        response.body should include regex """https:\/\/(deploy-dev).*\/job\/deploy-microservice.*"""
         response.body should include regex """https:\/\/(grafana-dev).*\/#\/dashboard"""
 
         // Links for other environments should not be present
-        response.body should not include regex("""https:\/\/(?!deploy-dev).*\/job\/deploy-microservice.*""")
         response.body should not include regex("""https:\/\/(?!grafana-dev).*\/#\/dashboard""")
 
         countSubstring(response.body, "Not deployed") shouldBe 2
 
         def countSubstring(str: String, substr: String) =
           substr.r.findAllMatchIn(str).length
+      }
+
+      "omit Jenkins from telemetry links" in {
+        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (404, None))
+        serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith      = (200, Some(serviceDetailsData)))
+
+        val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
+
+        response.body should not include "Jenkins"
+        response.body should include("Grafana")
       }
     }
 

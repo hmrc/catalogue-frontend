@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import org.mockito.Matchers._
 import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -174,6 +175,7 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       new VerifySignInStatusPassThrough(umac, controllerComponents),
       new UmpAuthenticatedPassThrough(umac, controllerComponents, catalogueErrorHandler),
       userManagementPortalConfig,
+      Configuration.empty,
       controllerComponents,
       mock[DigitalServiceInfoPage],
       mock[IndexPage],

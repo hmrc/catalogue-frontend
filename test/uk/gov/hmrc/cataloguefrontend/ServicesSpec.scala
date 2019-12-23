@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Configuration
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
@@ -57,6 +58,7 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
     mock[VerifySignInStatus],
     mock[UmpAuthActionBuilder],
     mock[UserManagementPortalConfig],
+    Configuration.empty,
     stubMessagesControllerComponents(),
     mock[DigitalServiceInfoPage],
     mock[IndexPage],
