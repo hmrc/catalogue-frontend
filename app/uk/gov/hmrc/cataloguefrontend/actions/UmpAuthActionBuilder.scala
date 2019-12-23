@@ -19,16 +19,15 @@ package uk.gov.hmrc.cataloguefrontend.actions
 import cats.data.EitherT
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
+import play.api.mvc.Results._
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, User}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
-import uk.gov.hmrc.play.HeaderCarrierConverter
-import play.api.mvc.Results._
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 

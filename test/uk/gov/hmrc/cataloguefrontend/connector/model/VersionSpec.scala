@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import org.scalatest.{FreeSpec, MustMatchers}
-import play.api.libs.json.Json
 
 class VersionSpec extends FreeSpec with MustMatchers {
 

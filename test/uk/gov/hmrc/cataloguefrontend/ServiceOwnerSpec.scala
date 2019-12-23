@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.ActionsSupport
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
-import uk.gov.hmrc.cataloguefrontend.service.{CatalogueErrorHandler, ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec

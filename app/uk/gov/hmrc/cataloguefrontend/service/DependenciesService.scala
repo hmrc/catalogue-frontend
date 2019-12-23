@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject._
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.DeploymentVO
-import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, SlugInfoFlag}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -120,8 +120,8 @@ case class ServiceDependencies(
 }
 
 object ServiceDependencies {
-  import play.api.libs.json.__
   import play.api.libs.functional.syntax._
+  import play.api.libs.json.__
 
   implicit val jdkr = (
         (__ \ "version").read[String]

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.util
 
 import java.net.URLEncoder
+
 import play.utils.UriEncoding
 
 object UrlUtils {

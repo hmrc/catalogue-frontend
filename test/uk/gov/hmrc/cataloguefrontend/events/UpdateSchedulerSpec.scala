@@ -21,8 +21,8 @@ import org.mockito.Mockito._
 import org.scalatest.{BeforeAndAfterAll, FunSpec}
 import org.scalatestplus.mockito.MockitoSugar
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 import scala.language.postfixOps
 
 class UpdateSchedulerSpec extends FunSpec with MockitoSugar with BeforeAndAfterAll {

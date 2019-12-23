@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 import java.time.LocalDate
 
 import org.joda.time.DateTime
-import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsString, JsSuccess, JsValue, Json, OFormat, Reads, __}
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 import uk.gov.hmrc.http.controllers.RestFormats
 
 sealed trait VersionState
@@ -278,8 +278,8 @@ case class ServiceWithDependency(
 
 
 object ServiceWithDependency {
-  import play.api.libs.json._
   import play.api.libs.functional.syntax._
+  import play.api.libs.json._
 
   val reads: Reads[ServiceWithDependency] =
     ( (__ \ "slugName"   ).read[String]

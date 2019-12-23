@@ -21,8 +21,8 @@ import play.api.Logger
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal

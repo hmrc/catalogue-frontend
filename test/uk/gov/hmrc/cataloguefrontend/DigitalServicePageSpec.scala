@@ -29,12 +29,12 @@ import play.api.libs.ws._
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET => _, _}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest}
-import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, UserManagementAuthConnector, UserManagementConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.User
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
+import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.service.{CatalogueErrorHandler, ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec

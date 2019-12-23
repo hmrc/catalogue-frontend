@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.service
 import java.time.LocalDateTime
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.{Deployer, Release, ServiceDeploymentInformation, ServiceDeploymentsConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 

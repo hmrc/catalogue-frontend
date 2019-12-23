@@ -23,12 +23,12 @@ import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.mvc.{ControllerComponents, MessagesControllerComponents, Result}
 import play.api.mvc.Results._
+import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, User}
+import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 
 import scala.concurrent.{ExecutionContext, Future}
 

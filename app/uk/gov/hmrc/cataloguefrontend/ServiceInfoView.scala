@@ -18,8 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import uk.gov.hmrc.cataloguefrontend.connector.TargetEnvironment
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
-import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
-import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, Environment => ShutteringEnvironment}
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue, Environment => ShutteringEnvironment}
 
 object ServiceInfoView {
   def isShuttered(withShutterState: Map[ShutteringEnvironment, ShutterState])(inEnvironment: TargetEnvironment): Boolean =

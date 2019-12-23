@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.http.HeaderCarrier
 

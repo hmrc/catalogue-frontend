@@ -17,9 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import java.net.{URI, URISyntaxException}
+
 import javax.inject._
 import uk.gov.hmrc.cataloguefrontend.connector.SearchByUrlConnector
 import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton

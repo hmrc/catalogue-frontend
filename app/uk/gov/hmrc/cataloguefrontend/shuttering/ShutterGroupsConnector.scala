@@ -19,10 +19,10 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import cats.instances.all._
 import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json._
 import play.api.Logger
+import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.config.GithubConfig
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}

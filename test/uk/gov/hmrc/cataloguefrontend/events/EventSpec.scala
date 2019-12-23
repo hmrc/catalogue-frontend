@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
-import org.scalatest.{FunSpec, FunSuite, Matchers}
+import org.scalatest.{FunSpec, Matchers}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsString, Json}
 

@@ -23,8 +23,8 @@ import org.scalatest.{FunSpec, Matchers}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsString}
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 class EventServiceSpec extends FunSpec with Matchers with MockitoSugar with ScalaFutures {
 

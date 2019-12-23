@@ -17,11 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.ControllerComponents
+import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import views.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
-import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 
 import scala.concurrent.{ExecutionContext, Future}
 

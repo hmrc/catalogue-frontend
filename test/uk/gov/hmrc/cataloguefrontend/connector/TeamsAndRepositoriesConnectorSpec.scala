@@ -18,17 +18,16 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest.{BeforeAndAfter, EitherValues, Matchers, OptionValues, WordSpec}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
+import org.scalatest._
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeHeaders
-import uk.gov.hmrc.cataloguefrontend.JsonData._
-import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
+import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class TeamsAndRepositoriesConnectorSpec

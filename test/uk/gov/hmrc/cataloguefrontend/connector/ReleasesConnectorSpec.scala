@@ -24,9 +24,8 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
-import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ApplicationName, Environment, ProfileName, ReleasesConnector, TimeSeen, VersionNumber, WhatsRunningWhere, WhatsRunningWhereVersion}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere._
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.test.UnitSpec
 

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.config
 
 import com.google.inject.{Inject, Singleton}
-import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton

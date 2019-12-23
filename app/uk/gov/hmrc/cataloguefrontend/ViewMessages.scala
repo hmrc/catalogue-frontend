@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
-
 import javax.inject.Inject
 import play.api.Configuration
 import play.twirl.api.Html

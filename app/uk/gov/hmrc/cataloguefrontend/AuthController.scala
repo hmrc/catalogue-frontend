@@ -18,13 +18,11 @@ package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-import play.api.data.Form
-import play.api.data.Forms
+import play.api.data.{Form, Forms}
 import play.api.i18n.Messages
 import play.api.mvc._
-import uk.gov.hmrc.cataloguefrontend.connector.model.Username
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController

@@ -57,7 +57,7 @@ class ReadModelService @Inject()(
       }
       .recover {
         case e =>
-          Logger.logger.error("Unable to refresh event cache", e)
+          Logger.error("Unable to refresh event cache", e)
           throw e
       }
 

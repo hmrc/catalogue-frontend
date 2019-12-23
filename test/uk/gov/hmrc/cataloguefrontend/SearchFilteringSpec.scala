@@ -20,7 +20,7 @@ import java.time.{LocalDateTime, ZoneId}
 import java.util.Date
 
 import org.scalatest.{Matchers, WordSpec}
-import SearchFiltering._
+import uk.gov.hmrc.cataloguefrontend.SearchFiltering._
 import uk.gov.hmrc.cataloguefrontend.connector.Team
 import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
 

@@ -22,8 +22,9 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
-import scala.concurrent.{Await, ExecutionContext, Future}
+
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 
 class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {

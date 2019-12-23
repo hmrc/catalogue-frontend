@@ -24,13 +24,13 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.i18n.MessagesProvider
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
-import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
+import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, Version}
-import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodeQueryParam
+import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
+import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodeQueryParam
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.DependencyExplorerPage
 
