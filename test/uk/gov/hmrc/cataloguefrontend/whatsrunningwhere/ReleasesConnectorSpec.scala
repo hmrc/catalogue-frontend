@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector
+package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import java.time.LocalDateTime
 
@@ -25,7 +25,6 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere._
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -158,4 +157,43 @@ class ReleasesConnectorSpec
       response shouldBe Seq.empty
     }
   }
+
+  "return all profileNames" in {
+      serviceEndpoint(
+        GET,
+        s"/releases-api/profiles",
+        willRespondWith = (
+          200,
+          Some(
+            """[
+              |  {"name": "tcs_all",
+              |   "apps": [
+              |     "identity-verification-frontend",
+              |     "identity-verification"
+              |    ]
+              |  },
+              |  {"name": "tpsa",
+              |   "apps": [
+              |     "dtxe",
+              |     "dtxe-validator"
+              |    ]
+              |  },
+              |  {"name": "trusts",
+              |   "apps": [
+              |     "trust-registration-api",
+              |     "trust-registration-stub"
+              |   ]
+              |  }
+              |]""".stripMargin)))
+
+      val response = await(
+        releasesConnector.profiles(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+      )
+
+      response should contain theSameElementsAs Seq(
+        ProfileName("tcs_all"),
+        ProfileName("tpsa"),
+        ProfileName("trusts"))
+    }
+
 }

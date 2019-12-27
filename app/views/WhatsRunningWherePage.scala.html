@@ -15,11 +15,15 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Environment, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Environment, ProfileName, WhatsRunningWhere}
 @import uk.gov.hmrc.cataloguefrontend.routes
 
 @this(viewMessages: ViewMessages)
-@(environments: Seq[Environment], whatsRunning: Seq[WhatsRunningWhere], form: Form[_])(implicit messages: Messages, request: Request[_])
+@( environments: Seq[Environment],
+   whatsRunning: Seq[WhatsRunningWhere],
+   profiles    : Seq[ProfileName],
+   form        : Form[_]
+ )(implicit messages: Messages, request: Request[_])
 @standard_layout("What's Running Where?", "whats-running-where") {
 
     <header>
@@ -45,6 +49,18 @@
                 <div class="col col-xs-3">
                     <input class="search form-control" id="search" type="text" name="application_name"
                     value="@form("application_name").value" autofocus>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col col-xs-3">
+                    @helper.select(
+                        field     =  form("profile_name"),
+                        options   =  helper.options(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++
+                                     profiles.map(_.asString).map(p => (p, p)) :_*),
+                        '_label   -> "Profile:",
+                        '_class   -> "form-group",
+                        'onchange -> "this.form.submit()"
+                    )
                 </div>
             </div>
         </form>

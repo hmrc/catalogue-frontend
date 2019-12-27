@@ -18,3 +18,5 @@ latestbuild.info=A curated selection of development dependencies determined by p
 shuttered.badge=Shuttered
 bobbyrules.active.badge=Bobby rule violated
 bobbyrules.pending.badge=Bobby rule pending
+
+whatsrunningwhere.select.profile=All Profiles
