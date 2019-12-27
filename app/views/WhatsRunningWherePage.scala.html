@@ -52,15 +52,15 @@
                 </div>
             </div>
             <div class="form-group row">
+                <div class="col-xs-2 padding-reset-right">
+                    <label for="profile_name">Profile:</label>
+                </div>
                 <div class="col col-xs-3">
-                    @helper.select(
-                        field     =  form("profile_name"),
-                        options   =  helper.options(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++
-                                     profiles.map(_.asString).map(p => (p, p)) :_*),
-                        '_label   -> "Profile:",
-                        '_class   -> "form-group",
-                        'onchange -> "this.form.submit()"
-                    )
+                    <select name="profile_name" onchange="this.form.submit();">
+                      @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profiles.map(_.asString).map(p => (p, p))){ options =>
+                        @options.map(selectOption(form("profile_name").value))
+                      }
+                    </select>
                 </div>
             </div>
         </form>
@@ -103,3 +103,9 @@
     searchBox.focus();
     searchBox.setSelectionRange(length, length);
 </script>
+
+@selectOption(selected: Option[String])(option: (String, String)) = {
+    <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected"}>
+        @option._2
+    </option>
+}
