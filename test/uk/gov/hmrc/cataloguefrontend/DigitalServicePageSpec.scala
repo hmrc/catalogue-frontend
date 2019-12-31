@@ -23,11 +23,11 @@ import org.mockito.Matchers._
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET => _, _}
+import play.api.{Application, Configuration}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.User
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
@@ -360,6 +360,7 @@ class DigitalServicePageSpec
       verifySignInStatusPassThrough,
       umpAuthenticatedPassThrough,
       userManagementPortalConfig,
+      Configuration.empty,
       stubMessagesControllerComponents(),
       digitalServiceInfoPage,
       mock[IndexPage],

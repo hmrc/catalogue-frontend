@@ -25,6 +25,7 @@ import org.mockito.Mockito.when
 import org.scalatest.Matchers._
 import org.scalatest.{BeforeAndAfter, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Configuration
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -162,6 +163,7 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
       mock[VerifySignInStatus],
       mock[UmpAuthActionBuilder],
       userManagementPortalConfig,
+      Configuration.empty,
       stubMessagesControllerComponents(),
       mock[DigitalServiceInfoPage],
       mock[IndexPage],

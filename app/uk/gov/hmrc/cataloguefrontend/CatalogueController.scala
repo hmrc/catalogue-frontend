@@ -20,6 +20,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
+import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
 import play.api.libs.json.Json.toJson
@@ -65,6 +66,7 @@ class CatalogueController @Inject()(
    verifySignInStatus: VerifySignInStatus,
    umpAuthActionBuilder: UmpAuthActionBuilder,
    userManagementPortalConfig: UserManagementPortalConfig,
+   configuration: Configuration,
    mcc: MessagesControllerComponents,
    digitalServiceInfoPage: DigitalServiceInfoPage,
    indexPage: IndexPage,
@@ -82,6 +84,9 @@ class CatalogueController @Inject()(
 
   import UserManagementConnector._
   import userManagementPortalConfig._
+
+  // this value must match the configured name property for jenkins services defined under url-templates.environments at https://github.com/hmrc/app-config-base/blob/master/teams-and-repositories.conf
+  private lazy val jenkinsLinkName = configuration.getOptional[String]("teams-and-repositories.link-name.jenkins").getOrElse("jenkins")
 
   private implicit val errorResponseFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
 
@@ -253,6 +258,9 @@ class CatalogueController @Inject()(
   }
 
   def service(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
+    def telemetryLinksFrom(links: Seq[Link]): Seq[Link] =
+      links.filterNot(_.name == jenkinsLinkName)
+
     def getDeployedEnvs(deployedToEnvs: Seq[DeploymentVO],
                         optRefEnvironments: Option[Seq[TargetEnvironment]]): Option[Seq[TargetEnvironment]] = {
       val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
@@ -261,7 +269,7 @@ class CatalogueController @Inject()(
           .map {
             case (lwrCasedRefEnvName, refEnvironment)
               if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
-              refEnvironment
+              refEnvironment.copy(services = telemetryLinksFrom(refEnvironment.services))
             case (_, refEnvironment) =>
               refEnvironment.copy(services = Nil)
           }
