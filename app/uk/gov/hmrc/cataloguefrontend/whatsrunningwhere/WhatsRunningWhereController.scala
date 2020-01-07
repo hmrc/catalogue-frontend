@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
@@ -38,8 +39,11 @@ class WhatsRunningWhereController @Inject()(
       for {
         form         <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
         profileName  =  form.fold(_ => None, _.profileName)
-        releases     <- releasesConnector.releases(profileName)
-        profiles     <- releasesConnector.profiles.map(_.sortBy(_.asString))
+        ( releases
+        , profiles
+        )            <- ( releasesConnector.releases(profileName)
+                        , releasesConnector.profiles.map(_.sortBy(_.asString))
+                        ).mapN { case (releases, profiles) => (releases, profiles) }
         environments =  releases.flatMap(_.versions.map(_.environment)).distinct.sorted
       } yield
         Ok(page(environments, releases, profiles, form))
