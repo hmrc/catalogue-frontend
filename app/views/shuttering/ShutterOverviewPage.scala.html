@@ -136,7 +136,7 @@
         @state.lastEvent.map(_.username).getOrElse("")
       </td>
       <td class="shutter-date">
-        @state.lastEvent.map(e => e.timestamp.asUTC.format(`yyyy-MM-dd HH:mm:SS z`)).getOrElse("")
+        @state.lastEvent.map(e => e.timestamp.asUTC.format(`yyyy-MM-dd HH:mm:ss z`)).getOrElse("")
       </td>
       @if(isSignedIn) {
         <td class="shutter-update">

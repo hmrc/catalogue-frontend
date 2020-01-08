@@ -27,7 +27,7 @@ object DateHelper {
   val `dd-MM-yyyy`: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
   val `yyyy-MM-dd`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
   val `yyyy-MM-dd HH:mm z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z")
-  val `yyyy-MM-dd HH:mm:SS z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS z")
+  val `yyyy-MM-dd HH:mm:ss z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
 
   implicit class JavaDateToLocalDateTime(d: Date) {
     def toLocalDate = LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault())
