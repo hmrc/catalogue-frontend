@@ -15,11 +15,15 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Environment, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Environment, ProfileName, WhatsRunningWhere}
 @import uk.gov.hmrc.cataloguefrontend.routes
 
 @this(viewMessages: ViewMessages)
-@(environments: Seq[Environment], whatsRunning: Seq[WhatsRunningWhere], form: Form[_])(implicit messages: Messages, request: Request[_])
+@( environments: Seq[Environment],
+   whatsRunning: Seq[WhatsRunningWhere],
+   profiles    : Seq[ProfileName],
+   form        : Form[_]
+ )(implicit messages: Messages, request: Request[_])
 @standard_layout("What's Running Where?", "whats-running-where") {
 
     <header>
@@ -45,6 +49,18 @@
                 <div class="col col-xs-3">
                     <input class="search form-control" id="search" type="text" name="application_name"
                     value="@form("application_name").value" autofocus>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-xs-2 padding-reset-right">
+                    <label for="profile_name">Profile:</label>
+                </div>
+                <div class="col col-xs-3">
+                    <select name="profile_name" onchange="this.form.submit();">
+                      @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profiles.map(_.asString).map(p => (p, p))){ options =>
+                        @options.map(selectOption(form("profile_name").value))
+                      }
+                    </select>
                 </div>
             </div>
         </form>
@@ -87,3 +103,9 @@
     searchBox.focus();
     searchBox.setSelectionRange(length, length);
 </script>
+
+@selectOption(selected: Option[String])(option: (String, String)) = {
+    <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected"}>
+        @option._2
+    </option>
+}

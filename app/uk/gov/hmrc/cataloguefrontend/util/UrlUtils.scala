@@ -26,4 +26,10 @@ object UrlUtils {
 
   def encodePathParam(param: String): String =
     UriEncoding.encodePathSegment(param, "UTF-8")
+
+  def toQueryParams(params: Seq[(String, String)]): String =
+    params
+      .map { case (k, v) =>
+        encodeQueryParam(k) + "=" + encodeQueryParam(v)
+      }.mkString("&")
 }

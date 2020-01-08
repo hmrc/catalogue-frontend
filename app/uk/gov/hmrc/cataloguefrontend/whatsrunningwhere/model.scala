@@ -20,37 +20,45 @@ import java.time.LocalDateTime
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs._
 
-case class WhatsRunningWhere(applicationName: ApplicationName,
-                             versions: List[WhatsRunningWhereVersion])
+case class WhatsRunningWhere(
+  applicationName: ApplicationName,
+  versions       : List[WhatsRunningWhereVersion])
 
-object WhatsRunningWhere {
-  implicit val whatsRunningWhereFormat: Reads[WhatsRunningWhere] = (
-    (__ \ "applicationName").read[ApplicationName] and
-    (__ \ "versions").read[List[WhatsRunningWhereVersion]]
-  )(WhatsRunningWhere.apply _)
-}
+case class WhatsRunningWhereVersion(
+  environment  : Environment,
+  versionNumber: VersionNumber,
+  lastSeen     : TimeSeen)
 
-case class WhatsRunningWhereVersion(environment: Environment,
-                                    versionNumber: VersionNumber,
-                                    lastSeen: TimeSeen)
-
-object WhatsRunningWhereVersion {
-  implicit val versionFormat: Reads[WhatsRunningWhereVersion] = (
-    (__ \ "environment").read[Environment].map(env => Environment(env.asString.stripSuffix("-AWS-London"))) and
-    (__ \ "versionNumber").read[VersionNumber] and
-    (__ \ "lastSeen").read[TimeSeen]
-  )(WhatsRunningWhereVersion.apply _)
-}
 
 object JsonCodecs {
   def format[A, B](f: A => B, g: B => A)(implicit fa: Format[A]): Format[B] = fa.inmap(f, g)
 
-  implicit val applicationNameFormat: Format[ApplicationName] = format(ApplicationName.apply, unlift(ApplicationName.unapply))
-  implicit val versionNumberFormat: Format[VersionNumber] = format(VersionNumber.apply, unlift(VersionNumber.unapply))
-  implicit val environmentFormat: Format[Environment] = format(Environment.apply, unlift(Environment.unapply))
-  implicit val timeSeenFormat: Format[TimeSeen] = format(TimeSeen.apply, unlift(TimeSeen.unapply))
+  val applicationNameFormat: Format[ApplicationName] = format(ApplicationName.apply, unlift(ApplicationName.unapply))
+  val versionNumberFormat  : Format[VersionNumber]   = format(VersionNumber.apply  , unlift(VersionNumber.unapply  ))
+  val environmentFormat    : Format[Environment]     = format(Environment.apply    , unlift(Environment.unapply    ))
+  val timeSeenFormat       : Format[TimeSeen]        = format(TimeSeen.apply       , unlift(TimeSeen.unapply       ))
+
+  val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] = {
+    implicit val wf  = environmentFormat
+    implicit val vnf = versionNumberFormat
+    implicit val tsf = timeSeenFormat
+    ( (__ \ "environment"  ).read[Environment].map(env => Environment(env.asString.stripSuffix("-AWS-London")))
+    ~ (__ \ "versionNumber").read[VersionNumber]
+    ~ (__ \ "lastSeen"     ).read[TimeSeen]
+    )(WhatsRunningWhereVersion.apply _)
+  }
+
+  val whatsRunningWhereReads: Reads[WhatsRunningWhere] = {
+    implicit val wf    = applicationNameFormat
+    implicit val wrwvf = whatsRunningWhereVersionReads
+    ( (__ \ "applicationName").read[ApplicationName]
+    ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
+    )(WhatsRunningWhere.apply _)
+  }
+
+  val profileFormat: Format[ProfileName] =
+    (__ \ "name").format[String].inmap(ProfileName.apply, unlift(ProfileName.unapply))
 }
 
 case class TimeSeen(time: LocalDateTime)
@@ -62,13 +70,13 @@ case class Environment(asString: String) extends AnyVal
 object Environment {
   private def precedence(environment: Environment) = environment.asString match {
     // use `contains` so environments with prefixes/suffixes are sorted too
-    case x if x.contains("production") => 0
+    case x if x.contains("production")   => 0
     case x if x.contains("externaltest") => 1
-    case x if x.contains("staging") => 2
-    case x if x.contains("qa") => 3
-    case x if x.contains("integration") => 4
-    case x if x.contains("development") => 5
-    case _ => 6
+    case x if x.contains("staging")      => 2
+    case x if x.contains("qa")           => 3
+    case x if x.contains("integration")  => 4
+    case x if x.contains("development")  => 5
+    case _                               => 6
   }
 
   implicit val ordering: Ordering[Environment] = new Ordering[Environment] {
@@ -82,4 +90,3 @@ object Environment {
 case class ProfileName(asString: String) extends AnyVal
 
 case class VersionNumber(asString: String) extends AnyVal
-
