@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{routes, Environment, EventData, ShutterStatusValue, ShutterStateData, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{routes, Environment, EventData, ShutterCause, ShutterStatusValue, ShutterStateChangeEvent, ShutterStateData, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 
 @this(viewMessages: ViewMessages)
@@ -25,7 +25,7 @@
  , selectedEnv   : Environment
  , isSignedIn    : Boolean
  , killSwitchLink: Option[String]
- )(implicit request: Request[_])
+ )(implicit request: Request[_], messages: Messages)
 
 @standard_layout(s"Shutter Overview - ${shutterType.asString.capitalize}") {
 
@@ -129,21 +129,34 @@
         <a class="shutter-row-link" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
           @state.serviceName
         </a>
+        @if(state.drillDownEvent.isDefined) {
+          <div id="drill-down-@{state.serviceName}-@{state.environment.asString}" class="drill-down-event">
+            @descriptionOf(state.drillDownEvent)
+          </div>
+        }
       </td>
       <td class="shutter-state">
         @state.status.value
       </td>
       <td class="shutter-user">
-        @state.lastEvent.map(_.username).getOrElse("")
+        @usernameFor(state.lastEvent)
       </td>
       <td class="shutter-date">
         @state.lastEvent.map(e => e.timestamp.asUTC.format(`yyyy-MM-dd HH:mm:ss z`)).getOrElse("")
       </td>
       <td>
         @if(state.lastEvent.isDefined) {
-          <a class="medium-glyphicon glyphicon glyphicon-list" href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName))"></a>
+          <a id="event-history-link-@{state.serviceName}-@{state.environment.asString}"
+             class="medium-glyphicon glyphicon glyphicon-list"
+             data-toggle="tooltip"
+             data-placement="right"
+             title="@messages("shutter-event.history")"
+             href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName))"></a>
+        } else {
+          @Html("No events")
         }
       </td>
+
       @if(isSignedIn) {
         <td class="shutter-update">
           <a id="shutter-link" class="shutter-row-link" href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
@@ -152,4 +165,16 @@
         </td>
       }
   </tr>
+}
+
+@usernameFor(eventOpt: Option[ShutterStateChangeEvent]) = @{
+  eventOpt.map { evt =>
+    if (evt.cause == ShutterCause.AutoReconciled) "auto-reconciler" else evt.username
+  }.getOrElse("")
+}
+
+@descriptionOf(eventOpt: Option[ShutterStateChangeEvent]) = @{
+  eventOpt.map { evt =>
+    s"(previously ${evt.status.value.asString} by ${evt.username} at ${evt.timestamp.asUTC.format(`yyyy-MM-dd HH:mm:ss z`)})"
+  }.getOrElse("")
 }

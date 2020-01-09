@@ -86,20 +86,27 @@ class ShutterConnector @Inject()(
   /**
     * GET
     * /shutter-api/{environment}/events
-    * Retrieves the current shutter events for all services for given environment
+    * Retrieves the latest shutter events for all services for given environment
     */
   def latestShutterEvents(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
-    http
-      .GET[Seq[ShutterEvent]](url =
-        s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&namedFilter=latestByServiceName&data.environment=${encodeQueryParam(env.asString)}&data.shutterType=${encodeQueryParam(st.asString)}")
-      .map(_.flatMap(_.toShutterStateChangeEvent))
+    shutterEventsFrom(shutterEventsUrlFor(st, env) + "&namedFilter=latestByServiceName")
 
-  def shutterEventsByTimestampDesc(filter: ShutterEventsFilter)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] = {
-    val url = s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&${ShutterEventsFilter.asQuery(filter)}"
+  /*
+   * Latest shutter events for all services that are not 'auto-reconciled' events
+   */
+  def latestNonAutoReconciliationShutterEvents(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
+    shutterEventsFrom(shutterEventsUrlFor(st, env) + "&namedFilter=latestNonAutoReconciliationByServiceName")
+
+  def shutterEventsByTimestampDesc(filter: ShutterEventsFilter)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
+    shutterEventsFrom(s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&${ShutterEventsFilter.asQuery(filter)}")
+
+  private def shutterEventsFrom(url: String)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     http.GET[Seq[ShutterEvent]](url).map {
       _.flatMap(_.toShutterStateChangeEvent)
     }
-  }
+
+  private def shutterEventsUrlFor(st: ShutterType, env: Environment): String =
+    s"$urlEvents?data.environment=${encodeQueryParam(env.asString)}&data.shutterType=${encodeQueryParam(st.asString)}"
 
   /**
     * GET

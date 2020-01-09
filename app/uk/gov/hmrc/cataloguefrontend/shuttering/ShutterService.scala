@@ -51,25 +51,34 @@ class ShutterService @Inject()(
   def frontendRouteWarnings(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] =
     shutterConnector.frontendRouteWarnings(env, serviceName)
 
-  def findCurrentStates(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateData]] =
+  def findCurrentStates(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateData]] = {
+    def keyByServiceName(events: Seq[ShutterStateChangeEvent]): Map[String, ShutterStateChangeEvent] =
+      events.map(evt => evt.serviceName -> evt).toMap
+
     for {
       states <- shutterConnector.shutterStates(st, env)
-      events <- shutterConnector.latestShutterEvents(st, env)
-      status =  states.map { state =>
-                  ShutterStateData(
-                      serviceName = state.name
-                    , shutterType = state.shutterType
-                    , environment = state.environment
-                    , status      = state.status
-                    , lastEvent   = events.find(_.serviceName == state.name)
-                    )
-                }
-      sorted =  status
-                  .sortWith { (l, r) => if (l.status.value == r.status.value)
-                                          l.serviceName < r.serviceName
-                                        else l.status.value == ShutterStatusValue.Shuttered
-                   }
+      latestNonReconciliationEvents <- shutterConnector.latestNonAutoReconciliationShutterEvents(st, env).map(keyByServiceName)
+      latestEvents <- shutterConnector.latestShutterEvents(st, env).map(keyByServiceName)
+      status = states.map { state =>
+        val latestEventOpt = latestEvents.get(state.name)
+        val reconciliationDrillDownEventOpt = latestEventOpt.filter(_.cause == ShutterCause.AutoReconciled).flatMap { _ =>
+          latestNonReconciliationEvents.get(state.name)
+        }
+        ShutterStateData(
+          serviceName = state.name
+          , shutterType = state.shutterType
+          , environment = state.environment
+          , status = state.status
+          , lastEvent = latestEventOpt
+          , drillDownEvent = reconciliationDrillDownEventOpt
+        )
+      }
+      sorted = status.sortWith { (l, r) =>
+        if (l.status.value == r.status.value) l.serviceName < r.serviceName
+        else l.status.value == ShutterStatusValue.Shuttered
+      }
     } yield sorted
+  }
 
   /** Creates an [[OutagePageStatus]] for each service based on the contents of [[OutagePage]] */
   def toOutagePageStatus(serviceNames: Seq[String], outagePages: List[OutagePage]): Seq[OutagePageStatus] =
@@ -118,7 +127,6 @@ class ShutterService @Inject()(
   def shutterGroups: Future[Seq[ShutterGroup]] =
     shutterGroupsConnector.shutterGroups
 
-
   def lookupShutterRoute(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[String]] = {
     for {
       baseRoutes      <- routeRulesConnector.serviceRoutes(serviceName)
@@ -137,4 +145,5 @@ case class ShutterStateData(
   , environment: Environment
   , status     : ShutterStatus
   , lastEvent  : Option[ShutterStateChangeEvent]
+  , drillDownEvent : Option[ShutterStateChangeEvent]
   )

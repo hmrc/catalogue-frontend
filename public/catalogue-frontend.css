@@ -12342,3 +12342,20 @@ table.shutter-events {
   background-color: #ffbf00;
   border: 1px solid #ffbf00;
 }
+
+#shutter-state-table td {
+  padding-bottom: 24px;
+}
+
+.drill-down-event {
+  position: absolute;
+  top: 60%;
+  left: 102%;
+  white-space: nowrap;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.shutter-service {
+  position: relative;
+}

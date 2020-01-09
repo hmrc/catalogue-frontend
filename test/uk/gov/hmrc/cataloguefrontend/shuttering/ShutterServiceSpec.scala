@@ -20,7 +20,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{Matchers, OptionValues, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.http.HeaderCarrier
@@ -29,7 +29,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
+class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers with OptionValues {
 
   val mockShutterStates = Seq(
       ShutterState(
@@ -72,29 +72,55 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
         , cause       = ShutterCause.UserCreated
         )
     , ShutterStateChangeEvent(
-          username    = "test.user"
+          username    = "shutter-api"
+        , timestamp   = Instant.now().minus(1, ChronoUnit.DAYS)
+        , serviceName = "ijk-frontend"
+        , environment = Environment.Production
+        , shutterType = ShutterType.Frontend
+        , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+        , cause       = ShutterCause.AutoReconciled
+        )
+    )
+
+  val mockNonAutoReconciliationEvents: Seq[ShutterStateChangeEvent] =
+    mockEvents.filterNot(_.cause == ShutterCause.AutoReconciled) :+
+      ShutterStateChangeEvent(
+        username    = "test.user"
         , timestamp   = Instant.now().minus(1, ChronoUnit.DAYS)
         , serviceName = "ijk-frontend"
         , environment = Environment.Production
         , shutterType = ShutterType.Frontend
         , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
         , cause       = ShutterCause.UserCreated
-        )
-    )
+      )
 
   "findCurrentStates" should {
     "return a list of shutter events ordered by shutter status" in {
       val boot = Boot.init
-      implicit val hc = new HeaderCarrier()
+      implicit val hc = HeaderCarrier()
 
       when(boot.mockShutterConnector.shutterStates(ShutterType.Frontend, Environment.Production)).thenReturn(Future(mockShutterStates))
       when(boot.mockShutterConnector.latestShutterEvents(ShutterType.Frontend, Environment.Production)).thenReturn(Future(mockEvents))
-
+      when(boot.mockShutterConnector.latestNonAutoReconciliationShutterEvents(ShutterType.Frontend, Environment.Production)).thenReturn(Future(mockNonAutoReconciliationEvents))
       val Seq(a,b,c) = Await.result(boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production), Duration(10, "seconds"))
 
       a.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
       b.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
       c.status shouldBe ShutterStatus.Unshuttered
+    }
+
+    "include the latest non auto-reconciliation event when the latest event was caused by the auto-reconciler" in {
+      val boot = Boot.init
+      implicit val hc = HeaderCarrier()
+
+      when(boot.mockShutterConnector.shutterStates(ShutterType.Frontend, Environment.Production)).thenReturn(Future(mockShutterStates))
+      when(boot.mockShutterConnector.latestShutterEvents(ShutterType.Frontend, Environment.Production)).thenReturn(Future(mockEvents))
+      when(boot.mockShutterConnector.latestNonAutoReconciliationShutterEvents(ShutterType.Frontend, Environment.Production)).thenReturn(Future(mockNonAutoReconciliationEvents))
+      val results = Await.result(boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production), Duration(10, "seconds"))
+
+      results.find(_.serviceName == "abc-frontend").value.drillDownEvent shouldBe empty
+      results.find(_.serviceName == "zxy-frontend").value.drillDownEvent shouldBe empty
+      results.find(_.serviceName == "ijk-frontend").value.drillDownEvent shouldBe mockNonAutoReconciliationEvents.find(_.serviceName == "ijk-frontend")
     }
   }
 
