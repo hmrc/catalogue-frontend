@@ -12163,7 +12163,7 @@ tr.shuttered_row td p {
     margin: 0px;
 }
 
-tr.shuttered_row td a {
+tr.shuttered_row td .shutter-row-link {
     background: #333333;
     color: #fff;
     border-radius: 3px;
