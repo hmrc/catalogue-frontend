@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, EventData, ShutterStatusValue, ShutterStateData, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{routes, Environment, EventData, ShutterStatusValue, ShutterStateData, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 
 @this(viewMessages: ViewMessages)
@@ -63,6 +63,7 @@
                   <th id="status-header"><p class="shutter-overview-header">Status</p></th>
                   <th id="last-update-by-header"><p class="shutter-overview-header">Last updated by</p></th>
                   <th id="date-header"><p class="shutter-overview-header">Date</p></th>
+                  <th id="events-link"><p class="shutter-overview-header">Events</p></th>
                   @if(isSignedIn) { <th id="update-header"><p class="shutter-overview-header">Update</p></th> }
               </tr>
           </thead>
@@ -125,7 +126,7 @@
 @shutterRow(state: ShutterStateData) = {
   <tr class="shutter-row @classFor(state.status.value)">
       <td class="shutter-service">
-        <a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
+        <a class="shutter-row-link" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
           @state.serviceName
         </a>
       </td>
@@ -138,9 +139,14 @@
       <td class="shutter-date">
         @state.lastEvent.map(e => e.timestamp.asUTC.format(`yyyy-MM-dd HH:mm:ss z`)).getOrElse("")
       </td>
+      <td>
+        @if(state.lastEvent.isDefined) {
+          <a class="medium-glyphicon glyphicon glyphicon-list" href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName))"></a>
+        }
+      </td>
       @if(isSignedIn) {
         <td class="shutter-update">
-          <a id="shutter-link" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
+          <a id="shutter-link" class="shutter-row-link" href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
             @changeValueFor(state.status.value)
           </a>
         </td>
