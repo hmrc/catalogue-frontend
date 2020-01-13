@@ -24,12 +24,12 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @import _root_.views.html.partials.DependenciesTeamPartial
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependencies}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependencies, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
 
-@(teamName: String,
+@(teamName: TeamName,
   repos: Map[String, Seq[String]],
   activityDates: TeamActivityDates,
   errorOrTeamMembers: Either[UMPError, Seq[DisplayableTeamMember]],
@@ -40,9 +40,9 @@
   teamDependencies: Seq[Dependencies]
 )(implicit messages: Messages, request: Request[_])
 
-@standard_layout(teamName, "teams") {
+@standard_layout(teamName.asString, "teams") {
     <header>
-        <h1>@teamName</h1>
+        <h1>@teamName.asString</h1>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
@@ -104,7 +104,7 @@
                               }
                               case Left(UMPError.HTTPError(404)) => {
                                 <div>
-                                  @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
+                                  @teamName.asString is unknown to the User Management Portal. To add the team, please raise a TSR
                                 </div>
                               }
                               case Left(error) => {
@@ -131,7 +131,7 @@
                             <ul class="list list--minimal" id="team_members">
                               @errorOrTeamMembers match {
                                 case Right(teamMembers) if teamMembers.isEmpty => {
-                                  @teamName has no members
+                                  @teamName.asString has no members
                                 }
                                 case Right(teamMembers) => {
                                   @for(teamMember <- teamMembers) {
@@ -141,7 +141,7 @@
                                   }
                                 }
                                 case Left(UMPError.UnknownTeam) => {
-                                  @teamName is unknown to the User Management Portal. To add the team, please raise a TSR
+                                  @teamName.asString is unknown to the User Management Portal. To add the team, please raise a TSR
                                 }
                                 case Left(error) => {
                                   <li id="linkToRectify">
@@ -175,9 +175,9 @@
 @umpUpdateLink(isMemberBox: Boolean) = {
   <div id="ump-correct-data-link" class="list list--minimal">
     @if(isMemberBox) {
-        To update @teamName team members, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+        To update @teamName.asString team members, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
     } else {
-        To update @teamName team details, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+        To update @teamName.asString team details, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
     }
   </div>
 }

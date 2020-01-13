@@ -22,6 +22,7 @@ import java.util.Date
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.cataloguefrontend.SearchFiltering._
 import uk.gov.hmrc.cataloguefrontend.connector.Team
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
 
 class SearchFilteringSpec extends WordSpec with Matchers {
@@ -35,15 +36,15 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val deployments = Seq(
-        TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),
-        TeamRelease("serv2", Seq("teamB"), productionDate = now, version = "2.0"),
-        TeamRelease("serv1", Seq("teamC"), productionDate = now, version = "3.0"),
-        TeamRelease("serv3", Seq("teamD"), productionDate = now, version = "4.0")
+        TeamRelease("serv1", Seq(TeamName("teamA")), productionDate = now, version = "1.0"),
+        TeamRelease("serv2", Seq(TeamName("teamB")), productionDate = now, version = "2.0"),
+        TeamRelease("serv1", Seq(TeamName("teamC")), productionDate = now, version = "3.0"),
+        TeamRelease("serv3", Seq(TeamName("teamD")), productionDate = now, version = "4.0")
       )
 
       deployments.filter(DeploymentsFilter(serviceName    = Some("serv1"))) shouldBe Seq(
-        TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),
-        TeamRelease("serv1", Seq("teamC"), productionDate = now, version = "3.0"))
+        TeamRelease("serv1", Seq(TeamName("teamA")), productionDate = now, version = "1.0"),
+        TeamRelease("serv1", Seq(TeamName("teamC")), productionDate = now, version = "3.0"))
 
     }
 
@@ -52,14 +53,14 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val deployments = Seq(
-        TeamRelease("serv1", Seq("teamA"), productionDate               = now, version = "1.0"),
-        TeamRelease("serv2", Seq("teamB"), productionDate               = now, version = "2.0"),
-        TeamRelease("filter-out-this-one", Seq("teamD"), productionDate = now, version = "4.0")
+        TeamRelease("serv1"              , Seq(TeamName("teamA")), productionDate = now, version = "1.0"),
+        TeamRelease("serv2"              , Seq(TeamName("teamB")), productionDate = now, version = "2.0"),
+        TeamRelease("filter-out-this-one", Seq(TeamName("teamD")), productionDate = now, version = "4.0")
       )
 
       deployments.filter(DeploymentsFilter(serviceName    = Some("SERV"))) should contain theSameElementsAs Seq(
-        TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),
-        TeamRelease("serv2", Seq("teamB"), productionDate = now, version = "2.0"))
+        TeamRelease("serv1", Seq(TeamName("teamA")), productionDate = now, version = "1.0"),
+        TeamRelease("serv2", Seq(TeamName("teamB")), productionDate = now, version = "2.0"))
 
     }
 
@@ -68,10 +69,10 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val deployments = Seq(
-        TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),
-        TeamRelease("serv2", Seq("teamB"), productionDate = now, version = "2.0"),
-        TeamRelease("serv1", Seq("teamC"), productionDate = now, version = "3.0"),
-        TeamRelease("serv3", Seq("teamD"), productionDate = now, version = "4.0")
+        TeamRelease("serv1", Seq(TeamName("teamA")), productionDate = now, version = "1.0"),
+        TeamRelease("serv2", Seq(TeamName("teamB")), productionDate = now, version = "2.0"),
+        TeamRelease("serv1", Seq(TeamName("teamC")), productionDate = now, version = "3.0"),
+        TeamRelease("serv3", Seq(TeamName("teamD")), productionDate = now, version = "4.0")
       )
 
       deployments.filter(DeploymentsFilter()) shouldBe deployments
@@ -84,9 +85,9 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val lastMonth: LocalDateTime = now.minusMonths(1).minusDays(1)
 
       val deployments = Seq.tabulate(10)(i =>
-        TeamRelease(s"serv$i", Seq("teamA"), productionDate = now, version = s"$i.0")) ++
+        TeamRelease(s"serv$i", Seq(TeamName("teamA")), productionDate = now, version = s"$i.0")) ++
         Seq.tabulate(5)(i =>
-          TeamRelease(s"lastMonthServ$i", Seq("teamB"), productionDate = lastMonth, version = s"$i.0"))
+          TeamRelease(s"lastMonthServ$i", Seq(TeamName("teamB")), productionDate = lastMonth, version = s"$i.0"))
 
       deployments.filter(DeploymentsFilter()).size should ===(10)
 
@@ -98,9 +99,9 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val lastMonth: LocalDateTime = now.minusMonths(1).minusDays(1)
 
       val deployments = Seq.tabulate(10)(i =>
-        TeamRelease(s"serv$i", Seq("teamA"), productionDate = now, version = s"$i.0")) ++
+        TeamRelease(s"serv$i", Seq(TeamName("teamA")), productionDate = now, version = s"$i.0")) ++
         Seq.tabulate(5)(i =>
-          TeamRelease(s"lastMonthServ$i", Seq("teamA"), productionDate = lastMonth, version = s"$i.0"))
+          TeamRelease(s"lastMonthServ$i", Seq(TeamName("teamA")), productionDate = lastMonth, version = s"$i.0"))
 
       deployments.filter(DeploymentsFilter(to = Some(now))).size should ===(15)
 
@@ -111,15 +112,15 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val deployments = Seq(
-        TeamRelease("serv3", Seq("teamA"), productionDate = now.minusDays(3), version  = "4.0"),
-        TeamRelease("serv1", Seq("teamB"), productionDate = now.minusDays(4), version  = "3.0"),
-        TeamRelease("serv2", Seq("teamC"), productionDate = now.minusDays(10), version = "2.0"),
-        TeamRelease("serv1", Seq("teamD"), productionDate = now.minusDays(20), version = "1.0")
+        TeamRelease("serv3", Seq(TeamName("teamA")), productionDate = now.minusDays(3), version  = "4.0"),
+        TeamRelease("serv1", Seq(TeamName("teamB")), productionDate = now.minusDays(4), version  = "3.0"),
+        TeamRelease("serv2", Seq(TeamName("teamC")), productionDate = now.minusDays(10), version = "2.0"),
+        TeamRelease("serv1", Seq(TeamName("teamD")), productionDate = now.minusDays(20), version = "1.0")
       )
 
       deployments.filter(DeploymentsFilter(from           = Some(now.minusDays(4)))) shouldBe Seq(
-        TeamRelease("serv3", Seq("teamA"), productionDate = now.minusDays(3), version = "4.0"),
-        TeamRelease("serv1", Seq("teamB"), productionDate = now.minusDays(4), version = "3.0")
+        TeamRelease("serv3", Seq(TeamName("teamA")), productionDate = now.minusDays(3), version = "4.0"),
+        TeamRelease("serv1", Seq(TeamName("teamB")), productionDate = now.minusDays(4), version = "3.0")
       )
 
     }
@@ -129,15 +130,15 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val deployments = Seq(
-        TeamRelease("serv3", Seq("teamA"), productionDate = now.minusDays(3), version  = "4.0"),
-        TeamRelease("serv1", Seq("teamB"), productionDate = now.minusDays(4), version  = "3.0"),
-        TeamRelease("serv2", Seq("teamC"), productionDate = now.minusDays(10), version = "2.0"),
-        TeamRelease("serv1", Seq("teamD"), productionDate = now.minusDays(20), version = "1.0")
+        TeamRelease("serv3", Seq(TeamName("teamA")), productionDate = now.minusDays(3), version  = "4.0"),
+        TeamRelease("serv1", Seq(TeamName("teamB")), productionDate = now.minusDays(4), version  = "3.0"),
+        TeamRelease("serv2", Seq(TeamName("teamC")), productionDate = now.minusDays(10), version = "2.0"),
+        TeamRelease("serv1", Seq(TeamName("teamD")), productionDate = now.minusDays(20), version = "1.0")
       )
 
       deployments.filter(DeploymentsFilter(to             = Some(now.minusDays(10)))) shouldBe Seq(
-        TeamRelease("serv2", Seq("teamC"), productionDate = now.minusDays(10), version = "2.0"),
-        TeamRelease("serv1", Seq("teamD"), productionDate = now.minusDays(20), version = "1.0")
+        TeamRelease("serv2", Seq(TeamName("teamC")), productionDate = now.minusDays(10), version = "2.0"),
+        TeamRelease("serv1", Seq(TeamName("teamD")), productionDate = now.minusDays(20), version = "1.0")
       )
 
     }
@@ -147,15 +148,15 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val deployments = Seq(
-        TeamRelease("serv3", Seq("teamA"), productionDate = now.minusDays(3), version  = "4.0"),
-        TeamRelease("serv1", Seq("teamB"), productionDate = now.minusDays(4), version  = "3.0"),
-        TeamRelease("serv2", Seq("teamC"), productionDate = now.minusDays(10), version = "2.0"),
-        TeamRelease("serv1", Seq("teamD"), productionDate = now.minusDays(20), version = "1.0")
+        TeamRelease("serv3", Seq(TeamName("teamA")), productionDate = now.minusDays(3), version  = "4.0"),
+        TeamRelease("serv1", Seq(TeamName("teamB")), productionDate = now.minusDays(4), version  = "3.0"),
+        TeamRelease("serv2", Seq(TeamName("teamC")), productionDate = now.minusDays(10), version = "2.0"),
+        TeamRelease("serv1", Seq(TeamName("teamD")), productionDate = now.minusDays(20), version = "1.0")
       )
 
       deployments.filter(DeploymentsFilter(from           = Some(now.minusDays(10)), to = Some(now.minusDays(4)))) shouldBe Seq(
-        TeamRelease("serv1", Seq("teamB"), productionDate = now.minusDays(4), version   = "3.0"),
-        TeamRelease("serv2", Seq("teamC"), productionDate = now.minusDays(10), version  = "2.0")
+        TeamRelease("serv1", Seq(TeamName("teamB")), productionDate = now.minusDays(4), version   = "3.0"),
+        TeamRelease("serv2", Seq(TeamName("teamC")), productionDate = now.minusDays(10), version  = "2.0")
       )
 
     }
@@ -165,17 +166,17 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val deployments = Seq(
-        TeamRelease("serv3", Seq("teamA"), productionDate = now.minusDays(3), version  = "4.0"),
-        TeamRelease("serv1", Seq("teamB"), productionDate = now.minusDays(4), version  = "3.0"),
-        TeamRelease("serv2", Seq("teamC"), productionDate = now.minusDays(10), version = "2.0"),
-        TeamRelease("serv1", Seq("teamD"), productionDate = now.minusDays(20), version = "1.0")
+        TeamRelease("serv3", Seq(TeamName("teamA")), productionDate = now.minusDays(3), version  = "4.0"),
+        TeamRelease("serv1", Seq(TeamName("teamB")), productionDate = now.minusDays(4), version  = "3.0"),
+        TeamRelease("serv2", Seq(TeamName("teamC")), productionDate = now.minusDays(10), version = "2.0"),
+        TeamRelease("serv1", Seq(TeamName("teamD")), productionDate = now.minusDays(20), version = "1.0")
       )
 
       deployments.filter(DeploymentsFilter(
         serviceName                                       = Some("serv2"),
         from                                              = Some(now.minusDays(10)),
         to                                                = Some(now.minusDays(4)))) shouldBe Seq(
-        TeamRelease("serv2", Seq("teamC"), productionDate = now.minusDays(10), version = "2.0"))
+        TeamRelease("serv2", Seq(TeamName("teamC")), productionDate = now.minusDays(10), version = "2.0"))
 
     }
 
@@ -184,15 +185,15 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val deployments = Seq(
-        TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),
-        TeamRelease("serv2", Seq("teamA"), productionDate = now, version = "2.0"),
-        TeamRelease("serv1", Seq("teamB"), productionDate = now, version = "3.0"),
-        TeamRelease("serv3", Seq("teamB"), productionDate = now, version = "4.0")
+        TeamRelease("serv1", Seq(TeamName("teamA")), productionDate = now, version = "1.0"),
+        TeamRelease("serv2", Seq(TeamName("teamA")), productionDate = now, version = "2.0"),
+        TeamRelease("serv1", Seq(TeamName("teamB")), productionDate = now, version = "3.0"),
+        TeamRelease("serv3", Seq(TeamName("teamB")), productionDate = now, version = "4.0")
       )
 
       deployments.filter(DeploymentsFilter(team           = Some("teamA"))) shouldBe Seq(
-        TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),
-        TeamRelease("serv2", Seq("teamA"), productionDate = now, version = "2.0"))
+        TeamRelease("serv1", Seq(TeamName("teamA")), productionDate = now, version = "1.0"),
+        TeamRelease("serv2", Seq(TeamName("teamA")), productionDate = now, version = "2.0"))
 
     }
     "get deployments filtered by partial team name and case insensitive" in {
@@ -200,16 +201,16 @@ class SearchFilteringSpec extends WordSpec with Matchers {
       val now: LocalDateTime = LocalDateTime.now()
 
       val deployments = Seq(
-        TeamRelease("serv1", Seq("teamA"), productionDate               = now, version = "1.0"),
-        TeamRelease("serv2", Seq("teamA"), productionDate               = now, version = "2.0"),
-        TeamRelease("serv1", Seq("teamB"), productionDate               = now, version = "3.0"),
-        TeamRelease("serv3", Seq("filter-out-this-one"), productionDate = now, version = "4.0")
+        TeamRelease("serv1", Seq(TeamName("teamA"))              , productionDate = now, version = "1.0"),
+        TeamRelease("serv2", Seq(TeamName("teamA"))              , productionDate = now, version = "2.0"),
+        TeamRelease("serv1", Seq(TeamName("teamB"))              , productionDate = now, version = "3.0"),
+        TeamRelease("serv3", Seq(TeamName("filter-out-this-one")), productionDate = now, version = "4.0")
       )
 
       deployments.filter(DeploymentsFilter(team = Some("TEAM"))).toList should contain theSameElementsAs Seq(
-        TeamRelease("serv1", Seq("teamA"), productionDate = now, version = "1.0"),
-        TeamRelease("serv2", Seq("teamA"), productionDate = now, version = "2.0"),
-        TeamRelease("serv1", Seq("teamB"), productionDate = now, version = "3.0")
+        TeamRelease("serv1", Seq(TeamName("teamA")), productionDate = now, version = "1.0"),
+        TeamRelease("serv2", Seq(TeamName("teamA")), productionDate = now, version = "2.0"),
+        TeamRelease("serv1", Seq(TeamName("teamB")), productionDate = now, version = "3.0")
       )
 
     }
@@ -218,33 +219,32 @@ class SearchFilteringSpec extends WordSpec with Matchers {
 
   "TeamResult.filter" should {
     val teams = Seq(
-      Team("CATO", None, None, None, None),
-      Team("Auth", None, None, None, None),
-      Team("API Platform", None, None, None, None),
-      Team("API Services", None, None, None, None),
-      Team("ALA", None, None, None, None),
-      Team("ATED", None, None, None, None)
+      Team(TeamName("CATO"), None, None, None, None),
+      Team(TeamName("Auth"), None, None, None, None),
+      Team(TeamName("API Platform"), None, None, None, None),
+      Team(TeamName("API Services"), None, None, None, None),
+      Team(TeamName("ALA"), None, None, None, None),
+      Team(TeamName("ATED"), None, None, None, None)
     )
 
     "return the right team given an exact match on the team name" in {
-      teams.filter(TeamFilter(Some("Auth"))) shouldBe Seq(Team("Auth", None, None, None, None))
+      teams.filter(TeamFilter(Some("Auth"))) shouldBe Seq(Team(TeamName("Auth"), None, None, None, None))
     }
 
     "return the right sequence of teams given a partial match" in {
       teams.filter(TeamFilter(Some("API"))) shouldBe
         Seq(
-          Team("API Platform", None, None, None, None),
-          Team("API Services", None, None, None, None)
+          Team(TeamName("API Platform"), None, None, None, None),
+          Team(TeamName("API Services"), None, None, None, None)
         )
     }
 
     "return the right sequence of teams given a case insensitive partial match" in {
       teams.filter(TeamFilter(Some("api"))) shouldBe
         Seq(
-          Team("API Platform", None, None, None, None),
-          Team("API Services", None, None, None, None)
+          Team(TeamName("API Platform"), None, None, None, None),
+          Team(TeamName("API Services"), None, None, None, None)
         )
     }
   }
-
 }

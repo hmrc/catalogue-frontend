@@ -19,4 +19,5 @@ shuttered.badge=Shuttered
 bobbyrules.active.badge=Bobby rule violated
 bobbyrules.pending.badge=Bobby rule pending
 
-whatsrunningwhere.select.profile=All Profiles
+whatsrunningwhere.select.profile=Any Profile
+whatsrunningwhere.select.team=Any Team

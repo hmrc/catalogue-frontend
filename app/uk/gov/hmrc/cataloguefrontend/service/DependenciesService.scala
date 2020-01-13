@@ -48,7 +48,7 @@ class DependenciesService @Inject()(
   }
 
   def getServicesWithDependency(
-      optTeam     : Option[String],
+      optTeam     : Option[TeamName],
       flag        : SlugInfoFlag,
       group       : String,
       artefact    : String,

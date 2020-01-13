@@ -18,12 +18,12 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model._
 
 @this()
-@(teamName: String, dependencies: Seq[Dependencies], showLink: Boolean = false)
+@(teamName: TeamName, dependencies: Seq[Dependencies], showLink: Boolean = false)
 
 @defining(dependencies.filter(_.hasOutOfDateDependencies)) { outOfDateDependencies =>
 
 <div id="team-dependencies" class="board">
-    <h3 class="board__heading">Out of Date Platform Dependencies for Team @teamName</h3>
+    <h3 class="board__heading">Out of Date Platform Dependencies for Team @teamName.asString</h3>
     <div class="board__body">
 
       @if(dependencies.isEmpty) {
@@ -31,7 +31,7 @@
         <p>Feel free to go and treat yourselves to a coffee and a biscuit.</p>
       } else {
         @if(showLink) {
-          <p>Click <a href="/teams/@teamName/out-of-date-dependencies">here</a> to open in dedicated window. (Useful for build monitors)</p>
+          <p>Click <a href="/teams/@teamName.asString/out-of-date-dependencies">here</a> to open in dedicated window. (Useful for build monitors)</p>
         }
         <div class="col-xs-8">
              @for(dependency <- dependencies) {

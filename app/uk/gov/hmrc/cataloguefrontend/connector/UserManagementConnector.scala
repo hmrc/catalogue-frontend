@@ -20,6 +20,7 @@ package connector
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpReads, HttpResponse}
@@ -40,16 +41,16 @@ case class UserManagementConnector @Inject()(
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
 
-  def getTeamMembersForTeams(teamNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[String, Either[UMPError, Seq[TeamMember]]]] =
+  def getTeamMembersForTeams(teamNames: Seq[TeamName])(implicit hc: HeaderCarrier): Future[Map[TeamName, Either[UMPError, Seq[TeamMember]]]] =
      Future.sequence(
        teamNames.map { teamName =>
          getTeamMembersFromUMP(teamName).map(umpErrorOrTeamMembers => (teamName, umpErrorOrTeamMembers))
        }
      ).map(_.toMap)
 
-  def getTeamMembersFromUMP(teamName: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
+  def getTeamMembersFromUMP(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    val url = s"$userManagementBaseUrl/v2/organisations/teams/${encodePathParam(teamName)}/members"
+    val url = s"$userManagementBaseUrl/v2/organisations/teams/${encodePathParam(teamName.asString)}/members"
     httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {
@@ -88,9 +89,9 @@ case class UserManagementConnector @Inject()(
       }
   }
 
-  def getTeamDetails(teamName: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, TeamDetails]] = {
+  def getTeamDetails(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Either[UMPError, TeamDetails]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    val url              = s"$userManagementBaseUrl/v2/organisations/teams/${encodePathParam(teamName)}"
+    val url              = s"$userManagementBaseUrl/v2/organisations/teams/${encodePathParam(teamName.asString)}"
     httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {

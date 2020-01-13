@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -40,7 +40,10 @@ class ConfigConnector @Inject()(
 
   private implicit val linkFormats         = Json.format[Link]
   private implicit val environmentsFormats = Json.format[TargetEnvironment]
-  private implicit val serviceFormats      = Json.format[RepositoryDetails]
+  private implicit val serviceFormats      = {
+    implicit val tnf = TeamName.format
+    Json.format[RepositoryDetails]
+  }
 
   private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response

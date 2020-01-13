@@ -16,4 +16,47 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
+import play.api.libs.json.Format
+import play.api.libs.functional.syntax._
+import play.api.mvc.{PathBindable, QueryStringBindable}
+
+
 case class Username(value: String) extends AnyVal
+
+case class TeamName(asString: String) extends AnyVal
+
+object TeamName {
+  lazy val format: Format[TeamName] =
+    Format.of[String].inmap(TeamName.apply, unlift(TeamName.unapply))
+
+  implicit val ordering = new Ordering[TeamName] {
+    def compare(x: TeamName, y: TeamName): Int =
+      x.asString.compare(y.asString)
+  }
+
+  implicit val pathBindable: PathBindable[TeamName] =
+    new PathBindable[TeamName] {
+      override def bind(key: String, value: String): Either[String, TeamName] =
+        Right(TeamName(value))
+
+      override def unbind(key: String, value: TeamName): String =
+        value.asString
+    }
+
+  implicit val queryStringBindable: QueryStringBindable[TeamName] =
+    new QueryStringBindable[TeamName] {
+      private val Name = "team"
+
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, TeamName]] =
+        params.get(Name).map { values =>
+          values.toList match {
+            case Nil => Left("missing team value")
+            case head :: Nil => pathBindable.bind(key, head)
+            case _ => Left("too many team values")
+          }
+        }
+
+      override def unbind(key: String, value: TeamName): String =
+        s"$Name=${value.asString}"
+    }
+}

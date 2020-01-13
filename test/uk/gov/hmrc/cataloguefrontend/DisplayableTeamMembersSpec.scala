@@ -18,13 +18,14 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FunSpec, Matchers}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 
 class DisplayableTeamMembersSpec extends FunSpec with Matchers with TypeCheckedTripleEquals {
 
   describe("DisplayTeamMembers") {
 
-    val teamName = "teamA"
+    val teamName = TeamName("teamA")
 
     val teamMembers = Seq(
       TeamMember(

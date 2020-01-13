@@ -89,4 +89,11 @@ object Environment {
 
 case class ProfileName(asString: String) extends AnyVal
 
+object ProfileName {
+  implicit val ordering = new Ordering[ProfileName] {
+    def compare(x: ProfileName, y: ProfileName): Int =
+      x.asString.compare(y.asString)
+  }
+}
+
 case class VersionNumber(asString: String) extends AnyVal

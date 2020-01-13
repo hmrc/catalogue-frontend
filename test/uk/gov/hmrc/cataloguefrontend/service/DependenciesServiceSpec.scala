@@ -40,7 +40,7 @@ class SlugInfoServiceSpec
     ServiceWithDependency(
       slugName           = "service1",
       slugVersion        = "v1",
-      teams              = List("T1"),
+      teams              = List(TeamName("T1")),
       depGroup           = group,
       depArtefact        = artefact,
       depVersion         = "1.0.0",
@@ -50,7 +50,7 @@ class SlugInfoServiceSpec
     ServiceWithDependency(
       slugName           = "service1",
       slugVersion        = "v1",
-      teams              = List("T1", "T2"),
+      teams              = List(TeamName("T1"), TeamName("T2")),
       depGroup           = group,
       depArtefact        = artefact,
       depVersion         = "2.0.0",
@@ -60,7 +60,7 @@ class SlugInfoServiceSpec
     ServiceWithDependency(
       slugName           = "service1",
       slugVersion        = "v1",
-      teams              = List("T2"),
+      teams              = List(TeamName("T2")),
       depGroup           = group,
       depArtefact        = artefact,
       depVersion         = "2.0.5",
@@ -74,8 +74,8 @@ class SlugInfoServiceSpec
       when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact, versionRange))
         .thenReturn(Future(Seq(v100, v200, v205)))
 
-      await(boot.service.getServicesWithDependency(optTeam = Some("T1"), SlugInfoFlag.Latest, group, artefact, versionRange)) shouldBe Seq(v200, v100)
-      await(boot.service.getServicesWithDependency(optTeam = Some("T2"), SlugInfoFlag.Latest, group, artefact, versionRange)) shouldBe Seq(v205, v200)
+      await(boot.service.getServicesWithDependency(optTeam = Some(TeamName("T1")), SlugInfoFlag.Latest, group, artefact, versionRange)) shouldBe Seq(v200, v100)
+      await(boot.service.getServicesWithDependency(optTeam = Some(TeamName("T2")), SlugInfoFlag.Latest, group, artefact, versionRange)) shouldBe Seq(v205, v200)
     }
   }
 

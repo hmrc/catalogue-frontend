@@ -37,7 +37,7 @@
         <td id="row@{i}_team">
             <ul class="list-group">
             @for(team <- release.teams) {
-                <li ><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team}</a></li>
+                <li ><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team.asString}</a></li>
             }
             </ul>
         </td>

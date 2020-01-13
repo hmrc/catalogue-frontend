@@ -28,13 +28,14 @@ object SearchFiltering {
 
     def filter(query: DeploymentsFilter): Seq[TeamRelease] = {
 
-      val q = if (query.isEmpty) DeploymentsFilter(from = Some(LocalDateTime.now().minusMonths(1))) else query
+      val q = if (query.isEmpty) DeploymentsFilter(from = Some(LocalDateTime.now().minusMonths(1)))
+              else query
 
       deployments.toStream
-        .filter(x => q.team.isEmpty || x.teams.map(_.toLowerCase).exists(_.contains(q.team.get.toLowerCase)))
-        .filter(x => q.serviceName.isEmpty || x.name.toLowerCase.contains(q.serviceName.get.toLowerCase))
-        .filter(x => q.from.isEmpty || x.productionDate.epochSeconds >= q.from.get.epochSeconds)
-        .filter(x => q.to.isEmpty || x.productionDate.epochSeconds < q.to.get.plusDays(1).epochSeconds)
+        .filter(x => q.team       .fold(true)(team        => x.teams.map(_.asString.toLowerCase).exists(_.contains(team.toLowerCase))))
+        .filter(x => q.serviceName.fold(true)(serviceName => x.name.toLowerCase.contains(serviceName.toLowerCase)))
+        .filter(x => q.from       .fold(true)(from        => x.productionDate.epochSeconds >= from.epochSeconds))
+        .filter(x => q.to         .fold(true)(to          => x.productionDate.epochSeconds < to.plusDays(1).epochSeconds))
     }
   }
 
@@ -42,18 +43,18 @@ object SearchFiltering {
 
     def filter(q: RepoListFilter): Seq[RepositoryDisplayDetails] =
       repositories.toStream
-        .filter(x => q.name.isEmpty || x.name.toLowerCase.contains(q.name.get.toLowerCase))
+        .filter(x => q.name.fold(true)(name => x.name.toLowerCase.contains(name.toLowerCase)))
         .filter(x =>
-          q.repoType.isEmpty || q.repoType.get.equalsIgnoreCase(x.repoType.toString) || ("service".equalsIgnoreCase(
-            q.repoType.get) && x.repoType == RepoType.Service))
-
+          q.repoType.fold(true)(repoType => repoType.equalsIgnoreCase(x.repoType.toString)
+                                         || ("service".equalsIgnoreCase(repoType) && x.repoType == RepoType.Service)
+                               )
+        )
   }
 
   implicit class TeamResult(teams: Seq[Team]) {
 
     def filter(teamFilter: TeamFilter): Seq[Team] =
-      teams.filter(team => teamFilter.name.isEmpty || team.name.toLowerCase.contains(teamFilter.name.get.toLowerCase))
-
+      teams.filter(team => teamFilter.name.fold(true)(name => team.name.asString.toLowerCase.contains(name.toLowerCase)))
   }
 
   implicit class DigitalServiceNameResult(digitalServiceNames: Seq[String]) {
@@ -61,9 +62,9 @@ object SearchFiltering {
     def filter(digitalServiceNameFilter: DigitalServiceNameFilter): Seq[String] =
       digitalServiceNames.filter(
         digitalServiceName =>
-          digitalServiceNameFilter.value.isEmpty || digitalServiceName.toLowerCase.contains(
-            digitalServiceNameFilter.value.get.toLowerCase))
-
+          digitalServiceNameFilter.value.fold(true)(value =>
+            digitalServiceName.toLowerCase.contains(value.toLowerCase)
+          )
+      )
   }
-
 }

@@ -21,6 +21,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.WhatsRunningWherePage
 
@@ -28,9 +30,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class WhatsRunningWhereController @Inject()(
-    releasesConnector: ReleasesConnector
-  , page             : WhatsRunningWherePage
-  , mcc              : MessagesControllerComponents
+    releasesConnector            : ReleasesConnector
+  , teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
+  , page                         : WhatsRunningWherePage
+  , mcc                          : MessagesControllerComponents
   )(implicit val ec: ExecutionContext
   ) extends FrontendController(mcc){
 
@@ -38,21 +41,29 @@ class WhatsRunningWhereController @Inject()(
     Action.async { implicit request =>
       for {
         form         <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profileName  =  form.fold(_ => None, _.profileName)
+        ( profileName
+        , teamName
+        )            =  form.fold( _ => (None         , None      )
+                                 , f => (f.profileName, f.teamName)
+                                 )
         ( releases
         , profiles
-        )            <- ( releasesConnector.releases(profileName)
-                        , releasesConnector.profiles.map(_.sortBy(_.asString))
-                        ).mapN { case (releases, profiles) => (releases, profiles) }
+        , teams
+        )            <- ( releasesConnector.releases(profileName, teamName)
+                        , releasesConnector.profiles.map(_.sorted)
+                        , teamsAndRepositoriesConnector.teamsWithRepositories.map(_.toList)
+                        ).mapN { case (r, p, t) => (r, p, t) }
         environments =  releases.flatMap(_.versions.map(_.environment)).distinct.sorted
       } yield
-        Ok(page(environments, releases, profiles, form))
+        Ok(page(environments, releases, profiles, teams.map(_.name), form))
     }
 }
 
 case class WhatsRunningWhereFilter(
-  profileName    : Option[ProfileName]     = None,
-  applicationName: Option[ApplicationName] = None)
+    profileName    : Option[ProfileName]     = None
+  , teamName       : Option[TeamName]        = None
+  , applicationName: Option[ApplicationName] = None
+  )
 
 object WhatsRunningWhereFilter {
   private def filterEmptyString(x: Option[String]) = x.filter(_.trim.nonEmpty)
@@ -60,9 +71,11 @@ object WhatsRunningWhereFilter {
   lazy val form = Form(
     mapping(
       "profile_name"     -> optional(text)
-                              .transform[Option[ProfileName]](filterEmptyString(_).map(ProfileName), _.map(_.asString)),
+                              .transform[Option[ProfileName]](filterEmptyString(_).map(ProfileName.apply), _.map(_.asString)),
+      "team_name"        -> optional(text)
+                              .transform[Option[TeamName]](filterEmptyString(_).map(TeamName.apply), _.map(_.asString)),
       "application_name" -> optional(text)
-                              .transform[Option[ApplicationName]](filterEmptyString(_).map(ApplicationName), _.map(_.asString))
+                              .transform[Option[ApplicationName]](filterEmptyString(_).map(ApplicationName.apply), _.map(_.asString))
     )(WhatsRunningWhereFilter.apply)(WhatsRunningWhereFilter.unapply)
   )
 }

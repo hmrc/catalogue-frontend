@@ -24,13 +24,13 @@
           <ul class="list list--minimal">
             @for(teamName <- repo.teamNames) {
                 <li class="list-item">
-                    <a id="link-to-@{teamName.toLowerCase.replaceAll(" ", "-")}" href="/teams/@teamName">
+                    <a id="link-to-@{teamName.asString.toLowerCase.replaceAll(" ", "-")}" href="/teams/@teamName.asString">
                         @if(repo.owningTeams.contains(teamName)) {
                             <strong>
-                                @teamName <span class="repo-owner">Owner</span>
+                                @teamName.asString <span class="repo-owner">Owner</span>
                             </strong>
                         } else {
-                            @teamName
+                            @teamName.asString
                         }
                     </a>
                 </li>

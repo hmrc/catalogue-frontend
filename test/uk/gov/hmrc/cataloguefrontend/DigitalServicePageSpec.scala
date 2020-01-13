@@ -31,7 +31,7 @@ import play.api.{Application, Configuration}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.User
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.connector.model.Username
+import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Username}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service._
@@ -187,7 +187,7 @@ class DigitalServicePageSpec
         .thenReturn(Future(Some(DigitalService(digitalServiceName, 0L, Seq.empty))))
 
       when(userManagementConnectorMock.getTeamMembersForTeams(any())(any()))
-        .thenReturn(Future(Map.empty[String, Either[UMPError, Seq[TeamMember]]]))
+        .thenReturn(Future(Map.empty[TeamName, Either[UMPError, Seq[TeamMember]]]))
 
       val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
 
@@ -264,7 +264,7 @@ class DigitalServicePageSpec
 
     "show the right error message when unable to connect to ump" in new MockedCatalogueFrontendSetup {
 
-      val teamName = "Team1"
+      val teamName = TeamName("Team1")
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
@@ -280,12 +280,11 @@ class DigitalServicePageSpec
 
       val document = asDocument(contentAsString(response))
 
-      document.select(s"#ump-error-$teamName").text() should ===("Sorry, the User Management Portal is not available")
+      document.select(s"#ump-error-${teamName.asString}").text() should ===("Sorry, the User Management Portal is not available")
     }
 
     "show the right error message the ump send no data" in new MockedCatalogueFrontendSetup {
-
-      val teamName = "Team1"
+      val teamName = TeamName("Team1")
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
@@ -301,13 +300,12 @@ class DigitalServicePageSpec
 
       val document = asDocument(contentAsString(response))
 
-      document.select(s"#ump-error-$teamName").text() should ===(
-        s"$teamName is unknown to the User Management Portal. To add the team, please raise a TSR")
+      document.select(s"#ump-error-${teamName.asString}").text() should ===(
+        s"${teamName.asString} is unknown to the User Management Portal. To add the team, please raise a TSR")
     }
 
     "show the right error message the ump gives an Http error" in new MockedCatalogueFrontendSetup {
-
-      val teamName = "Team1"
+      val teamName = TeamName("Team1")
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
@@ -323,7 +321,7 @@ class DigitalServicePageSpec
 
       val document = asDocument(contentAsString(response))
 
-      document.select(s"#ump-error-$teamName").text() should ===(s"Sorry, the User Management Portal is not available")
+      document.select(s"#ump-error-${teamName.asString}").text() should ===(s"Sorry, the User Management Portal is not available")
     }
   }
 

@@ -23,8 +23,7 @@ lazy val microservice = Project(appName, file("."))
     resolvers += Resolver.jcenterRepo,
     RoutesKeys.routesImport ++= Seq(
         "uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterType}",
-        "uk.gov.hmrc.cataloguefrontend.shuttering.Environment.pathBindable",
-        "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType.pathBindable"
+        "uk.gov.hmrc.cataloguefrontend.connector.model.TeamName",
     ),
     // ***************
     // Use the silencer plugin to suppress warnings from unused imports in compiled twirl templates
@@ -43,7 +42,7 @@ val compile = Seq(
   "uk.gov.hmrc"               %% "bootstrap-play-26"    % bootstrapPlayVersion,
   "uk.gov.hmrc"               %% "url-builder"          % "3.3.0-play-26",
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-26"   % hmrcMongoVersion,
-  "org.typelevel"             %% "cats-core"            % "1.6.1",
+  "org.typelevel"             %% "cats-core"            % "2.0.0",
   "org.apache.httpcomponents" %  "httpcore"             % "4.3.3",
   "org.yaml"                  %  "snakeyaml"            % "1.25",
   "org.apache.httpcomponents" %  "httpclient"           % "4.3.6",
