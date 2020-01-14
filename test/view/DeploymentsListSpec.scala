@@ -25,6 +25,7 @@ import org.scalatest.WordSpec
 import play.api.i18n.Messages
 import play.api.test.Helpers
 import play.twirl.api.Html
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.Deployer
 import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
@@ -43,7 +44,7 @@ class DeploymentsListSpec extends WordSpec {
           Seq(
             TeamRelease(
               "serv1",
-              Seq("teamA", "teamB"),
+              Seq(TeamName("teamA"), TeamName("teamB")),
               productionDate = now,
               creationDate   = Some(now.plusDays(2)),
               interval       = Some(2),
@@ -51,7 +52,7 @@ class DeploymentsListSpec extends WordSpec {
               version        = "1.0"),
             TeamRelease(
               "serv2",
-              Seq("teamA", "teamB"),
+              Seq(TeamName("teamA"), TeamName("teamB")),
               productionDate = now,
               creationDate   = Some(now.plusDays(2)),
               interval       = Some(2),

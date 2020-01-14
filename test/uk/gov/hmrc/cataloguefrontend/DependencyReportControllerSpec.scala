@@ -31,7 +31,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType._
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, TeamName, Version}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.time.DateTimeUtils
@@ -81,7 +81,7 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Gui
     def mockTeamsAndTheirRepositories(): OngoingStubbing[Future[Seq[Team]]] = {
       def team(teamName: String, repositories: Seq[String]) =
         Team(
-          teamName,
+          TeamName(teamName),
           None,
           None,
           None,

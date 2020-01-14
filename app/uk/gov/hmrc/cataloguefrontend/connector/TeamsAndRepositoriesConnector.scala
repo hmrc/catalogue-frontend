@@ -22,6 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment}
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
@@ -76,8 +77,8 @@ case class RepositoryDetails(
   description : String,
   createdAt   : LocalDateTime,
   lastActive  : LocalDateTime,
-  owningTeams : Seq[String],
-  teamNames   : Seq[String],
+  owningTeams : Seq[TeamName],
+  teamNames   : Seq[TeamName],
   githubUrl   : Link,
   jenkinsURL  : Option[Link],
   environments: Option[Seq[TargetEnvironment]],
@@ -95,7 +96,7 @@ object RepositoryDisplayDetails {
 }
 
 case class Team(
-  name                    : String,
+  name                    : TeamName,
   firstActiveDate         : Option[LocalDateTime],
   lastActiveDate          : Option[LocalDateTime],
   firstServiceCreationDate: Option[LocalDateTime],
@@ -106,7 +107,10 @@ case class Team(
 }
 
 object Team {
-  implicit val format: OFormat[Team] = Json.format[Team]
+  implicit val format: OFormat[Team] = {
+    implicit val tnf = TeamName.format
+    Json.format[Team]
+  }
 }
 
 case class DigitalService(name: String, lastUpdatedAt: Long, repositories: Seq[DigitalServiceRepository])
@@ -117,9 +121,12 @@ object DigitalService {
     createdAt    : LocalDateTime,
     lastUpdatedAt: LocalDateTime,
     repoType     : RepoType.RepoType,
-    teamNames    : Seq[String])
+    teamNames    : Seq[TeamName])
 
-  implicit val repoDetailsFormat: OFormat[DigitalServiceRepository] = Json.format[DigitalServiceRepository]
+  implicit val repoDetailsFormat: OFormat[DigitalServiceRepository] = {
+    implicit val tnf = TeamName.format
+    Json.format[DigitalServiceRepository]
+  }
 
   implicit val digitalServiceFormat: OFormat[DigitalService] = Json.format[DigitalService]
 }
@@ -134,6 +141,7 @@ class TeamsAndRepositoriesConnector @Inject()(
 
   private val teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
 
+  private implicit val tnf                 = TeamName.format
   private implicit val linkFormats         = Json.format[Link]
   private implicit val jenkinsLinkFormats  = Json.format[JenkinsLink]
   private implicit val environmentsFormats = Json.format[TargetEnvironment]
@@ -157,8 +165,8 @@ class TeamsAndRepositoriesConnector @Inject()(
   def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] =
     http.GET[Seq[String]](teamsAndServicesBaseUrl + s"/api/digital-services")
 
-  def teamInfo(teamName: String)(implicit hc: HeaderCarrier): Future[Option[Team]] = {
-    val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${encodePathParam(teamName)}"
+  def teamInfo(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Option[Team]] = {
+    val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${encodePathParam(teamName.asString)}"
 
     http
       .GET[Option[Team]](url)
@@ -194,7 +202,6 @@ class TeamsAndRepositoriesConnector @Inject()(
 object TeamsAndRepositoriesConnector {
 
   type ServiceName = String
-  type TeamName    = String
 
   sealed trait TeamsAndRepositoriesError
 

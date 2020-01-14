@@ -24,7 +24,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.http.HttpEntity
 import play.api.libs.json.{Json, OFormat}
 import play.api.mvc._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Version, VersionState}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, TeamName, Version, VersionState}
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, ServiceDependenciesConnector, Team, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
@@ -63,7 +63,7 @@ class DependencyReportController @Inject()(
     val libraryDependencyReportLines = dependencies.libraryDependencies.map { d =>
       DependencyReport(
         repository     = repoName,
-        team           = findTeamNames(repoName, allTeams).mkString(";"),
+        team           = findTeamNames(repoName, allTeams).map(_.asString).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
         dependencyName = d.name,
         dependencyType = "library",
@@ -76,7 +76,7 @@ class DependencyReportController @Inject()(
     val sbtPluginDependencyReportLines = dependencies.sbtPluginsDependencies.map { d =>
       DependencyReport(
         repository     = repoName,
-        team           = findTeamNames(repoName, allTeams).mkString(";"),
+        team           = findTeamNames(repoName, allTeams).map(_.asString).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
         dependencyName = d.name,
         dependencyType = "plugin",
@@ -89,7 +89,7 @@ class DependencyReportController @Inject()(
     libraryDependencyReportLines ++ sbtPluginDependencyReportLines
   }
 
-  private def findTeamNames(repositoryName: String, teams: Seq[Team]): Seq[String] =
+  private def findTeamNames(repositoryName: String, teams: Seq[Team]): Seq[TeamName] =
     teams
       .filter(_.repos.isDefined)
       .filter(team => team.repos.get.values.flatten.toSeq.contains(repositoryName))

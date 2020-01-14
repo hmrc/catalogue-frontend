@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Environment, ProfileName, WhatsRunningWhere}
 @import uk.gov.hmrc.cataloguefrontend.routes
 
@@ -22,6 +23,7 @@
 @( environments: Seq[Environment],
    whatsRunning: Seq[WhatsRunningWhere],
    profiles    : Seq[ProfileName],
+   teams       : Seq[TeamName],
    form        : Form[_]
  )(implicit messages: Messages, request: Request[_])
 @standard_layout("What's Running Where?", "whats-running-where") {
@@ -53,12 +55,24 @@
             </div>
             <div class="form-group row">
                 <div class="col-xs-2 padding-reset-right">
-                    <label for="profile_name">Profile:</label>
+                    <label for="profile_name">Service Manager Profile:</label>
                 </div>
                 <div class="col col-xs-3">
-                    <select name="profile_name" onchange="this.form.submit();">
+                    <select id="profile_name" name="profile_name" onchange="this.form.submit();">
                       @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profiles.map(_.asString).map(p => (p, p))){ options =>
                         @options.map(selectOption(form("profile_name").value))
+                      }
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-xs-2 padding-reset-right">
+                    <label for="team_name">Team:</label>
+                </div>
+                <div class="col col-xs-3">
+                    <select id="team_name" name="team_name" onchange="this.form.submit();">
+                      @defining(Seq("" -> Messages("whatsrunningwhere.select.team")) ++ teams.map(_.asString).map(t => (t, t))){ options =>
+                        @options.map(selectOption(form("team_name").value))
                       }
                     </select>
                 </div>
@@ -74,13 +88,13 @@
             </thead>
             <tbody class="list">
             @whatsRunning.zipWithIndex.map { case (wrw, i) =>
-            <tr role="row" id="row@{i}_name">
-                <td class="application-name"><a href="@routes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a></td>
+            <tr role="row" id="row@i">
+                <td class="application-name" id="row@{i}_application"><a href="@routes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a></td>
                 @environments.map { env =>
                     @wrw.versions.find(_.environment == env).map { version =>
-                        <td>@version.versionNumber.asString</td>
+                        <td id="row@{i}_version_@{env.asString}">@version.versionNumber.asString</td>
                     }.getOrElse {
-                        <td></td>
+                        <td id="row@{i}_version_@{env.asString}"></td>
                     }
                 }
             </tr>

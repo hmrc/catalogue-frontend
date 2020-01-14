@@ -32,6 +32,7 @@ import play.api.test.FakeHeaders
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.{UserManagementPortalConfig, WireMockEndpoints}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -72,7 +73,7 @@ class UserManagementConnectorSpec
   describe("User management connector") {
     it("should get the team members from the user-management service") {
       val teamMembers: Seq[TeamMember] =
-        callExternalMockedService("team-chicken", Some("/user-management-response.json")).futureValue.right.value
+        callExternalMockedService(TeamName("team-chicken"), Some("/user-management-response.json")).futureValue.right.value
 
       teamMembers should have length 2
 
@@ -98,24 +99,24 @@ class UserManagementConnectorSpec
 
     it("has an empty members array in json") {
       val res =
-        callExternalMockedService("team-chicken", Some("/user-management-empty-members.json")).futureValue
+        callExternalMockedService(TeamName("team-chicken"), Some("/user-management-empty-members.json")).futureValue
       res should ===(Right(Seq.empty))
     }
 
     it("no members field in json") {
       val res =
-        callExternalMockedService("team-chicken", Some("/user-management-no-members.json")).futureValue
+        callExternalMockedService(TeamName("team-chicken"), Some("/user-management-no-members.json")).futureValue
       res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     it("api returns an error code") {
-      val error: UMPError = callExternalMockedService("team-chicken", None, 500).futureValue.left.value
+      val error: UMPError = callExternalMockedService(TeamName("team-chicken"), None, 500).futureValue.left.value
 
       error should ===(UMPError.HTTPError(500))
     }
 
     it("api returns not found") {
-      val error: UMPError = callExternalMockedService("team-chicken", None, 404).futureValue.left.value
+      val error: UMPError = callExternalMockedService(TeamName("team-chicken"), None, 404).futureValue.left.value
 
       error should ===(UMPError.UnknownTeam)
     }
@@ -132,7 +133,7 @@ class UserManagementConnectorSpec
       when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
-        .getTeamMembersFromUMP("teamName")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getTeamMembersFromUMP(TeamName("teamName"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
         .left
         .value
@@ -146,7 +147,7 @@ class UserManagementConnectorSpec
       )
 
       val teamDetails = userManagementConnector
-        .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
         .right
         .value
@@ -166,7 +167,7 @@ class UserManagementConnectorSpec
       )
 
       val res = userManagementConnector
-        .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
@@ -178,7 +179,7 @@ class UserManagementConnectorSpec
         httpCode        = 500
       )
       val teamDetails = userManagementConnector
-        .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
         .left
         .value
@@ -198,7 +199,7 @@ class UserManagementConnectorSpec
       when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
-        .getTeamDetails("TEAM-A")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
         .futureValue
         .left
         .value
@@ -208,7 +209,7 @@ class UserManagementConnectorSpec
     describe("getTeamMembersForTeams") {
 
       it("should get the team members for multiple teams") {
-        val teamNames = Seq("Team1", "Team2")
+        val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
 
         stubUserManagementEndPoint(
           url             = "/v2/organisations/teams/Team1/members",
@@ -238,7 +239,7 @@ class UserManagementConnectorSpec
       }
 
       it("should return an Http error for calls with non-200 status codes") {
-        val teamNames = Seq("Team1", "Team2")
+        val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
 
         stubUserManagementEndPoint(
           url             = "/v2/organisations/teams/Team1/members",
@@ -251,14 +252,14 @@ class UserManagementConnectorSpec
           httpCode        = 404
         )
 
-        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
+        val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
           .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
 
-        val team1Result = teamsAndMembers.get("Team1").value
-        val team2Result = teamsAndMembers.get("Team2").value
+        val team1Result = teamsAndMembers.get(TeamName("Team1")).value
+        val team2Result = teamsAndMembers.get(TeamName("Team2")).value
 
         team2Result should ===(Left(UMPError.UnknownTeam))
 
@@ -281,25 +282,25 @@ class UserManagementConnectorSpec
           mock[UserManagementPortalConfig]
         )
 
-        val teamNames = Seq("Team1", "Team2")
+        val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
 
         when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("Boooom!")))
 
-        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
+        val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
           .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
 
-        val team1Result = teamsAndMembers.get("Team1").value
-        val team2Result = teamsAndMembers.get("Team2").value
+        val team1Result = teamsAndMembers.get(TeamName("Team1")).value
+        val team2Result = teamsAndMembers.get(TeamName("Team2")).value
 
         team1Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
         team2Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
       }
 
       it("should return a no data error if the json from UMP doesn't conform to the expected shape") {
-        val teamNames = Seq("Team1", "Team2")
+        val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
 
         stubUserManagementEndPoint(
           url             = "/v2/organisations/teams/Team1/members",
@@ -311,14 +312,14 @@ class UserManagementConnectorSpec
           jsonFileNameOpt = Some("/user-management-team-details-nodata-response.json")
         )
 
-        val teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
+        val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
           .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
 
-        val team1Result = teamsAndMembers.get("Team1").value
-        val team2Result = teamsAndMembers.get("Team2").value
+        val team1Result = teamsAndMembers.get(TeamName("Team1")).value
+        val team2Result = teamsAndMembers.get(TeamName("Team2")).value
 
         team2Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
 
@@ -404,11 +405,11 @@ class UserManagementConnectorSpec
   }
 
   def callExternalMockedService(
-    teamName: String,
+    teamName: TeamName,
     jsonFileNameOpt: Option[String],
     httpCode: Int = 200): Future[Either[UMPError, Seq[TeamMember]]] = {
 
-    stubUserManagementEndPoint(GET, httpCode, s"/v2/organisations/teams/$teamName/members", jsonFileNameOpt)
+    stubUserManagementEndPoint(GET, httpCode, s"/v2/organisations/teams/${teamName.asString}/members", jsonFileNameOpt)
 
     userManagementConnector
       .getTeamMembersFromUMP(teamName)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))

@@ -31,6 +31,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
@@ -50,13 +51,13 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
       val teamReleases = Seq(
         TeamRelease(
           name           = "service-name1",
-          teams          = Seq("team-name1"),
+          teams          = Seq(TeamName("team-name1")),
           productionDate = LocalDateTime.now(),
           version        = "1.0.0"
         ),
         TeamRelease(
           name           = "service-name2",
-          teams          = Seq("team-name2"),
+          teams          = Seq(TeamName("team-name2")),
           productionDate = LocalDateTime.now(),
           version        = "1.0.0"
         )
@@ -65,7 +66,7 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
       when(deploymentsService.getDeployments(is(None), is(None))(any[HeaderCarrier]))
         .thenReturn(Future.successful(teamReleases))
 
-      val result = controller.deploymentsList(teamName = Some(""), serviceName = Some(""))(FakeRequest())
+      val result = controller.deploymentsList(teamName = Some(TeamName("")), serviceName = Some(""))(FakeRequest())
 
       status(result)                            shouldBe OK
       result.toDocument.select("#row0").isEmpty shouldBe false
@@ -76,16 +77,16 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
       val teamReleases = Seq(
         TeamRelease(
           name           = "service-name1",
-          teams          = Seq("team-name1"),
+          teams          = Seq(TeamName("team-name1")),
           productionDate = LocalDateTime.now(),
           version        = "1.0.0"
         )
       )
 
-      when(deploymentsService.getDeployments(is(Some("team-name1")), is(None))(any[HeaderCarrier]))
+      when(deploymentsService.getDeployments(is(Some(TeamName("team-name1"))), is(None))(any[HeaderCarrier]))
         .thenReturn(Future.successful(teamReleases))
 
-      val result = controller.deploymentsList(teamName = Some("team-name1"), serviceName = None)(FakeRequest())
+      val result = controller.deploymentsList(teamName = Some(TeamName("team-name1")), serviceName = None)(FakeRequest())
 
       status(result)                            shouldBe OK
       result.toDocument.select("#row0").isEmpty shouldBe false
@@ -96,7 +97,7 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
       val teamReleases = Seq(
         TeamRelease(
           name           = "service-name1",
-          teams          = Seq("team-name1"),
+          teams          = Seq(TeamName("team-name1")),
           productionDate = LocalDateTime.now(),
           version        = "1.0.0"
         )
@@ -116,13 +117,13 @@ class CatalogueControllerSpec extends WordSpec with MockitoSugar with BeforeAndA
       val teamReleases = Seq(
         TeamRelease(
           name           = "service-name1",
-          teams          = Seq("team-name1"),
+          teams          = Seq(TeamName("team-name1")),
           productionDate = LocalDateTime.now(),
           version        = "1.0.0"
         ),
         TeamRelease(
           name           = "service-name2",
-          teams          = Seq("team-name2"),
+          teams          = Seq(TeamName("team-name2")),
           productionDate = LocalDateTime.now(),
           version        = "1.0.0"
         )

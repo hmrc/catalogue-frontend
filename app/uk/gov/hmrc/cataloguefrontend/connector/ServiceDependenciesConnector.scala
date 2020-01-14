@@ -74,9 +74,9 @@ class ServiceDependenciesConnector @Inject()(
       }
   }
 
-  def dependenciesForTeam(team: String)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
+  def dependenciesForTeam(team: TeamName)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
     import Dependencies.Implicits.reads
-    http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/teams/$team/dependencies")
+    http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/teams/${team.asString}/dependencies")
   }
 
   def getSlugDependencies(serviceName: String, version: Option[String] = None)

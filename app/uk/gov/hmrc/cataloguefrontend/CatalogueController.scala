@@ -31,6 +31,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignIn
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType, Environment => ShutteringEnvironment}
@@ -47,7 +48,7 @@ case class TeamActivityDates(
 
 case class DigitalServiceDetails(
   digitalServiceName: String,
-  teamMembersLookUp: Map[String, Either[UMPError, Seq[DisplayableTeamMember]]],
+  teamMembersLookUp: Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]],
   repos: Map[String, Seq[String]]
 )
 
@@ -146,7 +147,7 @@ class CatalogueController @Inject()(
             teams_list(
               teams = response
                 .filter(query)
-                .sortBy(_.name.toUpperCase),
+                .sortBy(_.name.asString.toUpperCase),
               form = form)
           )
         }
@@ -154,23 +155,24 @@ class CatalogueController @Inject()(
     }
   }
 
-  def digitalService(digitalServiceName: String): Action[AnyContent] = verifySignInStatus.async { implicit request =>
-    teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName) flatMap {
-      case Some(digitalService) =>
-        val teamNames = digitalService.repositories.flatMap(_.teamNames).distinct
-        userManagementConnector
-          .getTeamMembersForTeams(teamNames)
-          .map(convertToDisplayableTeamMembers)
-          .map(teamMembers =>
-            Ok(digitalServiceInfoPage(
-              DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)),
-              readModelService
-                .getDigitalServiceOwner(digitalServiceName)
-                .map(DisplayableTeamMember(_, userManagementProfileBaseUrl))
-            )))
-      case None => Future.successful(NotFound(error_404_template()))
+  def digitalService(digitalServiceName: String): Action[AnyContent] =
+    verifySignInStatus.async { implicit request =>
+      teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName).flatMap {
+        case Some(digitalService) =>
+          val teamNames: Set[TeamName] = digitalService.repositories.flatMap(_.teamNames).toSet
+          userManagementConnector
+            .getTeamMembersForTeams(teamNames.toSeq)
+            .map(convertToDisplayableTeamMembers)
+            .map(teamMembers =>
+              Ok(digitalServiceInfoPage(
+                DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)),
+                readModelService
+                  .getDigitalServiceOwner(digitalServiceName)
+                  .map(DisplayableTeamMember(_, userManagementProfileBaseUrl))
+              )))
+        case None => Future.successful(NotFound(error_404_template()))
+      }
     }
-  }
 
   def allUsers: Action[AnyContent] = Action { implicit request =>
     val filterTerm = request.getQueryString("term").getOrElse("")
@@ -210,7 +212,7 @@ class CatalogueController @Inject()(
     }
   }
 
-  def team(teamName: String): Action[AnyContent] = Action.async { implicit request =>
+  def team(teamName: TeamName): Action[AnyContent] = Action.async { implicit request =>
     for {
       teamInfo         <- teamsAndRepositoriesConnector.teamInfo(teamName)
       teamMembers      <- userManagementConnector.getTeamMembersFromUMP(teamName)
@@ -239,7 +241,7 @@ class CatalogueController @Inject()(
       }
   }
 
-  def outOfDateTeamDependencies(teamName: String): Action[AnyContent] = Action.async { implicit request =>
+  def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] = Action.async { implicit request =>
     for {
       teamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
     } yield Ok(outOfDateTeamDependenciesPage(teamName, teamDependencies))
@@ -427,32 +429,30 @@ class CatalogueController @Inject()(
     }
   }
 
-  def deploymentsList(teamName: Option[String], serviceName: Option[String]): Action[AnyContent] = Action.async {
-    implicit request =>
+  def deploymentsList(teamName: Option[TeamName], serviceName: Option[String]): Action[AnyContent] =
+    Action.async { implicit request =>
       import SearchFiltering._
-      deploymentsService.getDeployments(teamName.blankToNone, serviceName.blankToNone) map { teamReleases =>
-        DeploymentsFilter.form
-          .bindFromRequest()
-          .fold(
-            _ => Ok(deployments_list(Nil, userManagementProfileBaseUrl)),
-            deploymentsFilter =>
-              Ok(
-                deployments_list(
-                  deployments        = teamReleases filter deploymentsFilter,
-                  userProfileBaseUrl = userManagementProfileBaseUrl
-                )
+      deploymentsService.getDeployments(
+          teamName.filterNot(_.asString.trim.isEmpty)
+        , serviceName.filterNot(_.trim.isEmpty)
+        ).map { teamReleases =>
+          DeploymentsFilter.form
+            .bindFromRequest()
+            .fold(
+              _ => Ok(deployments_list(Nil, userManagementProfileBaseUrl)),
+              deploymentsFilter =>
+                Ok(
+                  deployments_list(
+                    deployments        = teamReleases filter deploymentsFilter,
+                    userProfileBaseUrl = userManagementProfileBaseUrl
+                  )
+              )
             )
-          )
-      }
-  }
-
-  private implicit class OptionOps(optString: Option[String]) {
-    lazy val blankToNone: Option[String] =
-      optString.map(_.trim).filterNot(_.isEmpty)
-  }
+        }
+    }
 
   private def convertToDisplayableTeamMembers(
-    teamName: String,
+    teamName: TeamName,
     errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]): Either[UMPError, Seq[DisplayableTeamMember]] =
     errorOrTeamMembers match {
       case Left(err) => Left(err)
@@ -460,8 +460,9 @@ class CatalogueController @Inject()(
         Right(DisplayableTeamMembers(teamName, userManagementProfileBaseUrl, tms))
     }
 
-  private def convertToDisplayableTeamMembers(teamsAndMembers: Map[String, Either[UMPError, Seq[TeamMember]]])
-    : Map[String, Either[UMPError, Seq[DisplayableTeamMember]]] =
+  private def convertToDisplayableTeamMembers(
+      teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]]
+    ): Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]] =
     teamsAndMembers.map {
       case (teamName, errorOrMembers) => (teamName, convertToDisplayableTeamMembers(teamName, errorOrMembers))
     }

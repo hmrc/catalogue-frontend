@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, TeamDetails}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.TeamActivityDates
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
@@ -27,9 +28,9 @@
 
 @this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
 
-@(teamName: String, teamDependencies: Seq[Dependencies])(implicit messages: Messages, request: Request[_])
+@(teamName: TeamName, teamDependencies: Seq[Dependencies])(implicit messages: Messages, request: Request[_])
 
-@standard_layout(teamName, "teams") {
+@standard_layout(teamName.asString, "teams") {
     @partials.team_bobby_active_violations_banner(teamDependencies)
     @partials.team_bobby_pending_violations_banner(teamDependencies)
     @dependenciesTeamPartial(teamName, teamDependencies)

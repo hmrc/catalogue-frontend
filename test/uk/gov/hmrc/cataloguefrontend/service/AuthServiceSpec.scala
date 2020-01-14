@@ -32,7 +32,7 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticatedRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember}
-import uk.gov.hmrc.cataloguefrontend.connector.model.Username
+import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Username}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.util.Generators.repoTypeGen
 import uk.gov.hmrc.http.HeaderCarrier
@@ -98,9 +98,9 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with 
     "allow service belonging to team containing user" in new Setup {
       forAll(repoTypeGen) { repoType =>
         when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
-          .thenReturn(Future(List(team("team1", Map(repoType -> List("service1"))))))
+          .thenReturn(Future(List(team(TeamName("team1"), Map(repoType -> List("service1"))))))
 
-        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
+        when(userManagementConnector.getTeamMembersFromUMP(TeamName(mockEq("team1")))(any()))
           .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember(request.user.username.value)))))
 
         val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
@@ -113,14 +113,14 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with 
       forAll(repoTypeGen) { repoType =>
         when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
           .thenReturn(Future(List(
-            team("team1", Map(repoType -> List("service1")))
-            , team("team2", Map(repoType -> List("service1")))
-          )))
+              team(TeamName("team1"), Map(repoType -> List("service1")))
+            , team(TeamName("team2"), Map(repoType -> List("service1")))
+            )))
 
-        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
+        when(userManagementConnector.getTeamMembersFromUMP(TeamName(mockEq("team1")))(any()))
           .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq.empty)))
 
-        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team2"))(any()))
+        when(userManagementConnector.getTeamMembersFromUMP(TeamName(mockEq("team2")))(any()))
           .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember(request.user.username.value)))))
 
         val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
@@ -131,7 +131,7 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with 
 
     "deny service which are not found in any team" in new Setup {
       when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
-        .thenReturn(Future(List(team("team1", Map.empty))))
+        .thenReturn(Future(List(team(TeamName("team1"), Map.empty))))
 
       val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
 
@@ -141,9 +141,9 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with 
     "deny service which belong to teams not containing user" in new Setup {
       forAll(repoTypeGen) { repoType =>
         when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
-          .thenReturn(Future(List(team("team1", Map(repoType -> List("service1"))))))
+          .thenReturn(Future(List(team(TeamName("team1"), Map(repoType -> List("service1"))))))
 
-        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
+        when(userManagementConnector.getTeamMembersFromUMP(TeamName(mockEq("team1")))(any()))
           .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq(teamMember("another.user")))))
 
         val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
@@ -156,14 +156,14 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with 
       forAll(repoTypeGen) { repoType =>
         when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
           .thenReturn(Future(List(
-              team("team1", Map(repoType -> List("service1")))
-            , team("team2", Map(repoType -> List("service1")))
+              team(TeamName("team1"), Map(repoType -> List("service1")))
+            , team(TeamName("team2"), Map(repoType -> List("service1")))
             )))
 
-        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team1"))(any()))
+        when(userManagementConnector.getTeamMembersFromUMP(TeamName(mockEq("team1")))(any()))
           .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq.empty)))
 
-        when(userManagementConnector.getTeamMembersFromUMP(mockEq("team2"))(any()))
+        when(userManagementConnector.getTeamMembersFromUMP(TeamName(mockEq("team2")))(any()))
           .thenReturn(Future(Either.right[UserManagementConnector.UMPError, Seq[TeamMember]](Seq.empty)))
 
         val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
@@ -183,7 +183,7 @@ class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with 
     val service                       = new AuthService(userManagementAuthConnector, userManagementConnector, teamsAndRepositoriesConnector)
   }
 
-  def team(name: String, repoMap: Map[RepoType.RepoType, List[String]]) = Team(
+  def team(name: TeamName, repoMap: Map[RepoType.RepoType, List[String]]) = Team(
       name                     = name
     , firstActiveDate          = None
     , lastActiveDate           = None

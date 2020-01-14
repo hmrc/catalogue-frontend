@@ -24,6 +24,7 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.test.UnitSpec
@@ -79,7 +80,7 @@ class ReleasesConnectorSpec
               |]""".stripMargin)))
 
       val response = await(
-        releasesConnector.releases(profileName = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        releasesConnector.releases(profileName = None, teamName = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
       )
 
       response should contain theSameElementsAs Seq(
@@ -128,7 +129,47 @@ class ReleasesConnectorSpec
               |]""".stripMargin)))
 
       val response = await(
-        releasesConnector.releases(profileName = Some(profileName))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        releasesConnector.releases(profileName = Some(profileName), teamName = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+      )
+
+      response should contain theSameElementsAs Seq(
+        WhatsRunningWhere(
+          ApplicationName("api-definition"),
+          List(
+            WhatsRunningWhereVersion(
+              Environment("integration"),
+              VersionNumber("1.57.0"),
+              lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
+          )
+        )
+      )
+    }
+
+    "return all releases for given teamName" in {
+      val teamName = TeamName("team1")
+
+      serviceEndpoint(
+        GET,
+        s"/releases-api/whats-running-where",
+        queryParameters = Seq(("team", teamName.asString)),
+        willRespondWith = (
+          200,
+          Some(
+            """[
+              |  {
+              |    "applicationName": "api-definition",
+              |    "versions": [
+              |      {
+              |        "environment": "integration-AWS-London",
+              |        "versionNumber": "1.57.0",
+              |        "lastSeen": "2019-05-29T14:09:48"
+              |      }
+              |    ]
+              |  }
+              |]""".stripMargin)))
+
+      val response = await(
+        releasesConnector.releases(profileName = None, teamName = Some(teamName))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
       )
 
       response should contain theSameElementsAs Seq(
@@ -151,7 +192,7 @@ class ReleasesConnectorSpec
         willRespondWith = (500, Some("errors!")))
 
       val response = await(
-        releasesConnector.releases(profileName = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        releasesConnector.releases(profileName = None, teamName = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
       )
 
       response shouldBe Seq.empty

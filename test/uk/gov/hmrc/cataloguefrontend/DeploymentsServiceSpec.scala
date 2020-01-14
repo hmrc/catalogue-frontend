@@ -24,8 +24,9 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{EitherValues, Matchers, OptionValues, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.FakeHeaders
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.{ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.ServiceName
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, TeamRelease}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
@@ -64,8 +65,8 @@ class DeploymentsServiceSpec
       when(teamsAndServicesConnector.allTeamsByService()).thenReturn(
         Future.successful(
           Map(
-            "a-service" -> Seq("a-team", "b-team"),
-            "b-service" -> Seq("c-team")
+            "a-service" -> Seq(TeamName("a-team"), TeamName("b-team")),
+            "b-service" -> Seq(TeamName("c-team"))
           )
         ))
 
@@ -75,12 +76,12 @@ class DeploymentsServiceSpec
       deployments should contain(
         TeamRelease(
           "a-service",
-          teams          = Seq("a-team", "b-team"),
+          teams          = Seq(TeamName("a-team"), TeamName("b-team")),
           productionDate = productionDate,
           version        = "0.1.0",
           latestDeployer = Some(Deployer("abc.xyz", productionDate))))
       deployments should contain(
-        TeamRelease("b-service", teams = Seq("c-team"), productionDate = productionDate, version = "0.2.0"))
+        TeamRelease("b-service", teams = Seq(TeamName("c-team")), productionDate = productionDate, version = "0.2.0"))
     }
 
     "Cope with deployments for services that are not known to the catalogue" in {
@@ -112,19 +113,19 @@ class DeploymentsServiceSpec
             Release("a-service", productionDate = productionDate, version = "0.1.0"),
             Release("b-service", productionDate = productionDate, version = "0.2.0"))))
 
-      when(teamsAndServicesConnector.teamInfo("b-team")).thenReturn(Future.successful(
-        Some(Team(name = "teamName", None, None, None, repos = Some(Map("Service" -> Seq("a-service", "b-service")))))))
+      when(teamsAndServicesConnector.teamInfo(TeamName("b-team"))).thenReturn(Future.successful(
+        Some(Team(name = TeamName("teamName"), None, None, None, repos = Some(Map("Service" -> Seq("a-service", "b-service")))))))
 
       when(teamsAndServicesConnector.teamsByService(Seq("a-service", "b-service"))).thenReturn(
-        Future.successful(Map("a-service" -> Seq("a-team", "b-team"), "b-service" -> Seq("b-team", "c-team"))))
+        Future.successful(Map("a-service" -> Seq(TeamName("a-team"), TeamName("b-team")), "b-service" -> Seq(TeamName("b-team"), TeamName("c-team")))))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
-      val deployments = service.getDeployments(teamName = Some("b-team"), serviceName = None).futureValue
+      val deployments = service.getDeployments(teamName = Some(TeamName("b-team")), serviceName = None).futureValue
 
       deployments should contain(
-        TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
+        TeamRelease("a-service", teams = Seq(TeamName("a-team"), TeamName("b-team")), productionDate = productionDate, version = "0.1.0"))
       deployments should contain(
-        TeamRelease("b-service", teams = Seq("b-team", "c-team"), productionDate = productionDate, version = "0.2.0"))
+        TeamRelease("b-service", teams = Seq(TeamName("b-team"), TeamName("c-team")), productionDate = productionDate, version = "0.2.0"))
     }
 
     "Filter results given a service name" in {
@@ -136,13 +137,23 @@ class DeploymentsServiceSpec
         .thenReturn(Future.successful(Seq(Release("a-service", productionDate = productionDate, version = "0.1.0"))))
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
-        Future.successful(Some(RepositoryDetails(name         = "a-service", description  = "some description", createdAt    = now, lastActive   = now, owningTeams  = Seq.empty, teamNames    = Seq("a-team", "b-team"), githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/a-service"), jenkinsURL           = None, environments = None, repoType     = RepoType.Service, isPrivate    = false))))
+        Future.successful(Some(RepositoryDetails(
+          name         = "a-service",
+          description  = "some description",
+          createdAt    = now,
+          lastActive   = now,
+          owningTeams  = Seq.empty,
+          teamNames    = Seq(TeamName("a-team"), TeamName("b-team")),
+          githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/a-service"),
+          jenkinsURL   = None,
+          environments = None,
+          repoType     = RepoType.Service, isPrivate    = false))))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
       val deployments = service.getDeployments(serviceName = Some("a-service"), teamName = None).futureValue
 
       deployments should contain(
-        TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
+        TeamRelease("a-service", teams = Seq(TeamName("a-team"), TeamName("b-team")), productionDate = productionDate, version = "0.1.0"))
     }
 
     "Give precedence to the service name filter over the team name filter as it is more specific" in {
@@ -155,25 +166,37 @@ class DeploymentsServiceSpec
 
       when(teamsAndServicesConnector.repositoryDetails("a-service")).thenReturn(
         Future.successful(
-          Some(RepositoryDetails(name         = "a-service", description  = "some description", createdAt    = now, lastActive   = now, owningTeams  = Seq(), teamNames    = Seq("a-team", "b-team"), githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/a-service"), jenkinsURL           = None, environments = None, repoType     = RepoType.Service, isPrivate    = false)))
+          Some(RepositoryDetails(
+            name         = "a-service",
+            description  = "some description",
+            createdAt    = now,
+            lastActive   = now,
+            owningTeams  = Seq(),
+            teamNames    = Seq(TeamName("a-team"), TeamName("b-team")),
+            githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/a-service"),
+            jenkinsURL   = None,
+            environments = None,
+            repoType     = RepoType.Service,
+            isPrivate    = false)))
       )
 
       val service = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
       val deployments =
-        service.getDeployments(serviceName = Some("a-service"), teamName = Some("non-matching-team")).futureValue
+        service.getDeployments(serviceName = Some("a-service"), teamName = Some(TeamName("non-matching-team")))
+        .futureValue
 
       deployments should contain(
-        TeamRelease("a-service", teams = Seq("a-team", "b-team"), productionDate = productionDate, version = "0.1.0"))
+        TeamRelease("a-service", teams = Seq(TeamName("a-team"), TeamName("b-team")), productionDate = productionDate, version = "0.1.0"))
     }
 
     "Not make unnecessary calls if a team does not exist" in {
       val deploymentsConnector      = mock[ServiceDeploymentsConnector]
       val teamsAndServicesConnector = mock[TeamsAndRepositoriesConnector]
 
-      when(teamsAndServicesConnector.teamInfo("a-team")).thenReturn(Future.successful(None))
+      when(teamsAndServicesConnector.teamInfo(TeamName("a-team"))).thenReturn(Future.successful(None))
 
       val service     = new DeploymentsService(deploymentsConnector, teamsAndServicesConnector)
-      val deployments = service.getDeployments(serviceName = None, teamName = Some("a-team")).futureValue
+      val deployments = service.getDeployments(serviceName = None, teamName = Some(TeamName("a-team"))).futureValue
 
       deployments shouldBe empty
     }
@@ -210,5 +233,4 @@ class DeploymentsServiceSpec
       verify(deploymentsConnector).getWhatIsRunningWhere(appName)
     }
   }
-
 }

@@ -16,7 +16,7 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, Team}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersion, BobbyVersionRange, GroupArtefacts, ServiceWithDependency}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersion, BobbyVersionRange, GroupArtefacts, ServiceWithDependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.routes
@@ -26,7 +26,7 @@
 @this(viewMessages: ViewMessages)
 
 @(form            : Form[_],
-  teams           : Seq[String],
+  teams           : Seq[TeamName],
   flags           : Seq[SlugInfoFlag],
   groupArtefacts  : List[GroupArtefacts],
   versionRange    : BobbyVersionRange,
@@ -99,7 +99,7 @@
                                 @helper.select(
                                     form("team"),
                                     helper.options(Seq("" -> Messages("dependencyexplorer.select.teams.all")) ++
-                                                   teams.map(t => (t, t)) :_*),
+                                                   teams.map(_.asString).map(t => (t, t)) :_*),
                                     '_label -> "",
                                     '_class -> "form-group"
                                 )
@@ -150,7 +150,7 @@
                                 <tr>
                                     <td><a href="@routes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
                                     <td>@result.slugVersion</td>
-                                    <td>@result.teams.mkString(", ")</td>
+                                    <td>@result.teams.map(_.asString).mkString(", ")</td>
                                     <td>@result.depGroup</td>
                                     <td>@result.depArtefact</td>
                                     <td>@result.depVersion</td>

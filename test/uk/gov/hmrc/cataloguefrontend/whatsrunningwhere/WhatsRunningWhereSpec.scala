@@ -22,19 +22,22 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
-import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
+import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
 import uk.gov.hmrc.play.test.UnitSpec
+
 
 class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()
       .configure(
-        "microservice.services.releases-api.host"  -> host,
-        "microservice.services.releases-api.port"  -> endpointPort,
-        "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-        "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                                        -> false
+        "microservice.services.releases-api.host"           -> host,
+        "microservice.services.releases-api.port"           -> endpointPort,
+        "microservice.services.teams-and-repositories.host" -> host,
+        "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "play.ws.ssl.loose.acceptAnyCertificate"            -> true,
+        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
+        "metrics.jvm"                                       -> false
       )
       .build()
 
@@ -43,6 +46,11 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
   "What's running where page" should {
 
     "show a list of applications, environments and version numbers" in {
+
+      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
+
+      serviceEndpoint(GET, "/releases-api/profiles", willRespondWith = (200, Some(JsonData.profiles)))
+
       serviceEndpoint(
         GET,
         "/releases-api/whats-running-where",

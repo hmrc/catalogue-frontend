@@ -25,7 +25,7 @@ import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.i18n.MessagesProvider
 import play.api.mvc._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
@@ -119,7 +119,7 @@ class DependencyExplorerController @Inject()(
               , success   = query =>
                   (for {
                     versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
-                    team         =  if (query.team.isEmpty) None else Some(query.team)
+                    team         =  if (query.team.isEmpty) None else Some(TeamName(query.team))
                     flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
                     results      <- EitherT.right[Result] {
                                       service
@@ -200,7 +200,7 @@ object DependencyExplorerController {
         , "depSemanticVersion" -> serviceWithDependency.depSemanticVersion.map(_.toString).getOrElse("")
         )
       if (serviceWithDependency.teams.isEmpty) Seq(m)
-      else serviceWithDependency.teams.map(team => m + ("team" -> team))
+      else serviceWithDependency.teams.map(team => m + ("team" -> team.asString))
     }
 
   def search(team: String = "", flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange): String =

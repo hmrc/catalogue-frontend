@@ -27,7 +27,8 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeHeaders
-import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class TeamsAndRepositoriesConnectorSpec
@@ -42,7 +43,7 @@ class TeamsAndRepositoriesConnectorSpec
     with EitherValues
     with MockitoSugar {
 
-  import uk.gov.hmrc.cataloguefrontend.JsonData._
+  import JsonData.{createdAt, lastActiveAt}
 
   implicit val defaultPatienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
@@ -85,15 +86,15 @@ class TeamsAndRepositoriesConnectorSpec
         .futureValue
 
       response.size        shouldBe 2
-      response("serviceA") shouldBe Seq("teamA", "teamB")
-      response("serviceB") shouldBe Seq("teamA")
+      response("serviceA") shouldBe Seq(TeamName("teamA"), TeamName("teamB"))
+      response("serviceB") shouldBe Seq(TeamName("teamA"))
     }
   }
 
   "repositoryDetails" should {
     "convert the json string to RepositoryDetails" in {
-      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
-      serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(serviceJenkinsData)))
+      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(JsonData.serviceDetailsData)))
+      serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(JsonData.serviceJenkinsData)))
 
       val responseData: RepositoryDetails =
         teamsAndRepositoriesConnector
@@ -105,7 +106,7 @@ class TeamsAndRepositoriesConnectorSpec
       responseData.description shouldBe "some description"
       responseData.createdAt   shouldBe createdAt
       responseData.lastActive  shouldBe lastActiveAt
-      responseData.teamNames   should ===(Seq("teamA", "teamB"))
+      responseData.teamNames   should ===(Seq(TeamName("teamA"), TeamName("teamB")))
       responseData.githubUrl   should ===(Link("github", "github.com", "https://github.com/hmrc/service-1"))
       responseData.jenkinsURL should === (None)
       responseData.environments should ===(
@@ -139,7 +140,7 @@ class TeamsAndRepositoriesConnectorSpec
 
   "allRepositories" should {
     "return all the repositories returned by the api" in {
-      serviceEndpoint(GET, "/api/repositories", willRespondWith = 200 -> Some(repositoriesData))
+      serviceEndpoint(GET, "/api/repositories", willRespondWith = 200 -> Some(JsonData.repositoriesData))
 
       val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
         .allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -168,7 +169,7 @@ class TeamsAndRepositoriesConnectorSpec
       serviceEndpoint(
         GET,
         "/api/digital-services/service-1",
-        willRespondWith = (200, Some(digitalServiceData)))
+        willRespondWith = (200, Some(JsonData.digitalServiceData)))
 
       val responseData =
         teamsAndRepositoriesConnector
@@ -184,7 +185,7 @@ class TeamsAndRepositoriesConnectorSpec
 
   "allDigitalServices" should {
     "return all the digital service names" in {
-      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(digitalServiceNamesData)))
+      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
 
       val digitalServiceNames: Seq[String] =
         teamsAndRepositoriesConnector
@@ -197,7 +198,7 @@ class TeamsAndRepositoriesConnectorSpec
 
   "teamsWithRepositories" should {
     "return all the teams and their repositories" in {
-      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(teamsWithRepos)))
+      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
 
       val teams: Seq[Team] =
         teamsAndRepositoriesConnector
@@ -208,7 +209,7 @@ class TeamsAndRepositoriesConnectorSpec
       teams      should contain theSameElementsAs
         Seq(
           Team(
-            "team1",
+            TeamName("team1"),
             None,
             None,
             None,
@@ -221,7 +222,7 @@ class TeamsAndRepositoriesConnectorSpec
               ))
           ),
           Team(
-            "team2",
+            TeamName("team2"),
             None,
             None,
             None,

@@ -270,7 +270,7 @@ object Version {
 case class ServiceWithDependency(
   slugName          : String,
   slugVersion       : String,
-  teams             : List[String],
+  teams             : List[TeamName],
   depGroup          : String,
   depArtefact       : String,
   depVersion        : String,
@@ -281,15 +281,17 @@ object ServiceWithDependency {
   import play.api.libs.functional.syntax._
   import play.api.libs.json._
 
-  val reads: Reads[ServiceWithDependency] =
+  val reads: Reads[ServiceWithDependency] = {
+    implicit val tnf = TeamName.format
     ( (__ \ "slugName"   ).read[String]
     ~ (__ \ "slugVersion").read[String]
-    ~ (__ \ "teams"      ).read[List[String]]
+    ~ (__ \ "teams"      ).read[List[TeamName]]
     ~ (__ \ "depGroup"   ).read[String]
     ~ (__ \ "depArtefact").read[String]
     ~ (__ \ "depVersion" ).read[String]
     ~ (__ \ "depVersion" ).read[String].map(Version.parse)
     )(ServiceWithDependency.apply _)
+  }
 }
 
 case class GroupArtefacts(group: String, artefacts: List[String])

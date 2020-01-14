@@ -20,6 +20,7 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.{RepositoryWithLeaks, Team}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 import scala.concurrent.ExecutionContext
 
@@ -31,7 +32,7 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyCheck
 
     "determine if at least one of team's repos has leaks" in new Setup {
       val team = Team(
-        name                     = "team0",
+        name                     = TeamName("team0"),
         firstActiveDate          = None,
         lastActiveDate           = None,
         firstServiceCreationDate = None,
@@ -45,7 +46,7 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyCheck
 
     "determine if a team has no leaks" in new Setup {
       val team = Team(
-        name                     = "team0",
+        name                     = TeamName("team0"),
         firstActiveDate          = None,
         lastActiveDate           = None,
         firstServiceCreationDate = None,
@@ -59,7 +60,7 @@ class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyCheck
 
     "filter repositories in the exclusion list" in new Setup {
       val team = Team(
-        name                     = "team0",
+        name                     = TeamName("team0"),
         firstActiveDate          = None,
         lastActiveDate           = None,
         firstServiceCreationDate = None,

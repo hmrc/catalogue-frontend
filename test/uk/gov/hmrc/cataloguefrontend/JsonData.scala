@@ -688,4 +688,10 @@ object JsonData {
       }
     """
 
+  val profiles: String =
+    """
+    |[
+    |
+    |]
+    """".stripMargin
 }
