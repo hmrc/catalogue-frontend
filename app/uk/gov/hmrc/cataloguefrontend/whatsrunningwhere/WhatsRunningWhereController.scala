@@ -54,8 +54,9 @@ class WhatsRunningWhereController @Inject()(
                         , teamsAndRepositoriesConnector.teamsWithRepositories.map(_.toList)
                         ).mapN { case (r, p, t) => (r, p, t) }
         environments =  releases.flatMap(_.versions.map(_.environment)).distinct.sorted
+        teamNames    =  teams.map(_.name).sorted
       } yield
-        Ok(page(environments, releases, profiles, teams.map(_.name), form))
+        Ok(page(environments, releases, profiles, teamNames, form))
     }
 }
 
