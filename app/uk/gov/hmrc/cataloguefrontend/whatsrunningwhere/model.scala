@@ -34,6 +34,12 @@ case class WhatsRunningWhereVersion(
 object JsonCodecs {
   def format[A, B](f: A => B, g: B => A)(implicit fa: Format[A]): Format[B] = fa.inmap(f, g)
 
+  private def toResult[A](e: Either[String, A]): JsResult[A] =
+    e match {
+      case Right(r) => JsSuccess(r)
+      case Left(l)  => JsError(__, l)
+    }
+
   val applicationNameFormat: Format[ApplicationName] = format(ApplicationName.apply, unlift(ApplicationName.unapply))
   val versionNumberFormat  : Format[VersionNumber]   = format(VersionNumber.apply  , unlift(VersionNumber.unapply  ))
   val environmentFormat    : Format[Environment]     = format(Environment.apply    , unlift(Environment.unapply    ))
@@ -57,8 +63,25 @@ object JsonCodecs {
     )(WhatsRunningWhere.apply _)
   }
 
-  val profileFormat: Format[ProfileName] =
-    (__ \ "name").format[String].inmap(ProfileName.apply, unlift(ProfileName.unapply))
+  val profileNameFormat: Format[ProfileName] =
+    format(ProfileName.apply, unlift(ProfileName.unapply))
+
+  val profileTypeFormat: Format[ProfileType] = new Format[ProfileType] {
+    override def reads(js: JsValue): JsResult[ProfileType] =
+      js.validate[String]
+        .flatMap(s => toResult(ProfileType.parse(s)))
+
+    override def writes(et: ProfileType): JsValue =
+      JsString(et.asString)
+  }
+
+  val profileFormat: OFormat[Profile] = {
+    implicit val pnf = profileNameFormat
+    implicit val ptf = profileTypeFormat
+    ( (__ \ "name").format[ProfileName]
+    ~ (__ \ "type").format[ProfileType]
+    )(Profile.apply, unlift(Profile.unapply))
+  }
 }
 
 case class TimeSeen(time: LocalDateTime)
@@ -95,5 +118,32 @@ object ProfileName {
       x.asString.compare(y.asString)
   }
 }
+
+sealed trait ProfileType {
+  def asString: String
+}
+object ProfileType {
+  def parse(s: String): Either[String, ProfileType] =
+    values
+      .find(_.asString == s)
+      .toRight(s"Invalid profileType - should be one of: ${values.map(_.asString).mkString(", ")}")
+
+  val values: List[ProfileType] = List(
+      Team
+    , ServiceManager
+    )
+
+  case object Team extends ProfileType {
+    override val asString: String = "team"
+  }
+  case object ServiceManager extends ProfileType {
+    override val asString: String = "servicemanager"
+  }
+}
+
+case class Profile(
+  profileName: ProfileName
+, profileType: ProfileType
+)
 
 case class VersionNumber(asString: String) extends AnyVal

@@ -20,7 +20,6 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -39,12 +38,12 @@ class ReleasesConnector @Inject()(
   implicit val wrwf = JsonCodecs.whatsRunningWhereReads
   implicit val pf   = JsonCodecs.profileFormat
 
-  def releases(profileName: Option[ProfileName], teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
+  def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
     val params = UrlUtils.toQueryParams(
       List(
-          profileName.map("profile" -> _.asString)
-        , teamName   .map("team"    -> _.asString)
+          profile.map("profileName" -> _.profileName.asString)
+        , profile.map("profileType" -> _.profileType.asString)
         ).flatten
     )
     http
@@ -56,10 +55,10 @@ class ReleasesConnector @Inject()(
       }
   }
 
-  def profiles(implicit hc: HeaderCarrier): Future[Seq[ProfileName]] = {
+  def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] = {
     val baseUrl = s"$serviceUrl/releases-api/profiles"
     http
-      .GET[Seq[ProfileName]](baseUrl)
+      .GET[Seq[Profile]](baseUrl)
       .recover {
         case NonFatal(ex) =>
           Logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)

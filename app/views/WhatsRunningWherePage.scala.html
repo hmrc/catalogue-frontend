@@ -16,15 +16,15 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Environment, ProfileName, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Environment, ProfileName, ProfileType, WhatsRunningWhere}
 @import uk.gov.hmrc.cataloguefrontend.routes
 
 @this(viewMessages: ViewMessages)
-@( environments: Seq[Environment],
-   whatsRunning: Seq[WhatsRunningWhere],
-   profiles    : Seq[ProfileName],
-   teams       : Seq[TeamName],
-   form        : Form[_]
+@( environments       : Seq[Environment]
+ , whatsRunning       : Seq[WhatsRunningWhere]
+ , selectedProfileType: ProfileType
+ , profilesNameByType : Map[ProfileType, Seq[ProfileName]]
+ , form               : Form[_]
  )(implicit messages: Messages, request: Request[_])
 @standard_layout("What's Running Where?", "whats-running-where") {
 
@@ -44,6 +44,7 @@
 
     <div id="whats-running-where-list">
         <form method="get">
+            <input type="hidden" id="profile_type" name="profile_type" value="@selectedProfileType.asString">
             <div class="form-group row">
                 <div class="col-xs-2 padding-reset-right">
                     <label for="search">Application name:</label>
@@ -54,28 +55,12 @@
                 </div>
             </div>
             <div class="form-group row">
-                <div class="col-xs-2 padding-reset-right">
-                    <label for="profile_name">Service Manager Profile:</label>
-                </div>
-                <div class="col col-xs-3">
-                    <select id="profile_name" name="profile_name" onchange="this.form.submit();">
-                      @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profiles.map(_.asString).map(p => (p, p))){ options =>
-                        @options.map(selectOption(form("profile_name").value))
-                      }
-                    </select>
-                </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-xs-2 padding-reset-right">
-                    <label for="team_name">Team:</label>
-                </div>
-                <div class="col col-xs-3">
-                    <select id="team_name" name="team_name" onchange="this.form.submit();">
-                      @defining(Seq("" -> Messages("whatsrunningwhere.select.team")) ++ teams.map(_.asString).map(t => (t, t))){ options =>
-                        @options.map(selectOption(form("team_name").value))
-                      }
-                    </select>
-                </div>
+              <ul class="nav nav-tabs" id="nav-tab" role="tablist">
+                @ProfileType.values.map(profileTypeTab)
+              </ul>
+              <div class="tab-content" id="nav-tabContent">
+                @ProfileType.values.map(profileTypeTabContent)
+              </div>
             </div>
         </form>
 
@@ -116,10 +101,51 @@
     var length = searchBox.value.length;
     searchBox.focus();
     searchBox.setSelectionRange(length, length);
+
+
+    function selectProfileType(profileType) {
+      document.getElementById('profile_type').value = profileType;
+      @ProfileType.values.map{ profileType =>
+        document.getElementById('@{profileType.asString}.profile_name').disabled = true;
+      }
+      document.getElementById(profileType + ".profile_name").disabled = false;
+      return true;
+    };
+
+    if (document.readyState != 'loading'){
+        ready();
+    } else {
+        document.addEventListener('DOMContentLoaded', ready);
+    }
+
+    function ready() {
+        selectProfileType('@selectedProfileType.asString');
+    }
+
 </script>
 
 @selectOption(selected: Option[String])(option: (String, String)) = {
     <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected"}>
         @option._2
     </option>
+}
+
+@profileTypeTab(profileType: ProfileType) = {
+  @defining(profileType == selectedProfileType){ active =>
+    <li id="tab-@profileType.asString" class="nav-item @if(active){active}">
+        <a class="nav-link @if(active){active}" id="@profileType-tab" data-toggle="tab" href="#@profileType" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">@profileType Profile</a>
+    </li>
+  }
+}
+
+@profileTypeTabContent(profileType: ProfileType) = {
+  @defining(profileType == selectedProfileType){ active =>
+    <div class="tab-pane fade @if(active){show active in}" id="@profileType" role="tabpanel">
+        <select id="@{profileType.asString}.profile_name" name="profile_name" onchange="this.form.submit();" style="margin: 20px">
+          @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profilesNameByType(profileType).map(_.asString).map(p => (p, p))){ options =>
+            @options.map(selectOption(form("profile_name").value))
+          }
+        </select>
+    </div>
+  }
 }
