@@ -41,24 +41,27 @@ class WhatsRunningWhereController @Inject()(
       for {
         form                <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
         profile             =  form.fold( _ => None
-                                        , f => f.profileName.map(profileName => Profile(profileName, f.profileType))
+                                        , f => for {
+                                                 profileType <- f.profileType
+                                                 profileName <- f.profileName
+                                               } yield Profile(profileType, profileName)
                                         )
+        selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
         ( releases
         , profiles
         )                   <- ( releasesConnector.releases(profile)
                                , releasesConnector.profiles
                                ).mapN { case (r, p) => (r, p) }
         environments        =  releases.flatMap(_.versions.map(_.environment)).distinct.sorted
-        profilesNameByType  = profiles.groupBy(_.profileType).mapValues(_.map(_.profileName).sorted)
-        selectedProfileType = profile.fold[ProfileType](ProfileType.Team)(_.profileType)
+        profileNames        = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
       } yield
-        Ok(page(environments, releases, selectedProfileType, profilesNameByType, form))
+        Ok(page(environments, releases, selectedProfileType, profileNames, form))
     }
 }
 
 case class WhatsRunningWhereFilter(
     profileName    : Option[ProfileName]     = None
-  , profileType    : ProfileType             = ProfileType.Team
+  , profileType    : Option[ProfileType]     = None
   , applicationName: Option[ApplicationName] = None
   )
 
@@ -68,15 +71,20 @@ object WhatsRunningWhereFilter {
   lazy val form = Form(
     mapping(
       "profile_name"     -> optional(text)
-                              .transform[Option[ProfileName]]( filterEmptyString(_).map(ProfileName.apply)
-                                                             , _.map(_.asString)
-                                                             )
+                              .transform[Option[ProfileName]](
+                                  _.map(ProfileName.apply)
+                                , _.map(_.asString)
+                                )
     , "profile_type"     -> optional(text)
-                              .transform[ProfileType]( _.flatMap(s => ProfileType.parse(s).toOption).getOrElse(ProfileType.Team)
-                                                     , pt => Some(pt.asString)
-                                                     )
+                              .transform[Option[ProfileType]](
+                                  _.flatMap(s => ProfileType.parse(s).toOption)
+                                , _.map(_.asString)
+                                )
     , "application_name" -> optional(text)
-                              .transform[Option[ApplicationName]](filterEmptyString(_).map(ApplicationName.apply), _.map(_.asString))
+                              .transform[Option[ApplicationName]](
+                                  filterEmptyString(_).map(ApplicationName.apply)
+                                , _.map(_.asString)
+                                )
     )(WhatsRunningWhereFilter.apply)(WhatsRunningWhereFilter.unapply)
   )
 }

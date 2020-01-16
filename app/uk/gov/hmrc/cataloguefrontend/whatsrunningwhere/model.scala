@@ -63,9 +63,6 @@ object JsonCodecs {
     )(WhatsRunningWhere.apply _)
   }
 
-  val profileNameFormat: Format[ProfileName] =
-    format(ProfileName.apply, unlift(ProfileName.unapply))
-
   val profileTypeFormat: Format[ProfileType] = new Format[ProfileType] {
     override def reads(js: JsValue): JsResult[ProfileType] =
       js.validate[String]
@@ -75,11 +72,14 @@ object JsonCodecs {
       JsString(et.asString)
   }
 
+  val profileNameFormat: Format[ProfileName] =
+    format(ProfileName.apply, unlift(ProfileName.unapply))
+
   val profileFormat: OFormat[Profile] = {
-    implicit val pnf = profileNameFormat
     implicit val ptf = profileTypeFormat
-    ( (__ \ "name").format[ProfileName]
-    ~ (__ \ "type").format[ProfileType]
+    implicit val pnf = profileNameFormat
+    ( (__ \ "type").format[ProfileType]
+    ~ (__ \ "name").format[ProfileName]
     )(Profile.apply, unlift(Profile.unapply))
   }
 }
@@ -142,8 +142,8 @@ object ProfileType {
 }
 
 case class Profile(
-  profileName: ProfileName
-, profileType: ProfileType
+  profileType: ProfileType
+, profileName: ProfileName
 )
 
 case class VersionNumber(asString: String) extends AnyVal
