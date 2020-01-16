@@ -15,19 +15,20 @@
  *@
 
 @import partials.ServiceDependenciesPartial
-@import uk.gov.hmrc.cataloguefrontend.connector.{RepositoryDetails, TargetEnvironment}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
+@import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, RepositoryDetails, TargetEnvironment}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceInfoView, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.{ServiceInfoView, ViewMessages}
 
 
 @this(dependenciesPartial: ServiceDependenciesPartial, viewMessages: ViewMessages)
 
-@(service: RepositoryDetails,
-  optLatestDependencies: Option[Dependencies],
-  dependenciesByVersion: Map[String, Seq[Dependency]],
+@(service                     : RepositoryDetails,
+  optLatestDependencies       : Option[Dependencies],
+  dependenciesByVersion       : Map[Version, Seq[Dependency]],
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
-  shutterState: Map[ShutteringEnvironment, ShutterState]
+  latestVersion               : Option[Version],
+  shutterState                : Map[ShutteringEnvironment, ShutterState]
 )(implicit messages: Messages)
 
 <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
@@ -37,7 +38,7 @@
             <div class="board">
                 <div class="board__heading">
                     <h4 class="environment-name">Latest</h4>
-                    @renderVersion(None)
+                    @renderVersion(latestVersion)
                 </div>
                 <span class="board__body">
                     @renderShutterStatusBadge(false)
@@ -123,7 +124,7 @@
     }
 </div>
 
-@renderVersion(optVersion: Option[String]) = {
+@renderVersion(optVersion: Option[Version]) = {
     @if(optVersion.isDefined) {
         <p class="small">@optVersion.get</p>
     } else {

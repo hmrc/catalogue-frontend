@@ -694,4 +694,20 @@ object JsonData {
     |
     |]
     """".stripMargin
+
+  val serviceDependenciesData: String =
+    """{
+      | "uri": "/",
+      | "name": "service-name",
+      | "version": "1.0.0",
+      | "runnerVersion": "1.0.0",
+      | "java": {
+      |    "version": "1.0.0",
+      |    "vendor": "openjdk",
+      |    "kind": ""
+      | },
+      | "classpath": "",
+      | "dependencies": []
+      }""".stripMargin
+
 }

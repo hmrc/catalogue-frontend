@@ -25,7 +25,9 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeHeaders
-import uk.gov.hmrc.cataloguefrontend.{Deployer, DeploymentVO, EnvironmentMapping, Release, ServiceDeploymentsConnector, WireMockEndpoints}
+import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
+import uk.gov.hmrc.cataloguefrontend.connector.{Deployer, DeploymentVO, EnvironmentMapping, Release, ServiceDeploymentsConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -234,12 +236,12 @@ class ServiceDeploymentsConnectorSpec
           HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())))
 
       response.deployments shouldEqual Seq(
-        DeploymentVO(EnvironmentMapping("qa", "qa"), "datacentred-sal01", "0.0.1"),
-        DeploymentVO(EnvironmentMapping("staging", "staging"), "skyscape-farnborough", "0.0.1"),
-        DeploymentVO(EnvironmentMapping("staging", "staging"), "datacentred-sal01", "0.0.2"),
-        DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", "0.0.1"),
-        DeploymentVO(EnvironmentMapping("production", "production"), "datacentred-sal01", "0.0.2"),
-        DeploymentVO(EnvironmentMapping("external test", "externaltest"), "datacentred-sal01", "0.0.1")
+        DeploymentVO(EnvironmentMapping("qa"           , "qa"          ), "datacentred-sal01"   , Version("0.0.1")),
+        DeploymentVO(EnvironmentMapping("staging"      , "staging"     ), "skyscape-farnborough", Version("0.0.1")),
+        DeploymentVO(EnvironmentMapping("staging"      , "staging"     ), "datacentred-sal01"   , Version("0.0.2")),
+        DeploymentVO(EnvironmentMapping("production"   , "production"  ), "skyscape-farnborough", Version("0.0.1")),
+        DeploymentVO(EnvironmentMapping("production"   , "production"  ), "datacentred-sal01"   , Version("0.0.2")),
+        DeploymentVO(EnvironmentMapping("external test", "externaltest"), "datacentred-sal01"   , Version("0.0.1"))
       )
     }
 

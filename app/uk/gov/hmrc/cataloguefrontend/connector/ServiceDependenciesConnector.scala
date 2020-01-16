@@ -50,33 +50,35 @@ class ServiceDependenciesConnector @Inject()(
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
 
-  private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies") + "/api"
+  private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies")
 
   def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
     import Dependencies.Implicits.reads
+    val url = s"$servicesDependenciesBaseUrl/api/dependencies/$repositoryName"
     http
-      .GET[Option[Dependencies]](s"$servicesDependenciesBaseUrl/dependencies/$repositoryName")
+      .GET[Option[Dependencies]](url)
       .recover {
         case ex =>
-          Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)
+          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           None
       }
   }
 
   def getAllDependencies()(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
     import Dependencies.Implicits.reads
+    val url = s"$servicesDependenciesBaseUrl/api/dependencies"
     http
-      .GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/dependencies")
+      .GET[Seq[Dependencies]](url)
       .recover {
         case ex =>
-          Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl: ${ex.getMessage}", ex)
+          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Nil
       }
   }
 
   def dependenciesForTeam(team: TeamName)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
     import Dependencies.Implicits.reads
-    http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/teams/${team.asString}/dependencies")
+    http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/api/teams/${team.asString}/dependencies")
   }
 
   def getSlugDependencies(serviceName: String, version: Option[String] = None)
@@ -86,19 +88,35 @@ class ServiceDependenciesConnector @Inject()(
       "version" -> version)
 
     http
-      .GET[Seq[ServiceDependencies]](s"$servicesDependenciesBaseUrl/sluginfos", queryParams)
+      .GET[Seq[ServiceDependencies]](s"$servicesDependenciesBaseUrl/api/sluginfos", queryParams)
       .recover {
         case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl/sluginfos: ${ex.getMessage}", ex)
+          Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl/api/sluginfos: ${ex.getMessage}", ex)
           Nil
       }
   }
 
-  def getCuratedSlugDependencies(serviceName: String, version: Option[String] = None)
-                                (implicit hc: HeaderCarrier): Future[Seq[Dependency]] = {
+  def getSlugInfo(
+      serviceName: String
+    , version    : Option[Version] = None
+    )(implicit hc: HeaderCarrier): Future[ServiceDependencies] =
+    http
+      .GET[ServiceDependencies](
+          s"$servicesDependenciesBaseUrl/api/sluginfo"
+        , queryParams = buildQueryParams(
+                          "name"    -> Some(serviceName)
+                        , "version" -> version.map(_.toString)
+                        )
+        )
+
+  def getCuratedSlugDependencies(
+      serviceName: String
+    , version: Option[Version] = None
+    )(implicit hc: HeaderCarrier
+    ): Future[Seq[Dependency]] = {
     import Dependencies.Implicits.readsDependency
-    val url = s"$servicesDependenciesBaseUrl/slug-dependencies/${encodePathParam(serviceName)}"
-    val queryParams = buildQueryParams("version" -> version)
+    val url = s"$servicesDependenciesBaseUrl/api/slug-dependencies/${encodePathParam(serviceName)}"
+    val queryParams = buildQueryParams("version" -> version.map(_.toString))
 
     http.GET[Seq[Dependency]](url, queryParams).recover {
       case NonFatal(ex) =>
@@ -118,7 +136,7 @@ class ServiceDependenciesConnector @Inject()(
     implicit val r = ServiceWithDependency.reads
     http
       .GET[Seq[ServiceWithDependency]](
-        s"$servicesDependenciesBaseUrl/serviceDeps",
+        s"$servicesDependenciesBaseUrl/api/serviceDeps",
         queryParams = Seq(
           "flag"         -> flag.asString,
           "group"        -> group,
@@ -128,24 +146,24 @@ class ServiceDependenciesConnector @Inject()(
 
    def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] = {
      implicit val r = GroupArtefacts.apiFormat
-     http.GET[List[GroupArtefacts]](s"$servicesDependenciesBaseUrl/groupArtefacts")
+     http.GET[List[GroupArtefacts]](s"$servicesDependenciesBaseUrl/api/groupArtefacts")
    }
 
   def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] = {
     implicit val r = JDKVersionFormats.jdkFormat
     http.GET[List[JDKVersion]](
-      url = s"$servicesDependenciesBaseUrl/jdkVersions",
+      url = s"$servicesDependenciesBaseUrl/api/jdkVersions",
       queryParams = Seq("flag" -> flag.asString))
   }
 
   def getBobbyRuleViolations(implicit hc:HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] = {
     implicit val brvr = BobbyRulesSummary.reads
-    http.GET[BobbyRulesSummary](url = s"$servicesDependenciesBaseUrl/bobbyViolations")
+    http.GET[BobbyRulesSummary](url = s"$servicesDependenciesBaseUrl/api/bobbyViolations")
       .map(_.summary)
   }
 
   def getHistoricBobbyRuleViolations(implicit hc:HeaderCarrier): Future[HistoricBobbyRulesSummary] = {
     implicit val brvr = HistoricBobbyRulesSummary.reads
-    http.GET[HistoricBobbyRulesSummary](url = s"$servicesDependenciesBaseUrl/historicBobbyViolations")
+    http.GET[HistoricBobbyRulesSummary](url = s"$servicesDependenciesBaseUrl/api/historicBobbyViolations")
   }
 }

@@ -263,14 +263,16 @@ class CatalogueController @Inject()(
     def telemetryLinksFrom(links: Seq[Link]): Seq[Link] =
       links.filterNot(_.name == jenkinsLinkName)
 
-    def getDeployedEnvs(deployedToEnvs: Seq[DeploymentVO],
-                        optRefEnvironments: Option[Seq[TargetEnvironment]]): Option[Seq[TargetEnvironment]] = {
+    def getDeployedEnvs(
+        deployedToEnvs    : Seq[DeploymentVO],
+        optRefEnvironments: Option[Seq[TargetEnvironment]]
+      ): Option[Seq[TargetEnvironment]] = {
       val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
       optRefEnvironments.map {
         _.map(e => (e.name.toLowerCase, e))
-          .map {
+         .map {
             case (lwrCasedRefEnvName, refEnvironment)
-              if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
+                if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
               refEnvironment.copy(services = telemetryLinksFrom(refEnvironment.services))
             case (_, refEnvironment) =>
               refEnvironment.copy(services = Nil)
@@ -280,54 +282,74 @@ class CatalogueController @Inject()(
 
     val futDeployments = deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
 
-    val futLibrariesBySlugVersion = futDeployments.flatMap { deployments =>
-      val versions = deployments.map(_.version).toSet
-      val librariesBySlugVersionFutures = versions.map { version =>
-        serviceDependencyConnector.getCuratedSlugDependencies(serviceName, Some(version)).map(version -> _)
-      }
-      Future.sequence(librariesBySlugVersionFutures).map(_.toMap)
-    }
+    val futLibrariesBySlugVersion = for {
+      deployments <- futDeployments
+      versions    =  deployments.map(_.version).toSet
+      res         <- versions.toList.traverse { version =>
+                       serviceDependencyConnector.getCuratedSlugDependencies(serviceName, Some(version))
+                         .map(version -> _)
+                     }.map(_.toMap)
+      } yield res
 
-    val futLibrariesOfLatestSlug = serviceDependencyConnector.getCuratedSlugDependencies(serviceName)
 
-    val futShutterStateByEnvironment = if (CatalogueFrontendSwitches.shuttering.isEnabled) {
-      ShutteringEnvironment.values.traverse { env =>
-        shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
-      }.map(_.collect { case Some(s) => s }.groupBy(_.environment).mapValues(_.head))
-    } else Future.successful(Map.empty[ShutteringEnvironment, ShutterState])
+    val futShutterStateByEnvironment =
+      if (CatalogueFrontendSwitches.shuttering.isEnabled)
+        ShutteringEnvironment.values
+          .traverse { env =>
+            shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
+          }
+          .map(
+            _.collect { case Some(s) => s }
+             .groupBy(_.environment)
+             .mapValues(_.head)
+          )
+      else Future.successful(Map.empty[ShutteringEnvironment, ShutterState])
 
-    (teamsAndRepositoriesConnector.repositoryDetails(serviceName)
-      , teamsAndRepositoriesConnector.lookupLink(serviceName)
-      , futDeployments
-      , serviceDependencyConnector.getDependencies(serviceName)
-      , futLibrariesBySlugVersion
-      , futLibrariesOfLatestSlug
-      , leakDetectionService.urlIfLeaksFound(serviceName)
-      , routeRulesService.serviceUrl(serviceName)
-      , routeRulesService.serviceRoutes(serviceName)
-      , futShutterStateByEnvironment
-      ).mapN { case (service, jenkinsLink, deployments, optMasterDependencies, librariesBySlugVersion, librariesOfLatestSlug, urlIfLeaksFound, serviceUrl, serviceRoutes, shutterState) =>
+    ( teamsAndRepositoriesConnector.repositoryDetails(serviceName)
+    , teamsAndRepositoriesConnector.lookupLink(serviceName)
+    , futDeployments
+    , serviceDependencyConnector.getDependencies(serviceName)
+    , futLibrariesBySlugVersion
+    , serviceDependencyConnector.getCuratedSlugDependencies(serviceName)
+    , leakDetectionService.urlIfLeaksFound(serviceName)
+    , routeRulesService.serviceUrl(serviceName)
+    , routeRulesService.serviceRoutes(serviceName)
+    , futShutterStateByEnvironment
+    , serviceDependencyConnector.getSlugInfo(serviceName)
+    ).mapN { case ( service
+                  , jenkinsLink
+                  , deployments
+                  , optMasterDependencies
+                  , librariesBySlugVersion
+                  , librariesOfLatestSlug
+                  , urlIfLeaksFound
+                  , serviceUrl
+                  , serviceRoutes
+                  , shutterState
+                  , latestServiceInfo
+                  ) =>
       service match {
         case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
-          val optDeployedEnvironments = getDeployedEnvs(deployments, repositoryDetails.environments)
-          val deploymentsByEnvironmentName = deployments.map { deployment =>
-            val envName = deployment.environmentMapping.name
-            envName -> deployments.filter(_.environmentMapping.name == envName)
-          }.toMap
+          val optDeployedEnvironments =
+            getDeployedEnvs(deployments, repositoryDetails.environments)
 
           Ok(
             serviceInfoPage(
-              repositoryDetails.copy(environments = optDeployedEnvironments, jenkinsURL = jenkinsLink),
-              optMasterDependencies,
-              librariesBySlugVersion,
-              librariesOfLatestSlug,
-              repositoryDetails.createdAt,
-              deploymentsByEnvironmentName,
-              urlIfLeaksFound,
-              serviceUrl,
-              serviceRoutes,
-              shutterState
-            )
+                service                      = repositoryDetails.copy(
+                                                   environments = optDeployedEnvironments
+                                                 , jenkinsURL   = jenkinsLink
+                                                 )
+              , optMasterDependencies        = optMasterDependencies
+              , dependenciesByVersion        = librariesBySlugVersion
+              , librariesOfLatestSlug        = librariesOfLatestSlug
+              , repositoryCreationDate       = repositoryDetails.createdAt
+              , deploymentsByEnvironmentName = deployments.groupBy(_.environmentMapping.name)
+              , latestVersion                = latestServiceInfo.semanticVersion
+              , linkToLeakDetection          = urlIfLeaksFound
+              , productionEnvironmentRoute   = serviceUrl
+              , serviceRoutes                = serviceRoutes
+              , shutterState                 = shutterState
+              )
           )
 
         case _ => NotFound(error_404_template())
