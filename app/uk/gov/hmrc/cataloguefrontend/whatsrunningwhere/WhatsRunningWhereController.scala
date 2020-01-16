@@ -22,7 +22,6 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.WhatsRunningWherePage
 
@@ -40,29 +39,29 @@ class WhatsRunningWhereController @Inject()(
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        form         <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        ( profileName
-        , teamName
-        )            =  form.fold( _ => (None         , None      )
-                                 , f => (f.profileName, f.teamName)
-                                 )
+        form                <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
+        profile             =  form.fold( _ => None
+                                        , f => for {
+                                                 profileType <- f.profileType
+                                                 profileName <- f.profileName
+                                               } yield Profile(profileType, profileName)
+                                        )
+        selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
         ( releases
         , profiles
-        , teams
-        )            <- ( releasesConnector.releases(profileName, teamName)
-                        , releasesConnector.profiles.map(_.sorted)
-                        , teamsAndRepositoriesConnector.teamsWithRepositories.map(_.toList)
-                        ).mapN { case (r, p, t) => (r, p, t) }
-        environments =  releases.flatMap(_.versions.map(_.environment)).distinct.sorted
-        teamNames    =  teams.map(_.name).sorted
+        )                   <- ( releasesConnector.releases(profile)
+                               , releasesConnector.profiles
+                               ).mapN { case (r, p) => (r, p) }
+        environments        =  releases.flatMap(_.versions.map(_.environment)).distinct.sorted
+        profileNames        = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
       } yield
-        Ok(page(environments, releases, profiles, teamNames, form))
+        Ok(page(environments, releases, selectedProfileType, profileNames, form))
     }
 }
 
 case class WhatsRunningWhereFilter(
     profileName    : Option[ProfileName]     = None
-  , teamName       : Option[TeamName]        = None
+  , profileType    : Option[ProfileType]     = None
   , applicationName: Option[ApplicationName] = None
   )
 
@@ -72,11 +71,20 @@ object WhatsRunningWhereFilter {
   lazy val form = Form(
     mapping(
       "profile_name"     -> optional(text)
-                              .transform[Option[ProfileName]](filterEmptyString(_).map(ProfileName.apply), _.map(_.asString)),
-      "team_name"        -> optional(text)
-                              .transform[Option[TeamName]](filterEmptyString(_).map(TeamName.apply), _.map(_.asString)),
-      "application_name" -> optional(text)
-                              .transform[Option[ApplicationName]](filterEmptyString(_).map(ApplicationName.apply), _.map(_.asString))
+                              .transform[Option[ProfileName]](
+                                  _.map(ProfileName.apply)
+                                , _.map(_.asString)
+                                )
+    , "profile_type"     -> optional(text)
+                              .transform[Option[ProfileType]](
+                                  _.flatMap(s => ProfileType.parse(s).toOption)
+                                , _.map(_.asString)
+                                )
+    , "application_name" -> optional(text)
+                              .transform[Option[ApplicationName]](
+                                  filterEmptyString(_).map(ApplicationName.apply)
+                                , _.map(_.asString)
+                                )
     )(WhatsRunningWhereFilter.apply)(WhatsRunningWhereFilter.unapply)
   )
 }

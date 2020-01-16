@@ -24,7 +24,6 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.test.UnitSpec
@@ -80,7 +79,7 @@ class ReleasesConnectorSpec
               |]""".stripMargin)))
 
       val response = await(
-        releasesConnector.releases(profileName = None, teamName = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
       )
 
       response should contain theSameElementsAs Seq(
@@ -105,13 +104,16 @@ class ReleasesConnectorSpec
       )
     }
 
-    "return all releases for given profileName" in {
+    "return all releases for given profile" in {
+      val profileType = ProfileType.ServiceManager
       val profileName = ProfileName("profile1")
 
       serviceEndpoint(
         GET,
         s"/releases-api/whats-running-where",
-        queryParameters = Seq(("profile", profileName.asString)),
+        queryParameters = Seq( "profileName" -> profileName.asString,
+                               "profileType" -> profileType.asString
+                             ),
         willRespondWith = (
           200,
           Some(
@@ -129,47 +131,7 @@ class ReleasesConnectorSpec
               |]""".stripMargin)))
 
       val response = await(
-        releasesConnector.releases(profileName = Some(profileName), teamName = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-      )
-
-      response should contain theSameElementsAs Seq(
-        WhatsRunningWhere(
-          ApplicationName("api-definition"),
-          List(
-            WhatsRunningWhereVersion(
-              Environment("integration"),
-              VersionNumber("1.57.0"),
-              lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
-          )
-        )
-      )
-    }
-
-    "return all releases for given teamName" in {
-      val teamName = TeamName("team1")
-
-      serviceEndpoint(
-        GET,
-        s"/releases-api/whats-running-where",
-        queryParameters = Seq(("team", teamName.asString)),
-        willRespondWith = (
-          200,
-          Some(
-            """[
-              |  {
-              |    "applicationName": "api-definition",
-              |    "versions": [
-              |      {
-              |        "environment": "integration-AWS-London",
-              |        "versionNumber": "1.57.0",
-              |        "lastSeen": "2019-05-29T14:09:48"
-              |      }
-              |    ]
-              |  }
-              |]""".stripMargin)))
-
-      val response = await(
-        releasesConnector.releases(profileName = None, teamName = Some(teamName))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        releasesConnector.releases(profile = Some(Profile(profileType, profileName)))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
       )
 
       response should contain theSameElementsAs Seq(
@@ -192,49 +154,51 @@ class ReleasesConnectorSpec
         willRespondWith = (500, Some("errors!")))
 
       val response = await(
-        releasesConnector.releases(profileName = None, teamName = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
       )
 
       response shouldBe Seq.empty
     }
+
+    "return all profileNames" in {
+        serviceEndpoint(
+          GET,
+          s"/releases-api/profiles",
+          willRespondWith = (
+            200,
+            Some(
+              """[
+                |  {"type": "servicemanager",
+                |   "name": "tcs_all",
+                |   "apps": [
+                |     "identity-verification-frontend",
+                |     "identity-verification"
+                |    ]
+                |  },
+                |  {"type": "servicemanager",
+                |   "name": "tpsa",
+                |   "apps": [
+                |     "dtxe",
+                |     "dtxe-validator"
+                |    ]
+                |  },
+                |  {"type": "team",
+                |   "name": "trusts",
+                |   "apps": [
+                |     "trust-registration-api",
+                |     "trust-registration-stub"
+                |   ]
+                |  }
+                |]""".stripMargin)))
+
+        val response = await(
+          releasesConnector.profiles(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        )
+
+        response should contain theSameElementsAs Seq(
+          Profile(ProfileType.ServiceManager, ProfileName("tcs_all")),
+          Profile(ProfileType.ServiceManager, ProfileName("tpsa")),
+          Profile(ProfileType.Team          , ProfileName("trusts")))
+      }
   }
-
-  "return all profileNames" in {
-      serviceEndpoint(
-        GET,
-        s"/releases-api/profiles",
-        willRespondWith = (
-          200,
-          Some(
-            """[
-              |  {"name": "tcs_all",
-              |   "apps": [
-              |     "identity-verification-frontend",
-              |     "identity-verification"
-              |    ]
-              |  },
-              |  {"name": "tpsa",
-              |   "apps": [
-              |     "dtxe",
-              |     "dtxe-validator"
-              |    ]
-              |  },
-              |  {"name": "trusts",
-              |   "apps": [
-              |     "trust-registration-api",
-              |     "trust-registration-stub"
-              |   ]
-              |  }
-              |]""".stripMargin)))
-
-      val response = await(
-        releasesConnector.profiles(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-      )
-
-      response should contain theSameElementsAs Seq(
-        ProfileName("tcs_all"),
-        ProfileName("tpsa"),
-        ProfileName("trusts"))
-    }
-
 }
