@@ -23,7 +23,7 @@ import org.mongodb.scala.model.Indexes._
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoCollection}
+import uk.gov.hmrc.mongo.play.json.PlayMongoCollection
 
 import scala.concurrent.{ExecutionContext, Future}
 

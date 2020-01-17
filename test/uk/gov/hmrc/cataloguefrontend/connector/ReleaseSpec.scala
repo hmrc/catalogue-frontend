@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.connector
 
 import java.time.LocalDateTime
 
@@ -41,8 +41,6 @@ class ReleaseSpec extends WordSpec with Matchers with MockitoSugar with ScalaFut
           Deployer("c", now.minusDays(20))
         )
       ).latestDeployer.get shouldBe Deployer("d", now.minusDays(5))
-
     }
   }
-
 }

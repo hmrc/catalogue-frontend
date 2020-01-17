@@ -23,7 +23,7 @@ import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticatedRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, UMPError}
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector, UserManagementAuthConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementAuthConnector, UserManagementConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}

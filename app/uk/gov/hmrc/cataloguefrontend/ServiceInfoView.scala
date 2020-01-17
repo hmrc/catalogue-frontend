@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import uk.gov.hmrc.cataloguefrontend.connector.TargetEnvironment
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
+import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, TargetEnvironment}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue, Environment => ShutteringEnvironment}
 
 object ServiceInfoView {
@@ -29,21 +29,27 @@ object ServiceInfoView {
   def libraryDependenciesOf(optDependencies: Option[Dependencies]): Seq[Dependency] =
     optDependencies.map(_.libraryDependencies).getOrElse(Seq.empty)
 
-  def slugDependencies(withDeployments: Map[String, Seq[DeploymentVO]], withDependencies: Map[String, Seq[Dependency]])
-                      (forEnvironment: TargetEnvironment): Seq[Dependency] =
-    lookupDeployment(withDeployments)(forEnvironment).flatMap { deployment =>
-      withDependencies.get(deployment.version)
-    }.getOrElse(Seq.empty)
+  def slugDependencies(
+      withDeployments : Map[String, Seq[DeploymentVO]]
+    , withDependencies: Map[Version, Seq[Dependency]]
+    )(forEnvironment: TargetEnvironment
+    ): Seq[Dependency] =
+    lookupVersion(withDeployments)(forEnvironment)
+      .flatMap(withDependencies.get)
+      .getOrElse(Seq.empty)
 
   def deploymentVersion(withDeployments: Map[String, Seq[DeploymentVO]])
-                       (forEnvironment: TargetEnvironment): Option[String] =
-    lookupDeployment(withDeployments)(forEnvironment).map(_.version)
+                       (forEnvironment: TargetEnvironment): Option[Version] =
+    lookupVersion(withDeployments)(forEnvironment)
 
-  private def lookupDeployment(deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]])
-                              (forEnvironment: TargetEnvironment): Option[DeploymentVO] =
-    deploymentsByEnvironmentName.get(forEnvironment.name.toLowerCase).flatMap {
-      _.headOption
-    }
+  private def lookupVersion(
+      deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]]
+    )(forEnvironment: TargetEnvironment
+    ): Option[Version] =
+    // a single environment may have multiple versions during a deployment
+    // return the lowest
+    deploymentsByEnvironmentName.get(forEnvironment.name.toLowerCase)
+      .flatMap(_.map(_.version).sorted.headOption)
 
   /*
    * Capture any curated library dependencies from master / Github that are not referenced by the 'latest' slug,

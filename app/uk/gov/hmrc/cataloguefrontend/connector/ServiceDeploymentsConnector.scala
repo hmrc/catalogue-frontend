@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.connector
 
 import java.time.{LocalDate, LocalDateTime}
 
@@ -22,6 +22,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json.{JsValue, Json, OFormat, Reads}
+import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+import uk.gov.hmrc.cataloguefrontend.{DateHelper, JavaDateTimeJsonFormatter}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -50,10 +52,13 @@ object EnvironmentMapping {
   implicit val environmentFormat = Json.format[EnvironmentMapping]
 }
 
-final case class DeploymentVO(environmentMapping: EnvironmentMapping, datacentre: String, version: String)
+final case class DeploymentVO(environmentMapping: EnvironmentMapping, datacentre: String, version: Version)
 
 object DeploymentVO {
-  implicit val environmentFormat = Json.format[DeploymentVO]
+  implicit val environmentFormat = {
+    implicit val vf = Version.format
+    Json.format[DeploymentVO]
+  }
 }
 
 case class ServiceDeploymentInformation(serviceName: String, deployments: Seq[DeploymentVO])

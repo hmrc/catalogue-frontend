@@ -327,9 +327,9 @@ class ServiceDependenciesConnectorSpec
 
   "GET curated slug dependencies" - {
     "returns a list of curated dependencies for a specific version of a slug" in new Setup {
-      val SlugName = "slug-name"
-      val SlugVersion = "slug-version"
-      serviceEndpoint(GET, url = s"/api/slug-dependencies/$SlugName?version=$SlugVersion",
+      val slugName = "slug-name"
+      val slugVersion = Version("1.0.0")
+      serviceEndpoint(GET, url = s"/api/slug-dependencies/$slugName?version=$slugVersion",
         willRespondWith = (Status.OK, Some(
           """|[{
              |  "name": "dep1",
@@ -344,7 +344,7 @@ class ServiceDependenciesConnectorSpec
              |  "isExternal": false
              | }]""".stripMargin)))
 
-      val response = serviceDependenciesConnector.getCuratedSlugDependencies(SlugName, Some(SlugVersion)).futureValue
+      val response = serviceDependenciesConnector.getCuratedSlugDependencies(slugName, Some(slugVersion)).futureValue
 
       response should contain theSameElementsAs Seq(
         Dependency(name = "dep1", currentVersion = Version("1.0.0"), latestVersion = None),
@@ -378,12 +378,12 @@ class ServiceDependenciesConnectorSpec
     }
 
     "returns an empty list of dependencies for an unknown slug" in new Setup {
-      val SlugName = "slug-name"
-      val SlugVersion = "slug-version"
-      serviceEndpoint(GET, url = s"/api/slug-dependencies/$SlugName?version=$SlugVersion",
+      val slugName = "slug-name"
+      val slugVersion = Version("1.0.0")
+      serviceEndpoint(GET, url = s"/api/slug-dependencies/$slugName?version=$slugVersion",
         willRespondWith = (Status.NOT_FOUND, None))
 
-      serviceDependenciesConnector.getCuratedSlugDependencies(SlugName, Some(SlugVersion)).futureValue shouldBe empty
+      serviceDependenciesConnector.getCuratedSlugDependencies(slugName, Some(slugVersion)).futureValue shouldBe empty
     }
 
     "returns an empty list of dependencies when a communication error occurs" in new Setup {

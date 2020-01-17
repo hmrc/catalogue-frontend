@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import java.time.LocalDate
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Json, JsValue, Reads, __}
+import play.api.libs.json.{JsValue, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 
 case class BobbyRulesSummary(

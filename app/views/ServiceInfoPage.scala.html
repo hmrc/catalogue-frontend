@@ -17,26 +17,27 @@
 @import java.time.LocalDateTime
 @import partials.{BuildToolsPartial, DependenciesByEnvironmentPartial}
 @import play.twirl.api.Html
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
+@import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, RepositoryDetails}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
 @import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.{DeploymentVO, ServiceInfoView, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.{ServiceInfoView, ViewMessages}
 @import views.partials.githubBadgeType
 
 @this(dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial, buildToolsPartial: BuildToolsPartial, viewMessages: ViewMessages)
 
-@(service: RepositoryDetails,
-  optMasterDependencies: Option[Dependencies],
-  dependenciesByVersion: Map[String, Seq[Dependency]],
-  librariesOfLatestSlug: Seq[Dependency],
-  repositoryCreationDate: LocalDateTime,
+@(service                     : RepositoryDetails,
+  optMasterDependencies       : Option[Dependencies],
+  dependenciesByVersion       : Map[Version, Seq[Dependency]],
+  librariesOfLatestSlug       : Seq[Dependency],
+  repositoryCreationDate      : LocalDateTime,
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
-  linkToLeakDetection: Option[String],
-  productionEnvironmentRoute: Option[EnvironmentRoute],
-  serviceRoutes: ServiceRoutes,
-  shutterState: Map[ShutteringEnvironment, ShutterState]
+  latestVersion               : Option[Version],
+  linkToLeakDetection         : Option[String],
+  productionEnvironmentRoute  : Option[EnvironmentRoute],
+  serviceRoutes               : ServiceRoutes,
+  shutterState                : Map[ShutteringEnvironment, ShutterState]
 )(implicit messages: Messages, request: Request[_])
 
 
@@ -92,6 +93,7 @@
             ServiceInfoView.platformDependenciesFrom(optMasterDependencies, librariesOfLatestSlug),
             dependenciesByVersion,
             deploymentsByEnvironmentName,
+            latestVersion,
             shutterState
         )
 
