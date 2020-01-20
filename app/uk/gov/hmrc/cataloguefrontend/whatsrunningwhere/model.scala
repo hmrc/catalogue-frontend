@@ -22,8 +22,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class WhatsRunningWhere(
-  applicationName: ApplicationName,
-  versions       : List[WhatsRunningWhereVersion])
+                              applicationName: ServiceName,
+                              versions       : List[WhatsRunningWhereVersion])
 
 case class WhatsRunningWhereVersion(
   environment  : Environment,
@@ -40,7 +40,7 @@ object JsonCodecs {
       case Left(l)  => JsError(__, l)
     }
 
-  val applicationNameFormat: Format[ApplicationName] = format(ApplicationName.apply, unlift(ApplicationName.unapply))
+  val applicationNameFormat: Format[ServiceName] = format(ServiceName.apply, unlift(ServiceName.unapply))
   val versionNumberFormat  : Format[VersionNumber]   = format(VersionNumber.apply  , unlift(VersionNumber.unapply  ))
   val environmentFormat    : Format[Environment]     = format(Environment.apply    , unlift(Environment.unapply    ))
   val timeSeenFormat       : Format[TimeSeen]        = format(TimeSeen.apply       , unlift(TimeSeen.unapply       ))
@@ -59,7 +59,7 @@ object JsonCodecs {
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] = {
     implicit val wf    = applicationNameFormat
     implicit val wrwvf = whatsRunningWhereVersionReads
-    ( (__ \ "applicationName").read[ApplicationName]
+    ( (__ \ "applicationName").read[ServiceName]
     ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
     )(WhatsRunningWhere.apply _)
   }
@@ -101,7 +101,7 @@ object JsonCodecs {
     implicit val anf  = applicationNameFormat
     implicit val enf  = environmentFormat
 
-    ( (__ \ "serviceName").format[ApplicationName]
+    ( (__ \ "serviceName").format[ServiceName]
     ~ (__ \ "environment").format[Environment]
     ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
     ~ (__ \ "lastCompleted").formatNullable[DeploymentEvent]
@@ -118,7 +118,7 @@ object TimeSeen {
   }
 }
 
-case class ApplicationName(asString: String) extends AnyVal
+case class ServiceName(asString: String) extends AnyVal
 
 case class Environment(asString: String) extends AnyVal
 
@@ -187,7 +187,7 @@ case class DeploymentEvent(deploymentId: String,
                            version: VersionNumber,
                            time: TimeSeen)
 
-case class ServiceDeployments(serviceName: ApplicationName,
+case class ServiceDeployments(serviceName: ServiceName,
                               environment: Environment,
                               deploymentEvents: Seq[DeploymentEvent],
                               lastCompleted: Option[DeploymentEvent])
