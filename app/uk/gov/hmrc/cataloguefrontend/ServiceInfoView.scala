@@ -26,9 +26,6 @@ object ServiceInfoView {
       _.status.value == ShutterStatusValue.Shuttered
     }
 
-  def libraryDependenciesOf(optDependencies: Option[Dependencies]): Seq[Dependency] =
-    optDependencies.map(_.libraryDependencies).getOrElse(Seq.empty)
-
   def slugDependencies(
       withDeployments : Map[String, Seq[DeploymentVO]]
     , withDependencies: Map[Version, Seq[Dependency]]
@@ -62,18 +59,6 @@ object ServiceInfoView {
         libraryDependencies = masterDependencies.libraryDependencies.filterNot { library =>
           libraryNamesInLatestSlug.contains(library.name)
         }
-      )
-    }
-
-  /*
-   * Note that we ignore libraryDependencies obtained from parsing master / GitHub, and replace them with those obtained
-   * from the 'latest' slug.  This provides consistency in that 'Platform Dependencies' is always populated from a slug,
-   * regardless of the selected tab.
-   */
-  def platformDependenciesFrom(optMasterDependencies: Option[Dependencies], librariesOfLatestSlug: Seq[Dependency]): Option[Dependencies] =
-    optMasterDependencies.map {
-      _.copy(
-        libraryDependencies = librariesOfLatestSlug
       )
     }
 }

@@ -24,7 +24,7 @@
 @this(dependenciesPartial: ServiceDependenciesPartial, viewMessages: ViewMessages)
 
 @(service                     : RepositoryDetails,
-  optLatestDependencies       : Option[Dependencies],
+  latestDependencies          : Seq[Dependency],
   dependenciesByVersion       : Map[Version, Seq[Dependency]],
   deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
   latestVersion               : Option[Version],
@@ -44,7 +44,7 @@
                     @renderShutterStatusBadge(false)
                     @renderBobbyRuleViolationBadges(
                        forEnvironment = "latest",
-                       withDependencies = ServiceInfoView.libraryDependenciesOf(optLatestDependencies)
+                       withDependencies = latestDependencies
                     )
                 </span>
             </div>
@@ -80,7 +80,7 @@
         <!-- no telemetry section for 'latest' -->
         <div class="row">
             <div class="col-md-12">
-                @dependenciesPartial(ServiceInfoView.libraryDependenciesOf(optLatestDependencies), "platform-dependencies-latest")
+                @dependenciesPartial(latestDependencies, "platform-dependencies-latest")
             </div>
         </div>
     </div>
