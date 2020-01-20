@@ -65,3 +65,4 @@ GET        /shutter-events                              uk.gov.hmrc.cataloguefro
 GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(env: ShutteringEnvironment, serviceName: Option[String] ?= None)
 
 GET        /whats-running-where                         uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.landing
+GET        /whats-running-where-ecs                     uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.ecs

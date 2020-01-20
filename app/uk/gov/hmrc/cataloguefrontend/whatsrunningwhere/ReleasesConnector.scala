@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -27,27 +26,22 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class ReleasesConnector @Inject()(
-    http          : HttpClient,
-    servicesConfig: ServicesConfig
-  )(implicit ec: ExecutionContext
-  ) {
+class ReleasesConnector @Inject()(http: HttpClient,
+                                  servicesConfig: ServicesConfig)
+                                 (implicit ec: ExecutionContext) {
 
   private val serviceUrl: String = servicesConfig.baseUrl("releases-api")
 
   implicit val wrwf = JsonCodecs.whatsRunningWhereReads
   implicit val pf   = JsonCodecs.profileFormat
+  implicit val sdf  = JsonCodecs.serviceDeploymentsFormat
 
   def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
-    val params = UrlUtils.toQueryParams(
-      List(
-          profile.map("profileName" -> _.profileName.asString)
-        , profile.map("profileType" -> _.profileType.asString)
-        ).flatten
-    )
+    val params = profileQueryParams(profile)
+
     http
-      .GET[Seq[WhatsRunningWhere]](baseUrl + (if (params.nonEmpty) "?" else "") + params)
+      .GET[Seq[WhatsRunningWhere]](baseUrl, params)
       .recover {
         case NonFatal(ex) =>
           Logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
@@ -65,4 +59,23 @@ class ReleasesConnector @Inject()(
           Seq.empty
       }
   }
+
+  def ecsReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[ServiceDeployments]] = {
+    val baseUrl = s"$serviceUrl/releases-api/ecs-deployment-events"
+    val params = profileQueryParams(profile)
+    http
+      .GET[Seq[ServiceDeployments]](baseUrl, params)
+      .recover {
+        case NonFatal(ex) =>
+          Logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
+          Seq.empty
+      }
+  }
+
+  private def profileQueryParams(profile: Option[Profile]): Seq[(String, String)] =
+    List(
+      profile.map("profileName" -> _.profileName.asString),
+      profile.map("profileType" -> _.profileType.asString)
+    ).flatten
+
 }
