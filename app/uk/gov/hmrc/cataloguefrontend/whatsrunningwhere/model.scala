@@ -112,8 +112,10 @@ object JsonCodecs {
 case class TimeSeen(time: LocalDateTime)
 
 object TimeSeen {
-  implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
-  implicit val timeSeenOrdering: Ordering[TimeSeen] = Ordering.by(_.time)
+  implicit val timeSeenOrdering: Ordering[TimeSeen] = {
+    implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
+    Ordering.by(_.time)
+  }
 }
 
 case class ApplicationName(asString: String) extends AnyVal
