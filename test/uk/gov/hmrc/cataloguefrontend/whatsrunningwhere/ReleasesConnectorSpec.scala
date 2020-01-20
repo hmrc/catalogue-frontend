@@ -159,46 +159,173 @@ class ReleasesConnectorSpec
 
       response shouldBe Seq.empty
     }
+  }
 
+  "profiles" should {
     "return all profileNames" in {
-        serviceEndpoint(
-          GET,
-          s"/releases-api/profiles",
-          willRespondWith = (
-            200,
-            Some(
-              """[
-                |  {"type": "servicemanager",
-                |   "name": "tcs_all",
-                |   "apps": [
-                |     "identity-verification-frontend",
-                |     "identity-verification"
-                |    ]
-                |  },
-                |  {"type": "servicemanager",
-                |   "name": "tpsa",
-                |   "apps": [
-                |     "dtxe",
-                |     "dtxe-validator"
-                |    ]
-                |  },
-                |  {"type": "team",
-                |   "name": "trusts",
-                |   "apps": [
-                |     "trust-registration-api",
-                |     "trust-registration-stub"
-                |   ]
-                |  }
-                |]""".stripMargin)))
+      serviceEndpoint(
+        GET,
+        s"/releases-api/profiles",
+        willRespondWith = (
+          200,
+          Some(
+            """[
+              |  {"type": "servicemanager",
+              |   "name": "tcs_all",
+              |   "apps": [
+              |     "identity-verification-frontend",
+              |     "identity-verification"
+              |    ]
+              |  },
+              |  {"type": "servicemanager",
+              |   "name": "tpsa",
+              |   "apps": [
+              |     "dtxe",
+              |     "dtxe-validator"
+              |    ]
+              |  },
+              |  {"type": "team",
+              |   "name": "trusts",
+              |   "apps": [
+              |     "trust-registration-api",
+              |     "trust-registration-stub"
+              |   ]
+              |  }
+              |]""".stripMargin)))
 
-        val response = await(
-          releasesConnector.profiles(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+      val response = await(
+        releasesConnector.profiles(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+      )
+
+      response should contain theSameElementsAs Seq(
+        Profile(ProfileType.ServiceManager, ProfileName("tcs_all")),
+        Profile(ProfileType.ServiceManager, ProfileName("tpsa")),
+        Profile(ProfileType.Team          , ProfileName("trusts")))
+    }
+  }
+
+  "ecsReleases" should {
+
+    "return all releases if profile not supplied" in {
+      serviceEndpoint(
+        GET,
+        "/releases-api/ecs-deployment-events",
+        willRespondWith = (
+          200,
+          Some(
+            """[
+              |  {
+              |    "serviceName": "api-definition",
+              |    "environment": "Integration",
+              |    "deploymentEvents": [],
+              |    "lastCompleted": {
+              |      "deploymentId": "some-stack-id",
+              |      "status": "CREATE_COMPLETE",
+              |      "version": "1.57.0",
+              |      "time": "2019-05-29T14:09:48"
+              |    }
+              |  },
+              |  {
+              |    "serviceName": "api-documentation",
+              |    "environment": "Integration",
+              |    "deploymentEvents": [],
+              |    "lastCompleted": {
+              |      "deploymentId": "some-other-stack-id",
+              |      "status": "UPDATE_COMPLETE",
+              |      "version": "0.44.0",
+              |      "time": "2019-05-29T14:09:46"
+              |    }
+              |  }
+              |]""".stripMargin)))
+
+      val response = await(
+        releasesConnector.ecsReleases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+      )
+
+      response should contain theSameElementsAs Seq(
+        ServiceDeployments(
+          ApplicationName("api-definition"),
+          Environment("Integration"),
+          Seq.empty,
+          Some(DeploymentEvent(
+            "some-stack-id",
+            DeploymentStatus("CREATE_COMPLETE"),
+            VersionNumber("1.57.0"),
+            TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 48))
+          ))
+        ),
+        ServiceDeployments(
+          ApplicationName("api-documentation"),
+          Environment("Integration"),
+          Seq.empty,
+          Some(DeploymentEvent(
+            "some-other-stack-id",
+            DeploymentStatus("UPDATE_COMPLETE"),
+            VersionNumber("0.44.0"),
+            TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 46))
+          ))
+        ),
+
+      )
+    }
+
+    "return all releases for given profile" in {
+      val profileType = ProfileType.ServiceManager
+      val profileName = ProfileName("profile1")
+
+      serviceEndpoint(
+        GET,
+        s"/releases-api/ecs-deployment-events",
+        queryParameters = Seq( "profileName" -> profileName.asString,
+          "profileType" -> profileType.asString
+        ),
+        willRespondWith = (
+          200,
+          Some(
+            """[
+              |  {
+              |    "serviceName": "api-definition",
+              |    "environment": "Integration",
+              |    "deploymentEvents": [],
+              |    "lastCompleted": {
+              |      "deploymentId": "some-stack-id",
+              |      "status": "CREATE_COMPLETE",
+              |      "version": "1.57.0",
+              |      "time": "2019-05-29T14:09:48"
+              |    }
+              |  }
+              |]""".stripMargin)))
+
+      val response = await(
+        releasesConnector.ecsReleases(profile = Some(Profile(profileType, profileName)))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+      )
+
+      response should contain theSameElementsAs Seq(
+        ServiceDeployments(
+          ApplicationName("api-definition"),
+          Environment("Integration"),
+          Seq.empty,
+          Some(DeploymentEvent(
+            "some-stack-id",
+            DeploymentStatus("CREATE_COMPLETE"),
+            VersionNumber("1.57.0"),
+            TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 48))
+          ))
         )
+      )
+    }
 
-        response should contain theSameElementsAs Seq(
-          Profile(ProfileType.ServiceManager, ProfileName("tcs_all")),
-          Profile(ProfileType.ServiceManager, ProfileName("tpsa")),
-          Profile(ProfileType.Team          , ProfileName("trusts")))
-      }
+    "return empty upon error" in {
+      serviceEndpoint(
+        GET,
+        s"/releases-api/ecs-deployment-events",
+        willRespondWith = (500, Some("errors!")))
+
+      val response = await(
+        releasesConnector.ecsReleases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+      )
+
+      response shouldBe Seq.empty
+    }
   }
 }

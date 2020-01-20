@@ -21,7 +21,6 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.WhatsRunningWherePage
 
@@ -29,31 +28,51 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class WhatsRunningWhereController @Inject()(
-    releasesConnector            : ReleasesConnector
-  , teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
-  , page                         : WhatsRunningWherePage
-  , mcc                          : MessagesControllerComponents
+    service          : WhatsRunningWhereService
+  , page             : WhatsRunningWherePage
+  , mcc              : MessagesControllerComponents
   )(implicit val ec: ExecutionContext
   ) extends FrontendController(mcc){
 
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        form                <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profile             =  form.fold( _ => None
-                                        , f => for {
-                                                 profileType <- f.profileType
-                                                 profileName <- f.profileName
-                                               } yield Profile(profileType, profileName)
-                                        )
-        selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        ( releases
-        , profiles
-        )                   <- ( releasesConnector.releases(profile)
-                               , releasesConnector.profiles
-                               ).mapN { case (r, p) => (r, p) }
-        environments        =  releases.flatMap(_.versions.map(_.environment)).distinct.sorted
-        profileNames        = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+        form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
+        profile              =  profileFrom(form)
+        selectedProfileType  =  form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
+        (releases, profiles) <- (service.releases(profile), service.profiles).mapN { case (r, p) => (r, p) }
+        environments         =  distinctEnvironments(releases)
+        profileNames         =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+      } yield
+        Ok(page(environments, releases, selectedProfileType, profileNames, form))
+    }
+
+  private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
+    form.fold(
+      _ => None,
+      f => for {
+        profileType <- f.profileType
+        profileName <- f.profileName
+      } yield Profile(profileType, profileName)
+    )
+
+  private def distinctEnvironments(releases: Seq[WhatsRunningWhere]) =
+    releases.flatMap(_.versions.map(_.environment)).distinct.sorted
+
+  /*
+   * todo - this is just duplicated at the moment.
+   * Need to decide if its worth refactoring, or if we should think about merging, or removing
+   * the heritage deployments stuff.
+   */
+  def ecs: Action[AnyContent] =
+    Action.async { implicit request =>
+      for {
+        form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
+        profile              =  profileFrom(form)
+        selectedProfileType  =  form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
+        (releases, profiles) <- (service.ecsReleases(profile), service.profiles).mapN { case (r, p) => (r, p) }
+        environments         =  distinctEnvironments(releases)
+        profileNames         =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
       } yield
         Ok(page(environments, releases, selectedProfileType, profileNames, form))
     }

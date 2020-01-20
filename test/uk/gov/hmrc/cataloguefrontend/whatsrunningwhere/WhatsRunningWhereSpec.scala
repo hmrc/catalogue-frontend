@@ -93,5 +93,56 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
 
       response.body   should include("integration")
     }
+
+    "show a list of applications, environments and version numbers for ECS releases" in {
+
+      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
+
+      serviceEndpoint(GET, "/releases-api/profiles", willRespondWith = (200, Some(JsonData.profiles)))
+
+      serviceEndpoint(
+        GET,
+        "/releases-api/ecs-deployment-events",
+        willRespondWith = (
+          200,
+          Some(
+            """[
+              |  {
+              |    "serviceName": "api-definition",
+              |    "environment": "Integration",
+              |    "deploymentEvents": [],
+              |    "lastCompleted": {
+              |      "deploymentId": "some-stack-id",
+              |      "status": "CREATE_COMPLETE",
+              |      "version": "1.57.0",
+              |      "time": "2019-05-29T14:09:48"
+              |    }
+              |  },
+              |  {
+              |    "serviceName": "api-documentation",
+              |    "environment": "Integration",
+              |    "deploymentEvents": [],
+              |    "lastCompleted": {
+              |      "deploymentId": "some-other-stack-id",
+              |      "status": "UPDATE_COMPLETE",
+              |      "version": "0.44.0",
+              |      "time": "2019-05-29T14:09:46"
+              |    }
+              |  }
+              |]""".stripMargin))
+      )
+
+      val response = await(WS.url(s"http://localhost:$port/whats-running-where-ecs").get)
+
+      response.status shouldBe 200
+
+      response.body   should include("api-definition")
+      response.body   should include("1.57.0")
+
+      response.body   should include("api-documentation")
+      response.body   should include("0.44.0")
+
+      response.body   should include("Integration")
+    }
   }
 }

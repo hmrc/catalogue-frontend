@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -44,6 +44,7 @@ object JsonCodecs {
   val versionNumberFormat  : Format[VersionNumber]   = format(VersionNumber.apply  , unlift(VersionNumber.unapply  ))
   val environmentFormat    : Format[Environment]     = format(Environment.apply    , unlift(Environment.unapply    ))
   val timeSeenFormat       : Format[TimeSeen]        = format(TimeSeen.apply       , unlift(TimeSeen.unapply       ))
+  val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, unlift(DeploymentStatus.unapply))
 
   val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] = {
     implicit val wf  = environmentFormat
@@ -78,13 +79,44 @@ object JsonCodecs {
   val profileFormat: OFormat[Profile] = {
     implicit val ptf = profileTypeFormat
     implicit val pnf = profileNameFormat
-    ( (__ \ "type").format[ProfileType]
+    ((__ \ "type").format[ProfileType]
     ~ (__ \ "name").format[ProfileName]
-    )(Profile.apply, unlift(Profile.unapply))
+    ) (Profile.apply, unlift(Profile.unapply))
+  }
+
+  val deploymentEventFormat: Format[DeploymentEvent] = {
+    implicit val vnf = versionNumberFormat
+    implicit val tsf = timeSeenFormat
+    implicit val dsf = deploymentStatusFormat
+
+    ( (__ \ "deploymentId").format[String]
+    ~ (__ \ "status").format[DeploymentStatus]
+    ~ (__ \ "version").format[VersionNumber]
+    ~ (__ \ "time").format[TimeSeen]
+    )(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
+  }
+
+  val serviceDeploymentsFormat: Format[ServiceDeployments] = {
+    implicit val devf = deploymentEventFormat
+    implicit val anf  = applicationNameFormat
+    implicit val enf  = environmentFormat
+
+    ( (__ \ "serviceName").format[ApplicationName]
+    ~ (__ \ "environment").format[Environment]
+    ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
+    ~ (__ \ "lastCompleted").formatNullable[DeploymentEvent]
+    )(ServiceDeployments.apply, unlift(ServiceDeployments.unapply))
   }
 }
 
 case class TimeSeen(time: LocalDateTime)
+
+object TimeSeen {
+  implicit val timeSeenOrdering: Ordering[TimeSeen] = {
+    implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
+    Ordering.by(_.time)
+  }
+}
 
 case class ApplicationName(asString: String) extends AnyVal
 
@@ -147,3 +179,15 @@ case class Profile(
 )
 
 case class VersionNumber(asString: String) extends AnyVal
+
+case class DeploymentStatus(asString: String) extends AnyVal
+
+case class DeploymentEvent(deploymentId: String,
+                           status: DeploymentStatus,
+                           version: VersionNumber,
+                           time: TimeSeen)
+
+case class ServiceDeployments(serviceName: ApplicationName,
+                              environment: Environment,
+                              deploymentEvents: Seq[DeploymentEvent],
+                              lastCompleted: Option[DeploymentEvent])
