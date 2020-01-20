@@ -27,17 +27,17 @@
 
 @this(dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial, buildToolsPartial: BuildToolsPartial, viewMessages: ViewMessages)
 
-@(service                     : RepositoryDetails,
-  optMasterDependencies       : Option[Dependencies],
-  dependenciesByVersion       : Map[Version, Seq[Dependency]],
-  librariesOfLatestSlug       : Seq[Dependency],
-  repositoryCreationDate      : LocalDateTime,
-  deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
-  latestVersion               : Option[Version],
-  linkToLeakDetection         : Option[String],
-  productionEnvironmentRoute  : Option[EnvironmentRoute],
-  serviceRoutes               : ServiceRoutes,
-  shutterState                : Map[ShutteringEnvironment, ShutterState]
+@(service                      : RepositoryDetails,
+  optMasterDependencies        : Option[Dependencies],
+  librariesOfLatestSlug        : Seq[Dependency],
+  repositoryCreationDate       : LocalDateTime,
+  dependenciesByEnvironmentName: Map[String, Seq[Dependency]],
+  versionByEnvironmentName     : Map[String, Version],
+  latestVersion                : Option[Version],
+  linkToLeakDetection          : Option[String],
+  productionEnvironmentRoute   : Option[EnvironmentRoute],
+  serviceRoutes                : ServiceRoutes,
+  shutterState                 : Map[ShutteringEnvironment, ShutterState]
 )(implicit messages: Messages, request: Request[_])
 
 
@@ -91,8 +91,8 @@
         @dependenciesByEnvironmentPartial(
             service,
             librariesOfLatestSlug,
-            dependenciesByVersion,
-            deploymentsByEnvironmentName,
+            dependenciesByEnvironmentName,
+            versionByEnvironmentName,
             latestVersion,
             shutterState
         )
