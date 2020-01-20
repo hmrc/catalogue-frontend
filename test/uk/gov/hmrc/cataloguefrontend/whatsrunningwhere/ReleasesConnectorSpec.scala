@@ -243,7 +243,7 @@ class ReleasesConnectorSpec
       )
 
       response should contain theSameElementsAs Seq(
-        ServiceDeployments(
+        ServiceDeployment(
           ServiceName("api-definition"),
           Environment("Integration"),
           Seq.empty,
@@ -254,7 +254,7 @@ class ReleasesConnectorSpec
             TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 48))
           ))
         ),
-        ServiceDeployments(
+        ServiceDeployment(
           ServiceName("api-documentation"),
           Environment("Integration"),
           Seq.empty,
@@ -301,7 +301,7 @@ class ReleasesConnectorSpec
       )
 
       response should contain theSameElementsAs Seq(
-        ServiceDeployments(
+        ServiceDeployment(
           ServiceName("api-definition"),
           Environment("Integration"),
           Seq.empty,

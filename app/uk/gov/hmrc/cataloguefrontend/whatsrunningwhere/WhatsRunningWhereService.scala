@@ -24,6 +24,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector)
                                          (implicit ec: ExecutionContext) {
 
+  /** Get releases from Heritage infrastructure. This will be removed once everything has migrated */
   def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     releasesConnector.releases(profile)
 
@@ -33,7 +34,7 @@ class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector)
   def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
     releasesConnector.profiles
 
-  private def convert(serviceDeployments: Seq[ServiceDeployments]): Seq[WhatsRunningWhere] =
+  private def convert(serviceDeployments: Seq[ServiceDeployment]): Seq[WhatsRunningWhere] =
     serviceDeployments.groupBy(_.serviceName).map { case (serviceName, deployments) =>
       val versions = deployments.flatMap { d =>
         d.lastCompleted.map { lastCompleted =>

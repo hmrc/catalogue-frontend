@@ -96,7 +96,7 @@ object JsonCodecs {
     )(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
   }
 
-  val serviceDeploymentsFormat: Format[ServiceDeployments] = {
+  val serviceDeploymentsFormat: Format[ServiceDeployment] = {
     implicit val devf = deploymentEventFormat
     implicit val anf  = applicationNameFormat
     implicit val enf  = environmentFormat
@@ -105,7 +105,7 @@ object JsonCodecs {
     ~ (__ \ "environment").format[Environment]
     ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
     ~ (__ \ "lastCompleted").formatNullable[DeploymentEvent]
-    )(ServiceDeployments.apply, unlift(ServiceDeployments.unapply))
+    )(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
   }
 }
 
@@ -187,7 +187,7 @@ case class DeploymentEvent(deploymentId: String,
                            version: VersionNumber,
                            time: TimeSeen)
 
-case class ServiceDeployments(serviceName: ServiceName,
-                              environment: Environment,
-                              deploymentEvents: Seq[DeploymentEvent],
-                              lastCompleted: Option[DeploymentEvent])
+case class ServiceDeployment(serviceName: ServiceName,
+                             environment: Environment,
+                             deploymentEvents: Seq[DeploymentEvent],
+                             lastCompleted: Option[DeploymentEvent])
