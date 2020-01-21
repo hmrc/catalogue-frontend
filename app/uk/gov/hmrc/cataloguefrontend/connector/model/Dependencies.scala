@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import java.time.LocalDate
+import java.time.{Instant, LocalDate}
 
-import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.http.controllers.RestFormats
@@ -60,7 +59,7 @@ case class Dependencies(
   libraryDependencies   : Seq[Dependency],
   sbtPluginsDependencies: Seq[Dependency],
   otherDependencies     : Seq[Dependency],
-  lastUpdated           : DateTime) {
+  lastUpdated           : Instant) {
 
   def toSeq: Seq[Dependency] =
     libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies
@@ -182,10 +181,10 @@ object Dependencies {
     private implicit val dtr = RestFormats.dateTimeFormats
     private implicit val bvf = BobbyVersionRange.format
     private implicit val brvr =
-      ((__ \ "reason").read[String]
-        ~ (__ \ "range").read[BobbyVersionRange]
-        ~ (__ \ "from").read[LocalDate]
-        ) (BobbyRuleViolation.apply _)
+      ( (__ \ "reason").read[String]
+      ~ (__ \ "range" ).read[BobbyVersionRange]
+      ~ (__ \ "from"  ).read[LocalDate]
+      ) (BobbyRuleViolation.apply _)
 
     implicit val readsDependency: Reads[Dependency] = Json.reads[Dependency]
     implicit val reads: Reads[Dependencies] = Json.reads[Dependencies]
