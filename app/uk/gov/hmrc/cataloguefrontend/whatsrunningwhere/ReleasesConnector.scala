@@ -60,11 +60,11 @@ class ReleasesConnector @Inject()(http: HttpClient,
       }
   }
 
-  def ecsReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[ServiceDeployments]] = {
+  def ecsReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[ServiceDeployment]] = {
     val baseUrl = s"$serviceUrl/releases-api/ecs-deployment-events"
     val params = profileQueryParams(profile)
     http
-      .GET[Seq[ServiceDeployments]](baseUrl, params)
+      .GET[Seq[ServiceDeployment]](baseUrl, params)
       .recover {
         case NonFatal(ex) =>
           Logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)

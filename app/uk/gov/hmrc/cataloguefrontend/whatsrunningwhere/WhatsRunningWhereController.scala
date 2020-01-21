@@ -78,11 +78,9 @@ class WhatsRunningWhereController @Inject()(
     }
 }
 
-case class WhatsRunningWhereFilter(
-    profileName    : Option[ProfileName]     = None
-  , profileType    : Option[ProfileType]     = None
-  , applicationName: Option[ApplicationName] = None
-  )
+case class WhatsRunningWhereFilter(profileName: Option[ProfileName] = None,
+                                   profileType: Option[ProfileType] = None,
+                                   serviceName: Option[ServiceName] = None)
 
 object WhatsRunningWhereFilter {
   private def filterEmptyString(x: Option[String]) = x.filter(_.trim.nonEmpty)
@@ -99,9 +97,9 @@ object WhatsRunningWhereFilter {
                                   _.flatMap(s => ProfileType.parse(s).toOption)
                                 , _.map(_.asString)
                                 )
-    , "application_name" -> optional(text)
-                              .transform[Option[ApplicationName]](
-                                  filterEmptyString(_).map(ApplicationName.apply)
+    , "service_name"     -> optional(text)
+                              .transform[Option[ServiceName]](
+                                  filterEmptyString(_).map(ServiceName.apply)
                                 , _.map(_.asString)
                                 )
     )(WhatsRunningWhereFilter.apply)(WhatsRunningWhereFilter.unapply)

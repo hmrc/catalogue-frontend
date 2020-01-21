@@ -84,7 +84,7 @@ class ReleasesConnectorSpec
 
       response should contain theSameElementsAs Seq(
         WhatsRunningWhere(
-          ApplicationName("api-definition"),
+          ServiceName("api-definition"),
           List(
             WhatsRunningWhereVersion(
               Environment("integration"),
@@ -93,7 +93,7 @@ class ReleasesConnectorSpec
           )
         ),
         WhatsRunningWhere(
-          ApplicationName("api-documentation"),
+          ServiceName("api-documentation"),
           List(
             WhatsRunningWhereVersion(
               Environment("integration"),
@@ -136,7 +136,7 @@ class ReleasesConnectorSpec
 
       response should contain theSameElementsAs Seq(
         WhatsRunningWhere(
-          ApplicationName("api-definition"),
+          ServiceName("api-definition"),
           List(
             WhatsRunningWhereVersion(
               Environment("integration"),
@@ -243,8 +243,8 @@ class ReleasesConnectorSpec
       )
 
       response should contain theSameElementsAs Seq(
-        ServiceDeployments(
-          ApplicationName("api-definition"),
+        ServiceDeployment(
+          ServiceName("api-definition"),
           Environment("Integration"),
           Seq.empty,
           Some(DeploymentEvent(
@@ -254,8 +254,8 @@ class ReleasesConnectorSpec
             TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 48))
           ))
         ),
-        ServiceDeployments(
-          ApplicationName("api-documentation"),
+        ServiceDeployment(
+          ServiceName("api-documentation"),
           Environment("Integration"),
           Seq.empty,
           Some(DeploymentEvent(
@@ -301,8 +301,8 @@ class ReleasesConnectorSpec
       )
 
       response should contain theSameElementsAs Seq(
-        ServiceDeployments(
-          ApplicationName("api-definition"),
+        ServiceDeployment(
+          ServiceName("api-definition"),
           Environment("Integration"),
           Seq.empty,
           Some(DeploymentEvent(
