@@ -22,7 +22,7 @@ import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.cataloguefrontend.shuttering.Environment.QA
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -51,7 +51,7 @@ class ShutterConnectorSpec extends WordSpec with MockitoSugar with Matchers with
 
   "Shutter Events" should {
     "be filtered by environment only when no service name is specified" in new Fixture {
-      val filter = ShutterEventsFilter(environment = QA, serviceName = None)
+      val filter = ShutterEventsFilter(environment = Environment.QA, serviceName = None)
       stubEmptyResponseForGet(withPath = s"$SomeBaseUrl/shutter-api/events", withParams = Seq(
         "type" -> "shutter-state-change",
         "data.environment" -> "qa"
@@ -61,7 +61,7 @@ class ShutterConnectorSpec extends WordSpec with MockitoSugar with Matchers with
     }
 
     "be filtered by serviceName and environment when a service name is specified" in new Fixture {
-      val filter = ShutterEventsFilter(environment = QA, serviceName = Some("abc-frontend"))
+      val filter = ShutterEventsFilter(environment = Environment.QA, serviceName = Some("abc-frontend"))
       stubEmptyResponseForGet(withPath = s"$SomeBaseUrl/shutter-api/events", withParams = Seq(
         "type" -> "shutter-state-change",
         "data.environment" -> "qa",

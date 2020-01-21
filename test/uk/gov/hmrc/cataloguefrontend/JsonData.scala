@@ -18,7 +18,8 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.time.LocalDateTime
 
-import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterType}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType}
 
 /**
   * Created by armin.

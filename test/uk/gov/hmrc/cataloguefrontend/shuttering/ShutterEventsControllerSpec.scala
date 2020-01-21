@@ -27,7 +27,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
-import uk.gov.hmrc.cataloguefrontend.shuttering.Environment.{Development, Production}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterCause.UserCreated
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus.Unshuttered
@@ -71,7 +71,7 @@ class ShutterEventsControllerSpec extends WordSpec with MockitoSugar with Matche
     }
 
     "request shutter events from the shutter api for the specified environment" in new Fixture {
-      val filter = ShutterEventsFilter(environment = Production, serviceName = None)
+      val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
       val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName)(FakeRequest())
@@ -81,7 +81,7 @@ class ShutterEventsControllerSpec extends WordSpec with MockitoSugar with Matche
     }
 
     "request shutter events from the shutter api for the specified service and environment" in new Fixture {
-      val filter = ShutterEventsFilter(environment = Production, serviceName = Some("abc-frontend"))
+      val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = Some("abc-frontend"))
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
       val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName)(FakeRequest())
@@ -91,7 +91,7 @@ class ShutterEventsControllerSpec extends WordSpec with MockitoSugar with Matche
     }
 
     "ignore a blank service name" in new Fixture {
-      val filter = ShutterEventsFilter(environment = Production, serviceName = None)
+      val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
       val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = Some("    "))(FakeRequest())
@@ -101,7 +101,7 @@ class ShutterEventsControllerSpec extends WordSpec with MockitoSugar with Matche
     }
 
     "recover from a failure to retrieve events from the shutter api" in new Fixture {
-      val filter = ShutterEventsFilter(environment = Production, serviceName = None)
+      val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorFailure(filter)
 
       val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName)(FakeRequest())
@@ -119,9 +119,9 @@ private object ShutterEventsControllerSpec {
     "username",
     timestamp = Instant.now(),
     "service name",
-    environment = Development,
+    environment = Environment.Development,
     shutterType = Frontend,
-    status = Unshuttered,
-    cause = UserCreated
+    status      = Unshuttered,
+    cause       = UserCreated
   )
 }

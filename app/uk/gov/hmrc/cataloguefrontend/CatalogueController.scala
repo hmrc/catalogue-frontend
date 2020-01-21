@@ -33,8 +33,9 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.events._
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
-import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType, Environment => ShutteringEnvironment}
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
@@ -301,7 +302,7 @@ class CatalogueController @Inject()(
 
     val futShutterStateByEnvironment =
       if (CatalogueFrontendSwitches.shuttering.isEnabled)
-        ShutteringEnvironment.values
+        Environment.values
           .traverse { env =>
             shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
           }
@@ -310,7 +311,7 @@ class CatalogueController @Inject()(
              .groupBy(_.environment)
              .mapValues(_.head)
           )
-      else Future.successful(Map.empty[ShutteringEnvironment, ShutterState])
+      else Future.successful(Map.empty[Environment, ShutterState])
 
     ( teamsAndRepositoriesConnector.repositoryDetails(serviceName)
     , teamsAndRepositoriesConnector.lookupLink(serviceName)

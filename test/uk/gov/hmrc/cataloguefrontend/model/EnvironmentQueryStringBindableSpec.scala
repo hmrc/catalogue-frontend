@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.shuttering
+package uk.gov.hmrc.cataloguefrontend.model
 
 import org.scalatest.{Matchers, OptionValues, WordSpec}
-import uk.gov.hmrc.cataloguefrontend.shuttering.Environment.{Production, QA}
 
 class EnvironmentQueryStringBindableSpec extends WordSpec with Matchers with OptionValues {
 
@@ -42,7 +41,7 @@ class EnvironmentQueryStringBindableSpec extends WordSpec with Matchers with Opt
     }
 
     "fail to be bound when there is more than one associated value" in {
-      val params = Map("environment" -> Seq(Production.asString, QA.asString))
+      val params = Map("environment" -> Seq(Environment.Production.asString, Environment.QA.asString))
 
       Environment.queryStringBindable.bind(key = "env", params).value shouldBe 'Left
     }

@@ -22,6 +22,7 @@ import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering._
 

@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Writes
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.{encodePathParam, encodeQueryParam}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, Token}

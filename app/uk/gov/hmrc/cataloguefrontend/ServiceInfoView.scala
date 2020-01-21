@@ -18,11 +18,12 @@ package uk.gov.hmrc.cataloguefrontend
 
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, TargetEnvironment}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
-import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue, Environment => ShutteringEnvironment}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 
 object ServiceInfoView {
-  def isShuttered(withShutterState: Map[ShutteringEnvironment, ShutterState])(inEnvironment: TargetEnvironment): Boolean =
-    TargetEnvironment.toShutteringEnvironment(inEnvironment).flatMap(withShutterState.get).exists {
+  def isShuttered(withShutterState: Map[Environment, ShutterState])(inEnvironment: TargetEnvironment): Boolean =
+    TargetEnvironment.toEnvironment(inEnvironment).flatMap(withShutterState.get).exists {
       _.status.value == ShutterStatusValue.Shuttered
     }
 

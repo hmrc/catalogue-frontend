@@ -23,7 +23,7 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -60,14 +60,14 @@ case class TargetEnvironment(name: String, services: Seq[Link]) {
 }
 
 object TargetEnvironment {
-  def toShutteringEnvironment(targetEnv: TargetEnvironment): Option[ShutteringEnvironment] =
+  def toEnvironment(targetEnv: TargetEnvironment): Option[Environment] =
     targetEnv.name.toLowerCase match {
-      case "production"    => Some(ShutteringEnvironment.Production)
-      case "external test" => Some(ShutteringEnvironment.ExternalTest)
-      case "qa"            => Some(ShutteringEnvironment.QA)
-      case "staging"       => Some(ShutteringEnvironment.Staging)
-      case "integration"   => Some(ShutteringEnvironment.Integration)
-      case "development"   => Some(ShutteringEnvironment.Development)
+      case "production"    => Some(Environment.Production)
+      case "external test" => Some(Environment.ExternalTest)
+      case "qa"            => Some(Environment.QA)
+      case "staging"       => Some(Environment.Staging)
+      case "integration"   => Some(Environment.Integration)
+      case "development"   => Some(Environment.Development)
       case _               => None
     }
 }

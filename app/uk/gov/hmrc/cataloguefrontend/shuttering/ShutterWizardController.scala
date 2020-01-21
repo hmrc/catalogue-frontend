@@ -28,6 +28,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthActionBuilder
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
@@ -473,7 +474,7 @@ object ShutterWizardController {
 
   val step0OutFormats = {
     implicit val stf = ShutterType.format
-    implicit val ef  = Environment.format
+    implicit val ef  = ShutterEnvironment.format
     Json.format[Step0Out]
   }
 
