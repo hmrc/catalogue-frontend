@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 
 import akka.stream.Materializer
 import org.mockito.Matchers.{eq => eqTo, _}
@@ -34,7 +34,6 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, TeamName, Version}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.time.DateTimeUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -106,7 +105,7 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Gui
               sbtPluginsDependencyState("PLUGIN-2", 2, "red")
             ),
             Seq(),
-            lastUpdated = DateTimeUtils.now
+            lastUpdated = Instant.now
           ),
           Dependencies(
             repositoryName = "repo-2",
@@ -117,7 +116,7 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Gui
               sbtPluginsDependencyState("PLUGIN-3", 3, "red")
             ),
             Seq(),
-            lastUpdated = DateTimeUtils.now
+            lastUpdated = Instant.now
           )
         )))
 

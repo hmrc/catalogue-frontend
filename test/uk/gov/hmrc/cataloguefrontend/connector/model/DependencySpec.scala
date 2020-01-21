@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import java.time.LocalDate
+import java.time.{Instant, LocalDate}
 
-import org.joda.time.DateTime
 import org.scalatest.{FreeSpec, Matchers}
 
 class DependencySpec extends FreeSpec with Matchers {
@@ -104,7 +103,7 @@ class DependencySpec extends FreeSpec with Matchers {
         , libraryDependencies    = Seq(badDep, goodDep, pendingDep)
         , sbtPluginsDependencies = Seq()
         , otherDependencies      = Seq()
-        , lastUpdated            = DateTime.now()
+        , lastUpdated            = Instant.now
         )
 
       deps.toSeq.filter(_.activeBobbyRuleViolations.nonEmpty) shouldBe Seq(badDep)
@@ -132,11 +131,10 @@ class DependencySpec extends FreeSpec with Matchers {
         , libraryDependencies    = Seq(badDep, goodDep, pendingDep)
         , sbtPluginsDependencies = Seq()
         , otherDependencies      = Seq()
-        , lastUpdated            = DateTime.now()
+        , lastUpdated            = Instant.now
         )
 
       deps.toSeq.filter(_.pendingBobbyRuleViolations.nonEmpty) shouldBe Seq(pendingDep)
     }
-
   }
 }

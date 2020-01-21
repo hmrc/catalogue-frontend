@@ -16,6 +16,8 @@
 
 package view
 
+import java.time.Instant
+
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest.Matchers._
@@ -24,7 +26,6 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.time.DateTimeUtils
 import views.html.partials.DependenciesPartial
 
 class DependenciesSpec extends WordSpec with MockitoSugar {
@@ -52,7 +53,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
         Dependency("plugin6-invalid-ahead-current", Version("4.0.0"), Some(Version("3.0.1")))
       ),
       Seq(Dependency("sbt", Version("0.13.11"), Some(Version("0.13.15")))),
-      lastUpdated = DateTimeUtils.now
+      lastUpdated = Instant.now
     )
 
     "show green and ok icon if versions are the same" in {
@@ -182,7 +183,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
           Nil,
           Nil,
           Seq(Dependency("sbt", Version("1.0.0"), Some(Version("1.0.0")))),
-          lastUpdated = DateTimeUtils.now)
+          lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 1.0.0"
@@ -197,7 +198,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
           Nil,
           Nil,
           Seq(Dependency("sbt", Version("1.0.0"), Some(Version("1.1.0")))),
-          lastUpdated = DateTimeUtils.now)
+          lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 1.1.0"
@@ -213,7 +214,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
           Nil,
           Nil,
           Seq(Dependency("sbt", Version("1.0.0"), Some(Version("1.0.1")))),
-          lastUpdated = DateTimeUtils.now)
+          lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 1.0.1"
@@ -229,7 +230,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
           Nil,
           Nil,
           Seq(Dependency("sbt", Version("1.0.0"), Some(Version("2.0.0")))),
-          lastUpdated = DateTimeUtils.now)
+          lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 2.0.0"
@@ -244,7 +245,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
         Nil,
         Nil,
         Seq(Dependency("sbt", Version("1.0.0"), None)),
-        lastUpdated = DateTimeUtils.now)
+        lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 (not found)"
@@ -260,7 +261,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
           Nil,
           Nil,
           Seq(Dependency("sbt", Version("5.0.0"), Some(Version("1.0.0")))),
-          lastUpdated = DateTimeUtils.now)
+          lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
       document.select("#sbt").get(0).text() shouldBe "sbt 5.0.0 1.0.0"
@@ -275,7 +276,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
         Seq(Dependency("lib1-up-to-date", Version("1.0.0"), Some(Version("1.0.0")))),
         Nil,
         Nil,
-        lastUpdated = DateTimeUtils.now)
+        lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
       verifyLegendSectionIsShowing(document)
@@ -287,7 +288,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
         Nil,
         Seq(Dependency("plugin1-up-to-date", Version("1.0.0"), Some(Version("1.0.0")))),
         Nil,
-        lastUpdated = DateTimeUtils.now)
+        lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
       verifyLegendSectionIsShowing(document)
@@ -299,14 +300,14 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
         Nil,
         Nil,
         Seq(Dependency("sbt", Version("1.0.0"), None)),
-        lastUpdated = DateTimeUtils.now)
+        lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
       verifyLegendSectionIsShowing(document)
     }
 
     "not be shown if no dependency entry exists" in {
-      val dependencies = Dependencies("service", Nil, Nil, Nil, lastUpdated = DateTimeUtils.now)
+      val dependencies = Dependencies("service", Nil, Nil, Nil, lastUpdated = Instant.now)
       val document     = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
       document.select("#legend") shouldBe empty

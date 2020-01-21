@@ -23,12 +23,12 @@
 
 @this(dependenciesPartial: ServiceDependenciesPartial, viewMessages: ViewMessages)
 
-@(service                     : RepositoryDetails,
-  optLatestDependencies       : Option[Dependencies],
-  dependenciesByVersion       : Map[Version, Seq[Dependency]],
-  deploymentsByEnvironmentName: Map[String, Seq[DeploymentVO]],
-  latestVersion               : Option[Version],
-  shutterState                : Map[ShutteringEnvironment, ShutterState]
+@(service                      : RepositoryDetails,
+  latestDependencies           : Seq[Dependency],
+  dependenciesByEnvironmentName: Map[String, Seq[Dependency]],
+  versionByEnvironmentName     : Map[String, Version],
+  latestVersion                : Option[Version],
+  shutterState                 : Map[ShutteringEnvironment, ShutterState]
 )(implicit messages: Messages)
 
 <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
@@ -44,7 +44,7 @@
                     @renderShutterStatusBadge(false)
                     @renderBobbyRuleViolationBadges(
                        forEnvironment = "latest",
-                       withDependencies = ServiceInfoView.libraryDependenciesOf(optLatestDependencies)
+                       withDependencies = latestDependencies
                     )
                 </span>
             </div>
@@ -57,15 +57,13 @@
             <div class="board">
                 <div class="board__heading">
                     <h4 class="environment-name">@environment.name</h4>
-                    @renderVersion(ServiceInfoView.deploymentVersion(withDeployments = deploymentsByEnvironmentName)(forEnvironment = environment))
+                    @renderVersion(ServiceInfoView.lookupByTargetEnvironment(versionByEnvironmentName, environment))
                 </div>
                 <div class="board__body">
                     @renderShutterStatusBadge(ServiceInfoView.isShuttered(withShutterState = shutterState)(inEnvironment = environment))
                     @renderBobbyRuleViolationBadges(
-                      forEnvironment = environment.name,
-                      withDependencies = ServiceInfoView.slugDependencies(
-                        withDeployments = deploymentsByEnvironmentName,
-                        withDependencies = dependenciesByVersion)(forEnvironment = environment)
+                      forEnvironment   = environment.name,
+                      withDependencies = ServiceInfoView.lookupByTargetEnvironment(dependenciesByEnvironmentName, environment).getOrElse(Seq.empty)
                     )
                 </div>
             </div>
@@ -80,7 +78,7 @@
         <!-- no telemetry section for 'latest' -->
         <div class="row">
             <div class="col-md-12">
-                @dependenciesPartial(ServiceInfoView.libraryDependenciesOf(optLatestDependencies), "platform-dependencies-latest")
+                @dependenciesPartial(latestDependencies, "platform-dependencies-latest")
             </div>
         </div>
     </div>
@@ -114,10 +112,10 @@
 
         <div class="row">
             <div class="col-md-12">
-                @dependenciesPartial(ServiceInfoView.slugDependencies(
-                    withDeployments = deploymentsByEnvironmentName,
-                    withDependencies = dependenciesByVersion)(forEnvironment = environment), s"platform-dependencies-${environment.id}"
-                )
+                @dependenciesPartial(
+                    ServiceInfoView.lookupByTargetEnvironment(dependenciesByEnvironmentName, environment).getOrElse(Seq.empty)
+                  , s"platform-dependencies-${environment.id}"
+                  )
             </div>
         </div>
     </div>
