@@ -21,14 +21,21 @@ import play.api.mvc.{PathBindable, QueryStringBindable}
 sealed trait Environment { def asString: String }
 
 object Environment {
-  case object Production      extends Environment { val asString = "production"   }
-  case object ExternalTest    extends Environment { val asString = "externaltest" }
-  case object Staging         extends Environment { val asString = "staging"      }
-  case object QA              extends Environment { val asString = "qa"           }
-  case object Integration     extends Environment { val asString = "integration"  }
-  case object Development     extends Environment { val asString = "development"  }
+  case object Development  extends Environment { val asString = "development"  }
+  case object Integration  extends Environment { val asString = "integration"  }
+  case object QA           extends Environment { val asString = "qa"           }
+  case object Staging      extends Environment { val asString = "staging"      }
+  case object ExternalTest extends Environment { val asString = "externaltest" }
+  case object Production   extends Environment { val asString = "production"   }
 
-  val values: List[Environment] = List(Production, ExternalTest, Staging, QA, Integration, Development)
+  val values: List[Environment] =
+    // this list is sorted
+    List(Development, Integration, QA, Staging, ExternalTest, Production)
+
+  implicit val ordering = new Ordering[Environment] {
+    def compare(x: Environment, y: Environment): Int =
+      values.indexOf(x).compare(values.indexOf(y))
+  }
 
   def parse(s: String): Option[Environment] =
     values.find(_.asString == s)
