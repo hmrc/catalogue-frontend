@@ -47,8 +47,8 @@ GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefro
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()
 
 GET        /shuttering-overview/:shutterType            uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStates(shutterType: ShutterType)
-GET        /shuttering-overview/:shutterType/:env       uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStatesForEnv(shutterType: ShutterType, env: ShutteringEnvironment)
-GET        /frontend-route-warnings/:env/:serviceName   uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.frontendRouteWarnings(env: ShutteringEnvironment, serviceName: String)
+GET        /shuttering-overview/:shutterType/:env       uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStatesForEnv(shutterType: ShutterType, env: Environment)
+GET        /frontend-route-warnings/:env/:serviceName   uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.frontendRouteWarnings(env: Environment, serviceName: String)
 
 GET        /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step1Get(serviceName: Option[String])
 POST       /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step1Post
@@ -59,10 +59,10 @@ POST       /shuttering/2b                               uk.gov.hmrc.cataloguefro
 GET        /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step3Get
 POST       /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step3Post
 GET        /shuttering/4                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step4Get
-GET        /shuttering/:shutterType/:env                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.start(shutterType: ShutterType, env: ShutteringEnvironment, serviceName: Option[String])
+GET        /shuttering/:shutterType/:env                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.start(shutterType: ShutterType, env: Environment, serviceName: Option[String])
 
 GET        /shutter-events                              uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEvents
-GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(env: ShutteringEnvironment, serviceName: Option[String] ?= None)
+GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(env: Environment, serviceName: Option[String] ?= None)
 
 GET        /whats-running-where                         uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.landing
 GET        /whats-running-where-ecs                     uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.ecs

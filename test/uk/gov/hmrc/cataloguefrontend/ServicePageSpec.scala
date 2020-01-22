@@ -27,7 +27,8 @@ import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, EnvironmentMapping, ServiceDeploymentInformation}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterStatusValue, ShutterType}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
@@ -61,6 +62,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     serviceEndpoint(GET, "/frontend-route/service-1", willRespondWith = (200, Some(configServiceService1)))
     serviceEndpoint(GET, "/frontend-route/service-name", willRespondWith = (200, Some(configServiceService1)))
   }
+
+  implicit val sdi = ServiceDeploymentInformation.format
 
   "A service page" should {
 
@@ -102,8 +105,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
               .toJson(Some(ServiceDeploymentInformation(
                 "service-1",
                 Seq(
-                  DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", Version("0.0.1")),
-                  DeploymentVO(EnvironmentMapping("qa", "qa"), "skyscape-farnborough", Version("0.0.1"))
+                  DeploymentVO(EnvironmentMapping("production", Environment.Production), "skyscape-farnborough", Version("0.0.1")),
+                  DeploymentVO(EnvironmentMapping("qa", Environment.QA), "skyscape-farnborough", Version("0.0.1"))
                 )
               )))
               .toString()))
@@ -139,8 +142,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         "/api/whatsrunningwhere/service-1",
         willRespondWith = (200, Some(Json.toJson(Some(ServiceDeploymentInformation("service-1",
                 Seq(
-                  DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", Version("0.0.1")),
-                  DeploymentVO(EnvironmentMapping("qa", "qa"), "skyscape-farnborough", Version("0.0.1"))
+                  DeploymentVO(EnvironmentMapping("production", Environment.Production), "skyscape-farnborough", Version("0.0.1")),
+                  DeploymentVO(EnvironmentMapping("qa", Environment.QA), "skyscape-farnborough", Version("0.0.1"))
                 )))).toString())))
       serviceEndpoint(GET, "/shutter-api/production/frontend/states/service-1"  , willRespondWith = (200, Some(shutterApiData(ShutterType.Frontend, Environment.Production, ShutterStatusValue.Unshuttered))))
       serviceEndpoint(GET, "/shutter-api/externaltest/frontend/states/service-1", willRespondWith = (404, None))
@@ -165,8 +168,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     "link to environments" should {
 
       "show only show links to envs for which the service is deployed to" in {
-        import ServiceDeploymentInformation._
-
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(serviceDetailsData)))
         serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(serviceJenkinsData)))
         serviceEndpoint(
@@ -178,8 +179,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
               Json
                 .toJson(Some(ServiceDeploymentInformation(
                   "service-1",
-                  Seq(DeploymentVO(EnvironmentMapping("production", "production"), "skyscape-farnborough", Version("0.0.1")),
-                    DeploymentVO(EnvironmentMapping("development", "development"), "skyscape-farnborough", Version("0.0.1"))))))
+                  Seq(DeploymentVO(EnvironmentMapping("production", Environment.Production), "skyscape-farnborough", Version("0.0.1")),
+                    DeploymentVO(EnvironmentMapping("development", Environment.Development), "skyscape-farnborough", Version("0.0.1"))))))
                 .toString()))
         )
         serviceEndpoint(GET, "/api/sluginfo?name=service-1",
@@ -206,9 +207,23 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         response.body should not include "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard"
       }
 
-      "show links to devs by default" in {
-        import ServiceDeploymentInformation._
+      "show 'Not deployed' for envs in which the service is not deployed" in {
+        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (404, None))
+        serviceEndpoint(GET, "/api/repositories/service-1"     , willRespondWith = (200, Some(serviceDetailsData)))
+        serviceEndpoint(GET, "/api/sluginfo?name=service-1"    , willRespondWith = (200, Some(serviceDependenciesData)))
 
+        val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
+
+        // Links for environments should not be present
+        response.body should not include regex("""https:\/\/(?!grafana-dev).*\/#\/dashboard""")
+
+        countSubstring(response.body, "Not deployed") shouldBe 3
+
+        def countSubstring(str: String, substr: String) =
+          substr.r.findAllMatchIn(str).length
+      }
+
+      "omit Jenkins from telemetry links" in {
         serviceEndpoint(
           GET,
           "/api/whatsrunningwhere/service-1",
@@ -218,41 +233,11 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
               Json
                 .toJson(Some(ServiceDeploymentInformation(
                   "service-1",
-                  Seq(DeploymentVO(EnvironmentMapping("production", "production"), "datacentred-sal01", Version("0.0.1"))))))
+                  Seq(DeploymentVO(EnvironmentMapping("development", Environment.Development), "datacentred-sal01", Version("0.0.1"))))))
                 .toString()))
         )
-        serviceEndpoint(GET, "/api/repositories/service-1" , willRespondWith = (200, Some(serviceDetailsData)))
-        serviceEndpoint(GET, "/api/sluginfo?name=service-1", willRespondWith = (200, Some(serviceDependenciesData)))
-
-        val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
-
-        response.body should include("https://grafana-dev.co.uk/#/dashboard")
-      }
-
-      "show 'Not deployed' for envs in which the service is not deployed" in {
-        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (404, None))
         serviceEndpoint(GET, "/api/repositories/service-1"     , willRespondWith = (200, Some(serviceDetailsData)))
         serviceEndpoint(GET, "/api/sluginfo?name=service-1"    , willRespondWith = (200, Some(serviceDependenciesData)))
-
-        val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
-
-        // Dev links should always be present
-        response.body should include regex """https:\/\/(grafana-dev).*\/#\/dashboard"""
-
-        // Links for other environments should not be present
-        response.body should not include regex("""https:\/\/(?!grafana-dev).*\/#\/dashboard""")
-
-        countSubstring(response.body, "Not deployed") shouldBe 2
-
-        def countSubstring(str: String, substr: String) =
-          substr.r.findAllMatchIn(str).length
-      }
-
-      "omit Jenkins from telemetry links" in {
-        serviceEndpoint(GET, "/api/whatsrunningwhere/service-1", willRespondWith = (404, None))
-        serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith      = (200, Some(serviceDetailsData)))
-      serviceEndpoint(GET, "/api/sluginfo?name=service-1",
-        willRespondWith = (200, Some(serviceDependenciesData)))
 
         val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
 

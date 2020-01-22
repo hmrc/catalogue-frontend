@@ -33,8 +33,9 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.events._
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
-import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType, Environment => ShutteringEnvironment}
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
@@ -267,15 +268,14 @@ class CatalogueController @Inject()(
         deployedToEnvs    : Seq[DeploymentVO],
         optRefEnvironments: Option[Seq[TargetEnvironment]]
       ): Option[Seq[TargetEnvironment]] = {
-      val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
+      val deployedEnvironments = deployedToEnvs.map(_.environmentMapping.environment)
       optRefEnvironments.map {
-        _.map(e => (e.name.toLowerCase, e))
-         .map {
-            case (lwrCasedRefEnvName, refEnvironment)
-                if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
-              refEnvironment.copy(services = telemetryLinksFrom(refEnvironment.services))
-            case (_, refEnvironment) =>
-              refEnvironment.copy(services = Nil)
+         _.map { targetEnvironment =>
+           val telemetryLinks =
+             if (deployedEnvironments.contains(targetEnvironment.environment))
+               telemetryLinksFrom(targetEnvironment.services)
+             else Nil
+           targetEnvironment.copy(services = telemetryLinks)
           }
       }
     }
@@ -283,10 +283,10 @@ class CatalogueController @Inject()(
     val futDeployments =
       deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
 
-    val futByEnvironment: Future[Map[String, (Version, Seq[Dependency])]] =
+    val futByEnvironment: Future[Map[Environment, (Version, Seq[Dependency])]] =
       for {
         deployments      <- futDeployments
-        envToDeployments =  deployments.groupBy(_.environmentMapping.name)
+        envToDeployments =  deployments.groupBy(_.environmentMapping.environment)
         res              <- envToDeployments.toList.traverse { case (env, deployments) =>
                               // a single environment may have multiple versions during a deployment
                               // return the lowest
@@ -301,7 +301,7 @@ class CatalogueController @Inject()(
 
     val futShutterStateByEnvironment =
       if (CatalogueFrontendSwitches.shuttering.isEnabled)
-        ShutteringEnvironment.values
+        Environment.values
           .traverse { env =>
             shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
           }
@@ -310,7 +310,7 @@ class CatalogueController @Inject()(
              .groupBy(_.environment)
              .mapValues(_.head)
           )
-      else Future.successful(Map.empty[ShutteringEnvironment, ShutterState])
+      else Future.successful(Map.empty[Environment, ShutterState])
 
     ( teamsAndRepositoriesConnector.repositoryDetails(serviceName)
     , teamsAndRepositoriesConnector.lookupLink(serviceName)

@@ -22,7 +22,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.Reads
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.shuttering.Environment.Production
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.shuttering.ShutterEventsPage
@@ -35,7 +35,7 @@ class ShutterEventsController @Inject() (mcc: MessagesControllerComponents, conn
                                         (implicit val ec: ExecutionContext) extends FrontendController(mcc) {
 
   def shutterEvents: Action[AnyContent] = Action {
-    Redirect(routes.ShutterEventsController.shutterEventsList(Production))
+    Redirect(routes.ShutterEventsController.shutterEventsList(Environment.Production))
   }
 
   def shutterEventsList(env: Environment, serviceName: Option[String]): Action[AnyContent] = Action.async { implicit request =>

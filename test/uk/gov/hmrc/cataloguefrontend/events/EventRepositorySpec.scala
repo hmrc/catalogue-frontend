@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
-import org.mockito.Mockito.when
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.IndexModel
 import org.scalatest.concurrent.ScalaFutures

@@ -43,6 +43,7 @@ object ConfigService {
   case class ConfigSourceEntries(source: String, precedence: Int, entries: Map[KeyName, String] = Map())
   case class ConfigSourceValue(source: String, precedence: Int, value: String)
 
+  // TODO another variant to cater for - Environment + "local"...
   val environments: Seq[String] = Seq("local", "development", "qa", "staging", "integration", "externaltest", "production")
 
   def sortBySourcePrecedence(entries: Option[Seq[ConfigSourceValue]]): Seq[ConfigSourceValue] =

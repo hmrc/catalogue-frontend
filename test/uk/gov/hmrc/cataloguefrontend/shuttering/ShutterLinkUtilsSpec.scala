@@ -17,12 +17,13 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 class ShutterLinkUtilsSpec extends WordSpec with Matchers {
 
   "mkLink" should {
     "make a production url" in {
-        ShutterLinkUtils.mkLink(Environment.Production, "/xyz") shouldBe "https://www.tax.service.gov.uk/xyz/platops-shutter-testing"
+      ShutterLinkUtils.mkLink(Environment.Production, "/xyz") shouldBe "https://www.tax.service.gov.uk/xyz/platops-shutter-testing"
     }
 
     "make a link for every non-production environment" in {

@@ -28,6 +28,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
@@ -112,21 +113,21 @@ class TeamsAndRepositoriesConnectorSpec
       responseData.environments should ===(
         Some(Seq(
           TargetEnvironment(
-            "Dev",
+            Environment.Development,
             Seq(
               Link("jenkins", "Jenkins", "https://deploy-dev.co.uk/job/deploy-microservice"),
               Link("grafana", "Grafana", "https://grafana-dev.co.uk/#/dashboard")
             )
           ),
           TargetEnvironment(
-            "QA",
+            Environment.QA,
             Seq(
               Link("jenkins", "Jenkins", "https://deploy-qa.co.uk/job/deploy-microservice"),
               Link("grafana", "Grafana", "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
             )
           ),
           TargetEnvironment(
-            "Production",
+            Environment.Production,
             Seq(
               Link("jenkins", "Jenkins", "https://deploy-prod.co.uk/job/deploy-microservice"),
               Link("grafana", "Grafana", "https://grafana-prod.co.uk/#/dashboard")

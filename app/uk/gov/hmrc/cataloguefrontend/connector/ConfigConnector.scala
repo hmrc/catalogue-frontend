@@ -37,22 +37,10 @@ class ConfigConnector @Inject()(
   implicit val configSourceEntriesReads = Json.reads[ConfigSourceEntries]
   implicit val configSourceValueReads = Json.reads[ConfigSourceValue]
 
-
-  private implicit val linkFormats         = Json.format[Link]
-  private implicit val environmentsFormats = Json.format[TargetEnvironment]
-  private implicit val serviceFormats      = {
-    implicit val tnf = TeamName.format
-    Json.format[RepositoryDetails]
-  }
-
-  private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
-    override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
-  }
-
-  def configByEnv(service: String)(implicit hc: HeaderCarrier) =
+  def configByEnv(service: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
     http.GET[ConfigByEnvironment](s"$serviceConfigsBaseUrl/config-by-env/$service")
 
-  def configByKey(service: String)(implicit hc: HeaderCarrier) =
+  def configByKey(service: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     http.GET[ConfigByKey](s"$serviceConfigsBaseUrl/config-by-key/$service")
 
   def bobbyRules()(implicit hc: HeaderCarrier): Future[BobbyRuleSet] = {

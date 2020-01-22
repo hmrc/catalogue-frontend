@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+
 object ShutterLinkUtils {
   def hostName(env: Environment) = {
     env match {

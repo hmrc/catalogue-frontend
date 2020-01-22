@@ -22,8 +22,9 @@ lazy val microservice = Project(appName, file("."))
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
     resolvers += Resolver.jcenterRepo,
     RoutesKeys.routesImport ++= Seq(
-        "uk.gov.hmrc.cataloguefrontend.shuttering.{Environment => ShutteringEnvironment, ShutterType}",
         "uk.gov.hmrc.cataloguefrontend.connector.model.TeamName",
+        "uk.gov.hmrc.cataloguefrontend.model.Environment",
+        "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType",
     ),
     // ***************
     // Use the silencer plugin to suppress warnings from unused imports in compiled twirl templates

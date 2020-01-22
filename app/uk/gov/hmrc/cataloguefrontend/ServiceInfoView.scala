@@ -16,19 +16,19 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, TargetEnvironment}
+import uk.gov.hmrc.cataloguefrontend.connector.TargetEnvironment
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
-import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue, Environment => ShutteringEnvironment}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 
 object ServiceInfoView {
-  def isShuttered(withShutterState: Map[ShutteringEnvironment, ShutterState])(inEnvironment: TargetEnvironment): Boolean =
-    TargetEnvironment.toShutteringEnvironment(inEnvironment).flatMap(withShutterState.get).exists {
-      _.status.value == ShutterStatusValue.Shuttered
-    }
+  def isShuttered(withShutterState: Map[Environment, ShutterState])(targetEnvironment: TargetEnvironment): Boolean =
+    lookupByTargetEnvironment(withShutterState, targetEnvironment)
+      .exists(_.status.value == ShutterStatusValue.Shuttered)
 
   // TODO this can go as soon as we have a global Environment type
-  def lookupByTargetEnvironment[A](map: Map[String, A], environment: TargetEnvironment): Option[A] =
-    map.get(environment.name.toLowerCase)
+  def lookupByTargetEnvironment[A](map: Map[Environment, A], targetEnvironment: TargetEnvironment): Option[A] =
+    map.get(targetEnvironment.environment)
 
   /*
    * Capture any curated library dependencies from master / Github that are not referenced by the 'latest' slug,

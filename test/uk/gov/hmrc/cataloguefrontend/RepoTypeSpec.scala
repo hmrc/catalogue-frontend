@@ -23,12 +23,13 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 
 class RepoTypeSpec extends WordSpec with Matchers {
 
+  implicit val rtf = RepoType.format
+
   "RepoType" should {
     "be able to be read from a json string" in {
       Json.parse("""{"type":"Service"}""").as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Service)
       Json.parse("""{"type":"Library"}""").as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Library)
-      Json.parse("""{"type":"Other"}""").as[Map[String, RepoType]]   shouldBe Map("type" -> RepoType.Other)
+      Json.parse("""{"type":"Other"}"""  ).as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Other)
     }
   }
-
 }

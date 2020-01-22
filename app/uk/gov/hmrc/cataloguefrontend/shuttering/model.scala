@@ -20,29 +20,17 @@ import java.time.Instant
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import play.api.mvc.{PathBindable, QueryStringBindable}
+import play.api.mvc.PathBindable
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 
-sealed trait Environment { def asString: String }
-object Environment {
-  case object Production      extends Environment { val asString = "production"   }
-  case object ExternalTest    extends Environment { val asString = "externaltest" }
-  case object Staging         extends Environment { val asString = "staging"      }
-  case object QA              extends Environment { val asString = "qa"           }
-  case object Integration     extends Environment { val asString = "integration"  }
-  case object Development     extends Environment { val asString = "development"  }
-
-  val values: List[Environment] = List(Production, ExternalTest, Staging, QA, Integration, Development)
-
-  def parse(s: String): Option[Environment] =
-    values.find(_.asString == s)
-
+object ShutterEnvironment {
   val format: Format[Environment] =
     new Format[Environment] {
       override def reads(json: JsValue) =
         json.validate[String]
           .flatMap { s =>
-              parse(s) match {
+              Environment.parse(s) match {
                 case Some(env) => JsSuccess(env)
                 case None      => JsError(__, s"Invalid Environment '$s'")
               }
@@ -50,32 +38,6 @@ object Environment {
 
       override def writes(e: Environment) =
         JsString(e.asString)
-    }
-
-  implicit val pathBindable: PathBindable[Environment] =
-    new PathBindable[Environment] {
-      override def bind(key: String, value: String): Either[String, Environment] =
-        parse(value).toRight(s"Invalid Environment '$value'")
-
-      override def unbind(key: String, value: Environment): String =
-        value.asString
-    }
-
-  implicit val queryStringBindable: QueryStringBindable[Environment] =
-    new QueryStringBindable[Environment] {
-      private val Name = "environment"
-
-      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Environment]] =
-        params.get(Name).map { values =>
-          values.toList match {
-            case Nil => Left("missing environment value")
-            case head :: Nil => pathBindable.bind(key, head)
-            case _ => Left("too many environment values")
-          }
-        }
-
-      override def unbind(key: String, value: Environment): String =
-        s"$Name=${value.asString}"
     }
 }
 
@@ -198,7 +160,7 @@ object ShutterState {
 
   val reads: Reads[ShutterState] = {
     implicit val stf = ShutterType.format
-    implicit val ef  = Environment.format
+    implicit val ef  = ShutterEnvironment.format
     implicit val ssf = ShutterStatus.format
     ( (__ \ "name"        ).read[String]
     ~ (__ \ "type"        ).read[ShutterType]
@@ -306,7 +268,7 @@ object EventData {
             )
 
   val shutterStateChangeDataFormat: Format[ShutterStateChangeData] = {
-    implicit val ef   = Environment.format
+    implicit val ef   = ShutterEnvironment.format
     implicit val st   = ShutterType.format
     implicit val ssvf = ShutterStatus.format
     implicit val scf  = ShutterCause.format
@@ -322,7 +284,7 @@ object EventData {
   }
 
   val killSwitchStateChangeDataFormat: Format[KillSwitchStateChangeData] = {
-    implicit val ef   = Environment.format
+    implicit val ef   = ShutterEnvironment.format
     implicit val ssvf = ShutterStatusValue.format
 
     ( (__ \ "environment").format[Environment]
@@ -433,7 +395,7 @@ case class OutagePage(
 
 object OutagePage {
   val reads: Reads[OutagePage] = {
-    implicit val ef   = Environment.format
+    implicit val ef   = ShutterEnvironment.format
     implicit val tcf  = TemplatedContent.format
     implicit val opwr = OutagePageWarning.reads
     ( (__ \ "serviceName"      ).read[String]

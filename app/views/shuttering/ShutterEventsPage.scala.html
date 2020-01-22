@@ -15,7 +15,8 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{Environment, ShutterEventsView, ShutterStateChangeEvent}
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterEventsView, ShutterStateChangeEvent}
 
 @(events: Seq[ShutterStateChangeEvent], form: Form[_], environments: List[Environment])(implicit messages: Messages, request: Request[_])
 
