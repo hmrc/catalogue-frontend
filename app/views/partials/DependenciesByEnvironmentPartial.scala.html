@@ -26,8 +26,8 @@
 
 @(service                      : RepositoryDetails,
   latestDependencies           : Seq[Dependency],
-  dependenciesByEnvironmentName: Map[String, Seq[Dependency]],
-  versionByEnvironmentName     : Map[String, Version],
+  dependenciesByEnvironmentName: Map[Environment, Seq[Dependency]],
+  versionByEnvironmentName     : Map[Environment, Version],
   latestVersion                : Option[Version],
   shutterState                 : Map[Environment, ShutterState]
 )(implicit messages: Messages)
@@ -44,7 +44,7 @@
                 <span class="board__body">
                     @renderShutterStatusBadge(false)
                     @renderBobbyRuleViolationBadges(
-                       forEnvironment = "latest",
+                       forEnvironment   = None,
                        withDependencies = latestDependencies
                     )
                 </span>
@@ -52,19 +52,19 @@
         </a>
     </li>
 
-    @for(environment <- service.environments.getOrElse(Seq.empty)) {
+    @for(targetEnvironment <- service.environments.getOrElse(Seq.empty)) {
     <li class="nav-item">
-        <a id="@{environment.id}-tab" class="nav-link" data-toggle="tab" href="#@{environment.id}-pane" role="tab" aria-controls="@environment.id" aria-selected="false">
+        <a id="@{targetEnvironment.id}-tab" class="nav-link" data-toggle="tab" href="#@{targetEnvironment.id}-pane" role="tab" aria-controls="@targetEnvironment.id" aria-selected="false">
             <div class="board">
                 <div class="board__heading">
-                    <h4 class="environment-name">@environment.name</h4>
-                    @renderVersion(ServiceInfoView.lookupByTargetEnvironment(versionByEnvironmentName, environment))
+                    <h4 class="environment-name">@targetEnvironment.environment</h4>
+                    @renderVersion(ServiceInfoView.lookupByTargetEnvironment(versionByEnvironmentName, targetEnvironment))
                 </div>
                 <div class="board__body">
-                    @renderShutterStatusBadge(ServiceInfoView.isShuttered(withShutterState = shutterState)(inEnvironment = environment))
+                    @renderShutterStatusBadge(ServiceInfoView.isShuttered(withShutterState = shutterState)(targetEnvironment = targetEnvironment))
                     @renderBobbyRuleViolationBadges(
-                      forEnvironment   = environment.name,
-                      withDependencies = ServiceInfoView.lookupByTargetEnvironment(dependenciesByEnvironmentName, environment).getOrElse(Seq.empty)
+                      forEnvironment   = Some(targetEnvironment.environment),
+                      withDependencies = ServiceInfoView.lookupByTargetEnvironment(dependenciesByEnvironmentName, targetEnvironment).getOrElse(Seq.empty)
                     )
                 </div>
             </div>
@@ -140,12 +140,12 @@
     }
 }
 
-@renderBobbyRuleViolationBadges(forEnvironment: String, withDependencies: Seq[Dependency]) = {
+@renderBobbyRuleViolationBadges(forEnvironment: Option[Environment], withDependencies: Seq[Dependency]) = {
     @renderActiveBobbyRuleViolationBadge(forEnvironment, withDependencies)
     @renderPendingBobbyRuleViolationBadge(forEnvironment, withDependencies)
 }
 
-@renderActiveBobbyRuleViolationBadge(forEnvironment: String, withDependencies: Seq[Dependency]) = {
+@renderActiveBobbyRuleViolationBadge(forEnvironment: Option[Environment], withDependencies: Seq[Dependency]) = {
     @if(withDependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
         <div id="bobby-violation-active-badge-@{forEnvironment}" class="environment-badge bobby-violation-active-badge"
              data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.active.badge")"></div>
@@ -154,11 +154,15 @@
    }
 }
 
-@renderPendingBobbyRuleViolationBadge(forEnvironment: String, withDependencies: Seq[Dependency]) = {
+@renderPendingBobbyRuleViolationBadge(forEnvironment: Option[Environment], withDependencies: Seq[Dependency]) = {
     @if(withDependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
         <div id="bobby-violation-pending-badge-@{forEnvironment}" class="environment-badge bobby-violation-pending-badge"
              data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.pending.badge")"></div>
     } else {
         <div id="bobby-violation-pending-badge-@{forEnvironment}" class="environment-badge no-badge"></div>
     }
+}
+
+@optEnvToString(optEnv: Option[Environment]) = {
+    @optEnv.fold("latest")(_.asString)
 }

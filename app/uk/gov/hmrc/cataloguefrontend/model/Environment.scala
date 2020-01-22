@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.model
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
 sealed trait Environment { def asString: String }
+
 object Environment {
   case object Production      extends Environment { val asString = "production"   }
   case object ExternalTest    extends Environment { val asString = "externaltest" }

@@ -104,7 +104,7 @@ object JsonData {
        |	     },
        |      "environments" : [
        |      {
-       |        "name" : "Dev",
+       |        "name" : "Development",
        |        "services" : [{
        |          "name": "jenkins",
        |		       "displayName": "Jenkins",
@@ -591,7 +591,7 @@ object JsonData {
       |		     "url": "https://github.com/hmrc/serv"
       |	     },
       |      "environments" : [{
-      |        "name" : "env1",
+      |        "name" : "Production",
       |        "services" : [{
       |          "name": "ser1",
       |		       "displayName": "service1",
@@ -602,7 +602,7 @@ object JsonData {
       |          "url": "http://ser2/serv"
       |        }]
       |      },{
-      |        "name" : "env2",
+      |        "name" : "Staging",
       |        "services" : [{
       |          "name": "ser1",
       |		       "displayName": "service1",

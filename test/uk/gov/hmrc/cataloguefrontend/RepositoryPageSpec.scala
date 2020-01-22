@@ -146,7 +146,7 @@ class RepositoryPageSpec
       |		     }
       |	     ],
       |      "environments" : [{
-      |        "name" : "env1",
+      |        "name" : "Production",
       |        "services" : [{
       |          "name": "ser1",
       |		       "displayName": "service1",
@@ -157,7 +157,7 @@ class RepositoryPageSpec
       |          "url": "http://ser2/${repositoryDetails.repositoryName}"
       |        }]
       |      },{
-      |        "name" : "env2",
+      |        "name" : "Staging",
       |        "services" : [{
       |          "name": "ser1",
       |		       "displayName": "service1",

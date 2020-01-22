@@ -16,30 +16,56 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDateTime, ZoneOffset}
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
-import play.api.libs.json.{JsValue, Json, OFormat, Reads}
+import play.api.libs.json.{__, Format, JsError, JsNumber, JsResult, JsString, JsSuccess, JsValue, Json}
+import play.api.libs.functional.syntax._
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.{DateHelper, JavaDateTimeJsonFormatter}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.DateHelper
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
+
+object JavaLocalDateTime {
+
+  val format: Format[LocalDateTime] =
+   new Format[LocalDateTime] {
+    override def reads(json: JsValue): JsResult[LocalDateTime] =
+      json match {
+        case JsNumber(v) => JsSuccess(LocalDateTime.ofEpochSecond(v.toLongExact, 0, ZoneOffset.UTC))
+        case v           => JsError(s"invalid value for epoch second '$v'")
+      }
+
+    override def writes(ldt: LocalDateTime) =
+      JsNumber(ldt.toEpochSecond(ZoneOffset.UTC))
+   }
+}
+
+
 case class Deployer(name: String, deploymentDate: LocalDateTime)
 
+object Deployer {
+  val format: Format[Deployer] = {
+    implicit val ldtf = JavaLocalDateTime.format
+    Json.format[Deployer]
+  }
+}
+
 case class Release(
-  name: String,
+  name          : String,
   productionDate: LocalDateTime,
-  creationDate: Option[LocalDateTime] = None,
-  interval: Option[Long]              = None,
-  leadTime: Option[Long]              = None,
-  version: String,
-  deployers: Seq[Deployer] = Seq.empty) {
+  creationDate  : Option[LocalDateTime] = None,
+  interval      : Option[Long]          = None,
+  leadTime      : Option[Long]          = None,
+  version       : String,
+  deployers     : Seq[Deployer]         = Seq.empty) {
 
   lazy val latestDeployer: Option[Deployer] = {
     import DateHelper._
@@ -47,23 +73,59 @@ case class Release(
   }
 }
 
-final case class EnvironmentMapping(name: String, releasesAppId: String)
+object Release {
+  val format: Format[Release] = {
+    implicit val ldtf = JavaLocalDateTime.format
+    implicit val df   = Deployer.format
+    Json.format[Release]
+  }
+}
+
+object ServiceDeploymentEnvironment {
+  val format: Format[Environment] =
+    new Format[Environment] {
+      override def reads(json: JsValue) =
+        json.validate[String]
+          .flatMap { s =>
+              Environment.parse(s) match {
+                case Some(env) => JsSuccess(env)
+                case None      => JsError(__, s"Invalid Environment '$s'")
+              }
+            }
+
+      override def writes(e: Environment) =
+        JsString(e.asString)
+    }
+}
+
+final case class EnvironmentMapping(name: String, environment: Environment)
+
 object EnvironmentMapping {
-  implicit val environmentFormat = Json.format[EnvironmentMapping]
+  val format: Format[EnvironmentMapping] = {
+    implicit val ef = ServiceDeploymentEnvironment.format
+    ( (__ \ "name"         ).format[String]
+    ~ (__ \ "releasesAppId").format[Environment]
+    )(EnvironmentMapping.apply, unlift(EnvironmentMapping.unapply))
+  }
 }
 
 final case class DeploymentVO(environmentMapping: EnvironmentMapping, datacentre: String, version: Version)
 
 object DeploymentVO {
-  implicit val environmentFormat = {
-    implicit val vf = Version.format
+  val format: Format[DeploymentVO] = {
+    implicit val emf = EnvironmentMapping.format
+    implicit val vf  = Version.format
     Json.format[DeploymentVO]
   }
 }
 
 case class ServiceDeploymentInformation(serviceName: String, deployments: Seq[DeploymentVO])
+
 object ServiceDeploymentInformation {
-  implicit val whatsRunningWhereFormat = Json.format[ServiceDeploymentInformation]
+  val format: Format[ServiceDeploymentInformation] = {
+    implicit val dvf = DeploymentVO.format
+    Json.format[ServiceDeploymentInformation]
+  }
 }
 
 @Singleton
@@ -78,10 +140,8 @@ class ServiceDeploymentsConnector @Inject()(
   import ServiceDeploymentInformation._
   import uk.gov.hmrc.http.HttpReads._
 
-  private implicit val dateTimeReads: Reads[LocalDateTime] = JavaDateTimeJsonFormatter.localDateTimeReads
-  private implicit val dateReads: Reads[LocalDate]         = JavaDateTimeJsonFormatter.localDateReads
-  private implicit val deployerFormat: OFormat[Deployer]   = Json.format[Deployer]
-  private implicit val deploymentsFormat: Reads[Release]   = Json.reads[Release]
+  private implicit val rf   = Release.format
+  private implicit val sdif = ServiceDeploymentInformation.format
 
   def getDeployments(serviceNames: Set[String])(implicit hc: HeaderCarrier): Future[Seq[Release]] =
     http

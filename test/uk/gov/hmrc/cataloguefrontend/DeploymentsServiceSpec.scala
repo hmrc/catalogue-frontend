@@ -27,6 +27,7 @@ import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.ServiceName
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.{DeploymentsService, TeamRelease}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
@@ -221,7 +222,7 @@ class DeploymentsServiceSpec
       val cannedWhatIsRunningWhere =
         ServiceDeploymentInformation(
           appName,
-          Seq(DeploymentVO(EnvironmentMapping("qa", "qa"), "skyscape-farnborough", Version("0.0.1"))))
+          Seq(DeploymentVO(EnvironmentMapping("qa", Environment.QA), "skyscape-farnborough", Version("0.0.1"))))
       when(deploymentsConnector.getWhatIsRunningWhere(any())(any()))
         .thenReturn(Future.successful(cannedWhatIsRunningWhere))
 

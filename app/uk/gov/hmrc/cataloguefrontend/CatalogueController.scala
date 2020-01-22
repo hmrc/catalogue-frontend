@@ -268,15 +268,14 @@ class CatalogueController @Inject()(
         deployedToEnvs    : Seq[DeploymentVO],
         optRefEnvironments: Option[Seq[TargetEnvironment]]
       ): Option[Seq[TargetEnvironment]] = {
-      val deployedEnvNames = deployedToEnvs.map(_.environmentMapping.name)
+      val deployedEnvironments = deployedToEnvs.map(_.environmentMapping.environment)
       optRefEnvironments.map {
-        _.map(e => (e.name.toLowerCase, e))
-         .map {
-            case (lwrCasedRefEnvName, refEnvironment)
-                if deployedEnvNames.contains(lwrCasedRefEnvName) || lwrCasedRefEnvName == "dev" =>
-              refEnvironment.copy(services = telemetryLinksFrom(refEnvironment.services))
-            case (_, refEnvironment) =>
-              refEnvironment.copy(services = Nil)
+         _.map { targetEnvironment =>
+           val telemetryLinks =
+             if (deployedEnvironments.contains(targetEnvironment.environment))
+               telemetryLinksFrom(targetEnvironment.services)
+             else Nil
+           targetEnvironment.copy(services = telemetryLinks)
           }
       }
     }
@@ -284,10 +283,10 @@ class CatalogueController @Inject()(
     val futDeployments =
       deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
 
-    val futByEnvironment: Future[Map[String, (Version, Seq[Dependency])]] =
+    val futByEnvironment: Future[Map[Environment, (Version, Seq[Dependency])]] =
       for {
         deployments      <- futDeployments
-        envToDeployments =  deployments.groupBy(_.environmentMapping.name)
+        envToDeployments =  deployments.groupBy(_.environmentMapping.environment)
         res              <- envToDeployments.toList.traverse { case (env, deployments) =>
                               // a single environment may have multiple versions during a deployment
                               // return the lowest

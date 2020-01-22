@@ -21,11 +21,12 @@ import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -37,39 +38,44 @@ object RepoType extends Enumeration {
 
   val Service, Library, Prototype, Other = Value
 
-  implicit val repoTypeReads: Reads[RepoType] = new Reads[RepoType] {
-    override def reads(json: JsValue): JsResult[RepoType] = json match {
-      case JsString(s) => JsSuccess(RepoType.withName(s))
-      case _ =>
-        JsError(
-          __,
-          JsonValidationError(s"Expected value to be a String contained within ${RepoType.values}, got $json instead."))
-    }
-  }
+  val format: Format[RepoType] =
+    new Format[RepoType] {
+      override def reads(json: JsValue) =
+        json match {
+          case JsString(s) => JsSuccess(RepoType.withName(s))
+          case _ => JsError(
+                      __,
+                     JsonValidationError(s"Expected value to be a String contained within ${RepoType.values}, got $json instead."))
+        }
 
+      override def writes(rt: RepoType) =
+        JsString(rt.toString)
+    }
 }
 
 case class Link(name: String, displayName: String, url: String) {
   val id: String = displayName.toLowerCase.replaceAll(" ", "-")
 }
 
+object Link {
+  val format: Format[Link] =
+    Json.format[Link]
+}
+
 case class JenkinsLink(service: String, jenkinsURL: String)
 
-case class TargetEnvironment(name: String, services: Seq[Link]) {
-  val id: String = name.toLowerCase.replaceAll(" ", "-")
+case class TargetEnvironment(environment: Environment, services: Seq[Link]) {
+  val id: String = environment.asString
 }
 
 object TargetEnvironment {
-  def toEnvironment(targetEnv: TargetEnvironment): Option[Environment] =
-    targetEnv.name.toLowerCase match {
-      case "production"    => Some(Environment.Production)
-      case "external test" => Some(Environment.ExternalTest)
-      case "qa"            => Some(Environment.QA)
-      case "staging"       => Some(Environment.Staging)
-      case "integration"   => Some(Environment.Integration)
-      case "development"   => Some(Environment.Development)
-      case _               => None
-    }
+  val format: Format[TargetEnvironment] = {
+    implicit val ef = TeamsAndRepositoriesEnvironment.format
+    implicit val lf = Link.format
+    ( (__ \ "name"    ).format[Environment]
+    ~ (__ \ "services").format[Seq[Link]]
+    )(TargetEnvironment.apply, unlift(TargetEnvironment.unapply))
+  }
 }
 
 case class RepositoryDetails(
@@ -85,6 +91,16 @@ case class RepositoryDetails(
   repoType    : RepoType.RepoType,
   isPrivate   : Boolean)
 
+object RepositoryDetails {
+  val format: Format[RepositoryDetails] = {
+    implicit val tnf = TeamName.format
+    implicit val lf  = Link.format
+    implicit val tef = TargetEnvironment.format
+    implicit val rtf = RepoType.format
+    Json.format[RepositoryDetails]
+  }
+}
+
 case class RepositoryDisplayDetails(
   name         : String,
   createdAt    : LocalDateTime,
@@ -92,7 +108,10 @@ case class RepositoryDisplayDetails(
   repoType     : RepoType.RepoType)
 
 object RepositoryDisplayDetails {
-  implicit val repoDetailsFormat: OFormat[RepositoryDisplayDetails] = Json.format[RepositoryDisplayDetails]
+  val format: OFormat[RepositoryDisplayDetails] = {
+    implicit val rtf = RepoType.format
+    Json.format[RepositoryDisplayDetails]
+  }
 }
 
 case class Team(
@@ -107,7 +126,7 @@ case class Team(
 }
 
 object Team {
-  implicit val format: OFormat[Team] = {
+  val format: OFormat[Team] = {
     implicit val tnf = TeamName.format
     Json.format[Team]
   }
@@ -123,12 +142,40 @@ object DigitalService {
     repoType     : RepoType.RepoType,
     teamNames    : Seq[TeamName])
 
-  implicit val repoDetailsFormat: OFormat[DigitalServiceRepository] = {
-    implicit val tnf = TeamName.format
-    Json.format[DigitalServiceRepository]
+  object DigitalServiceRepository {
+    val format: OFormat[DigitalServiceRepository] = {
+      implicit val rtf = RepoType.format
+      implicit val tnf = TeamName.format
+      Json.format[DigitalServiceRepository]
+    }
   }
 
-  implicit val digitalServiceFormat: OFormat[DigitalService] = Json.format[DigitalService]
+  val format: OFormat[DigitalService] = {
+    implicit val dsrf = DigitalServiceRepository.format
+    Json.format[DigitalService]
+  }
+}
+
+object TeamsAndRepositoriesEnvironment {
+  val format: Format[Environment] =
+    // The source of environment is url-templates.envrionments (sic)
+    // https://github.com/hmrc/app-config-base/blob/227e006901c96ad10230a2f88a305b70645bf7d1/teams-and-repositories.conf
+    new Format[Environment] {
+      override def reads(json: JsValue) =
+        json.validate[String]
+          .flatMap {
+            case "Production"    => JsSuccess(Environment.Production)
+            case "External Test" => JsSuccess(Environment.ExternalTest)
+            case "QA"            => JsSuccess(Environment.QA)
+            case "Staging"       => JsSuccess(Environment.Staging)
+            case "Integration"   => JsSuccess(Environment.Integration)
+            case "Development"   => JsSuccess(Environment.Development)
+            case s               => JsError(__, s"Invalid Environment '$s'")
+          }
+
+      override def writes(e: Environment) =
+        JsString(e.asString)
+    }
 }
 
 @Singleton
@@ -141,15 +188,14 @@ class TeamsAndRepositoriesConnector @Inject()(
 
   private val teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
 
-  private implicit val tnf                 = TeamName.format
-  private implicit val linkFormats         = Json.format[Link]
-  private implicit val jenkinsLinkFormats  = Json.format[JenkinsLink]
-  private implicit val environmentsFormats = Json.format[TargetEnvironment]
-  private implicit val serviceFormats      = Json.format[RepositoryDetails]
-
-  private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
-    override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
-  }
+  private implicit val tf   = Team.format
+  private implicit val tnf  = TeamName.format
+  private implicit val lf   = Link.format
+  private implicit val jf   = Json.format[JenkinsLink]
+  private implicit val ef   = TeamsAndRepositoriesEnvironment.format
+  private implicit val rdf  = RepositoryDetails.format
+  private implicit val rddf = RepositoryDisplayDetails.format
+  private implicit val dsf  = DigitalService.format
 
   def lookupLink(service: String)(implicit hc: HeaderCarrier): Future[Option[Link]] =
     http.GET[JenkinsLink](teamsAndServicesBaseUrl + s"/api/jenkins-url/$service")
@@ -165,15 +211,12 @@ class TeamsAndRepositoriesConnector @Inject()(
   def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] =
     http.GET[Seq[String]](teamsAndServicesBaseUrl + s"/api/digital-services")
 
-  def teamInfo(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Option[Team]] = {
-    val url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${encodePathParam(teamName.asString)}"
-
+  def teamInfo(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Option[Team]] =
     http
-      .GET[Option[Team]](url)
+      .GET[Option[Team]](teamsAndServicesBaseUrl + s"/api/teams_with_details/${encodePathParam(teamName.asString)}")
       .recover {
         case _ => None
       }
-  }
 
   def teamsWithRepositories(implicit hc: HeaderCarrier): Future[Seq[Team]] =
     http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams_with_repositories")
