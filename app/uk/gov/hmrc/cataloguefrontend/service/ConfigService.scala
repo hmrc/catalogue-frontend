@@ -47,8 +47,8 @@ object ConfigService {
     val values: List[ConfigEnvironment] =
       Local :: Environment.values.map(ForEnvironment.apply)
 
-    val format: Format[ConfigEnvironment] =
-      new Format[ConfigEnvironment] {
+    val reads: Reads[ConfigEnvironment] =
+      new Reads[ConfigEnvironment] {
         override def reads(json: JsValue) =
           json.validate[String]
             .flatMap {
@@ -58,9 +58,6 @@ object ConfigService {
                                 case None      => JsError(__, s"Invalid Environment '$s'")
                               }
             }
-
-        override def writes(e: ConfigEnvironment) =
-          JsString(e.asString)
       }
   }
 
@@ -68,7 +65,7 @@ object ConfigService {
 
   object ConfigByEnvironment {
     val reads: Reads[ConfigByEnvironment] = {
-      implicit val cef  = ConfigEnvironment.format
+      implicit val cer  = ConfigEnvironment.reads
       implicit val cser = ConfigSourceEntries.reads
       Reads.of[Map[String, Seq[ConfigSourceEntries]]]
         .map(_.map { case (k , v) => (JsString(k).as[ConfigEnvironment], v) })
@@ -79,7 +76,7 @@ object ConfigService {
 
   object ConfigByKey {
     val reads: Reads[ConfigByKey] = {
-      implicit val cef  = ConfigEnvironment.format
+      implicit val cer  = ConfigEnvironment.reads
       implicit val csvf = ConfigSourceValue.reads
       Reads.of[Map[KeyName, Map[String, Seq[ConfigSourceValue]]]]
         .map(_.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v)}))

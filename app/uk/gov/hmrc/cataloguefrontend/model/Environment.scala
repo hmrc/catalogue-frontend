@@ -66,3 +66,15 @@ object Environment {
         s"$Name=${value.asString}"
     }
 }
+
+trait SlugInfoFlag { def asString: String }
+object SlugInfoFlag {
+  case object Latest                           extends SlugInfoFlag { override def asString = "latest"     }
+  case class  ForEnvironment(env: Environment) extends SlugInfoFlag { override def asString = env.asString }
+
+  val values: List[SlugInfoFlag] =
+    Latest :: Environment.values.map(ForEnvironment.apply)
+
+  def parse(s: String): Option[SlugInfoFlag] =
+    values.find(_.asString == s)
+}

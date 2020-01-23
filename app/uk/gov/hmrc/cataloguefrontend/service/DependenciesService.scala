@@ -19,7 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject._
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, ServiceDependenciesConnector, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}

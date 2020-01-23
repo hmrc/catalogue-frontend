@@ -27,7 +27,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.test.UnitSpec
 

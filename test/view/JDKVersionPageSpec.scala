@@ -21,8 +21,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.FakeRequest
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
-import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
-import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
+import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import views.html.JdkVersionPage
 
@@ -40,7 +39,7 @@ class JDKVersionPageSpec extends WordSpec with MockitoSugar with Matchers {
           JDKVersion(name = "test-slug",     version = "1.181.0", vendor = OpenJDK, kind = JDK)
         , JDKVersion(name = "thing-service", version = "1.171.0", vendor = Oracle , kind = JRE))
 
-      val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, Latest))
+      val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, SlugInfoFlag.Latest))
 
       val slug1 = document.select("#jdk-slug-test-slug")
       val slug2 = document.select("#jdk-slug-thing-service")
@@ -56,7 +55,7 @@ class JDKVersionPageSpec extends WordSpec with MockitoSugar with Matchers {
       implicit val request = FakeRequest()
 
       val versions = List(JDKVersion(name= "thing-service", version = "1.171.0", vendor = Oracle, kind = JDK))
-      val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, Latest))
+      val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, SlugInfoFlag.Latest))
 
       val slug = document.select("#jdk-slug-thing-service")
       val link = slug.select("a[href*='/repositories/thing-service']")

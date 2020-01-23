@@ -26,7 +26,8 @@ import play.api.http.HttpEntity
 import play.api.i18n.MessagesProvider
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.connector.{SlugInfoFlag, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils

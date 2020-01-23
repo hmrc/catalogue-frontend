@@ -25,7 +25,8 @@ import play.api.data.{Form, Forms}
 import play.api.i18n.MessagesProvider
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
-import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ServiceDependenciesConnector, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.BobbyRulesTrendPage
