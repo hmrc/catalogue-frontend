@@ -15,7 +15,8 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigService
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{ConfigByKey, ConfigEnvironment, ConfigSourceValue}
 @import scala.collection.immutable.ListMap
 
 @this(viewMessages: ViewMessages)
@@ -38,22 +39,22 @@
                 <div class="grid-header">
                     <div id="header-0" class="grid-item sticky-column truncate-content" style="width:300px;">Key</div>
                     <div class="gutter gutter-horizontal"></div>
-                    @for((env, index) <- environments.zipWithIndex) {
-                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env" style="width:500px;">@env</div>
-                        <div class="gutter gutter-horizontal column-@env"></div>
+                    @for((env, index) <- ConfigEnvironment.values.zipWithIndex) {
+                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString" style="width:500px;">@env.asString</div>
+                        <div class="gutter gutter-horizontal column-@env.asString"></div>
                     }
                 </div>
-                @for((key: String, envSources: Map[String, Seq[ConfigSourceValue]]) <- ListMap(configByKey.toSeq.sortWith(_._1 < _._1):_*)) {
+                @for((key, envSources) <- configByKey.toSeq.sortBy(_._1)) {
                     @defining(envSources.forall(_._2.map(_.source) == List("referenceConf"))) { isRefconfOnly =>
                         <div id="config-row-@key" class="grid-row @if(isRefconfOnly) {refconf-only} else {}">
                             <div id="config-key-@key" class="grid-item sticky-column truncate-content" style="width:310px;">@key</div>
-                            @for((env, i) <- environments.zipWithIndex) {
-                                <div class="grid-item column-@env" style="width:510px;">
+                            @for(env <- ConfigEnvironment.values) {
+                                <div class="grid-item column-@env.asString" style="width:510px;">
                                     <ul>
-                                    @for(sourceValue: ConfigSourceValue <- sortBySourcePrecedence(envSources.get(env))) {
-                                        <li class="config-value" title="@friendlySourceName(sourceValue.source, env)">
+                                    @for(sourceValue: ConfigSourceValue <- ConfigService.sortBySourcePrecedence(envSources.get(env))) {
+                                        <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env)">
                                             <span class="truncate-content">@sourceValue.value</span>
-                                            <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env-@sourceValue.source-@key"></a>
+                                            <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env.asString-@sourceValue.source-@key"></a>
                                         </li>
                                     }
                                     </ul>
@@ -67,10 +68,10 @@
         <aside id="menu">
             <h2>Columns</h2>
             <ul>
-                @for(env <- environments) {
+                @for(env <- ConfigEnvironment.values) {
                     <li>
-                        <input class="column-filter" type="checkbox" id="show-@env" checked="checked" />
-                        <label for="show-@env">@env</label>
+                        <input class="column-filter" type="checkbox" id="show-@env.asString" checked="checked" />
+                        <label for="show-@env.asString">@env.asString</label>
                     </li>
                 }
             </ul>

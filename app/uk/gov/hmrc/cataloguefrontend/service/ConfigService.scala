@@ -17,7 +17,9 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
+import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -28,36 +30,94 @@ class ConfigService @Inject()(configConnector: ConfigConnector) {
   def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
     configConnector.configByEnv(serviceName)
 
-  def configByKey(serviceName: String)(implicit hc: HeaderCarrier) =
+  def configByKey(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     configConnector.configByKey(serviceName)
 }
 
 @Singleton
 object ConfigService {
-  type EnvironmentName = String
+
   type KeyName = String
 
-  type ConfigByEnvironment = Map[EnvironmentName, Seq[ConfigSourceEntries]]
-  type ConfigByKey = Map[KeyName, Map[EnvironmentName, Seq[ConfigSourceValue]]]
+  trait ConfigEnvironment { def asString: String }
+  object ConfigEnvironment {
+    case object Local                            extends ConfigEnvironment { override def asString = "local"      }
+    case class  ForEnvironment(env: Environment) extends ConfigEnvironment { override def asString = env.asString }
 
-  case class ConfigSourceEntries(source: String, precedence: Int, entries: Map[KeyName, String] = Map())
-  case class ConfigSourceValue(source: String, precedence: Int, value: String)
+    val values: List[ConfigEnvironment] =
+      Local :: Environment.values.map(ForEnvironment.apply)
 
-  // TODO another variant to cater for - Environment + "local"...
-  val environments: Seq[String] = Seq("local", "development", "qa", "staging", "integration", "externaltest", "production")
+    val format: Format[ConfigEnvironment] =
+      new Format[ConfigEnvironment] {
+        override def reads(json: JsValue) =
+          json.validate[String]
+            .flatMap {
+              case "local" => JsSuccess(ConfigEnvironment.Local)
+              case s       => Environment.parse(s) match {
+                                case Some(env) => JsSuccess(ForEnvironment(env))
+                                case None      => JsError(__, s"Invalid Environment '$s'")
+                              }
+            }
+
+        override def writes(e: ConfigEnvironment) =
+          JsString(e.asString)
+      }
+  }
+
+  type ConfigByEnvironment = Map[ConfigEnvironment, Seq[ConfigSourceEntries]]
+
+  object ConfigByEnvironment {
+    val reads: Reads[ConfigByEnvironment] = {
+      implicit val cef  = ConfigEnvironment.format
+      implicit val cser = ConfigSourceEntries.reads
+      Reads.of[Map[String, Seq[ConfigSourceEntries]]]
+        .map(_.map { case (k , v) => (JsString(k).as[ConfigEnvironment], v) })
+    }
+  }
+
+  type ConfigByKey = Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]
+
+  object ConfigByKey {
+    val reads: Reads[ConfigByKey] = {
+      implicit val cef  = ConfigEnvironment.format
+      implicit val csvf = ConfigSourceValue.reads
+      Reads.of[Map[KeyName, Map[String, Seq[ConfigSourceValue]]]]
+        .map(_.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v)}))
+    }
+  }
+
+  case class ConfigSourceEntries(
+      source    : String
+    , precedence: Int
+    , entries   : Map[KeyName, String] = Map()
+    )
+
+  object ConfigSourceEntries {
+     val reads = Json.reads[ConfigSourceEntries]
+  }
+
+  case class ConfigSourceValue(
+      source    : String
+    , precedence: Int
+    , value     : String
+    )
+
+  object ConfigSourceValue {
+    val reads = Json.reads[ConfigSourceValue]
+  }
 
   def sortBySourcePrecedence(entries: Option[Seq[ConfigSourceValue]]): Seq[ConfigSourceValue] =
-    entries.map(e => e.sortWith((a, b) => a.precedence < b.precedence)).getOrElse(Seq())
+    entries.map(_.sortBy(_.precedence)).getOrElse(Seq())
 
-  def friendlySourceName(source: String, environment: String): String = {
+  def friendlySourceName(source: String, environment: ConfigEnvironment): String = {
     source match {
       case "referenceConf"              => "Microservice reference.conf files"
       case "applicationConf"            => "Microservice application.conf file"
       case "baseConfig"                 => "App-config-base"
-      case "appConfigEnvironment"       => s"App-config-$environment"
+      case "appConfigEnvironment"       => s"App-config-${environment.asString}"
       case "appConfigCommonFixed"       => "App-config-common fixed settings"
       case "appConfigCommonOverridable" => "App-config-common overridable settings"
-      case _ => source
+      case _                            => source
     }
   }
 }
