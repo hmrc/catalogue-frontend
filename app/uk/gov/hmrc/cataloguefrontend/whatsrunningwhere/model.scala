@@ -123,7 +123,8 @@ case class ServiceName(asString: String) extends AnyVal
 case class Environment(asString: String) extends AnyVal
 
 object Environment {
-  private def precedence(environment: Environment) = environment.asString match {
+  // todo - refactor to use the common model Environment. We do not expect prefixes/suffixes anymore
+  private def precedence(environment: Environment) = environment.asString.toLowerCase match {
     // use `contains` so environments with prefixes/suffixes are sorted too
     case x if x.contains("production")   => 0
     case x if x.contains("externaltest") => 1
