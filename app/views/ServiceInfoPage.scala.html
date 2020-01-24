@@ -30,7 +30,7 @@
 @(repositoryDetails            : RepositoryDetails,
   optMasterDependencies        : Option[Dependencies],
   repositoryCreationDate       : LocalDateTime,
-  envDatas                     : Map[SlugInfoFlag, EnvData],
+  envDatas                     : Map[SlugInfoFlag, Option[EnvData]],
   linkToLeakDetection          : Option[String],
   productionEnvironmentRoute   : Option[EnvironmentRoute],
   serviceRoutes                : ServiceRoutes,
@@ -91,7 +91,7 @@
                 @buildToolsPartial(
                   ServiceInfoView.buildToolsFrom(
                     optMasterDependencies = optMasterDependencies
-                  , librariesOfLatestSlug = envDatas(SlugInfoFlag.Latest).dependencies
+                  , librariesOfLatestSlug = envDatas(SlugInfoFlag.Latest).toSeq.flatMap(_.dependencies)
                   )
                 )
             </div>

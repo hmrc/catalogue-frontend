@@ -18,15 +18,15 @@ package uk.gov.hmrc.cataloguefrontend.model
 
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
-sealed trait Environment { def asString: String }
+sealed trait Environment { def asString: String; def displayString: String }
 
 object Environment {
-  case object Development  extends Environment { val asString = "development"  }
-  case object Integration  extends Environment { val asString = "integration"  }
-  case object QA           extends Environment { val asString = "qa"           }
-  case object Staging      extends Environment { val asString = "staging"      }
-  case object ExternalTest extends Environment { val asString = "externaltest" }
-  case object Production   extends Environment { val asString = "production"   }
+  case object Development  extends Environment { val asString = "development" ; override def displayString = "Development"   }
+  case object Integration  extends Environment { val asString = "integration" ; override def displayString = "Integration"   }
+  case object QA           extends Environment { val asString = "qa"          ; override def displayString = "QA"            }
+  case object Staging      extends Environment { val asString = "staging"     ; override def displayString = "Staging"       }
+  case object ExternalTest extends Environment { val asString = "externaltest"; override def displayString = "External Test" }
+  case object Production   extends Environment { val asString = "production"  ; override def displayString = "Production"    }
 
   val values: List[Environment] =
     // this list is sorted
@@ -67,13 +67,18 @@ object Environment {
     }
 }
 
-trait SlugInfoFlag { def asString: String }
+trait SlugInfoFlag { def asString: String; def displayString: String }
 object SlugInfoFlag {
-  case object Latest                           extends SlugInfoFlag { override def asString = "latest"     }
-  case class  ForEnvironment(env: Environment) extends SlugInfoFlag { override def asString = env.asString }
+  case object Latest                           extends SlugInfoFlag { override def asString = "latest"    ; override def displayString = "Latest"          }
+  case class  ForEnvironment(env: Environment) extends SlugInfoFlag { override def asString = env.asString; override def displayString = env.displayString }
 
   val values: List[SlugInfoFlag] =
     Latest :: Environment.values.map(ForEnvironment.apply)
+
+  implicit val ordering = new Ordering[SlugInfoFlag] {
+    def compare(x: SlugInfoFlag, y: SlugInfoFlag): Int =
+      values.indexOf(x).compare(values.indexOf(y))
+  }
 
   def parse(s: String): Option[SlugInfoFlag] =
     values.find(_.asString == s)

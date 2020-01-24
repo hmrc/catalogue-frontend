@@ -24,22 +24,22 @@
 
 @this(dependenciesPartial: ServiceDependenciesPartial, viewMessages: ViewMessages)
 
-@(envDatas: Map[SlugInfoFlag, EnvData]
+@(envDatas: Map[SlugInfoFlag, Option[EnvData]]
 )(implicit messages: Messages)
 
 <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
-  @for((slugInfoFlag, envData) <- envDatas) {
+  @for((slugInfoFlag, optEnvData) <- envDatas.toSeq.sortBy(_._1)) {
     <li class="nav-item @if(slugInfoFlag == SlugInfoFlag.Latest) { active }">
         <a id="@{slugInfoFlag.asString}-tab" class="nav-link" data-toggle="tab" href="#@{slugInfoFlag.asString}-pane" role="tab" aria-controls="@slugInfoFlag.asString" aria-selected="false">
             <div class="board">
                 <div class="board__heading">
-                    <h4 class="environment-name">@slugInfoFlag.asString</h4>
-                    <p class="small">@envData.version</p>
+                    <h4 class="environment-name">@slugInfoFlag.displayString</h4>
+                    <p class="small">@renderVersion(optEnvData.map(_.version))</p>
                 </div>
                 <div class="board__body">
-                    @renderShutterStatusBadge(envData.optShutterState)
-                    @renderActiveBobbyRuleViolationBadge(slugInfoFlag, envData.dependencies)
-                    @renderPendingBobbyRuleViolationBadge(slugInfoFlag, envData.dependencies)
+                    @renderShutterStatusBadge(optEnvData.flatMap(_.optShutterState))
+                    @renderActiveBobbyRuleViolationBadge(slugInfoFlag, optEnvData.toSeq.flatMap(_.dependencies))
+                    @renderPendingBobbyRuleViolationBadge(slugInfoFlag, optEnvData.toSeq.flatMap(_.dependencies))
                 </div>
             </div>
         </a>
@@ -48,10 +48,11 @@
 </ul>
 
 <div id="environmentPanes" class="tab-content environment-panes">
-  @for((slugInfoFlag, envData) <- envDatas) {
+  @for((slugInfoFlag, optEnvData) <- envDatas.toSeq.sortBy(_._1)) {
     <div id="@{slugInfoFlag.asString}-pane" class="tab-pane @if(slugInfoFlag == SlugInfoFlag.Latest) { active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab">
 
-      @envData.optTelemetryLinks.map { telemetryLinks =>
+      @if(slugInfoFlag != SlugInfoFlag.Latest) {
+        @defining(optEnvData.flatMap(_.optTelemetryLinks).getOrElse(Seq.empty)){ telemetryLinks =>
         <div class="row">
             <div class="col-md-12">
                 <div id="@{slugInfoFlag.asString}-telemetry" class="board">
@@ -76,12 +77,13 @@
                 </div>
             </div>
         </div>
+        }
       }
 
         <div class="row">
             <div class="col-md-12">
                 @dependenciesPartial(
-                    envData.dependencies
+                    optEnvData.toSeq.flatMap(_.dependencies)
                   , s"platform-dependencies-${slugInfoFlag.asString}"
                   )
             </div>
@@ -89,6 +91,15 @@
     </div>
   }
 </div>
+
+@renderVersion(optVersion: Option[Version]) = {
+    @if(optVersion.isDefined) {
+        <p class="small">@optVersion.get</p>
+    } else {
+        <!-- needed to ensure each tab nav-item has the same height -->
+        <p class="small">&nbsp;</p>
+    }
+}
 
 @renderShutterStatusBadge(optShutterState: Option[ShutterState]) = {
     @if(optShutterState.exists(_.status.value == ShutterStatusValue.Shuttered)) {
