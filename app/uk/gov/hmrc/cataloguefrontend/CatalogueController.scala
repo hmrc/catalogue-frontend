@@ -289,9 +289,7 @@ class CatalogueController @Inject()(
                                                        ).flatten
 
                                                      ( serviceDependencyConnector.getCuratedSlugDependencies(serviceName, Some(version))
-                                                     , if (CatalogueFrontendSwitches.shuttering.isEnabled)
-                                                          shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
-                                                       else Future.successful(None)
+                                                     , shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
                                                      ).mapN {
                                                        case (dependencies, optShutterState) =>
                                                          val envData = EnvData(version, dependencies, optShutterState, Some(telemetryLinks))

@@ -15,7 +15,6 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
 
 @(title: String = "Home", active: String = "")(content: Html)(implicit request: Request[_])
@@ -90,13 +89,11 @@
                             <li><a href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
                             <li><a href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
                             <li><a href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
-                            @if(CatalogueFrontendSwitches.shuttering.isEnabled) {
-                              <li role="separator" class="divider"></li>
-                              <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Frontend)">Shutter Overview - Frontend</a></li>
-                              <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Api)">Shutter Overview - Api</a></li>
-                              <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Rate)">Shutter Overview - Rate</a></li>
-                              <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEvents">Shutter Events</a></li>
-                            }
+                            <li role="separator" class="divider"></li>
+                            <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Frontend)">Shutter Overview - Frontend</a></li>
+                            <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Api)">Shutter Overview - Api</a></li>
+                            <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Rate)">Shutter Overview - Rate</a></li>
+                            <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEvents">Shutter Events</a></li>
                         </ul>
                     </li>
                 </ul>
