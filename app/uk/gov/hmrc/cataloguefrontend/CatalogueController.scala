@@ -272,7 +272,7 @@ class CatalogueController @Inject()(
     teamsAndRepositoriesConnector.repositoryDetails(serviceName).flatMap {
       case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
 
-        val futEnvDatas: Future[Map[SlugInfoFlag, Option[EnvData]]] =
+        val futEnvDatas: Future[Map[SlugInfoFlag, EnvData]] =
           for {
             deployments <- deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
             res         <- Environment.values.traverse { env =>
@@ -298,7 +298,7 @@ class CatalogueController @Inject()(
                                case None          => Future.successful((SlugInfoFlag.ForEnvironment(env), None))
                              }
                            }
-          } yield res.toMap
+          } yield res.collect { case (k, Some(v)) => (k, v) }.toMap
 
         ( teamsAndRepositoriesConnector.lookupLink(serviceName)
         , futEnvDatas
@@ -317,14 +317,15 @@ class CatalogueController @Inject()(
                       , serviceRoutes
                       , optLatestServiceInfo
                       ) =>
-          val latestData: Option[EnvData] =
+          val optLatestData: Option[(SlugInfoFlag, EnvData)] =
             optLatestServiceInfo.map { latestServiceInfo =>
-              EnvData(
-                  version           = latestServiceInfo.semanticVersion.get
-                , dependencies      = librariesOfLatestSlug
-                , optShutterState   = None
-                , optTelemetryLinks = None
-                )
+              SlugInfoFlag.Latest ->
+                EnvData(
+                    version           = latestServiceInfo.semanticVersion.get
+                  , dependencies      = librariesOfLatestSlug
+                  , optShutterState   = None
+                  , optTelemetryLinks = None
+                  )
             }
 
           Ok(
@@ -332,7 +333,7 @@ class CatalogueController @Inject()(
                 repositoryDetails          = repositoryDetails.copy(jenkinsURL = jenkinsLink)
               , optMasterDependencies      = optMasterDependencies
               , repositoryCreationDate     = repositoryDetails.createdAt
-              , envDatas                   = envDatas + (SlugInfoFlag.Latest -> latestData)
+              , envDatas                   = optLatestData.fold(envDatas)(envDatas + _)
               , linkToLeakDetection        = urlIfLeaksFound
               , productionEnvironmentRoute = serviceUrl
               , serviceRoutes              = serviceRoutes
