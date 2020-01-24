@@ -29,6 +29,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -402,7 +403,7 @@ class ServiceDependenciesConnectorSpec
     "returns JDK versions with vendor" in new Setup {
       serviceEndpoint(
         GET,
-        s"/api/jdkVersions?flag=${SlugInfoFlag.Production.asString}",
+        s"/api/jdkVersions?flag=${SlugInfoFlag.ForEnvironment(Environment.Production).asString}",
         willRespondWith = (
           200,
           Some(
@@ -411,7 +412,7 @@ class ServiceDependenciesConnectorSpec
               |,{"name":"service-backend","version":"1.8.0_191", "vendor": "OpenJDK", "kind": "JRE"}
               |]""".stripMargin)))
 
-      val response = serviceDependenciesConnector.getJDKVersions(SlugInfoFlag.Production).futureValue
+      val response = serviceDependenciesConnector.getJDKVersions(SlugInfoFlag.ForEnvironment(Environment.Production)).futureValue
 
       response.head.name    shouldBe "something-api"
       response.head.version shouldBe "1.8.0_181"

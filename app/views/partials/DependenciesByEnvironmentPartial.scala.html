@@ -17,110 +17,79 @@
 @import partials.ServiceDependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, RepositoryDetails, TargetEnvironment}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
-@import uk.gov.hmrc.cataloguefrontend.{ServiceInfoView, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
+@import uk.gov.hmrc.cataloguefrontend.{EnvData, ServiceInfoView, ViewMessages}
 
 
 @this(dependenciesPartial: ServiceDependenciesPartial, viewMessages: ViewMessages)
 
-@(service                      : RepositoryDetails,
-  latestDependencies           : Seq[Dependency],
-  dependenciesByEnvironmentName: Map[Environment, Seq[Dependency]],
-  versionByEnvironmentName     : Map[Environment, Version],
-  latestVersion                : Option[Version],
-  shutterState                 : Map[Environment, ShutterState]
+@(envDatas: Map[SlugInfoFlag, Option[EnvData]]
 )(implicit messages: Messages)
 
 <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
-    <!-- we hard-code 'latest' as it is not a deployment 'environment' -->
-    <li class="nav-item active">
-        <a id="latest-tab" class="nav-link" data-toggle="tab" href="#latest-pane" role="tab" aria-controls="latest" aria-selected="true">
+  @for((slugInfoFlag, optEnvData) <- envDatas.toSeq.sortBy(_._1)) {
+    <li class="nav-item @if(slugInfoFlag == SlugInfoFlag.Latest) { active }">
+        <a id="@{slugInfoFlag.asString}-tab" class="nav-link" data-toggle="tab" href="#@{slugInfoFlag.asString}-pane" role="tab" aria-controls="@slugInfoFlag.asString" aria-selected="false">
             <div class="board">
                 <div class="board__heading">
-                    <h4 class="environment-name">Latest</h4>
-                    @renderVersion(latestVersion)
-                </div>
-                <span class="board__body">
-                    @renderShutterStatusBadge(false)
-                    @renderBobbyRuleViolationBadges(
-                       forEnvironment   = None,
-                       withDependencies = latestDependencies
-                    )
-                </span>
-            </div>
-        </a>
-    </li>
-
-    @for(targetEnvironment <- service.environments.getOrElse(Seq.empty)) {
-    <li class="nav-item">
-        <a id="@{targetEnvironment.id}-tab" class="nav-link" data-toggle="tab" href="#@{targetEnvironment.id}-pane" role="tab" aria-controls="@targetEnvironment.id" aria-selected="false">
-            <div class="board">
-                <div class="board__heading">
-                    <h4 class="environment-name">@targetEnvironment.environment</h4>
-                    @renderVersion(ServiceInfoView.lookupByTargetEnvironment(versionByEnvironmentName, targetEnvironment))
+                    <h4 class="environment-name">@slugInfoFlag.displayString</h4>
+                    <p class="small">@renderVersion(optEnvData.map(_.version))</p>
                 </div>
                 <div class="board__body">
-                    @renderShutterStatusBadge(ServiceInfoView.isShuttered(withShutterState = shutterState)(targetEnvironment = targetEnvironment))
-                    @renderBobbyRuleViolationBadges(
-                      forEnvironment   = Some(targetEnvironment.environment),
-                      withDependencies = ServiceInfoView.lookupByTargetEnvironment(dependenciesByEnvironmentName, targetEnvironment).getOrElse(Seq.empty)
-                    )
+                    @renderShutterStatusBadge(optEnvData.flatMap(_.optShutterState))
+                    @renderActiveBobbyRuleViolationBadge(slugInfoFlag, optEnvData.toSeq.flatMap(_.dependencies))
+                    @renderPendingBobbyRuleViolationBadge(slugInfoFlag, optEnvData.toSeq.flatMap(_.dependencies))
                 </div>
             </div>
         </a>
     </li>
-    }
+  }
 </ul>
 
 <div id="environmentPanes" class="tab-content environment-panes">
-    <!-- we hard-code 'latest' as it is not a deployment 'environment' -->
-    <div id="latest-pane" class="tab-pane active" role="tabpanel" aria-labelledby="latest-tab">
-        <!-- no telemetry section for 'latest' -->
-        <div class="row">
-            <div class="col-md-12">
-                @dependenciesPartial(latestDependencies, "platform-dependencies-latest")
-            </div>
-        </div>
-    </div>
+  @for((slugInfoFlag, optEnvData) <- envDatas.toSeq.sortBy(_._1)) {
+    <div id="@{slugInfoFlag.asString}-pane" class="tab-pane @if(slugInfoFlag == SlugInfoFlag.Latest) { active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab">
 
-    @for(environment <- service.environments.getOrElse(Seq.empty)) {
-    <div id="@{environment.id}-pane" class="tab-pane" role="tabpanel" aria-labelledby="@{environment.id}-tab">
+      @if(slugInfoFlag != SlugInfoFlag.Latest) {
+        @defining(optEnvData.flatMap(_.optTelemetryLinks).getOrElse(Seq.empty)){ telemetryLinks =>
         <div class="row">
             <div class="col-md-12">
-                <div id="@{environment.id}-telemetry" class="board">
+                <div id="@{slugInfoFlag.asString}-telemetry" class="board">
                     <h3 class="board__heading">Telemetry</h3>
                     <div class="board__body">
                         <ul class="list list--minimal">
-                            @if(environment.services.isEmpty) {
-                            <li class="list-item">
+                          @if(telemetryLinks.isEmpty) {
+                             <li class="list-item">
                                 Not deployed
                             </li>
-                            } else {
-                            @for(tool <- environment.services) {
+                          } else {
+                            @for(tool <- telemetryLinks) {
                             <li class="list-item col-xs-6">
-                                <a id="link-to-@{tool.id}-@{environment.id}" href="@{tool.url}" target="_blank">
+                                <a id="link-to-@{tool.id}-@{slugInfoFlag.asString}" href="@{tool.url}" target="_blank">
                                     @{tool.displayName}<span class="glyphicon glyphicon-new-window"></span>
                                 </a>
                             </li>
                             }
-                            }
+                          }
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
+        }
+      }
 
         <div class="row">
             <div class="col-md-12">
                 @dependenciesPartial(
-                    ServiceInfoView.lookupByTargetEnvironment(dependenciesByEnvironmentName, environment).getOrElse(Seq.empty)
-                  , s"platform-dependencies-${environment.id}"
+                    optEnvData.toSeq.flatMap(_.dependencies)
+                  , s"platform-dependencies-${slugInfoFlag.asString}"
                   )
             </div>
         </div>
     </div>
-    }
+  }
 </div>
 
 @renderVersion(optVersion: Option[Version]) = {
@@ -132,37 +101,28 @@
     }
 }
 
-@renderShutterStatusBadge(isShuttered: Boolean) = {
-    @if(isShuttered) {
+@renderShutterStatusBadge(optShutterState: Option[ShutterState]) = {
+    @if(optShutterState.exists(_.status.value == ShutterStatusValue.Shuttered)) {
         <div class="environment-badge shutter-badge" data-toggle="tooltip" data-placement="top" title="@messages("shuttered.badge")"></div>
     } else {
         <div class="environment-badge no-badge"></div>
     }
 }
 
-@renderBobbyRuleViolationBadges(forEnvironment: Option[Environment], withDependencies: Seq[Dependency]) = {
-    @renderActiveBobbyRuleViolationBadge(forEnvironment, withDependencies)
-    @renderPendingBobbyRuleViolationBadge(forEnvironment, withDependencies)
-}
-
-@renderActiveBobbyRuleViolationBadge(forEnvironment: Option[Environment], withDependencies: Seq[Dependency]) = {
-    @if(withDependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
-        <div id="bobby-violation-active-badge-@{forEnvironment}" class="environment-badge bobby-violation-active-badge"
+@renderActiveBobbyRuleViolationBadge(slugInfoFlag: SlugInfoFlag, dependencies: Seq[Dependency]) = {
+    @if(dependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
+        <div id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-active-badge"
              data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.active.badge")"></div>
     } else {
-        <div id="bobby-violation-active-badge-@{forEnvironment}" class="environment-badge no-badge"></div>
+        <div id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></div>
    }
 }
 
-@renderPendingBobbyRuleViolationBadge(forEnvironment: Option[Environment], withDependencies: Seq[Dependency]) = {
-    @if(withDependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
-        <div id="bobby-violation-pending-badge-@{forEnvironment}" class="environment-badge bobby-violation-pending-badge"
+@renderPendingBobbyRuleViolationBadge(slugInfoFlag: SlugInfoFlag, dependencies: Seq[Dependency]) = {
+    @if(dependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
+        <div id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-pending-badge"
              data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.pending.badge")"></div>
     } else {
-        <div id="bobby-violation-pending-badge-@{forEnvironment}" class="environment-badge no-badge"></div>
+        <div id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></div>
     }
-}
-
-@optEnvToString(optEnv: Option[Environment]) = {
-    @optEnv.fold("latest")(_.asString)
 }

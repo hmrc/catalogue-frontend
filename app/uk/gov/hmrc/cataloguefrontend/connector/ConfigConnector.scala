@@ -17,10 +17,9 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName}
+import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -34,8 +33,8 @@ class ConfigConnector @Inject()(
 
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
 
-  implicit val configSourceEntriesReads = Json.reads[ConfigSourceEntries]
-  implicit val configSourceValueReads = Json.reads[ConfigSourceValue]
+  implicit val cber = ConfigByEnvironment.reads
+  implicit val cbkr = ConfigByKey.reads
 
   def configByEnv(service: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
     http.GET[ConfigByEnvironment](s"$serviceConfigsBaseUrl/config-by-env/$service")

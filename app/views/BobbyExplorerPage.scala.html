@@ -15,8 +15,8 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, BobbyRulesTrendController, CatalogueFrontendSwitches, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
 
 @this(viewMessages: ViewMessages)
@@ -100,9 +100,9 @@
         <td>@rule.reason</td>
         <td>@rule.from</td>
         @if(inclViewSlugsLink) {
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest    )</td>
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.QA        )</td>
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.Production)</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest                                )</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.QA        ))</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.Production))</td>
             <td><a href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See trend</a></td>
         } else {
           <td></td>

@@ -16,31 +16,25 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import uk.gov.hmrc.cataloguefrontend.connector.TargetEnvironment
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 
 object ServiceInfoView {
-  def isShuttered(withShutterState: Map[Environment, ShutterState])(targetEnvironment: TargetEnvironment): Boolean =
-    lookupByTargetEnvironment(withShutterState, targetEnvironment)
-      .exists(_.status.value == ShutterStatusValue.Shuttered)
-
-  // TODO this can go as soon as we have a global Environment type
-  def lookupByTargetEnvironment[A](map: Map[Environment, A], targetEnvironment: TargetEnvironment): Option[A] =
-    map.get(targetEnvironment.environment)
-
   /*
    * Capture any curated library dependencies from master / Github that are not referenced by the 'latest' slug,
    * and assume that they represent 'test-only' library dependencies.
    */
-  def buildToolsFrom(optMasterDependencies: Option[Dependencies], librariesOfLatestSlug: Seq[Dependency]): Option[Dependencies] =
+  def buildToolsFrom(
+    optMasterDependencies: Option[Dependencies]
+  , librariesOfLatestSlug: Seq[Dependency]
+  ): Option[Dependencies] =
     optMasterDependencies.map { masterDependencies =>
       val libraryNamesInLatestSlug = librariesOfLatestSlug.map(_.name).toSet
       masterDependencies.copy(
-        libraryDependencies = masterDependencies.libraryDependencies.filterNot { library =>
-          libraryNamesInLatestSlug.contains(library.name)
-        }
+        libraryDependencies =
+          masterDependencies.libraryDependencies
+            .filterNot { library =>
+              libraryNamesInLatestSlug.contains(library.name)
+            }
       )
     }
 }

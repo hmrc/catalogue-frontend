@@ -217,7 +217,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         // Links for environments should not be present
         response.body should not include regex("""https:\/\/(?!grafana-dev).*\/#\/dashboard""")
 
-        countSubstring(response.body, "Not deployed") shouldBe 3
+        countSubstring(response.body, "Not deployed") shouldBe 6
 
         def countSubstring(str: String, substr: String) =
           substr.r.findAllMatchIn(str).length

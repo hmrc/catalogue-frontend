@@ -17,35 +17,30 @@
 @import java.time.LocalDateTime
 @import partials.{BuildToolsPartial, DependenciesByEnvironmentPartial}
 @import play.twirl.api.Html
-@import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, RepositoryDetails}
+@import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, Link, RepositoryDetails}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
-@import uk.gov.hmrc.cataloguefrontend.connector.SlugInfoFlag.Latest
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
-@import uk.gov.hmrc.cataloguefrontend.{ServiceInfoView, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.{EnvData, ServiceInfoView, ViewMessages}
 @import views.partials.githubBadgeType
 
 @this(dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial, buildToolsPartial: BuildToolsPartial, viewMessages: ViewMessages)
 
-@(service                      : RepositoryDetails,
+@(repositoryDetails            : RepositoryDetails,
   optMasterDependencies        : Option[Dependencies],
-  librariesOfLatestSlug        : Seq[Dependency],
   repositoryCreationDate       : LocalDateTime,
-  dependenciesByEnvironmentName: Map[Environment, Seq[Dependency]],
-  versionByEnvironmentName     : Map[Environment, Version],
-  latestVersion                : Option[Version],
+  envDatas                     : Map[SlugInfoFlag, Option[EnvData]],
   linkToLeakDetection          : Option[String],
   productionEnvironmentRoute   : Option[EnvironmentRoute],
   serviceRoutes                : ServiceRoutes,
-  shutterState                 : Map[Environment, ShutterState]
 )(implicit messages: Messages, request: Request[_])
 
 
-@standard_layout(service.name, "services") {
+@standard_layout(repositoryDetails.name, "services") {
     <header class="header-with-github-badge">
         <div>
-            <h1 id="service-header">Service: @service.name<span>@githubBadgeType(service)</span></h1>
+            <h1 id="service-header">Service: @repositoryDetails.name<span>@githubBadgeType(repositoryDetails)</span></h1>
         </div>
 
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -59,7 +54,7 @@
 
         <div class="row">
             <div class="col-md-12">
-                @partials.details(service)
+                @partials.details(repositoryDetails)
             </div>
         </div>
 
@@ -81,33 +76,31 @@
 
         <div class="row">
             <div class="col-md-6">
-                @partials.repo_owning_teams(service)
+                @partials.repo_owning_teams(repositoryDetails)
             </div>
 
             <div class="col-md-6">
-                @partials.code_and_builds(service)
+                @partials.code_and_builds(repositoryDetails)
             </div>
         </div>
 
-        @dependenciesByEnvironmentPartial(
-            service,
-            librariesOfLatestSlug,
-            dependenciesByEnvironmentName,
-            versionByEnvironmentName,
-            latestVersion,
-            shutterState
-        )
+        @dependenciesByEnvironmentPartial(envDatas)
 
         <div class="row">
             <div class="col-md-12">
-                @buildToolsPartial(ServiceInfoView.buildToolsFrom(optMasterDependencies, librariesOfLatestSlug))
+                @buildToolsPartial(
+                  ServiceInfoView.buildToolsFrom(
+                    optMasterDependencies = optMasterDependencies
+                  , librariesOfLatestSlug = envDatas(SlugInfoFlag.Latest).toSeq.flatMap(_.dependencies)
+                  )
+                )
             </div>
         </div>
     </section>
 
-    <div class="alert alert-success" role="alert" id="@service.name">
+    <div class="alert alert-success" role="alert" id="@repositoryDetails.name">
         <p>
-        @Html(viewMessages.informationalText)
+          @Html(viewMessages.informationalText)
         </p>
     </div>
 }
