@@ -17,27 +17,23 @@
 @import java.time.LocalDateTime
 @import partials.{BuildToolsPartial, DependenciesByEnvironmentPartial}
 @import play.twirl.api.Html
-@import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, RepositoryDetails}
+@import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, Link, RepositoryDetails}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
-@import uk.gov.hmrc.cataloguefrontend.{ServiceInfoView, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.{EnvData, ServiceInfoView, ViewMessages}
 @import views.partials.githubBadgeType
 
 @this(dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial, buildToolsPartial: BuildToolsPartial, viewMessages: ViewMessages)
 
 @(service                      : RepositoryDetails,
   optMasterDependencies        : Option[Dependencies],
-  librariesOfLatestSlug        : Seq[Dependency],
   repositoryCreationDate       : LocalDateTime,
-  dependenciesByEnvironmentName: Map[Environment, Seq[Dependency]],
-  versionByEnvironmentName     : Map[Environment, Version],
-  latestVersion                : Option[Version],
+  envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
   productionEnvironmentRoute   : Option[EnvironmentRoute],
   serviceRoutes                : ServiceRoutes,
-  shutterState                 : Map[Environment, ShutterState]
 )(implicit messages: Messages, request: Request[_])
 
 
@@ -88,25 +84,23 @@
             </div>
         </div>
 
-        @dependenciesByEnvironmentPartial(
-            service,
-            librariesOfLatestSlug,
-            dependenciesByEnvironmentName,
-            versionByEnvironmentName,
-            latestVersion,
-            shutterState
-        )
+        @dependenciesByEnvironmentPartial(envDatas)
 
         <div class="row">
             <div class="col-md-12">
-                @buildToolsPartial(ServiceInfoView.buildToolsFrom(optMasterDependencies, librariesOfLatestSlug))
+                @buildToolsPartial(
+                  ServiceInfoView.buildToolsFrom(
+                    optMasterDependencies = optMasterDependencies
+                  , librariesOfLatestSlug = envDatas(SlugInfoFlag.Latest).dependencies
+                  )
+                )
             </div>
         </div>
     </section>
 
     <div class="alert alert-success" role="alert" id="@service.name">
         <p>
-        @Html(viewMessages.informationalText)
+          @Html(viewMessages.informationalText)
         </p>
     </div>
 }

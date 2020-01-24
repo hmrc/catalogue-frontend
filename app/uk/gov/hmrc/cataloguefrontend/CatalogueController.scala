@@ -33,7 +33,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.events._
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
@@ -52,6 +52,14 @@ case class DigitalServiceDetails(
   teamMembersLookUp: Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]],
   repos: Map[String, Seq[String]]
 )
+
+
+case class EnvData(
+    version          : Version
+  , dependencies     : Seq[Dependency]
+  , optShutterState  : Option[ShutterState]
+  , optTelemetryLinks: Option[Seq[Link]]
+  )
 
 @Singleton
 class CatalogueController @Inject()(
@@ -261,98 +269,80 @@ class CatalogueController @Inject()(
   }
 
   def service(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
-    def telemetryLinksFrom(links: Seq[Link]): Seq[Link] =
-      links.filterNot(_.name == jenkinsLinkName)
 
-    def getDeployedEnvs(
-        deployedToEnvs    : Seq[DeploymentVO],
-        optRefEnvironments: Option[Seq[TargetEnvironment]]
-      ): Option[Seq[TargetEnvironment]] = {
-      val deployedEnvironments = deployedToEnvs.map(_.environmentMapping.environment)
-      optRefEnvironments.map {
-         _.map { targetEnvironment =>
-           val telemetryLinks =
-             if (deployedEnvironments.contains(targetEnvironment.environment))
-               telemetryLinksFrom(targetEnvironment.services)
-             else Nil
-           targetEnvironment.copy(services = telemetryLinks)
-          }
-      }
-    }
+    val futRepositoryDetails = teamsAndRepositoriesConnector.repositoryDetails(serviceName)
 
-    val futDeployments =
-      deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
-
-    val futByEnvironment: Future[Map[Environment, (Version, Seq[Dependency])]] =
+    val futEnvDatas: Future[Map[SlugInfoFlag, EnvData]] =
       for {
-        deployments      <- futDeployments
+        optRepositoryDetails <- futRepositoryDetails
+        deployments      <- deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
+        deployedEnvironments = deployments.map(_.environmentMapping.environment)
         envToDeployments =  deployments.groupBy(_.environmentMapping.environment)
         res              <- envToDeployments.toList.traverse { case (env, deployments) =>
                               // a single environment may have multiple versions during a deployment
                               // return the lowest
                               deployments.map(_.version).sorted.headOption match {
-                                case Some(version) => serviceDependencyConnector.getCuratedSlugDependencies(serviceName, Some(version)).map {dependencies =>
-                                                        (env, Some((version, dependencies)))
+                                case Some(version) => val telemetryLinks =
+                                                        (for {
+                                                           repositoryDetails  <- optRepositoryDetails.toSeq
+                                                           targetEnvironments <- repositoryDetails.environments.toSeq
+                                                           targetEnvironment  <- targetEnvironments
+                                                           if (targetEnvironment.environment == env)
+                                                         } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)
+                                                        ).flatten
+
+                                                      ( serviceDependencyConnector.getCuratedSlugDependencies(serviceName, Some(version))
+                                                      , if (CatalogueFrontendSwitches.shuttering.isEnabled)
+                                                           shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
+                                                        else Future.successful(None)
+                                                      ).mapN {
+                                                        case (dependencies, optShutterState) =>
+                                                          val envData = EnvData(version, dependencies, optShutterState, Some(telemetryLinks))
+                                                          (SlugInfoFlag.ForEnvironment(env), Some(envData))
                                                       }
-                                case None          => Future.successful((env, None))
+                                case None          => Future.successful((SlugInfoFlag.ForEnvironment(env), None))
                               }
                             }
       } yield res.collect { case (k, Some(v)) => (k, v) }.toMap
 
-    val futShutterStateByEnvironment =
-      if (CatalogueFrontendSwitches.shuttering.isEnabled)
-        Environment.values
-          .traverse { env =>
-            shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
-          }
-          .map(
-            _.collect { case Some(s) => s }
-             .groupBy(_.environment)
-             .mapValues(_.head)
-          )
-      else Future.successful(Map.empty[Environment, ShutterState])
-
-    ( teamsAndRepositoriesConnector.repositoryDetails(serviceName)
+    ( futRepositoryDetails
     , teamsAndRepositoriesConnector.lookupLink(serviceName)
-    , futDeployments
-    , futByEnvironment
+    , futEnvDatas
     , serviceDependencyConnector.getDependencies(serviceName)
     , serviceDependencyConnector.getCuratedSlugDependencies(serviceName)
     , leakDetectionService.urlIfLeaksFound(serviceName)
     , routeRulesService.serviceUrl(serviceName)
     , routeRulesService.serviceRoutes(serviceName)
-    , futShutterStateByEnvironment
     , serviceDependencyConnector.getSlugInfo(serviceName)
-    ).mapN { case ( service
+    ).mapN { case ( optRepositoryDetails
                   , jenkinsLink
-                  , deployments
-                  , byEnvironment
+                  , envDatas
                   , optMasterDependencies
                   , librariesOfLatestSlug
                   , urlIfLeaksFound
                   , serviceUrl
                   , serviceRoutes
-                  , shutterState
                   , latestServiceInfo
                   ) =>
-      service match {
-        case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
+      val latestData: EnvData =
+        EnvData(
+            version           = latestServiceInfo.semanticVersion.get
+          , dependencies      = librariesOfLatestSlug
+          , optShutterState   = None
+          , optTelemetryLinks = None
+          )
+
+      optRepositoryDetails match {
+        case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service => // TODO move this check after first api call
           Ok(
             serviceInfoPage(
-                service                       = repositoryDetails.copy(
-                                                    environments = getDeployedEnvs(deployments, repositoryDetails.environments)
-                                                  , jenkinsURL   = jenkinsLink
-                                                  )
-              , optMasterDependencies         = optMasterDependencies
-              , librariesOfLatestSlug         = librariesOfLatestSlug
-              , repositoryCreationDate        = repositoryDetails.createdAt
-              , dependenciesByEnvironmentName = byEnvironment.mapValues { case (_, d) => d }
-              , versionByEnvironmentName      = byEnvironment.mapValues { case (v, _) => v }
-              , latestVersion                 = latestServiceInfo.semanticVersion
-              , linkToLeakDetection           = urlIfLeaksFound
-              , productionEnvironmentRoute    = serviceUrl
-              , serviceRoutes                 = serviceRoutes
-              , shutterState                  = shutterState
+                service                    = repositoryDetails.copy(jenkinsURL = jenkinsLink)
+              , optMasterDependencies      = optMasterDependencies
+              , repositoryCreationDate     = repositoryDetails.createdAt
+              , envDatas                   = envDatas.updated[EnvData](SlugInfoFlag.Latest, latestData)
+              , linkToLeakDetection        = urlIfLeaksFound
+              , productionEnvironmentRoute = serviceUrl
+              , serviceRoutes              = serviceRoutes
               )
           )
 
