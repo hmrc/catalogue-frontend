@@ -18,17 +18,27 @@
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
-@(dependencies: Seq[Dependency])
+@( environment : Option[Environment]
+ , dependencies: Seq[Dependency]
+ , pending     : Boolean
+ , team        : Boolean             = false
+ )
 
 @defining(
     dependencies
-        .flatMap(dependency => dependency.pendingBobbyRuleViolations.map(rule => (dependency.name, dependency.currentVersion, rule)))
+        .flatMap { dependency =>
+           val violations = if (pending) dependency.pendingBobbyRuleViolations
+                            else dependency.activeBobbyRuleViolations
+           violations.map(rule => (dependency.name, dependency.currentVersion, rule))
+        }
         .toSet
-    ) { violations =>
+  ) { violations =>
     @if(violations.nonEmpty) {
-        <div class="alert alert-info" id="bobby-rule-pending-banner">
+        <div class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-@if(pending) {pending} else {broken}-banner">
             <strong>
-                This repository will break upcoming Bobby Rules, and will fail to build in Jenkins.
+                @if(team) { One or more of your repositories } else { This repository }
+                @if(pending) { will break } else { has broken }
+                Bobby Rules@environment.fold(", and will fail to build in Jenkins")(env => s" in ${env.displayString}").
                 Please review the lists below, and refer to <a href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
             </strong>
         </div>

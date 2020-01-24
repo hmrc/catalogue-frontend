@@ -31,7 +31,7 @@
 @(teamName: TeamName, teamDependencies: Seq[Dependencies])(implicit messages: Messages, request: Request[_])
 
 @standard_layout(teamName.asString, "teams") {
-    @partials.team_bobby_active_violations_banner(teamDependencies)
-    @partials.team_bobby_pending_violations_banner(teamDependencies)
+    @partials.bobby_violations_banner(environment = None, dependencies = teamDependencies.flatMap(_.toSeq), pending = false, team = true)
+    @partials.bobby_violations_banner(environment = None, dependencies = teamDependencies.flatMap(_.toSeq), pending = true , team = true)
     @dependenciesTeamPartial(teamName, teamDependencies)
 }

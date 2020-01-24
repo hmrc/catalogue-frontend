@@ -36,8 +36,8 @@
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
-    @partials.bobby_active_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
-    @partials.bobby_pending_violations_banner(optDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.bobby_violations_banner(environment = None, optDependencies.toSeq.flatMap(_.toSeq), pending = false)
+    @partials.bobby_violations_banner(environment = None, optDependencies.toSeq.flatMap(_.toSeq), pending = true )
 
     <section class="section-wrapper">
         <div class="row">

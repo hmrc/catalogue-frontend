@@ -46,8 +46,8 @@
     </header>
 
     @partials.team_leak_detection_banner(leaksFoundForTeam)
-    @partials.team_bobby_active_violations_banner(teamDependencies)
-    @partials.team_bobby_pending_violations_banner(teamDependencies)
+    @partials.bobby_violations_banner(environment = None, dependencies = teamDependencies.flatMap(_.toSeq), pending = false, team = true)
+    @partials.bobby_violations_banner(environment = None, dependencies = teamDependencies.flatMap(_.toSeq), pending = true, team = true)
 
     <section class="section-wrapper">
 
