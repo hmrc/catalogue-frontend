@@ -317,22 +317,24 @@ class CatalogueController @Inject()(
                       , urlIfLeaksFound
                       , serviceUrl
                       , serviceRoutes
-                      , latestServiceInfo
+                      , optLatestServiceInfo
                       ) =>
-          val latestData: EnvData =
-            EnvData(
-                version           = latestServiceInfo.semanticVersion.get
-              , dependencies      = librariesOfLatestSlug
-              , optShutterState   = None
-              , optTelemetryLinks = None
-              )
+          val latestData: Option[EnvData] =
+            optLatestServiceInfo.map { latestServiceInfo =>
+              EnvData(
+                  version           = latestServiceInfo.semanticVersion.get
+                , dependencies      = librariesOfLatestSlug
+                , optShutterState   = None
+                , optTelemetryLinks = None
+                )
+            }
 
           Ok(
             serviceInfoPage(
                 repositoryDetails          = repositoryDetails.copy(jenkinsURL = jenkinsLink)
               , optMasterDependencies      = optMasterDependencies
               , repositoryCreationDate     = repositoryDetails.createdAt
-              , envDatas                   = envDatas + (SlugInfoFlag.Latest -> Some(latestData))
+              , envDatas                   = envDatas + (SlugInfoFlag.Latest -> latestData)
               , linkToLeakDetection        = urlIfLeaksFound
               , productionEnvironmentRoute = serviceUrl
               , serviceRoutes              = serviceRoutes

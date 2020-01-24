@@ -22,7 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -84,7 +84,7 @@ class ServiceDependenciesConnector @Inject()(
   def getSlugInfo(
       serviceName: String
     , version    : Option[Version] = None
-    )(implicit hc: HeaderCarrier): Future[ServiceDependencies] =
+    )(implicit hc: HeaderCarrier): Future[Option[ServiceDependencies]] =
     http
       .GET[ServiceDependencies](
           s"$servicesDependenciesBaseUrl/api/sluginfo"
@@ -92,7 +92,10 @@ class ServiceDependenciesConnector @Inject()(
                           "name"    -> Some(serviceName)
                         , "version" -> version.map(_.toString)
                         )
-        )
+        ).map(Some.apply)
+      .recover {
+        case e: NotFoundException => None
+      }
 
   def getCuratedSlugDependencies(
       serviceName: String
