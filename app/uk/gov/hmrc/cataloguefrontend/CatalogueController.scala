@@ -222,32 +222,34 @@ class CatalogueController @Inject()(
   }
 
   def team(teamName: TeamName): Action[AnyContent] = Action.async { implicit request =>
-    for {
-      teamInfo         <- teamsAndRepositoriesConnector.teamInfo(teamName)
-      teamMembers      <- userManagementConnector.getTeamMembersFromUMP(teamName)
-      teamDetails      <- userManagementConnector.getTeamDetails(teamName)
-      reposWithLeaks   <- leakDetectionService.repositoriesWithLeaks
-      teamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
-    } yield
-      teamInfo match {
-        case Some(team) =>
-          implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
-
+    teamsAndRepositoriesConnector.teamInfo(teamName).flatMap {
+      case Some(teamInfo) =>
+        ( userManagementConnector.getTeamMembersFromUMP(teamName)
+        , userManagementConnector.getTeamDetails(teamName)
+        , leakDetectionService.repositoriesWithLeaks
+        , serviceDependencyConnector.dependenciesForTeam(teamName)
+        ).mapN {
+         ( teamMembers
+         , teamDetails
+         , reposWithLeaks
+         , masterTeamDependencies
+         ) =>
           Ok(
             teamInfoPage(
-              teamName            = team.name,
-              repos               = team.repos.getOrElse(Map.empty),
-              activityDates       = TeamActivityDates(team.firstActiveDate, team.lastActiveDate, team.firstServiceCreationDate),
-              errorOrTeamMembers  = convertToDisplayableTeamMembers(team.name, teamMembers),
-              errorOrTeamDetails  = teamDetails,
-              umpMyTeamsUrl       = umpMyTeamsPageUrl(team.name),
-              leaksFoundForTeam   = leakDetectionService.teamHasLeaks(team, reposWithLeaks),
-              hasLeaks            = leakDetectionService.hasLeaks(reposWithLeaks),
-              teamDependencies    = teamDependencies
+              teamName               = teamInfo.name,
+              repos                  = teamInfo.repos.getOrElse(Map.empty),
+              activityDates          = TeamActivityDates(teamInfo.firstActiveDate, teamInfo.lastActiveDate, teamInfo.firstServiceCreationDate),
+              errorOrTeamMembers     = convertToDisplayableTeamMembers(teamInfo.name, teamMembers),
+              errorOrTeamDetails     = teamDetails,
+              umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name),
+              leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks),
+              hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
+              masterTeamDependencies = masterTeamDependencies
             )
           )
-        case _ => NotFound(error_404_template())
-      }
+        }
+      case _ => Future.successful(NotFound(error_404_template()))
+    }
   }
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] = Action.async { implicit request =>

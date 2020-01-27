@@ -28,15 +28,15 @@
 
 @this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
 
-@(teamName: TeamName,
-  repos: Map[String, Seq[String]],
-  activityDates: TeamActivityDates,
-  errorOrTeamMembers: Either[UMPError, Seq[DisplayableTeamMember]],
-  errorOrTeamDetails: Either[UMPError, TeamDetails],
-  umpMyTeamsUrl: String,
-  leaksFoundForTeam: Boolean,
-  hasLeaks: String => Boolean,
-  teamDependencies: Seq[Dependencies]
+@(teamName              : TeamName,
+  repos                 : Map[String, Seq[String]],
+  activityDates         : TeamActivityDates,
+  errorOrTeamMembers    : Either[UMPError, Seq[DisplayableTeamMember]],
+  errorOrTeamDetails    : Either[UMPError, TeamDetails],
+  umpMyTeamsUrl         : String,
+  leaksFoundForTeam     : Boolean,
+  hasLeaks              : String => Boolean,
+  masterTeamDependencies: Seq[Dependencies]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(teamName.asString, "teams") {
@@ -46,8 +46,8 @@
     </header>
 
     @partials.team_leak_detection_banner(leaksFoundForTeam)
-    @partials.bobby_violations_banner(environment = None, dependencies = teamDependencies.flatMap(_.toSeq), pending = false, team = true)
-    @partials.bobby_violations_banner(environment = None, dependencies = teamDependencies.flatMap(_.toSeq), pending = true, team = true)
+    @partials.bobby_violations_banner(environment = None, dependencies = masterTeamDependencies.flatMap(_.toSeq), pending = false, team = true)
+    @partials.bobby_violations_banner(environment = None, dependencies = masterTeamDependencies.flatMap(_.toSeq), pending = true , team = true)
 
     <section class="section-wrapper">
 
@@ -168,7 +168,7 @@
         </div>
     </section>
 
-    @dependenciesTeamPartial(teamName, teamDependencies, true)
+    @dependenciesTeamPartial(teamName, masterTeamDependencies, true)
 }
 
 @umpUpdateLink(isMemberBox: Boolean) = {
