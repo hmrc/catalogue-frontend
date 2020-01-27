@@ -18,9 +18,15 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model._
 
 @this()
-@(teamName: TeamName, masterTeamDependencies: Seq[Dependencies], showLink: Boolean = false)
+@( teamName              : TeamName
+ , masterTeamDependencies: Seq[Dependencies]
+ , prodDependencies      : Map[String, Seq[Dependency]]
+ , showLink              : Boolean
+ )
 
 @defining(masterTeamDependencies.filter(_.hasOutOfDateDependencies)) { outOfDateDependencies =>
+
+!!! ProdDependencies: @prodDependencies.size
 
 <div id="team-dependencies" class="board">
     <h3 class="board__heading">Out of Date Platform Dependencies for Team @teamName.asString</h3>
@@ -35,9 +41,14 @@
         }
         <div class="col-xs-8">
              @for(dependency <- masterTeamDependencies) {
+               @defining(prodDependencies.getOrElse(dependency.repositoryName, Seq.empty)){ prodDependencies =>
                  <ul class="list list--minimal list-group row" id="ood-@dependency.repositoryName">
 
                      <h4>@dependency.repositoryName</h4>
+
+                     @bobby_alerts(prodDependencies, pending = false)
+                     @bobby_alerts(prodDependencies, pending = true )
+
                      <li>
                          <span class="col-xs-4"><label>Dependency</label></span>
                          <span class="col-xs-3"><label>Current Version</label></span>
@@ -50,6 +61,7 @@
                      @partials.dependency_section(dependency.otherDependencies.filter(_.isOutOfDate))
 
                  </ul>
+               }
              }
         </div>
         @if(masterTeamDependencies.nonEmpty) {
@@ -60,4 +72,24 @@
 
 </div>
 
+}
+
+@bobby_alerts(prodDependencies: Seq[Dependency], pending: Boolean) = {
+  @defining(
+      prodDependencies
+          .flatMap { dependency =>
+             val violations = if (pending) dependency.pendingBobbyRuleViolations
+                              else dependency.activeBobbyRuleViolations
+             violations.map(rule => (dependency.name, dependency.currentVersion, rule))
+          }
+          .toSet
+    ) { violations =>
+      @if(violations.nonEmpty) {
+          <div class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-@if(pending) {pending} else {broken}-banner">
+              <strong>
+                  This repo has @if(pending) { upcoming } bobby violations in Production
+              </strong>
+          </div>
+      }
+  }
 }

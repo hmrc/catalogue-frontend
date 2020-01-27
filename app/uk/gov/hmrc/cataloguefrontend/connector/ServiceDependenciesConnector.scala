@@ -119,6 +119,23 @@ class ServiceDependenciesConnector @Inject()(
     }
   }
 
+  def getCuratedSlugDependenciesForTeam(
+      teamName: TeamName
+    , flag    : SlugInfoFlag
+    )(implicit hc: HeaderCarrier
+    ): Future[Map[String, Seq[Dependency]]] = {
+    import Dependencies.Implicits.readsDependency
+    val url = s"$servicesDependenciesBaseUrl/api/teams/${encodePathParam(teamName.asString)}/slug-dependencies"
+    http.GET[Map[String, Seq[Dependency]]](
+      url
+    , queryParams = Seq("flag" -> flag.asString)
+    ).recover {
+      case NonFatal(ex) =>
+        Logger.error(s"An error occurred when connecting to [$url]: ${ex.getMessage}", ex)
+        Map.empty
+    }
+  }
+
   private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
     queryParams.collect { case (k, Some(v)) => (k, v) }
 

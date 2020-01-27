@@ -221,42 +221,53 @@ class CatalogueController @Inject()(
     }
   }
 
-  def team(teamName: TeamName): Action[AnyContent] = Action.async { implicit request =>
-    teamsAndRepositoriesConnector.teamInfo(teamName).flatMap {
-      case Some(teamInfo) =>
-        ( userManagementConnector.getTeamMembersFromUMP(teamName)
-        , userManagementConnector.getTeamDetails(teamName)
-        , leakDetectionService.repositoriesWithLeaks
-        , serviceDependencyConnector.dependenciesForTeam(teamName)
-        ).mapN {
-         ( teamMembers
-         , teamDetails
-         , reposWithLeaks
-         , masterTeamDependencies
-         ) =>
-          Ok(
-            teamInfoPage(
-              teamName               = teamInfo.name,
-              repos                  = teamInfo.repos.getOrElse(Map.empty),
-              activityDates          = TeamActivityDates(teamInfo.firstActiveDate, teamInfo.lastActiveDate, teamInfo.firstServiceCreationDate),
-              errorOrTeamMembers     = convertToDisplayableTeamMembers(teamInfo.name, teamMembers),
-              errorOrTeamDetails     = teamDetails,
-              umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name),
-              leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks),
-              hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
-              masterTeamDependencies = masterTeamDependencies
+  def team(teamName: TeamName): Action[AnyContent] =
+    Action.async { implicit request =>
+      teamsAndRepositoriesConnector.teamInfo(teamName).flatMap {
+        case Some(teamInfo) =>
+          ( userManagementConnector.getTeamMembersFromUMP(teamName)
+          , userManagementConnector.getTeamDetails(teamName)
+          , leakDetectionService.repositoriesWithLeaks
+          , serviceDependencyConnector.dependenciesForTeam(teamName)
+          , serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
+          ).mapN {
+           ( teamMembers
+           , teamDetails
+           , reposWithLeaks
+           , masterTeamDependencies
+           , prodDependencies
+           ) =>
+            Ok(
+              teamInfoPage(
+                teamName               = teamInfo.name
+              , repos                  = teamInfo.repos.getOrElse(Map.empty)
+              , activityDates          = TeamActivityDates(teamInfo.firstActiveDate, teamInfo.lastActiveDate, teamInfo.firstServiceCreationDate)
+              , errorOrTeamMembers     = convertToDisplayableTeamMembers(teamInfo.name, teamMembers)
+              , errorOrTeamDetails     = teamDetails
+              , umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name)
+              , leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks)
+              , hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks)
+              , masterTeamDependencies = masterTeamDependencies
+              , prodDependencies       = prodDependencies
+              )
             )
-          )
-        }
-      case _ => Future.successful(NotFound(error_404_template()))
+          }
+        case _ => Future.successful(NotFound(error_404_template()))
+      }
     }
-  }
 
-  def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] = Action.async { implicit request =>
-    for {
-      masterTeamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
-    } yield Ok(outOfDateTeamDependenciesPage(teamName, masterTeamDependencies))
-  }
+  def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
+    Action.async { implicit request =>
+      (
+        serviceDependencyConnector.dependenciesForTeam(teamName)
+      , serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
+      ).mapN {
+        ( masterTeamDependencies
+        , prodDependencies
+        ) =>
+        Ok(outOfDateTeamDependenciesPage(teamName, masterTeamDependencies, prodDependencies))
+      }
+    }
 
   def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
     for {

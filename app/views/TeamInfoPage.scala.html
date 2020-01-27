@@ -20,7 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, TeamDetails}
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependencies, TeamName}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependencies, Dependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
@@ -34,7 +34,8 @@
   umpMyTeamsUrl         : String,
   leaksFoundForTeam     : Boolean,
   hasLeaks              : String => Boolean,
-  masterTeamDependencies: Seq[Dependencies]
+  masterTeamDependencies: Seq[Dependencies],
+  prodDependencies      : Map[String, Seq[Dependency]]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(teamName.asString, "teams") {
@@ -168,7 +169,7 @@
         </div>
     </section>
 
-    @dependenciesTeamPartial(teamName, masterTeamDependencies, true)
+    @dependenciesTeamPartial(teamName, masterTeamDependencies, prodDependencies, showLink = true)
 }
 
 @umpUpdateLink(isMemberBox: Boolean) = {
