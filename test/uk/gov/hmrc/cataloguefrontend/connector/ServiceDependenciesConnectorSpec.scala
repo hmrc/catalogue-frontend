@@ -327,10 +327,10 @@ class ServiceDependenciesConnectorSpec
   }
 
   "GET curated slug dependencies" - {
-    "returns a list of curated dependencies for a specific version of a slug" in new Setup {
+    "returns a list of curated dependencies for slugInfoFlag" in new Setup {
       val slugName = "slug-name"
-      val slugVersion = Version("1.0.0")
-      serviceEndpoint(GET, url = s"/api/slug-dependencies/$slugName?version=$slugVersion",
+      val flag     = SlugInfoFlag.Latest
+      serviceEndpoint(GET, url = s"/api/slug-dependencies/$slugName?flag=${flag.asString}",
         willRespondWith = (Status.OK, Some(
           """|[{
              |  "name": "dep1",
@@ -345,32 +345,7 @@ class ServiceDependenciesConnectorSpec
              |  "isExternal": false
              | }]""".stripMargin)))
 
-      val response = serviceDependenciesConnector.getCuratedSlugDependencies(slugName, Some(slugVersion)).futureValue
-
-      response should contain theSameElementsAs Seq(
-        Dependency(name = "dep1", currentVersion = Version("1.0.0"), latestVersion = None),
-        Dependency(name = "dep2", currentVersion = Version("2.0.0"), latestVersion = Some(Version("2.1.0")))
-      )
-    }
-
-    "returns a list of curated dependencies for the latest version of a slug" in new Setup {
-      val SlugName = "slug-name"
-      serviceEndpoint(GET, url = s"/api/slug-dependencies/$SlugName",
-        willRespondWith = (Status.OK, Some(
-          """|[{
-             |  "name": "dep1",
-             |  "currentVersion": {"major": 1, "minor": 0, "patch": 0, "original": "1.0.0"},
-             |  "bobbyRuleViolations": [],
-             |  "isExternal": false
-             | },
-             | {"name": "dep2",
-             |  "currentVersion": {"major": 2, "minor": 0, "patch": 0, "original": "2.0.0"},
-             |  "latestVersion": {"major": 2, "minor": 1, "patch": 0, "original": "2.1.0"},
-             |  "bobbyRuleViolations": [],
-             |  "isExternal": false
-             | }]""".stripMargin)))
-
-      val response = serviceDependenciesConnector.getCuratedSlugDependencies(SlugName, version = None).futureValue
+      val response = serviceDependenciesConnector.getCuratedSlugDependencies(slugName, flag).futureValue
 
       response should contain theSameElementsAs Seq(
         Dependency(name = "dep1", currentVersion = Version("1.0.0"), latestVersion = None),
@@ -380,22 +355,21 @@ class ServiceDependenciesConnectorSpec
 
     "returns an empty list of dependencies for an unknown slug" in new Setup {
       val slugName = "slug-name"
-      val slugVersion = Version("1.0.0")
-      serviceEndpoint(GET, url = s"/api/slug-dependencies/$slugName?version=$slugVersion",
+      val flag     = SlugInfoFlag.ForEnvironment(Environment.ExternalTest)
+      serviceEndpoint(GET, url = s"/api/slug-dependencies/$slugName?flag=${flag.asString}",
         willRespondWith = (Status.NOT_FOUND, None))
 
-      serviceDependenciesConnector.getCuratedSlugDependencies(slugName, Some(slugVersion)).futureValue shouldBe empty
+      serviceDependenciesConnector.getCuratedSlugDependencies(slugName, flag).futureValue shouldBe empty
     }
 
     "returns an empty list of dependencies when a communication error occurs" in new Setup {
       val mockedHttpClient = mock[HttpClient]
-      when(mockedHttpClient.GET(any(), any())(any(), any(), any())).thenReturn(
-        Future.failed(new RuntimeException("Boom!!"))
-      )
+      when(mockedHttpClient.GET(any(), any())(any(), any(), any()))
+        .thenReturn(Future.failed(new RuntimeException("Boom!!")))
 
       val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig])
 
-      connector.getCuratedSlugDependencies("slugName", version = None).futureValue shouldBe empty
+      connector.getCuratedSlugDependencies("slugName", flag = SlugInfoFlag.Latest).futureValue shouldBe empty
     }
   }
 

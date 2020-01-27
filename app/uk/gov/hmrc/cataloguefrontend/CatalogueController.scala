@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.LocalDateTime
 
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
@@ -254,8 +254,8 @@ class CatalogueController @Inject()(
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] = Action.async { implicit request =>
     for {
-      teamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
-    } yield Ok(outOfDateTeamDependenciesPage(teamName, teamDependencies))
+      masterTeamDependencies <- serviceDependencyConnector.dependenciesForTeam(teamName)
+    } yield Ok(outOfDateTeamDependenciesPage(teamName, masterTeamDependencies))
   }
 
   def serviceConfig(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
@@ -278,6 +278,7 @@ class CatalogueController @Inject()(
           for {
             deployments <- deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
             res         <- Environment.values.traverse { env =>
+                             val slugInfoFlag = SlugInfoFlag.ForEnvironment(env)
                              val deployedVersions = deployments.filter(_.environmentMapping.environment == env).map(_.version)
                              // a single environment may have multiple versions during a deployment
                              // return the lowest
@@ -290,22 +291,22 @@ class CatalogueController @Inject()(
                                                         } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)
                                                        ).flatten
 
-                                                     ( serviceDependencyConnector.getCuratedSlugDependencies(serviceName, Some(version))
+                                                     ( serviceDependencyConnector.getCuratedSlugDependencies(serviceName, slugInfoFlag)
                                                      , shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
                                                      ).mapN {
                                                        case (dependencies, optShutterState) =>
                                                          val envData = EnvData(version, dependencies, optShutterState, Some(telemetryLinks))
-                                                         (SlugInfoFlag.ForEnvironment(env), Some(envData))
+                                                         Some(slugInfoFlag -> envData)
                                                      }
-                               case None          => Future.successful((SlugInfoFlag.ForEnvironment(env), None))
+                               case None          => Future.successful(None)
                              }
                            }
-          } yield res.collect { case (k, Some(v)) => (k, v) }.toMap
+          } yield res.collect { case Some(v) => v }.toMap
 
         ( teamsAndRepositoriesConnector.lookupLink(serviceName)
         , futEnvDatas
         , serviceDependencyConnector.getDependencies(serviceName)
-        , serviceDependencyConnector.getCuratedSlugDependencies(serviceName)
+        , serviceDependencyConnector.getCuratedSlugDependencies(serviceName, SlugInfoFlag.Latest)
         , leakDetectionService.urlIfLeaksFound(serviceName)
         , routeRulesService.serviceUrl(serviceName)
         , routeRulesService.serviceRoutes(serviceName)

@@ -28,10 +28,10 @@
 
 @this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
 
-@(teamName: TeamName, teamDependencies: Seq[Dependencies])(implicit messages: Messages, request: Request[_])
+@(teamName: TeamName, masterTeamDependencies: Seq[Dependencies])(implicit messages: Messages, request: Request[_])
 
 @standard_layout(teamName.asString, "teams") {
-    @partials.bobby_violations_banner(environment = None, dependencies = teamDependencies.flatMap(_.toSeq), pending = false, team = true)
-    @partials.bobby_violations_banner(environment = None, dependencies = teamDependencies.flatMap(_.toSeq), pending = true , team = true)
-    @dependenciesTeamPartial(teamName, teamDependencies)
+    @partials.bobby_violations_banner(environment = None, dependencies = masterTeamDependencies.flatMap(_.toSeq), pending = false, team = true)
+    @partials.bobby_violations_banner(environment = None, dependencies = masterTeamDependencies.flatMap(_.toSeq), pending = true , team = true)
+    @dependenciesTeamPartial(teamName, masterTeamDependencies)
 }
