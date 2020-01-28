@@ -36,9 +36,15 @@
     @if(violations.nonEmpty) {
         <div class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-@if(pending) {pending} else {broken}-banner">
             <strong>
-                @if(team) { One or more of your repositories } else { This repository }
-                @if(pending) { will break } else { has broken }
-                Bobby Rules@environment.fold(", and will fail to build in Jenkins")(env => s" in ${env.displayString}").
+                @environment.fold{
+                  @if(team) { One or more of your repositories } else { This "repository" }
+                  @if(pending) { will break } else { has broken }
+                  Bobby Rules, and will fail to build in Jenkins.
+                }{ env =>
+                  @if(team) { One or more of your services } else { This service }
+                  @if(pending) { will break } else { has broken }
+                  Bobby Rules in @env.displayString.
+                }
                 Please review the lists below, and refer to <a href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
             </strong>
         </div>

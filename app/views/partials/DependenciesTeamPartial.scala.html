@@ -26,8 +26,6 @@
 
 @defining(masterTeamDependencies.filter(_.hasOutOfDateDependencies)) { outOfDateDependencies =>
 
-!!! ProdDependencies: @prodDependencies.size
-
 <div id="team-dependencies" class="board">
     <h3 class="board__heading">Out of Date Platform Dependencies for Team @teamName.asString</h3>
     <div class="board__body">
@@ -87,7 +85,7 @@
       @if(violations.nonEmpty) {
           <div class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-@if(pending) {pending} else {broken}-banner">
               <strong>
-                  This repo has @if(pending) { upcoming } bobby violations in Production
+                  This service has @if(pending) { upcoming } bobby violations in Production
               </strong>
           </div>
       }
