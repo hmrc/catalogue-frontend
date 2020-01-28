@@ -30,7 +30,7 @@
 @(repositoryDetails            : RepositoryDetails,
   optMasterDependencies        : Option[Dependencies],
   repositoryCreationDate       : LocalDateTime,
-  envDatas                     : Map[SlugInfoFlag, Option[EnvData]],
+  envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
   productionEnvironmentRoute   : Option[EnvironmentRoute],
   serviceRoutes                : ServiceRoutes,
@@ -47,8 +47,8 @@
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
-    @partials.bobby_active_violations_banner(optMasterDependencies.map(_.toSeq).getOrElse(Seq.empty))
-    @partials.bobby_pending_violations_banner(optMasterDependencies.map(_.toSeq).getOrElse(Seq.empty))
+    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = envDatas.get(SlugInfoFlag.ForEnvironment(Environment.Production)).toSeq.flatMap(_.dependencies), pending = false)
+    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = envDatas.get(SlugInfoFlag.ForEnvironment(Environment.Production)).toSeq.flatMap(_.dependencies), pending = true )
 
     <section class="section-wrapper">
 
@@ -91,7 +91,7 @@
                 @buildToolsPartial(
                   ServiceInfoView.buildToolsFrom(
                     optMasterDependencies = optMasterDependencies
-                  , librariesOfLatestSlug = envDatas(SlugInfoFlag.Latest).toSeq.flatMap(_.dependencies)
+                  , librariesOfLatestSlug = envDatas.get(SlugInfoFlag.Latest).toSeq.flatMap(_.dependencies)
                   )
                 )
             </div>

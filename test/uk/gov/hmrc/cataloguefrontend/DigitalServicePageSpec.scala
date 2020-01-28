@@ -40,7 +40,7 @@ import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.Source
@@ -175,7 +175,7 @@ class DigitalServicePageSpec
 
       val document = asDocument(response.body)
 
-      val serviceOwnerO = document.select("#service_owner_edit_input").iterator().toList.headOption
+      val serviceOwnerO = document.select("#service_owner_edit_input").iterator.asScala.toList.headOption
 
       serviceOwnerO.isDefined         shouldBe true
       serviceOwnerO.get.attr("value") shouldBe "Not specified"
@@ -193,7 +193,7 @@ class DigitalServicePageSpec
 
       val document = asDocument(contentAsString(response))
 
-      val serviceOwnerO = document.select("#service_owner_edit_input").iterator().toList.headOption
+      val serviceOwnerO = document.select("#service_owner_edit_input").iterator.asScala.toList.headOption
 
       serviceOwnerO.isDefined         shouldBe true
       serviceOwnerO.get.attr("value") shouldBe serviceOwner.getDisplayName
@@ -390,7 +390,7 @@ class DigitalServicePageSpec
     Source.fromURL(getClass.getResource(jsonFilePath)).getLines().mkString("\n")
 
   private def verifyTeamMemberHrefLinks(document: Document): Boolean = {
-    val hrefs = document.select("#team_members [href]").iterator().toList
+    val hrefs = document.select("#team_members [href]").iterator.asScala.toList
 
     hrefs.size shouldBe 4
     hrefs(0).attributes().get("href") == "http://example.com/profile/joe.black"
@@ -400,7 +400,7 @@ class DigitalServicePageSpec
   }
 
   private def verifyTeamMemberElementsText(document: Document): Unit = {
-    val teamMembersLiElements = document.select("#team_members li").iterator().toList
+    val teamMembersLiElements = document.select("#team_members li").iterator.asScala.toList
 
     teamMembersLiElements.length shouldBe 4
 

@@ -38,5 +38,5 @@ object FeatureSwitch {
 }
 
 object CatalogueFrontendSwitches {
-  def shuttering = FeatureSwitch.forName("shuttering")
+  //def shuttering = FeatureSwitch.forName("shuttering")
 }

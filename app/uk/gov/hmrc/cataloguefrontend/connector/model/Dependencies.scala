@@ -68,6 +68,22 @@ case class Dependencies(
     toSeq.exists(_.isOutOfDate)
 }
 
+object Dependencies {
+  object Implicits {
+    private implicit val vf = Version.format
+    private implicit val dtr = RestFormats.dateTimeFormats
+    private implicit val bvf = BobbyVersionRange.format
+    private implicit val brvr =
+      ( (__ \ "reason").read[String]
+      ~ (__ \ "range" ).read[BobbyVersionRange]
+      ~ (__ \ "from"  ).read[LocalDate]
+      ) (BobbyRuleViolation.apply _)
+
+    implicit val readsDependency: Reads[Dependency] = Json.reads[Dependency]
+    implicit val reads: Reads[Dependencies] = Json.reads[Dependencies]
+  }
+}
+
 case class BobbyVersion(version: Version, inclusive: Boolean)
 
 // TODO rename as VersionRange?
@@ -172,32 +188,6 @@ object BobbyVersionRange {
 // TODO avoid caching LocalDate, and provide to isActive function
 case class BobbyRuleViolation(reason: String, range: BobbyVersionRange, from: LocalDate)(implicit now: LocalDate = LocalDate.now()) {
   def isActive: Boolean = now.isAfter(from)
-}
-
-
-object Dependencies {
-  object Implicits {
-    private implicit val vf = Version.format
-    private implicit val dtr = RestFormats.dateTimeFormats
-    private implicit val bvf = BobbyVersionRange.format
-    private implicit val brvr =
-      ( (__ \ "reason").read[String]
-      ~ (__ \ "range" ).read[BobbyVersionRange]
-      ~ (__ \ "from"  ).read[LocalDate]
-      ) (BobbyRuleViolation.apply _)
-
-    implicit val readsDependency: Reads[Dependency] = Json.reads[Dependency]
-    implicit val reads: Reads[Dependencies] = Json.reads[Dependencies]
-  }
-
-  def collectViolations(dependenciesSeq: Seq[Dependencies], f: Dependency => Seq[BobbyRuleViolation]): Seq[(String, BobbyRuleViolation)] =
-    dependenciesSeq
-      .flatMap(
-          _.toSeq
-           .flatMap(dependency => f(dependency).map(v => (dependency.name, v))))
-      .toSet
-      .toList
-      .sortBy { (e: (String, BobbyRuleViolation)) => e._1 }
 }
 
 case class Version(

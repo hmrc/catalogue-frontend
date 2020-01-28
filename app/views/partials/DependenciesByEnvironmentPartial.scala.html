@@ -24,12 +24,13 @@
 
 @this(dependenciesPartial: ServiceDependenciesPartial, viewMessages: ViewMessages)
 
-@(envDatas: Map[SlugInfoFlag, Option[EnvData]]
+@(envDatas: Map[SlugInfoFlag, EnvData]
 )(implicit messages: Messages)
 
 <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
-  @for((slugInfoFlag, optEnvData) <- envDatas.toSeq.sortBy(_._1)) {
-    <li class="nav-item @if(slugInfoFlag == SlugInfoFlag.Latest) { active }">
+  @for(slugInfoFlag <- SlugInfoFlag.values) {
+    @defining(envDatas.get(slugInfoFlag)){ optEnvData =>
+      <li class="nav-item @if(slugInfoFlag == SlugInfoFlag.Latest) { active }">
         <a id="@{slugInfoFlag.asString}-tab" class="nav-link" data-toggle="tab" href="#@{slugInfoFlag.asString}-pane" role="tab" aria-controls="@slugInfoFlag.asString" aria-selected="false">
             <div class="board">
                 <div class="board__heading">
@@ -43,13 +44,15 @@
                 </div>
             </div>
         </a>
-    </li>
+      </li>
+    }
   }
 </ul>
 
 <div id="environmentPanes" class="tab-content environment-panes">
-  @for((slugInfoFlag, optEnvData) <- envDatas.toSeq.sortBy(_._1)) {
-    <div id="@{slugInfoFlag.asString}-pane" class="tab-pane @if(slugInfoFlag == SlugInfoFlag.Latest) { active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab">
+  @for(slugInfoFlag <- SlugInfoFlag.values) {
+    @defining(envDatas.get(slugInfoFlag)){ optEnvData =>
+      <div id="@{slugInfoFlag.asString}-pane" class="tab-pane @if(slugInfoFlag == SlugInfoFlag.Latest) { active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab">
 
       @if(slugInfoFlag != SlugInfoFlag.Latest) {
         @defining(optEnvData.flatMap(_.optTelemetryLinks).getOrElse(Seq.empty)){ telemetryLinks =>
@@ -88,7 +91,8 @@
                   )
             </div>
         </div>
-    </div>
+      </div>
+    }
   }
 </div>
 

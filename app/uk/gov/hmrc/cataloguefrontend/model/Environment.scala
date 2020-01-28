@@ -81,5 +81,6 @@ object SlugInfoFlag {
   }
 
   def parse(s: String): Option[SlugInfoFlag] =
-    values.find(_.asString == s)
+    if (s == "external test") Some(SlugInfoFlag.ForEnvironment(Environment.ExternalTest)) // service-dependencies currently represents with a space
+    else values.find(_.asString == s)
 }

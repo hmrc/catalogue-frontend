@@ -66,25 +66,30 @@ class ServiceDependenciesConnector @Inject()(
     http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/api/teams/${team.asString}/dependencies")
   }
 
-  def getSlugDependencies(serviceName: String, version: Option[String] = None)
-                         (implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] = {
-    val queryParams = buildQueryParams(
-      "name"    -> Some(serviceName),
-      "version" -> version)
-
+  def getSlugDependencies(
+      serviceName: String
+    , version    : Option[Version] = None
+    )(implicit hc: HeaderCarrier
+    ): Future[Seq[ServiceDependencies]] =
     http
-      .GET[Seq[ServiceDependencies]](s"$servicesDependenciesBaseUrl/api/sluginfos", queryParams)
+      .GET[Seq[ServiceDependencies]](
+          s"$servicesDependenciesBaseUrl/api/sluginfos"
+        , queryParams = buildQueryParams(
+                            "name"    -> Some(serviceName)
+                          , "version" -> version.map(_.toString)
+                          )
+        )
       .recover {
         case NonFatal(ex) =>
           Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl/api/sluginfos: ${ex.getMessage}", ex)
           Nil
       }
-  }
 
   def getSlugInfo(
       serviceName: String
     , version    : Option[Version] = None
-    )(implicit hc: HeaderCarrier): Future[Option[ServiceDependencies]] =
+    )(implicit hc: HeaderCarrier
+    ): Future[Option[ServiceDependencies]] =
     http
       .GET[ServiceDependencies](
           s"$servicesDependenciesBaseUrl/api/sluginfo"
@@ -99,22 +104,40 @@ class ServiceDependenciesConnector @Inject()(
 
   def getCuratedSlugDependencies(
       serviceName: String
-    , version: Option[Version] = None
+    , flag       : SlugInfoFlag
     )(implicit hc: HeaderCarrier
     ): Future[Seq[Dependency]] = {
     import Dependencies.Implicits.readsDependency
     val url = s"$servicesDependenciesBaseUrl/api/slug-dependencies/${encodePathParam(serviceName)}"
-    val queryParams = buildQueryParams("version" -> version.map(_.toString))
-
-    http.GET[Seq[Dependency]](url, queryParams).recover {
+    http.GET[Seq[Dependency]](
+      url,
+      queryParams = Seq("flag" -> flag.asString)
+    ).recover {
       case NonFatal(ex) =>
         Logger.error(s"An error occurred when connecting to [$url]: ${ex.getMessage}", ex)
         Nil
     }
   }
 
+  def getCuratedSlugDependenciesForTeam(
+      teamName: TeamName
+    , flag    : SlugInfoFlag
+    )(implicit hc: HeaderCarrier
+    ): Future[Map[String, Seq[Dependency]]] = {
+    import Dependencies.Implicits.readsDependency
+    val url = s"$servicesDependenciesBaseUrl/api/teams/${encodePathParam(teamName.asString)}/slug-dependencies"
+    http.GET[Map[String, Seq[Dependency]]](
+      url
+    , queryParams = Seq("flag" -> flag.asString)
+    ).recover {
+      case NonFatal(ex) =>
+        Logger.error(s"An error occurred when connecting to [$url]: ${ex.getMessage}", ex)
+        Map.empty
+    }
+  }
+
   private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
-    queryParams.flatMap(param => param._2.map((param._1, _)))
+    queryParams.collect { case (k, Some(v)) => (k, v) }
 
   def getServicesWithDependency(
       flag        : SlugInfoFlag,
