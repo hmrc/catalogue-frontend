@@ -82,7 +82,7 @@
 
                 @for(flag <- flags) {
                   <br/>
-                  <div id="chart_div_@flag" align="center"></div>
+                  <div id="chart_div_@{flag.asString}" align="center"></div>
                 }
             </div>
         </div>
@@ -108,11 +108,11 @@
                                 ]);
 
                                 var options = {
-                                title   : '@flag.asString.capitalize',
+                                title   : '@flag.displayString',
                                 vAxis : { title   : 'Services affected'},
                                 focusTarget: 'category'
                                 };
-                                var chart = new google.visualization.LineChart(document.getElementById('chart_div_@flag'));
+                                var chart = new google.visualization.LineChart(document.getElementById('chart_div_@{flag.asString}'));
                                 chart.draw(data, options);
                             }
                         }

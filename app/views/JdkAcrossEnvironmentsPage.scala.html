@@ -59,7 +59,7 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@routes.JDKVersionController.findLatestVersions(d.env)">@d.env</a></td>
+              <td><a href="@routes.JDKVersionController.findLatestVersions(d.env.asString)">@d.env.displayString</a></td>
               @for(jdk <- jdks) { <td>@{d.usage.getOrElse(jdk, 0)}</td>}
           </tr>
 
@@ -104,7 +104,7 @@
 
                 data.addRows([
                     @for(d <- envdata) {
-                        ['@d.env' @for(jdk <- jdks) {,@{d.usage.getOrElse(jdk, 0)}}],
+                        ['@d.env.displayString' @for(jdk <- jdks) {,@{d.usage.getOrElse(jdk, 0)}}],
                     }
                 ]);
 

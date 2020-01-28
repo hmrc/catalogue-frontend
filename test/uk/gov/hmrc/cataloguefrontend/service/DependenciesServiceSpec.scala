@@ -105,7 +105,7 @@ class SlugInfoServiceSpec
       when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
         .thenReturn(Future(List.empty[JDKVersion]))
 
-      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest.asString, Map.empty[JDKVersion, Int])
+      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest, Map.empty[JDKVersion, Int])
     }
   }
 
