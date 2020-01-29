@@ -98,7 +98,7 @@
 
 @envOption(env: Environment) = {
   <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)" class="navbar-link">@env.toString (@shutteredCount(env) / @serviceCount(env))</a>
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)" class="navbar-link">@env.displayString (@shutteredCount(env) / @serviceCount(env))</a>
   </li>
 }
 
