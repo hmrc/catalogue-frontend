@@ -56,6 +56,18 @@
         <div class="shuttered-checkbox"><input id="shuttered-only" type="checkbox" name="shuttered-only" value="false" onclick="filterUnshuttered()"> Only Show Shuttered @{shutterType}s</div>
     </div>
 
+  @if(isSignedIn) {
+      <div class="row tabs-bottom">
+          <div class="sm-col-12">
+              <p class="shutter-info-link">
+                  Select a service from the list below or
+                  <a href="@{
+                      uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None)
+                  }">click here to go to the shutter wizard</a>
+                  .</p>
+          </div>
+      </div>
+  }
   <div class="row tabs-bottom">
       <table id="shutter-state-table" class="table table-striped">
           <thead>

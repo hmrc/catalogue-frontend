@@ -12172,6 +12172,11 @@ tr.shuttered_row td .shutter-row-link {
     margin: 0px;
 }
 
+
+.shutter-info-link {
+  margin: 0.6em;
+}
+
 th#service-header {
     width: 30%;
     max-width: 30%;
