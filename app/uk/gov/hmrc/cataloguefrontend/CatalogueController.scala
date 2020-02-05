@@ -24,7 +24,6 @@ import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
 import play.api.libs.json.Json.toJson
-import play.api.libs.json.{Format, Json}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
@@ -37,7 +36,6 @@ import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
-import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import views.html._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -97,8 +95,6 @@ class CatalogueController @Inject()(
 
   // this value must match the configured name property for jenkins services defined under url-templates.environments at https://github.com/hmrc/app-config-base/blob/master/teams-and-repositories.conf
   private lazy val jenkinsLinkName = configuration.getOptional[String]("teams-and-repositories.link-name.jenkins").getOrElse("jenkins")
-
-  private implicit val errorResponseFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
 
   private val repoTypeToDetailsUrl = Map(
     RepoType.Service   -> routes.CatalogueController.service _,

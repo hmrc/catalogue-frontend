@@ -28,25 +28,29 @@ object VersionState {
   case object MinorVersionOutOfDate extends VersionState
   case object MajorVersionOutOfDate extends VersionState
   case object Invalid               extends VersionState
-  case object BobbyRuleViolated     extends VersionState
-  case object BobbyRulePending      extends VersionState
+  case class BobbyRuleViolated(violation: BobbyRuleViolation) extends VersionState
+  case class BobbyRulePending (violation: BobbyRuleViolation) extends VersionState
 }
 
 case class Dependency(
-  name          : String,
-  currentVersion: Version,
-  latestVersion : Option[Version],
-  bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty,
-  isExternal    : Boolean = false) {
+    name               : String,
+    group              : String,
+    currentVersion     : Version,
+    latestVersion      : Option[Version],
+    bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty
+  ) {
+
+  val isExternal =
+    !group.startsWith("uk.gov.hmrc")
 
   lazy val (activeBobbyRuleViolations, pendingBobbyRuleViolations) =
     bobbyRuleViolations.partition(_.isActive)
 
   def versionState: Option[VersionState] =
     if (activeBobbyRuleViolations.nonEmpty)
-      Some(VersionState.BobbyRuleViolated)
+      Some(VersionState.BobbyRuleViolated(activeBobbyRuleViolations.head))
     else if (pendingBobbyRuleViolations.nonEmpty)
-      Some(VersionState.BobbyRulePending)
+      Some(VersionState.BobbyRulePending(pendingBobbyRuleViolations.head))
     else
       latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
 

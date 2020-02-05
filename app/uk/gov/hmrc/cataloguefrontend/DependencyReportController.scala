@@ -107,8 +107,8 @@ class DependencyReportController @Inject()(
       case Some(VersionState.MinorVersionOutOfDate) => "amber"
       case Some(VersionState.MajorVersionOutOfDate) => "red"
       case Some(VersionState.Invalid)               => "N/A"
-      case Some(VersionState.BobbyRuleViolated)     => "verybad"
-      case Some(VersionState.BobbyRulePending)      => "pending"
+      case Some(_: VersionState.BobbyRuleViolated)  => "verybad"
+      case Some(_: VersionState.BobbyRulePending)   => "pending"
       case None                                     => "grey"
     }
 
