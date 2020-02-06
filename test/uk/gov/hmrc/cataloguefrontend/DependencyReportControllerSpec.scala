@@ -153,12 +153,12 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Gui
 
   private def sbtPluginsDependencyState(sbtPluginName: String, majorVersion: Int, colour: String) = {
     val currentVersion = Version(s"$majorVersion.0.0")
-    Dependency(sbtPluginName, currentVersion, latestVersion(currentVersion, colour))
+    Dependency(sbtPluginName, "uk.gov.hmrc", currentVersion, latestVersion(currentVersion, colour))
   }
 
   private def libraryDependency(libraryName: String, majorVersion: Int, colour: String) = {
     val currentVersion = Version(s"$majorVersion.0.0")
-    Dependency(libraryName, currentVersion, latestVersion(currentVersion, colour))
+    Dependency(libraryName, "uk.gov.hmrc", currentVersion, latestVersion(currentVersion, colour))
   }
 
   private def digitalServiceRepository(repoName: String) =

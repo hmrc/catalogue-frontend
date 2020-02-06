@@ -21,8 +21,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
 
 class DependencySectionSpec extends WordSpec with Matchers {
 
-  val dependency1 = Dependency("example-library", Version("1.2.3-play-25"), Some(Version("1.2.3-play-26")))
-  val dependency2 = Dependency("library4j", Version("4.0.1"), Some(Version("4.2.0")))
+  val dependency1 = Dependency("example-library", "uk.gov.hmrc", Version("1.2.3-play-25"), Some(Version("1.2.3-play-26")))
+  val dependency2 = Dependency("library4j", "uk.gov.hmrc", Version("4.0.1"), Some(Version("4.2.0")))
 
   "dependency_section" should {
 
@@ -31,9 +31,9 @@ class DependencySectionSpec extends WordSpec with Matchers {
       res should include("""<span id="example-library-current-version" class="col-xs-3">1.2.3-play-25</span>""")
       res should include(
         """<span id="example-library-latestVersion-version" class="col-xs-3">
-        |                    <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"> </span>
-        |                    1.2.3-play-26
-        |                </span>""".stripMargin)
+        |              <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"> </span>
+        |              1.2.3-play-26
+        |          </span>""".stripMargin)
     }
 
     "not display the version suffix when missing" in {
@@ -41,10 +41,9 @@ class DependencySectionSpec extends WordSpec with Matchers {
       res should include("""<span id="library4j-current-version" class="col-xs-3">4.0.1</span>""")
       res should include(
         """<span id="library4j-latestVersion-version" class="col-xs-3">
-        |                    <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"> </span>
-        |                    4.2.0
-        |                </span>""".stripMargin)
+        |              <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"> </span>
+        |              4.2.0
+        |          </span>""".stripMargin)
     }
   }
-
 }
