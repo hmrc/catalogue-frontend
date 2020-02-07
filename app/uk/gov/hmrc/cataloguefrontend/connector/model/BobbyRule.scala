@@ -28,7 +28,10 @@ case class BobbyRule(
   , range   : BobbyVersionRange
   , reason  : String
   , from    : LocalDate
-  )
+  ) {
+    def id: String =
+      s"$group:$artefact:$range"
+  }
 
 object BobbyRule {
   val reads: Reads[BobbyRule] = {

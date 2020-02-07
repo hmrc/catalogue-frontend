@@ -20,28 +20,30 @@
 
 
 @for(dependency <- dependencies.sortBy(_.name))  {
-        <li>
-            <div class="@{getColourClass(dependency)}" id="@{dependency.name}">
-                <span class="col-xs-4 left-aligned">
-                    <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}" title="@{getAltText(dependency)}"> </span>
-                    @if(dependency.latestVersion.isDefined && !dependency.isExternal) {
-                        <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}">@dependency.name</a>
-                    } else {
-                        @dependency.name
-                    }
-                </span>
-                <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion.toString</span>
-                <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">
-                    <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"> </span>
-                    @dependency.latestVersion.map(_.toString).getOrElse("(not found)")
-                </span>
-                <span id="@{dependency.name}-bobbyrule" class="col-xs-2">
-                    @if(dependency.versionState.fold(false)(v => List(VersionState.BobbyRuleViolated, VersionState.BobbyRulePending).contains(v))) {
-                        <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.name}">See rule</a>
-                    } else { }
-                </span>
-            </div>
-        </li>
+  <li>
+      <div class="@{getColourClass(dependency)}" id="@{dependency.name}">
+          <span class="col-xs-4 left-aligned">
+              <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}" title="@{getAltText(dependency)}"> </span>
+              @if(dependency.latestVersion.isDefined && !dependency.isExternal) {
+                  <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}">@dependency.name</a>
+              } else {
+                  @dependency.name
+              }
+          </span>
+          <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion.toString</span>
+          <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">
+              <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"> </span>
+              @dependency.latestVersion.map(_.toString).getOrElse("(not found)")
+          </span>
+          <span id="@{dependency.name}-bobbyrule" class="col-xs-2">
+              @dependency.versionState match {
+                  case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
+                  case Some(VersionState.BobbyRulePending (violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
+                  case _                                               => { }
+              }
+          </span>
+      </div>
+  </li>
 }
 
 @getColourClass(dependency: Dependency) = @{
@@ -50,8 +52,8 @@
         case VersionState.MinorVersionOutOfDate => "amber"
         case VersionState.MajorVersionOutOfDate => "red"
         case VersionState.Invalid               => "black"
-        case VersionState.BobbyRuleViolated     => "verybad"
-        case VersionState.BobbyRulePending      => "pending"
+        case _: VersionState.BobbyRuleViolated  => "verybad"
+        case _: VersionState.BobbyRulePending   => "pending"
     }
 }
 
@@ -61,8 +63,8 @@
         case VersionState.MinorVersionOutOfDate => "glyphicon-alert"
         case VersionState.MajorVersionOutOfDate => "glyphicon-ban-circle"
         case VersionState.Invalid               => "glyphicon-question-sign"
-        case VersionState.BobbyRuleViolated     => "glyphicon-remove"
-        case VersionState.BobbyRulePending      => "glyphicon-remove"
+        case _: VersionState.BobbyRuleViolated  => "glyphicon-remove"
+        case _: VersionState.BobbyRulePending   => "glyphicon-remove"
     }
 }
 
@@ -72,7 +74,7 @@
         case VersionState.MinorVersionOutOfDate => "minor version behind"
         case VersionState.MajorVersionOutOfDate => "major version behind"
         case VersionState.Invalid               => "invalid version difference"
-        case VersionState.BobbyRuleViolated     => "bobby rule violated"
-        case VersionState.BobbyRulePending      => "bobby rule pending"
+        case _: VersionState.BobbyRuleViolated  => "bobby rule violated"
+        case _: VersionState.BobbyRulePending   => "bobby rule pending"
     }
 }

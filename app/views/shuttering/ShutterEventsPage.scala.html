@@ -82,7 +82,7 @@
 
 @makeTab(env: Environment) = {
 <li id="tab-@env.asString" class="navbar-item @if(form("environment").value.contains(env.asString)) {active}">
- <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, form("serviceName").value)" class="navbar-link">@env.toString</a>
+  <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, form("serviceName").value)" class="navbar-link">@env.displayString</a>
 </li>
 }
 

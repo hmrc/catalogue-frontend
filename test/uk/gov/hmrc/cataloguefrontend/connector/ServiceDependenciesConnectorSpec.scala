@@ -78,41 +78,41 @@ class ServiceDependenciesConnectorSpec
           |  "libraryDependencies": [
           |    {
           |      "name": "frontend-bootstrap",
+          |      "group": "uk.gov.hmrc",
           |      "currentVersion": "7.11.0",
           |      "latestVersion": "8.80.0",
-          |      "isExternal": false,
           |      "bobbyRuleViolations": []
           |    },
           |    {
           |      "name": "play-config",
+          |      "group": "uk.gov.hmrc",
           |      "currentVersion": "3.0.0",
           |      "latestVersion": "7.70.0",
-          |      "isExternal": false,
           |      "bobbyRuleViolations": []
           |    }
           |  ],
           |  "sbtPluginsDependencies": [
           |    {
           |      "name": "plugin-1",
+          |      "group": "org",
           |      "currentVersion": "1.0.0",
           |      "latestVersion": "1.1.0",
-          |      "isExternal": true,
           |      "bobbyRuleViolations": []
           |    },
           |    {
           |      "name": "plugin-2",
+          |      "group": "uk.gov.hmrc",
           |      "currentVersion": "2.0.0",
           |      "latestVersion": "2.1.0",
-          |      "isExternal": false,
           |      "bobbyRuleViolations": []
           |    }
           |  ],
           |  "otherDependencies": [
           |    {
           |      "name": "sbt",
+          |      "group": "uk.gov.hmrc",
           |      "currentVersion": "0.13.8",
           |      "latestVersion": "0.13.15",
-          |      "isExternal": false,
           |      "bobbyRuleViolations": []
           |    }
           |  ],
@@ -131,18 +131,18 @@ class ServiceDependenciesConnectorSpec
       response.repositoryName      shouldBe "repo1"
       response.libraryDependencies should contain theSameElementsAs
         Seq(
-          Dependency("frontend-bootstrap", Version("7.11.0"), Some(Version("8.80.0"))),
-          Dependency("play-config", Version("3.0.0"), Some(Version("7.70.0")))
+          Dependency("frontend-bootstrap", "uk.gov.hmrc", Version("7.11.0"), Some(Version("8.80.0"))),
+          Dependency("play-config", "uk.gov.hmrc", Version("3.0.0"), Some(Version("7.70.0")))
         )
 
       response.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-1", Version("1.0.0"), Some(Version("1.1.0")), isExternal = true),
-          Dependency("plugin-2", Version("2.0.0"), Some(Version("2.1.0")), isExternal = false)
+          Dependency("plugin-1", "org", Version("1.0.0"), Some(Version("1.1.0"))),
+          Dependency("plugin-2", "uk.gov.hmrc", Version("2.0.0"), Some(Version("2.1.0")))
         )
       response.otherDependencies should contain theSameElementsAs
         Seq(
-          Dependency("sbt", Version("0.13.8"), Some(Version("0.13.15")))
+          Dependency("sbt", "uk.gov.hmrc", Version("0.13.8"), Some(Version("0.13.15")))
         )
 
     }
@@ -189,41 +189,41 @@ class ServiceDependenciesConnectorSpec
           |    "libraryDependencies": [
           |      {
           |        "name": "frontend-bootstrap",
+          |        "group": "uk.gov.hmrc",
           |        "currentVersion": "7.11.0",
           |        "latestVersion": "8.80.0",
-          |        "isExternal": false,
           |        "bobbyRuleViolations": []
           |      },
           |      {
           |        "name": "play-config",
+          |        "group": "uk.gov.hmrc",
           |        "currentVersion": "3.0.0",
           |        "latestVersion": "7.70.0",
-          |        "isExternal": false,
           |        "bobbyRuleViolations": []
           |      }
           |    ],
           |    "sbtPluginsDependencies": [
           |      {
           |        "name": "plugin-1",
+          |        "group": "org",
           |        "currentVersion": "1.0.0",
           |        "latestVersion": "1.1.0",
-          |        "isExternal": true,
           |        "bobbyRuleViolations": []
           |      },
           |      {
           |        "name": "plugin-2",
+          |        "group": "uk.gov.hmrc",
           |        "currentVersion": "2.0.0",
           |        "latestVersion": "2.1.0",
-          |        "isExternal": false,
           |        "bobbyRuleViolations": []
           |      }
           |    ],
           |    "otherDependencies": [
           |      {
           |        "name": "sbt",
+          |        "group": "uk.gov.hmrc",
           |        "currentVersion": "0.13.7",
           |        "latestVersion": "0.13.15",
-          |        "isExternal": false,
           |        "bobbyRuleViolations": []
           |      }
           |    ],
@@ -234,41 +234,41 @@ class ServiceDependenciesConnectorSpec
           |    "libraryDependencies": [
           |      {
           |        "name": "some-lib-1",
+          |        "group": "uk.gov.hmrc",
           |        "currentVersion": "7.77.0",
           |        "latestVersion": "8.80.0",
-          |        "isExternal": false,
           |        "bobbyRuleViolations": []
           |      },
           |      {
           |        "name": "some-lib-2",
+          |        "group": "uk.gov.hmrc",
           |        "currentVersion": "3.0.0",
           |        "latestVersion": "7.70.0",
-          |        "isExternal": false,
           |        "bobbyRuleViolations": []
           |      }
           |    ],
           |    "sbtPluginsDependencies": [
           |      {
           |        "name": "plugin-3",
+          |        "group": "org",
           |        "currentVersion": "1.0.0",
           |        "latestVersion": "1.1.0",
-          |        "isExternal": true,
           |        "bobbyRuleViolations": []
           |      },
           |      {
           |        "name": "plugin-4",
+          |        "group": "uk.gov.hmrc",
           |        "currentVersion": "2.0.0",
           |        "latestVersion": "2.1.0",
-          |        "isExternal": false,
           |        "bobbyRuleViolations": []
           |      }
           |    ],
           |    "otherDependencies": [
           |      {
           |        "name": "sbt",
+          |        "group": "uk.gov.hmrc",
           |        "currentVersion": "0.13.8",
           |        "latestVersion": "0.13.15",
-          |        "isExternal": false,
           |        "bobbyRuleViolations": []
           |      }
           |    ],
@@ -289,19 +289,19 @@ class ServiceDependenciesConnectorSpec
       response.head.repositoryName      shouldBe "repo1"
       response.head.libraryDependencies should contain theSameElementsAs
         Seq(
-          Dependency("frontend-bootstrap", Version("7.11.0"), Some(Version("8.80.0"))),
-          Dependency("play-config", Version("3.0.0"), Some(Version("7.70.0")))
+          Dependency("frontend-bootstrap", "uk.gov.hmrc", Version("7.11.0"), Some(Version("8.80.0"))),
+          Dependency("play-config", "uk.gov.hmrc", Version("3.0.0"), Some(Version("7.70.0")))
         )
 
       response.head.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-1", Version("1.0.0"), Some(Version("1.1.0")), isExternal = true),
-          Dependency("plugin-2", Version("2.0.0"), Some(Version("2.1.0")), isExternal = false)
+          Dependency("plugin-1", "org", Version("1.0.0"), Some(Version("1.1.0"))),
+          Dependency("plugin-2", "uk.gov.hmrc", Version("2.0.0"), Some(Version("2.1.0")))
         )
 
       response.head.otherDependencies should contain theSameElementsAs
         Seq(
-          Dependency("sbt", Version("0.13.7"), Some(Version("0.13.15")))
+          Dependency("sbt", "uk.gov.hmrc", Version("0.13.7"), Some(Version("0.13.15")))
         )
 
       response.last.libraryDependencies.size shouldBe 2
@@ -309,19 +309,19 @@ class ServiceDependenciesConnectorSpec
       response.last.repositoryName      shouldBe "repo2"
       response.last.libraryDependencies should contain theSameElementsAs
         Seq(
-          Dependency("some-lib-1", Version("7.77.0"), Some(Version("8.80.0"))),
-          Dependency("some-lib-2", Version("3.0.0"), Some(Version("7.70.0")))
+          Dependency("some-lib-1", "uk.gov.hmrc", Version("7.77.0"), Some(Version("8.80.0"))),
+          Dependency("some-lib-2", "uk.gov.hmrc", Version("3.0.0"), Some(Version("7.70.0")))
         )
 
       response.last.sbtPluginsDependencies should contain theSameElementsAs
         Seq(
-          Dependency("plugin-3", Version("1.0.0"), Some(Version("1.1.0")), isExternal = true),
-          Dependency("plugin-4", Version("2.0.0"), Some(Version("2.1.0")), isExternal = false)
+          Dependency("plugin-3", "org", Version("1.0.0"), Some(Version("1.1.0"))),
+          Dependency("plugin-4", "uk.gov.hmrc", Version("2.0.0"), Some(Version("2.1.0")))
         )
 
       response.last.otherDependencies should contain theSameElementsAs
         Seq(
-          Dependency("sbt", Version("0.13.8"), Some(Version("0.13.15")))
+          Dependency("sbt", "uk.gov.hmrc", Version("0.13.8"), Some(Version("0.13.15")))
         )
     }
   }
@@ -334,22 +334,22 @@ class ServiceDependenciesConnectorSpec
         willRespondWith = (Status.OK, Some(
           """|[{
              |  "name": "dep1",
+             |  "group": "uk.gov.hmrc",
              |  "currentVersion": {"major": 1, "minor": 0, "patch": 0, "original": "1.0.0"},
-             |  "bobbyRuleViolations": [],
-             |  "isExternal": false
+             |  "bobbyRuleViolations": []
              | },
              | {"name": "dep2",
+             |  "group": "uk.gov.hmrc",
              |  "currentVersion": {"major": 2, "minor": 0, "patch": 0, "original": "2.0.0"},
              |  "latestVersion": {"major": 2, "minor": 1, "patch": 0, "original": "2.1.0"},
-             |  "bobbyRuleViolations": [],
-             |  "isExternal": false
+             |  "bobbyRuleViolations": []
              | }]""".stripMargin)))
 
       val response = serviceDependenciesConnector.getCuratedSlugDependencies(slugName, flag).futureValue
 
       response should contain theSameElementsAs Seq(
-        Dependency(name = "dep1", currentVersion = Version("1.0.0"), latestVersion = None),
-        Dependency(name = "dep2", currentVersion = Version("2.0.0"), latestVersion = Some(Version("2.1.0")))
+        Dependency(name = "dep1", group = "uk.gov.hmrc", currentVersion = Version("1.0.0"), latestVersion = None),
+        Dependency(name = "dep2", group = "uk.gov.hmrc", currentVersion = Version("2.0.0"), latestVersion = Some(Version("2.1.0")))
       )
     }
 

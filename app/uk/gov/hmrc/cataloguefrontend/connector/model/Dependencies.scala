@@ -28,25 +28,64 @@ object VersionState {
   case object MinorVersionOutOfDate extends VersionState
   case object MajorVersionOutOfDate extends VersionState
   case object Invalid               extends VersionState
-  case object BobbyRuleViolated     extends VersionState
-  case object BobbyRulePending      extends VersionState
+  case class BobbyRuleViolated(violation: BobbyRuleViolation) extends VersionState
+  case class BobbyRulePending (violation: BobbyRuleViolation) extends VersionState
+}
+
+// TODO avoid caching LocalDate, and provide to isActive function
+case class BobbyRuleViolation(
+    reason: String
+  , range : BobbyVersionRange
+  , from  : LocalDate
+  )(implicit now: LocalDate = LocalDate.now()) {
+  def isActive: Boolean = now.isAfter(from)
+}
+
+object BobbyRuleViolation {
+  val format = {
+    implicit val bvf  = BobbyVersionRange.format
+    ( (__ \ "reason").read[String]
+    ~ (__ \ "range" ).read[BobbyVersionRange]
+    ~ (__ \ "from"  ).read[LocalDate]
+    ) (BobbyRuleViolation.apply _)
+  }
+
+
+  implicit val ordering = new Ordering[BobbyRuleViolation] {
+    // ordering by rule which is most strict first
+    def compare(x: BobbyRuleViolation, y: BobbyRuleViolation): Int = {
+      implicit val vo : Ordering[Version]   = Version.ordering.reverse
+      implicit val bo : Ordering[Boolean]   = Ordering.Boolean.reverse
+      implicit val ldo: Ordering[LocalDate] = new Ordering[LocalDate] {
+        def compare(x: LocalDate, y: LocalDate) = x.compareTo(y)
+      }.reverse
+      (x.range.upperBound.map(_.version), x.range.upperBound.map(_.inclusive), x.from)
+        .compare(
+          (y.range.upperBound.map(_.version), y.range.upperBound.map(_.inclusive), y.from)
+        )
+    }
+  }
 }
 
 case class Dependency(
-  name          : String,
-  currentVersion: Version,
-  latestVersion : Option[Version],
-  bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty,
-  isExternal    : Boolean = false) {
+    name               : String,
+    group              : String,
+    currentVersion     : Version,
+    latestVersion      : Option[Version],
+    bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty
+  ) {
+
+  val isExternal =
+    !group.startsWith("uk.gov.hmrc")
 
   lazy val (activeBobbyRuleViolations, pendingBobbyRuleViolations) =
     bobbyRuleViolations.partition(_.isActive)
 
   def versionState: Option[VersionState] =
     if (activeBobbyRuleViolations.nonEmpty)
-      Some(VersionState.BobbyRuleViolated)
+      Some(VersionState.BobbyRuleViolated(activeBobbyRuleViolations.sorted.head))
     else if (pendingBobbyRuleViolations.nonEmpty)
-      Some(VersionState.BobbyRulePending)
+      Some(VersionState.BobbyRulePending(pendingBobbyRuleViolations.sorted.head))
     else
       latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
 
@@ -70,14 +109,9 @@ case class Dependencies(
 
 object Dependencies {
   object Implicits {
-    private implicit val vf = Version.format
-    private implicit val dtr = RestFormats.dateTimeFormats
-    private implicit val bvf = BobbyVersionRange.format
-    private implicit val brvr =
-      ( (__ \ "reason").read[String]
-      ~ (__ \ "range" ).read[BobbyVersionRange]
-      ~ (__ \ "from"  ).read[LocalDate]
-      ) (BobbyRuleViolation.apply _)
+    private implicit val dtr  = RestFormats.dateTimeFormats
+    private implicit val vf   = Version.format
+    private implicit val brvr = BobbyRuleViolation.format
 
     implicit val readsDependency: Reads[Dependency] = Json.reads[Dependency]
     implicit val reads: Reads[Dependencies] = Json.reads[Dependencies]
@@ -185,10 +219,6 @@ object BobbyVersionRange {
   }
 }
 
-// TODO avoid caching LocalDate, and provide to isActive function
-case class BobbyRuleViolation(reason: String, range: BobbyVersionRange, from: LocalDate)(implicit now: LocalDate = LocalDate.now()) {
-  def isActive: Boolean = now.isAfter(from)
-}
 
 case class Version(
     major: Int,
@@ -201,19 +231,21 @@ case class Version(
   def diff(other: Version): (Int, Int, Int) =
     (this.major - other.major, this.minor - other.minor, this.patch - other.patch)
 
-  override def compare(other: Version): Int =
-    if (major == other.major)
-      if (minor == other.minor)
-        patch - other.patch
-      else
-        minor - other.minor
-    else
-      major - other.major
+  override def compare(other: Version): Int = {
+    import Ordered._
+    (major, minor, patch).compare((other.major, other.minor, other.patch))
+  }
 
   override def toString: String = original
 }
 
 object Version {
+
+  implicit val ordering = new Ordering[Version] {
+    def compare(x: Version, y: Version): Int =
+      x.compare(y)
+  }
+
   def getVersionState(currentVersion: Version, latestVersion: Version): VersionState =
     latestVersion.diff(currentVersion) match {
       case (0, 0, 0)                                   => VersionState.UpToDate

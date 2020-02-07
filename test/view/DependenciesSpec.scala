@@ -37,22 +37,22 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
     val dependencies = Dependencies(
       "service",
       Seq(
-        Dependency("lib1-up-to-date", Version("1.0.0"), Some(Version("1.0.0"))),
-        Dependency("lib2-minor-behind", Version("2.0.0"), Some(Version("2.1.0"))),
-        Dependency("lib3-major-behind", Version("3.0.0"), Some(Version("4.0.0"))),
-        Dependency("lib4-patch-behind", Version("3.0.0"), Some(Version("3.0.1"))),
-        Dependency("lib5-no-latest-version", Version("3.0.0"), None),
-        Dependency("lib6-invalid-ahead-current", Version("4.0.0"), Some(Version("3.0.1")))
+        Dependency("lib1-up-to-date", "uk.gov.hmrc", Version("1.0.0"), Some(Version("1.0.0"))),
+        Dependency("lib2-minor-behind", "uk.gov.hmrc", Version("2.0.0"), Some(Version("2.1.0"))),
+        Dependency("lib3-major-behind", "uk.gov.hmrc", Version("3.0.0"), Some(Version("4.0.0"))),
+        Dependency("lib4-patch-behind", "uk.gov.hmrc", Version("3.0.0"), Some(Version("3.0.1"))),
+        Dependency("lib5-no-latest-version", "uk.gov.hmrc", Version("3.0.0"), None),
+        Dependency("lib6-invalid-ahead-current", "uk.gov.hmrc", Version("4.0.0"), Some(Version("3.0.1")))
       ),
       Seq(
-        Dependency("plugin1-up-to-date", Version("1.0.0"), Some(Version("1.0.0"))),
-        Dependency("plugin2-minor-behind", Version("2.0.0"), Some(Version("2.1.0"))),
-        Dependency("plugin3-major-behind", Version("3.0.0"), Some(Version("4.0.0"))),
-        Dependency("plugin4-patch-behind", Version("3.0.0"), Some(Version("3.0.1"))),
-        Dependency("plugin5-no-latest-version", Version("3.0.0"), None),
-        Dependency("plugin6-invalid-ahead-current", Version("4.0.0"), Some(Version("3.0.1")))
+        Dependency("plugin1-up-to-date", "uk.gov.hmrc", Version("1.0.0"), Some(Version("1.0.0"))),
+        Dependency("plugin2-minor-behind", "uk.gov.hmrc", Version("2.0.0"), Some(Version("2.1.0"))),
+        Dependency("plugin3-major-behind", "uk.gov.hmrc", Version("3.0.0"), Some(Version("4.0.0"))),
+        Dependency("plugin4-patch-behind", "uk.gov.hmrc", Version("3.0.0"), Some(Version("3.0.1"))),
+        Dependency("plugin5-no-latest-version", "uk.gov.hmrc", Version("3.0.0"), None),
+        Dependency("plugin6-invalid-ahead-current", "uk.gov.hmrc", Version("4.0.0"), Some(Version("3.0.1")))
       ),
-      Seq(Dependency("sbt", Version("0.13.11"), Some(Version("0.13.15")))),
+      Seq(Dependency("sbt", "uk.gov.hmrc", Version("0.13.11"), Some(Version("0.13.15")))),
       lastUpdated = Instant.now
     )
 
@@ -182,7 +182,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
           "service",
           Nil,
           Nil,
-          Seq(Dependency("sbt", Version("1.0.0"), Some(Version("1.0.0")))),
+          Seq(Dependency("sbt", "org.scala-sbt", Version("1.0.0"), Some(Version("1.0.0")))),
           lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
@@ -197,7 +197,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
           "service",
           Nil,
           Nil,
-          Seq(Dependency("sbt", Version("1.0.0"), Some(Version("1.1.0")))),
+          Seq(Dependency("sbt", "org.scala-sbt", Version("1.0.0"), Some(Version("1.1.0")))),
           lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
@@ -213,7 +213,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
           "service",
           Nil,
           Nil,
-          Seq(Dependency("sbt", Version("1.0.0"), Some(Version("1.0.1")))),
+          Seq(Dependency("sbt", "org.scala-sbt", Version("1.0.0"), Some(Version("1.0.1")))),
           lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
@@ -229,7 +229,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
           "service",
           Nil,
           Nil,
-          Seq(Dependency("sbt", Version("1.0.0"), Some(Version("2.0.0")))),
+          Seq(Dependency("sbt", "org.scala-sbt", Version("1.0.0"), Some(Version("2.0.0")))),
           lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
@@ -244,7 +244,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
         "service",
         Nil,
         Nil,
-        Seq(Dependency("sbt", Version("1.0.0"), None)),
+        Seq(Dependency("sbt", "org.scala-sbt", Version("1.0.0"), None)),
         lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
@@ -260,7 +260,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
           "service",
           Nil,
           Nil,
-          Seq(Dependency("sbt", Version("5.0.0"), Some(Version("1.0.0")))),
+          Seq(Dependency("sbt", "org.scala-sbt", Version("5.0.0"), Some(Version("1.0.0")))),
           lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
@@ -273,7 +273,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
     "be shown if least one library dependency entry exists" in {
       val dependencies = Dependencies(
         "service",
-        Seq(Dependency("lib1-up-to-date", Version("1.0.0"), Some(Version("1.0.0")))),
+        Seq(Dependency("lib1-up-to-date", "uk.gov.hrmc", Version("1.0.0"), Some(Version("1.0.0")))),
         Nil,
         Nil,
         lastUpdated = Instant.now)
@@ -286,7 +286,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
       val dependencies = Dependencies(
         "service",
         Nil,
-        Seq(Dependency("plugin1-up-to-date", Version("1.0.0"), Some(Version("1.0.0")))),
+        Seq(Dependency("plugin1-up-to-date", "uk.gov.hrmc", Version("1.0.0"), Some(Version("1.0.0")))),
         Nil,
         lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
@@ -299,7 +299,7 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
         "service",
         Nil,
         Nil,
-        Seq(Dependency("sbt", Version("1.0.0"), None)),
+        Seq(Dependency("sbt", "org.scala-sbt", Version("1.0.0"), None)),
         lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
