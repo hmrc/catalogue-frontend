@@ -25,7 +25,6 @@ import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
 import uk.gov.hmrc.play.test.UnitSpec
 
-
 class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
   override def fakeApplication: Application =
@@ -56,13 +55,12 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
         "/releases-api/whats-running-where",
         willRespondWith = (
           200,
-          Some(
-            """[
+          Some("""[
               |  {
               |    "applicationName": "api-definition",
               |    "versions": [
               |      {
-              |        "environment": "integration-AWS-London",
+              |        "environment": "integration",
               |        "versionNumber": "1.57.0",
               |        "lastSeen": "2019-05-29T14:09:48"
               |      }
@@ -72,7 +70,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
               |    "applicationName": "api-documentation",
               |    "versions": [
               |      {
-              |        "environment": "integration-AWS-London",
+              |        "environment": "integration",
               |        "versionNumber": "0.44.0",
               |        "lastSeen": "2019-05-29T14:09:46"
               |      }
@@ -85,13 +83,13 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
 
       response.status shouldBe 200
 
-      response.body   should include("api-definition")
-      response.body   should include("1.57.0")
+      response.body should include("api-definition")
+      response.body should include("1.57.0")
 
-      response.body   should include("api-documentation")
-      response.body   should include("0.44.0")
+      response.body should include("api-documentation")
+      response.body should include("0.44.0")
 
-      response.body   should include("integration")
+      response.body should include("integration")
     }
 
     "show a list of applications, environments and version numbers for ECS releases" in {
@@ -105,11 +103,10 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
         "/releases-api/ecs-deployment-events",
         willRespondWith = (
           200,
-          Some(
-            """[
+          Some("""[
               |  {
               |    "serviceName": "api-definition",
-              |    "environment": "Integration",
+              |    "environment": "integration",
               |    "deploymentEvents": [],
               |    "lastCompleted": {
               |      "deploymentId": "some-stack-id",
@@ -120,7 +117,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
               |  },
               |  {
               |    "serviceName": "api-documentation",
-              |    "environment": "Integration",
+              |    "environment": "integration",
               |    "deploymentEvents": [],
               |    "lastCompleted": {
               |      "deploymentId": "some-other-stack-id",
@@ -136,13 +133,13 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
 
       response.status shouldBe 200
 
-      response.body   should include("api-definition")
-      response.body   should include("1.57.0")
+      response.body should include("api-definition")
+      response.body should include("1.57.0")
 
-      response.body   should include("api-documentation")
-      response.body   should include("0.44.0")
+      response.body should include("api-documentation")
+      response.body should include("0.44.0")
 
-      response.body   should include("Integration")
+      response.body should include("Integration")
     }
   }
 }

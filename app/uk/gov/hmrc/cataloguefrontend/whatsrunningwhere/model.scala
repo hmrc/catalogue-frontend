@@ -20,16 +20,19 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.Environment._
+
+sealed trait DeploymentGeneration
+case object ECS extends DeploymentGeneration
+case object Heritage extends DeploymentGeneration
 
 case class WhatsRunningWhere(
-                              applicationName: ServiceName,
-                              versions       : List[WhatsRunningWhereVersion])
+  applicationName: ServiceName,
+  versions: List[WhatsRunningWhereVersion],
+  deployedIn: DeploymentGeneration = Heritage)
 
-case class WhatsRunningWhereVersion(
-  environment  : Environment,
-  versionNumber: VersionNumber,
-  lastSeen     : TimeSeen)
-
+case class WhatsRunningWhereVersion(environment: Environment, versionNumber: VersionNumber, lastSeen: TimeSeen)
 
 object JsonCodecs {
   def format[A, B](f: A => B, g: B => A)(implicit fa: Format[A]): Format[B] = fa.inmap(f, g)
@@ -41,27 +44,41 @@ object JsonCodecs {
     }
 
   val applicationNameFormat: Format[ServiceName] = format(ServiceName.apply, unlift(ServiceName.unapply))
-  val versionNumberFormat  : Format[VersionNumber]   = format(VersionNumber.apply  , unlift(VersionNumber.unapply  ))
-  val environmentFormat    : Format[Environment]     = format(Environment.apply    , unlift(Environment.unapply    ))
-  val timeSeenFormat       : Format[TimeSeen]        = format(TimeSeen.apply       , unlift(TimeSeen.unapply       ))
-  val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, unlift(DeploymentStatus.unapply))
+  val versionNumberFormat: Format[VersionNumber] = format(VersionNumber.apply, unlift(VersionNumber.unapply))
+  val timeSeenFormat: Format[TimeSeen]           = format(TimeSeen.apply, unlift(TimeSeen.unapply))
+  val deploymentStatusFormat: Format[DeploymentStatus] =
+    format(DeploymentStatus.apply, unlift(DeploymentStatus.unapply))
+
+  val environmentFormat: Format[Environment] = new Format[Environment] {
+    override def reads(json: JsValue): JsResult[Environment] =
+      json
+        .validate[String]
+        .flatMap { s =>
+          Environment.parse(s) match {
+            case Some(env) => JsSuccess(env)
+            case None      => JsError(__, s"Invalid Environment '$s'")
+          }
+        }
+
+    override def writes(e: Environment) =
+      JsString(e.asString)
+  }
 
   val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] = {
     implicit val wf  = environmentFormat
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
-    ( (__ \ "environment"  ).read[Environment].map(env => Environment(env.asString.stripSuffix("-AWS-London")))
-    ~ (__ \ "versionNumber").read[VersionNumber]
-    ~ (__ \ "lastSeen"     ).read[TimeSeen]
-    )(WhatsRunningWhereVersion.apply _)
+    ((__ \ "environment").read[Environment]
+      ~ (__ \ "versionNumber").read[VersionNumber]
+      ~ (__ \ "lastSeen").read[TimeSeen])(WhatsRunningWhereVersion.apply _)
   }
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] = {
     implicit val wf    = applicationNameFormat
     implicit val wrwvf = whatsRunningWhereVersionReads
-    ( (__ \ "applicationName").read[ServiceName]
-    ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
-    )(WhatsRunningWhere.apply _)
+    ((__ \ "applicationName").read[ServiceName]
+      ~ (__ \ "versions").read[List[WhatsRunningWhereVersion]]
+      ~ Reads.pure(Heritage))(WhatsRunningWhere.apply _)
   }
 
   val profileTypeFormat: Format[ProfileType] = new Format[ProfileType] {
@@ -80,8 +97,7 @@ object JsonCodecs {
     implicit val ptf = profileTypeFormat
     implicit val pnf = profileNameFormat
     ((__ \ "type").format[ProfileType]
-    ~ (__ \ "name").format[ProfileName]
-    ) (Profile.apply, unlift(Profile.unapply))
+      ~ (__ \ "name").format[ProfileName])(Profile.apply, unlift(Profile.unapply))
   }
 
   val deploymentEventFormat: Format[DeploymentEvent] = {
@@ -89,11 +105,10 @@ object JsonCodecs {
     implicit val tsf = timeSeenFormat
     implicit val dsf = deploymentStatusFormat
 
-    ( (__ \ "deploymentId").format[String]
-    ~ (__ \ "status").format[DeploymentStatus]
-    ~ (__ \ "version").format[VersionNumber]
-    ~ (__ \ "time").format[TimeSeen]
-    )(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
+    ((__ \ "deploymentId").format[String]
+      ~ (__ \ "status").format[DeploymentStatus]
+      ~ (__ \ "version").format[VersionNumber]
+      ~ (__ \ "time").format[TimeSeen])(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
   }
 
   val serviceDeploymentsFormat: Format[ServiceDeployment] = {
@@ -101,11 +116,11 @@ object JsonCodecs {
     implicit val anf  = applicationNameFormat
     implicit val enf  = environmentFormat
 
-    ( (__ \ "serviceName").format[ServiceName]
-    ~ (__ \ "environment").format[Environment]
-    ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
-    ~ (__ \ "lastCompleted").formatNullable[DeploymentEvent]
-    )(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
+    ((__ \ "serviceName").format[ServiceName]
+      ~ (__ \ "environment").format[Environment]
+      ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
+      ~ (__ \ "lastCompleted")
+        .formatNullable[DeploymentEvent])(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
   }
 }
 
@@ -120,19 +135,15 @@ object TimeSeen {
 
 case class ServiceName(asString: String) extends AnyVal
 
-case class Environment(asString: String) extends AnyVal
-
-object Environment {
-  // todo - refactor to use the common model Environment. We do not expect prefixes/suffixes anymore
-  private def precedence(environment: Environment) = environment.asString.toLowerCase match {
-    // use `contains` so environments with prefixes/suffixes are sorted too
-    case x if x.contains("production")   => 0
-    case x if x.contains("externaltest") => 1
-    case x if x.contains("staging")      => 2
-    case x if x.contains("qa")           => 3
-    case x if x.contains("integration")  => 4
-    case x if x.contains("development")  => 5
-    case _                               => 6
+object WrWEnvironment {
+  private def precedence(environment: Environment): Int = environment match {
+    case Production   => 0
+    case ExternalTest => 1
+    case Staging      => 2
+    case QA           => 3
+    case Integration  => 4
+    case Development  => 5
+    case _            => 6
   }
 
   implicit val ordering: Ordering[Environment] = new Ordering[Environment] {
@@ -162,9 +173,9 @@ object ProfileType {
       .toRight(s"Invalid profileType - should be one of: ${values.map(_.asString).mkString(", ")}")
 
   val values: List[ProfileType] = List(
-      Team
-    , ServiceManager
-    )
+    Team,
+    ServiceManager
+  )
 
   case object Team extends ProfileType {
     override val asString: String = "team"
@@ -175,20 +186,18 @@ object ProfileType {
 }
 
 case class Profile(
-  profileType: ProfileType
-, profileName: ProfileName
+  profileType: ProfileType,
+  profileName: ProfileName
 )
 
 case class VersionNumber(asString: String) extends AnyVal
 
 case class DeploymentStatus(asString: String) extends AnyVal
 
-case class DeploymentEvent(deploymentId: String,
-                           status: DeploymentStatus,
-                           version: VersionNumber,
-                           time: TimeSeen)
+case class DeploymentEvent(deploymentId: String, status: DeploymentStatus, version: VersionNumber, time: TimeSeen)
 
-case class ServiceDeployment(serviceName: ServiceName,
-                             environment: Environment,
-                             deploymentEvents: Seq[DeploymentEvent],
-                             lastCompleted: Option[DeploymentEvent])
+case class ServiceDeployment(
+  serviceName: ServiceName,
+  environment: Environment,
+  deploymentEvents: Seq[DeploymentEvent],
+  lastCompleted: Option[DeploymentEvent])

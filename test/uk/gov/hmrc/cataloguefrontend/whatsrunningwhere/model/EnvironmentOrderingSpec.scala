@@ -17,28 +17,18 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Environment
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.Environment._
 
 import scala.util.Random.shuffle
 
 class EnvironmentOrderingSpec extends WordSpec with Matchers {
 
-  implicit def strToEnv(s: String): Environment = Environment(s)
-
   "Environment ordering" should {
     "order environments" in {
-      val ordered = List[Environment]("production", "externaltest", "staging", "qa", "integration", "development")
+      import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WrWEnvironment.ordering
+      val ordered = List[Environment](Production, ExternalTest, Staging, QA, Integration, Development)
       shuffle(ordered).sorted shouldBe ordered
-    }
-
-    "handle suffixes and prefixes by sorting lexicographically" in {
-      val ordered = List[Environment]("production-ECS", "production-Heritage", "ECS-qa", "Heritage-qa")
-      ordered.reverse.sorted shouldBe ordered
-    }
-
-    "puts unknown environments at the end, and lexicographically orders them" in {
-      val ordered = List[Environment]("production", "development", "unknown-1", "unknown-2")
-      ordered.reverse.sorted shouldBe ordered
     }
   }
 }
