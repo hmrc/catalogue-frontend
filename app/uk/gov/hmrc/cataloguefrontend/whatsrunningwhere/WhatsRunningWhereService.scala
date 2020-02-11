@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import javax.inject.Inject
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentGeneration.ECS
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}

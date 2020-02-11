@@ -34,19 +34,9 @@ class WhatsRunningWhereController @Inject()(
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
-  import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WrWEnvironment.ordering
+  def heritageReleases: Action[AnyContent] = releases(ecs = false, heritage = true)
 
-  def heritage: Action[AnyContent] =
-    Action.async { implicit request =>
-      for {
-        form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profile             = profileFrom(form)
-        selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (releases, profiles) <- (service.releases(profile), service.profiles).mapN { case (r, p) => (r, p) }
-        environments = distinctEnvironments(releases)
-        profileNames = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield Ok(page(environments, releases, selectedProfileType, profileNames, form))
-    }
+  def ecsReleases: Action[AnyContent] = releases(ecs = true, heritage = false)
 
   private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
     form.fold(
@@ -61,31 +51,20 @@ class WhatsRunningWhereController @Inject()(
   private def distinctEnvironments(releases: Seq[WhatsRunningWhere]) =
     releases.flatMap(_.versions.map(_.environment)).distinct.sorted
 
-  /*
-   * todo - this is just duplicated at the moment.
-   * Need to decide if its worth refactoring, or if we should think about merging, or removing
-   * the heritage deployments stuff.
-   */
-  def ecs: Action[AnyContent] =
+  private def releases(ecs: Boolean, heritage: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
       for {
         form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
         profile             = profileFrom(form)
         selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (releases, profiles) <- (service.ecsReleases(profile), service.profiles).mapN { case (r, p) => (r, p) }
-        environments = distinctEnvironments(releases)
-        profileNames = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield Ok(page(environments, releases, selectedProfileType, profileNames, form))
-    }
-
-  def ecsAndHeritage: Action[AnyContent] =
-    Action.async { implicit request =>
-      for {
-        form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profile             = profileFrom(form)
-        selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (ecsReleases, profiles) <- (service.ecsReleases(profile), service.profiles).mapN { case (r, p) => (r, p) }
-        heritageReleases        <- service.releases(profile)
+        (ecsReleases, heritageReleases, profiles) <- (
+                                                      if (ecs) service.ecsReleases(profile)
+                                                      else Future.successful(Seq.empty[WhatsRunningWhere]),
+                                                      if (heritage) service.releases(profile)
+                                                      else Future.successful(Seq.empty[WhatsRunningWhere]),
+                                                      service.profiles).mapN {
+                                                      case (e, h, p) => (e, h, p)
+                                                    }
         releases     = (ecsReleases ++ heritageReleases).sortBy(_.applicationName.asString)
         environments = distinctEnvironments(releases)
         profileNames = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted

@@ -37,7 +37,6 @@ class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConf
   def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
     val params  = profileQueryParams(profile)
-
     http
       .GET[Seq[WhatsRunningWhere]](baseUrl, params)
       .recover {
@@ -60,18 +59,6 @@ class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConf
 
   def ecsReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[ServiceDeployment]] = {
     val baseUrl = s"$serviceUrl/releases-api/ecs-deployment-events"
-    val params  = profileQueryParams(profile)
-    http
-      .GET[Seq[ServiceDeployment]](baseUrl, params)
-      .recover {
-        case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
-          Seq.empty
-      }
-  }
-
-  def heritageReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[ServiceDeployment]] = {
-    val baseUrl = s"$serviceUrl/releases-api/v2/whats-running-where"
     val params  = profileQueryParams(profile)
     http
       .GET[Seq[ServiceDeployment]](baseUrl, params)

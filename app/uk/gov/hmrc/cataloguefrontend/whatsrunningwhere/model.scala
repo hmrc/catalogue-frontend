@@ -21,12 +21,14 @@ import java.time.{LocalDateTime, ZoneOffset}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.model.Environment._
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentGeneration._
 
 sealed trait DeploymentGeneration
-case object ECS extends DeploymentGeneration
-case object Heritage extends DeploymentGeneration
 
+object DeploymentGeneration {
+  case object ECS extends DeploymentGeneration
+  case object Heritage extends DeploymentGeneration
+}
 case class WhatsRunningWhere(
   applicationName: ServiceName,
   versions: List[WhatsRunningWhereVersion],
@@ -134,25 +136,6 @@ object TimeSeen {
 }
 
 case class ServiceName(asString: String) extends AnyVal
-
-object WrWEnvironment {
-  private def precedence(environment: Environment): Int = environment match {
-    case Production   => 0
-    case ExternalTest => 1
-    case Staging      => 2
-    case QA           => 3
-    case Integration  => 4
-    case Development  => 5
-    case _            => 6
-  }
-
-  implicit val ordering: Ordering[Environment] = new Ordering[Environment] {
-    override def compare(x: Environment, y: Environment): Int = {
-      val envPrecedence = precedence(x).compare(precedence(y))
-      if (envPrecedence == 0) x.asString.compareTo(y.asString) else envPrecedence
-    }
-  }
-}
 
 case class ProfileName(asString: String) extends AnyVal
 
