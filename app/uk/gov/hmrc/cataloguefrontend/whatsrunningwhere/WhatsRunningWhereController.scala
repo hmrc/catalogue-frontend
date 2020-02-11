@@ -28,80 +28,75 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class WhatsRunningWhereController @Inject()(
-    service          : WhatsRunningWhereService
-  , page             : WhatsRunningWherePage
-  , mcc              : MessagesControllerComponents
-  )(implicit val ec: ExecutionContext
-  ) extends FrontendController(mcc){
+  service: WhatsRunningWhereService,
+  page: WhatsRunningWherePage,
+  mcc: MessagesControllerComponents
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
-  def landing: Action[AnyContent] =
-    Action.async { implicit request =>
-      for {
-        form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profile              =  profileFrom(form)
-        selectedProfileType  =  form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (releases, profiles) <- (service.releases(profile), service.profiles).mapN { case (r, p) => (r, p) }
-        environments         =  distinctEnvironments(releases)
-        profileNames         =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield
-        Ok(page(environments, releases, selectedProfileType, profileNames, form))
-    }
+  def heritageReleases: Action[AnyContent] = releases(ecs = false, heritage = true)
+
+  def ecsReleases: Action[AnyContent] = releases(ecs = true, heritage = false)
 
   private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
     form.fold(
       _ => None,
-      f => for {
-        profileType <- f.profileType
-        profileName <- f.profileName
-      } yield Profile(profileType, profileName)
+      f =>
+        for {
+          profileType <- f.profileType
+          profileName <- f.profileName
+        } yield Profile(profileType, profileName)
     )
 
   private def distinctEnvironments(releases: Seq[WhatsRunningWhere]) =
     releases.flatMap(_.versions.map(_.environment)).distinct.sorted
 
-  /*
-   * todo - this is just duplicated at the moment.
-   * Need to decide if its worth refactoring, or if we should think about merging, or removing
-   * the heritage deployments stuff.
-   */
-  def ecs: Action[AnyContent] =
+  private def releases(ecs: Boolean, heritage: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profile              =  profileFrom(form)
-        selectedProfileType  =  form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (releases, profiles) <- (service.ecsReleases(profile), service.profiles).mapN { case (r, p) => (r, p) }
-        environments         =  distinctEnvironments(releases)
-        profileNames         =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield
-        Ok(page(environments, releases, selectedProfileType, profileNames, form))
+        form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
+        profile             = profileFrom(form)
+        selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
+        (ecsReleases, heritageReleases, profiles) <- (
+                                                      if (ecs) service.ecsReleases(profile)
+                                                      else Future.successful(Seq.empty[WhatsRunningWhere]),
+                                                      if (heritage) service.releases(profile)
+                                                      else Future.successful(Seq.empty[WhatsRunningWhere]),
+                                                      service.profiles).mapN {
+                                                      case (e, h, p) => (e, h, p)
+                                                    }
+        releases     = (ecsReleases ++ heritageReleases).sortBy(_.applicationName.asString)
+        environments = distinctEnvironments(releases)
+        profileNames = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+      } yield Ok(page(environments, releases, selectedProfileType, profileNames, form))
     }
 }
 
-case class WhatsRunningWhereFilter(profileName: Option[ProfileName] = None,
-                                   profileType: Option[ProfileType] = None,
-                                   serviceName: Option[ServiceName] = None)
+case class WhatsRunningWhereFilter(
+  profileName: Option[ProfileName] = None,
+  profileType: Option[ProfileType] = None,
+  serviceName: Option[ServiceName] = None)
 
 object WhatsRunningWhereFilter {
   private def filterEmptyString(x: Option[String]) = x.filter(_.trim.nonEmpty)
 
   lazy val form = Form(
     mapping(
-      "profile_name"     -> optional(text)
-                              .transform[Option[ProfileName]](
-                                  _.map(ProfileName.apply)
-                                , _.map(_.asString)
-                                )
-    , "profile_type"     -> optional(text)
-                              .transform[Option[ProfileType]](
-                                  _.flatMap(s => ProfileType.parse(s).toOption)
-                                , _.map(_.asString)
-                                )
-    , "service_name"     -> optional(text)
-                              .transform[Option[ServiceName]](
-                                  filterEmptyString(_).map(ServiceName.apply)
-                                , _.map(_.asString)
-                                )
+      "profile_name" -> optional(text)
+        .transform[Option[ProfileName]](
+          _.map(ProfileName.apply),
+          _.map(_.asString)
+        ),
+      "profile_type" -> optional(text)
+        .transform[Option[ProfileType]](
+          _.flatMap(s => ProfileType.parse(s).toOption),
+          _.map(_.asString)
+        ),
+      "service_name" -> optional(text)
+        .transform[Option[ServiceName]](
+          filterEmptyString(_).map(ServiceName.apply),
+          _.map(_.asString)
+        )
     )(WhatsRunningWhereFilter.apply)(WhatsRunningWhereFilter.unapply)
   )
 }

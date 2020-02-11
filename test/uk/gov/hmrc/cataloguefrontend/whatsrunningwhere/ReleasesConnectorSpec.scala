@@ -21,28 +21,26 @@ import java.time.LocalDateTime
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
+import play.api.{Application, Environment}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
+import uk.gov.hmrc.cataloguefrontend.model.Environment.Integration
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ReleasesConnectorSpec
-    extends UnitSpec
-    with GuiceOneServerPerSuite
-    with WireMockEndpoints
-    with EitherValues {
+class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints with EitherValues {
 
-  override def fakeApplication: Application = new GuiceApplicationBuilder()
-    .disable(classOf[com.kenshoo.play.metrics.PlayModule])
-    .configure(Map(
-      "microservice.services.releases-api.port" -> endpointPort,
-      "microservice.services.releases-api.host" -> host,
-      "play.http.requestHandler"                -> "play.api.http.DefaultHttpRequestHandler",
-      "metrics.jvm"                             -> false
-    ))
-    .build()
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
+      .configure(Map(
+        "microservice.services.releases-api.port" -> endpointPort,
+        "microservice.services.releases-api.host" -> host,
+        "play.http.requestHandler"                -> "play.api.http.DefaultHttpRequestHandler",
+        "metrics.jvm"                             -> false
+      ))
+      .build()
 
   private lazy val releasesConnector = app.injector.instanceOf[ReleasesConnector]
 
@@ -54,13 +52,12 @@ class ReleasesConnectorSpec
         "/releases-api/whats-running-where",
         willRespondWith = (
           200,
-          Some(
-            """[
+          Some("""[
               |  {
               |    "applicationName": "api-definition",
               |    "versions": [
               |      {
-              |        "environment": "integration-AWS-London",
+              |        "environment": "integration",
               |        "versionNumber": "1.57.0",
               |        "lastSeen": "2019-05-29T14:09:48"
               |      }
@@ -70,13 +67,14 @@ class ReleasesConnectorSpec
               |    "applicationName": "api-documentation",
               |    "versions": [
               |      {
-              |        "environment": "integration-AWS-London",
+              |        "environment": "integration",
               |        "versionNumber": "0.44.0",
               |        "lastSeen": "2019-05-29T14:09:46"
               |      }
               |    ]
               |  }
-              |]""".stripMargin)))
+              |]""".stripMargin))
+      )
 
       val response = await(
         releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -87,7 +85,7 @@ class ReleasesConnectorSpec
           ServiceName("api-definition"),
           List(
             WhatsRunningWhereVersion(
-              Environment("integration"),
+              Integration,
               VersionNumber("1.57.0"),
               lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
           )
@@ -96,7 +94,7 @@ class ReleasesConnectorSpec
           ServiceName("api-documentation"),
           List(
             WhatsRunningWhereVersion(
-              Environment("integration"),
+              Integration,
               VersionNumber("0.44.0"),
               lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:46")))
           )
@@ -111,27 +109,26 @@ class ReleasesConnectorSpec
       serviceEndpoint(
         GET,
         s"/releases-api/whats-running-where",
-        queryParameters = Seq( "profileName" -> profileName.asString,
-                               "profileType" -> profileType.asString
-                             ),
+        queryParameters = Seq("profileName" -> profileName.asString, "profileType" -> profileType.asString),
         willRespondWith = (
           200,
-          Some(
-            """[
+          Some("""[
               |  {
               |    "applicationName": "api-definition",
               |    "versions": [
               |      {
-              |        "environment": "integration-AWS-London",
+              |        "environment": "integration",
               |        "versionNumber": "1.57.0",
               |        "lastSeen": "2019-05-29T14:09:48"
               |      }
               |    ]
               |  }
-              |]""".stripMargin)))
+              |]""".stripMargin))
+      )
 
       val response = await(
-        releasesConnector.releases(profile = Some(Profile(profileType, profileName)))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        releasesConnector.releases(profile = Some(Profile(profileType, profileName)))(
+          HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
       )
 
       response should contain theSameElementsAs Seq(
@@ -139,7 +136,7 @@ class ReleasesConnectorSpec
           ServiceName("api-definition"),
           List(
             WhatsRunningWhereVersion(
-              Environment("integration"),
+              Integration,
               VersionNumber("1.57.0"),
               lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
           )
@@ -148,10 +145,7 @@ class ReleasesConnectorSpec
     }
 
     "return empty upon error" in {
-      serviceEndpoint(
-        GET,
-        s"/releases-api/whats-running-where",
-        willRespondWith = (500, Some("errors!")))
+      serviceEndpoint(GET, s"/releases-api/whats-running-where", willRespondWith = (500, Some("errors!")))
 
       val response = await(
         releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -168,8 +162,7 @@ class ReleasesConnectorSpec
         s"/releases-api/profiles",
         willRespondWith = (
           200,
-          Some(
-            """[
+          Some("""[
               |  {"type": "servicemanager",
               |   "name": "tcs_all",
               |   "apps": [
@@ -191,7 +184,8 @@ class ReleasesConnectorSpec
               |     "trust-registration-stub"
               |   ]
               |  }
-              |]""".stripMargin)))
+              |]""".stripMargin))
+      )
 
       val response = await(
         releasesConnector.profiles(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -200,7 +194,8 @@ class ReleasesConnectorSpec
       response should contain theSameElementsAs Seq(
         Profile(ProfileType.ServiceManager, ProfileName("tcs_all")),
         Profile(ProfileType.ServiceManager, ProfileName("tpsa")),
-        Profile(ProfileType.Team          , ProfileName("trusts")))
+        Profile(ProfileType.Team, ProfileName("trusts"))
+      )
     }
   }
 
@@ -212,11 +207,10 @@ class ReleasesConnectorSpec
         "/releases-api/ecs-deployment-events",
         willRespondWith = (
           200,
-          Some(
-            """[
+          Some("""[
               |  {
               |    "serviceName": "api-definition",
-              |    "environment": "Integration",
+              |    "environment": "integration",
               |    "deploymentEvents": [],
               |    "lastCompleted": {
               |      "deploymentId": "some-stack-id",
@@ -227,7 +221,7 @@ class ReleasesConnectorSpec
               |  },
               |  {
               |    "serviceName": "api-documentation",
-              |    "environment": "Integration",
+              |    "environment": "integration",
               |    "deploymentEvents": [],
               |    "lastCompleted": {
               |      "deploymentId": "some-other-stack-id",
@@ -236,7 +230,8 @@ class ReleasesConnectorSpec
               |      "time": "2019-05-29T14:09:46"
               |    }
               |  }
-              |]""".stripMargin)))
+              |]""".stripMargin))
+      )
 
       val response = await(
         releasesConnector.ecsReleases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -245,27 +240,28 @@ class ReleasesConnectorSpec
       response should contain theSameElementsAs Seq(
         ServiceDeployment(
           ServiceName("api-definition"),
-          Environment("Integration"),
+          Integration,
           Seq.empty,
-          Some(DeploymentEvent(
-            "some-stack-id",
-            DeploymentStatus("CREATE_COMPLETE"),
-            VersionNumber("1.57.0"),
-            TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 48))
-          ))
+          Some(
+            DeploymentEvent(
+              "some-stack-id",
+              DeploymentStatus("CREATE_COMPLETE"),
+              VersionNumber("1.57.0"),
+              TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 48))
+            ))
         ),
         ServiceDeployment(
           ServiceName("api-documentation"),
-          Environment("Integration"),
+          Integration,
           Seq.empty,
-          Some(DeploymentEvent(
-            "some-other-stack-id",
-            DeploymentStatus("UPDATE_COMPLETE"),
-            VersionNumber("0.44.0"),
-            TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 46))
-          ))
+          Some(
+            DeploymentEvent(
+              "some-other-stack-id",
+              DeploymentStatus("UPDATE_COMPLETE"),
+              VersionNumber("0.44.0"),
+              TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 46))
+            ))
         ),
-
       )
     }
 
@@ -276,16 +272,13 @@ class ReleasesConnectorSpec
       serviceEndpoint(
         GET,
         s"/releases-api/ecs-deployment-events",
-        queryParameters = Seq( "profileName" -> profileName.asString,
-          "profileType" -> profileType.asString
-        ),
+        queryParameters = Seq("profileName" -> profileName.asString, "profileType" -> profileType.asString),
         willRespondWith = (
           200,
-          Some(
-            """[
+          Some("""[
               |  {
               |    "serviceName": "api-definition",
-              |    "environment": "Integration",
+              |    "environment": "integration",
               |    "deploymentEvents": [],
               |    "lastCompleted": {
               |      "deploymentId": "some-stack-id",
@@ -294,32 +287,32 @@ class ReleasesConnectorSpec
               |      "time": "2019-05-29T14:09:48"
               |    }
               |  }
-              |]""".stripMargin)))
+              |]""".stripMargin))
+      )
 
       val response = await(
-        releasesConnector.ecsReleases(profile = Some(Profile(profileType, profileName)))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        releasesConnector.ecsReleases(profile = Some(Profile(profileType, profileName)))(
+          HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
       )
 
       response should contain theSameElementsAs Seq(
         ServiceDeployment(
           ServiceName("api-definition"),
-          Environment("Integration"),
+          Integration,
           Seq.empty,
-          Some(DeploymentEvent(
-            "some-stack-id",
-            DeploymentStatus("CREATE_COMPLETE"),
-            VersionNumber("1.57.0"),
-            TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 48))
-          ))
+          Some(
+            DeploymentEvent(
+              "some-stack-id",
+              DeploymentStatus("CREATE_COMPLETE"),
+              VersionNumber("1.57.0"),
+              TimeSeen(LocalDateTime.of(2019, 5, 29, 14, 9, 48))
+            ))
         )
       )
     }
 
     "return empty upon error" in {
-      serviceEndpoint(
-        GET,
-        s"/releases-api/ecs-deployment-events",
-        willRespondWith = (500, Some("errors!")))
+      serviceEndpoint(GET, s"/releases-api/ecs-deployment-events", willRespondWith = (500, Some("errors!")))
 
       val response = await(
         releasesConnector.ecsReleases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
