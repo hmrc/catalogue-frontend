@@ -1,0 +1,85 @@
+@*
+ * Copyright 2020 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.HeritageDeployment
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@this()
+
+
+@(deployments: Seq[HeritageDeployment], teams: Seq[Team], userProfileBaseUrl: String)(implicit request: Request[_])
+
+@standard_layout("Deployments", "deployments") {
+  <header>
+    <h1>Deployments: Production</h1>
+  </header>
+
+ <div class="row">
+
+     <div class="col-sm-12">
+
+  <form onsubmit="return updateDeployments()" class="form-inline" id="search-form">
+    <span>Service: <input id="service-search-input" type="text" name="app" value=''></span>
+    <span>Team:
+        <select name="team">
+            <option value=""></option>
+@teams.map { t => <option value="@t.name.asString">@t.name.asString</option> }
+     </select>
+
+</span>
+
+    <div class="input-group">
+      Production deployment from: <input id="from-search-input" type="date" name="from" value=''>
+      to:<input type="date" id="to-search-input" name="to" value=''>
+    </div>
+    <input type="submit" value="Filter">
+  </form>
+</div>
+</div>
+<div class="row">
+  <table class="table table-striped">
+    <tr>
+      <th><span>Service</span></th>
+      <th><span>Teams</span></th>
+      <th><span>Version</span></th>
+      <th><span>Production deployment</span></th>
+      <th><span>Latest Deployer</span></th>
+      <th>Interval</th>
+    </tr>
+    @deployments.zipWithIndex.map{case (release, i) =>
+    <tr id="row@i">
+      <td id="row@{i}_name"><a
+      href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(release.name.asString).url}">@{release.name.asString}</a>
+      </td>
+      <td id="row@{i}_team">
+        <ul class="list-group">
+        @for(team <- release.teams) {
+          <li ><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team.asString}</a></li>
+        }
+        </ul>
+      </td>
+      <td class="monospaced" id="row@{i}_version">@{release.version.asString}</td>
+      <td class="monospaced" id="row@{i}_production">@{release.productionDate.time.toString}</td>
+      <td class="monospaced" id="row@{i}_deployer">
+      @release.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.userName}" target="_blank">@{u.userName}<span class="glyphicon glyphicon-new-window"/></a>}.getOrElse("N/A")
+      </td>
+      <td class="monospaced" id="row@{i}_interval">@{release.interval.fold("--")(x => if(x==1) "1 day" else s"$x days")}</td>
+    </tr>
+    }
+
+  </table>
+</div>
+}

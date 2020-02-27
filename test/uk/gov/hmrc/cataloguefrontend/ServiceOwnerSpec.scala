@@ -31,6 +31,7 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -168,7 +169,6 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       mock[RouteRulesService],
       mock[ServiceDependenciesConnector],
       mock[LeakDetectionService],
-      mock[DeploymentsService],
       mockedEventService,
       mockedModelService,
       mock[ShutterService],
@@ -178,6 +178,7 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       Configuration.empty,
       controllerComponents,
       mock[DigitalServiceInfoPage],
+      mock[WhatsRunningWhereService],
       mock[IndexPage],
       mock[TeamInfoPage],
       mock[ServiceInfoPage],

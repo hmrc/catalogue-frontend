@@ -18,7 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.http.HeaderCarrier
+import play.api.libs.json.Reads
+import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -74,5 +76,34 @@ class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConf
       profile.map("profileName" -> _.profileName.asString),
       profile.map("profileType" -> _.profileType.asString)
     ).flatten
+
+  def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
+    val baseUrl = s"$serviceUrl/releases-api/whats-running-where/$service"
+
+    http
+      .GET[WhatsRunningWhere](baseUrl)
+      .recover {
+        case _: NotFoundException =>
+          Logger.error(s"Service $service not found, returning placeholder whatsrunningwhere")
+          WhatsRunningWhere(ServiceName(service), Nil)
+        case ex =>
+          Logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
+          throw ex
+      }
+  }
+
+  private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
+    queryParams.collect { case (k, Some(v)) => (k, v) }
+
+  def deploymentHistory(from: Option[Long] = None, to: Option[Long] = None, team: Option[String] = None, app: Option[String] = None)(
+    implicit hc: HeaderCarrier): Future[Seq[HeritageDeployment]] = {
+
+    implicit val rf: Reads[HeritageDeployment] = JsonCodecs.heritageDeployment
+
+    val baseUrl = s"$serviceUrl/releases-api/deployments/${Production.asString}"
+    val params  = buildQueryParams("from" -> from.map(_.toString), "to" -> to.map(_.toString), "team" -> team, "app" -> app)
+
+    http.GET[Seq[HeritageDeployment]](baseUrl, queryParams = params)
+  }
 
 }

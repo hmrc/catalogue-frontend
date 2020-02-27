@@ -15,13 +15,13 @@
  *@
 
 @import java.time.LocalDateTime
+
 @import partials.{BuildToolsPartial, DependenciesByEnvironmentPartial}
 @import play.twirl.api.Html
-@import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, Link, RepositoryDetails}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, Version}
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ServiceInfoView, ViewMessages}
 @import views.partials.githubBadgeType
 

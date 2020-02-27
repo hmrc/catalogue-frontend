@@ -19,8 +19,6 @@ GET        /libraries                                   uk.gov.hmrc.cataloguefro
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /prototypes                                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allPrototypes
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
-GET        /deployments                                 uk.gov.hmrc.cataloguefrontend.CatalogueController.deploymentsPage
-GET        /deployments/list                            uk.gov.hmrc.cataloguefrontend.CatalogueController.deploymentsList(team: Option[TeamName], serviceName: Option[String])
 GET        /assets/*file                                controllers.Assets.at(path="/public", file)
 GET        /                                            uk.gov.hmrc.cataloguefrontend.CatalogueController.index
 GET        /admin/metrics                               @com.kenshoo.play.metrics.MetricsController.metrics
@@ -66,3 +64,5 @@ GET        /shutter-events/list                         uk.gov.hmrc.cataloguefro
 
 GET        /whats-running-where                         uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.heritageReleases
 GET        /whats-running-where-ecs                     uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.ecsReleases
+
+GET        /deployments                                 uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.history

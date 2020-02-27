@@ -23,8 +23,9 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -45,31 +46,31 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
   }
 
   private lazy val catalogueController = new CatalogueController(
-    mock[UserManagementConnector],
-    mock[TeamsAndRepositoriesConnector],
-    mock[ConfigService],
-    mock[RouteRulesService],
-    mock[ServiceDependenciesConnector],
-    mock[LeakDetectionService],
-    mock[DeploymentsService],
-    mock[EventService],
-    mock[ReadModelService],
-    mock[ShutterService],
-    mock[VerifySignInStatus],
-    mock[UmpAuthActionBuilder],
-    mock[UserManagementPortalConfig],
-    Configuration.empty,
-    stubMessagesControllerComponents(),
-    mock[DigitalServiceInfoPage],
-    mock[IndexPage],
-    mock[TeamInfoPage],
-    mock[ServiceInfoPage],
-    mock[ServiceConfigPage],
-    mock[ServiceConfigRawPage],
-    mock[LibraryInfoPage],
-    mock[PrototypeInfoPage],
-    mock[RepositoryInfoPage],
-    mock[RepositoriesListPage],
-    mock[OutOfDateTeamDependenciesPage]
+    userManagementConnector       = mock[UserManagementConnector],
+    teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
+    configService                 = mock[ConfigService],
+    routeRulesService             = mock[RouteRulesService],
+    serviceDependencyConnector    = mock[ServiceDependenciesConnector],
+    leakDetectionService          = mock[LeakDetectionService],
+    eventService                  = mock[EventService],
+    readModelService              = mock[ReadModelService],
+    shutterService                = mock[ShutterService],
+    verifySignInStatus            = mock[VerifySignInStatus],
+    umpAuthActionBuilder          = mock[UmpAuthActionBuilder],
+    userManagementPortalConfig    = mock[UserManagementPortalConfig],
+    configuration                 = Configuration.empty,
+    mcc                           = stubMessagesControllerComponents(),
+    digitalServiceInfoPage        = mock[DigitalServiceInfoPage],
+    whatsRunningWhereService      = mock[WhatsRunningWhereService],
+    indexPage                     = mock[IndexPage],
+    teamInfoPage                  = mock[TeamInfoPage],
+    serviceInfoPage               = mock[ServiceInfoPage],
+    serviceConfigPage             = mock[ServiceConfigPage],
+    serviceConfigRawPage          = mock[ServiceConfigRawPage],
+    libraryInfoPage               = mock[LibraryInfoPage],
+    prototypeInfoPage             = mock[PrototypeInfoPage],
+    repositoryInfoPage            = mock[RepositoryInfoPage],
+    repositoriesListPage          = mock[RepositoriesListPage],
+    outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage]
   )
 }
