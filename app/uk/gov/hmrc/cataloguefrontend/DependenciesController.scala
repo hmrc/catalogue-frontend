@@ -19,7 +19,8 @@ package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.service.{DependenciesService, DeploymentsService}
+import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.DependenciesPage
 
@@ -27,16 +28,16 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class DependenciesController @Inject()(
-  mcc                : MessagesControllerComponents,
+  mcc: MessagesControllerComponents,
   dependenciesService: DependenciesService,
-  deploymentsService : DeploymentsService,
-  dependenciesPage   : DependenciesPage
-)(implicit val ec: ExecutionContext
-) extends FrontendController(mcc) {
+  whatsRunningWhereService: WhatsRunningWhereService,
+  dependenciesPage: DependenciesPage
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
-      deployments         <- deploymentsService.getWhatsRunningWhere(name).map(_.deployments)
+      deployments         <- whatsRunningWhereService.releases(name).map(_.versions)
       serviceDependencies <- dependenciesService.search(name, deployments)
     } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.semanticVersion)(Ordering[Option[Version]].reverse)))
   }

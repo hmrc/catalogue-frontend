@@ -34,6 +34,9 @@ class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector)(i
   def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
     releasesConnector.profiles
 
+  def releases(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
+    releasesConnector.releasesForService(service)
+
   private def convert(serviceDeployments: Seq[ServiceDeployment]): Seq[WhatsRunningWhere] =
     serviceDeployments
       .groupBy(_.serviceName)

@@ -16,17 +16,24 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-import java.net.URLEncoder
+import org.scalatest.{Matchers, WordSpec}
 
-import play.utils.UriEncoding
+class UrlUtilsSpec extends WordSpec with Matchers {
 
-object UrlUtils {
-  def encodeQueryParam(param: String): String =
-    URLEncoder.encode(param, "UTF-8")
+  "buildQueryParams" should {
 
-  def encodePathParam(param: String): String =
-    UriEncoding.encodePathSegment(param, "UTF-8")
+    "generate a list of params" in {
+      val params: Seq[(String, String)] = UrlUtils.buildQueryParams("foo" -> Some("Bar"), "fizz" -> Some("buzz"))
+      params should contain theSameElementsAs Seq(("foo", "Bar"), ("fizz", "buzz"))
 
-  def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
-    queryParams.collect { case (k, Some(v)) => (k, v) }
+    }
+
+    "drop empty params" in {
+      val params = UrlUtils.buildQueryParams("baz" -> Some("buz"), "fizz" -> None)
+      params should contain theSameElementsAs Seq(("baz", "buz"))
+
+    }
+
+  }
+
 }

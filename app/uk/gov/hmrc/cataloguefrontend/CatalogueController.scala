@@ -33,17 +33,15 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DeploymentsService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class TeamActivityDates(
-  firstActive: Option[LocalDateTime],
-  lastActive: Option[LocalDateTime],
-  firstServiceCreationDate: Option[LocalDateTime])
+case class TeamActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime], firstServiceCreationDate: Option[LocalDateTime])
 
 case class DigitalServiceDetails(
   digitalServiceName: String,
@@ -51,50 +49,50 @@ case class DigitalServiceDetails(
   repos: Map[String, Seq[String]]
 )
 
-
 case class EnvData(
-    version          : Version
-  , dependencies     : Seq[Dependency]
-  , optShutterState  : Option[ShutterState]
-  , optTelemetryLinks: Option[Seq[Link]]
-  )
+  version: Version,
+  dependencies: Seq[Dependency],
+  optShutterState: Option[ShutterState],
+  optTelemetryLinks: Option[Seq[Link]]
+)
 
 @Singleton
 class CatalogueController @Inject()(
-   userManagementConnector: UserManagementConnector,
-   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-   configService: ConfigService,
-   routeRulesService: RouteRulesService,
-   serviceDependencyConnector: ServiceDependenciesConnector,
-   leakDetectionService: LeakDetectionService,
-   deploymentsService: DeploymentsService,
-   eventService: EventService,
-   readModelService: ReadModelService,
-   shutterService: ShutterService,
-   verifySignInStatus: VerifySignInStatus,
-   umpAuthActionBuilder: UmpAuthActionBuilder,
-   userManagementPortalConfig: UserManagementPortalConfig,
-   configuration: Configuration,
-   mcc: MessagesControllerComponents,
-   digitalServiceInfoPage: DigitalServiceInfoPage,
-   indexPage: IndexPage,
-   teamInfoPage: TeamInfoPage,
-   serviceInfoPage: ServiceInfoPage,
-   serviceConfigPage: ServiceConfigPage,
-   serviceConfigRawPage: ServiceConfigRawPage,
-   libraryInfoPage: LibraryInfoPage,
-   prototypeInfoPage: PrototypeInfoPage,
-   repositoryInfoPage: RepositoryInfoPage,
-   repositoriesListPage: RepositoriesListPage,
-   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage
+  userManagementConnector: UserManagementConnector,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  configService: ConfigService,
+  routeRulesService: RouteRulesService,
+  serviceDependencyConnector: ServiceDependenciesConnector,
+  leakDetectionService: LeakDetectionService,
+  eventService: EventService,
+  readModelService: ReadModelService,
+  shutterService: ShutterService,
+  verifySignInStatus: VerifySignInStatus,
+  umpAuthActionBuilder: UmpAuthActionBuilder,
+  userManagementPortalConfig: UserManagementPortalConfig,
+  configuration: Configuration,
+  mcc: MessagesControllerComponents,
+  digitalServiceInfoPage: DigitalServiceInfoPage,
+  whatsRunningWhereService: WhatsRunningWhereService,
+  indexPage: IndexPage,
+  teamInfoPage: TeamInfoPage,
+  serviceInfoPage: ServiceInfoPage,
+  serviceConfigPage: ServiceConfigPage,
+  serviceConfigRawPage: ServiceConfigRawPage,
+  libraryInfoPage: LibraryInfoPage,
+  prototypeInfoPage: PrototypeInfoPage,
+  repositoryInfoPage: RepositoryInfoPage,
+  repositoriesListPage: RepositoriesListPage,
+  outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage
 )(implicit val ec: ExecutionContext)
- extends FrontendController(mcc) {
+    extends FrontendController(mcc) {
 
   import UserManagementConnector._
   import userManagementPortalConfig._
 
   // this value must match the configured name property for jenkins services defined under url-templates.environments at https://github.com/hmrc/app-config-base/blob/master/teams-and-repositories.conf
-  private lazy val jenkinsLinkName = configuration.getOptional[String]("teams-and-repositories.link-name.jenkins").getOrElse("jenkins")
+  private lazy val jenkinsLinkName =
+    configuration.getOptional[String]("teams-and-repositories.link-name.jenkins").getOrElse("jenkins")
 
   private val repoTypeToDetailsUrl = Map(
     RepoType.Service   -> routes.CatalogueController.service _,
@@ -125,18 +123,15 @@ class CatalogueController @Inject()(
           optTeamMember.fold {
             Future.successful(NotAcceptable(toJson(s"Invalid user: $serviceOwnerDisplayName")))
           } { member =>
-            member.username.fold(
-              Future.successful(ExpectationFailed(toJson(s"Username was not set (by UMP) for $member!")))) {
-              serviceOwnerUsername =>
-                eventService
-                  .saveServiceOwnerUpdatedEvent(
-                    ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
-                  .map(_ => Ok(toJson(DisplayableTeamMember(member, userManagementProfileBaseUrl))))
+            member.username.fold(Future.successful(ExpectationFailed(toJson(s"Username was not set (by UMP) for $member!")))) { serviceOwnerUsername =>
+              eventService
+                .saveServiceOwnerUpdatedEvent(ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
+                .map(_ => Ok(toJson(DisplayableTeamMember(member, userManagementProfileBaseUrl))))
             }
           }
         }
-        .getOrElse(Future.successful(BadRequest(
-          toJson(s"""Unable to parse json: "${request.body.asText.getOrElse("No text in request body!")}""""))))
+        .getOrElse(Future.successful(BadRequest(toJson(s"""Unable to parse json: "${request.body.asText
+          .getOrElse("No text in request body!")}""""))))
     }
 
   def allTeams(): Action[AnyContent] = Action.async { implicit request =>
@@ -221,32 +216,28 @@ class CatalogueController @Inject()(
     Action.async { implicit request =>
       teamsAndRepositoriesConnector.teamInfo(teamName).flatMap {
         case Some(teamInfo) =>
-          ( userManagementConnector.getTeamMembersFromUMP(teamName)
-          , userManagementConnector.getTeamDetails(teamName)
-          , leakDetectionService.repositoriesWithLeaks
-          , serviceDependencyConnector.dependenciesForTeam(teamName)
-          , serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
-          ).mapN {
-           ( teamMembers
-           , teamDetails
-           , reposWithLeaks
-           , masterTeamDependencies
-           , prodDependencies
-           ) =>
-            Ok(
-              teamInfoPage(
-                teamName               = teamInfo.name
-              , repos                  = teamInfo.repos.getOrElse(Map.empty)
-              , activityDates          = TeamActivityDates(teamInfo.firstActiveDate, teamInfo.lastActiveDate, teamInfo.firstServiceCreationDate)
-              , errorOrTeamMembers     = convertToDisplayableTeamMembers(teamInfo.name, teamMembers)
-              , errorOrTeamDetails     = teamDetails
-              , umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name)
-              , leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks)
-              , hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks)
-              , masterTeamDependencies = masterTeamDependencies
-              , prodDependencies       = prodDependencies
+          (
+            userManagementConnector.getTeamMembersFromUMP(teamName),
+            userManagementConnector.getTeamDetails(teamName),
+            leakDetectionService.repositoriesWithLeaks,
+            serviceDependencyConnector.dependenciesForTeam(teamName),
+            serviceDependencyConnector
+              .getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))).mapN {
+            (teamMembers, teamDetails, reposWithLeaks, masterTeamDependencies, prodDependencies) =>
+              Ok(
+                teamInfoPage(
+                  teamName               = teamInfo.name,
+                  repos                  = teamInfo.repos.getOrElse(Map.empty),
+                  activityDates          = TeamActivityDates(teamInfo.firstActiveDate, teamInfo.lastActiveDate, teamInfo.firstServiceCreationDate),
+                  errorOrTeamMembers     = convertToDisplayableTeamMembers(teamInfo.name, teamMembers),
+                  errorOrTeamDetails     = teamDetails,
+                  umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name),
+                  leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks),
+                  hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
+                  masterTeamDependencies = masterTeamDependencies,
+                  prodDependencies       = prodDependencies
+                )
               )
-            )
           }
         case _ => Future.successful(NotFound(error_404_template()))
       }
@@ -255,12 +246,9 @@ class CatalogueController @Inject()(
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
     Action.async { implicit request =>
       (
-        serviceDependencyConnector.dependenciesForTeam(teamName)
-      , serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
-      ).mapN {
-        ( masterTeamDependencies
-        , prodDependencies
-        ) =>
+        serviceDependencyConnector.dependenciesForTeam(teamName),
+        serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
+      ).mapN { (masterTeamDependencies, prodDependencies) =>
         Ok(outOfDateTeamDependenciesPage(teamName, masterTeamDependencies, prodDependencies))
       }
     }
@@ -280,75 +268,66 @@ class CatalogueController @Inject()(
   def service(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
     teamsAndRepositoriesConnector.repositoryDetails(serviceName).flatMap {
       case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
-
         val futEnvDatas: Future[Map[SlugInfoFlag, EnvData]] =
           for {
-            deployments <- deploymentsService.getWhatsRunningWhere(serviceName).map(_.deployments)
-            res         <- Environment.values.traverse { env =>
-                             val slugInfoFlag = SlugInfoFlag.ForEnvironment(env)
-                             val deployedVersions = deployments.filter(_.environmentMapping.environment == env).map(_.version)
-                             // a single environment may have multiple versions during a deployment
-                             // return the lowest
-                             deployedVersions.sorted.headOption match {
-                               case Some(version) => val telemetryLinks =
-                                                       (for {
-                                                          targetEnvironments <- repositoryDetails.environments.toSeq
-                                                          targetEnvironment  <- targetEnvironments
-                                                          if (targetEnvironment.environment == env)
-                                                        } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)
-                                                       ).flatten
+            deployments <- whatsRunningWhereService.releases(serviceName).map(_.versions)
+            res <- Environment.values.traverse { env =>
+                    val slugInfoFlag     = SlugInfoFlag.ForEnvironment(env)
+                    val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion())
+                    // a single environment may have multiple versions during a deployment
+                    // return the lowest
+                    deployedVersions.sorted.headOption match {
+                      case Some(version) =>
+                        val telemetryLinks =
+                          (for {
+                            targetEnvironments <- repositoryDetails.environments.toSeq
+                            targetEnvironment  <- targetEnvironments
+                            if targetEnvironment.environment == env
+                          } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)).flatten
 
-                                                     ( serviceDependencyConnector.getCuratedSlugDependencies(serviceName, slugInfoFlag)
-                                                     , shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
-                                                     ).mapN {
-                                                       case (dependencies, optShutterState) =>
-                                                         val envData = EnvData(version, dependencies, optShutterState, Some(telemetryLinks))
-                                                         Some(slugInfoFlag -> envData)
-                                                     }
-                               case None          => Future.successful(None)
-                             }
-                           }
+                        (serviceDependencyConnector.getCuratedSlugDependencies(serviceName, slugInfoFlag), shutterService.getShutterState(ShutterType.Frontend, env, serviceName))
+                          .mapN {
+                            case (dependencies, optShutterState) =>
+                              val envData = EnvData(version, dependencies, optShutterState, Some(telemetryLinks))
+                              Some(slugInfoFlag -> envData)
+                          }
+                      case None => Future.successful(None)
+                    }
+                  }
           } yield res.collect { case Some(v) => v }.toMap
 
-        ( teamsAndRepositoriesConnector.lookupLink(serviceName)
-        , futEnvDatas
-        , serviceDependencyConnector.getDependencies(serviceName)
-        , serviceDependencyConnector.getCuratedSlugDependencies(serviceName, SlugInfoFlag.Latest)
-        , leakDetectionService.urlIfLeaksFound(serviceName)
-        , routeRulesService.serviceUrl(serviceName)
-        , routeRulesService.serviceRoutes(serviceName)
-        , serviceDependencyConnector.getSlugInfo(serviceName)
-        ).mapN { case ( jenkinsLink
-                      , envDatas
-                      , optMasterDependencies
-                      , librariesOfLatestSlug
-                      , urlIfLeaksFound
-                      , serviceUrl
-                      , serviceRoutes
-                      , optLatestServiceInfo
-                      ) =>
-          val optLatestData: Option[(SlugInfoFlag, EnvData)] =
-            optLatestServiceInfo.map { latestServiceInfo =>
-              SlugInfoFlag.Latest ->
-                EnvData(
-                    version           = latestServiceInfo.semanticVersion.get
-                  , dependencies      = librariesOfLatestSlug
-                  , optShutterState   = None
-                  , optTelemetryLinks = None
+        (
+          teamsAndRepositoriesConnector.lookupLink(serviceName),
+          futEnvDatas,
+          serviceDependencyConnector.getDependencies(serviceName),
+          serviceDependencyConnector.getCuratedSlugDependencies(serviceName, SlugInfoFlag.Latest),
+          leakDetectionService.urlIfLeaksFound(serviceName),
+          routeRulesService.serviceUrl(serviceName),
+          routeRulesService.serviceRoutes(serviceName),
+          serviceDependencyConnector.getSlugInfo(serviceName)).mapN {
+          case (jenkinsLink, envDatas, optMasterDependencies, librariesOfLatestSlug, urlIfLeaksFound, serviceUrl, serviceRoutes, optLatestServiceInfo) =>
+            val optLatestData: Option[(SlugInfoFlag, EnvData)] =
+              optLatestServiceInfo.map { latestServiceInfo =>
+                SlugInfoFlag.Latest ->
+                  EnvData(
+                    version           = latestServiceInfo.semanticVersion.get,
+                    dependencies      = librariesOfLatestSlug,
+                    optShutterState   = None,
+                    optTelemetryLinks = None
                   )
-            }
+              }
 
-          Ok(
-            serviceInfoPage(
-                repositoryDetails          = repositoryDetails.copy(jenkinsURL = jenkinsLink)
-              , optMasterDependencies      = optMasterDependencies
-              , repositoryCreationDate     = repositoryDetails.createdAt
-              , envDatas                   = optLatestData.fold(envDatas)(envDatas + _)
-              , linkToLeakDetection        = urlIfLeaksFound
-              , productionEnvironmentRoute = serviceUrl
-              , serviceRoutes              = serviceRoutes
+            Ok(
+              serviceInfoPage(
+                repositoryDetails          = repositoryDetails.copy(jenkinsURL = jenkinsLink),
+                optMasterDependencies      = optMasterDependencies,
+                repositoryCreationDate     = repositoryDetails.createdAt,
+                envDatas                   = optLatestData.fold(envDatas)(envDatas + _),
+                linkToLeakDetection        = urlIfLeaksFound,
+                productionEnvironmentRoute = serviceUrl,
+                serviceRoutes              = serviceRoutes
               )
-          )
+            )
         }
 
       case _ => Future.successful(NotFound(error_404_template()))
@@ -379,16 +358,18 @@ class CatalogueController @Inject()(
         case Some(s) if s.repoType == RepoType.Prototype =>
           Ok(prototypeInfoPage(s.copy(environments = None), s.createdAt, urlIfLeaksFound))
         case None => NotFound(error_404_template())
-    }
+      }
   }
 
   def repository(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
-      repository         <- teamsAndRepositoriesConnector.repositoryDetails(name)
-                                .map(_.map(repo => repo.copy(teamNames = {
-                                  val (owners, other) = repo.teamNames.partition(s => repo.owningTeams.contains(s))
-                                  owners.sorted ++ other.sorted
-                                })))
+      repository <- teamsAndRepositoriesConnector
+                     .repositoryDetails(name)
+                     .map(_.map(repo =>
+                       repo.copy(teamNames = {
+                         val (owners, other) = repo.teamNames.partition(s => repo.owningTeams.contains(s))
+                         owners.sorted ++ other.sorted
+                       })))
       jenkinsLinks       <- teamsAndRepositoriesConnector.lookupLink(name)
       optDependencies    <- serviceDependencyConnector.getDependencies(name)
       optUrlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
@@ -438,42 +419,7 @@ class CatalogueController @Inject()(
     }
   }
 
-  def deploymentsPage(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful {
-      Ok(
-        deployments_page(
-          form               = DeploymentsFilter.form.bindFromRequest(),
-          userProfileBaseUrl = userManagementProfileBaseUrl
-        )
-      )
-    }
-  }
-
-  def deploymentsList(teamName: Option[TeamName], serviceName: Option[String]): Action[AnyContent] =
-    Action.async { implicit request =>
-      import SearchFiltering._
-      deploymentsService.getDeployments(
-          teamName.filterNot(_.asString.trim.isEmpty)
-        , serviceName.filterNot(_.trim.isEmpty)
-        ).map { teamReleases =>
-          DeploymentsFilter.form
-            .bindFromRequest()
-            .fold(
-              _ => Ok(deployments_list(Nil, userManagementProfileBaseUrl)),
-              deploymentsFilter =>
-                Ok(
-                  deployments_list(
-                    deployments        = teamReleases filter deploymentsFilter,
-                    userProfileBaseUrl = userManagementProfileBaseUrl
-                  )
-              )
-            )
-        }
-    }
-
-  private def convertToDisplayableTeamMembers(
-    teamName: TeamName,
-    errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]): Either[UMPError, Seq[DisplayableTeamMember]] =
+  private def convertToDisplayableTeamMembers(teamName: TeamName, errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]): Either[UMPError, Seq[DisplayableTeamMember]] =
     errorOrTeamMembers match {
       case Left(err) => Left(err)
       case Right(tms) =>
@@ -481,8 +427,8 @@ class CatalogueController @Inject()(
     }
 
   private def convertToDisplayableTeamMembers(
-      teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]]
-    ): Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]] =
+    teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]]
+  ): Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]] =
     teamsAndMembers.map {
       case (teamName, errorOrMembers) => (teamName, convertToDisplayableTeamMembers(teamName, errorOrMembers))
     }
@@ -512,11 +458,7 @@ object DigitalServiceNameFilter {
   )
 }
 
-case class DeploymentsFilter(
-  team: Option[String]        = None,
-  serviceName: Option[String] = None,
-  from: Option[LocalDateTime] = None,
-  to: Option[LocalDateTime]   = None) {
+case class DeploymentsFilter(team: Option[String] = None, serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
   def isEmpty: Boolean = team.isEmpty && serviceName.isEmpty && from.isEmpty && to.isEmpty
 }
 

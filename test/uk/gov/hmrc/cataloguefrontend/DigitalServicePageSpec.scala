@@ -36,6 +36,7 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
@@ -45,12 +46,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.Source
 
-class DigitalServicePageSpec
-    extends UnitSpec
-    with GuiceOneServerPerSuite
-    with WireMockEndpoints
-    with MockitoSugar
-    with ActionsSupport {
+class DigitalServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints with MockitoSugar with ActionsSupport {
 
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()
@@ -300,8 +296,7 @@ class DigitalServicePageSpec
 
       val document = asDocument(contentAsString(response))
 
-      document.select(s"#ump-error-${teamName.asString}").text() should ===(
-        s"${teamName.asString} is unknown to the User Management Portal. To add the team, please raise a TSR")
+      document.select(s"#ump-error-${teamName.asString}").text() should ===(s"${teamName.asString} is unknown to the User Management Portal. To add the team, please raise a TSR")
     }
 
     "show the right error message the ump gives an Http error" in new MockedCatalogueFrontendSetup {
@@ -345,32 +340,32 @@ class DigitalServicePageSpec
     when(userManagementPortalConfig.userManagementProfileBaseUrl) thenReturn "http://things.things.com"
 
     val catalogueController = new CatalogueController(
-      userManagementConnectorMock,
-      teamsAndRepositoriesConnectorMock,
-      mock[ConfigService],
-      mock[RouteRulesService],
-      mock[ServiceDependenciesConnector],
-      mock[LeakDetectionService],
-      mock[DeploymentsService],
-      mock[EventService],
-      mockedModelService,
-      mock[ShutterService],
-      verifySignInStatusPassThrough,
-      umpAuthenticatedPassThrough,
-      userManagementPortalConfig,
-      Configuration.empty,
-      stubMessagesControllerComponents(),
-      digitalServiceInfoPage,
-      mock[IndexPage],
-      mock[TeamInfoPage],
-      mock[ServiceInfoPage],
-      mock[ServiceConfigPage],
-      mock[ServiceConfigRawPage],
-      mock[LibraryInfoPage],
-      mock[PrototypeInfoPage],
-      mock[RepositoryInfoPage],
-      mock[RepositoriesListPage],
-      mock[OutOfDateTeamDependenciesPage]
+      userManagementConnector       = userManagementConnectorMock,
+      teamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock,
+      configService                 = mock[ConfigService],
+      routeRulesService             = mock[RouteRulesService],
+      serviceDependencyConnector    = mock[ServiceDependenciesConnector],
+      leakDetectionService          = mock[LeakDetectionService],
+      eventService                  = mock[EventService],
+      readModelService              = mockedModelService,
+      shutterService                = mock[ShutterService],
+      verifySignInStatus            = verifySignInStatusPassThrough,
+      umpAuthActionBuilder          = umpAuthenticatedPassThrough,
+      userManagementPortalConfig    = userManagementPortalConfig,
+      configuration                 = Configuration.empty,
+      mcc                           = stubMessagesControllerComponents(),
+      digitalServiceInfoPage        = digitalServiceInfoPage,
+      whatsRunningWhereService      = mock[WhatsRunningWhereService],
+      indexPage                     = mock[IndexPage],
+      teamInfoPage                  = mock[TeamInfoPage],
+      serviceInfoPage               = mock[ServiceInfoPage],
+      serviceConfigPage             = mock[ServiceConfigPage],
+      serviceConfigRawPage          = mock[ServiceConfigRawPage],
+      libraryInfoPage               = mock[LibraryInfoPage],
+      prototypeInfoPage             = mock[PrototypeInfoPage],
+      repositoryInfoPage            = mock[RepositoryInfoPage],
+      repositoriesListPage          = mock[RepositoriesListPage],
+      outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage]
     )
   }
 

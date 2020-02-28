@@ -19,8 +19,9 @@ package uk.gov.hmrc.cataloguefrontend.service
 import javax.inject._
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.connector.{DeploymentVO, ServiceDependenciesConnector}
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,29 +31,17 @@ class DependenciesService @Inject()(
   serviceDependenciesConnector: ServiceDependenciesConnector
 )(implicit val ec: ExecutionContext) {
 
-  def search(serviceName: String, deployments: Seq[DeploymentVO])
-            (implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] = {
-    serviceDependenciesConnector.getSlugDependencies(serviceName).map {
-      _.map { serviceDependency =>
-        val environmentMappingName =
-          deployments
-            .find(deploymentVO => serviceDependency.version.contains(deploymentVO.version))
-            .map(_.environmentMapping.name)
+  def search(serviceName: String, deployments: Seq[WhatsRunningWhereVersion])(implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] =
+    Future
+      .sequence(deployments.map(wrwv => {
+        serviceDependenciesConnector
+          .getSlugDependencies(serviceName, Some(wrwv.versionNumber.asVersion()))
+          .map(_.map(_.copy(environment = Some(wrwv.environment))))
+      }))
+      .map(_.flatten)
 
-        environmentMappingName match {
-          case Some(_) => serviceDependency.copy(environment = environmentMappingName)
-          case None    => serviceDependency
-        }
-      }
-    }
-  }
-
-  def getServicesWithDependency(
-      optTeam     : Option[TeamName],
-      flag        : SlugInfoFlag,
-      group       : String,
-      artefact    : String,
-      versionRange: BobbyVersionRange)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =
+  def getServicesWithDependency(optTeam: Option[TeamName], flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange)(
+    implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =
     serviceDependenciesConnector
       .getServicesWithDependency(flag, group, artefact, versionRange)
       .map { l =>
@@ -61,25 +50,23 @@ class DependenciesService @Inject()(
           case Some(team) => l.filter(_.teams.contains(team))
         }
       }
-      .map(_
-        .sortBy(_.slugName)
+      .map(_.sortBy(_.slugName)
         .sorted(Ordering.by((_: ServiceWithDependency).depSemanticVersion).reverse))
 
   def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] =
-    serviceDependenciesConnector
-      .getGroupArtefacts
+    serviceDependenciesConnector.getGroupArtefacts
       .map(_.map(g => g.copy(artefacts = g.artefacts.sorted)))
       .map(_.sortBy(_.group))
 
-  def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier) : Future[List[JDKVersion]] =
+  def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] =
     serviceDependenciesConnector
       .getJDKVersions(flag)
       .map(_.sortBy(_.version))
 
-  def getJDKCountsForEnv(env: SlugInfoFlag)(implicit hc: HeaderCarrier) : Future[JDKUsageByEnv] =
+  def getJDKCountsForEnv(env: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[JDKUsageByEnv] =
     for {
       versions <- serviceDependenciesConnector.getJDKVersions(env)
-      counts   =  versions.groupBy(j => j.copy(name="", kind = JDK) ).mapValues(_.length)
+      counts = versions.groupBy(j => j.copy(name = "", kind = JDK)).mapValues(_.length)
     } yield JDKUsageByEnv(env, counts)
 
 }
@@ -90,27 +77,26 @@ object DependenciesService {
     dependencies.sortBy(serviceDependency => (serviceDependency.group, serviceDependency.artifact))
 }
 
-
-case class ServiceJDKVersion(version: String, vendor: String, kind:String)
+case class ServiceJDKVersion(version: String, vendor: String, kind: String)
 
 case class ServiceDependency(
-    path    : String
-  , group   : String
-  , artifact: String
-  , version : String
-  , meta    : String = ""
-  )
+  path: String,
+  group: String,
+  artifact: String,
+  version: String,
+  meta: String = ""
+)
 
 case class ServiceDependencies(
-      uri          : String
-    , name         : String
-    , version      : Option[String]
-    , runnerVersion: String
-    , java         : ServiceJDKVersion
-    , classpath    : String
-    , dependencies : Seq[ServiceDependency]
-    , environment  : Option[String] = None
-    ) {
+  uri: String,
+  name: String,
+  version: Option[String],
+  runnerVersion: String,
+  java: ServiceJDKVersion,
+  classpath: String,
+  dependencies: Seq[ServiceDependency],
+  environment: Option[Environment] = None
+) {
   val isEmpty: Boolean = dependencies.isEmpty
 
   val nonEmpty: Boolean = dependencies.nonEmpty
@@ -124,21 +110,25 @@ object ServiceDependencies {
   import play.api.libs.json.__
 
   implicit val jdkr = (
-        (__ \ "version").read[String]
-      ~ (__ \ "vendor" ).read[String]
-      ~ (__ \ "kind"   ).read[String]
-    )(ServiceJDKVersion)
+    (__ \ "version").read[String]
+      ~ (__ \ "vendor").read[String]
+      ~ (__ \ "kind").read[String]
+  )(ServiceJDKVersion)
 
   implicit val dependencyReads: Reads[ServiceDependency] = Json.using[Json.WithDefaultValues].reads[ServiceDependency]
-  implicit val serviceDependenciesReads: Reads[ServiceDependencies] = (
-    (__ \ "uri"          ).read[String]
-  ~ (__ \ "name"         ).read[String]
-  ~ (__ \ "version"      ).readNullable[String]
-  ~ (__ \ "runnerVersion").read[String]
-  ~ (__ \ "java"         ).read[ServiceJDKVersion]
-  ~ (__ \ "classpath"    ).read[String]
-  ~ (__ \ "dependencies" ).read[Seq[ServiceDependency]]
-  ~ (__ \ "environment"  ).readNullable[String]
-  )(ServiceDependencies.apply _)
+
+  implicit val serviceDependenciesReads: Reads[ServiceDependencies] = {
+    implicit val envf = JsonCodecs.environmentFormat
+    (
+      (__ \ "uri").read[String]
+        ~ (__ \ "name").read[String]
+        ~ (__ \ "version").readNullable[String]
+        ~ (__ \ "runnerVersion").read[String]
+        ~ (__ \ "java").read[ServiceJDKVersion]
+        ~ (__ \ "classpath").read[String]
+        ~ (__ \ "dependencies").read[Seq[ServiceDependency]]
+        ~ (__ \ "environment").readNullable[Environment]
+    )(ServiceDependencies.apply _)
+  }
 
 }

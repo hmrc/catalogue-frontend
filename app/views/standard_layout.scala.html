@@ -75,7 +75,7 @@
                         <a id="link-to-repositories" href="@appRoutes.CatalogueController.allRepositories" class="@if(active=="repositories") {active}">Repositories</a>
                     </li>
                     <li>
-                        <a id="link-to-deployments" href="@appRoutes.CatalogueController.deploymentsPage" class="@if(active=="deployments") {active}">Deployments</a>
+                        <a id="link-to-deployments" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history" class="@if(active=="deployments") {active}">Deployments</a>
                     </li>
                     <li>
                         <a id="link-to-whats-running-where" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.heritageReleases()" class="@if(active=="whats-running-where") {active}">What's Running Where</a>

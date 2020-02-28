@@ -16,28 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.LocalDateTime
-
-import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, RepositoryDisplayDetails, Team}
-import uk.gov.hmrc.cataloguefrontend.service.TeamRelease
 
 object SearchFiltering {
-
-  implicit class DeploymentsResult(deployments: Seq[TeamRelease]) {
-
-    def filter(query: DeploymentsFilter): Seq[TeamRelease] = {
-
-      val q = if (query.isEmpty) DeploymentsFilter(from = Some(LocalDateTime.now().minusMonths(1)))
-              else query
-
-      deployments.toStream
-        .filter(x => q.team       .fold(true)(team        => x.teams.map(_.asString.toLowerCase).exists(_.contains(team.toLowerCase))))
-        .filter(x => q.serviceName.fold(true)(serviceName => x.name.toLowerCase.contains(serviceName.toLowerCase)))
-        .filter(x => q.from       .fold(true)(from        => x.productionDate.epochSeconds >= from.epochSeconds))
-        .filter(x => q.to         .fold(true)(to          => x.productionDate.epochSeconds < to.plusDays(1).epochSeconds))
-    }
-  }
 
   implicit class RepositoryResult(repositories: Seq[RepositoryDisplayDetails]) {
 
@@ -45,10 +26,9 @@ object SearchFiltering {
       repositories.toStream
         .filter(x => q.name.fold(true)(name => x.name.toLowerCase.contains(name.toLowerCase)))
         .filter(x =>
-          q.repoType.fold(true)(repoType => repoType.equalsIgnoreCase(x.repoType.toString)
-                                         || ("service".equalsIgnoreCase(repoType) && x.repoType == RepoType.Service)
-                               )
-        )
+          q.repoType.fold(true)(repoType =>
+            repoType.equalsIgnoreCase(x.repoType.toString)
+              || ("service".equalsIgnoreCase(repoType) && x.repoType == RepoType.Service)))
   }
 
   implicit class TeamResult(teams: Seq[Team]) {
@@ -61,10 +41,7 @@ object SearchFiltering {
 
     def filter(digitalServiceNameFilter: DigitalServiceNameFilter): Seq[String] =
       digitalServiceNames.filter(
-        digitalServiceName =>
-          digitalServiceNameFilter.value.fold(true)(value =>
-            digitalServiceName.toLowerCase.contains(value.toLowerCase)
-          )
+        digitalServiceName => digitalServiceNameFilter.value.fold(true)(value => digitalServiceName.toLowerCase.contains(value.toLowerCase))
       )
   }
 }
