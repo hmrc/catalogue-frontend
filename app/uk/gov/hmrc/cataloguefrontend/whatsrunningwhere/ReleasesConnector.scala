@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
+import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -92,16 +93,13 @@ class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConf
       }
   }
 
-  private def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
-    queryParams.collect { case (k, Some(v)) => (k, v) }
-
   def deploymentHistory(from: Option[Long] = None, to: Option[Long] = None, team: Option[String] = None, app: Option[String] = None)(
     implicit hc: HeaderCarrier): Future[Seq[HeritageDeployment]] = {
 
-    implicit val rf: Reads[HeritageDeployment] = JsonCodecs.heritageDeployment
+    implicit val rf = JsonCodecs.heritageDeployment
 
     val baseUrl = s"$serviceUrl/releases-api/deployments/${Production.asString}"
-    val params  = buildQueryParams("from" -> from.map(_.toString), "to" -> to.map(_.toString), "team" -> team, "app" -> app)
+    val params  = UrlUtils.buildQueryParams("from" -> from.map(_.toString), "to" -> to.map(_.toString), "team" -> team, "app" -> app)
 
     http.GET[Seq[HeritageDeployment]](baseUrl, queryParams = params)
   }

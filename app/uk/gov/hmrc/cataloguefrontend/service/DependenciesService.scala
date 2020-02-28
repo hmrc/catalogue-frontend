@@ -20,8 +20,8 @@ import javax.inject._
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,7 +36,7 @@ class DependenciesService @Inject()(
       .sequence(deployments.map(wrwv => {
         serviceDependenciesConnector
           .getSlugDependencies(serviceName, Some(wrwv.versionNumber.asVersion()))
-          .map(_.map(_.copy(environment = Some(wrwv.environment.asString))))
+          .map(_.map(_.copy(environment = Some(wrwv.environment))))
       }))
       .map(_.flatten)
 
@@ -95,7 +95,7 @@ case class ServiceDependencies(
   java: ServiceJDKVersion,
   classpath: String,
   dependencies: Seq[ServiceDependency],
-  environment: Option[String] = None
+  environment: Option[Environment] = None
 ) {
   val isEmpty: Boolean = dependencies.isEmpty
 
@@ -116,15 +116,19 @@ object ServiceDependencies {
   )(ServiceJDKVersion)
 
   implicit val dependencyReads: Reads[ServiceDependency] = Json.using[Json.WithDefaultValues].reads[ServiceDependency]
-  implicit val serviceDependenciesReads: Reads[ServiceDependencies] = (
-    (__ \ "uri").read[String]
-      ~ (__ \ "name").read[String]
-      ~ (__ \ "version").readNullable[String]
-      ~ (__ \ "runnerVersion").read[String]
-      ~ (__ \ "java").read[ServiceJDKVersion]
-      ~ (__ \ "classpath").read[String]
-      ~ (__ \ "dependencies").read[Seq[ServiceDependency]]
-      ~ (__ \ "environment").readNullable[String]
-  )(ServiceDependencies.apply _)
+
+  implicit val serviceDependenciesReads: Reads[ServiceDependencies] = {
+    implicit val envf = JsonCodecs.environmentFormat
+    (
+      (__ \ "uri").read[String]
+        ~ (__ \ "name").read[String]
+        ~ (__ \ "version").readNullable[String]
+        ~ (__ \ "runnerVersion").read[String]
+        ~ (__ \ "java").read[ServiceJDKVersion]
+        ~ (__ \ "classpath").read[String]
+        ~ (__ \ "dependencies").read[Seq[ServiceDependency]]
+        ~ (__ \ "environment").readNullable[Environment]
+    )(ServiceDependencies.apply _)
+  }
 
 }
