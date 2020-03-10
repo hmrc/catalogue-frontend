@@ -42,8 +42,8 @@
 </span>
 
     <div class="input-group">
-      Production deployment from: <input id="from-search-input" type="date" name="from" value=''>
-      to:<input type="date" id="to-search-input" name="to" value=''>
+      Deployment from: <input id="from-search-input" type="date" name="from" value=''>
+      to:<input class="btn btn-primary" type="date" id="to-search-input" name="to" value=''>
     </div>
     <input type="submit" value="Filter">
   </form>
@@ -72,11 +72,11 @@
         </ul>
       </td>
       <td class="monospaced" id="row@{i}_version">@{release.version.asString}</td>
-      <td class="monospaced" id="row@{i}_production">@{release.productionDate.time.toString}</td>
+      <td class="monospaced" id="row@{i}_production">@{release.productionDate.time.asString}</td>
       <td class="monospaced" id="row@{i}_deployer">
       @release.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.userName}" target="_blank">@{u.userName}<span class="glyphicon glyphicon-new-window"/></a>}.getOrElse("N/A")
       </td>
-      <td class="monospaced" id="row@{i}_interval">@{release.interval.fold("--")(x => if(x==1) "1 day" else s"$x days")}</td>
+      <td class="monospaced" id="row@{i}_interval">@{release.interval.fold("--")(x => if(x.toDays==1) "1 day" else s"${x.toDays} days")}</td>
     </tr>
     }
 
