@@ -32,6 +32,8 @@ class LeakDetectionConnector @Inject()(
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
 
+  private val logger = Logger(getClass)
+
   private val url: String = servicesConfig.baseUrl("leak-detection")
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] = {
@@ -40,7 +42,7 @@ class LeakDetectionConnector @Inject()(
       .GET[Seq[RepositoryWithLeaks]](s"$url/reports/repositories")(implicitly, hcAcceptingJson, implicitly)
       .recover {
         case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty
       }
   }

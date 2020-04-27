@@ -21,9 +21,10 @@ import java.time.Instant
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.mockito.ArgumentMatchers.{any, eq => eqTo}
-import org.mockito.Mockito.when
 import org.mockito.MockitoSugar
-import org.scalatest.{Matchers, OptionValues, WordSpec}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
@@ -37,8 +38,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ShutterEventsControllerSpec extends WordSpec with MockitoSugar with Matchers with GuiceOneAppPerSuite with
-  DefaultAwaitTimeout with OptionValues {
+class ShutterEventsControllerSpec
+  extends AnyWordSpec
+  with MockitoSugar
+  with Matchers
+  with GuiceOneAppPerSuite
+  with DefaultAwaitTimeout
+  with OptionValues {
 
   import Helpers._
   import ShutterEventsControllerSpec._

@@ -18,10 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import java.util.UUID
 
-import org.mockito.Mockito._
 import org.mockito.MockitoSugar
-import org.scalatest.Matchers._
-import org.scalatest.WordSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
@@ -32,7 +31,12 @@ import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import scala.concurrent.ExecutionContext
 import scala.util.Random
 
-class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with MockitoSugar with ScalaFutures {
+class UserManagementAuthConnectorSpec
+  extends AnyWordSpec
+  with Matchers
+  with HttpClientStub
+  with MockitoSugar
+  with ScalaFutures {
   import ExecutionContext.Implicits.global
 
   "authenticate" should {

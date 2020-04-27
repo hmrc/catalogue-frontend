@@ -17,11 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 
-class DisplayableTeamMembersSpec extends FunSpec with Matchers with TypeCheckedTripleEquals {
+class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheckedTripleEquals {
 
   describe("DisplayTeamMembers") {
 

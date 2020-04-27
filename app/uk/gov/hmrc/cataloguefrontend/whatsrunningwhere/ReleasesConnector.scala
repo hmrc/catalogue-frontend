@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
@@ -30,6 +29,8 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
+
+  private val logger = Logger(getClass)
 
   private val serviceUrl: String = servicesConfig.baseUrl("releases-api")
 
@@ -44,7 +45,7 @@ class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConf
       .GET[Seq[WhatsRunningWhere]](baseUrl, params)
       .recover {
         case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
+          logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
           Seq.empty
       }
   }
@@ -55,7 +56,7 @@ class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConf
       .GET[Seq[Profile]](baseUrl)
       .recover {
         case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
+          logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
           Seq.empty
       }
   }
@@ -67,16 +68,15 @@ class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConf
       .GET[Seq[ServiceDeployment]](baseUrl, params)
       .recover {
         case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
+          logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
           Seq.empty
       }
   }
 
   private def profileQueryParams(profile: Option[Profile]): Seq[(String, String)] =
-    List(
-      profile.map("profileName" -> _.profileName.asString),
-      profile.map("profileType" -> _.profileType.asString)
-    ).flatten
+    UrlUtils.buildQueryParams(
+      "profileName" -> profile.map(_.profileName.asString),
+      "profileType" -> profile.map(_.profileType.asString))
 
   def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where/$service"
@@ -85,10 +85,10 @@ class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConf
       .GET[WhatsRunningWhere](baseUrl)
       .recover {
         case _: NotFoundException =>
-          Logger.error(s"Service $service not found, returning placeholder whatsrunningwhere")
+          logger.error(s"Service $service not found, returning placeholder whatsrunningwhere")
           WhatsRunningWhere(ServiceName(service), Nil)
         case ex =>
-          Logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
+          logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
           throw ex
       }
   }
@@ -99,9 +99,12 @@ class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConf
     implicit val rf = JsonCodecs.heritageDeployment
 
     val baseUrl = s"$serviceUrl/releases-api/deployments/${Production.asString}"
-    val params  = UrlUtils.buildQueryParams("from" -> from.map(_.toString), "to" -> to.map(_.toString), "team" -> team, "app" -> app)
+    val params  = UrlUtils.buildQueryParams(
+      "from" -> from.map(_.toString),
+      "to"   -> to.map(_.toString),
+      "team" -> team,
+      "app"  -> app)
 
     http.GET[Seq[HeritageDeployment]](baseUrl, queryParams = params)
   }
-
 }

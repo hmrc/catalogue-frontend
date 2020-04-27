@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
 
-class EventTypeSpec extends FunSpec with Matchers {
+class EventTypeSpec extends AnyFunSpec with Matchers {
 
   describe("EventType") {
     it("should convert to and from json (read/write)") {

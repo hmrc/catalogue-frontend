@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.{Application, Environment}
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints

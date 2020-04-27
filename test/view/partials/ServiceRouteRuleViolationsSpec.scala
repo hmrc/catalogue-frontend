@@ -16,11 +16,12 @@
 
 package view.partials
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 
-class ServiceRouteRuleViolationsSpec extends WordSpec with Matchers {
+class ServiceRouteRuleViolationsSpec extends AnyWordSpec with Matchers {
 
   val misMatchedServiceRoutes = ServiceRoutes(Seq(
     EnvironmentRoute(

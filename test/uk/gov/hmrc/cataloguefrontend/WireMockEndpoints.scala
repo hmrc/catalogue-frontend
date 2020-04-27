@@ -25,7 +25,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.http.RequestMethod
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.util.Try
 
 trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfterEach {
@@ -55,9 +55,8 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
 
   def printMappings(): Unit = {
     println(s"endpointMockUrl = $endpointMockUrl")
-    endpointMock.allStubMappings().getMappings.toList.foreach { s =>
-      println(s)
-    }
+    endpointMock.allStubMappings().getMappings.asScala.toList
+      .foreach(println)
   }
 
   def serviceEndpoint(

@@ -21,7 +21,9 @@ import org.mockito.MockitoSugar
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
-import org.scalatest._
+import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -33,7 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class TeamsAndRepositoriesConnectorSpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with BeforeAndAfter
     with ScalaFutures

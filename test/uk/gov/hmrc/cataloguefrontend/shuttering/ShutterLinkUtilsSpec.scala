@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 
-class ShutterLinkUtilsSpec extends WordSpec with Matchers {
+class ShutterLinkUtilsSpec extends AnyWordSpec with Matchers {
 
   "mkLink" should {
     "make a production url" in {

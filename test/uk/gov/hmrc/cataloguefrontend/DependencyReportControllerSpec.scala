@@ -20,7 +20,6 @@ import java.time.{Instant, LocalDateTime}
 
 import akka.stream.Materializer
 import org.mockito.ArgumentMatchers.{eq => eqTo, _}
-import org.mockito.Mockito.when
 import org.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application

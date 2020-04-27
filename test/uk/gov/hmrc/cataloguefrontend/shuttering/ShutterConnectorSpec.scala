@@ -18,10 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import org.mockito.ArgumentMatcher
 import org.mockito.ArgumentMatchers.{any, argThat, eq => eqTo}
-import org.mockito.Mockito.when
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
@@ -30,7 +30,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.Future
 
-class ShutterConnectorSpec extends WordSpec with MockitoSugar with Matchers with ScalaFutures {
+class ShutterConnectorSpec extends AnyWordSpec with MockitoSugar with Matchers with ScalaFutures {
 
   import ShutterConnectorSpec._
 

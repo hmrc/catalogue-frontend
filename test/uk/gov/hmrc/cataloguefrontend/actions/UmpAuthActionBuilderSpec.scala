@@ -17,10 +17,9 @@
 package uk.gov.hmrc.cataloguefrontend.actions
 
 import org.mockito.ArgumentMatchers.{eq => eqTo, _}
-import org.mockito.Mockito._
 import org.mockito.MockitoSugar
-import org.scalatest.Matchers._
-import org.scalatest.WordSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.Results._
@@ -37,7 +36,12 @@ import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutures with GuiceOneAppPerSuite {
+class UmpAuthActionBuilderSpec
+  extends AnyWordSpec
+  with Matchers
+  with MockitoSugar
+  with ScalaFutures
+  with GuiceOneAppPerSuite {
 
   "WhenAuthenticated Action" should {
 

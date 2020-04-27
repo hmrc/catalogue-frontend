@@ -31,8 +31,12 @@ import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 @Singleton
-class ShutterEventsController @Inject() (mcc: MessagesControllerComponents, connector: ShutterConnector)
-                                        (implicit val ec: ExecutionContext) extends FrontendController(mcc) {
+class ShutterEventsController @Inject()(
+  mcc      : MessagesControllerComponents,
+  connector: ShutterConnector
+)(implicit val ec: ExecutionContext) extends FrontendController(mcc) {
+
+  private val logger = Logger(getClass)
 
   def shutterEvents: Action[AnyContent] = Action {
     Redirect(routes.ShutterEventsController.shutterEventsList(Environment.Production))
@@ -45,7 +49,7 @@ class ShutterEventsController @Inject() (mcc: MessagesControllerComponents, conn
 
     connector.shutterEventsByTimestampDesc(filter).recover {
       case NonFatal(ex) =>
-        Logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
+        logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
         Seq.empty
     }.map { events =>
       Ok(ShutterEventsPage(events, form, Environment.values))

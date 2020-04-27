@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
-import org.mockito.Mockito._
 import org.mockito.MockitoSugar
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.language.postfixOps
 
-class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
+class ReadModelServiceSpec extends AnyFunSpec with Matchers with MockitoSugar {
   import ExecutionContext.Implicits.global
 
   val eventService            = mock[EventService]
@@ -50,7 +49,7 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
           )
         )
 
-      Await.result(readModelService.refreshEventsCache, 5 seconds)
+      Await.result(readModelService.refreshEventsCache, 5.seconds)
 
       readModelService.eventsCache.size shouldBe 1
       readModelService.eventsCache.head shouldBe "Catalogue" -> "Joe Black"
@@ -65,7 +64,7 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
       when(userManagementConnector.getAllUsersFromUMP)
         .thenReturn(Future.successful(Right(Seq(teamMember))))
 
-      Await.result(readModelService.refreshUmpCache, 5 seconds)
+      Await.result(readModelService.refreshUmpCache, 5.seconds)
 
       readModelService.umpUsersCache.size shouldBe 1
       readModelService.umpUsersCache.head shouldBe teamMember

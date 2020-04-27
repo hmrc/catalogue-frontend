@@ -17,7 +17,8 @@
 package view
 import org.jsoup.Jsoup
 import org.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.FakeRequest
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
@@ -26,8 +27,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.model._
 import views.html.JdkVersionPage
 
 
-class JDKVersionPageSpec extends WordSpec with MockitoSugar with Matchers {
-  private[this] val msg :ViewMessages = mock[ViewMessages]
+class JDKVersionPageSpec extends AnyWordSpec with MockitoSugar with Matchers {
+  private val msg: ViewMessages = mock[ViewMessages]
 
   "JDK Usage list" should {
 
@@ -36,7 +37,8 @@ class JDKVersionPageSpec extends WordSpec with MockitoSugar with Matchers {
 
       val versions = List(
           JDKVersion(name = "test-slug",     version = "1.181.0", vendor = OpenJDK, kind = JDK)
-        , JDKVersion(name = "thing-service", version = "1.171.0", vendor = Oracle , kind = JRE))
+        , JDKVersion(name = "thing-service", version = "1.171.0", vendor = Oracle , kind = JRE)
+        )
 
       val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, SlugInfoFlag.Latest))
 

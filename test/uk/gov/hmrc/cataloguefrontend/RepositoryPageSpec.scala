@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.scalatest._
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -56,8 +56,7 @@ class RepositoryPageSpec
       )
       .build()
 
-  private[this] lazy val WS           = app.injector.instanceOf[WSClient]
-  private[this] lazy val viewMessages = app.injector.instanceOf[ViewMessages]
+  private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

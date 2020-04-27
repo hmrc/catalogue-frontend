@@ -17,10 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 import org.mockito.MockitoSugar
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsObject, JsString, Json}
 
-class EventSpec extends FunSpec with Matchers with MockitoSugar {
+class EventSpec extends AnyFunSpec with Matchers with MockitoSugar {
 
   describe("Json write") {
 

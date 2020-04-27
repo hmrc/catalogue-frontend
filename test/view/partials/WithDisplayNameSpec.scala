@@ -16,13 +16,14 @@
 
 package view.partials
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import play.twirl.api.Html
 import views.html.partials.with_display_name
 
-class WithDisplayNameSpec extends WordSpec with Matchers with GuiceOneAppPerSuite {
+class WithDisplayNameSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
 
   "Working with user's display name" should {
 

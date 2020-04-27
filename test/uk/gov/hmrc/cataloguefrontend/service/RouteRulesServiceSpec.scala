@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 
-class RouteRulesServiceSpec extends WordSpec with Matchers {
+class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
   "Service" should {
     "No result for inconsistency check when no environment routes" in {

@@ -17,11 +17,9 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.mockito.ArgumentMatchers._
-import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
 import org.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.libs.json.Json
-import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.test.Helpers
@@ -141,7 +139,6 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       when(mockedModelService.getAllUsers)
         .thenReturn(teamMembers)
 
-      val ownerUpdatedEventData = ServiceOwnerUpdatedEventData("service-abc", "Mrs Invalid Person")
       val response = catalogueController
         .saveServiceOwner()(
           FakeRequest(Helpers.POST, "/")

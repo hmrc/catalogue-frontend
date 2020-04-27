@@ -18,10 +18,11 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.{any, eq => eqTo}
-import org.mockito.Mockito._
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Matchers, OptionValues, WordSpec}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.i18n.{Lang, MessagesApi}
@@ -36,7 +37,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AuthControllerSpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with GuiceOneAppPerSuite
     with MockitoSugar
@@ -85,8 +86,6 @@ class AuthControllerSpec
       val request = FakeRequest().withFormUrlEncodedBody("username" -> "", "password" -> "")
 
       val result = controller.submit(request)
-
-      val foo = Some(Some(Some(1)))
 
       status(result)          shouldBe 400
       contentAsString(result) should include(messagesApi("sign-in.wrong-credentials"))

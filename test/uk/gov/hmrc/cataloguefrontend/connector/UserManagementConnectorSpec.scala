@@ -19,17 +19,17 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import com.github.tomakehurst.wiremock.http.RequestMethod
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.mockito.ArgumentMatchers.{any, anyString}
-import org.mockito.Mockito.when
 import org.mockito.MockitoSugar
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest._
+import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
@@ -42,7 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 class UserManagementConnectorSpec
-    extends FunSpec
+    extends AnyFunSpec
     with Matchers
     with TypeCheckedTripleEquals
     with BeforeAndAfter

@@ -32,10 +32,10 @@ class UserManagementAuthConnector @Inject()(
   http                    : HttpClient,
   userManagementAuthConfig: UserManagementAuthConfig
 )(implicit val ec: ExecutionContext) {
-
-
   import UserManagementAuthConnector._
   import userManagementAuthConfig._
+
+  private val logger = Logger(getClass)
 
   def authenticate(username: String, password: String)(
     implicit headerCarrier: HeaderCarrier): Future[Either[UmpUnauthorized, TokenAndUserId]] = {
@@ -52,7 +52,7 @@ class UserManagementAuthConnector @Inject()(
               Right(TokenAndUserId(token, userId))
 
             case UNAUTHORIZED | FORBIDDEN =>
-              Logger.info(
+              logger.info(
                 s"Failed to authenticate for username: $username, response was: ${response.status} ${response.body}")
               Left(UmpUnauthorized)
 

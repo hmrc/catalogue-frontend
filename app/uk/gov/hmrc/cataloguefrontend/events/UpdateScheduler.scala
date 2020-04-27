@@ -18,12 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.events
 
 import akka.actor.{ActorSystem, Cancellable}
 import javax.inject.{Inject, Singleton}
-import play.Logger
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
+import play.api.Logger
 
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.language.postfixOps
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class UpdateScheduler @Inject()(
@@ -31,29 +29,21 @@ class UpdateScheduler @Inject()(
   readModelService: ReadModelService
 )(implicit val ec: ExecutionContext) {
 
-  private def updateEventsReadModel: Future[Map[String, String]] = readModelService.refreshEventsCache
-  private def updateUmpCacheReadModel: Future[Seq[TeamMember]]   = readModelService.refreshUmpCache
+  private val logger = Logger(getClass)
 
-  val initialDelay: FiniteDuration = 1 second
+  val initialDelay: FiniteDuration = 1.second
 
   def startUpdatingEventsReadModel(interval: FiniteDuration): Cancellable = {
-    Logger.info(s"Initialising Event read model update every $interval")
-
-    val scheduler = actorSystem.scheduler.schedule(initialDelay, interval) {
-      updateEventsReadModel
+    logger.info(s"Initialising Event read model update every $interval")
+    actorSystem.scheduler.schedule(initialDelay, interval) {
+      readModelService.refreshEventsCache
     }
-
-    scheduler
   }
 
   def startUpdatingUmpCacheReadModel(interval: FiniteDuration): Cancellable = {
-    Logger.info(s"Initialising UMP cache read model update every $interval")
-
-    val scheduler = actorSystem.scheduler.schedule(initialDelay, interval) {
-      updateUmpCacheReadModel
+    logger.info(s"Initialising UMP cache read model update every $interval")
+    actorSystem.scheduler.schedule(initialDelay, interval) {
+      readModelService.refreshUmpCache
     }
-
-    scheduler
   }
-
 }

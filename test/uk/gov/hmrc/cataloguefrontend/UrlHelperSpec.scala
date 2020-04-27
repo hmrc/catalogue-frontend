@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class UrlHelperSpec extends WordSpec with Matchers {
+
+class UrlHelperSpec extends AnyWordSpec with Matchers {
 
   "UrlHelper" should {
     "append a slash to the url if it doesn't end with one" in {

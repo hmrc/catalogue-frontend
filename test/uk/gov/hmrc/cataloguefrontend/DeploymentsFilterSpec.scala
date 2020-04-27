@@ -20,10 +20,11 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime}
 
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest.OptionValues._
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class DeploymentsFilterSpec extends WordSpec with Matchers with TypeCheckedTripleEquals {
+class DeploymentsFilterSpec extends AnyWordSpec with Matchers with OptionValues with TypeCheckedTripleEquals {
 
   implicit def toDateTime(s: String): LocalDateTime =
     LocalDate.parse(s, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay()

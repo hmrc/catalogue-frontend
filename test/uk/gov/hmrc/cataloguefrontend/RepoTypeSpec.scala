@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 
-class RepoTypeSpec extends WordSpec with Matchers {
+class RepoTypeSpec extends AnyWordSpec with Matchers {
 
   implicit val rtf = RepoType.format
 

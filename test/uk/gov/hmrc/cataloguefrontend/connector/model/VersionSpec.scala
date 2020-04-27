@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import org.scalatest.{FreeSpec, MustMatchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.must.Matchers
 
-class VersionSpec extends FreeSpec with MustMatchers {
+class VersionSpec extends AnyFreeSpec with Matchers {
 
   "Can be lower than others" in {
     Version("0.0.0") < Version("0.0.1") mustBe true

@@ -18,10 +18,11 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
 import org.mockito.MockitoSugar
-import org.scalatest._
+import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.Status
@@ -38,7 +39,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.{ExecutionContext, Future}
 
 class ServiceDependenciesConnectorSpec
-    extends FreeSpec
+    extends AnyFreeSpec
     with Matchers
     with BeforeAndAfter
     with GuiceOneAppPerSuite

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import org.mockito.ArgumentMatchers._
-import org.mockito.Mockito._
 import org.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}

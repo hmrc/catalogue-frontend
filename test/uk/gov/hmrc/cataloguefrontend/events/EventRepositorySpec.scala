@@ -17,8 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 import org.mockito.MockitoSugar
-import org.mongodb.scala.bson.collection.immutable.Document
-import org.mongodb.scala.model.IndexModel
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, LoneElement, OptionValues}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -80,10 +78,6 @@ class EventRepositorySpec
     "return all the right events" in {
       val serviceOwnerUpdateEvent = Event(
         eventType = EventType.ServiceOwnerUpdated,
-        timestamp = timestamp,
-        data      = Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
-      val otherEvent = Event(
-        eventType = EventType.Other,
         timestamp = timestamp,
         data      = Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
 

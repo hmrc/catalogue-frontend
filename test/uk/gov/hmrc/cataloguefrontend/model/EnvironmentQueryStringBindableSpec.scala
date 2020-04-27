@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.model
 
-import org.scalatest.{Matchers, OptionValues, WordSpec}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class EnvironmentQueryStringBindableSpec extends WordSpec with Matchers with OptionValues {
+class EnvironmentQueryStringBindableSpec extends AnyWordSpec with Matchers with OptionValues {
 
   "an Environment QueryString parameter" should {
 

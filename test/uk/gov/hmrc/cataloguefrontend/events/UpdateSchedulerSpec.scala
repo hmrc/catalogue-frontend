@@ -17,15 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 import akka.actor.ActorSystem
-import org.mockito.Mockito._
 import org.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, FunSpec}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funspec.AnyFunSpec
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext}
-import scala.language.postfixOps
 
-class UpdateSchedulerSpec extends FunSpec with MockitoSugar with BeforeAndAfterAll {
+class UpdateSchedulerSpec extends AnyFunSpec with MockitoSugar with BeforeAndAfterAll {
   import ExecutionContext.Implicits.global
 
   private val actorSystem           = ActorSystem()
@@ -36,7 +35,7 @@ class UpdateSchedulerSpec extends FunSpec with MockitoSugar with BeforeAndAfterA
       val readModelService = mock[ReadModelService]
       val scheduler        = new UpdateScheduler(actorSystem, readModelService)
 
-      scheduler.startUpdatingEventsReadModel(100 milliseconds)
+      scheduler.startUpdatingEventsReadModel(100.milliseconds)
 
       verify(readModelService, after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshEventsCache
       verify(readModelService, never).refreshUmpCache
@@ -48,7 +47,7 @@ class UpdateSchedulerSpec extends FunSpec with MockitoSugar with BeforeAndAfterA
       val readModelService = mock[ReadModelService]
       val scheduler        = new UpdateScheduler(actorSystem, readModelService)
 
-      scheduler.startUpdatingUmpCacheReadModel(100 milliseconds)
+      scheduler.startUpdatingUmpCacheReadModel(100.milliseconds)
 
       verify(readModelService, after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshUmpCache
       verify(readModelService, never).refreshEventsCache

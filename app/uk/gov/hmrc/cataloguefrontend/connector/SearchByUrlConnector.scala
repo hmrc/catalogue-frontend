@@ -33,6 +33,8 @@ class SearchByUrlConnector @Inject()(
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
 
+  private val logger = Logger(getClass)
+
   private val url: String = s"${servicesConfig.baseUrl("service-configs")}/frontend-route/search"
 
   implicit val frontendRouteReads: Reads[FrontendRoute] = Json.using[Json.WithDefaultValues].reads[FrontendRoute]
@@ -43,7 +45,7 @@ class SearchByUrlConnector @Inject()(
       .GET[Seq[FrontendRoutes]](url, Seq("frontendPath" -> term))
       .recover {
         case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty
       }
 }

@@ -18,11 +18,12 @@ package view.partials
 
 import java.time.LocalDateTime
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.{Link, RepoType, RepositoryDetails}
 import views.partials.githubBadgeType
 
-class GithubBadgeTypeSpec extends WordSpec with Matchers {
+class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
 
   "Github Badge" should {
     "be Open if repository is not private" in {

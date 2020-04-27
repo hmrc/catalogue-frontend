@@ -21,7 +21,7 @@ import java.time.ZoneOffset
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.scalatest._
+import org.scalatest.BeforeAndAfter
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.io.Source
 
 class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
@@ -114,7 +114,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       response.status shouldBe 200
 
       val htmlDocument = asDocument(response.body)
-      val anchorTags   = htmlDocument.getElementsByTag("a").toList
+      val anchorTags   = htmlDocument.getElementsByTag("a").asScala.toList
 
       def assertAnchor(href: String, text: String): Unit =
         assert(anchorTags.exists { e =>
@@ -355,9 +355,9 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       document.select("#team-first-active").text() shouldBe "First Active: None"
       document.select("#team-last-active").text()  shouldBe "Last Active: None"
 
-      document.select("#team-description").head.text()   shouldBe "Description: TEAM-A is a great team"
-      document.select("#team-documentation").head.text() shouldBe "Documentation: Go to Confluence space"
-      document.select("#team-documentation").head.toString() should include(
+      document.select("#team-description").asScala.head.text()   shouldBe "Description: TEAM-A is a great team"
+      document.select("#team-documentation").asScala.head.text() shouldBe "Documentation: Go to Confluence space"
+      document.select("#team-documentation").asScala.head.toString() should include(
         """<a href="https://some.documentation.url" target="_blank">Go to Confluence space<span class="glyphicon glyphicon-new-window"""")
 
       document.select("#team-organisation").text() shouldBe "Organisation: ORGA"
@@ -374,12 +374,12 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
   def verifyTeamOwnerIndicatorLabel(document: Document): Unit = {
     val serviceOwnersLiLabels = document.select("#team_members li .label-success")
-    serviceOwnersLiLabels.size()                         shouldBe 2
-    serviceOwnersLiLabels.iterator().toSeq.map(_.text()) shouldBe Seq("Service Owner", "Service Owner")
+    serviceOwnersLiLabels.size()                                 shouldBe 2
+    serviceOwnersLiLabels.iterator().asScala.toSeq.map(_.text()) shouldBe Seq("Service Owner", "Service Owner")
   }
 
   def verifyTeamMemberHrefLinks(document: Document): Boolean = {
-    val hrefs = document.select("#team_members [href]").iterator().toList
+    val hrefs = document.select("#team_members [href]").iterator().asScala.toList
 
     hrefs.size shouldBe 5
     hrefs(0).attributes().get("href") == "http://example.com/profile/m.q"
@@ -390,7 +390,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
   }
 
   def verifyTeamMemberElementsText(document: Document): Unit = {
-    val teamMembersLiElements = document.select("#team_members li").iterator().toList
+    val teamMembersLiElements = document.select("#team_members li").iterator().asScala.toList
 
     teamMembersLiElements.length shouldBe 5
 

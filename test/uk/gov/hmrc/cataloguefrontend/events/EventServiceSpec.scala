@@ -17,16 +17,16 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 import org.mockito.ArgumentCaptor
-import org.mockito.Mockito._
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsObject, JsString}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-class EventServiceSpec extends FunSpec with Matchers with MockitoSugar with ScalaFutures {
+class EventServiceSpec extends AnyFunSpec with Matchers with MockitoSugar with ScalaFutures {
 
   describe("EventService") {
     val testStartTime   = System.currentTimeMillis()

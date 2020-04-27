@@ -18,14 +18,27 @@ package view.partials
 
 import java.time.LocalDateTime
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.{Link, RepoType, RepositoryDetails}
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
-class DetailsSpec extends WordSpec with Matchers {
+class DetailsSpec extends AnyWordSpec with Matchers {
 
-  val repo = RepositoryDetails(name         = "reponame", description  = "some description", createdAt    = LocalDateTime.of(2018, 12, 31, 8, 30, 30), lastActive   = LocalDateTime.of(2018, 12, 31, 18, 30, 30), owningTeams  = Seq(), teamNames    = Seq(), githubUrl    = Link("repo1", "repository 1", "http://url"), jenkinsURL           = None, environments = None, repoType     = RepoType.Other, isPrivate    = true)
+  val repo = RepositoryDetails(
+    name         = "reponame",
+    description  = "some description",
+    createdAt    = LocalDateTime.of(2018, 12, 31, 8, 30, 30),
+    lastActive   = LocalDateTime.of(2018, 12, 31, 18, 30, 30),
+    owningTeams  = Seq(),
+    teamNames    = Seq(),
+    githubUrl    = Link("repo1", "repository 1", "http://url"),
+    jenkinsURL   = None,
+    environments = None,
+    repoType     = RepoType.Other,
+    isPrivate    = true
+  )
 
   val environmentRoute = EnvironmentRoute(
     environment = "EnvName",

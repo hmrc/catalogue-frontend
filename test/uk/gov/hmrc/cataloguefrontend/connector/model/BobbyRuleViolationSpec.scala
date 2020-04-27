@@ -20,9 +20,10 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import scala.util.Random
 
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
-class BobbyRuleViolationSpec extends FreeSpec with Matchers {
+class BobbyRuleViolationSpec extends AnyFreeSpec with Matchers {
 
   "BobbyRuleViolation" - {
 

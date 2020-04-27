@@ -21,10 +21,9 @@ import java.util.UUID
 import cats.data.NonEmptyList
 import cats.implicits._
 import org.mockito.ArgumentMatchers.{any, eq => mockEq}
-import org.mockito.Mockito._
 import org.mockito.MockitoSugar
-import org.scalatest.Matchers._
-import org.scalatest.WordSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -39,9 +38,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks {
-  import AuthService._
+class AuthServiceSpec
+  extends AnyWordSpec
+  with Matchers
+  with MockitoSugar
+  with ScalaFutures
+  with ScalaCheckDrivenPropertyChecks {
 
+  import AuthService._
   import ExecutionContext.Implicits.global
 
   implicit val defaultPatienceConfig = PatienceConfig(Span(500, Millis), Span(15, Millis))

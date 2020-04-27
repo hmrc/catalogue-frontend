@@ -16,10 +16,11 @@
 
 package view.partials
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
 
-class DependencySectionSpec extends WordSpec with Matchers {
+class DependencySectionSpec extends AnyWordSpec with Matchers {
 
   val dependency1 = Dependency("example-library", "uk.gov.hmrc", Version("1.2.3-play-25"), Some(Version("1.2.3-play-26")))
   val dependency2 = Dependency("library4j", "uk.gov.hmrc", Version("4.0.1"), Some(Version("4.2.0")))
