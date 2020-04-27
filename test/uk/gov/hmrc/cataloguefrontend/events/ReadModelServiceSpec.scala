@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.events
 
 import org.mockito.Mockito._
+import org.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
@@ -37,24 +37,24 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
   describe("refreshEventsCache") {
 
     it("should update the eventsCache correctly (with the events returned from the Repository))") {
-      when(eventService.getAllEvents).thenReturn(
-        Future.successful(
-          List(
-            Event(
-              EventType.ServiceOwnerUpdated,
-              1,
-              Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject]
+      when(eventService.getAllEvents)
+        .thenReturn(
+          Future.successful(
+            List(
+              Event(
+                EventType.ServiceOwnerUpdated,
+                1,
+                Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject]
+              )
             )
           )
         )
-      )
 
       Await.result(readModelService.refreshEventsCache, 5 seconds)
 
       readModelService.eventsCache.size shouldBe 1
       readModelService.eventsCache.head shouldBe "Catalogue" -> "Joe Black"
     }
-
   }
 
   describe("refreshUmpCache") {
@@ -62,7 +62,8 @@ class ReadModelServiceSpec extends FunSpec with Matchers with MockitoSugar {
     it("should update the umpUsersCache correctly (with the users returned from the UMP))") {
 
       val teamMember = TeamMember(Some("Jack Low"), None, None, None, None, None)
-      when(userManagementConnector.getAllUsersFromUMP).thenReturn(Future.successful(Right(Seq(teamMember))))
+      when(userManagementConnector.getAllUsersFromUMP)
+        .thenReturn(Future.successful(Right(Seq(teamMember))))
 
       Await.result(readModelService.refreshUmpCache, 5 seconds)
 

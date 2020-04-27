@@ -19,10 +19,10 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import java.util.UUID
 
 import org.mockito.Mockito._
+import org.mockito.MockitoSugar
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector._

@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
+import org.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsString, Json}
 
 class EventSpec extends FunSpec with Matchers with MockitoSugar {
@@ -52,7 +52,5 @@ class EventSpec extends FunSpec with Matchers with MockitoSugar {
 
       js.as[Event] shouldBe event
     }
-
   }
-
 }

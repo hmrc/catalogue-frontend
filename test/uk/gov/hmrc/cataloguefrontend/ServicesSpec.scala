@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.test.FakeRequest
 import play.api.test.Helpers._

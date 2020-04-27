@@ -23,7 +23,7 @@ import org.mongodb.scala.model.Indexes._
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.PlayMongoCollection
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,7 +32,7 @@ class EventRepository @Inject()(
     mongoComponent: MongoComponent
   , futureHelpers : FutureHelpers
   )(implicit ec: ExecutionContext
-  ) extends PlayMongoCollection[Event](
+  ) extends PlayMongoRepository[Event](
       mongoComponent = mongoComponent
     , collectionName = "events"
     , domainFormat   = Event.format

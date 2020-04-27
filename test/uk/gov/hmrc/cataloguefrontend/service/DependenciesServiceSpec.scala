@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag

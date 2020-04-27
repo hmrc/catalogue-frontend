@@ -16,23 +16,23 @@
 
 package uk.gov.hmrc.cataloguefrontend.events
 
+import org.mockito.MockitoSugar
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.IndexModel
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, LoneElement, OptionValues}
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
-import uk.gov.hmrc.mongo.test.DefaultMongoCollectionSupport
+import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class EventRepositorySpec
     extends UnitSpec
     with LoneElement
-    with DefaultMongoCollectionSupport
+    with DefaultPlayMongoRepositorySupport[Event]
     with ScalaFutures
     with OptionValues
     with BeforeAndAfterEach
@@ -41,9 +41,7 @@ class EventRepositorySpec
 
   val futureHelpers: FutureHelpers = app.injector.instanceOf[FutureHelpers]
 
-  private lazy val eventRepository = new EventRepository(mongoComponent, futureHelpers)
-  override protected lazy val collectionName: String = eventRepository.collectionName
-  override protected lazy val indexes: Seq[IndexModel] = eventRepository.indexes
+  override lazy val repository = new EventRepository(mongoComponent, futureHelpers)
 
   private val timestamp = 1494625868
 
@@ -53,15 +51,15 @@ class EventRepositorySpec
       insertEvent(timestamp)
       insertEvent(timestamp + 1)
 
-      val events: Seq[Event] = eventRepository.getAllEvents.futureValue
+      val events: Seq[Event] = repository.getAllEvents.futureValue
 
       events.size shouldBe 2
       events      should contain theSameElementsAs
         Seq(
           Event(
-            EventType.ServiceOwnerUpdated,
+            eventType = EventType.ServiceOwnerUpdated,
             timestamp = timestamp,
-            Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "joe.black")).as[JsObject]),
+            data      = Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "joe.black")).as[JsObject]),
           Event(
             EventType.ServiceOwnerUpdated,
             timestamp = timestamp + 1,
@@ -72,48 +70,43 @@ class EventRepositorySpec
 
   private def insertEvent(theTimestamp: Int) =
     insert(
-      Document(
-          "eventType" -> "ServiceOwnerUpdated"
-        , "data"      -> Document(
-                           "service"  -> "Catalogue"
-                         , "username" -> "joe.black"
-                         )
-        , "timestamp" -> theTimestamp
-        , "metadata"  -> Document()
-        ))
+      Event(
+        eventType = EventType.ServiceOwnerUpdated,
+        timestamp = theTimestamp,
+        data      = Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "joe.black")).as[JsObject]))
       .futureValue
 
   "getEventsByType" should {
     "return all the right events" in {
       val serviceOwnerUpdateEvent = Event(
-        EventType.ServiceOwnerUpdated,
+        eventType = EventType.ServiceOwnerUpdated,
         timestamp = timestamp,
-        Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
+        data      = Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
       val otherEvent = Event(
-        EventType.Other,
+        eventType = EventType.Other,
         timestamp = timestamp,
-        Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
+        data      = Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
 
-      eventRepository.add(serviceOwnerUpdateEvent).futureValue
+      repository.add(serviceOwnerUpdateEvent).futureValue
 
-      val events: Seq[Event] = eventRepository.getEventsByType(EventType.ServiceOwnerUpdated).futureValue
+      val events: Seq[Event] = repository.getEventsByType(EventType.ServiceOwnerUpdated).futureValue
 
       events.size shouldBe 1
       events.head shouldBe Event(
-        EventType.ServiceOwnerUpdated,
+        eventType = EventType.ServiceOwnerUpdated,
         timestamp = timestamp,
-        Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
+        data      = Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
     }
   }
 
   "add" should {
     "be able to insert a new record and update it as well" in {
       val event = Event(
-        EventType.ServiceOwnerUpdated,
+        eventType = EventType.ServiceOwnerUpdated,
         timestamp = timestamp,
-        Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
-      eventRepository.add(event).futureValue
-      val all = eventRepository.getAllEvents.futureValue
+        data      = Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
+      repository.add(event).futureValue
+      val all = repository.getAllEvents.futureValue
 
       all.size shouldBe 1
       val savedEvent: Event = all.loneElement

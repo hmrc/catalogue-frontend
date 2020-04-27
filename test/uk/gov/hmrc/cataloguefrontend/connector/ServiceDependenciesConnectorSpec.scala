@@ -17,11 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.mockito.Matchers.any
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.mockito.MockitoSugar
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.Status
@@ -144,7 +144,6 @@ class ServiceDependenciesConnectorSpec
         Seq(
           Dependency("sbt", "uk.gov.hmrc", Version("0.13.8"), Some(Version("0.13.15")))
         )
-
     }
 
     "return a None for non existing repository" in new Setup {
@@ -156,7 +155,6 @@ class ServiceDependenciesConnectorSpec
         .futureValue
 
       response shouldBe None
-
     }
 
     "return a None for if a communication error occurs" in new Setup {
@@ -397,7 +395,6 @@ class ServiceDependenciesConnectorSpec
       response(1).version shouldBe "1.8.0_191"
       response(1).vendor  shouldBe OpenJDK
       response(1).kind    shouldBe JRE
-
     }
   }
 

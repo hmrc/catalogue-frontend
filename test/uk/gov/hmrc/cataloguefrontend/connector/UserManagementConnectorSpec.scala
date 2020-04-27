@@ -18,13 +18,13 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.mockito.Matchers.{any, anyString}
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito.when
+import org.mockito.MockitoSugar
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -128,7 +128,8 @@ class UserManagementConnectorSpec
         mock[UserManagementPortalConfig]
       )
 
-      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("some error")))
+      when(mockedHttpGet.GET(anyString())(any(), any(), any()))
+        .thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
         .getTeamMembersFromUMP(TeamName("teamName"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))

@@ -20,8 +20,8 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 import org.mockito.Mockito.when
+import org.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
@@ -88,8 +88,10 @@ class ShutterServiceSpec extends WordSpec with MockitoSugar with Matchers {
       val boot = Boot.init
       implicit val hc = new HeaderCarrier()
 
-      when(boot.mockShutterConnector.shutterStates(ShutterType.Frontend, Environment.Production)).thenReturn(Future(mockShutterStates))
-      when(boot.mockShutterConnector.latestShutterEvents(ShutterType.Frontend, Environment.Production)).thenReturn(Future(mockEvents))
+      when(boot.mockShutterConnector.shutterStates(ShutterType.Frontend, Environment.Production))
+        .thenReturn(Future(mockShutterStates))
+      when(boot.mockShutterConnector.latestShutterEvents(ShutterType.Frontend, Environment.Production))
+        .thenReturn(Future(mockEvents))
 
       val Seq(a,b,c) = Await.result(boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production), Duration(10, "seconds"))
 

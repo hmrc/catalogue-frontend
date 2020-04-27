@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.mockito.Matchers._
+import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.mvc.Result
@@ -77,8 +77,10 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
     val teamMembers = Seq(teamMember1, teamMember("member 2", "member.2"), teamMember("member 3", "member.3"))
 
     "save the username of the service owner and return the his/her full DisplayableTeamMember object" in new Setup {
-      when(mockedModelService.getAllUsers).thenReturn(teamMembers)
-      when(mockedEventService.saveServiceOwnerUpdatedEvent(any())).thenReturn(Future.successful(true))
+      when(mockedModelService.getAllUsers)
+        .thenReturn(teamMembers)
+      when(mockedEventService.saveServiceOwnerUpdatedEvent(any()))
+        .thenReturn(Future.successful(true))
 
       val serviceOwnerSaveEventData = ServiceOwnerSaveEventData("service-abc", "member 1")
 
@@ -101,8 +103,10 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
 
     "not save the service owner if it doesn't contain a username" in new Setup {
       val member = TeamMember(Some("member 1"), None, None, None, None, None)
-      when(mockedModelService.getAllUsers).thenReturn(Seq(member))
-      when(mockedEventService.saveServiceOwnerUpdatedEvent(any())).thenReturn(Future.successful(true))
+      when(mockedModelService.getAllUsers)
+        .thenReturn(Seq(member))
+      when(mockedEventService.saveServiceOwnerUpdatedEvent(any()))
+        .thenReturn(Future.successful(true))
 
       val serviceOwnerSaveEventData = ServiceOwnerSaveEventData("service-abc", "member 1")
       val response = catalogueController
@@ -117,7 +121,8 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
     }
 
     "not save the user if he/she is not a valid user (from UMP)" in new Setup {
-      when(mockedModelService.getAllUsers).thenReturn(teamMembers)
+      when(mockedModelService.getAllUsers)
+        .thenReturn(teamMembers)
 
       val ownerUpdatedEventData = ServiceOwnerSaveEventData("service-abc", "Mrs Invalid Person")
       val response = catalogueController
@@ -133,7 +138,8 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
     }
 
     "return a BadRequest error if the sent json is valid" in new Setup {
-      when(mockedModelService.getAllUsers).thenReturn(teamMembers)
+      when(mockedModelService.getAllUsers)
+        .thenReturn(teamMembers)
 
       val ownerUpdatedEventData = ServiceOwnerUpdatedEventData("service-abc", "Mrs Invalid Person")
       val response = catalogueController
@@ -161,7 +167,8 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
     private val catalogueErrorHandler      = mock[CatalogueErrorHandler]
 
     val profileBaseUrl = "http://things.things.com"
-    when(userManagementPortalConfig.userManagementProfileBaseUrl) thenReturn profileBaseUrl
+    when(userManagementPortalConfig.userManagementProfileBaseUrl)
+      .thenReturn(profileBaseUrl)
 
     val catalogueController: CatalogueController = new CatalogueController(
       mock[UserManagementConnector],

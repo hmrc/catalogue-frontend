@@ -19,10 +19,9 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.{Instant, LocalDateTime}
 
 import akka.stream.Materializer
-import org.mockito.Matchers.{eq => eqTo, _}
+import org.mockito.ArgumentMatchers.{eq => eqTo, _}
 import org.mockito.Mockito.when
-import org.mockito.stubbing.OngoingStubbing
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -77,7 +76,7 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Gui
           Future.successful(Some(DigitalService(digitalService2, 1, Seq(digitalServiceRepository("repo-2"))))))
     }
 
-    def mockTeamsAndTheirRepositories(): OngoingStubbing[Future[Seq[Team]]] = {
+    def mockTeamsAndTheirRepositories() = {
       def team(teamName: String, repositories: Seq[String]) =
         Team(
           TeamName(teamName),

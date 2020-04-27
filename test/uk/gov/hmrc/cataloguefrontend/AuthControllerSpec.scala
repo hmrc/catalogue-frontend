@@ -17,11 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.jsoup.Jsoup
-import org.mockito.Matchers.{any, eq => is}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito._
+import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, OptionValues, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.i18n.{Lang, MessagesApi}
@@ -56,7 +56,7 @@ class AuthControllerSpec
       val expectedToken       = UmpToken("ump-token")
       val expectedDisplayName = DisplayName("John Smith")
 
-      when(authService.authenticate(is(username), is(password))(any()))
+      when(authService.authenticate(eqTo(username), eqTo(password))(any()))
         .thenReturn(Future(Right(TokenAndDisplayName(expectedToken, expectedDisplayName))))
 
       val result = controller.submit(request)
@@ -71,7 +71,8 @@ class AuthControllerSpec
       val password = "n/a"
       val request  = FakeRequest().withFormUrlEncodedBody("username" -> username, "password" -> password)
 
-      when(authService.authenticate(is(username), is(password))(any())).thenReturn(Future(Left(UmpUnauthorized)))
+      when(authService.authenticate(eqTo(username), eqTo(password))(any()))
+        .thenReturn(Future(Left(UmpUnauthorized)))
 
       val result = controller.submit(request)
 
@@ -90,7 +91,6 @@ class AuthControllerSpec
       status(result)          shouldBe 400
       contentAsString(result) should include(messagesApi("sign-in.wrong-credentials"))
     }
-
   }
 
   "Showing sign-in page" should {

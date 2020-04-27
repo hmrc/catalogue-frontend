@@ -19,9 +19,9 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mockito.Matchers._
+import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito.when
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
@@ -264,11 +264,12 @@ class DigitalServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with W
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
-      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
-        Future.successful(
-          Map(teamName -> Left(UMPError.ConnectionError("Boooom!")))
+      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any()))
+        .thenReturn(
+          Future.successful(
+            Map(teamName -> Left(UMPError.ConnectionError("Boooom!")))
+          )
         )
-      )
 
       val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
 
@@ -284,11 +285,12 @@ class DigitalServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with W
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
-      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
-        Future.successful(
-          Map(teamName -> Left(UMPError.UnknownTeam))
+      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any()))
+        .thenReturn(
+          Future.successful(
+            Map(teamName -> Left(UMPError.UnknownTeam))
+          )
         )
-      )
 
       val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
 
@@ -304,11 +306,12 @@ class DigitalServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with W
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
         .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
-      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any())).thenReturn(
-        Future.successful(
-          Map(teamName -> Left(UMPError.HTTPError(500)))
+      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any()))
+        .thenReturn(
+          Future.successful(
+            Map(teamName -> Left(UMPError.HTTPError(500)))
+          )
         )
-      )
 
       val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
 

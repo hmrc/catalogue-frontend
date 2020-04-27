@@ -18,9 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.events
 
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito._
+import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FunSpec, Matchers}
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsString}
 
 import scala.concurrent.duration._
@@ -53,7 +53,8 @@ class EventServiceSpec extends FunSpec with Matchers with MockitoSugar with Scal
 
     it("should get all events by delegating to the event repository") {
       val mockedEvents = (1 to 5).map(_ => mock[Event]).toList
-      when(eventRepository.getAllEvents).thenReturn(Future.successful(mockedEvents))
+      when(eventRepository.getAllEvents)
+        .thenReturn(Future.successful(mockedEvents))
 
       val events = eventService.getAllEvents
       Await.ready(events, 5 seconds)

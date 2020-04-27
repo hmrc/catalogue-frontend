@@ -16,15 +16,14 @@
 
 package view
 import org.jsoup.Jsoup
+import org.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.FakeRequest
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import views.html.JdkVersionPage
-
 
 
 class JDKVersionPageSpec extends WordSpec with MockitoSugar with Matchers {

@@ -18,8 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.events
 
 import akka.actor.ActorSystem
 import org.mockito.Mockito._
+import org.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, FunSpec}
-import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
@@ -39,7 +39,7 @@ class UpdateSchedulerSpec extends FunSpec with MockitoSugar with BeforeAndAfterA
       scheduler.startUpdatingEventsReadModel(100 milliseconds)
 
       verify(readModelService, after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshEventsCache
-      verify(readModelService, never()).refreshUmpCache
+      verify(readModelService, never).refreshUmpCache
     }
   }
 
@@ -51,7 +51,7 @@ class UpdateSchedulerSpec extends FunSpec with MockitoSugar with BeforeAndAfterA
       scheduler.startUpdatingUmpCacheReadModel(100 milliseconds)
 
       verify(readModelService, after(scheduler.initialDelay.toMillis.toInt + 550).atLeast(4)).refreshUmpCache
-      verify(readModelService, never()).refreshEventsCache
+      verify(readModelService, never).refreshEventsCache
     }
   }
 }

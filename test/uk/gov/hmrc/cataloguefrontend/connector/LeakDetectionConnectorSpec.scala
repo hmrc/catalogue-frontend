@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import org.mockito.Matchers._
+import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -35,7 +35,8 @@ class LeakDetectionConnectorSpec extends UnitSpec with MockitoSugar {
       val servicesConfig                        = mock[ServicesConfig]
       val httpClient                            = mock[HttpClient]
 
-      when(servicesConfig.baseUrl(any())).thenReturn("http://leak-detection:8855")
+      when(servicesConfig.baseUrl(any()))
+        .thenReturn("http://leak-detection:8855")
 
       when(httpClient.GET(any())(any(), any(), any()))
         .thenReturn(Future.failed(new BadGatewayException("an exception")))

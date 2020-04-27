@@ -20,13 +20,13 @@ import java.util.UUID
 
 import cats.data.NonEmptyList
 import cats.implicits._
-import org.mockito.Matchers.{any, eq => mockEq}
+import org.mockito.ArgumentMatchers.{any, eq => mockEq}
 import org.mockito.Mockito._
+import org.mockito.MockitoSugar
 import org.scalatest.Matchers._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticatedRequest
