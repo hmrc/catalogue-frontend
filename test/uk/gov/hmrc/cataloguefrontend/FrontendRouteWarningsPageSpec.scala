@@ -21,7 +21,7 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class FrontendRouteWarningsPageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
 
@@ -48,7 +48,7 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with GuiceOneServerPerSuite
     "shows the table with route warnings" in {
       serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(abcWarnings)))
 
-      val response = await(ws.url(s"http://localhost:$port/frontend-route-warnings/development/abc-frontend").get)
+      val response = ws.url(s"http://localhost:$port/frontend-route-warnings/development/abc-frontend").get.futureValue
       response.status shouldBe 200
       response.body.contains("""<li id="tab-development" class="navbar-item active">""") shouldBe true
       response.body.contains("""LegacyErrorPageMisconfigured""") shouldBe true
@@ -68,5 +68,4 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with GuiceOneServerPerSuite
       |}
       |]
       |""".stripMargin
-
 }

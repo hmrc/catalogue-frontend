@@ -24,7 +24,7 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
@@ -57,7 +57,7 @@ class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServ
             JsonData.digitalServiceNamesData
           )))
 
-      val response = await(WS.url(s"http://localhost:$port/digital-services").get)
+      val response = WS.url(s"http://localhost:$port/digital-services").get.futureValue
 
       response.status shouldBe 200
       response.body   should include("<h1>Digital Services</h1>")

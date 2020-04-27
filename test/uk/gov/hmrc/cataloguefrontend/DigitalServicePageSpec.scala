@@ -36,9 +36,9 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
-import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
 
 import scala.collection.JavaConverters._
@@ -116,7 +116,7 @@ class DigitalServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with W
           ))
       )
 
-      val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
+      val response = WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get.futureValue
 
       response.status shouldBe 200
 
@@ -141,7 +141,7 @@ class DigitalServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with W
           ))
       )
 
-      val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
+      val response = WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get.futureValue
 
       response.status shouldBe 200
       response.body   should include(viewMessages.noRepoOfTypeForDigitalService("service"))
@@ -167,7 +167,7 @@ class DigitalServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with W
            | }""".stripMargin
           ))
       )
-      val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
+      val response = WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get.futureValue
 
       val document = asDocument(response.body)
 
@@ -249,7 +249,7 @@ class DigitalServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with W
       mockHttpApiCall(s"/v2/organisations/teams/$team1/members", "/user-management-response-team1.json")
       mockHttpApiCall(s"/v2/organisations/teams/$team2/members", "/user-management-response-team2.json")
 
-      val response = await(WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get)
+      val response = WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get.futureValue
 
       response.status shouldBe 200
 

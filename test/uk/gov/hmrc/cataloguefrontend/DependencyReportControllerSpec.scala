@@ -32,8 +32,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepo
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType._
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.{ExecutionContext, Future}
 

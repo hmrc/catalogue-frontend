@@ -24,8 +24,8 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.FutureHelpers
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.mongo.test.DefaultMongoCollectionSupport
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -53,7 +53,7 @@ class EventRepositorySpec
       insertEvent(timestamp)
       insertEvent(timestamp + 1)
 
-      val events: Seq[Event] = await(eventRepository.getAllEvents)
+      val events: Seq[Event] = eventRepository.getAllEvents.futureValue
 
       events.size shouldBe 2
       events      should contain theSameElementsAs
@@ -71,17 +71,17 @@ class EventRepositorySpec
   }
 
   private def insertEvent(theTimestamp: Int) =
-    await(
-      insert(
-        Document(
-            "eventType" -> "ServiceOwnerUpdated"
-          , "data"      -> Document(
-                             "service"  -> "Catalogue"
-                           , "username" -> "joe.black"
-                           )
-          , "timestamp" -> theTimestamp
-          , "metadata"  -> Document()
-          )))
+    insert(
+      Document(
+          "eventType" -> "ServiceOwnerUpdated"
+        , "data"      -> Document(
+                           "service"  -> "Catalogue"
+                         , "username" -> "joe.black"
+                         )
+        , "timestamp" -> theTimestamp
+        , "metadata"  -> Document()
+        ))
+      .futureValue
 
   "getEventsByType" should {
     "return all the right events" in {
@@ -94,9 +94,9 @@ class EventRepositorySpec
         timestamp = timestamp,
         Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
 
-      await(eventRepository.add(serviceOwnerUpdateEvent))
+      eventRepository.add(serviceOwnerUpdateEvent).futureValue
 
-      val events: Seq[Event] = await(eventRepository.getEventsByType(EventType.ServiceOwnerUpdated))
+      val events: Seq[Event] = eventRepository.getEventsByType(EventType.ServiceOwnerUpdated).futureValue
 
       events.size shouldBe 1
       events.head shouldBe Event(
@@ -112,8 +112,8 @@ class EventRepositorySpec
         EventType.ServiceOwnerUpdated,
         timestamp = timestamp,
         Json.toJson(ServiceOwnerUpdatedEventData("Catalogue", "Joe Black")).as[JsObject])
-      await(eventRepository.add(event))
-      val all = await(eventRepository.getAllEvents)
+      eventRepository.add(event).futureValue
+      val all = eventRepository.getAllEvents.futureValue
 
       all.size shouldBe 1
       val savedEvent: Event = all.loneElement

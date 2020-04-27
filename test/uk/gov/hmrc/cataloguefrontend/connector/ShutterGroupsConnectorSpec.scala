@@ -23,7 +23,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterGroup, ShutterGroupsConnector}
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class ShutterGroupsConnectorSpec
     extends UnitSpec
@@ -65,9 +65,7 @@ class ShutterGroupsConnectorSpec
           ))
       )
 
-      val response = await(
-        shutterGroupsConnnector.shutterGroups
-      )
+      val response = shutterGroupsConnnector.shutterGroups.futureValue
 
       response should contain theSameElementsAs List(
         ShutterGroup("FE-GROUP", List("fe1", "fe2")),
@@ -91,9 +89,7 @@ class ShutterGroupsConnectorSpec
           ))
       )
 
-      val response = await(
-        shutterGroupsConnnector.shutterGroups
-      )
+      val response = shutterGroupsConnnector.shutterGroups.futureValue
 
       response shouldBe List.empty
     }
@@ -106,12 +102,9 @@ class ShutterGroupsConnectorSpec
           404, None
       ))
 
-      val response = await(
-        shutterGroupsConnnector.shutterGroups
-      )
+      val response = shutterGroupsConnnector.shutterGroups.futureValue
 
       response shouldBe List.empty
     }
-
   }
 }

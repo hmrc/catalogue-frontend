@@ -23,8 +23,8 @@ import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleFactory.aBobbyRule
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -50,7 +50,7 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
       when(connector.bobbyRules()).thenReturn(Future(new BobbyRuleSet(libraries = Seq(futureLibraryRule, aBobbyRule(from = today), aBobbyRule(from = today.minusDays(1))),
         plugins = Seq(futurePluginRule, aBobbyRule(from = today), aBobbyRule(name = "past.plugin", from = today.minusDays(1))))))
 
-      val result = await(service.getRules())
+      val result = service.getRules.futureValue
 
       result.upcoming.libraries.length should be (1)
       result.upcoming.libraries should contain (futureLibraryRule)
@@ -67,7 +67,7 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
       when(connector.bobbyRules()).thenReturn(Future(new BobbyRuleSet(libraries = Seq(aBobbyRule(from = today.plusDays(1)), currentLibraryRule, pastLibraryRule),
         plugins = Seq(aBobbyRule(from = today.plusDays(1)), currentPluginRule, pastPluginRule))))
 
-      val result = await(service.getRules())
+      val result = service.getRules.futureValue
 
       result.active.libraries.length should be (2)
       result.active.libraries should contain (currentLibraryRule)
@@ -86,7 +86,7 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
         aBobbyRule(organisation = "b", from = today.minusDays(1)))
       when(connector.bobbyRules()).thenReturn(Future(new BobbyRuleSet(rules, rules)))
 
-      val result = await(service.getRules())
+      val result = service.getRules.futureValue
 
       result.upcoming.libraries.head should be (expectedRule)
       result.upcoming.plugins.head should be (expectedRule)
@@ -101,7 +101,7 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
         expectedRule)
       when(connector.bobbyRules()).thenReturn(Future(new BobbyRuleSet(rules, rules)))
 
-      val result = await(service.getRules())
+      val result = service.getRules.futureValue
 
       result.active.libraries.head should be (expectedRule)
       result.active.plugins.head should be (expectedRule)
@@ -116,7 +116,7 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
       val rules = Seq(aBobbyRule(organisation = "b", name = "a", from = upcomingDate), expectedUpcomingRule, aBobbyRule(organisation = "b", name = "a", from = activeDate), expectedActiveRule)
       when(connector.bobbyRules()).thenReturn(Future(new BobbyRuleSet(rules, rules)))
 
-      val result = await(service.getRules())
+      val result = service.getRules.futureValue
 
       result.upcoming.libraries.head should be (expectedUpcomingRule)
       result.upcoming.plugins.head should be (expectedUpcomingRule)

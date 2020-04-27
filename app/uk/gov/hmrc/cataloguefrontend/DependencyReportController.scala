@@ -27,7 +27,7 @@ import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, TeamName, Version, VersionState}
 import uk.gov.hmrc.cataloguefrontend.connector.{DigitalService, ServiceDependenciesConnector, Team, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -46,9 +46,9 @@ case class DependencyReport(
 class DependencyReportController @Inject()(
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   serviceDependencyConnector   : ServiceDependenciesConnector,
-  cc                           : ControllerComponents
+  cc                           : MessagesControllerComponents
 )(implicit val ec: ExecutionContext
-) extends BackendController(cc) {
+) extends FrontendController(cc) {
 
   implicit val drFormat: OFormat[DependencyReport] = Json.format[DependencyReport]
 

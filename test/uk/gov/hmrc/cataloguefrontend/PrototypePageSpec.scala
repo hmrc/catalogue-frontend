@@ -23,7 +23,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class PrototypePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
 
@@ -51,7 +51,7 @@ class PrototypePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMo
 
       serviceEndpoint(GET, "/api/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
 
-      val response = await(WS.url(s"http://localhost:$port/prototype/2fa-prototype").get)
+      val response = WS.url(s"http://localhost:$port/prototype/2fa-prototype").get.futureValue
       response.status shouldBe 200
       response.body   should include("links on this page are automatically generated")
       response.body   should include("Designers")
@@ -64,5 +64,4 @@ class PrototypePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMo
       response.body should include(lastActiveAt.displayFormat)
     }
   }
-
 }

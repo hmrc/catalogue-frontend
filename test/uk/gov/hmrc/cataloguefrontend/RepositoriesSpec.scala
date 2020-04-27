@@ -25,7 +25,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class RepositoriesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
@@ -46,9 +46,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
   def asDocument(html: String): Document = Jsoup.parse(html)
 
   "Repositories list" should {
-
     "show a list of all repositories when 'All' is selected" in {
-
       serviceEndpoint(
         GET,
         "/api/repositories",
@@ -58,7 +56,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
             JsonData.repositoriesData
           )))
 
-      val response = await(WS.url(s"http://localhost:$port/repositories").get)
+      val response = WS.url(s"http://localhost:$port/repositories").get.futureValue
 
       response.status shouldBe 200
       response.body   should include("<h1>Repositories</h1>")
@@ -85,7 +83,6 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
     }
 
     "show a list of all libraries when 'Library' is selected" in {
-
       serviceEndpoint(
         GET,
         "/api/repositories",
@@ -95,7 +92,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
             JsonData.repositoriesData
           )))
 
-      val response = await(WS.url(s"http://localhost:$port/repositories?name=&type=Library").get)
+      val response = WS.url(s"http://localhost:$port/repositories?name=&type=Library").get.futureValue
 
       response.status shouldBe 200
       response.body   should include("<h1>Repositories</h1>")
@@ -110,6 +107,5 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       document.select("#row0_repotype").text()                        shouldBe "Library"
       document.select("#row0_lastActive").text()                      shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
     }
-
   }
 }

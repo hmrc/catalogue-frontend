@@ -25,7 +25,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class RepositoryPageSpec
     extends UnitSpec
@@ -69,7 +69,7 @@ class RepositoryPageSpec
     "return a 404 when the teams-and-repositories microservice returns a 404" in {
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (404, None))
 
-      val response = await(WS.url(s"http://localhost:$port/repositories/serv").get)
+      val response = WS.url(s"http://localhost:$port/repositories/serv").get.futureValue
       response.status shouldBe 404
     }
 
@@ -82,7 +82,7 @@ class RepositoryPageSpec
           willRespondWith = (200, Some(repositoryData(repositoryDetails)))
         )
 
-        val response = await(WS.url(s"http://localhost:$port/repositories/${repositoryDetails.repositoryName}").get)
+        val response = WS.url(s"http://localhost:$port/repositories/${repositoryDetails.repositoryName}").get.futureValue
 
         response.status shouldBe 200
         response.body   should include(s"links on this page are automatically generated")
@@ -106,12 +106,11 @@ class RepositoryPageSpec
         willRespondWith = (200, None)
       )
 
-      val response = await(WS.url(s"http://localhost:$port/repositories/service-name").get)
+      val response = WS.url(s"http://localhost:$port/repositories/service-name").get.futureValue
 
       val document = Jsoup.parse(response.body)
 
       document.select("#platform-dependencies").size() should be > 0
-
     }
   }
 

@@ -77,9 +77,9 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
           )
           .returning(status)
 
-        intercept[BadGatewayException] {
-          await(connector.authenticate(username, password))
-        }.message shouldBe s"Received $status from POST to $userMgtAuthUrl/v1/login"
+        val e = connector.authenticate(username, password).failed.futureValue
+        e shouldBe an[BadGatewayException]
+        e.getMessage shouldBe s"Received $status from POST to $userMgtAuthUrl/v1/login"
       }
     }
   }
@@ -120,11 +120,10 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
           .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
           .returning(unsupportedStatus)
 
-        intercept[BadGatewayException] {
-          await(connector.getUser(umpToken))
-        }.message shouldBe s"Received $unsupportedStatus from GET to $userMgtAuthUrl/v1/login"
+        val e = connector.getUser(umpToken).failed.futureValue
+        e shouldBe an[BadGatewayException]
+        e.getMessage shouldBe s"Received $unsupportedStatus from GET to $userMgtAuthUrl/v1/login"
       }
-
     }
   }
 
@@ -135,7 +134,8 @@ class UserManagementAuthConnectorSpec extends WordSpec with HttpClientStub with 
     val userManagementAuthConfig              = mock[UserManagementAuthConfig]
     val userMgtAuthUrl                        = "http://usermgt-auth:9999"
 
-    when(userManagementAuthConfig.baseUrl).thenReturn(userMgtAuthUrl)
+    when(userManagementAuthConfig.baseUrl)
+      .thenReturn(userMgtAuthUrl)
 
     val connector = new UserManagementAuthConnector(httpClient, userManagementAuthConfig)
   }

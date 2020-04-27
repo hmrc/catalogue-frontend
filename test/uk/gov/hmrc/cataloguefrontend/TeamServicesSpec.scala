@@ -30,7 +30,7 @@ import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -109,7 +109,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
       response.status shouldBe 200
 
@@ -127,7 +127,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       assertAnchor("/prototype/service1-prototype", "service1-prototype")
       assertAnchor("/prototype/service2-prototype", "service2-prototype")
       assertAnchor("/repositories/teamA-other", "teamA-other")
-
     }
 
     "show user management portal link" ignore {
@@ -148,13 +147,12 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
       response.status shouldBe 200
 
       response.body.toString should include(
         """<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
-
     }
 
     "show a message if no services are found" in {
@@ -179,7 +177,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
       response.status shouldBe 200
       response.body   should include(viewMessages.noRepoOfTypeForTeam("service"))
@@ -209,7 +207,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/large-user-management-response.json")
 
-      val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
+      val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
       response.status shouldBe 200
       val document = asDocument(response.body)
@@ -247,7 +245,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       )
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
-      val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
+      val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
       response.status shouldBe 200
 
@@ -281,7 +279,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
         mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", fileName)
 
-        val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
+        val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
         response.status shouldBe 200
         response.body   should include(umpFrontPageUrl)
@@ -291,12 +289,10 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
         document
           .select("#linkToRectify")
           .text() shouldBe s"Team $teamName is not defined in the User Management Portal, please add it here"
-
       }
 
       verifyForFile("/user-management-empty-members.json")
       verifyForFile("/user-management-no-members.json")
-
     }
 
     "show error message if UMP is not available" in {
@@ -323,7 +319,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
         "/user-management-response.json",
         httpCodeToBeReturned = 404)
 
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
       response.status shouldBe 200
 
@@ -351,7 +347,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName", "/user-management-team-details-response.json")
 
-      val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
+      val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
       response.status shouldBe 200
       val document = asDocument(response.body)
@@ -373,9 +369,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
         """<a href="https://slack.host/messages/team-A-NOTIFICATION" target="_blank">Go to notification channel<span class="glyphicon glyphicon-new-window"""")
 
       document.select("#team-location").text() shouldBe "Location: STLPD"
-
     }
-
   }
 
   def verifyTeamOwnerIndicatorLabel(document: Document): Unit = {
@@ -423,5 +417,4 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
     (Json.parse(jsonString) \\ "members").headOption
       .map(js => js.as[Seq[TeamMember]])
       .getOrElse(throw new RuntimeException(s"not able to extract team members from json: $jsonString"))
-
 }
