@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.events
+package uk.gov.hmrc.cataloguefrontend.util
 
-import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.OptionValues
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.Json
+import org.scalatest.wordspec.AnyWordSpecLike
 
-class EventTypeSpec extends AnyFunSpec with Matchers {
+import scala.concurrent.duration.DurationInt
 
-  describe("EventType") {
-    it("should convert to and from json (read/write)") {
-      val json = Json.toJson(EventType.ServiceOwnerUpdated)
-      json.as[EventType.Value] shouldBe EventType.ServiceOwnerUpdated
-    }
-  }
+trait UnitSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures {
+  override implicit val patienceConfig = PatienceConfig(timeout = 30.seconds, interval = 100.millis)
 }

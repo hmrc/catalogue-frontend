@@ -18,9 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import java.time.LocalDateTime
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class HeritageDeploymentTest extends FlatSpec with Matchers {
+class HeritageDeploymentSpec extends AnyFlatSpec with Matchers {
 
   "LastDeployer" should "select the most recent deployer" in {
 

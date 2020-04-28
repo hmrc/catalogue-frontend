@@ -18,9 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import java.time.{Instant, LocalDate}
 
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
-class DependencySpec extends FreeSpec with Matchers {
+class DependencySpec extends AnyFreeSpec with Matchers {
 
   "versionState" - {
 

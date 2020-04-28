@@ -19,12 +19,12 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.{LocalDateTime, ZoneOffset}
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.scalatest._
+import org.scalatest.BeforeAndAfter
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class TeamsSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
@@ -70,7 +70,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite
           ))
       )
 
-      val response = await(WS.url(s"http://localhost:$port/teams").get)
+      val response = WS.url(s"http://localhost:$port/teams").get.futureValue
 
       response.status shouldBe 200
       response.body   should include("""<a href="/teams/teamA">teamA</a>""")

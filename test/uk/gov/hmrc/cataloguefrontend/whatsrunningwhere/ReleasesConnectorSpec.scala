@@ -21,13 +21,13 @@ import java.time.LocalDateTime
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.{Application, Environment}
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Integration
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.test.UnitSpec
 
 class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints with EitherValues {
 
@@ -76,9 +76,8 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |]""".stripMargin))
       )
 
-      val response = await(
-        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-      )
+      val response =
+        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response should contain theSameElementsAs Seq(
         WhatsRunningWhere(
@@ -126,10 +125,10 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |]""".stripMargin))
       )
 
-      val response = await(
+      val response =
         releasesConnector.releases(profile = Some(Profile(profileType, profileName)))(
-          HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-      )
+            HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
+          ).futureValue
 
       response should contain theSameElementsAs Seq(
         WhatsRunningWhere(
@@ -147,9 +146,8 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
     "return empty upon error" in {
       serviceEndpoint(GET, s"/releases-api/whats-running-where", willRespondWith = (500, Some("errors!")))
 
-      val response = await(
-        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-      )
+      val response =
+        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response shouldBe Seq.empty
     }
@@ -187,9 +185,8 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |]""".stripMargin))
       )
 
-      val response = await(
-        releasesConnector.profiles(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-      )
+      val response =
+        releasesConnector.profiles(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response should contain theSameElementsAs Seq(
         Profile(ProfileType.ServiceManager, ProfileName("tcs_all")),
@@ -233,9 +230,8 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |]""".stripMargin))
       )
 
-      val response = await(
-        releasesConnector.ecsReleases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-      )
+      val response =
+        releasesConnector.ecsReleases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response should contain theSameElementsAs Seq(
         ServiceDeployment(
@@ -290,10 +286,10 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |]""".stripMargin))
       )
 
-      val response = await(
+      val response =
         releasesConnector.ecsReleases(profile = Some(Profile(profileType, profileName)))(
-          HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-      )
+          HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
+        ).futureValue
 
       response should contain theSameElementsAs Seq(
         ServiceDeployment(
@@ -314,9 +310,8 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
     "return empty upon error" in {
       serviceEndpoint(GET, s"/releases-api/ecs-deployment-events", willRespondWith = (500, Some("errors!")))
 
-      val response = await(
-        releasesConnector.ecsReleases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
-      )
+      val response =
+        releasesConnector.ecsReleases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response shouldBe Seq.empty
     }

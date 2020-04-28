@@ -18,18 +18,18 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.mockito.Matchers.{any, anyString}
-import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.{any, anyString}
+import org.mockito.MockitoSugar
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest._
+import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Span}
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
@@ -42,7 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 class UserManagementConnectorSpec
-    extends FunSpec
+    extends AnyFunSpec
     with Matchers
     with TypeCheckedTripleEquals
     with BeforeAndAfter
@@ -54,7 +54,6 @@ class UserManagementConnectorSpec
     with OptionValues {
 
   import ExecutionContext.Implicits.global
-
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
 
@@ -94,7 +93,6 @@ class UserManagementConnectorSpec
         serviceOwnerFor = Some(Seq("CATO", "SOME-SERVICE")),
         username        = Some("karl.gojarvis")
       )
-
     }
 
     it("has an empty members array in json") {
@@ -130,7 +128,8 @@ class UserManagementConnectorSpec
         mock[UserManagementPortalConfig]
       )
 
-      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("some error")))
+      when(mockedHttpGet.GET(anyString())(any(), any(), any()))
+        .thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
         .getTeamMembersFromUMP(TeamName("teamName"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -196,7 +195,8 @@ class UserManagementConnectorSpec
         mock[UserManagementPortalConfig]
       )
 
-      when(mockedHttpGet.GET(anyString())(any(), any(), any())).thenReturn(Future.failed(new RuntimeException("some error")))
+      when(mockedHttpGet.GET(anyString())(any(), any(), any()))
+        .thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
         .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -355,7 +355,6 @@ class UserManagementConnectorSpec
           "ricky.micky@gov.uk",
           "aleks.malkes@gov.uk",
           "anand.manand@gov.uk")
-
       }
     }
   }
@@ -397,10 +396,9 @@ class UserManagementConnectorSpec
         jsonFileNameOpt = None
       )
 
-      intercept[BadGatewayException] {
-        await(userManagementConnector.getDisplayName(userId))
-      }.message shouldBe s"Received status: $unexpectedStatusCode from GET to $endpointMockUrl$relativeUrl"
-
+      val e = userManagementConnector.getDisplayName(userId).failed.futureValue
+      e shouldBe an[BadGatewayException]
+      e.getMessage shouldBe s"Received status: $unexpectedStatusCode from GET to $endpointMockUrl$relativeUrl"
     }
   }
 

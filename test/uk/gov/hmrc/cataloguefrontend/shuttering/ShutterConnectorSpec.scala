@@ -17,11 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import org.mockito.ArgumentMatcher
-import org.mockito.Matchers.{any, argThat, eq => is}
-import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.{any, argThat, eq => eqTo}
+import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
@@ -30,7 +30,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.Future
 
-class ShutterConnectorSpec extends WordSpec with MockitoSugar with Matchers with ScalaFutures {
+class ShutterConnectorSpec extends AnyWordSpec with MockitoSugar with Matchers with ScalaFutures {
 
   import ShutterConnectorSpec._
 
@@ -46,7 +46,8 @@ class ShutterConnectorSpec extends WordSpec with MockitoSugar with Matchers with
     // unfortunately the test will receive an unhelpful NullPointerException if expectations are not met
     def stubEmptyResponseForGet(withPath: String, withParams: Seq[(String, String)]): Unit =
       when(httpClient.GET(argThat(new UrlArgumentMatcher(withPath, withParams)))(
-        any[HttpReads[Seq[ShutterEvent]]], is(headerCarrier), is(executionContext))).thenReturn(Future.successful(Seq.empty))
+        any[HttpReads[Seq[ShutterEvent]]], eqTo(headerCarrier), eqTo(executionContext)))
+        .thenReturn(Future.successful(Seq.empty))
   }
 
   "Shutter Events" should {
@@ -77,14 +78,14 @@ private object ShutterConnectorSpec {
   val SomeBaseUrl = "http://somebaseurl"
 
   class UrlArgumentMatcher(path: String, params: Seq[(String, String)]) extends ArgumentMatcher[String] {
-    override def matches(arg: Any): Boolean =
-      arg.isInstanceOf[String] && isMatchingUrl(arg.toString)
+    override def matches(arg: String): Boolean =
+      isMatchingUrl(arg.toString)
 
     private def isMatchingUrl(url: String): Boolean = {
       val indexOfQueryStringSeparator = url.indexOf('?')
-      if (indexOfQueryStringSeparator < 0) {
+      if (indexOfQueryStringSeparator < 0)
         url == path && params.isEmpty
-      } else {
+      else {
         val urlPath = url.substring(0, indexOfQueryStringSeparator)
         val urlQueryParams = url.substring(indexOfQueryStringSeparator + 1).split('&').toList.map(toKeyValue)
         path == urlPath && params.sorted == urlQueryParams.sorted
@@ -93,8 +94,10 @@ private object ShutterConnectorSpec {
 
     private def toKeyValue(query: String): (String, String) = {
       val indexOfKeyValueSeparator = query.indexOf('=')
-      if (indexOfKeyValueSeparator < 0) query -> ""
-      else query.substring(0, indexOfKeyValueSeparator) -> query.substring(indexOfKeyValueSeparator + 1)
+      if (indexOfKeyValueSeparator < 0)
+        query -> ""
+      else
+        query.substring(0, indexOfKeyValueSeparator) -> query.substring(indexOfKeyValueSeparator + 1)
     }
   }
 }

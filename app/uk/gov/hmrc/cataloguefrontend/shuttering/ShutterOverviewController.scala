@@ -40,6 +40,8 @@ class ShutterOverviewController @Inject()(
   )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
+  private val logger = Logger(getClass)
+
   def allStates(shutterType: ShutterType): Action[AnyContent] =
     allStatesForEnv(
         shutterType = shutterType
@@ -54,7 +56,7 @@ class ShutterOverviewController @Inject()(
                                    .findCurrentStates(shutterType, env)
                                    .recover {
                                      case NonFatal(ex) =>
-                                       Logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
+                                       logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
                                        Seq.empty
                                    }
                                    .map(ws => (env, ws))
@@ -73,7 +75,7 @@ class ShutterOverviewController @Inject()(
                                .frontendRouteWarnings(env, serviceName)
                                .recover {
                                   case NonFatal(ex) =>
-                                    Logger.error(s"Could not retrieve frontend route warnings for service '$serviceName' in env: '${env.asString}': ${ex.getMessage}", ex)
+                                    logger.error(s"Could not retrieve frontend route warnings for service '$serviceName' in env: '${env.asString}': ${ex.getMessage}", ex)
                                     Seq.empty
                                }
                                .map(ws => (env, ws))

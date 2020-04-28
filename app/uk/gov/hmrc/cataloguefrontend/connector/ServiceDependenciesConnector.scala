@@ -35,6 +35,8 @@ class ServiceDependenciesConnector @Inject()(
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
 
+  private val logger = Logger(getClass)
+
   private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies")
 
   def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
@@ -44,7 +46,7 @@ class ServiceDependenciesConnector @Inject()(
       .GET[Option[Dependencies]](url)
       .recover {
         case ex =>
-          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           None
       }
   }
@@ -56,7 +58,7 @@ class ServiceDependenciesConnector @Inject()(
       .GET[Seq[Dependencies]](url)
       .recover {
         case ex =>
-          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Nil
       }
   }
@@ -81,7 +83,7 @@ class ServiceDependenciesConnector @Inject()(
         )
       .recover {
         case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl/api/sluginfos: ${ex.getMessage}", ex)
+          logger.error(s"An error occurred when connecting to $servicesDependenciesBaseUrl/api/sluginfos: ${ex.getMessage}", ex)
           Nil
       }
 
@@ -114,7 +116,7 @@ class ServiceDependenciesConnector @Inject()(
       queryParams = Seq("flag" -> flag.asString)
     ).recover {
       case NonFatal(ex) =>
-        Logger.error(s"An error occurred when connecting to [$url]: ${ex.getMessage}", ex)
+        logger.error(s"An error occurred when connecting to [$url]: ${ex.getMessage}", ex)
         Nil
     }
   }
@@ -131,7 +133,7 @@ class ServiceDependenciesConnector @Inject()(
     , queryParams = Seq("flag" -> flag.asString)
     ).recover {
       case NonFatal(ex) =>
-        Logger.error(s"An error occurred when connecting to [$url]: ${ex.getMessage}", ex)
+        logger.error(s"An error occurred when connecting to [$url]: ${ex.getMessage}", ex)
         Map.empty
     }
   }

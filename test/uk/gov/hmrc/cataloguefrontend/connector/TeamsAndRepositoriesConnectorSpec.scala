@@ -17,11 +17,13 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
+import org.mockito.MockitoSugar
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Span}
-import org.scalatest._
-import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -33,7 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class TeamsAndRepositoriesConnectorSpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with BeforeAndAfter
     with ScalaFutures
@@ -161,7 +163,6 @@ class TeamsAndRepositoriesConnectorSpec
       repositories(2).createdAt     shouldBe createdAt
       repositories(2).lastUpdatedAt shouldBe lastActiveAt
       repositories(2).repoType      shouldBe RepoType.Other
-
     }
   }
 

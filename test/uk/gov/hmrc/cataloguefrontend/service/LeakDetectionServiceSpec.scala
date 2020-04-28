@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.{RepositoryWithLeaks, Team}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 import scala.concurrent.ExecutionContext
 
-class LeakDetectionServiceSpec extends WordSpec with Matchers with PropertyChecks {
-
+class LeakDetectionServiceSpec extends AnyWordSpec with Matchers {
   import ExecutionContext.Implicits.global
 
   "Service" should {

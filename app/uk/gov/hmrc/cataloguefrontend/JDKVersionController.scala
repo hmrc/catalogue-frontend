@@ -16,24 +16,23 @@
 
 package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
-import play.api.mvc.ControllerComponents
+import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import views.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class JDKVersionController @Inject()(
-                                      cc: ControllerComponents,
-                                      dependenciesService: DependenciesService,
-                                      jdkPage: JdkVersionPage,
-                                      jdkCountsPage: JdkAcrossEnvironmentsPage
-                                      )(
-  implicit val ec: ExecutionContext)
-    extends BackendController(cc) {
+  cc                 : MessagesControllerComponents,
+  dependenciesService: DependenciesService,
+  jdkPage            : JdkVersionPage,
+  jdkCountsPage      : JdkAcrossEnvironmentsPage
+)(implicit val ec: ExecutionContext
+) extends FrontendController(cc) {
 
   def findLatestVersions(flag: String) = Action.async { implicit request =>
     for {
@@ -43,13 +42,12 @@ class JDKVersionController @Inject()(
   }
 
   def compareAllEnvironments() = Action.async { implicit request =>
-
     for {
        envs      <- Future.sequence(SlugInfoFlag.values.map(dependenciesService.getJDKCountsForEnv))
        jdks      =  envs.flatMap(_.usage.keys).distinct.sortBy(byJDKVersion)
     } yield Ok(jdkCountsPage(envs, jdks))
   }
 
-  private def byJDKVersion(v: JDKVersion) = v.version.replaceAll("\\D", "").toInt
-
+  private def byJDKVersion(v: JDKVersion) =
+    v.version.replaceAll("\\D", "").toInt
 }

@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.actions
 
-import org.mockito.Matchers.{eq => is, _}
-import org.mockito.Mockito._
-import org.scalatest.Matchers._
-import org.scalatest.WordSpec
+import org.mockito.ArgumentMatchers.{eq => eqTo, _}
+import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.Results._
 import play.api.mvc.{MessagesControllerComponents, Result}
@@ -32,7 +31,13 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFutures with GuiceOneAppPerSuite {
+class VerifySignInStatusSpec
+  extends AnyWordSpec
+  with Matchers
+  with MockitoSugar
+  with ScalaFutures
+  with GuiceOneAppPerSuite {
+
   import ExecutionContext.Implicits.global
 
   "Action" should {
@@ -41,7 +46,8 @@ class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFuture
       val umpToken = UmpToken("token")
       val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
 
-      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(Some(User(Username("username"), groups = List.empty))))
+      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any()))
+        .thenReturn(Future(Some(User(Username("username"), groups = List.empty))))
 
       action
         .invokeBlock(request, actionBodyExpecting(isValid = true))
@@ -52,7 +58,8 @@ class VerifySignInStatusSpec extends WordSpec with MockitoSugar with ScalaFuture
       val umpToken = UmpToken("token")
       val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
 
-      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(None))
+      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any()))
+        .thenReturn(Future(None))
 
       action
         .invokeBlock(request, actionBodyExpecting(isValid = false))

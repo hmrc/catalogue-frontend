@@ -23,7 +23,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
@@ -79,7 +79,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
               |]""".stripMargin))
       )
 
-      val response = await(WS.url(s"http://localhost:$port/whats-running-where").get)
+      val response = WS.url(s"http://localhost:$port/whats-running-where").get.futureValue
 
       response.status shouldBe 200
 
@@ -129,7 +129,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
               |]""".stripMargin))
       )
 
-      val response = await(WS.url(s"http://localhost:$port/whats-running-where-ecs").get)
+      val response = WS.url(s"http://localhost:$port/whats-running-where-ecs").get.futureValue
 
       response.status shouldBe 200
 

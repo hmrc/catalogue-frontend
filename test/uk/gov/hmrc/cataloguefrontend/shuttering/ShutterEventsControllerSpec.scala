@@ -20,10 +20,11 @@ import java.time.Instant
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mockito.Matchers.{any, eq => is}
-import org.mockito.Mockito.when
-import org.scalatest.{Matchers, OptionValues, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.MockitoSugar
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
@@ -37,8 +38,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ShutterEventsControllerSpec extends WordSpec with MockitoSugar with Matchers with GuiceOneAppPerSuite with
-  DefaultAwaitTimeout with OptionValues {
+class ShutterEventsControllerSpec
+  extends AnyWordSpec
+  with MockitoSugar
+  with Matchers
+  with GuiceOneAppPerSuite
+  with DefaultAwaitTimeout
+  with OptionValues {
 
   import Helpers._
   import ShutterEventsControllerSpec._
@@ -49,14 +55,12 @@ class ShutterEventsControllerSpec extends WordSpec with MockitoSugar with Matche
     val underTest = new ShutterEventsController(mcc, connector)
 
     def stubConnectorSuccess(forFilter: ShutterEventsFilter, returnEvents: Seq[ShutterStateChangeEvent] = Seq.empty): Unit =
-      when(connector.shutterEventsByTimestampDesc(is(forFilter))(any[HeaderCarrier])).thenReturn(
-        Future.successful(returnEvents)
-      )
+      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter))(any[HeaderCarrier]))
+        .thenReturn(Future.successful(returnEvents))
 
     def stubConnectorFailure(forFilter: ShutterEventsFilter): Unit =
-      when(connector.shutterEventsByTimestampDesc(is(forFilter))(any[HeaderCarrier])).thenReturn(
-        Future.failed(new RuntimeException("connector failure"))
-      )
+      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter))(any[HeaderCarrier]))
+        .thenReturn(Future.failed(new RuntimeException("connector failure")))
 
     implicit class ResultOps(eventualResult: Future[Result]) {
       lazy val toDocument: Document = Jsoup.parse(contentAsString(eventualResult))

@@ -32,11 +32,13 @@ class EventsReloadScheduler @Inject()(
   @Named("appName") appName: String,
   updateScheduler: UpdateScheduler) {
 
+  private val logger = Logger(getClass)
+
   val eventReloadIntervalKey    = "event.reload.interval"
   val umpCacheReloadIntervalKey = "ump.cache.reload.interval"
 
-  Logger.info(s"Starting : $appName : in mode : ${environment.mode}")
-  Logger.debug("[Catalogue-frontend] - Starting... ")
+  logger.info(s"Starting : $appName : in mode : ${environment.mode}")
+  logger.debug("[Catalogue-frontend] - Starting... ")
 
   scheduleEventsReloadSchedule(appLifecycle, configuration)
   scheduleUmpCacheReloadSchedule(appLifecycle, configuration)
@@ -50,9 +52,8 @@ class EventsReloadScheduler @Inject()(
   private def scheduleUmpCacheReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration): Unit = {
     lazy val umpCacheReloadInterval = configuration.getMillis(umpCacheReloadIntervalKey).milliseconds
 
-    Logger.warn(s"UMP cache reload interval set to $umpCacheReloadInterval milliseconds")
+    logger.warn(s"UMP cache reload interval set to $umpCacheReloadInterval milliseconds")
     val cancellable = updateScheduler.startUpdatingUmpCacheReadModel(umpCacheReloadInterval)
     appLifecycle.addStopHook(() => Future.successful(cancellable.cancel()))
   }
-
 }

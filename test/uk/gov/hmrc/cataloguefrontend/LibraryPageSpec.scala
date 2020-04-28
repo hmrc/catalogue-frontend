@@ -18,13 +18,13 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.scalatest._
+import org.scalatest.BeforeAndAfter
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class LibraryPageSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
 
@@ -56,14 +56,14 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPe
     "return a 404 when teams and services returns a 404" in {
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (404, None))
 
-      val response = await(WS.url(s"http://localhost:$port/services/serv").get)
+      val response = WS.url(s"http://localhost:$port/services/serv").get.futureValue
       response.status shouldBe 404
     }
 
     "return a 404 when a Service is viewed as a Library" in {
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(serviceData)))
 
-      val response = await(WS.url(s"http://localhost:$port/library/serv").get)
+      val response = WS.url(s"http://localhost:$port/library/serv").get.futureValue
       response.status shouldBe 404
     }
 
@@ -72,7 +72,7 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPe
       serviceEndpoint(GET, "/api/repositories/lib", willRespondWith = (200, Some(libraryData)))
       serviceEndpoint(GET, "/api/jenkins-url/lib", willRespondWith = (200, Some(jenkinsData)))
 
-      val response = await(WS.url(s"http://localhost:$port/library/lib").get)
+      val response = WS.url(s"http://localhost:$port/library/lib").get.futureValue
       response.status shouldBe 200
       response.body   should include(s"links on this page are automatically generated")
       response.body   should include(s"teamA")
@@ -87,19 +87,14 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPe
     }
 
     "Render dependencies with red, green, amber and grey colours" in {
-
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                      = (200, Some(libraryData)))
       serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
 
-      val response = await(WS.url(s"http://localhost:$port/library/service-name").get)
+      val response = WS.url(s"http://localhost:$port/library/service-name").get.futureValue
 
       val document = Jsoup.parse(response.body)
 
       document.select("#platform-dependencies").size() shouldBe 1
-
     }
-
   }
-
-
 }

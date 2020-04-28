@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.mockito.Matchers._
-import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers._
+import org.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.libs.json.Json
-import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.test.Helpers
@@ -31,9 +29,9 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
-import uk.gov.hmrc.play.test.UnitSpec
 import views.html._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -47,7 +45,8 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
     val serviceOwner       = TeamMember(None, None, None, None, None, None)
 
     "return the service owner for a given digital service" in new Setup {
-      when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwner))
+      when(mockedModelService.getDigitalServiceOwner(any()))
+        .thenReturn(Some(serviceOwner))
 
       val response = catalogueController.serviceOwner(digitalServiceName)(FakeRequest())
 
@@ -59,8 +58,9 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
 
     "return the 404 when no owner found for a given digital service" in new Setup {
 
-      when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(None)
-      val response: Result = catalogueController.serviceOwner(digitalServiceName)(FakeRequest())
+      when(mockedModelService.getDigitalServiceOwner(any()))
+        .thenReturn(None)
+      val response = catalogueController.serviceOwner(digitalServiceName)(FakeRequest())
 
       status(response) shouldBe 404
 
@@ -75,8 +75,10 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
     val teamMembers = Seq(teamMember1, teamMember("member 2", "member.2"), teamMember("member 3", "member.3"))
 
     "save the username of the service owner and return the his/her full DisplayableTeamMember object" in new Setup {
-      when(mockedModelService.getAllUsers).thenReturn(teamMembers)
-      when(mockedEventService.saveServiceOwnerUpdatedEvent(any())).thenReturn(Future.successful(true))
+      when(mockedModelService.getAllUsers)
+        .thenReturn(teamMembers)
+      when(mockedEventService.saveServiceOwnerUpdatedEvent(any()))
+        .thenReturn(Future.successful(true))
 
       val serviceOwnerSaveEventData = ServiceOwnerSaveEventData("service-abc", "member 1")
 
@@ -99,11 +101,13 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
 
     "not save the service owner if it doesn't contain a username" in new Setup {
       val member = TeamMember(Some("member 1"), None, None, None, None, None)
-      when(mockedModelService.getAllUsers).thenReturn(Seq(member))
-      when(mockedEventService.saveServiceOwnerUpdatedEvent(any())).thenReturn(Future.successful(true))
+      when(mockedModelService.getAllUsers)
+        .thenReturn(Seq(member))
+      when(mockedEventService.saveServiceOwnerUpdatedEvent(any()))
+        .thenReturn(Future.successful(true))
 
       val serviceOwnerSaveEventData = ServiceOwnerSaveEventData("service-abc", "member 1")
-      val response: Result = catalogueController
+      val response = catalogueController
         .saveServiceOwner()(
           FakeRequest(Helpers.POST, "/")
             .withHeaders("Content-Type" -> "application/json")
@@ -112,14 +116,14 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       status(response)                   shouldBe 417
       contentAsJson(response).as[String] shouldBe s"Username was not set (by UMP) for $member!"
       verifyZeroInteractions(mockedEventService)
-
     }
 
     "not save the user if he/she is not a valid user (from UMP)" in new Setup {
-      when(mockedModelService.getAllUsers).thenReturn(teamMembers)
+      when(mockedModelService.getAllUsers)
+        .thenReturn(teamMembers)
 
       val ownerUpdatedEventData = ServiceOwnerSaveEventData("service-abc", "Mrs Invalid Person")
-      val response: Result = catalogueController
+      val response = catalogueController
         .saveServiceOwner()(
           FakeRequest(Helpers.POST, "/")
             .withHeaders("Content-Type" -> "application/json")
@@ -132,10 +136,10 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
     }
 
     "return a BadRequest error if the sent json is valid" in new Setup {
-      when(mockedModelService.getAllUsers).thenReturn(teamMembers)
+      when(mockedModelService.getAllUsers)
+        .thenReturn(teamMembers)
 
-      val ownerUpdatedEventData = ServiceOwnerUpdatedEventData("service-abc", "Mrs Invalid Person")
-      val response: Result = catalogueController
+      val response = catalogueController
         .saveServiceOwner()(
           FakeRequest(Helpers.POST, "/")
             .withHeaders("Content-Type" -> "application/json")
@@ -160,7 +164,8 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
     private val catalogueErrorHandler      = mock[CatalogueErrorHandler]
 
     val profileBaseUrl = "http://things.things.com"
-    when(userManagementPortalConfig.userManagementProfileBaseUrl) thenReturn profileBaseUrl
+    when(userManagementPortalConfig.userManagementProfileBaseUrl)
+      .thenReturn(profileBaseUrl)
 
     val catalogueController: CatalogueController = new CatalogueController(
       mock[UserManagementConnector],

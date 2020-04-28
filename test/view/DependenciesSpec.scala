@@ -20,15 +20,16 @@ import java.time.Instant
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.scalatest.Matchers._
-import org.scalatest.{Assertion, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
+import org.scalatest.Assertion
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import views.html.partials.DependenciesPartial
 
-class DependenciesSpec extends WordSpec with MockitoSugar {
+class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
   private[this] val viewMessages = mock[ViewMessages]
 
@@ -160,7 +161,6 @@ class DependenciesSpec extends WordSpec with MockitoSugar {
       elements.attr("title").contains(title),
       s"element title ($title) is not found : [${elements.text()}]"
     )
-
   }
 
   private def verifyCss(document: Document, elementsCssSelector: String, iconCssClasses: String*): Unit = {

@@ -19,6 +19,12 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 import java.time.LocalDate
 
 object BobbyRuleFactory {
-  def aBobbyRule(organisation: String = "uk.gov.hmrc", name: String = "play-frontend", range: String = "[*-SNAPSHOT]", reason: String = "No snapshot dependencies permitted", from: LocalDate = LocalDate.of(2015, 3, 16)) =
+  def aBobbyRule(
+    organisation: String    = "uk.gov.hmrc",
+    name        : String    = "play-frontend",
+    range       : String    = "[*-SNAPSHOT]",
+    reason      : String    = "No snapshot dependencies permitted",
+    from        : LocalDate = LocalDate.of(2015, 3, 16)
+  ) =
     BobbyRule(organisation, name, BobbyVersionRange(range), reason, from)
 }

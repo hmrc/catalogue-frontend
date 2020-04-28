@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 class CsvUtilsSpec
-  extends WordSpec
+  extends AnyWordSpec
      with Matchers {
 
   "CsvUtilsSpec.toCsv" should {

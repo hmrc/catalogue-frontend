@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus.{Shuttered, Unshuttered}
 
-class ShutterEventsViewSpec extends WordSpec with Matchers {
+class ShutterEventsViewSpec extends AnyWordSpec with Matchers {
 
   "The Shutter Events view" should {
     "present the reason for a shuttered event when the reason is known" in {

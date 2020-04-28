@@ -32,6 +32,8 @@ class ReadModelService @Inject()(
   type ServiceName          = String
   type ServiceOwnerUserName = String
 
+  private val logger = Logger(getClass)
+
   private[events] var eventsCache     = Map.empty[ServiceName, ServiceOwnerUserName]
   protected[events] var umpUsersCache = Seq.empty[TeamMember]
 
@@ -42,8 +44,6 @@ class ReadModelService @Inject()(
 
   def refreshEventsCache = {
     val eventualEvents = eventService.getAllEvents
-
-    println("refreshEventsCache")
 
     eventualEvents
       .map { events =>
@@ -57,21 +57,19 @@ class ReadModelService @Inject()(
       }
       .recover {
         case e =>
-          Logger.error("Unable to refresh event cache", e)
+          logger.error("Unable to refresh event cache", e)
           throw e
       }
-
   }
 
   def refreshUmpCache: Future[Seq[TeamMember]] =
     userManagementConnector.getAllUsersFromUMP.map {
       case Right(tms) =>
-        Logger.info(s"Got ${tms.length} set of UMP users")
+        logger.info(s"Got ${tms.length} set of UMP users")
         umpUsersCache = tms
         umpUsersCache
       case Left(error) =>
-        Logger.error(s"An error occurred getting users from ump: $error")
+        logger.error(s"An error occurred getting users from ump: $error")
         Nil
     }
-
 }

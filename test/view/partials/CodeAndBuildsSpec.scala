@@ -17,13 +17,14 @@
 package view.partials
 import java.time.LocalDateTime
 
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.{Link, RepoType, RepositoryDetails}
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class CodeAndBuildsSpec extends WordSpec with Matchers with GeneratorDrivenPropertyChecks {
+class CodeAndBuildsSpec extends AnyWordSpec with Matchers with ScalaCheckDrivenPropertyChecks {
 
   val repo = RepositoryDetails(name         = "reponame", description  = "", createdAt    = LocalDateTime.now(), lastActive   = LocalDateTime.now(), owningTeams  = Seq(), teamNames    = Seq(), githubUrl    = Link("repo1", "repository 1", "http://url"), jenkinsURL           = None, environments = None, repoType     = RepoType.Service, isPrivate    = true)
 

@@ -17,14 +17,15 @@
 package view
 
 import org.jsoup.Jsoup
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
 import views.html.standard_layout
 
-class StandardLayoutSpec extends WordSpec with Matchers with GuiceOneAppPerSuite {
+class StandardLayoutSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
 
   "standard layout" should {
 

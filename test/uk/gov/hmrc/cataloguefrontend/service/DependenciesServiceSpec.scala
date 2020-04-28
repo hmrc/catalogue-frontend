@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -75,8 +74,8 @@ class SlugInfoServiceSpec
       when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact, versionRange))
         .thenReturn(Future(Seq(v100, v200, v205)))
 
-      await(boot.service.getServicesWithDependency(optTeam = Some(TeamName("T1")), SlugInfoFlag.Latest, group, artefact, versionRange)) shouldBe Seq(v200, v100)
-      await(boot.service.getServicesWithDependency(optTeam = Some(TeamName("T2")), SlugInfoFlag.Latest, group, artefact, versionRange)) shouldBe Seq(v205, v200)
+      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T1")), SlugInfoFlag.Latest, group, artefact, versionRange).futureValue shouldBe Seq(v200, v100)
+      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T2")), SlugInfoFlag.Latest, group, artefact, versionRange).futureValue shouldBe Seq(v205, v200)
     }
   }
 
@@ -92,7 +91,7 @@ class SlugInfoServiceSpec
       when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
         .thenReturn(Future(List(jdk1, jdk2, jdk3, jdk4)))
 
-      val res = await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest))
+      val res = boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest).futureValue
 
       res.usage(JDKVersion("", "1.181.1", Oracle, JDK)) shouldBe 2
       res.usage(JDKVersion("", "1.191.1", OpenJDK, JDK)) shouldBe 1
@@ -105,7 +104,7 @@ class SlugInfoServiceSpec
       when(boot.mockedServiceDependenciesConnector.getJDKVersions(SlugInfoFlag.Latest))
         .thenReturn(Future(List.empty[JDKVersion]))
 
-      await(boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest)) shouldBe JDKUsageByEnv(SlugInfoFlag.Latest, Map.empty[JDKVersion, Int])
+      boot.service.getJDKCountsForEnv(SlugInfoFlag.Latest).futureValue shouldBe JDKUsageByEnv(SlugInfoFlag.Latest, Map.empty[JDKVersion, Int])
     }
   }
 

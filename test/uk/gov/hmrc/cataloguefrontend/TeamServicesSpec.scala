@@ -21,7 +21,7 @@ import java.time.ZoneOffset
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.scalatest._
+import org.scalatest.BeforeAndAfter
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -30,9 +30,9 @@ import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.io.Source
 
 class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
@@ -109,12 +109,12 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
       response.status shouldBe 200
 
       val htmlDocument = asDocument(response.body)
-      val anchorTags   = htmlDocument.getElementsByTag("a").toList
+      val anchorTags   = htmlDocument.getElementsByTag("a").asScala.toList
 
       def assertAnchor(href: String, text: String): Unit =
         assert(anchorTags.exists { e =>
@@ -127,7 +127,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       assertAnchor("/prototype/service1-prototype", "service1-prototype")
       assertAnchor("/prototype/service2-prototype", "service2-prototype")
       assertAnchor("/repositories/teamA-other", "teamA-other")
-
     }
 
     "show user management portal link" ignore {
@@ -148,13 +147,12 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
       response.status shouldBe 200
 
       response.body.toString should include(
         """<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
-
     }
 
     "show a message if no services are found" in {
@@ -179,7 +177,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
 
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
       response.status shouldBe 200
       response.body   should include(viewMessages.noRepoOfTypeForTeam("service"))
@@ -209,7 +207,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/large-user-management-response.json")
 
-      val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
+      val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
       response.status shouldBe 200
       val document = asDocument(response.body)
@@ -247,7 +245,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       )
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
-      val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
+      val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
       response.status shouldBe 200
 
@@ -281,7 +279,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
         mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", fileName)
 
-        val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
+        val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
         response.status shouldBe 200
         response.body   should include(umpFrontPageUrl)
@@ -291,12 +289,10 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
         document
           .select("#linkToRectify")
           .text() shouldBe s"Team $teamName is not defined in the User Management Portal, please add it here"
-
       }
 
       verifyForFile("/user-management-empty-members.json")
       verifyForFile("/user-management-no-members.json")
-
     }
 
     "show error message if UMP is not available" in {
@@ -323,7 +319,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
         "/user-management-response.json",
         httpCodeToBeReturned = 404)
 
-      val response = await(WS.url(s"http://localhost:$port/teams/teamA").get)
+      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
       response.status shouldBe 200
 
@@ -351,7 +347,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
 
       mockHttpApiCall(s"/v2/organisations/teams/$teamName", "/user-management-team-details-response.json")
 
-      val response = await(WS.url(s"http://localhost:$port/teams/$teamName").get)
+      val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
       response.status shouldBe 200
       val document = asDocument(response.body)
@@ -359,9 +355,9 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       document.select("#team-first-active").text() shouldBe "First Active: None"
       document.select("#team-last-active").text()  shouldBe "Last Active: None"
 
-      document.select("#team-description").head.text()   shouldBe "Description: TEAM-A is a great team"
-      document.select("#team-documentation").head.text() shouldBe "Documentation: Go to Confluence space"
-      document.select("#team-documentation").head.toString() should include(
+      document.select("#team-description").asScala.head.text()   shouldBe "Description: TEAM-A is a great team"
+      document.select("#team-documentation").asScala.head.text() shouldBe "Documentation: Go to Confluence space"
+      document.select("#team-documentation").asScala.head.toString() should include(
         """<a href="https://some.documentation.url" target="_blank">Go to Confluence space<span class="glyphicon glyphicon-new-window"""")
 
       document.select("#team-organisation").text() shouldBe "Organisation: ORGA"
@@ -373,19 +369,17 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
         """<a href="https://slack.host/messages/team-A-NOTIFICATION" target="_blank">Go to notification channel<span class="glyphicon glyphicon-new-window"""")
 
       document.select("#team-location").text() shouldBe "Location: STLPD"
-
     }
-
   }
 
   def verifyTeamOwnerIndicatorLabel(document: Document): Unit = {
     val serviceOwnersLiLabels = document.select("#team_members li .label-success")
-    serviceOwnersLiLabels.size()                         shouldBe 2
-    serviceOwnersLiLabels.iterator().toSeq.map(_.text()) shouldBe Seq("Service Owner", "Service Owner")
+    serviceOwnersLiLabels.size()                                 shouldBe 2
+    serviceOwnersLiLabels.iterator().asScala.toSeq.map(_.text()) shouldBe Seq("Service Owner", "Service Owner")
   }
 
   def verifyTeamMemberHrefLinks(document: Document): Boolean = {
-    val hrefs = document.select("#team_members [href]").iterator().toList
+    val hrefs = document.select("#team_members [href]").iterator().asScala.toList
 
     hrefs.size shouldBe 5
     hrefs(0).attributes().get("href") == "http://example.com/profile/m.q"
@@ -396,7 +390,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
   }
 
   def verifyTeamMemberElementsText(document: Document): Unit = {
-    val teamMembersLiElements = document.select("#team_members li").iterator().toList
+    val teamMembersLiElements = document.select("#team_members li").iterator().asScala.toList
 
     teamMembersLiElements.length shouldBe 5
 
@@ -423,5 +417,4 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
     (Json.parse(jsonString) \\ "members").headOption
       .map(js => js.as[Seq[TeamMember]])
       .getOrElse(throw new RuntimeException(s"not able to extract team members from json: $jsonString"))
-
 }

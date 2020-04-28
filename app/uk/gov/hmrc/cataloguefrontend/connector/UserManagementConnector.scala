@@ -37,6 +37,8 @@ case class UserManagementConnector @Inject()(
   import UserManagementConnector._
   import userManagementPortalConfig._
 
+  private val logger = Logger(getClass)
+
   private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
   }
@@ -64,7 +66,7 @@ case class UserManagementConnector @Inject()(
       }
       .recover {
         case ex =>
-          Logger.error(s"An error occurred when connecting to $url", ex)
+          logger.error(s"An error occurred when connecting to $url", ex)
           Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
       }
   }
@@ -84,7 +86,7 @@ case class UserManagementConnector @Inject()(
       }
       .recover {
         case ex =>
-          Logger.error(s"An error occurred when connecting to $url", ex)
+          logger.error(s"An error occurred when connecting to $url", ex)
           Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
       }
   }
@@ -105,7 +107,7 @@ case class UserManagementConnector @Inject()(
       }
       .recover {
         case ex =>
-          Logger.error(s"An error occurred when connecting to $url", ex)
+          logger.error(s"An error occurred when connecting to $url", ex)
           Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
       }
   }

@@ -26,8 +26,8 @@ import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType}
+import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs
-import uk.gov.hmrc.play.test.UnitSpec
 
 class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
 
@@ -70,7 +70,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(GET, "/frontend-route/serv", willRespondWith = (200, Some(configServiceEmpty)))
       serviceEndpoint(GET, "/api/services/serv", willRespondWith   = (404, None))
 
-      val response = await(ws.url(s"http://localhost:$port/repositories/serv").get)
+      val response = ws.url(s"http://localhost:$port/repositories/serv").get.futureValue
       response.status shouldBe 404
     }
 
@@ -90,7 +90,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(GET, "/shutter-api/development/frontend/states/serv", willRespondWith  = (404, None))
       serviceEndpoint(GET, "/api/sluginfo?name=serv", willRespondWith                        = (200, Some(serviceDependenciesData)))
 
-      val response = await(ws.url(s"http://localhost:$port/service/serv").get)
+      val response = ws.url(s"http://localhost:$port/service/serv").get.futureValue
       response.status shouldBe 404
     }
 
@@ -120,7 +120,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(GET, "/shutter-api/development/frontend/states/service-1", willRespondWith  = (404, None))
       serviceEndpoint(GET, "/api/sluginfo?name=service-1", willRespondWith                        = (200, Some(serviceDependenciesData)))
 
-      val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
+      val response = ws.url(s"http://localhost:$port/service/service-1").get.futureValue
       response.status shouldBe 200
       response.body   should include("links on this page are automatically generated")
       response.body   should include("teamA")
@@ -165,7 +165,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(GET, "/shutter-api/development/frontend/states/service-1", willRespondWith = (404, None))
       serviceEndpoint(GET, "/api/sluginfo?name=service-1", willRespondWith                       = (200, Some(serviceDependenciesData)))
 
-      val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
+      val response = ws.url(s"http://localhost:$port/service/service-1").get.futureValue
       response.status shouldBe 200
       val document = Jsoup.parse(response.body)
 
@@ -195,7 +195,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         )
         serviceEndpoint(GET, "/api/sluginfo?name=service-1", willRespondWith = (200, Some(serviceDependenciesData)))
 
-        val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
+        val response = ws.url(s"http://localhost:$port/service/service-1").get.futureValue
         response.status shouldBe 200
         response.body   should include("links on this page are automatically generated")
         response.body   should include("teamA")
@@ -220,7 +220,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith      = (200, Some(serviceDetailsData)))
         serviceEndpoint(GET, "/api/sluginfo?name=service-1", willRespondWith     = (200, Some(serviceDependenciesData)))
 
-        val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
+        val response = ws.url(s"http://localhost:$port/service/service-1").get.futureValue
 
         // Links for environments should not be present
         response.body should not include regex("""https:\/\/(?!grafana-dev).*\/#\/dashboard""")
@@ -245,7 +245,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith  = (200, Some(serviceDetailsData)))
         serviceEndpoint(GET, "/api/sluginfo?name=service-1", willRespondWith = (200, Some(serviceDependenciesData)))
 
-        val response = await(ws.url(s"http://localhost:$port/service/service-1").get)
+        val response = ws.url(s"http://localhost:$port/service/service-1").get.futureValue
 
         response.body should not include "Jenkins"
         response.body should include("Grafana")
@@ -259,7 +259,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
       serviceEndpoint(GET, "/api/sluginfo?name=service-name", willRespondWith                     = (200, Some(serviceDependenciesData)))
 
-      val response = await(ws.url(s"http://localhost:$port/service/service-name").get)
+      val response = ws.url(s"http://localhost:$port/service/service-name").get.futureValue
 
       val document = Jsoup.parse(response.body)
 

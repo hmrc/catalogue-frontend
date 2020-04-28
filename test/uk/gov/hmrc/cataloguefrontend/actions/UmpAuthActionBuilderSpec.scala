@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.actions
 
-import org.mockito.Matchers.{eq => is, _}
-import org.mockito.Mockito._
-import org.scalatest.Matchers._
-import org.scalatest.WordSpec
+import org.mockito.ArgumentMatchers.{eq => eqTo, _}
+import org.mockito.MockitoSugar
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, MessagesControllerComponents, Request}
@@ -37,7 +36,12 @@ import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutures with GuiceOneAppPerSuite {
+class UmpAuthActionBuilderSpec
+  extends AnyWordSpec
+  with Matchers
+  with MockitoSugar
+  with ScalaFutures
+  with GuiceOneAppPerSuite {
 
   "WhenAuthenticated Action" should {
 
@@ -45,7 +49,7 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
       val expectedStatus = Ok
       val (umpToken, request) = initSession(FakeRequest())
 
-      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(Some(User(Username("username"), List.empty))))
+      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any())).thenReturn(Future(Some(User(Username("username"), List.empty))))
 
       whenAuthenticated
         .invokeBlock(request, (_: Request[AnyContent]) => Future(expectedStatus))
@@ -55,7 +59,7 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
     "return 303 REDIRECT if user is not signed-in (token exists but not valid)" in new Setup {
       val (umpToken, request) = initSession(FakeRequest(GET, "requestedPage"))
 
-      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(None))
+      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any())).thenReturn(Future(None))
 
       val result = whenAuthenticated.invokeBlock(request, (_: Request[AnyContent]) => Future(Ok)).futureValue
 
@@ -84,7 +88,8 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
       val group               = "dev-tools"
       val (umpToken, request) = initSession(FakeRequest(GET, "requestedPage"))
 
-      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(None))
+      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any()))
+        .thenReturn(Future(None))
 
       val result = withGroup(group).invokeBlock(request, (_: Request[AnyContent]) => Future(Ok)).futureValue
 
@@ -113,7 +118,8 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
       val group          = "dev-tools"
       val (umpToken, request) = initSession(FakeRequest())
 
-      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(Some(User(Username("username"), groups = List(group)))))
+      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any()))
+        .thenReturn(Future(Some(User(Username("username"), groups = List(group)))))
 
       withGroup(group)
         .invokeBlock(request, (_: Request[AnyContent]) => Future(expectedStatus))
@@ -125,8 +131,10 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
       val (umpToken, request) = initSession(FakeRequest())
       val expectedBody = "forbidden html"
 
-      when(userManagementAuthConnector.getUser(is(umpToken))(any())).thenReturn(Future(Some(User(Username("username"), groups = List.empty))))
-      when(catalogueErrorHandler.forbiddenTemplate(any())).thenReturn(Html(expectedBody))
+      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any()))
+        .thenReturn(Future(Some(User(Username("username"), groups = List.empty))))
+      when(catalogueErrorHandler.forbiddenTemplate(any()))
+        .thenReturn(Html(expectedBody))
 
       val result = withGroup(group).invokeBlock(request, (_: Request[AnyContent]) => Future(Ok))
 
@@ -154,6 +162,5 @@ class UmpAuthActionBuilderSpec extends WordSpec with MockitoSugar with ScalaFutu
           )
       (umpToken, requestWithSession)
     }
-
   }
 }

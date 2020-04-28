@@ -20,7 +20,7 @@ import akka.actor.ActorSystem
 import cats.data.OptionT
 import cats.implicits._
 import com.typesafe.config.Config
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 import play.api.libs.json.{JsValue, Writes}
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.http.hooks.HttpHook

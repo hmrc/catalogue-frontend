@@ -33,6 +33,8 @@ class RouteRulesConnector @Inject()(
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
 
+  private val logger = Logger(getClass)
+
   private val url: String = s"${servicesConfig.baseUrl("service-configs")}/frontend-route"
 
   implicit val routeReads: Reads[Route] = Json.reads[Route]
@@ -43,7 +45,7 @@ class RouteRulesConnector @Inject()(
       .GET[EnvironmentRoutes](s"$url/$service")
       .recover {
         case NonFatal(ex) =>
-          Logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty
       }
 }

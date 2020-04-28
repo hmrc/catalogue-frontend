@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class UrlUtilsSpec extends WordSpec with Matchers {
+class UrlUtilsSpec extends AnyWordSpec with Matchers {
 
   "buildQueryParams" should {
 
