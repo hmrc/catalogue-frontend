@@ -24,7 +24,7 @@ lazy val microservice = Project(appName, file("."))
     RoutesKeys.routesImport ++= Seq(
         "uk.gov.hmrc.cataloguefrontend.connector.model.TeamName",
         "uk.gov.hmrc.cataloguefrontend.model.Environment",
-        "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType",
+        "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType"
     ),
     // ***************
     // Use the silencer plugin to suppress warnings from unused imports in compiled twirl templates
@@ -32,11 +32,11 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies ++= Seq(
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
       "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-    ),
+    )
     // ***************
   )
 
-val bootstrapPlayVersion = "2.4.0"
+val bootstrapPlayVersion = "2.6.0"
 val hmrcMongoVersion     = "0.28.0"
 
 val compile = Seq(
