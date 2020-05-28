@@ -36,8 +36,8 @@ lazy val microservice = Project(appName, file("."))
     // ***************
   )
 
-val bootstrapPlayVersion = "2.6.0"
-val hmrcMongoVersion     = "0.28.0"
+val bootstrapPlayVersion = "2.14.0"
+val hmrcMongoVersion     = "0.29.0"
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-27" % bootstrapPlayVersion,
@@ -54,7 +54,7 @@ val compile = Seq(
 val test = Seq(
   "uk.gov.hmrc"            %% "bootstrap-test-play-27"   % bootstrapPlayVersion % Test,
   "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-27"  % hmrcMongoVersion     % Test,
-  "org.scalatest"          %% "scalatest"                % "3.1.0"              % Test,
+  "org.scalatest"          %% "scalatest"                % "3.1.2"              % Test,
   "org.scalatestplus.play" %% "scalatestplus-play"       % "3.1.3"              % Test,
   "org.scalacheck"         %% "scalacheck"               % "1.14.3"             % Test,
   "org.scalatestplus"      %% "scalatestplus-scalacheck" % "3.1.0.0-RC2"        % Test,
