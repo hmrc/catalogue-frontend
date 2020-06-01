@@ -57,7 +57,6 @@
       <th><span>Version</span></th>
       <th><span>Production deployment</span></th>
       <th><span>Latest Deployer</span></th>
-      <th>Interval</th>
     </tr>
     @deployments.zipWithIndex.map{case (release, i) =>
     <tr id="row@i">
@@ -76,7 +75,6 @@
       <td class="monospaced" id="row@{i}_deployer">
       @release.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.userName}" target="_blank">@{u.userName}<span class="glyphicon glyphicon-new-window"/></a>}.getOrElse("N/A")
       </td>
-      <td class="monospaced" id="row@{i}_interval">@{release.interval.fold("--")(x => if(x.toDays==1) "1 day" else s"${x.toDays} days")}</td>
     </tr>
     }
 
