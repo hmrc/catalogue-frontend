@@ -21,7 +21,7 @@ import cats.instances.all._
 import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
-import play.api.i18n.{Messages, MessagesProvider}
+import play.api.i18n.Messages
 import play.api.libs.json.Json
 import play.api.mvc.{MessagesControllerComponents, Request, Result}
 import play.twirl.api.Html
@@ -482,7 +482,7 @@ object ShutterWizardController {
 
   val step1Key  = DataKey[Step1Out]("step1")
 
-  def step1Form(implicit messagesProvider: MessagesProvider) =
+  def step1Form() =
     Form(
       Forms.mapping(
         "serviceName" -> Forms.seq(Forms.text).verifying(notEmptySeq),
@@ -509,7 +509,7 @@ object ShutterWizardController {
 
   val step2aKey = DataKey[Step2aOut]("step2a")
 
-  def step2aForm(implicit messagesProvider: MessagesProvider) =
+  def step2aForm() =
     Form(
       Forms
         .mapping(
@@ -531,7 +531,7 @@ object ShutterWizardController {
 
   val step2bKey = DataKey[Step2bOut]("step2b")
 
-  def step2bForm(implicit messagesProvider: MessagesProvider) =
+  def step2bForm() =
     Form(
       Forms.mapping(
           "reason"                -> Forms.text
@@ -560,7 +560,7 @@ object ShutterWizardController {
 
   // -- Step 3 -------------------------
 
-  def step3Form(implicit messagesProvider: MessagesProvider) =
+  def step3Form() =
     Form(
       Forms
         .mapping(

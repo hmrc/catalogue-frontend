@@ -19,6 +19,7 @@ lazy val microservice = Project(appName, file("."))
     scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
+    scalacOptions ++= Seq("-Ywarn-macros:after"), //Remove lots of false warnings about unused implicits for json formats
     // ***************
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
     resolvers += Resolver.jcenterRepo,

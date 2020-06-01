@@ -20,7 +20,6 @@ import java.time.{Instant, LocalDate, ZoneId}
 
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
-import play.api.i18n.MessagesProvider
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.http.HeaderCarrier
@@ -51,7 +50,7 @@ class DeploymentHistoryController @Inject()(
 
   case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], app: Option[String])
 
-  def form(implicit messagesProvider: MessagesProvider): Form[SearchForm] = {
+  def form(): Form[SearchForm] = {
     val dateFormat = "yyyy-MM-dd"
     Form(
       Forms.mapping(
