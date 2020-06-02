@@ -66,11 +66,11 @@ class TeamsAndRepositoriesConnectorSpec
 
   "teamsByService" should {
 
-    "return a list of team information for each given service with archived repositories param passed to api" in {
+    "return a list of team information for each given service" in {
 
       serviceEndpoint(
         POST,
-        "/api/services?archived=false&teamDetails=true",
+        "/api/services?teamDetails=true",
         givenJsonBody = Some(Json.arr("serviceA", "serviceB").toString()),
         willRespondWith = (
           200,

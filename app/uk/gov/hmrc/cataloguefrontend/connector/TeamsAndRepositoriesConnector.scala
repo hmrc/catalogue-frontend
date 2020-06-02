@@ -212,20 +212,23 @@ class TeamsAndRepositoriesConnector @Inject()(
     http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams")
 
   def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] =
-    http.GET[Seq[String]](teamsAndServicesBaseUrl + s"/api/digital-services" +
-      queryString(teamsAndRepositoriesArchived.toList))
+    http.GET[Seq[String]](
+      url = teamsAndServicesBaseUrl + s"/api/digital-services",
+      queryParams = teamsAndRepositoriesArchived.toSeq)
 
   def teamInfo(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Option[Team]] =
     http
-      .GET[Option[Team]](teamsAndServicesBaseUrl + s"/api/teams_with_details/${encodePathParam(teamName.asString)}" +
-        queryString(teamsAndRepositoriesArchived.toList))
+      .GET[Option[Team]](
+        url = teamsAndServicesBaseUrl + s"/api/teams_with_details/${encodePathParam(teamName.asString)}",
+        queryParams = teamsAndRepositoriesArchived.toSeq)
       .recover {
         case _ => None
       }
 
   def teamsWithRepositories(implicit hc: HeaderCarrier): Future[Seq[Team]] =
-    http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams_with_repositories" +
-      queryString(teamsAndRepositoriesArchived.toList))
+    http.GET[Seq[Team]](
+      url = teamsAndServicesBaseUrl + s"/api/teams_with_repositories",
+      queryParams = teamsAndRepositoriesArchived.toSeq)
 
   def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[DigitalService]] = {
     val url = teamsAndServicesBaseUrl + s"/api/digital-services/${encodePathParam(digitalServiceName)}"
@@ -233,29 +236,23 @@ class TeamsAndRepositoriesConnector @Inject()(
   }
 
   def allRepositories(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
-    http.GET[Seq[RepositoryDisplayDetails]](teamsAndServicesBaseUrl + s"/api/repositories" +
-      queryString(teamsAndRepositoriesArchived.toList))
+    http.GET[Seq[RepositoryDisplayDetails]](
+      url = teamsAndServicesBaseUrl + s"/api/repositories",
+      queryParams = teamsAndRepositoriesArchived.toSeq)
 
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] =
     http.GET[Option[RepositoryDetails]](teamsAndServicesBaseUrl + s"/api/repositories/${encodePathParam(name)}")
 
   def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http.POST[JsValue, Map[ServiceName, Seq[TeamName]]](
-      teamsAndServicesBaseUrl + s"/api/services" +
-        queryString(teamsAndRepositoriesArchived.toList :+ ("teamDetails", "true")),
+      teamsAndServicesBaseUrl + s"/api/services?teamDetails=true",
       Json.arr(serviceNames.map(toJsFieldJsValueWrapper(_)): _*)
     )
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
-    http.GET[Map[ServiceName, Seq[TeamName]]](teamsAndServicesBaseUrl + s"/api/services" +
-      queryString(teamsAndRepositoriesArchived.toList :+ ("teamDetails", "true")))
-
-  private def queryString(parameters: Seq[(String, String)]): String = {
-    parameters match {
-      case Nil => ""
-      case _   => "?" + parameters.map(param => s"${param._1}=${param._2}").mkString("&")
-    }
-  }
+    http.GET[Map[ServiceName, Seq[TeamName]]](
+      url = teamsAndServicesBaseUrl + s"/api/services",
+      queryParams = teamsAndRepositoriesArchived.toSeq :+ ("teamDetails", "true"))
 }
 
 object TeamsAndRepositoriesConnector {
