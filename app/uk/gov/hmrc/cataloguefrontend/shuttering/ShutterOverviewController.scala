@@ -23,7 +23,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering._
 
 import scala.concurrent.ExecutionContext
@@ -37,8 +37,8 @@ class ShutterOverviewController @Inject()(
   , frontendRoutesWarningPage  : FrontendRouteWarningsPage
   , shutterService             : ShutterService
   , catalogueConfig            : CatalogueConfig
-  )(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  )(implicit val ec: ExecutionContext
+  ) extends FrontendController(mcc) {
 
   private val logger = Logger(getClass)
 

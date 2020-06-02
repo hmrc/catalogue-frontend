@@ -69,17 +69,19 @@ object JsonCodecs {
     implicit val wf  = environmentFormat
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
-    ((__ \ "environment").read[Environment]
-      ~ (__ \ "versionNumber").read[VersionNumber]
-      ~ (__ \ "lastSeen").read[TimeSeen])(WhatsRunningWhereVersion.apply _)
+    ( (__ \ "environment"  ).read[Environment]
+    ~ (__ \ "versionNumber").read[VersionNumber]
+    ~ (__ \ "lastSeen"     ).read[TimeSeen]
+    )(WhatsRunningWhereVersion.apply _)
   }
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] = {
     implicit val wf    = applicationNameFormat
     implicit val wrwvf = whatsRunningWhereVersionReads
-    ((__ \ "applicationName").read[ServiceName]
-      ~ (__ \ "versions").read[List[WhatsRunningWhereVersion]]
-      ~ Reads.pure(Heritage))(WhatsRunningWhere.apply _)
+    ( (__ \ "applicationName").read[ServiceName]
+    ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
+    ~ Reads.pure(Heritage)
+    )(WhatsRunningWhere.apply _)
   }
 
   val profileTypeFormat: Format[ProfileType] = new Format[ProfileType] {
@@ -97,8 +99,9 @@ object JsonCodecs {
   val profileFormat: OFormat[Profile] = {
     implicit val ptf = profileTypeFormat
     implicit val pnf = profileNameFormat
-    ((__ \ "type").format[ProfileType]
-      ~ (__ \ "name").format[ProfileName])(Profile.apply, unlift(Profile.unapply))
+    ( (__ \ "type").format[ProfileType]
+    ~ (__ \ "name").format[ProfileName]
+    )(Profile.apply, unlift(Profile.unapply))
   }
 
   // ECS Deployment Event
@@ -106,48 +109,47 @@ object JsonCodecs {
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
     implicit val dsf = deploymentStatusFormat
-
-    ((__ \ "deploymentId").format[String]
-      ~ (__ \ "status").format[DeploymentStatus]
-      ~ (__ \ "version").format[VersionNumber]
-      ~ (__ \ "time").format[TimeSeen])(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
+    ( (__ \ "deploymentId").format[String]
+    ~ (__ \ "status"      ).format[DeploymentStatus]
+    ~ (__ \ "version"     ).format[VersionNumber]
+    ~ (__ \ "time"        ).format[TimeSeen]
+    )(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
   }
 
   val serviceDeploymentsFormat: Format[ServiceDeployment] = {
     implicit val devf = deploymentEventFormat
     implicit val anf  = applicationNameFormat
     implicit val enf  = environmentFormat
-
-    ((__ \ "serviceName").format[ServiceName]
-      ~ (__ \ "environment").format[Environment]
-      ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
-      ~ (__ \ "lastCompleted")
-        .formatNullable[DeploymentEvent])(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
+    ( (__ \ "serviceName"     ).format[ServiceName]
+    ~ (__ \ "environment"     ).format[Environment]
+    ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
+    ~ (__ \ "lastCompleted"   ).formatNullable[DeploymentEvent]
+    )(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
   }
 
   val durationInDaysReads: Reads[Duration] = __.read[Long].map(days => Duration.ofDays(days))
 
   val deployerAuditReads: Reads[DeployerAudit] = {
     implicit val tsf = timeSeenFormat
-    ((__ \ "userName").read[String]
-      ~ (__ \ "deployTime").read[TimeSeen])(DeployerAudit.apply _)
+    ( (__ \ "userName"  ).read[String]
+    ~ (__ \ "deployTime").read[TimeSeen]
+    )(DeployerAudit.apply _)
   }
 
   val heritageDeployment: Reads[HeritageDeployment] = {
     implicit val anf  = applicationNameFormat
-    implicit val ef   = environmentFormat
     implicit val vnf  = versionNumberFormat
     implicit val tsf  = timeSeenFormat
     implicit val dar  = deployerAuditReads
     implicit val tmf  = teamNameFormat
     implicit val didr = durationInDaysReads
-
-    ((__ \ "name").read[ServiceName]
-      ~ (__ \ "version").read[VersionNumber]
-      ~ (__ \ "teams").read[Seq[TeamName]]
-      ~ (__ \ "productionDate").read[TimeSeen]
-      ~ (__ \ "interval").readNullable[Duration]
-      ~ (__ \ "deployers").read[Seq[DeployerAudit]])(HeritageDeployment.apply _)
+    ( (__ \ "name"          ).read[ServiceName]
+    ~ (__ \ "version"       ).read[VersionNumber]
+    ~ (__ \ "teams"         ).read[Seq[TeamName]]
+    ~ (__ \ "productionDate").read[TimeSeen]
+    ~ (__ \ "interval"      ).readNullable[Duration]
+    ~ (__ \ "deployers"     ).read[Seq[DeployerAudit]]
+    )(HeritageDeployment.apply _)
   }
 
 }

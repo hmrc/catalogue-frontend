@@ -20,11 +20,10 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.libs.json.Reads
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering.ShutterEventsPage
 
 import scala.concurrent.ExecutionContext
@@ -34,7 +33,8 @@ import scala.util.control.NonFatal
 class ShutterEventsController @Inject()(
   mcc      : MessagesControllerComponents,
   connector: ShutterConnector
-)(implicit val ec: ExecutionContext) extends FrontendController(mcc) {
+)(implicit val ec: ExecutionContext
+) extends FrontendController(mcc) {
 
   private val logger = Logger(getClass)
 
@@ -43,21 +43,22 @@ class ShutterEventsController @Inject()(
   }
 
   def shutterEventsList(env: Environment, serviceName: Option[String]): Action[AnyContent] = Action.async { implicit request =>
-    implicit val readsShutterEvent: Reads[ShutterEvent] = ShutterEvent.reads
     val filter = filterFor(env, serviceName)
     val form = ShutterEventsForm.fromFilter(filter)
 
-    connector.shutterEventsByTimestampDesc(filter).recover {
-      case NonFatal(ex) =>
-        logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
-        Seq.empty
-    }.map { events =>
-      Ok(ShutterEventsPage(events, form, Environment.values))
-    }
+    connector
+      .shutterEventsByTimestampDesc(filter)
+      .recover {
+        case NonFatal(ex) =>
+          logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
+          Seq.empty
+      }.map { events =>
+        Ok(ShutterEventsPage(events, form, Environment.values))
+      }
   }
 
   private def filterFor(env: Environment, serviceNameOpt: Option[String]): ShutterEventsFilter =
-    ShutterEventsFilter(env, if (serviceNameOpt.exists(_.trim.nonEmpty)) serviceNameOpt else None)
+    ShutterEventsFilter(env, serviceNameOpt.filter(_.trim.nonEmpty))
 }
 
 private case class ShutterEventsForm(env: String, serviceName: Option[String])

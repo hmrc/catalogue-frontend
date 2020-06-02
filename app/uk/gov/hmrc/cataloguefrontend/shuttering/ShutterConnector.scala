@@ -22,17 +22,19 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.{encodePathParam, encodeQueryParam}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, Token}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, Token}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class ShutterConnector @Inject()(
-  http: HttpClient,
+  http         : HttpClient,
   serviceConfig: ServicesConfig
-)(implicit val ec: ExecutionContext) {
+)(implicit val ec: ExecutionContext
+) {
+  import HttpReads.Implicits._
 
   private val shutterApiBaseUrl = serviceConfig.baseUrl("shutter-api") + "/shutter-api"
 
@@ -73,15 +75,17 @@ class ShutterConnector @Inject()(
     , status     : ShutterStatus
     )(implicit hc: HeaderCarrier): Future[Unit] = {
     implicit val isf = ShutterStatus.format
-
     http
-      .PUT[ShutterStatus, HttpResponse](s"${urlStates(st, env)}/${encodePathParam(serviceName)}", status)(
+      .PUT[ShutterStatus, Try[Unit]](
+          s"${urlStates(st, env)}/${encodePathParam(serviceName)}",
+          status
+        )(
           implicitly[Writes[ShutterStatus]]
-        , implicitly[HttpReads[HttpResponse]]
+        , implicitly[HttpReads[Try[Unit]]]
         , hc.copy(token = Some(Token(umpToken.value)))
         , implicitly[ExecutionContext]
         )
-        .map(_ => ())
+        .map(_.get)
   }
 
   /**
@@ -91,16 +95,17 @@ class ShutterConnector @Inject()(
     */
   def latestShutterEvents(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     http
-      .GET[Seq[ShutterEvent]](url =
-        s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&namedFilter=latestByServiceName&data.environment=${encodeQueryParam(env.asString)}&data.shutterType=${encodeQueryParam(st.asString)}")
+      .GET[Seq[ShutterEvent]](
+        url = s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&namedFilter=latestByServiceName&data.environment=${encodeQueryParam(env.asString)}&data.shutterType=${encodeQueryParam(st.asString)}"
+      )
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
-  def shutterEventsByTimestampDesc(filter: ShutterEventsFilter)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] = {
-    val url = s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&${ShutterEventsFilter.asQuery(filter)}"
-    http.GET[Seq[ShutterEvent]](url).map {
-      _.flatMap(_.toShutterStateChangeEvent)
-    }
-  }
+  def shutterEventsByTimestampDesc(filter: ShutterEventsFilter)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
+    http
+      .GET[Seq[ShutterEvent]](
+        url = s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&${ShutterEventsFilter.asQuery(filter)}"
+      )
+      .map(_.flatMap(_.toShutterStateChangeEvent))
 
   /**
     * GET

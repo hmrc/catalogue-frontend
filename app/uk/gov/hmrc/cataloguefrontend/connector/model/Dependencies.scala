@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import java.time.{Instant, LocalDate}
 
+import com.github.ghik.silencer.silent
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.http.controllers.RestFormats
@@ -109,7 +110,7 @@ case class Dependencies(
 
 object Dependencies {
   object Implicits {
-    private implicit val dtr  = RestFormats.dateTimeFormats
+    @silent("never used") private implicit val dtr = RestFormats.dateTimeFormats
     private implicit val vf   = Version.format
     private implicit val brvr = BobbyRuleViolation.format
 

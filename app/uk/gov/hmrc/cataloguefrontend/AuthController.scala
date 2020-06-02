@@ -25,7 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.sign_in
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -33,8 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthController @Inject()(
   authService: AuthService,
   configuration: Configuration,
-  mcc: MessagesControllerComponents)(implicit ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  mcc: MessagesControllerComponents)(implicit ec: ExecutionContext
+) extends FrontendController(mcc) {
 
   import AuthController._
 

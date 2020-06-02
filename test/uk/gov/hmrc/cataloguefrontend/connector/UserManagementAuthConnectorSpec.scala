@@ -52,7 +52,7 @@ class UserManagementAuthConnectorSpec
         )
         .returning(
           status = OK,
-          body   = Json.obj("Token" -> token, "uid" -> userId)
+          json   = Json.obj("Token" -> token, "uid" -> userId)
         )
 
       connector.authenticate(username, password).futureValue shouldBe Right(
@@ -95,7 +95,7 @@ class UserManagementAuthConnectorSpec
         .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
         .returning(
           status = OK,
-          body   = Json.obj("uid" -> username, "groups" -> JsArray(Seq.empty))
+          json   = Json.obj("uid" -> username, "groups" -> JsArray(Seq.empty))
         )
 
       connector.getUser(umpToken).futureValue shouldBe Some(User(Username("username"), groups = List.empty))

@@ -24,7 +24,7 @@ import play.api.i18n.MessagesProvider
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DeploymentHistoryPage
 
 import scala.concurrent.ExecutionContext
@@ -34,8 +34,9 @@ class DeploymentHistoryController @Inject()(
   releasesConnector: ReleasesConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   page: DeploymentHistoryPage,
-  mcc: MessagesControllerComponents)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  mcc: MessagesControllerComponents
+)(implicit val ec: ExecutionContext
+) extends FrontendController(mcc) {
 
   def history(): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier()

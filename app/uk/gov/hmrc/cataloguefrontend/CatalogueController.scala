@@ -36,12 +36,16 @@ import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class TeamActivityDates(firstActive: Option[LocalDateTime], lastActive: Option[LocalDateTime], firstServiceCreationDate: Option[LocalDateTime])
+case class TeamActivityDates(
+  firstActive: Option[LocalDateTime],
+  lastActive: Option[LocalDateTime],
+  firstServiceCreationDate: Option[LocalDateTime]
+)
 
 case class DigitalServiceDetails(
   digitalServiceName: String,
@@ -216,13 +220,12 @@ class CatalogueController @Inject()(
     Action.async { implicit request =>
       teamsAndRepositoriesConnector.teamInfo(teamName).flatMap {
         case Some(teamInfo) =>
-          (
-            userManagementConnector.getTeamMembersFromUMP(teamName),
+          ( userManagementConnector.getTeamMembersFromUMP(teamName),
             userManagementConnector.getTeamDetails(teamName),
             leakDetectionService.repositoriesWithLeaks,
             serviceDependencyConnector.dependenciesForTeam(teamName),
-            serviceDependencyConnector
-              .getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))).mapN {
+            serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
+          ).mapN {
             (teamMembers, teamDetails, reposWithLeaks, masterTeamDependencies, prodDependencies) =>
               Ok(
                 teamInfoPage(
@@ -245,8 +248,7 @@ class CatalogueController @Inject()(
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
     Action.async { implicit request =>
-      (
-        serviceDependencyConnector.dependenciesForTeam(teamName),
+      ( serviceDependencyConnector.dependenciesForTeam(teamName),
         serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
       ).mapN { (masterTeamDependencies, prodDependencies) =>
         Ok(outOfDateTeamDependenciesPage(teamName, masterTeamDependencies, prodDependencies))
@@ -285,12 +287,13 @@ class CatalogueController @Inject()(
                             if targetEnvironment.environment == env
                           } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)).flatten
 
-                        (serviceDependencyConnector.getCuratedSlugDependencies(serviceName, slugInfoFlag), shutterService.getShutterState(ShutterType.Frontend, env, serviceName))
-                          .mapN {
-                            case (dependencies, optShutterState) =>
-                              val envData = EnvData(version, dependencies, optShutterState, Some(telemetryLinks))
-                              Some(slugInfoFlag -> envData)
-                          }
+                        ( serviceDependencyConnector.getCuratedSlugDependencies(serviceName, slugInfoFlag)
+                        , shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
+                        ).mapN {
+                          case (dependencies, optShutterState) =>
+                            val envData = EnvData(version, dependencies, optShutterState, Some(telemetryLinks))
+                            Some(slugInfoFlag -> envData)
+                        }
                       case None => Future.successful(None)
                     }
                   }
@@ -419,7 +422,10 @@ class CatalogueController @Inject()(
     }
   }
 
-  private def convertToDisplayableTeamMembers(teamName: TeamName, errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]): Either[UMPError, Seq[DisplayableTeamMember]] =
+  private def convertToDisplayableTeamMembers(
+    teamName          : TeamName,
+    errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]
+  ): Either[UMPError, Seq[DisplayableTeamMember]] =
     errorOrTeamMembers match {
       case Left(err) => Left(err)
       case Right(tms) =>
@@ -434,14 +440,16 @@ class CatalogueController @Inject()(
     }
 }
 
-case class TeamFilter(name: Option[String] = None) {
+case class TeamFilter(
+  name: Option[String] = None
+) {
   def isEmpty: Boolean = name.isEmpty
 }
 
 object TeamFilter {
   lazy val form = Form(
     mapping(
-      "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
+      "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(TeamFilter.apply)(TeamFilter.unapply)
   )
 }
@@ -453,43 +461,49 @@ case class DigitalServiceNameFilter(value: Option[String] = None) {
 object DigitalServiceNameFilter {
   lazy val form = Form(
     mapping(
-      "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
+      "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(DigitalServiceNameFilter.apply)(DigitalServiceNameFilter.unapply)
   )
 }
 
-case class DeploymentsFilter(team: Option[String] = None, serviceName: Option[String] = None, from: Option[LocalDateTime] = None, to: Option[LocalDateTime] = None) {
+case class DeploymentsFilter(
+  team       : Option[String]        = None,
+  serviceName: Option[String]        = None,
+  from       : Option[LocalDateTime] = None,
+  to         : Option[LocalDateTime] = None
+) {
   def isEmpty: Boolean = team.isEmpty && serviceName.isEmpty && from.isEmpty && to.isEmpty
 }
 
-case class RepoListFilter(name: Option[String] = None, repoType: Option[String] = None) {
+case class RepoListFilter(
+  name    : Option[String] = None,
+  repoType: Option[String] = None
+) {
   def isEmpty: Boolean = name.isEmpty && repoType.isEmpty
 }
 
 object RepoListFilter {
   lazy val form = Form(
     mapping(
-      "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
-      "type" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
+      "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+      "type" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(RepoListFilter.apply)(RepoListFilter.unapply)
   )
 }
 
 object DeploymentsFilter {
-
-  import DateHelper._
-
   lazy val form = Form(
     mapping(
-      "team" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
-      "serviceName" -> optional(text)
-        .transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity),
-      "from" -> optionalLocalDateTimeMapping("from.error.date"),
-      "to"   -> optionalLocalDateTimeMapping("to.error.date")
+      "team"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+      "serviceName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+      "from"        -> optionalLocalDateTimeMapping("from.error.date"),
+      "to"          -> optionalLocalDateTimeMapping("to.error.date")
     )(DeploymentsFilter.apply)(DeploymentsFilter.unapply)
   )
 
-  def optionalLocalDateTimeMapping(errorCode: String): Mapping[Option[LocalDateTime]] =
+  def optionalLocalDateTimeMapping(errorCode: String): Mapping[Option[LocalDateTime]] = {
+    import DateHelper._
     optional(text.verifying(errorCode, x => stringToLocalDateTimeOpt(x).isDefined))
       .transform[Option[LocalDateTime]](_.flatMap(stringToLocalDateTimeOpt), _.map(_.format(`yyyy-MM-dd`)))
+  }
 }

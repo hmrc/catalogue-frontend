@@ -24,8 +24,7 @@ import org.scalatest.matchers.should.Matchers._
 import play.api.libs.json.{JsValue, Writes}
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.http.hooks.HttpHook
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.play.http.ws.WSHttp
 
 import scala.collection.immutable.Queue
@@ -129,15 +128,14 @@ trait HttpClientStub {
 
     private[HttpClientStub] var httpResponse: OptionT[Future, HttpResponse] = OptionT.none[Future, HttpResponse]
 
-    def returning(status: Int, body: JsValue): Unit =
-      returning(HttpResponse(status, responseJson = Some(body)))
+    def returning(status: Int, json: JsValue): Unit =
+      returning(HttpResponse(status, json = json, headers = Map.empty))
 
     def returning(status: Int): Unit =
-      returning(HttpResponse(status, responseJson = None))
+      returning(HttpResponse(status, body = ""))
 
     def returning(response: HttpResponse): Unit =
       httpResponse = OptionT.pure[Future](response)
-
   }
 
   class ClientStub private[HttpClientStub] (verbStubbing: VerbStubbing) extends HttpClient with WSHttp {

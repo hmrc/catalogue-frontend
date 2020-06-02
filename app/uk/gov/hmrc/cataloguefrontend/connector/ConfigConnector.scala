@@ -19,9 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -29,7 +28,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class ConfigConnector @Inject()(
   http          : HttpClient,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext) {
+)(implicit val ec: ExecutionContext
+){
+  import HttpReads.Implicits._
 
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
 

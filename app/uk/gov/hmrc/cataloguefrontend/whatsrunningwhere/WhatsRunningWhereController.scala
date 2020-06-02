@@ -21,7 +21,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.WhatsRunningWherePage
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,8 +31,8 @@ class WhatsRunningWhereController @Inject()(
   service: WhatsRunningWhereService,
   page: WhatsRunningWherePage,
   mcc: MessagesControllerComponents
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+)(implicit val ec: ExecutionContext
+) extends FrontendController(mcc) {
 
   def heritageReleases: Action[AnyContent] = releases(ecs = false, heritage = true)
 

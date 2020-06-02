@@ -20,15 +20,20 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
+class ReleasesConnector @Inject()(
+  http          : HttpClient,
+  servicesConfig: ServicesConfig
+)(implicit
+  ec: ExecutionContext
+) {
+  import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
 
@@ -82,19 +87,26 @@ class ReleasesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConf
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where/$service"
 
     http
-      .GET[WhatsRunningWhere](baseUrl)
+      .GET[Option[WhatsRunningWhere]](baseUrl)
+      .map(_.getOrElse {
+        logger.error(s"Service $service not found, returning placeholder whatsrunningwhere")
+        WhatsRunningWhere(ServiceName(service), Nil)
+      })
       .recover {
-        case _: NotFoundException =>
-          logger.error(s"Service $service not found, returning placeholder whatsrunningwhere")
-          WhatsRunningWhere(ServiceName(service), Nil)
         case ex =>
           logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
           throw ex
       }
   }
 
-  def deploymentHistory(from: Option[Long] = None, to: Option[Long] = None, team: Option[String] = None, app: Option[String] = None)(
-    implicit hc: HeaderCarrier): Future[Seq[HeritageDeployment]] = {
+  def deploymentHistory(
+    from: Option[Long]   = None,
+    to  : Option[Long]   = None,
+    team: Option[String] = None,
+    app : Option[String] = None
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[HeritageDeployment]] = {
 
     implicit val rf = JsonCodecs.heritageDeployment
 

@@ -26,9 +26,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepo
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -182,17 +181,16 @@ object TeamsAndRepositoriesEnvironment {
 class TeamsAndRepositoriesConnector @Inject()(
   http          : HttpClient,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext) {
-
+)(implicit val ec: ExecutionContext
+) {
   import TeamsAndRepositoriesConnector._
+  import HttpReads.Implicits._
 
   private val teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
 
   private implicit val tf   = Team.format
   private implicit val tnf  = TeamName.format
-  private implicit val lf   = Link.format
   private implicit val jf   = Json.format[JenkinsLink]
-  private implicit val ef   = TeamsAndRepositoriesEnvironment.format
   private implicit val rdf  = RepositoryDetails.format
   private implicit val rddf = RepositoryDisplayDetails.format
   private implicit val dsf  = DigitalService.format
@@ -202,8 +200,8 @@ class TeamsAndRepositoriesConnector @Inject()(
     .map(l => Link(l.service, "Build", l.jenkinsURL))
       .map(Option.apply)
       .recover {
-      case ex: Throwable => None
-    }
+        case ex: Throwable => None
+      }
 
   def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
     http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams")
