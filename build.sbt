@@ -16,6 +16,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     majorVersion := 4,
     scalaVersion := "2.12.10",
+    scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
     // ***************
@@ -36,7 +37,7 @@ lazy val microservice = Project(appName, file("."))
     // ***************
   )
 
-val bootstrapPlayVersion = "2.14.0"
+val bootstrapPlayVersion = "2.15.0"
 val hmrcMongoVersion     = "0.29.0"
 
 val compile = Seq(

@@ -34,7 +34,7 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering.shutterService._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -55,8 +55,8 @@ class ShutterWizardController @Inject()(
   , mongoComponent               : MongoComponent
   , servicesConfig               : ServicesConfig
   , timestampSupport             : TimestampSupport
-  )(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc)
+  )(implicit val ec: ExecutionContext
+  ) extends FrontendController(mcc)
        with play.api.i18n.I18nSupport {
 
   import ShutterWizardController._

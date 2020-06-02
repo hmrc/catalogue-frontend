@@ -22,9 +22,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -33,7 +32,9 @@ import scala.util.control.NonFatal
 class ServiceDependenciesConnector @Inject()(
   http          : HttpClient,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext) {
+)(implicit val ec: ExecutionContext
+) {
+  import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
 
@@ -88,27 +89,24 @@ class ServiceDependenciesConnector @Inject()(
       }
 
   def getSlugInfo(
-      serviceName: String
-    , version    : Option[Version] = None
-    )(implicit hc: HeaderCarrier
-    ): Future[Option[ServiceDependencies]] =
+    serviceName: String
+  , version    : Option[Version] = None
+  )(implicit hc: HeaderCarrier
+  ): Future[Option[ServiceDependencies]] =
     http
-      .GET[ServiceDependencies](
+      .GET[Option[ServiceDependencies]](
           s"$servicesDependenciesBaseUrl/api/sluginfo"
         , queryParams = buildQueryParams(
                           "name"    -> Some(serviceName)
                         , "version" -> version.map(_.toString)
                         )
-        ).map(Some.apply)
-      .recover {
-        case e: NotFoundException => None
-      }
+        )
 
   def getCuratedSlugDependencies(
-      serviceName: String
-    , flag       : SlugInfoFlag
-    )(implicit hc: HeaderCarrier
-    ): Future[Seq[Dependency]] = {
+    serviceName: String
+  , flag       : SlugInfoFlag
+  )(implicit hc: HeaderCarrier
+  ): Future[Seq[Dependency]] = {
     import Dependencies.Implicits.readsDependency
     val url = s"$servicesDependenciesBaseUrl/api/slug-dependencies/${encodePathParam(serviceName)}"
     http.GET[Seq[Dependency]](
@@ -122,10 +120,10 @@ class ServiceDependenciesConnector @Inject()(
   }
 
   def getCuratedSlugDependenciesForTeam(
-      teamName: TeamName
-    , flag    : SlugInfoFlag
-    )(implicit hc: HeaderCarrier
-    ): Future[Map[String, Seq[Dependency]]] = {
+    teamName: TeamName
+  , flag    : SlugInfoFlag
+  )(implicit hc: HeaderCarrier
+  ): Future[Map[String, Seq[Dependency]]] = {
     import Dependencies.Implicits.readsDependency
     val url = s"$servicesDependenciesBaseUrl/api/teams/${encodePathParam(teamName.asString)}/slug-dependencies"
     http.GET[Map[String, Seq[Dependency]]](
@@ -142,10 +140,12 @@ class ServiceDependenciesConnector @Inject()(
     queryParams.collect { case (k, Some(v)) => (k, v) }
 
   def getServicesWithDependency(
-      flag        : SlugInfoFlag,
-      group       : String,
-      artefact    : String,
-      versionRange: BobbyVersionRange)(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] = {
+    flag        : SlugInfoFlag,
+    group       : String,
+    artefact    : String,
+    versionRange: BobbyVersionRange
+  )(implicit hc: HeaderCarrier
+  ): Future[Seq[ServiceWithDependency]] = {
     implicit val r = ServiceWithDependency.reads
     http
       .GET[Seq[ServiceWithDependency]](

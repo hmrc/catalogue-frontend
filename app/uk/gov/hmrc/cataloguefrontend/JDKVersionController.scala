@@ -20,7 +20,7 @@ import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
 
 import scala.concurrent.{ExecutionContext, Future}

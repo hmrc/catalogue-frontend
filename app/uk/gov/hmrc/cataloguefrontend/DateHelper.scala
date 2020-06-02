@@ -52,7 +52,7 @@ object DateHelper {
       d.format(DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm"))
   }
 
-  implicit def stringToLocalDateTimeOpt(ds: String): Option[LocalDateTime] =
+  def stringToLocalDateTimeOpt(ds: String): Option[LocalDateTime] =
     Try {
       LocalDate.parse(ds, `yyyy-MM-dd`).atStartOfDay()
     }.toOption
