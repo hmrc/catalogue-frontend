@@ -55,6 +55,7 @@ class TeamsAndRepositoriesConnectorSpec
       .configure(
         "microservice.services.teams-and-repositories.host" -> host,
         "microservice.services.teams-and-repositories.port" -> endpointPort,
+        "microservice.services.teams-and-repositories.archivedRepositories" -> false,
         "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
         "metrics.jvm"                                       -> false
       )
@@ -142,8 +143,8 @@ class TeamsAndRepositoriesConnectorSpec
   }
 
   "allRepositories" should {
-    "return all the repositories returned by the api" in {
-      serviceEndpoint(GET, "/api/repositories", willRespondWith = 200 -> Some(JsonData.repositoriesData))
+    "return all the repositories returned by the api with archived repositories param passed to api" in {
+      serviceEndpoint(GET, "/api/repositories?archived=false", willRespondWith = 200 -> Some(JsonData.repositoriesData))
 
       val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
         .allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
@@ -186,8 +187,8 @@ class TeamsAndRepositoriesConnectorSpec
   }
 
   "allDigitalServices" should {
-    "return all the digital service names" in {
-      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
+    "return all the digital service names with archived repositories param passed to api" in {
+      serviceEndpoint(GET, "/api/digital-services?archived=false", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
 
       val digitalServiceNames: Seq[String] =
         teamsAndRepositoriesConnector
@@ -199,8 +200,8 @@ class TeamsAndRepositoriesConnectorSpec
   }
 
   "teamsWithRepositories" should {
-    "return all the teams and their repositories" in {
-      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
+    "return all the teams and their repositories with archived repositories param passed to api" in {
+      serviceEndpoint(GET, "/api/teams_with_repositories?archived=false", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
 
       val teams: Seq[Team] =
         teamsAndRepositoriesConnector
