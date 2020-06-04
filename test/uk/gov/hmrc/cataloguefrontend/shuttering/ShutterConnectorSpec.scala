@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import org.mockito.ArgumentMatcher
-import org.mockito.ArgumentMatchers.{any, argThat, eq => eqTo}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -44,29 +43,39 @@ class ShutterConnectorSpec extends AnyWordSpec with MockitoSugar with Matchers w
 
     // unfortunately the test will receive an unhelpful NullPointerException if expectations are not met
     def stubEmptyResponseForGet(withPath: String, withParams: Seq[(String, String)]): Unit =
-      when(httpClient.GET(argThat(new UrlArgumentMatcher(withPath, withParams)))(
-        any[HttpReads[Seq[ShutterEvent]]], eqTo(headerCarrier), eqTo(executionContext)))
+      when(httpClient.GET(
+        eqTo(withPath),
+        eqTo(withParams))(
+          any[HttpReads[Seq[ShutterEvent]]],
+          eqTo(headerCarrier),
+          eqTo(executionContext)))
         .thenReturn(Future.successful(Seq.empty))
   }
 
   "Shutter Events" should {
     "be filtered by environment only when no service name is specified" in new Fixture {
       val filter = ShutterEventsFilter(environment = Environment.QA, serviceName = None)
-      stubEmptyResponseForGet(withPath = s"$SomeBaseUrl/shutter-api/events", withParams = Seq(
-        "type" -> "shutter-state-change",
-        "data.environment" -> "qa"
-      ))
+      stubEmptyResponseForGet(
+        withPath   = s"$SomeBaseUrl/shutter-api/events",
+        withParams = Seq(
+          "type"             -> "shutter-state-change",
+          "data.environment" -> "qa"
+        )
+      )
 
       underTest.shutterEventsByTimestampDesc(filter).futureValue shouldBe empty
     }
 
     "be filtered by serviceName and environment when a service name is specified" in new Fixture {
       val filter = ShutterEventsFilter(environment = Environment.QA, serviceName = Some("abc-frontend"))
-      stubEmptyResponseForGet(withPath = s"$SomeBaseUrl/shutter-api/events", withParams = Seq(
-        "type" -> "shutter-state-change",
-        "data.environment" -> "qa",
-        "data.serviceName" -> "abc-frontend"
-      ))
+      stubEmptyResponseForGet(
+        withPath   = s"$SomeBaseUrl/shutter-api/events",
+        withParams = Seq(
+          "type"             -> "shutter-state-change",
+          "data.environment" -> "qa",
+          "data.serviceName" -> "abc-frontend"
+        )
+      )
 
       underTest.shutterEventsByTimestampDesc(filter).futureValue shouldBe empty
     }
@@ -75,28 +84,4 @@ class ShutterConnectorSpec extends AnyWordSpec with MockitoSugar with Matchers w
 
 private object ShutterConnectorSpec {
   val SomeBaseUrl = "http://somebaseurl"
-
-  class UrlArgumentMatcher(path: String, params: Seq[(String, String)]) extends ArgumentMatcher[String] {
-    override def matches(arg: String): Boolean =
-      isMatchingUrl(arg.toString)
-
-    private def isMatchingUrl(url: String): Boolean = {
-      val indexOfQueryStringSeparator = url.indexOf('?')
-      if (indexOfQueryStringSeparator < 0)
-        url == path && params.isEmpty
-      else {
-        val urlPath = url.substring(0, indexOfQueryStringSeparator)
-        val urlQueryParams = url.substring(indexOfQueryStringSeparator + 1).split('&').toList.map(toKeyValue)
-        path == urlPath && params.sorted == urlQueryParams.sorted
-      }
-    }
-
-    private def toKeyValue(query: String): (String, String) = {
-      val indexOfKeyValueSeparator = query.indexOf('=')
-      if (indexOfKeyValueSeparator < 0)
-        query -> ""
-      else
-        query.substring(0, indexOfKeyValueSeparator) -> query.substring(indexOfKeyValueSeparator + 1)
-    }
-  }
 }
