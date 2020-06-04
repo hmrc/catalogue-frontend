@@ -22,17 +22,40 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentGeneration._
 
-sealed trait DeploymentGeneration
-
-object DeploymentGeneration {
-  case object ECS extends DeploymentGeneration
-  case object Heritage extends DeploymentGeneration
+sealed trait Platform {
+  def asString: String
 }
-case class WhatsRunningWhere(applicationName: ServiceName, versions: List[WhatsRunningWhereVersion], deployedIn: DeploymentGeneration = Heritage)
 
-case class WhatsRunningWhereVersion(environment: Environment, versionNumber: VersionNumber, lastSeen: TimeSeen)
+object Platform {
+  case object ECS      extends Platform { override val asString = "ecs"      }
+  case object Heritage extends Platform { override val asString = "heritage" }
+
+  val values: List[Platform] =
+    List(ECS, Heritage)
+
+  def parse(s: String): Either[String, Platform] =
+    values
+      .find(_.asString equalsIgnoreCase s)
+      .toRight(s"Invalid platform - should be one of: ${values.map(_.asString).mkString(", ")}")
+}
+case class WhatsRunningWhere(
+  applicationName: ServiceName,
+  versions       : List[WhatsRunningWhereVersion],
+  deployedIn     : Platform                        = Platform.Heritage
+)
+
+case class WhatsRunningWhereVersion(
+  environment  : Environment,
+  versionNumber: VersionNumber,
+  lastSeen     : TimeSeen
+)
+
+case class ServicePlatformMapping(
+  serviceName: ServiceName,
+  environment: Environment,
+  platform   : Platform
+)
 
 object JsonCodecs {
   def format[A, B](f: A => B, g: B => A)(implicit fa: Format[A]): Format[B] = fa.inmap(f, g)
@@ -43,10 +66,10 @@ object JsonCodecs {
       case Left(l)  => JsError(__, l)
     }
 
-  val applicationNameFormat: Format[ServiceName] = format(ServiceName.apply, unlift(ServiceName.unapply))
-  val versionNumberFormat: Format[VersionNumber] = format(VersionNumber.apply, unlift(VersionNumber.unapply))
-  val timeSeenFormat: Format[TimeSeen]           = format(TimeSeen.apply, unlift(TimeSeen.unapply))
-  val teamNameFormat: Format[TeamName]           = format(TeamName.apply, unlift(TeamName.unapply))
+  val applicationNameFormat: Format[ServiceName]   = format(ServiceName.apply, unlift(ServiceName.unapply))
+  val versionNumberFormat  : Format[VersionNumber] = format(VersionNumber.apply, unlift(VersionNumber.unapply))
+  val timeSeenFormat       : Format[TimeSeen]      = format(TimeSeen.apply, unlift(TimeSeen.unapply))
+  val teamNameFormat       : Format[TeamName]      = format(TeamName.apply, unlift(TeamName.unapply))
   val deploymentStatusFormat: Format[DeploymentStatus] =
     format(DeploymentStatus.apply, unlift(DeploymentStatus.unapply))
 
@@ -80,7 +103,7 @@ object JsonCodecs {
     implicit val wrwvf = whatsRunningWhereVersionReads
     ( (__ \ "applicationName").read[ServiceName]
     ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
-    ~ Reads.pure(Heritage)
+    ~ Reads.pure(Platform.Heritage)
     )(WhatsRunningWhere.apply _)
   }
 
@@ -102,6 +125,15 @@ object JsonCodecs {
     ( (__ \ "type").format[ProfileType]
     ~ (__ \ "name").format[ProfileName]
     )(Profile.apply, unlift(Profile.unapply))
+  }
+
+  lazy val platformFormat: Format[Platform] = new Format[Platform] {
+    override def reads(js: JsValue): JsResult[Platform] =
+      js.validate[String]
+        .flatMap(s => toResult(Platform.parse(s)))
+
+    override def writes(platform: Platform): JsValue =
+      JsString(platform.asString)
   }
 
   // ECS Deployment Event
@@ -136,7 +168,7 @@ object JsonCodecs {
     )(DeployerAudit.apply _)
   }
 
-  val heritageDeployment: Reads[HeritageDeployment] = {
+  val heritageDeploymentReads: Reads[HeritageDeployment] = {
     implicit val anf  = applicationNameFormat
     implicit val vnf  = versionNumberFormat
     implicit val tsf  = timeSeenFormat
@@ -152,6 +184,15 @@ object JsonCodecs {
     )(HeritageDeployment.apply _)
   }
 
+  val servicePlatformMappingReads: Reads[ServicePlatformMapping] = {
+    implicit val anf = JsonCodecs.applicationNameFormat
+    implicit val enf = JsonCodecs.environmentFormat
+    implicit val pf  = JsonCodecs.platformFormat
+    ( (__ \ "serviceName").read[ServiceName]
+    ~ (__ \ "environment").read[Environment]
+    ~ (__ \ "platform"   ).read[Platform]
+    )(ServicePlatformMapping.apply _)
+  }
 }
 
 case class TimeSeen(time: LocalDateTime)
@@ -164,14 +205,16 @@ object TimeSeen {
 }
 
 case class ServiceName(asString: String) extends AnyVal
+object ServiceName {
+  implicit val serviceNameOrdering: Ordering[ServiceName] =
+    Ordering.by(_.asString)
+}
 
 case class ProfileName(asString: String) extends AnyVal
 
 object ProfileName {
-  implicit val ordering = new Ordering[ProfileName] {
-    def compare(x: ProfileName, y: ProfileName): Int =
-      x.asString.compare(y.asString)
-  }
+  implicit val ordering: Ordering[ProfileName] =
+    Ordering.by(_.asString)
 }
 
 sealed trait ProfileType {
@@ -202,14 +245,24 @@ case class Profile(
 )
 
 case class VersionNumber(asString: String) extends AnyVal {
-  def asVersion(): Version = Version(asString)
+  def asVersion: Version = Version(asString)
 }
 
 case class DeploymentStatus(asString: String) extends AnyVal
 
-case class DeploymentEvent(deploymentId: String, status: DeploymentStatus, version: VersionNumber, time: TimeSeen)
+case class DeploymentEvent(
+  deploymentId: String,
+  status      : DeploymentStatus,
+  version     : VersionNumber,
+  time        : TimeSeen
+)
 
-case class ServiceDeployment(serviceName: ServiceName, environment: Environment, deploymentEvents: Seq[DeploymentEvent], lastCompleted: Option[DeploymentEvent])
+case class ServiceDeployment(
+  serviceName: ServiceName,
+  environment: Environment,
+  deploymentEvents: Seq[DeploymentEvent],
+  lastCompleted: Option[DeploymentEvent]
+)
 
 case class HeritageDeployment(
   name: ServiceName,
