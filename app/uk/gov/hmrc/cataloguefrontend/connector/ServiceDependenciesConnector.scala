@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
+import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
@@ -31,7 +31,8 @@ import scala.util.control.NonFatal
 @Singleton
 class ServiceDependenciesConnector @Inject()(
   http          : HttpClient,
-  servicesConfig: ServicesConfig
+  servicesConfig: ServicesConfig,
+  configuration: Configuration
 )(implicit val ec: ExecutionContext
 ) {
   import HttpReads.Implicits._
@@ -39,6 +40,8 @@ class ServiceDependenciesConnector @Inject()(
   private val logger = Logger(getClass)
 
   private val servicesDependenciesBaseUrl: String = servicesConfig.baseUrl("service-dependencies")
+  private val retrieveArchivedRepositories: Option[Boolean] = configuration
+    .getOptional[Boolean]("microservice.services.teams-and-repositories.archivedRepositories")
 
   def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
     import Dependencies.Implicits.reads
@@ -66,7 +69,10 @@ class ServiceDependenciesConnector @Inject()(
 
   def dependenciesForTeam(team: TeamName)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
     import Dependencies.Implicits.reads
-    http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/api/teams/${team.asString}/dependencies")
+    http.GET[Seq[Dependencies]](
+      url = s"$servicesDependenciesBaseUrl/api/teams/${team.asString}/dependencies",
+      queryParams = buildQueryParams(("archived", retrieveArchivedRepositories.map(_.toString)))
+    )
   }
 
   def getSlugDependencies(
@@ -128,7 +134,9 @@ class ServiceDependenciesConnector @Inject()(
     val url = s"$servicesDependenciesBaseUrl/api/teams/${encodePathParam(teamName.asString)}/slug-dependencies"
     http.GET[Map[String, Seq[Dependency]]](
       url
-    , queryParams = Seq("flag" -> flag.asString)
+    , queryParams = buildQueryParams(
+        ("archived", retrieveArchivedRepositories.map(_.toString)),
+        ("flag", Some(flag.asString)))
     ).recover {
       case NonFatal(ex) =>
         logger.error(s"An error occurred when connecting to [$url]: ${ex.getMessage}", ex)

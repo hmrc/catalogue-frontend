@@ -24,7 +24,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
+import play.api.{Application, Configuration}
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -163,7 +163,7 @@ class ServiceDependenciesConnectorSpec
       when(mockedHttpClient.GET(any())(any(), any(), any()))
         .thenReturn(Future.failed(new RuntimeException("Boom!!")))
 
-      val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig])
+      val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig], mock[Configuration])
 
       connector
         .getDependencies("non-existing-repo")
@@ -365,7 +365,7 @@ class ServiceDependenciesConnectorSpec
       when(mockedHttpClient.GET(any(), any())(any(), any(), any()))
         .thenReturn(Future.failed(new RuntimeException("Boom!!")))
 
-      val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig])
+      val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig], mock[Configuration])
 
       connector.getCuratedSlugDependencies("slugName", flag = SlugInfoFlag.Latest).futureValue shouldBe empty
     }
