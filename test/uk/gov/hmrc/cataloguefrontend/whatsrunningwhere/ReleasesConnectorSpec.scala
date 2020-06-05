@@ -77,7 +77,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
       )
 
       val response =
-        releasesConnector.ecsReleases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        releasesConnector.releases(profile = None, Platform.ECS)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response should contain theSameElementsAs Seq(
         WhatsRunningWhere(
@@ -123,7 +123,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
 
       val response =
         releasesConnector
-          .ecsReleases(profile = Some(Profile(profileType, profileName)))(
+          .releases(profile = Some(Profile(profileType, profileName)), platform = Platform.ECS)(
             HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
           )
           .futureValue
@@ -143,7 +143,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
       serviceEndpoint(GET, s"/releases-api/whats-running-where", queryParameters = Seq("platform" -> Platform.ECS.asString), willRespondWith = (500, Some("errors!")))
 
       val response =
-        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        releasesConnector.releases(profile = None, Platform.ECS)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response shouldBe Seq.empty
     }
@@ -155,6 +155,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
       serviceEndpoint(
         GET,
         "/releases-api/whats-running-where",
+        queryParameters = Seq("platform" -> Platform.Heritage.asString),
         willRespondWith = (
           200,
           Some("""[
@@ -182,7 +183,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
       )
 
       val response =
-        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        releasesConnector.releases(profile = None, Platform.Heritage)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response should contain theSameElementsAs Seq(
         WhatsRunningWhere(
@@ -207,7 +208,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
       serviceEndpoint(
         GET,
         s"/releases-api/whats-running-where",
-        queryParameters = Seq("profileName" -> profileName.asString, "profileType" -> profileType.asString),
+        queryParameters = Seq("profileName" -> profileName.asString, "profileType" -> profileType.asString, "platform" -> Platform.Heritage.asString),
         willRespondWith = (
           200,
           Some("""[
@@ -226,7 +227,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
 
       val response =
         releasesConnector
-          .releases(profile = Some(Profile(profileType, profileName)))(
+          .releases(profile = Some(Profile(profileType, profileName)), Platform.Heritage)(
             HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
           )
           .futureValue
@@ -245,7 +246,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
       serviceEndpoint(GET, s"/releases-api/whats-running-where", willRespondWith = (500, Some("errors!")))
 
       val response =
-        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        releasesConnector.releases(profile = None, Platform.Heritage)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
 
       response shouldBe Seq.empty
     }

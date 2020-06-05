@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, Platform}
 
 class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
 
@@ -100,6 +100,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(
         GET,
         "/releases-api/whats-running-where/service-1",
+        queryParameters = Seq("platform" -> Platform.Heritage.asString),
         willRespondWith = (
           200,
           Some("""{"applicationName":"service-1",
@@ -185,6 +186,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         serviceEndpoint(
           GET,
           "/releases-api/whats-running-where/service-1",
+          queryParameters = Seq("platform" -> Platform.Heritage.asString),
           willRespondWith = (
             200,
             Some("""{"applicationName":"service-1",
@@ -235,6 +237,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         serviceEndpoint(
           GET,
           "/releases-api/whats-running-where/service-1",
+          queryParameters = Seq("platform" -> Platform.Heritage.asString),
           willRespondWith = (
             200,
             Some("""{"applicationName":"service-1",
@@ -253,10 +256,10 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
     }
 
     "Render platform dependencies section" in {
-      serviceEndpoint(GET, "/api/repositories/service-name",                      willRespondWith = (200, Some(serviceDetailsData)))
-      serviceEndpoint(GET, "/releases-api/whatsrunningwhere/service-name",        willRespondWith = (200, Some(""" {"applicationName":"service-name","versions":[]} """)))
+      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                      = (200, Some(serviceDetailsData)))
+      serviceEndpoint(GET, "/releases-api/whatsrunningwhere/service-name", willRespondWith        = (200, Some(""" {"applicationName":"service-name","versions":[]} """)))
       serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
-      serviceEndpoint(GET, "/api/sluginfo?name=service-name",                     willRespondWith = (200, Some(serviceDependenciesData)))
+      serviceEndpoint(GET, "/api/sluginfo?name=service-name", willRespondWith                     = (200, Some(serviceDependenciesData)))
 
       val response = ws.url(s"http://localhost:$port/service/service-name").get.futureValue
 

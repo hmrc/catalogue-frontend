@@ -35,7 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Platform, WhatsRunningWhereService}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
@@ -220,12 +220,12 @@ class CatalogueController @Inject()(
     Action.async { implicit request =>
       teamsAndRepositoriesConnector.teamInfo(teamName).flatMap {
         case Some(teamInfo) =>
-          ( userManagementConnector.getTeamMembersFromUMP(teamName),
+          (
+            userManagementConnector.getTeamMembersFromUMP(teamName),
             userManagementConnector.getTeamDetails(teamName),
             leakDetectionService.repositoriesWithLeaks,
             serviceDependencyConnector.dependenciesForTeam(teamName),
-            serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
-          ).mapN {
+            serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))).mapN {
             (teamMembers, teamDetails, reposWithLeaks, masterTeamDependencies, prodDependencies) =>
               Ok(
                 teamInfoPage(
@@ -248,10 +248,11 @@ class CatalogueController @Inject()(
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
     Action.async { implicit request =>
-      ( serviceDependencyConnector.dependenciesForTeam(teamName),
-        serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
-      ).mapN { (masterTeamDependencies, prodDependencies) =>
-        Ok(outOfDateTeamDependenciesPage(teamName, masterTeamDependencies, prodDependencies))
+      (
+        serviceDependencyConnector.dependenciesForTeam(teamName),
+        serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))).mapN {
+        (masterTeamDependencies, prodDependencies) =>
+          Ok(outOfDateTeamDependenciesPage(teamName, masterTeamDependencies, prodDependencies))
       }
     }
 
@@ -272,7 +273,7 @@ class CatalogueController @Inject()(
       case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
         val futEnvDatas: Future[Map[SlugInfoFlag, EnvData]] =
           for {
-            deployments <- whatsRunningWhereService.releases(serviceName).map(_.versions)
+            deployments <- whatsRunningWhereService.releases(serviceName, Platform.Heritage).map(_.versions)
             res <- Environment.values.traverse { env =>
                     val slugInfoFlag     = SlugInfoFlag.ForEnvironment(env)
                     val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
@@ -287,13 +288,12 @@ class CatalogueController @Inject()(
                             if targetEnvironment.environment == env
                           } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)).flatten
 
-                        ( serviceDependencyConnector.getCuratedSlugDependencies(serviceName, slugInfoFlag)
-                        , shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
-                        ).mapN {
-                          case (dependencies, optShutterState) =>
-                            val envData = EnvData(version, dependencies, optShutterState, Some(telemetryLinks))
-                            Some(slugInfoFlag -> envData)
-                        }
+                        (serviceDependencyConnector.getCuratedSlugDependencies(serviceName, slugInfoFlag), shutterService.getShutterState(ShutterType.Frontend, env, serviceName))
+                          .mapN {
+                            case (dependencies, optShutterState) =>
+                              val envData = EnvData(version, dependencies, optShutterState, Some(telemetryLinks))
+                              Some(slugInfoFlag -> envData)
+                          }
                       case None => Future.successful(None)
                     }
                   }
@@ -423,7 +423,7 @@ class CatalogueController @Inject()(
   }
 
   private def convertToDisplayableTeamMembers(
-    teamName          : TeamName,
+    teamName: TeamName,
     errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]
   ): Either[UMPError, Seq[DisplayableTeamMember]] =
     errorOrTeamMembers match {
@@ -467,16 +467,16 @@ object DigitalServiceNameFilter {
 }
 
 case class DeploymentsFilter(
-  team       : Option[String]        = None,
-  serviceName: Option[String]        = None,
-  from       : Option[LocalDateTime] = None,
-  to         : Option[LocalDateTime] = None
+  team: Option[String]        = None,
+  serviceName: Option[String] = None,
+  from: Option[LocalDateTime] = None,
+  to: Option[LocalDateTime]   = None
 ) {
   def isEmpty: Boolean = team.isEmpty && serviceName.isEmpty && from.isEmpty && to.isEmpty
 }
 
 case class RepoListFilter(
-  name    : Option[String] = None,
+  name: Option[String]     = None,
   repoType: Option[String] = None
 ) {
   def isEmpty: Boolean = name.isEmpty && repoType.isEmpty

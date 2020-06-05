@@ -58,9 +58,9 @@ class WhatsRunningWhereController @Inject()(
         profile             = profileFrom(form)
         selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
         (ecsReleases, heritageReleases, profiles) <- (
-                                                      if (ecs) service.ecsReleases(profile)
+                                                      if (ecs) service.releases(profile, Platform.ECS)
                                                       else Future.successful(Seq.empty[WhatsRunningWhere]),
-                                                      if (heritage) service.releases(profile)
+                                                      if (heritage) service.releases(profile, Platform.Heritage)
                                                       else Future.successful(Seq.empty[WhatsRunningWhere]),
                                                       service.profiles).mapN {
                                                       case (e, h, p) => (e, h, p)

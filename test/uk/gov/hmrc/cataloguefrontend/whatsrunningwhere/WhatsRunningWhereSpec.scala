@@ -44,7 +44,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
 
   "What's running where page" should {
 
-    "show a list of applications, environments and version numbers" in {
+    "show a list of applications, environments and version numbers for Heritage" in {
 
       serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
 
@@ -53,6 +53,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
       serviceEndpoint(
         GET,
         "/releases-api/whats-running-where",
+        queryParameters = Seq("platform" -> Platform.Heritage.asString),
         willRespondWith = (
           200,
           Some("""[

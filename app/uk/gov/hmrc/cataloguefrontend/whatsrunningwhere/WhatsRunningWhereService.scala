@@ -19,20 +19,17 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import javax.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector)(implicit ec: ExecutionContext) {
+class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector) {
 
   /** Get releases from Heritage infrastructure. This will be removed once everything has migrated */
-  def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
-    releasesConnector.releases(profile)
-
-  def ecsReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
-    releasesConnector.ecsReleases(profile)
+  def releases(profile: Option[Profile], platform: Platform)(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
+    releasesConnector.releases(profile, platform)
 
   def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
     releasesConnector.profiles
 
-  def releases(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
-    releasesConnector.releasesForService(service)
+  def releases(service: String, platform: Platform)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
+    releasesConnector.releasesForService(service, platform)
 }
