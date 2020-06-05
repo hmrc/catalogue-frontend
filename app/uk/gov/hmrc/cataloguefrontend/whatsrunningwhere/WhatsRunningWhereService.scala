@@ -28,32 +28,11 @@ class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector)(i
     releasesConnector.releases(profile)
 
   def ecsReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
-    releasesConnector.ecsReleases(profile) map convert
+    releasesConnector.ecsWhatsRunningWhere(profile)
 
   def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
     releasesConnector.profiles
 
   def releases(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
     releasesConnector.releasesForService(service)
-
-  private def convert(serviceDeployments: Seq[ServiceDeployment]): Seq[WhatsRunningWhere] =
-    serviceDeployments
-      .groupBy(_.serviceName)
-      .map {
-        case (serviceName, deployments) =>
-          val versions = deployments.flatMap { d =>
-            d.lastCompleted.map { lastCompleted =>
-              WhatsRunningWhereVersion(
-                environment   = d.environment,
-                versionNumber = lastCompleted.version,
-                lastSeen      = lastCompleted.time)
-            }
-          }
-          WhatsRunningWhere(
-            applicationName = serviceName,
-            versions        = versions.toList,
-            deployedIn      = Platform.ECS
-          )
-      }
-      .toSeq
 }

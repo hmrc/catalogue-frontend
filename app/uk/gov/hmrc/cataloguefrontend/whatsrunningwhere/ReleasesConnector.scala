@@ -28,11 +28,11 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ReleasesConnector @Inject()(
-  http          : HttpClient,
+  http: HttpClient,
   servicesConfig: ServicesConfig
-)(implicit
-  ec: ExecutionContext
-) {
+)(
+  implicit
+  ec: ExecutionContext) {
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
@@ -78,10 +78,24 @@ class ReleasesConnector @Inject()(
       }
   }
 
+  def ecsWhatsRunningWhere(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
+    val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
+    val params  = profileQueryParams(profile) ++ UrlUtils.buildQueryParams("platform" -> Some(Platform.ECS.asString))
+    http
+      .GET[Seq[WhatsRunningWhere]](baseUrl, params)
+      .recover {
+        case NonFatal(ex) =>
+          logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
+          Seq.empty
+      }
+      .map(_.map(updatePlatform(Platform.ECS)))
+  }
+
+  private def updatePlatform(platform: Platform)(whatsRunningWhere: WhatsRunningWhere): WhatsRunningWhere =
+    whatsRunningWhere.copy(deployedIn = platform)
+
   private def profileQueryParams(profile: Option[Profile]): Seq[(String, String)] =
-    UrlUtils.buildQueryParams(
-      "profileName" -> profile.map(_.profileName.asString),
-      "profileType" -> profile.map(_.profileType.asString))
+    UrlUtils.buildQueryParams("profileName" -> profile.map(_.profileName.asString), "profileType" -> profile.map(_.profileType.asString))
 
   def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where/$service"
@@ -101,21 +115,21 @@ class ReleasesConnector @Inject()(
 
   def deploymentHistory(
     from: Option[Long]   = None,
-    to  : Option[Long]   = None,
+    to: Option[Long]     = None,
     team: Option[String] = None,
-    app : Option[String] = None
-  )(implicit
-    hc: HeaderCarrier
-  ): Future[Seq[HeritageDeployment]] = {
+    app: Option[String]  = None
+  )(
+    implicit
+    hc: HeaderCarrier): Future[Seq[HeritageDeployment]] = {
     implicit val hdr = JsonCodecs.heritageDeploymentReads
     http.GET[Seq[HeritageDeployment]](
-      url         = s"$serviceUrl/releases-api/deployments/${Environment.Production.asString}",
+      url = s"$serviceUrl/releases-api/deployments/${Environment.Production.asString}",
       queryParams = UrlUtils.buildQueryParams(
-                      "from" -> from.map(_.toString),
-                      "to"   -> to.map(_.toString),
-                      "team" -> team,
-                      "app"  -> app
-                    )
+        "from" -> from.map(_.toString),
+        "to"   -> to.map(_.toString),
+        "team" -> team,
+        "app"  -> app
+      )
     )
   }
 

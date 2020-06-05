@@ -43,6 +43,111 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
       .build()
 
   private lazy val releasesConnector = app.injector.instanceOf[ReleasesConnector]
+  "ecsWhatsRunningWhere" should {
+
+    "return all releases if profile not supplied" in {
+      serviceEndpoint(
+        GET,
+        "/releases-api/whats-running-where",
+        queryParameters = Seq("platform" -> Platform.ECS.asString),
+        willRespondWith = (
+          200,
+          Some("""[
+                 |  {
+                 |    "applicationName": "api-definition",
+                 |    "versions": [
+                 |      {
+                 |        "environment": "integration",
+                 |        "versionNumber": "1.57.0",
+                 |        "lastSeen": "2019-05-29T14:09:48"
+                 |      }
+                 |    ]
+                 |  },
+                 |  {
+                 |    "applicationName": "api-documentation",
+                 |    "versions": [
+                 |      {
+                 |        "environment": "integration",
+                 |        "versionNumber": "0.44.0",
+                 |        "lastSeen": "2019-05-29T14:09:46"
+                 |      }
+                 |    ]
+                 |  }
+                 |]""".stripMargin))
+      )
+
+      val response =
+        releasesConnector.ecsWhatsRunningWhere(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+
+      response should contain theSameElementsAs Seq(
+        WhatsRunningWhere(
+          ServiceName("api-definition"),
+          List(
+            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
+          ),
+          deployedIn = Platform.ECS
+        ),
+        WhatsRunningWhere(
+          ServiceName("api-documentation"),
+          List(
+            WhatsRunningWhereVersion(Integration, VersionNumber("0.44.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:46")))
+          ),
+          deployedIn = Platform.ECS
+        )
+      )
+    }
+
+    "return all releases for given profile" in {
+      val profileType = ProfileType.ServiceManager
+      val profileName = ProfileName("profile1")
+
+      serviceEndpoint(
+        GET,
+        s"/releases-api/whats-running-where",
+        queryParameters = Seq("profileName" -> profileName.asString, "profileType" -> profileType.asString, "platform" -> Platform.ECS.asString),
+        willRespondWith = (
+          200,
+          Some("""[
+                 |  {
+                 |    "applicationName": "api-definition",
+                 |    "versions": [
+                 |      {
+                 |        "environment": "integration",
+                 |        "versionNumber": "1.57.0",
+                 |        "lastSeen": "2019-05-29T14:09:48"
+                 |      }
+                 |    ]
+                 |  }
+                 |]""".stripMargin))
+      )
+
+      val response =
+        releasesConnector
+          .ecsWhatsRunningWhere(profile = Some(Profile(profileType, profileName)))(
+            HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
+          )
+          .futureValue
+
+      response should contain theSameElementsAs Seq(
+        WhatsRunningWhere(
+          ServiceName("api-definition"),
+          List(
+            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
+          ),
+          deployedIn = Platform.ECS
+        )
+      )
+    }
+
+    "return empty upon error" in {
+      serviceEndpoint(GET, s"/releases-api/whats-running-where", queryParameters = Seq("platform" -> Platform.ECS.asString), willRespondWith = (500, Some("errors!")))
+
+      val response =
+        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+
+      response shouldBe Seq.empty
+    }
+  }
 
   "releases" should {
 
@@ -83,19 +188,13 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(
-              Integration,
-              VersionNumber("1.57.0"),
-              lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
+            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
           )
         ),
         WhatsRunningWhere(
           ServiceName("api-documentation"),
           List(
-            WhatsRunningWhereVersion(
-              Integration,
-              VersionNumber("0.44.0"),
-              lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:46")))
+            WhatsRunningWhereVersion(Integration, VersionNumber("0.44.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:46")))
           )
         )
       )
@@ -126,18 +225,17 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
       )
 
       val response =
-        releasesConnector.releases(profile = Some(Profile(profileType, profileName)))(
+        releasesConnector
+          .releases(profile = Some(Profile(profileType, profileName)))(
             HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
-          ).futureValue
+          )
+          .futureValue
 
       response should contain theSameElementsAs Seq(
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(
-              Integration,
-              VersionNumber("1.57.0"),
-              lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
+            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
           )
         )
       )
@@ -287,9 +385,11 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
       )
 
       val response =
-        releasesConnector.ecsReleases(profile = Some(Profile(profileType, profileName)))(
-          HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
-        ).futureValue
+        releasesConnector
+          .ecsReleases(profile = Some(Profile(profileType, profileName)))(
+            HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())
+          )
+          .futureValue
 
       response should contain theSameElementsAs Seq(
         ServiceDeployment(

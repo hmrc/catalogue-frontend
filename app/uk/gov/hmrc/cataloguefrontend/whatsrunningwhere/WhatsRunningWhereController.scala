@@ -22,7 +22,7 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.WhatsRunningWherePage
+import views.html.whatsrunningwhere.WhatsRunningWherePage
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -31,8 +31,8 @@ class WhatsRunningWhereController @Inject()(
   service: WhatsRunningWhereService,
   page: WhatsRunningWherePage,
   mcc: MessagesControllerComponents
-)(implicit val ec: ExecutionContext
-) extends FrontendController(mcc) {
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
   def heritageReleases: Action[AnyContent] = releases(ecs = false, heritage = true)
 
@@ -72,10 +72,7 @@ class WhatsRunningWhereController @Inject()(
     }
 }
 
-case class WhatsRunningWhereFilter(
-  profileName: Option[ProfileName] = None,
-  profileType: Option[ProfileType] = None,
-  serviceName: Option[ServiceName] = None)
+case class WhatsRunningWhereFilter(profileName: Option[ProfileName] = None, profileType: Option[ProfileType] = None, serviceName: Option[ServiceName] = None)
 
 object WhatsRunningWhereFilter {
   private def filterEmptyString(x: Option[String]) = x.filter(_.trim.nonEmpty)
