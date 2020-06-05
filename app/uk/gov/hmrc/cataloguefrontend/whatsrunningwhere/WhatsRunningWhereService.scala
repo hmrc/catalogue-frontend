@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import javax.inject.Inject
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentGeneration.ECS
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -53,7 +52,7 @@ class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector)(i
           WhatsRunningWhere(
             applicationName = serviceName,
             versions        = versions.toList,
-            deployedIn      = ECS
+            deployedIn      = Platform.ECS
           )
       }
       .toSeq

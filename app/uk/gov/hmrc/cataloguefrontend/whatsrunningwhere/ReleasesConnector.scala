@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -107,16 +107,23 @@ class ReleasesConnector @Inject()(
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[HeritageDeployment]] = {
+    implicit val hdr = JsonCodecs.heritageDeploymentReads
+    http.GET[Seq[HeritageDeployment]](
+      url         = s"$serviceUrl/releases-api/deployments/${Environment.Production.asString}",
+      queryParams = UrlUtils.buildQueryParams(
+                      "from" -> from.map(_.toString),
+                      "to"   -> to.map(_.toString),
+                      "team" -> team,
+                      "app"  -> app
+                    )
+    )
+  }
 
-    implicit val rf = JsonCodecs.heritageDeployment
-
-    val baseUrl = s"$serviceUrl/releases-api/deployments/${Production.asString}"
-    val params  = UrlUtils.buildQueryParams(
-      "from" -> from.map(_.toString),
-      "to"   -> to.map(_.toString),
-      "team" -> team,
-      "app"  -> app)
-
-    http.GET[Seq[HeritageDeployment]](baseUrl, queryParams = params)
+  def getServicePlatformMappings(implicit hc: HeaderCarrier): Future[Seq[ServicePlatformMapping]] = {
+    implicit val spmr = JsonCodecs.servicePlatformMappingReads
+    http
+      .GET[Seq[ServicePlatformMapping]](
+        url = s"$serviceUrl/releases-api/service-platform-mappings"
+      )
   }
 }

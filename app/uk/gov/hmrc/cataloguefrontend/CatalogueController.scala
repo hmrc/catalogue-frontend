@@ -275,7 +275,7 @@ class CatalogueController @Inject()(
             deployments <- whatsRunningWhereService.releases(serviceName).map(_.versions)
             res <- Environment.values.traverse { env =>
                     val slugInfoFlag     = SlugInfoFlag.ForEnvironment(env)
-                    val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion())
+                    val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
                     // a single environment may have multiple versions during a deployment
                     // return the lowest
                     deployedVersions.sorted.headOption match {

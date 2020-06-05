@@ -35,7 +35,7 @@ class DependenciesService @Inject()(
     Future
       .sequence(deployments.map(wrwv => {
         serviceDependenciesConnector
-          .getSlugDependencies(serviceName, Some(wrwv.versionNumber.asVersion()))
+          .getSlugDependencies(serviceName, Some(wrwv.versionNumber.asVersion))
           .map(_.map(_.copy(environment = Some(wrwv.environment))))
       }))
       .map(_.flatten)

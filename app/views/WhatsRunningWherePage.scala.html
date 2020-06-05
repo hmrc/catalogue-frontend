@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ ProfileName, ProfileType, WhatsRunningWhere}
 @import uk.gov.hmrc.cataloguefrontend.routes
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentGeneration.ECS
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform
 
 @this(viewMessages: ViewMessages)
 
@@ -84,7 +84,7 @@
             <tr role="row" id="row@i">
                 <td class="application-name" id="row@{i}_application">
                     <a href="@routes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
-                    @if(wrw.deployedIn == ECS){ <span class="label label-primary pull-right">ECS</span>}
+                    @if(wrw.deployedIn == Platform.ECS){ <span class="label label-primary pull-right">ECS</span>}
                 </td>
 
                 @environments.map { env =>

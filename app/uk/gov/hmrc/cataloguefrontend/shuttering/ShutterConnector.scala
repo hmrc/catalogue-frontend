@@ -21,7 +21,7 @@ import play.api.libs.json.Writes
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
-import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.{encodePathParam, encodeQueryParam}
+import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, Token}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -96,14 +96,21 @@ class ShutterConnector @Inject()(
   def latestShutterEvents(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     http
       .GET[Seq[ShutterEvent]](
-        url = s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&namedFilter=latestByServiceName&data.environment=${encodeQueryParam(env.asString)}&data.shutterType=${encodeQueryParam(st.asString)}"
+        url         = urlEvents,
+        queryParams = Seq(
+          "type"             -> EventType.ShutterStateChange.asString,
+          "namedFilter"      -> "latestByServiceName",
+          "data.environment" -> env.asString,
+          "data.shutterType" -> st.asString
+        )
       )
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
   def shutterEventsByTimestampDesc(filter: ShutterEventsFilter)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     http
       .GET[Seq[ShutterEvent]](
-        url = s"$urlEvents?type=${encodeQueryParam(EventType.ShutterStateChange.asString)}&${ShutterEventsFilter.asQuery(filter)}"
+        url         = urlEvents,
+        queryParams = Seq("type" -> EventType.ShutterStateChange.asString) ++ filter.asQueryParams
       )
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
@@ -132,16 +139,12 @@ class ShutterConnector @Inject()(
 }
 
 object ShutterConnector {
-  case class ShutterEventsFilter(environment: Environment, serviceName: Option[String])
-
-  object ShutterEventsFilter {
-    private [shuttering] def asQuery(filter: ShutterEventsFilter): String = {
-      val queryParams = Seq(asQueryParam(key = "data.environment", value = filter.environment.asString)) ++
-        filter.serviceName.map(asQueryParam(key = "data.serviceName", _))
-      queryParams.mkString("&")
-    }
-
-    private def asQueryParam(key: String, value: String): String =
-      s"$key=${encodeQueryParam(value)}"
+  case class ShutterEventsFilter(
+    environment: Environment,
+    serviceName: Option[String]
+  ) {
+    def asQueryParams: Seq[(String, String)] =
+      Seq("data.environment" -> environment.asString) ++
+        serviceName.map("data.serviceName" -> _)
   }
 }
