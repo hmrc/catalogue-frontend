@@ -20,21 +20,21 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.whatsrunningwhere.ServicePlatformMappingPage
+import views.html.whatsrunningwhere.FuturePlatformMigrationPage
 import cats.implicits._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ServicePlatformMappingController @Inject()(
-  cc                        : MessagesControllerComponents,
-  releasesConnector         : ReleasesConnector,
-  servicePlatformMappingPage: ServicePlatformMappingPage,
+class FuturePlatformMigrationController @Inject()(
+  cc                         : MessagesControllerComponents,
+  releasesConnector          : ReleasesConnector,
+  futurePlatformMigrationPage: FuturePlatformMigrationPage,
 )(implicit val ec: ExecutionContext
 ) extends FrontendController(cc) {
 
-  def getServicePlatformMapping =
+  def futurePlatformMigration =
     Action.async { implicit request =>
       for {
         servicePlatformMappings <- releasesConnector.getServicePlatformMappings
@@ -48,7 +48,7 @@ class ServicePlatformMappingController @Inject()(
                                        .groupBy(_.environment)
                                        .mapValues(_.groupBy(_.platform).mapValues(_.size))
                                    )
-      } yield Ok(servicePlatformMappingPage(serviceData, platformCount))
+      } yield Ok(futurePlatformMigrationPage(serviceData, platformCount))
     }
 
   def sortByKeys[A : Ordering, B](m: Map[A, B]): Map[A, B] =
