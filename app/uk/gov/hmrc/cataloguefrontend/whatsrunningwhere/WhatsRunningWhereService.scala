@@ -28,7 +28,7 @@ class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector)(i
     releasesConnector.releases(profile)
 
   def ecsReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
-    releasesConnector.ecsWhatsRunningWhere(profile)
+    releasesConnector.ecsReleases(profile)
 
   def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
     releasesConnector.profiles

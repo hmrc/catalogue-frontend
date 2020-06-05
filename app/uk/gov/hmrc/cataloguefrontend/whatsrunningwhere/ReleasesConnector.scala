@@ -66,19 +66,7 @@ class ReleasesConnector @Inject()(
       }
   }
 
-  def ecsReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[ServiceDeployment]] = {
-    val baseUrl = s"$serviceUrl/releases-api/ecs-deployment-events"
-    val params  = profileQueryParams(profile)
-    http
-      .GET[Seq[ServiceDeployment]](baseUrl, params)
-      .recover {
-        case NonFatal(ex) =>
-          logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
-          Seq.empty
-      }
-  }
-
-  def ecsWhatsRunningWhere(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
+  def ecsReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
     val params  = profileQueryParams(profile) ++ UrlUtils.buildQueryParams("platform" -> Some(Platform.ECS.asString))
     http
