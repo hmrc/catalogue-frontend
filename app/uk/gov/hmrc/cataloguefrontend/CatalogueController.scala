@@ -98,6 +98,9 @@ class CatalogueController @Inject()(
   private lazy val jenkinsLinkName =
     configuration.getOptional[String]("teams-and-repositories.link-name.jenkins").getOrElse("jenkins")
 
+  private lazy val hideArchivedRepositoriesFromTeam: Boolean =
+    configuration.getOptional[Boolean]("team.hideArchivedRepositories").getOrElse(false)
+
   private val repoTypeToDetailsUrl = Map(
     RepoType.Service   -> routes.CatalogueController.service _,
     RepoType.Other     -> routes.CatalogueController.repository _,
@@ -225,20 +228,24 @@ class CatalogueController @Inject()(
             userManagementConnector.getTeamDetails(teamName),
             leakDetectionService.repositoriesWithLeaks,
             serviceDependencyConnector.dependenciesForTeam(teamName),
-            serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))).mapN {
-            (teamMembers, teamDetails, reposWithLeaks, masterTeamDependencies, prodDependencies) =>
+            serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),
+            if (hideArchivedRepositoriesFromTeam) teamsAndRepositoriesConnector.archivedRepositories else Future.successful(Nil)).mapN {
+            (teamMembers, teamDetails, reposWithLeaks, masterTeamDependencies, prodDependencies, archivedRepos) =>
+              val reposToHide: Seq[String] = archivedRepos.map(_.name)
               Ok(
                 teamInfoPage(
                   teamName               = teamInfo.name,
-                  repos                  = teamInfo.repos.getOrElse(Map.empty),
+                  repos                  = teamInfo.repos.getOrElse(Map.empty).map { case (repoType, repos) =>
+                                            repoType -> repos.filterNot(reposToHide.contains(_))
+                                           },
                   activityDates          = TeamActivityDates(teamInfo.firstActiveDate, teamInfo.lastActiveDate, teamInfo.firstServiceCreationDate),
                   errorOrTeamMembers     = convertToDisplayableTeamMembers(teamInfo.name, teamMembers),
                   errorOrTeamDetails     = teamDetails,
                   umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name),
                   leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks),
                   hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
-                  masterTeamDependencies = masterTeamDependencies,
-                  prodDependencies       = prodDependencies
+                  masterTeamDependencies = masterTeamDependencies.filterNot(dependencies => reposToHide.contains(dependencies.repositoryName)),
+                  prodDependencies       = prodDependencies.filterNot { case (repo, _) => reposToHide.contains(repo) }
                 )
               )
           }
