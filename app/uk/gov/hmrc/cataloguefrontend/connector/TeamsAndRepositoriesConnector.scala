@@ -227,13 +227,10 @@ class TeamsAndRepositoriesConnector @Inject()(
   }
 
   def allRepositories(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
-    http.GET[Seq[RepositoryDisplayDetails]](teamsAndServicesBaseUrl + s"/api/repositories")
+    repositories(archived = None)
 
   def archivedRepositories(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
-    http.GET[Seq[RepositoryDisplayDetails]](
-      url = teamsAndServicesBaseUrl + s"/api/repositories",
-      queryParams = Seq(("archived", "true"))
-    )
+    repositories(archived = Some(true))
 
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] =
     http.GET[Option[RepositoryDetails]](teamsAndServicesBaseUrl + s"/api/repositories/${encodePathParam(name)}")
@@ -248,6 +245,13 @@ class TeamsAndRepositoriesConnector @Inject()(
     http.GET[Map[ServiceName, Seq[TeamName]]](
       url = teamsAndServicesBaseUrl + s"/api/services",
       queryParams = Seq(("teamDetails", "true")))
+
+  private def repositories(archived: Option[Boolean])
+                          (implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
+    http.GET[Seq[RepositoryDisplayDetails]](
+      url = teamsAndServicesBaseUrl + s"/api/repositories",
+      queryParams = archived.map(a => ("archived", a.toString)).toSeq
+    )
 
 }
 
