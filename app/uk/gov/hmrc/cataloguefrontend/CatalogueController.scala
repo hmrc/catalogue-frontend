@@ -244,8 +244,8 @@ class CatalogueController @Inject()(
                   umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name),
                   leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks),
                   hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
-                  masterTeamDependencies = masterTeamDependencies.filterNot(dependencies => reposToHide.contains(dependencies.repositoryName)),
-                  prodDependencies       = prodDependencies.filterNot { case (repo, _) => reposToHide.contains(repo) }
+                  masterTeamDependencies = masterTeamDependencies.filterNot(repo => reposToHide.contains(repo.repositoryName)),
+                  prodDependencies       = prodDependencies.filterNot { case (service, _) => reposToHide.contains(service) }
                 )
               )
           }
