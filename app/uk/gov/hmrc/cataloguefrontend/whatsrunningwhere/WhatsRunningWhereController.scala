@@ -22,7 +22,7 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.WhatsRunningWherePage
+import views.html.whatsrunningwhere.WhatsRunningWherePage
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -31,12 +31,12 @@ class WhatsRunningWhereController @Inject()(
   service: WhatsRunningWhereService,
   page: WhatsRunningWherePage,
   mcc: MessagesControllerComponents
-)(implicit val ec: ExecutionContext
-) extends FrontendController(mcc) {
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
-  def heritageReleases: Action[AnyContent] = releases(ecs = false, heritage = true)
+  def heritageReleases: Action[AnyContent] = releases(Platform.Heritage)
 
-  def ecsReleases: Action[AnyContent] = releases(ecs = true, heritage = false)
+  def ecsReleases: Action[AnyContent] = releases(Platform.ECS)
 
   private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
     form.fold(
@@ -51,31 +51,20 @@ class WhatsRunningWhereController @Inject()(
   private def distinctEnvironments(releases: Seq[WhatsRunningWhere]) =
     releases.flatMap(_.versions.map(_.environment)).distinct.sorted
 
-  private def releases(ecs: Boolean, heritage: Boolean): Action[AnyContent] =
+  private def releases(platform: Platform): Action[AnyContent] =
     Action.async { implicit request =>
       for {
         form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
         profile             = profileFrom(form)
         selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (ecsReleases, heritageReleases, profiles) <- (
-                                                      if (ecs) service.ecsReleases(profile)
-                                                      else Future.successful(Seq.empty[WhatsRunningWhere]),
-                                                      if (heritage) service.releases(profile)
-                                                      else Future.successful(Seq.empty[WhatsRunningWhere]),
-                                                      service.profiles).mapN {
-                                                      case (e, h, p) => (e, h, p)
-                                                    }
-        releases     = (ecsReleases ++ heritageReleases).sortBy(_.applicationName.asString)
+        (releases, profiles) <- (service.releases(profile, platform).map(_.sortBy(_.applicationName.asString)), service.profiles).mapN { case (r, p) => (r, p) }
         environments = distinctEnvironments(releases)
         profileNames = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
       } yield Ok(page(environments, releases, selectedProfileType, profileNames, form))
     }
 }
 
-case class WhatsRunningWhereFilter(
-  profileName: Option[ProfileName] = None,
-  profileType: Option[ProfileType] = None,
-  serviceName: Option[ServiceName] = None)
+case class WhatsRunningWhereFilter(profileName: Option[ProfileName] = None, profileType: Option[ProfileType] = None, serviceName: Option[ServiceName] = None)
 
 object WhatsRunningWhereFilter {
   private def filterEmptyString(x: Option[String]) = x.filter(_.trim.nonEmpty)

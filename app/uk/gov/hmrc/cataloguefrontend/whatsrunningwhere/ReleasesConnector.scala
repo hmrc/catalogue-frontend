@@ -28,11 +28,11 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ReleasesConnector @Inject()(
-  http          : HttpClient,
+  http: HttpClient,
   servicesConfig: ServicesConfig
-)(implicit
-  ec: ExecutionContext
-) {
+)(
+  implicit
+  ec: ExecutionContext) {
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
@@ -43,9 +43,9 @@ class ReleasesConnector @Inject()(
   implicit val pf   = JsonCodecs.profileFormat
   implicit val sdf  = JsonCodecs.serviceDeploymentsFormat
 
-  def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
+  def releases(profile: Option[Profile], platform: Platform)(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
-    val params  = profileQueryParams(profile)
+    val params  = profileQueryParams(profile) ++ UrlUtils.buildQueryParams("platform" -> Some(platform.asString))
     http
       .GET[Seq[WhatsRunningWhere]](baseUrl, params)
       .recover {
@@ -53,6 +53,7 @@ class ReleasesConnector @Inject()(
           logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
           Seq.empty
       }
+      .map(_.map(addPlatformTag(platform)))
   }
 
   def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] = {
@@ -66,28 +67,17 @@ class ReleasesConnector @Inject()(
       }
   }
 
-  def ecsReleases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[ServiceDeployment]] = {
-    val baseUrl = s"$serviceUrl/releases-api/ecs-deployment-events"
-    val params  = profileQueryParams(profile)
-    http
-      .GET[Seq[ServiceDeployment]](baseUrl, params)
-      .recover {
-        case NonFatal(ex) =>
-          logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
-          Seq.empty
-      }
-  }
+  private def addPlatformTag(platform: Platform)(whatsRunningWhere: WhatsRunningWhere): WhatsRunningWhere =
+    whatsRunningWhere.copy(deployedIn = platform)
 
   private def profileQueryParams(profile: Option[Profile]): Seq[(String, String)] =
-    UrlUtils.buildQueryParams(
-      "profileName" -> profile.map(_.profileName.asString),
-      "profileType" -> profile.map(_.profileType.asString))
+    UrlUtils.buildQueryParams("profileName" -> profile.map(_.profileName.asString), "profileType" -> profile.map(_.profileType.asString))
 
-  def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
+  def releasesForService(service: String, platform: Platform)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where/$service"
-
+    val params  = UrlUtils.buildQueryParams("platform" -> Some(platform.asString))
     http
-      .GET[Option[WhatsRunningWhere]](baseUrl)
+      .GET[Option[WhatsRunningWhere]](baseUrl, params)
       .map(_.getOrElse {
         logger.error(s"Service $service not found, returning placeholder whatsrunningwhere")
         WhatsRunningWhere(ServiceName(service), Nil)
@@ -101,21 +91,21 @@ class ReleasesConnector @Inject()(
 
   def deploymentHistory(
     from: Option[Long]   = None,
-    to  : Option[Long]   = None,
+    to: Option[Long]     = None,
     team: Option[String] = None,
-    app : Option[String] = None
-  )(implicit
-    hc: HeaderCarrier
-  ): Future[Seq[HeritageDeployment]] = {
+    app: Option[String]  = None
+  )(
+    implicit
+    hc: HeaderCarrier): Future[Seq[HeritageDeployment]] = {
     implicit val hdr = JsonCodecs.heritageDeploymentReads
     http.GET[Seq[HeritageDeployment]](
-      url         = s"$serviceUrl/releases-api/deployments/${Environment.Production.asString}",
+      url = s"$serviceUrl/releases-api/deployments/${Environment.Production.asString}",
       queryParams = UrlUtils.buildQueryParams(
-                      "from" -> from.map(_.toString),
-                      "to"   -> to.map(_.toString),
-                      "team" -> team,
-                      "app"  -> app
-                    )
+        "from" -> from.map(_.toString),
+        "to"   -> to.map(_.toString),
+        "team" -> team,
+        "app"  -> app
+      )
     )
   }
 

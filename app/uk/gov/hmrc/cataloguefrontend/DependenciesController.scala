@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Platform, WhatsRunningWhereService}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependenciesPage
 
@@ -37,7 +37,7 @@ class DependenciesController @Inject()(
 
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
-      deployments         <- whatsRunningWhereService.releases(name).map(_.versions)
+      deployments         <- whatsRunningWhereService.releases(name, Platform.Heritage).map(_.versions)
       serviceDependencies <- dependenciesService.search(name, deployments)
     } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.semanticVersion)(Ordering[Option[Version]].reverse)))
   }

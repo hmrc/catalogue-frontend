@@ -44,7 +44,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
 
   "What's running where page" should {
 
-    "show a list of applications, environments and version numbers" in {
+    "show a list of applications, environments and version numbers for Heritage" in {
 
       serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
 
@@ -53,6 +53,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
       serviceEndpoint(
         GET,
         "/releases-api/whats-running-where",
+        queryParameters = Seq("platform" -> Platform.Heritage.asString),
         willRespondWith = (
           200,
           Some("""[
@@ -100,33 +101,32 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
 
       serviceEndpoint(
         GET,
-        "/releases-api/ecs-deployment-events",
+        "/releases-api/whats-running-where",
+        queryParameters = Seq("platform" -> Platform.ECS.asString),
         willRespondWith = (
           200,
           Some("""[
-              |  {
-              |    "serviceName": "api-definition",
-              |    "environment": "integration",
-              |    "deploymentEvents": [],
-              |    "lastCompleted": {
-              |      "deploymentId": "some-stack-id",
-              |      "status": "CREATE_COMPLETE",
-              |      "version": "1.57.0",
-              |      "time": "2019-05-29T14:09:48"
-              |    }
-              |  },
-              |  {
-              |    "serviceName": "api-documentation",
-              |    "environment": "integration",
-              |    "deploymentEvents": [],
-              |    "lastCompleted": {
-              |      "deploymentId": "some-other-stack-id",
-              |      "status": "UPDATE_COMPLETE",
-              |      "version": "0.44.0",
-              |      "time": "2019-05-29T14:09:46"
-              |    }
-              |  }
-              |]""".stripMargin))
+                 |  {
+                 |    "applicationName": "api-definition",
+                 |    "versions": [
+                 |      {
+                 |        "environment": "integration",
+                 |        "versionNumber": "1.58.0",
+                 |        "lastSeen": "2019-05-29T14:09:48"
+                 |      }
+                 |    ]
+                 |  },
+                 |  {
+                 |    "applicationName": "api-documentation",
+                 |    "versions": [
+                 |      {
+                 |        "environment": "integration",
+                 |        "versionNumber": "0.41.0",
+                 |        "lastSeen": "2019-05-29T14:09:46"
+                 |      }
+                 |    ]
+                 |  }
+                 |]""".stripMargin))
       )
 
       val response = WS.url(s"http://localhost:$port/whats-running-where-ecs").get.futureValue
@@ -134,10 +134,10 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
       response.status shouldBe 200
 
       response.body should include("api-definition")
-      response.body should include("1.57.0")
+      response.body should include("1.58.0")
 
       response.body should include("api-documentation")
-      response.body should include("0.44.0")
+      response.body should include("0.41.0")
 
       response.body should include("Integration")
     }
