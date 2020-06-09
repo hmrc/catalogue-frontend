@@ -22,6 +22,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.{ECS, Heritage}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -38,16 +40,16 @@ class DeploymentHistoryController @Inject()(
 )(implicit val ec: ExecutionContext
 ) extends FrontendController(mcc) {
 
-  def history(): Action[AnyContent] = Action.async { implicit request =>
+  def history(env: Environment = Production): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     val search = form.bindFromRequest().fold(_ => SearchForm(None, None, None, None), res => res)
 
     for {
-      historyHeritage <- releasesConnector.deploymentHistory(Heritage, from = search.from, to = search.to, app = search.app, team = search.team)
-      historyEcs <- releasesConnector.deploymentHistory(ECS, from = search.from, to = search.to, app = search.app, team = search.team)
+      historyHeritage <- releasesConnector.deploymentHistory(Heritage, env, from = search.from, to = search.to, app = search.app, team = search.team)
+      historyEcs <- releasesConnector.deploymentHistory(ECS, env, from = search.from, to = search.to, app = search.app, team = search.team)
       teams   <- teamsAndRepositoriesConnector.allTeams
-    } yield Ok(page((historyHeritage ++ historyEcs).sortBy(_.firstSeen)(Ordering[TimeSeen].reverse), teams.sortBy(_.name.asString), ""))
+    } yield Ok(page(env, (historyHeritage ++ historyEcs).sortBy(_.firstSeen)(Ordering[TimeSeen].reverse), teams.sortBy(_.name.asString), ""))
   }
 
   case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], app: Option[String])

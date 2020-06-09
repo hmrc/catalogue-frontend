@@ -91,6 +91,7 @@ class ReleasesConnector @Inject()(
 
   def deploymentHistory(
     platform: Platform,
+    environment: Environment,
     from: Option[Long]   = None,
     to: Option[Long]     = None,
     team: Option[String] = None,
@@ -101,7 +102,7 @@ class ReleasesConnector @Inject()(
 
     implicit val rf = JsonCodecs.heritageDeploymentReads
     http.GET[Seq[Deployment]](
-      url = s"$serviceUrl/releases-api/deployments/${Environment.Production.asString}",
+      url = s"$serviceUrl/releases-api/deployments/${environment.asString}",
       queryParams = UrlUtils.buildQueryParams(
         "from" -> from.map(_.toString),
         "to" -> to.map(_.toString),

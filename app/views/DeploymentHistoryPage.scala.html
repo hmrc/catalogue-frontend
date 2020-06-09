@@ -16,15 +16,16 @@
 
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Deployment
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @this()
 
 
-@(deployments: Seq[Deployment], teams: Seq[Team], userProfileBaseUrl: String)(implicit request: Request[_])
+@(env: Environment, deployments: Seq[Deployment], teams: Seq[Team], userProfileBaseUrl: String)(implicit request: Request[_])
 
 @standard_layout("Deployments", "deployments") {
   <header>
-    <h1>Deployments: Production</h1>
+    <h1>Deployments: @env.asString</h1>
   </header>
 
  <div class="row">

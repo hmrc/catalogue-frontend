@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
+@import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 
 @(title: String = "Home", active: String = "")(content: Html)(implicit request: Request[_])
 <!DOCTYPE html>
@@ -75,7 +76,7 @@
                         <a id="link-to-repositories" href="@appRoutes.CatalogueController.allRepositories" class="@if(active=="repositories") {active}">Repositories</a>
                     </li>
                     <li>
-                        <a id="link-to-deployments" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history" class="@if(active=="deployments") {active}">Deployments</a>
+                        <a id="link-to-deployments" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(Production)" class="@if(active=="deployments") {active}">Deployments</a>
                     </li>
                     <li>
                         <a id="link-to-whats-running-where" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.heritageReleases()" class="@if(active=="whats-running-where") {active}">What's Running Where</a>
