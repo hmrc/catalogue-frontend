@@ -55,7 +55,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
         "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
         "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
         "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                                        -> false
+        "metrics.jvm"                                        -> false,
+        "team.hideArchivedRepositories"                      -> true
       )
       .build()
 
@@ -69,6 +70,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/teamA/dependencies", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/CATO/dependencies", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/repositories?archived=true", willRespondWith = (200, Some("[]")))
   }
 
   "Team services page" should {
@@ -125,6 +127,83 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       assertAnchor("/service/teamA-serv", "teamA-serv")
       assertAnchor("/service/teamA-frontend", "teamA-frontend")
       assertAnchor("/prototype/service1-prototype", "service1-prototype")
+      assertAnchor("/prototype/service2-prototype", "service2-prototype")
+      assertAnchor("/repositories/teamA-other", "teamA-other")
+    }
+
+
+    "filter out archived repositories from a list of libraries, services, prototypes and repositories" in {
+      serviceEndpoint(GET, "/api/repositories?archived=true", willRespondWith = (200, Some(
+        """
+          |[{
+          |  "name": "service1-prototype",
+          |  "createdAt": 12345,
+          |  "lastUpdatedAt": 67890,
+          |  "repoType": "Prototype",
+          |  "language": "Scala",
+          |  "archived": true
+          |}]
+          |""".stripMargin)))
+
+      serviceEndpoint(
+        GET,
+        "/api/teams_with_details/teamA",
+        willRespondWith = (
+          200,
+          Some(
+            """
+               {
+                 "name": "teamA",
+                 "firstActiveDate":1234560,
+                 "lastActiveDate":1234561,
+                 "repos":{
+                    "Library": [
+                        "teamA-lib"
+                    ],
+                    "Service": [
+                        "teamA-serv",
+                        "teamA-frontend"
+                    ],
+                    "Prototype": [
+                        "service1-prototype",
+                        "service2-prototype"
+                    ],
+                    "Other": [
+                        "teamA-other"
+                    ]
+                 },
+                 "ownedRepos": []
+               }
+            """
+          ))
+      )
+
+      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
+
+      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
+
+      response.status shouldBe 200
+
+      val htmlDocument = asDocument(response.body)
+      val anchorTags   = htmlDocument.getElementsByTag("a").asScala.toList
+
+      def assertAnchor(href: String, text: String): Unit =
+        assert(anchorTags.exists { e =>
+          e.text == text && e.attr("href") == href
+        })
+
+      def assertNoAnchor(href: String, text: String): Unit = {
+        val anchorExists = anchorTags.exists { e =>
+          e.text == text && e.attr("href") == href
+        }
+        assert(!anchorExists)
+      }
+
+      assertAnchor("/library/teamA-lib", "teamA-lib")
+      assertAnchor("/service/teamA-serv", "teamA-serv")
+      assertAnchor("/service/teamA-frontend", "teamA-frontend")
+      // Note: assert that this anchor does NOT exist
+      assertNoAnchor("/prototype/service1-prototype", "service1-prototype")
       assertAnchor("/prototype/service2-prototype", "service2-prototype")
       assertAnchor("/repositories/teamA-other", "teamA-other")
     }
