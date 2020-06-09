@@ -19,6 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import helper._
+
 @this()
 
 @(
@@ -29,13 +30,13 @@
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("Deployments", "deployments") {
-  <header>
-    <h1>Deployments: @selectedEnv.asString</h1>
-  </header>
+    <header>
+        <h1>Deployments: @selectedEnv.asString</h1>
+    </header>
 
-     <form class="form-inline" id="search-form">
-
-        <div class="row">
+    <div id="service-list">
+        <form method="get">
+            <div class="form-group row">
             <span>Service: <input id="service-search-input" type="text" name="service" value='@form("service").value'></span>
              @select(
                  field = form("platform"),
@@ -58,7 +59,7 @@
              )
          </div>
 
-        <div class="row">
+            <div class="form-group row">
             <div class="input-group">
                 Date from: <input id="from-search-input" type="date" name="from" value='@form("from").value'>
                 to:<input type="date" id="to-search-input" name="to" value='@form("to").value'>
@@ -66,47 +67,53 @@
 
             <input type="submit" value="Filter">
         </div>
-     </form>
+        </form>
 
-<div class="row">
-    <ul id="environment" class="nav nav-tabs">
-        @Environment.values.map(envOption)
-    </ul>
-</div>
+        <div class="row">
+            <ul id="environment" class="nav nav-tabs">
+                @Environment.values.map(envOption)
+            </ul>
+        </div>
 
-<div class="row">
-  <table class="table table-striped">
-    <tr>
-      <th><span>Service</span></th>
-      <th><span>Teams</span></th>
-      <th><span>Version</span></th>
-      <th><span>Deploy Time</span></th>
-      <th><span>Deployer</span></th>
-    </tr>
-    @deployments.zipWithIndex.map{case (d, i) =>
-    <tr id="row@i">
-      <td id="row@{i}_name">
-          @if(d.isECS){ <span class="label label-primary pull-right">ECS</span>}
-          <a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString).url}">@{d.name.asString}</a>
-      </td>
-      <td id="row@{i}_team">
-        <ul class="list-group">
-        @for(team <- d.teams) {
-          <li ><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team.asString}</a></li>
-        }
-        </ul>
-      </td>
-      <td class="monospaced" id="row@{i}_version">@{d.version.asString}</td>
-      <td class="monospaced" id="row@{i}_production">@{d.firstSeen.time.asString}</td>
-      <td class="monospaced" id="row@{i}_deployer">
-      @d.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.userName}" target="_blank">@{u.userName}<span class="glyphicon glyphicon-new-window"/></a>}.getOrElse("N/A")
-      </td>
-    </tr>
-    }
-
-  </table>
-</div>
+        <table class="table table-striped">
+            <tr>
+                <th class="col-lg-4"><button role="button" class="sort no-border" data-sort="service-name">Service</button></th>
+                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="team">Teams</button></th>
+                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="version">Version</button></th>
+                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="deploy-time">Deploy Time</button></th>
+                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="deployer">Deployer</button></th>
+            </tr>
+            <tbody class="list">
+                @deployments.zipWithIndex.map{case (d, i) =>
+                <tr id="row@i">
+                  <td id="row@{i}_name" class="service-name">
+                      @if(d.isECS){ <span class="label label-primary pull-right">ECS</span>}
+                      <a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString).url}">@{d.name.asString}</a>
+                  </td>
+                  <td id="row@{i}_team" class="team">
+                    <ul class="list-group">
+                    @for(team <- d.teams) {
+                      <li><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team.asString}</a></li>
+                    }
+                    </ul>
+                  </td>
+                  <td id="row@{i}_version"    class="version monospaced">@{d.version.asString}</td>
+                  <td id="row@{i}_production" class="deploy-time monospaced">@{d.firstSeen.time.asString}</td>
+                  <td id="row@{i}_deployer"   class="deployer monospaced">
+                    @d.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.userName}" target="_blank">@{u.userName}<span class="glyphicon glyphicon-new-window"/></a>}.getOrElse("N/A")
+                  </td>
+                </tr>
+                }
+          </tbody>
+      </table>
+    </div>
 }
+
+<!-- listjs configuration -->
+<script>
+var options = { valueNames: [ 'service-name','team', 'version', 'deploy-time', 'deployer' ] };
+var serviceList = new List('service-list', options);
+</script>
 
 @envOption(env: Environment) = {
 <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
