@@ -42,7 +42,16 @@ class DeploymentHistoryController @Inject()(
   def history(env: Environment = Production): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    val search = form.bindFromRequest().fold(_ => SearchForm(None, None, None, None, None), res => res)
+    val today = LocalDate.now()
+    val weekAgo = today.minusDays(7)
+
+    val search = form.bindFromRequest().fold(_ => SearchForm(None, None, None, None, None), res =>
+      res.copy(
+        //If no query params are set, default to showing the last weeks data
+        from = res.from.orElse(Some(toEpochMillis(weekAgo))),
+        to = res.to.orElse(Some(toEpochMillis(today)))
+      )
+    )
 
     // Either specific platform is specified, or all of them
     val platforms = search.platform.flatMap(p => Platform.parse(p).toOption).map(Seq.apply(_)).getOrElse(Platform.values)
@@ -59,12 +68,15 @@ class DeploymentHistoryController @Inject()(
         deployments.sortBy(_.firstSeen)(Ordering[TimeSeen].reverse),
         teams.sortBy(_.name.asString),
         "",
-        form.bindFromRequest()
+        form.fill(search)
       )
     )
   }
 
   case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], app: Option[String], platform: Option[String])
+
+  def toLocalDate(l: Long): LocalDate = Instant.ofEpochMilli(l).atZone(ZoneId.of("UTC")).toLocalDate
+  def toEpochMillis(l: LocalDate): Long = l.atStartOfDay(ZoneId.of("UTC")).toInstant.toEpochMilli
 
   lazy val form: Form[SearchForm] = {
     val dateFormat = "yyyy-MM-dd"
@@ -73,11 +85,11 @@ class DeploymentHistoryController @Inject()(
         "from" -> Forms.optional(
           Forms
             .localDate(dateFormat)
-            .transform[Long](_.atStartOfDay(ZoneId.of("UTC")).toInstant.toEpochMilli, l => LocalDate.from(Instant.ofEpochMilli(l)))),
+            .transform[Long](toEpochMillis, toLocalDate)),
         "to" -> Forms.optional(
           Forms
             .localDate(dateFormat)
-            .transform[Long](_.atStartOfDay(ZoneId.of("UTC")).toInstant.toEpochMilli, l => LocalDate.from(Instant.ofEpochMilli(l)))),
+            .transform[Long](toEpochMillis, toLocalDate)),
         "team" -> Forms.optional(Forms.text),
         "service" -> Forms.optional(Forms.text),
         "platform" -> Forms.optional(Forms.text)

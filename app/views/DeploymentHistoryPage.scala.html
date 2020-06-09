@@ -31,42 +31,48 @@
 
 @standard_layout("Deployments", "deployments") {
     <header>
-        <h1>Deployments: @selectedEnv.asString</h1>
+        <h1>Deployments</h1>
     </header>
 
     <div id="service-list">
         <form method="get">
             <div class="form-group row">
-            <span>Service: <input id="service-search-input" type="text" name="service" value='@form("service").value'></span>
-             @select(
-                 field = form("platform"),
-                 options = Seq(
-                     "Heritage" -> "Heritage",
-                     "ECS" -> "ECS"
-                 ),
-                 '_default -> "All",
-                 '_label -> "Platform",
-                 'onchange -> "this.form.submit()",
-                 'id -> "platform-search"
-             )
-             @select(
-                 field = form("team"),
-                 options = teams.map(t => t.name.asString -> t.name.asString),
-                 '_default -> "All",
-                 '_label -> "Team",
-                 'onchange -> "this.form.submit()",
-                 'id -> "team-search"
-             )
-         </div>
-
-            <div class="form-group row">
-            <div class="input-group">
-                Date from: <input id="from-search-input" type="date" name="from" value='@form("from").value'>
-                to:<input type="date" id="to-search-input" name="to" value='@form("to").value'>
+                <div class="col-xs-3">
+                    <label for="service-search-input">Service name</label>
+                    <input id="service-search-input" class="search form-control" type="text" name="service" value='@form("service").value' autofocus>
+                </div>
+                <div class="col-xs-2">
+                    @select(
+                        field = form("platform"),
+                        options = Seq(
+                        "Heritage" -> "Heritage",
+                        "ECS" -> "ECS"
+                        ),
+                        '_default -> "All",
+                        '_label -> "Platform",
+                        'onchange -> "this.form.submit()",
+                        'id -> "platform-search"
+                    )
+                </div>
+                <div class="col-xs-3">
+                    @select(
+                        field = form("team"),
+                        options = teams.map(t => t.name.asString -> t.name.asString),
+                        '_default -> "All",
+                        '_label -> "Team",
+                        'onchange -> "this.form.submit()",
+                        'id -> "team-search"
+                    )
+                </div>
+                <div class="col-xs-2">
+                    <label for="from-search-input">Date From</label>
+                    <input id="from-search-input" class="form-control" type="date" name="from" onchange="this.form.submit()" value='@form("from").value'>
+                </div>
+                <div class="col-xs-2">
+                    <label for="to-search-input">Date From</label>
+                    <input type="date" id="to-search-input" class="form-control" name="to" onchange="this.form.submit()" value='@form("to").value'>
+                </div>
             </div>
-
-            <input type="submit" value="Filter">
-        </div>
         </form>
 
         <div class="row">
