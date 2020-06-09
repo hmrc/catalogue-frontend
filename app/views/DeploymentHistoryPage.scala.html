@@ -18,36 +18,60 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import helper._
 @this()
 
-
-@(env: Environment, deployments: Seq[Deployment], teams: Seq[Team], userProfileBaseUrl: String)(implicit request: Request[_])
+@(
+    selectedEnv: Environment, deployments: Seq[Deployment],
+    teams: Seq[Team],
+    userProfileBaseUrl: String,
+    form: Form[_]
+)(implicit messages: Messages, request: Request[_])
 
 @standard_layout("Deployments", "deployments") {
   <header>
-    <h1>Deployments: @env.asString</h1>
+    <h1>Deployments: @selectedEnv.asString</h1>
   </header>
 
- <div class="row">
-     <div class="col-sm-12">
-          <form onsubmit="return updateDeployments()" class="form-inline" id="search-form">
-            <span>Service: <input id="service-search-input" type="text" name="app" value=''></span>
-            <span>Team:
-                <select name="team">
-                    <option value=""></option>
-                    @teams.map { t => <option value="@t.name.asString">@t.name.asString</option> }
-                </select>
-            </span>
+     <form class="form-inline" id="search-form">
 
+        <div class="row">
+            <span>Service: <input id="service-search-input" type="text" name="service" value='@form("service").value'></span>
+             @select(
+                 field = form("platform"),
+                 options = Seq(
+                     "Heritage" -> "Heritage",
+                     "ECS" -> "ECS"
+                 ),
+                 '_default -> "All",
+                 '_label -> "Platform",
+                 'onchange -> "this.form.submit()",
+                 'id -> "platform-search"
+             )
+             @select(
+                 field = form("team"),
+                 options = teams.map(t => t.name.asString -> t.name.asString),
+                 '_default -> "All",
+                 '_label -> "Team",
+                 'onchange -> "this.form.submit()",
+                 'id -> "team-search"
+             )
+         </div>
+
+        <div class="row">
             <div class="input-group">
-              Deployment from: <input id="from-search-input" type="date" name="from" value=''>
-              to:<input type="date" id="to-search-input" name="to" value=''>
+                Date from: <input id="from-search-input" type="date" name="from" value='@form("from").value'>
+                to:<input type="date" id="to-search-input" name="to" value='@form("to").value'>
             </div>
 
             <input type="submit" value="Filter">
+        </div>
+     </form>
 
-          </form>
-    </div>
+<div class="row">
+    <ul id="environment" class="nav nav-tabs">
+        @Environment.values.map(envOption)
+    </ul>
 </div>
 
 <div class="row">
@@ -82,4 +106,10 @@
 
   </table>
 </div>
+}
+
+@envOption(env: Environment) = {
+<li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
+    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(env)" class="navbar-link">@env.displayString</a>
+</li>
 }

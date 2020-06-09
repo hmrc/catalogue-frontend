@@ -24,12 +24,11 @@ import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.{ECS, Heritage}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DeploymentHistoryPage
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DeploymentHistoryController @Inject()(
@@ -43,18 +42,31 @@ class DeploymentHistoryController @Inject()(
   def history(env: Environment = Production): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    val search = form.bindFromRequest().fold(_ => SearchForm(None, None, None, None), res => res)
+    val search = form.bindFromRequest().fold(_ => SearchForm(None, None, None, None, None), res => res)
+
+    // Either specific platform is specified, or all of them
+    val platforms = search.platform.flatMap(p => Platform.parse(p).toOption).map(Seq.apply(_)).getOrElse(Platform.values)
 
     for {
-      historyHeritage <- releasesConnector.deploymentHistory(Heritage, env, from = search.from, to = search.to, app = search.app, team = search.team)
-      historyEcs <- releasesConnector.deploymentHistory(ECS, env, from = search.from, to = search.to, app = search.app, team = search.team)
+      deployments <- Future.sequence(
+        platforms.map(p => releasesConnector.deploymentHistory(p, env, from = search.from, to = search.to, app = search.app, team = search.team))
+      ).map(_.flatten)
       teams   <- teamsAndRepositoriesConnector.allTeams
-    } yield Ok(page(env, (historyHeritage ++ historyEcs).sortBy(_.firstSeen)(Ordering[TimeSeen].reverse), teams.sortBy(_.name.asString), ""))
+
+    } yield Ok(
+      page(
+        env,
+        deployments.sortBy(_.firstSeen)(Ordering[TimeSeen].reverse),
+        teams.sortBy(_.name.asString),
+        "",
+        form.bindFromRequest()
+      )
+    )
   }
 
-  case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], app: Option[String])
+  case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], app: Option[String], platform: Option[String])
 
-  def form(): Form[SearchForm] = {
+  lazy val form: Form[SearchForm] = {
     val dateFormat = "yyyy-MM-dd"
     Form(
       Forms.mapping(
@@ -67,7 +79,8 @@ class DeploymentHistoryController @Inject()(
             .localDate(dateFormat)
             .transform[Long](_.atStartOfDay(ZoneId.of("UTC")).toInstant.toEpochMilli, l => LocalDate.from(Instant.ofEpochMilli(l)))),
         "team" -> Forms.optional(Forms.text),
-        "app"  -> Forms.optional(Forms.text)
+        "service" -> Forms.optional(Forms.text),
+        "platform" -> Forms.optional(Forms.text)
       )(SearchForm.apply)(SearchForm.unapply)
     )
   }
