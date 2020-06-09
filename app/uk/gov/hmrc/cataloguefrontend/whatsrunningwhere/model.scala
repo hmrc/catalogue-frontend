@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.{Duration, LocalDateTime, ZoneOffset}
+import java.time.{LocalDateTime, ZoneOffset}
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.ECS
 
 sealed trait Platform {
   def asString: String
@@ -159,8 +160,6 @@ object JsonCodecs {
     )(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
   }
 
-  val durationInDaysReads: Reads[Duration] = __.read[Long].map(days => Duration.ofDays(days))
-
   val deployerAuditReads: Reads[DeployerAudit] = {
     implicit val tsf = timeSeenFormat
     ( (__ \ "userName"  ).read[String]
@@ -168,20 +167,23 @@ object JsonCodecs {
     )(DeployerAudit.apply _)
   }
 
-  val heritageDeploymentReads: Reads[HeritageDeployment] = {
+  val heritageDeploymentReads: Reads[Deployment] = {
+    implicit val pf   = platformFormat
     implicit val anf  = applicationNameFormat
+    implicit val ef   = environmentFormat
     implicit val vnf  = versionNumberFormat
     implicit val tsf  = timeSeenFormat
     implicit val dar  = deployerAuditReads
     implicit val tmf  = teamNameFormat
-    implicit val didr = durationInDaysReads
-    ( (__ \ "name"          ).read[ServiceName]
+    ( (__ \ "platform"      ).read[Platform]
+    ~ (__ \ "name"          ).read[ServiceName]
+    ~ (__ \ "environment"   ).read[Environment]
     ~ (__ \ "version"       ).read[VersionNumber]
     ~ (__ \ "teams"         ).read[Seq[TeamName]]
-    ~ (__ \ "productionDate").read[TimeSeen]
-    ~ (__ \ "interval"      ).readNullable[Duration]
+    ~ (__ \ "firstSeen"     ).read[TimeSeen]
+    ~ (__ \ "lastSeen"      ).read[TimeSeen]
     ~ (__ \ "deployers"     ).read[Seq[DeployerAudit]]
-    )(HeritageDeployment.apply _)
+    )(Deployment.apply _)
   }
 
   val servicePlatformMappingReads: Reads[ServicePlatformMapping] = {
@@ -264,13 +266,17 @@ case class ServiceDeployment(
   lastCompleted: Option[DeploymentEvent]
 )
 
-case class HeritageDeployment(
+case class Deployment(
+  platform: Platform,
   name: ServiceName,
+  environment: Environment,
   version: VersionNumber,
   teams: Seq[TeamName],
-  productionDate: TimeSeen,
-  interval: Option[Duration]    = None,
+  firstSeen: TimeSeen,
+  lastSeen: TimeSeen,
   deployers: Seq[DeployerAudit] = Seq.empty) {
+
+  lazy val isECS: Boolean = platform == ECS
 
   lazy val latestDeployer: Option[DeployerAudit] = {
     implicit val order = TimeSeen.timeSeenOrdering

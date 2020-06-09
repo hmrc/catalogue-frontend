@@ -22,6 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.{ECS, Heritage}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DeploymentHistoryPage
@@ -43,9 +44,10 @@ class DeploymentHistoryController @Inject()(
     val search = form.bindFromRequest().fold(_ => SearchForm(None, None, None, None), res => res)
 
     for {
-      history <- releasesConnector.deploymentHistory(from = search.from, to = search.to, app = search.app, team = search.team)
+      historyHeritage <- releasesConnector.deploymentHistory(Heritage, from = search.from, to = search.to, app = search.app, team = search.team)
+      historyEcs <- releasesConnector.deploymentHistory(ECS, from = search.from, to = search.to, app = search.app, team = search.team)
       teams   <- teamsAndRepositoriesConnector.allTeams
-    } yield Ok(page(history, teams, ""))
+    } yield Ok(page((historyHeritage ++ historyEcs).sortBy(_.firstSeen)(Ordering[TimeSeen].reverse), teams.sortBy(_.name.asString), ""))
   }
 
   case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], app: Option[String])

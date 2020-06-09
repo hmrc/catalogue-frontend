@@ -14,13 +14,13 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.HeritageDeployment
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Deployment
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @this()
 
 
-@(deployments: Seq[HeritageDeployment], teams: Seq[Team], userProfileBaseUrl: String)(implicit request: Request[_])
+@(deployments: Seq[Deployment], teams: Seq[Team], userProfileBaseUrl: String)(implicit request: Request[_])
 
 @standard_layout("Deployments", "deployments") {
   <header>
@@ -28,52 +28,53 @@
   </header>
 
  <div class="row">
-
      <div class="col-sm-12">
+          <form onsubmit="return updateDeployments()" class="form-inline" id="search-form">
+            <span>Service: <input id="service-search-input" type="text" name="app" value=''></span>
+            <span>Team:
+                <select name="team">
+                    <option value=""></option>
+                    @teams.map { t => <option value="@t.name.asString">@t.name.asString</option> }
+                </select>
+            </span>
 
-  <form onsubmit="return updateDeployments()" class="form-inline" id="search-form">
-    <span>Service: <input id="service-search-input" type="text" name="app" value=''></span>
-    <span>Team:
-        <select name="team">
-            <option value=""></option>
-@teams.map { t => <option value="@t.name.asString">@t.name.asString</option> }
-     </select>
+            <div class="input-group">
+              Deployment from: <input id="from-search-input" type="date" name="from" value=''>
+              to:<input type="date" id="to-search-input" name="to" value=''>
+            </div>
 
-</span>
+            <input type="submit" value="Filter">
 
-    <div class="input-group">
-      Deployment from: <input id="from-search-input" type="date" name="from" value=''>
-      to:<input type="date" id="to-search-input" name="to" value=''>
+          </form>
     </div>
-    <input type="submit" value="Filter">
-  </form>
 </div>
-</div>
+
 <div class="row">
   <table class="table table-striped">
     <tr>
       <th><span>Service</span></th>
       <th><span>Teams</span></th>
       <th><span>Version</span></th>
-      <th><span>Production deployment</span></th>
-      <th><span>Latest Deployer</span></th>
+      <th><span>Deploy Time</span></th>
+      <th><span>Deployer</span></th>
     </tr>
-    @deployments.zipWithIndex.map{case (release, i) =>
+    @deployments.zipWithIndex.map{case (d, i) =>
     <tr id="row@i">
-      <td id="row@{i}_name"><a
-      href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(release.name.asString).url}">@{release.name.asString}</a>
+      <td id="row@{i}_name">
+          @if(d.isECS){ <span class="label label-primary pull-right">ECS</span>}
+          <a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString).url}">@{d.name.asString}</a>
       </td>
       <td id="row@{i}_team">
         <ul class="list-group">
-        @for(team <- release.teams) {
+        @for(team <- d.teams) {
           <li ><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team.asString}</a></li>
         }
         </ul>
       </td>
-      <td class="monospaced" id="row@{i}_version">@{release.version.asString}</td>
-      <td class="monospaced" id="row@{i}_production">@{release.productionDate.time.asString}</td>
+      <td class="monospaced" id="row@{i}_version">@{d.version.asString}</td>
+      <td class="monospaced" id="row@{i}_production">@{d.firstSeen.time.asString}</td>
       <td class="monospaced" id="row@{i}_deployer">
-      @release.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.userName}" target="_blank">@{u.userName}<span class="glyphicon glyphicon-new-window"/></a>}.getOrElse("N/A")
+      @d.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.userName}" target="_blank">@{u.userName}<span class="glyphicon glyphicon-new-window"/></a>}.getOrElse("N/A")
       </td>
     </tr>
     }
