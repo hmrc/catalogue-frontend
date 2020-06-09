@@ -68,21 +68,19 @@
           </div>
       </div>
   }
-  <div class="row tabs-bottom">
+  <div id="service-list" class="row tabs-bottom">
       <table id="shutter-state-table" class="table table-striped">
-          <thead>
-              <tr>
-                  <th id="service-header"><p class="shutter-overview-header">Service</p></th>
-                  <th id="status-header"><p class="shutter-overview-header">Status</p></th>
-                  <th id="last-update-by-header"><p class="shutter-overview-header">Last updated by</p></th>
-                  <th id="date-header"><p class="shutter-overview-header">Date</p></th>
-                  <th id="events-link"><p class="shutter-overview-header">Events</p></th>
-                  @if(isSignedIn) { <th id="update-header"><p class="shutter-overview-header">Update</p></th> }
-              </tr>
-          </thead>
+          <tr>
+              <th id="service-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-service">Service</button></p></th>
+              <th id="status-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-state">Status</button></p></th>
+              <th id="last-update-by-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-user">Last Updated By</button></p></th>
+              <th id="date-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-date">Date</button></p></th>
+              <th id="events-link"><p class="shutter-overview-header">Events</p></th>
+              @if(isSignedIn) { <th id="update-header"><p class="shutter-overview-header">Update</p></th> }
+          </tr>
 
-          <tbody>
-              @shutterStates.get(selectedEnv).getOrElse(Seq.empty).map(shutterRow)
+          <tbody class="list">
+            @shutterRows(shutterStates.get(selectedEnv).getOrElse(Seq.empty))
           </tbody>
 
       </table>
@@ -105,6 +103,9 @@
             });
         }
     }
+
+    var options = { valueNames: [ 'shutter-service', 'shutter-state', 'shutter-user', 'shutter-date' ] };
+    var serviceList = new List('service-list', options);
   </script>
 }
 
@@ -136,42 +137,44 @@
   }
 }
 
-@shutterRow(state: ShutterStateData) = {
-  <tr class="shutter-row @classFor(state.status.value)">
-      <td class="shutter-service">
-        <a class="shutter-row-link" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
-          @state.serviceName
-        </a>
-      </td>
-      <td class="shutter-state">
-        @state.status.value
-      </td>
-      <td class="shutter-user">
-        @usernameFor(state.lastEvent)
-      </td>
-      <td class="shutter-date">
-        @state.lastEvent.map(e => e.timestamp.asUTC.format(`yyyy-MM-dd HH:mm:ss z`)).getOrElse("")
-      </td>
-      <td>
-        @if(state.lastEvent.isDefined) {
-          <a id="event-history-link-@{state.serviceName}-@{state.environment.asString}"
-             class="medium-glyphicon glyphicon glyphicon-list"
-             data-toggle="tooltip"
-             data-placement="right"
-             title="@messages("shutter-event.history")"
-             href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName))"></a>
-        } else {
-          @Html("No events")
-        }
-      </td>
-      @if(isSignedIn) {
-        <td class="shutter-update">
-          <a id="shutter-link" class="shutter-row-link" href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
-            @changeValueFor(state.status.value)
-          </a>
-        </td>
-      }
-  </tr>
+@shutterRows(states: Seq[ShutterStateData]) = {
+    @states.zipWithIndex.map{case (state, i) =>
+      <tr id="row@i" class="shutter-row @classFor(state.status.value)">
+          <td id="row@{i}_name" class="shutter-service">
+            <a class="shutter-row-link" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
+              @state.serviceName
+            </a>
+          </td>
+          <td id="row@{i}_state" class="shutter-state">
+            @state.status.value
+          </td>
+          <td id="row@{i}_user" class="shutter-user">
+            @usernameFor(state.lastEvent)
+          </td>
+          <td id="row@{i}_date" class="shutter-date">
+            @state.lastEvent.map(e => e.timestamp.asUTC.format(`yyyy-MM-dd HH:mm:ss z`)).getOrElse("")
+          </td>
+          <td id="row@{i}_event">
+            @if(state.lastEvent.isDefined) {
+              <a id="event-history-link-@{state.serviceName}-@{state.environment.asString}"
+                 class="medium-glyphicon glyphicon glyphicon-list"
+                 data-toggle="tooltip"
+                 data-placement="right"
+                 title="@messages("shutter-event.history")"
+                 href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName))"></a>
+            } else {
+              @Html("No events")
+            }
+          </td>
+          @if(isSignedIn) {
+            <td id="row@{i}_update" class="shutter-update">
+              <a id="shutter-link" class="shutter-row-link" href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
+                @changeValueFor(state.status.value)
+              </a>
+            </td>
+          }
+      </tr>
+    }
 }
 
 @usernameFor(eventOpt: Option[ShutterStateChangeEvent]) = @{
