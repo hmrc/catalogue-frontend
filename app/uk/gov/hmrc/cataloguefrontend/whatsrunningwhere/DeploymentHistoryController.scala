@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.{Instant, LocalDate, ZoneId}
+import java.time.{Instant, LocalDate, LocalTime, ZoneId}
 
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
@@ -48,8 +48,8 @@ class DeploymentHistoryController @Inject()(
     val search = form.bindFromRequest().fold(_ => SearchForm(None, None, None, None, None), res =>
       res.copy(
         //If no query params are set, default to showing the last weeks data
-        from = res.from.orElse(Some(toEpochMillis(weekAgo))),
-        to = res.to.orElse(Some(toEpochMillis(today)))
+        from = res.from.orElse(Some(toEpochMillis(weekAgo, startOfDay = true))),
+        to = res.to.orElse(Some(toEpochMillis(today, startOfDay = false)))
       )
     )
 
@@ -74,8 +74,11 @@ class DeploymentHistoryController @Inject()(
 
   case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], app: Option[String], platform: Option[String])
 
+  val utc = ZoneId.of("UTC")
   def toLocalDate(l: Long): LocalDate = Instant.ofEpochMilli(l).atZone(ZoneId.of("UTC")).toLocalDate
-  def toEpochMillis(l: LocalDate): Long = l.atStartOfDay(ZoneId.of("UTC")).toInstant.toEpochMilli
+  def toEpochMillis(l: LocalDate, startOfDay: Boolean): Long = {
+    (if(startOfDay) l.atStartOfDay(utc) else l.atTime(LocalTime.MAX).atZone(utc)).toInstant.toEpochMilli
+  }
 
   lazy val form: Form[SearchForm] = {
     val dateFormat = "yyyy-MM-dd"
@@ -84,11 +87,11 @@ class DeploymentHistoryController @Inject()(
         "from" -> Forms.optional(
           Forms
             .localDate(dateFormat)
-            .transform[Long](toEpochMillis, toLocalDate)),
+            .transform[Long](toEpochMillis(_, startOfDay =  true), toLocalDate)),
         "to" -> Forms.optional(
           Forms
             .localDate(dateFormat)
-            .transform[Long](toEpochMillis, toLocalDate)),
+            .transform[Long](toEpochMillis(_, startOfDay = false), toLocalDate)),
         "team" -> Forms.optional(Forms.text),
         "service" -> Forms.optional(Forms.text),
         "platform" -> Forms.optional(Forms.text)

@@ -38,7 +38,7 @@
         <form method="get">
             <div class="form-group row">
                 <div class="col-xs-3">
-                    <label for="service-search-input">Service name</label>
+                    <label for="service-search-input" title="Search across all fields" data-toggle="tooltip">Search</label>
                     <input id="service-search-input" class="search form-control" type="text" name="service" value='@form("service").value' autofocus>
                 </div>
                 <div class="col-xs-2">
@@ -65,11 +65,11 @@
                     )
                 </div>
                 <div class="col-xs-2">
-                    <label for="from-search-input">Date From</label>
+                    <label for="from-search-input" title="From the start of this day" data-toggle="tooltip">Date From</label>
                     <input id="from-search-input" class="form-control" type="date" name="from" onchange="this.form.submit()" value='@form("from").value'>
                 </div>
                 <div class="col-xs-2">
-                    <label for="to-search-input">Date To</label>
+                    <label for="to-search-input" title="To the end of this day" data-toggle="tooltip" >Date To</label>
                     <input id="to-search-input" class="form-control" type="date" name="to" onchange="this.form.submit()" value='@form("to").value'>
                 </div>
             </div>
