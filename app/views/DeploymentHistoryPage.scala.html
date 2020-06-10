@@ -34,12 +34,13 @@
         <h1>Deployments</h1>
     </header>
 
-    <div id="service-list">
-        <form method="get">
+    <div id="search-list">
+        <form id="form">
             <div class="form-group row">
+                <input type="hidden" id="selected-environment" value="@selectedEnv.asString">
                 <div class="col-xs-3">
-                    <label for="service-search-input" title="Search across all fields" data-toggle="tooltip">Search</label>
-                    <input id="service-search-input" class="search form-control" type="text" name="service" value='@form("service").value' autofocus>
+                    <label for="search" title="Search across all fields" data-toggle="tooltip">Search</label>
+                    <input id="search" class="search form-control" type="text" name="search" value='@form("search").value' autofocus>
                 </div>
                 <div class="col-xs-2">
                     @select(
@@ -115,14 +116,28 @@
     </div>
 }
 
-<!-- listjs configuration -->
 <script>
+// listjs configuration
 var options = { valueNames: [ 'service-name','team', 'version', 'deploy-time', 'deployer' ] };
-var serviceList = new List('service-list', options);
+var serviceList = new List('search-list', options);
+
+// re-search the list upon page load.
+serviceList.search($('#search').val());
+
+function selectEnvironment(e, environment) {
+  // Stop the default link action. Instead we will fire the form to change page
+  e.preventDefault();
+
+  // Update the hidden environment field with what was selected
+  $('#selected-environment').value = environment;
+
+  // Post the form back to the the chosen environment endpoint
+  $('#form').attr('action', "/deployments/" + environment).submit();
+};
 </script>
 
 @envOption(env: Environment) = {
 <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(env)" class="navbar-link">@env.displayString</a>
+    <a href="/deployments/@{env.asString}" class="navbar-link" id="@{env.asString}-tab" onclick="javascript:selectEnvironment(event, '@{env.asString}')" role="tab">@env.displayString</a>
 </li>
 }

@@ -58,7 +58,8 @@ class DeploymentHistoryController @Inject()(
 
     for {
       deployments <- Future.sequence(
-        platforms.map(p => releasesConnector.deploymentHistory(p, env, from = search.from, to = search.to, app = search.app, team = search.team))
+        // We always search with App=None to pull back the whole set for filtering
+        platforms.map(p => releasesConnector.deploymentHistory(p, env, from = search.from, to = search.to, app = None, team = search.team))
       ).map(_.flatten)
       teams   <- teamsAndRepositoriesConnector.allTeams
     } yield Ok(
@@ -72,7 +73,7 @@ class DeploymentHistoryController @Inject()(
     )
   }
 
-  case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], app: Option[String], platform: Option[String])
+  case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], search: Option[String], platform: Option[String])
 
   val utc = ZoneId.of("UTC")
   def toLocalDate(l: Long): LocalDate = Instant.ofEpochMilli(l).atZone(ZoneId.of("UTC")).toLocalDate
@@ -93,7 +94,7 @@ class DeploymentHistoryController @Inject()(
             .localDate(dateFormat)
             .transform[Long](toEpochMillis(_, startOfDay = false), toLocalDate)),
         "team" -> Forms.optional(Forms.text),
-        "service" -> Forms.optional(Forms.text),
+        "search" -> Forms.optional(Forms.text),
         "platform" -> Forms.optional(Forms.text)
       )(SearchForm.apply)(SearchForm.unapply)
     )
