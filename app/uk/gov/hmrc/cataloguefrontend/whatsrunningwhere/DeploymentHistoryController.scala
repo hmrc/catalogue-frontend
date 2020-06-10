@@ -61,7 +61,6 @@ class DeploymentHistoryController @Inject()(
         platforms.map(p => releasesConnector.deploymentHistory(p, env, from = search.from, to = search.to, app = search.app, team = search.team))
       ).map(_.flatten)
       teams   <- teamsAndRepositoriesConnector.allTeams
-
     } yield Ok(
       page(
         env,

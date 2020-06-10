@@ -43,6 +43,10 @@ object DateHelper {
 
     def asString = d.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
 
+    def asUTCString = {
+      d.atZone(ZoneId.of("UTC")).format(`yyyy-MM-dd HH:mm:ss z`)
+    }
+
     def asPattern(pattern: String) = d.format(DateTimeFormatter.ofPattern(pattern))
 
     def asRFC1123: String =
