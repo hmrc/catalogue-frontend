@@ -131,8 +131,15 @@
 var options = { valueNames: [ 'service-name','team', 'version', 'deploy-time', 'deployer' ] };
 var serviceList = new List('search-list', options);
 
+var searchBox = document.getElementById("search");
+
 // re-search the list upon page load.
-serviceList.search($('#search').val());
+serviceList.search(search.value);
+
+// set autofocus cursor to right of text in search box
+var length = searchBox.value.length;
+searchBox.focus();
+searchBox.setSelectionRange(length, length);
 
 function selectEnvironment(e, environment) {
   // Stop the default link action. Instead we will fire the form to change page

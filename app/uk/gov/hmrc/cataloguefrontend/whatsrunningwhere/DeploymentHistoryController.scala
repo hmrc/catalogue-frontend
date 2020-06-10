@@ -59,11 +59,18 @@ class DeploymentHistoryController @Inject()(
             // We always search with App=None to pull back the whole set for filtering
             platforms.map(p => releasesConnector.deploymentHistory(p, env, from = Some(validForm.from), to = Some(validForm.to), app = None, team = validForm.team))
           ).map(_.flatten)
+
+          // Explode the deployments so there is one per deployment event
+          explodedDeployments = for {
+            d <- deployments
+            audit <- d.deployers
+          } yield d.copy(deployers = Seq(audit), firstSeen = audit.deployTime, lastSeen = audit.deployTime)
+
           teams   <- teamsAndRepositoriesConnector.allTeams
         } yield Ok(
           page(
             env,
-            deployments.sortBy(_.firstSeen)(Ordering[TimeSeen].reverse),
+            explodedDeployments.sortBy(_.firstSeen)(Ordering[TimeSeen].reverse),
             teams.sortBy(_.name.asString),
             "",
             form.fill(validForm)
