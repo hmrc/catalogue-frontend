@@ -39,41 +39,41 @@ class DeploymentHistoryController @Inject()(
 )(implicit val ec: ExecutionContext
 ) extends FrontendController(mcc) {
 
+  val today = LocalDate.now()
+  val weekAgo = today.minusDays(7)
+
   def history(env: Environment = Production): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    val today = LocalDate.now()
-    val weekAgo = today.minusDays(7)
 
-    val search = form.bindFromRequest().fold(_ => SearchForm(None, None, None, None, None), res =>
-      res.copy(
-        //If no query params are set, default to showing the last weeks data
-        from = res.from.orElse(Some(toEpochMillis(weekAgo, startOfDay = true))),
-        to = res.to.orElse(Some(toEpochMillis(today, startOfDay = false)))
-      )
-    )
 
-    // Either specific platform is specified, or all of them
-    val platforms = search.platform.flatMap(p => Platform.parse(p).toOption).map(Seq.apply(_)).getOrElse(Platform.values)
+    form.bindFromRequest().fold(
+      formWithErrors => Future.successful(BadRequest(page(env, Seq.empty, Seq.empty, "", formWithErrors))),
+      validForm => {
 
-    for {
-      deployments <- Future.sequence(
-        // We always search with App=None to pull back the whole set for filtering
-        platforms.map(p => releasesConnector.deploymentHistory(p, env, from = search.from, to = search.to, app = None, team = search.team))
-      ).map(_.flatten)
-      teams   <- teamsAndRepositoriesConnector.allTeams
-    } yield Ok(
-      page(
-        env,
-        deployments.sortBy(_.firstSeen)(Ordering[TimeSeen].reverse),
-        teams.sortBy(_.name.asString),
-        "",
-        form.fill(search)
-      )
+        // Either specific platform is specified, or all of them
+        val platforms = validForm.platform.flatMap(p => Platform.parse(p).toOption).map(Seq.apply(_)).getOrElse(Platform.values)
+
+        for {
+          deployments <- Future.sequence(
+            // We always search with App=None to pull back the whole set for filtering
+            platforms.map(p => releasesConnector.deploymentHistory(p, env, from = Some(validForm.from), to = Some(validForm.to), app = None, team = validForm.team))
+          ).map(_.flatten)
+          teams   <- teamsAndRepositoriesConnector.allTeams
+        } yield Ok(
+          page(
+            env,
+            deployments.sortBy(_.firstSeen)(Ordering[TimeSeen].reverse),
+            teams.sortBy(_.name.asString),
+            "",
+            form.fill(validForm)
+          )
+        )
+      }
     )
   }
 
-  case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], search: Option[String], platform: Option[String])
+  case class SearchForm(from: Long, to: Long, team: Option[String], search: Option[String], platform: Option[String])
 
   val utc = ZoneId.of("UTC")
   def toLocalDate(l: Long): LocalDate = Instant.ofEpochMilli(l).atZone(ZoneId.of("UTC")).toLocalDate
@@ -88,15 +88,18 @@ class DeploymentHistoryController @Inject()(
         "from" -> Forms.optional(
           Forms
             .localDate(dateFormat)
-            .transform[Long](toEpochMillis(_, startOfDay =  true), toLocalDate)),
+            .transform[Long](toEpochMillis(_, startOfDay =  true), toLocalDate)
+          ).transform[Long](o => o.getOrElse(toEpochMillis(weekAgo, startOfDay = true)), a => Some(a)), //Default to last week if not set
         "to" -> Forms.optional(
           Forms
             .localDate(dateFormat)
-            .transform[Long](toEpochMillis(_, startOfDay = false), toLocalDate)),
+            .transform[Long](toEpochMillis(_, startOfDay = false), toLocalDate)
+          ).transform[Long](o => o.getOrElse(toEpochMillis(today, startOfDay = false)), a => Some(a)),  //Default to now if not set
         "team" -> Forms.optional(Forms.text),
         "search" -> Forms.optional(Forms.text),
         "platform" -> Forms.optional(Forms.text)
       )(SearchForm.apply)(SearchForm.unapply)
+        verifying("To Date must be greater than or equal to From Date", f => f.to > f.from)
     )
   }
 }
