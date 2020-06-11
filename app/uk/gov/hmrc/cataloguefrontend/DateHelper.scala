@@ -21,7 +21,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 
 object DateHelper {
-
   val utc = ZoneId.of("UTC")
 
   val `dd-MM-yyyy HH:mm`: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
@@ -30,35 +29,38 @@ object DateHelper {
   val `yyyy-MM-dd HH:mm:ss z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
 
   implicit class JavaDateToLocalDateTime(d: Date) {
-    def toLocalDate: LocalDateTime = LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault())
+    def toLocalDate: LocalDateTime =
+      LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault())
   }
 
   implicit class LocalDateImplicits(d: LocalDate) {
-    def atStartOfDayEpochMillis: Long = d.atStartOfDay(utc).toInstant.toEpochMilli
-    def atEndOfDayEpochMillis: Long = d.atTime(LocalTime.MAX).atZone(utc).toInstant.toEpochMilli
+    def atStartOfDayEpochMillis: Long =
+      d.atStartOfDay(utc).toInstant.toEpochMilli
+
+    def atEndOfDayEpochMillis: Long =
+      d.atTime(LocalTime.MAX).atZone(utc).toInstant.toEpochMilli
   }
 
   implicit class LocalDateTimeImplicits(d: LocalDateTime) {
+    def epochMillis: Long =
+      d.atZone(utc).toInstant.toEpochMilli
 
-    def epochMillis: Long = d.atZone(utc).toInstant.toEpochMilli
+    def asPattern(pattern: String): String =
+      d.format(DateTimeFormatter.ofPattern(pattern))
 
-    def asString = d.format(`dd-MM-yyyy HH:mm`)
-
-    def asUTCString = {
-      d.atZone(utc).format(`yyyy-MM-dd HH:mm:ss z`)
-    }
-
-    def asPattern(pattern: String) = d.format(DateTimeFormatter.ofPattern(pattern))
-
-    def displayFormat: String = d.format(`dd MMM uuuu HH:mm`)
+    def displayFormat: String =
+      d.format(`dd MMM uuuu HH:mm`)
   }
 
   implicit class InstantToZonedDateTime(instant: Instant) {
     def asUTC: ZonedDateTime =
       // use ZoneId.of("UTC") rather than ZoneOffset.UTC to get "UTC" as short displayName rather than "Z"
       ZonedDateTime.ofInstant(instant, utc)
+
+    def asUTCString: String =
+      asUTC.format(`yyyy-MM-dd HH:mm z`)
   }
 
-  def longToLocalDate(l: Long): LocalDate = Instant.ofEpochMilli(l).atZone(utc).toLocalDate
-
+  def longToLocalDate(l: Long): LocalDate =
+    Instant.ofEpochMilli(l).atZone(utc).toLocalDate
 }
