@@ -44,7 +44,7 @@
     </div>
     }
 
-    <div id="search-list">
+    <div id="service-list">
         <form id="form">
             <div class="form-group row">
                 <input type="hidden" id="selected-environment" value="@selectedEnv.asString">
@@ -129,7 +129,7 @@
 <script>
 // listjs configuration
 var options = { valueNames: [ 'service-name','team', 'version', 'deploy-time', 'deployer' ] };
-var serviceList = new List('search-list', options);
+var serviceList = new List('service-list', options);
 
 var searchBox = document.getElementById("search");
 
