@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.Instant
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -197,11 +197,11 @@ object JsonCodecs {
   }
 }
 
-case class TimeSeen(time: LocalDateTime)
+case class TimeSeen(time: Instant)
 
 object TimeSeen {
   implicit val timeSeenOrdering: Ordering[TimeSeen] = {
-    implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toEpochSecond(ZoneOffset.UTC))
+    implicit val io: Ordering[Instant] = Ordering.by(_.toEpochMilli)
     Ordering.by(_.time)
   }
 }

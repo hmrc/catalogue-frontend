@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.LocalDateTime
+import java.time.Instant
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
@@ -59,7 +59,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
                  |      {
                  |        "environment": "integration",
                  |        "versionNumber": "1.57.0",
-                 |        "lastSeen": "2019-05-29T14:09:48"
+                 |        "lastSeen": "2019-05-29T14:09:48Z"
                  |      }
                  |    ]
                  |  },
@@ -69,7 +69,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
                  |      {
                  |        "environment": "integration",
                  |        "versionNumber": "0.44.0",
-                 |        "lastSeen": "2019-05-29T14:09:46"
+                 |        "lastSeen": "2019-05-29T14:09:46Z"
                  |      }
                  |    ]
                  |  }
@@ -83,14 +83,14 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
+            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
           ),
           deployedIn = Platform.ECS
         ),
         WhatsRunningWhere(
           ServiceName("api-documentation"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("0.44.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:46")))
+            WhatsRunningWhereVersion(Integration, VersionNumber("0.44.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:46Z")))
           ),
           deployedIn = Platform.ECS
         )
@@ -114,7 +114,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
                  |      {
                  |        "environment": "integration",
                  |        "versionNumber": "1.57.0",
-                 |        "lastSeen": "2019-05-29T14:09:48"
+                 |        "lastSeen": "2019-05-29T14:09:48Z"
                  |      }
                  |    ]
                  |  }
@@ -132,7 +132,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
+            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
           ),
           deployedIn = Platform.ECS
         )
@@ -165,7 +165,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |      {
               |        "environment": "integration",
               |        "versionNumber": "1.57.0",
-              |        "lastSeen": "2019-05-29T14:09:48"
+              |        "lastSeen": "2019-05-29T14:09:48Z"
               |      }
               |    ]
               |  },
@@ -175,7 +175,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |      {
               |        "environment": "integration",
               |        "versionNumber": "0.44.0",
-              |        "lastSeen": "2019-05-29T14:09:46"
+              |        "lastSeen": "2019-05-29T14:09:46Z"
               |      }
               |    ]
               |  }
@@ -189,13 +189,13 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
+            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
           )
         ),
         WhatsRunningWhere(
           ServiceName("api-documentation"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("0.44.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:46")))
+            WhatsRunningWhereVersion(Integration, VersionNumber("0.44.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:46Z")))
           )
         )
       )
@@ -218,7 +218,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |      {
               |        "environment": "integration",
               |        "versionNumber": "1.57.0",
-              |        "lastSeen": "2019-05-29T14:09:48"
+              |        "lastSeen": "2019-05-29T14:09:48Z"
               |      }
               |    ]
               |  }
@@ -236,7 +236,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(LocalDateTime.parse("2019-05-29T14:09:48")))
+            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
           )
         )
       )

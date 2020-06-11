@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.LocalDateTime
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -27,21 +28,21 @@ class DeploymentSpec extends AnyFlatSpec with Matchers {
 
   "LastDeployer" should "select the most recent deployer" in {
 
-    val now = LocalDateTime.now()
+    val now = Instant.now()
     val h = Deployment(
       Heritage,
       ServiceName("foo"),
       Production,
       VersionNumber("1.1.1"),
       Seq.empty,
-      TimeSeen(LocalDateTime.now()),
-      TimeSeen(LocalDateTime.now()),
+      TimeSeen(now),
+      TimeSeen(now),
       Seq(
-        DeployerAudit("usera", TimeSeen(now.minusDays(3))),
-        DeployerAudit("userb", TimeSeen(now.minusDays(1))),
-        DeployerAudit("userc", TimeSeen(now.minusDays(2)))
+        DeployerAudit("usera", TimeSeen(now.minus(3, ChronoUnit.DAYS))),
+        DeployerAudit("userb", TimeSeen(now.minus(1, ChronoUnit.DAYS))),
+        DeployerAudit("userc", TimeSeen(now.minus(2, ChronoUnit.DAYS)))
       )
     )
-    h.latestDeployer.get shouldBe DeployerAudit("userb", TimeSeen(now.minusDays(1)))
+    h.latestDeployer.get shouldBe DeployerAudit("userb", TimeSeen(now.minus(1, ChronoUnit.DAYS)))
   }
 }
