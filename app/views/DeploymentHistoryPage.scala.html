@@ -77,11 +77,11 @@
                 </div>
                 <div class="col-xs-2">
                     <label for="from-search-input" title="From the start of this day" data-toggle="tooltip">Date From</label>
-                    <input id="from-search-input" class="form-control" type="date" name="from" onchange="this.form.submit()" value='@form("from").value'>
+                    <input id="from-search-input" class="form-control" type="date" name="from" onchange="dateFilterChange(event)" value='@form("from").value'>
                 </div>
                 <div class="col-xs-2">
                     <label for="to-search-input" title="To the end of this day" data-toggle="tooltip" >Date To</label>
-                    <input id="to-search-input" class="form-control" type="date" name="to" onchange="this.form.submit()" value='@form("to").value'>
+                    <input id="to-search-input" class="form-control" type="date" name="to" onchange="dateFilterChange(event)" value='@form("to").value'>
                 </div>
             </div>
         </form>
@@ -116,8 +116,7 @@
                   </td>
                   <td id="row@{i}_version"    class="version">@{d.version.asString}</td>
                   <td id="row@{i}_deploytime" class="deploy-time monospaced">@{d.firstSeen.time.asUTCString}</td>
-                  <td id="row@{i}_deployer"   class="deployer">
-                    @d.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.userName}" target="_blank">@{u.userName}<span class="glyphicon glyphicon-new-window"/></a>}.getOrElse("N/A")
+                  <td id="row@{i}_deployer"   class="deployer">@d.latestDeployer.map{u =><a href="@userProfileBaseUrl/@{u.userName}" target="_blank">@{u.userName}<span class="glyphicon glyphicon-new-window"/></a>}.getOrElse("N/A")
                   </td>
                 </tr>
                 }
@@ -140,6 +139,13 @@ serviceList.search(search.value);
 var length = searchBox.value.length;
 searchBox.focus();
 searchBox.setSelectionRange(length, length);
+
+function dateFilterChange(e) {
+    // Wait a bit before submitting to allow acceptance tests to fill complete field
+    setTimeout( function () {
+        $('#form').submit();
+    }, 100);
+}
 
 function selectEnvironment(e, environment) {
   // Stop the default link action. Instead we will fire the form to change page
