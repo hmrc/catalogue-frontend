@@ -90,21 +90,25 @@ class ReleasesConnector @Inject()(
   }
 
   def deploymentHistory(
+    platform: Platform,
+    environment: Environment,
     from: Option[Long]   = None,
     to: Option[Long]     = None,
     team: Option[String] = None,
-    app: Option[String]  = None
-  )(
-    implicit
-    hc: HeaderCarrier): Future[Seq[HeritageDeployment]] = {
-    implicit val hdr = JsonCodecs.heritageDeploymentReads
-    http.GET[Seq[HeritageDeployment]](
-      url = s"$serviceUrl/releases-api/deployments/${Environment.Production.asString}",
+    app : Option[String] = None
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[Deployment]] = {
+
+    implicit val rf = JsonCodecs.heritageDeploymentReads
+    http.GET[Seq[Deployment]](
+      url = s"$serviceUrl/releases-api/deployments/${environment.asString}",
       queryParams = UrlUtils.buildQueryParams(
         "from" -> from.map(_.toString),
-        "to"   -> to.map(_.toString),
+        "to" -> to.map(_.toString),
         "team" -> team,
-        "app"  -> app
+        "app" -> app,
+        "platform" -> Some(platform.asString)
       )
     )
   }

@@ -62,8 +62,8 @@ val test = Seq(
   "com.vladsch.flexmark"   %  "flexmark-all"             % "0.35.10"            % Test,
   "com.typesafe.play"      %% "play-test"                % PlayVersion.current  % Test,
   "com.github.tomakehurst" %  "wiremock"                 % "1.58"               % Test,
-  "org.jsoup"              %  "jsoup"                    % "1.9.2"              % Test,
-  "org.mockito"            %% "mockito-scala"            % "1.10.2"             % Test,
+  "org.jsoup"              %  "jsoup"                    % "1.13.1"              % Test,
+  "org.mockito"            %% "mockito-scala"            % "1.10.6"             % Test,
   ws
 )
 

@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.{Instant, LocalDate, ZoneId}
+import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
-import play.api.i18n.MessagesProvider
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DeploymentHistoryPage
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DeploymentHistoryController @Inject()(
@@ -38,34 +39,74 @@ class DeploymentHistoryController @Inject()(
 )(implicit val ec: ExecutionContext
 ) extends FrontendController(mcc) {
 
-  def history(): Action[AnyContent] = Action.async { implicit request =>
+  import DeploymentHistoryController._
+
+  def history(env: Environment = Production): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    val search = form.bindFromRequest().fold(_ => SearchForm(None, None, None, None), res => res)
+    form.bindFromRequest().fold(
+      formWithErrors => Future.successful(BadRequest(page(env, Seq.empty, Seq.empty, "", formWithErrors))),
+      validForm => {
 
-    for {
-      history <- releasesConnector.deploymentHistory(from = search.from, to = search.to, app = search.app, team = search.team)
-      teams   <- teamsAndRepositoriesConnector.allTeams
-    } yield Ok(page(history, teams, ""))
+        // Either specific platform is specified, or all of them
+        val platforms = validForm.platform.flatMap(p => Platform.parse(p).toOption).map(Seq.apply(_)).getOrElse(Platform.values)
+
+        for {
+          deployments <- Future.sequence(
+            // We always search with App=None to pull back the whole set for filtering
+            platforms.map(p => releasesConnector.deploymentHistory(p, env, from = Some(validForm.from), to = Some(validForm.to), app = None, team = validForm.team))
+          ).map(_.flatten)
+
+          // Explode the deployments so there is one per deployment event
+          explodedDeployments = for {
+            d <- deployments
+            audit <- d.deployers
+          } yield d.copy(deployers = Seq(audit), firstSeen = audit.deployTime, lastSeen = audit.deployTime)
+
+          teams <- teamsAndRepositoriesConnector.allTeams
+        } yield Ok(
+          page(
+            env,
+            explodedDeployments.sortBy(_.firstSeen)(Ordering[TimeSeen].reverse),
+            teams.sortBy(_.name.asString),
+            "",
+            form.fill(validForm)
+          )
+        )
+      }
+    )
   }
+}
 
-  case class SearchForm(from: Option[Long], to: Option[Long], team: Option[String], app: Option[String])
+object DeploymentHistoryController {
 
-  def form(implicit messagesProvider: MessagesProvider): Form[SearchForm] = {
+  import uk.gov.hmrc.cataloguefrontend.DateHelper._
+
+  case class SearchForm(from: Long, to: Long, team: Option[String], search: Option[String], platform: Option[String])
+
+  def defaultFromTime(referenceDate: LocalDate = LocalDate.now()): Long = referenceDate.minusDays(7).atStartOfDayEpochMillis
+
+  def defaultToTime(referenceDate: LocalDate = LocalDate.now()): Long = referenceDate.atEndOfDayEpochMillis
+
+  lazy val form: Form[SearchForm] = {
     val dateFormat = "yyyy-MM-dd"
     Form(
       Forms.mapping(
         "from" -> Forms.optional(
           Forms
             .localDate(dateFormat)
-            .transform[Long](_.atStartOfDay(ZoneId.of("UTC")).toInstant.toEpochMilli, l => LocalDate.from(Instant.ofEpochMilli(l)))),
+            .transform[Long](_.atStartOfDayEpochMillis, longToLocalDate)
+          ).transform[Long](o => o.getOrElse(defaultFromTime()), l => Some(l)), //Default to last week if not set
         "to" -> Forms.optional(
           Forms
             .localDate(dateFormat)
-            .transform[Long](_.atStartOfDay(ZoneId.of("UTC")).toInstant.toEpochMilli, l => LocalDate.from(Instant.ofEpochMilli(l)))),
+            .transform[Long](_.atEndOfDayEpochMillis, longToLocalDate)
+          ).transform[Long](o => o.getOrElse(defaultToTime()), l => Some(l)),  //Default to now if not set
         "team" -> Forms.optional(Forms.text),
-        "app"  -> Forms.optional(Forms.text)
+        "search" -> Forms.optional(Forms.text),
+        "platform" -> Forms.optional(Forms.text)
       )(SearchForm.apply)(SearchForm.unapply)
+        verifying("To Date must be greater than or equal to From Date", f => f.to > f.from)
     )
   }
 }

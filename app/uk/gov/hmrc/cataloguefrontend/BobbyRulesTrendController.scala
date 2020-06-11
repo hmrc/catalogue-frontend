@@ -22,7 +22,6 @@ import cats.data.EitherT
 import cats.instances.future._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
-import play.api.i18n.MessagesProvider
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
 import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ServiceDependenciesConnector}
@@ -109,7 +108,7 @@ class BobbyRulesTrendController @Inject()(
       rules: Seq[String]
     )
 
-  def form(implicit messagesProvider: MessagesProvider) = {
+  def form() = {
     import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmptySeq
     Form(
       Forms.mapping(

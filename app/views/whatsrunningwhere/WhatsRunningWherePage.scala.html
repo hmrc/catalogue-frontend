@@ -53,7 +53,7 @@
                 </div>
                 <div class="col col-xs-3">
                     <input class="search form-control" id="search" type="text" name="application_name"
-                    value="@form("application_name").value" autofocus>
+                    value='@form("application_name").value' autofocus>
                 </div>
             </div>
             <div class="form-group row">
@@ -74,7 +74,7 @@
 
         <table class="table table-striped" id="service-list">
             <thead>
-                <th>Application name</th>
+                <th><button role="button" class="sort no-border" data-sort="application-name">Application Name</button></th>
                 @environments.map { env =>
                     <th>@env.displayString</th>
                 }
@@ -102,7 +102,7 @@
 }
 
 <script>
-    var options = {valueNames: ['application-name']};
+    var options = { valueNames: [ 'application-name' ] };
     var serviceList = new List('whats-running-where-list', options);
 
     // re-search the list upon page load.

@@ -20,18 +20,22 @@ import java.time.LocalDateTime
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.Heritage
 
-class HeritageDeploymentSpec extends AnyFlatSpec with Matchers {
+class DeploymentSpec extends AnyFlatSpec with Matchers {
 
   "LastDeployer" should "select the most recent deployer" in {
 
     val now = LocalDateTime.now()
-    val h = HeritageDeployment(
+    val h = Deployment(
+      Heritage,
       ServiceName("foo"),
+      Production,
       VersionNumber("1.1.1"),
       Seq.empty,
       TimeSeen(LocalDateTime.now()),
-      None,
+      TimeSeen(LocalDateTime.now()),
       Seq(
         DeployerAudit("usera", TimeSeen(now.minusDays(3))),
         DeployerAudit("userb", TimeSeen(now.minusDays(1))),

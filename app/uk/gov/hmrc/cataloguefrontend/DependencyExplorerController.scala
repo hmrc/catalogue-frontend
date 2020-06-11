@@ -23,7 +23,6 @@ import cats.instances.all._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
-import play.api.i18n.MessagesProvider
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
@@ -167,7 +166,7 @@ class DependencyExplorerController @Inject()(
     , asCsv       : Boolean = false
     )
 
-  def form(implicit messagesProvider: MessagesProvider) = {
+  def form() = {
     import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmpty
     Form(
       Forms.mapping(

@@ -33,49 +33,46 @@
         <h1>Repositories</h1>
     </header>
 
+    @if(form.hasErrors) {
+        <div class="alert alert-danger" role="alert">
+        <ul class="list">
+            @form.errors.map { error =>
+            <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+            }
+        </ul>
+    </div>
+    }
 
-@if(form.hasErrors) {
-<div class="alert alert-danger" role="alert">
-    <ul class="list">
-        @form.errors.map { error =>
-        <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
-        }
-    </ul>
-</div>
-}
+    <div id="service-list">
+        <form action="/repositories" method="get">
+            <div class="form-group row">
+                <div class="col-xs-1 padding-reset-right">
+                    <label for="search">Name:</label>
+                </div>
+                <div class="col col-xs-3">
+                    <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
+                </div>
+                <div class="col-xs-1 col-xs-offset-2">
+                    <label for="type-search">Type:</label>
+                </div>
 
-
-<div id="service-list">
-    <form action="/repositories" method="get">
-        <div class="form-group row">
-            <div class="col-xs-1 padding-reset-right">
-                <label for="search">Name:</label>
+                <div class="col col-xs-2">
+                    @select(
+                        field = form("type"),
+                        options = Seq(
+                            "Library" -> "Library",
+                            "Prototype" -> "Prototype",
+                            "Service" -> "Service",
+                            "Other" -> "Other"
+                        ),
+                        '_default -> "All",
+                        '_label -> "",
+                        'onchange -> "this.form.submit()",
+                        'id -> "type-search"
+                    )
             </div>
-            <div class="col col-xs-3">
-                <input class="search form-control" id="search" type="text" name="name" value="@form("name").value" autofocus>
             </div>
-            <div class="col-xs-1 col-xs-offset-2">
-                <label for="type-search">Type:</label>
-            </div>
-
-            <div class="col col-xs-2">
-                @select(
-                    field = form("type"),
-                    options = Seq(
-                        "Library" -> "Library",
-                        "Prototype" -> "Prototype",
-                        "Service" -> "Service",
-                        "Other" -> "Other"
-                    ),
-                    '_default -> "All",
-                    '_label -> "",
-                    'onchange -> "this.form.submit()",
-                    'id -> "type-search"
-            )
-            </div>
-        </div>
-    </form>
-
+        </form>
         <table class="table table-striped">
             <tr>
                 <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
@@ -101,22 +98,17 @@
             </tr>
             }
             </tbody>
-
-
         </table>
-
     </div>
 }
 
-        <!-- listjs configuration -->
-    <script>
-        var options = { valueNames: [ 'service-name','repo-type', 'created', 'last-active' ] };
+<!-- listjs configuration -->
+<script>
+    var options = { valueNames: [ 'service-name','repo-type', 'created', 'last-active' ] };
+    var serviceList = new List('service-list', options);
+</script>
 
-        var serviceList = new List('service-list', options);
-    </script>
-
-
-    @repoTypes = @{
+@repoTypes = @{
     ("" ,"All") +: RepoType.values.map {v =>
         if (v == RepoType.Service) (v.toString, "Service")
         else (v.toString, v.toString)
