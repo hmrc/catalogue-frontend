@@ -21,8 +21,8 @@ import java.time.LocalDateTime
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import play.api.data.Form
 import play.api.data.Forms._
-import play.api.data.{Form, Mapping}
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
@@ -473,15 +473,6 @@ object DigitalServiceNameFilter {
   )
 }
 
-case class DeploymentsFilter(
-  team: Option[String]        = None,
-  serviceName: Option[String] = None,
-  from: Option[LocalDateTime] = None,
-  to: Option[LocalDateTime]   = None
-) {
-  def isEmpty: Boolean = team.isEmpty && serviceName.isEmpty && from.isEmpty && to.isEmpty
-}
-
 case class RepoListFilter(
   name: Option[String]     = None,
   repoType: Option[String] = None
@@ -496,21 +487,4 @@ object RepoListFilter {
       "type" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(RepoListFilter.apply)(RepoListFilter.unapply)
   )
-}
-
-object DeploymentsFilter {
-  lazy val form = Form(
-    mapping(
-      "team"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "serviceName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "from"        -> optionalLocalDateTimeMapping("from.error.date"),
-      "to"          -> optionalLocalDateTimeMapping("to.error.date")
-    )(DeploymentsFilter.apply)(DeploymentsFilter.unapply)
-  )
-
-  def optionalLocalDateTimeMapping(errorCode: String): Mapping[Option[LocalDateTime]] = {
-    import DateHelper._
-    optional(text.verifying(errorCode, x => stringToLocalDateTimeOpt(x).isDefined))
-      .transform[Option[LocalDateTime]](_.flatMap(stringToLocalDateTimeOpt), _.map(_.format(`yyyy-MM-dd`)))
-  }
 }

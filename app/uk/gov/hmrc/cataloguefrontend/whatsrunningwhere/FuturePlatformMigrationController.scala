@@ -18,10 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.MessagesControllerComponents
-import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.whatsrunningwhere.FuturePlatformMigrationPage
-import cats.implicits._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.ExecutionContext

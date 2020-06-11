@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.{Instant, LocalDate, LocalTime, ZoneId}
+import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
@@ -39,13 +39,10 @@ class DeploymentHistoryController @Inject()(
 )(implicit val ec: ExecutionContext
 ) extends FrontendController(mcc) {
 
-  val today = LocalDate.now()
-  val weekAgo = today.minusDays(7)
+  import DeploymentHistoryController._
 
   def history(env: Environment = Production): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier()
-
-
 
     form.bindFromRequest().fold(
       formWithErrors => Future.successful(BadRequest(page(env, Seq.empty, Seq.empty, "", formWithErrors))),
@@ -66,7 +63,7 @@ class DeploymentHistoryController @Inject()(
             audit <- d.deployers
           } yield d.copy(deployers = Seq(audit), firstSeen = audit.deployTime, lastSeen = audit.deployTime)
 
-          teams   <- teamsAndRepositoriesConnector.allTeams
+          teams <- teamsAndRepositoriesConnector.allTeams
         } yield Ok(
           page(
             env,
@@ -79,14 +76,17 @@ class DeploymentHistoryController @Inject()(
       }
     )
   }
+}
+
+object DeploymentHistoryController {
+
+  import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
   case class SearchForm(from: Long, to: Long, team: Option[String], search: Option[String], platform: Option[String])
 
-  val utc = ZoneId.of("UTC")
-  def toLocalDate(l: Long): LocalDate = Instant.ofEpochMilli(l).atZone(ZoneId.of("UTC")).toLocalDate
-  def toEpochMillis(l: LocalDate, startOfDay: Boolean): Long = {
-    (if(startOfDay) l.atStartOfDay(utc) else l.atTime(LocalTime.MAX).atZone(utc)).toInstant.toEpochMilli
-  }
+  def defaultFromTime(referenceDate: LocalDate = LocalDate.now()): Long = referenceDate.minusDays(7).atStartOfDayEpochMillis
+
+  def defaultToTime(referenceDate: LocalDate = LocalDate.now()): Long = referenceDate.atEndOfDayEpochMillis
 
   lazy val form: Form[SearchForm] = {
     val dateFormat = "yyyy-MM-dd"
@@ -95,13 +95,13 @@ class DeploymentHistoryController @Inject()(
         "from" -> Forms.optional(
           Forms
             .localDate(dateFormat)
-            .transform[Long](toEpochMillis(_, startOfDay =  true), toLocalDate)
-          ).transform[Long](o => o.getOrElse(toEpochMillis(weekAgo, startOfDay = true)), a => Some(a)), //Default to last week if not set
+            .transform[Long](_.atStartOfDayEpochMillis, longToLocalDate)
+          ).transform[Long](o => o.getOrElse(defaultFromTime()), l => Some(l)), //Default to last week if not set
         "to" -> Forms.optional(
           Forms
             .localDate(dateFormat)
-            .transform[Long](toEpochMillis(_, startOfDay = false), toLocalDate)
-          ).transform[Long](o => o.getOrElse(toEpochMillis(today, startOfDay = false)), a => Some(a)),  //Default to now if not set
+            .transform[Long](_.atEndOfDayEpochMillis, longToLocalDate)
+          ).transform[Long](o => o.getOrElse(defaultToTime()), l => Some(l)),  //Default to now if not set
         "team" -> Forms.optional(Forms.text),
         "search" -> Forms.optional(Forms.text),
         "platform" -> Forms.optional(Forms.text)
