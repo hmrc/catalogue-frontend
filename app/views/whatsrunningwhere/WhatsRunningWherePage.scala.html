@@ -15,14 +15,15 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ ProfileName, ProfileType, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Platform, ProfileName, ProfileType, WhatsRunningWhere}
 @import uk.gov.hmrc.cataloguefrontend.routes
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform
 
 @this(viewMessages: ViewMessages)
 
-@( environments       : Seq[Environment]
+@( platform           : Platform
+ , environments       : Seq[Environment]
  , whatsRunning       : Seq[WhatsRunningWhere]
  , selectedProfileType: ProfileType
  , profileNames       : Seq[ProfileName]
@@ -31,8 +32,22 @@
 @standard_layout("What's Running Where?", "whats-running-where") {
 
     <header>
-        <h1>What's Running Where?</h1>
+        <h1>What's Running Where? @platform</h1>
     </header>
+
+    <div class="alert alert-info">
+      <strong>
+         During the migration to ECS, your service may be running different versions in the different platforms.
+       </strong>
+       <br/>
+       See <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.FuturePlatformMigrationController.futurePlatformMigration">Migration to Future Platform</a>
+       for which platform your requests are being routed to.
+       <br/>
+       See @platform match {
+         case Platform.ECS      => { <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.heritageReleases()">What's Running Where? @Platform.Heritage</a> }
+         case Platform.Heritage => { <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.ecsReleases()">What's Running Where? @Platform.ECS</a> }
+       }
+    </div>
 
     @if(form.hasErrors) {
         <div class="alert alert-danger" role="alert">
@@ -131,7 +146,9 @@
 @profileTypeTab(profileType: ProfileType) = {
   @defining(profileType == selectedProfileType){ active =>
     <li id="tab-@profileType.asString" class="nav-item @if(active){active}">
-        <a class="nav-link @if(active){active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">@profileType Profile</a>
+        <a class="nav-link @if(active){active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">
+          @profileType Profile
+        </a>
     </li>
   }
 }
