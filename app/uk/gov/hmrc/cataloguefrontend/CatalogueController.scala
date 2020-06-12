@@ -279,7 +279,7 @@ class CatalogueController @Inject()(
       case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service =>
         val futEnvDatas: Future[Map[SlugInfoFlag, EnvData]] =
           for {
-            deployments <- whatsRunningWhereService.releases(serviceName, Platform.Heritage).map(_.versions)
+            deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
             res <- Environment.values.traverse { env =>
                     val slugInfoFlag     = SlugInfoFlag.ForEnvironment(env)
                     val deployedVersions = deployments.filter(_.environment == env).map(x => (x.versionNumber.asVersion, x.platform))

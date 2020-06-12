@@ -100,7 +100,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
       serviceEndpoint(
         GET,
         "/releases-api/whats-running-where/service-1",
-        queryParameters = Seq("platform" -> Platform.Heritage.asString),
         willRespondWith = (
           200,
           Some("""{"applicationName":"service-1",
@@ -186,7 +185,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         serviceEndpoint(
           GET,
           "/releases-api/whats-running-where/service-1",
-          queryParameters = Seq("platform" -> Platform.Heritage.asString),
           willRespondWith = (
             200,
             Some("""{"applicationName":"service-1",
@@ -237,7 +235,6 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
         serviceEndpoint(
           GET,
           "/releases-api/whats-running-where/service-1",
-          queryParameters = Seq("platform" -> Platform.Heritage.asString),
           willRespondWith = (
             200,
             Some("""{"applicationName":"service-1",

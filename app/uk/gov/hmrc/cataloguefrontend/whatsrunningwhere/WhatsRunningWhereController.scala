@@ -57,7 +57,7 @@ class WhatsRunningWhereController @Inject()(
         form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
         profile              =  profileFrom(form)
         selectedProfileType  =  form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (releases, profiles) <- ( service.releases(profile, platform).map(_.sortBy(_.applicationName.asString))
+        (releases, profiles) <- ( service.releasesForProfile(profile, platform).map(_.sortBy(_.applicationName.asString))
                                 , service.profiles
                                 ).mapN { (r, p) => (r, p) }
         environments         =  distinctEnvironments(releases)

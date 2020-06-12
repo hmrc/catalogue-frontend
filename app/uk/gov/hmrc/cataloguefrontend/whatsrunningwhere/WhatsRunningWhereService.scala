@@ -23,13 +23,12 @@ import scala.concurrent.Future
 
 class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector) {
 
-  /** Get releases from Heritage infrastructure. This will be removed once everything has migrated */
-  def releases(profile: Option[Profile], platform: Platform)(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
+  def releasesForProfile(profile: Option[Profile], platform: Platform)(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     releasesConnector.releases(profile, platform)
 
   def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
     releasesConnector.profiles
 
-  def releases(service: String, platform: Platform)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
-    releasesConnector.releasesForService(service, platform)
+  def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
+    releasesConnector.releasesForService(service)
 }
