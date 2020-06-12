@@ -37,7 +37,7 @@ class DependenciesController @Inject()(
 
   def service(name: String): Action[AnyContent] = Action.async { implicit request =>
     for {
-      deployments         <- whatsRunningWhereService.releases(name, Platform.Heritage).map(_.versions)
+      deployments         <- whatsRunningWhereService.releasesForService(name).map(_.versions)
       serviceDependencies <- dependenciesService.search(name, deployments)
     } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.semanticVersion)(Ordering[Option[Version]].reverse)))
   }

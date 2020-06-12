@@ -69,11 +69,10 @@ class ReleasesConnector @Inject()(
   private def profileQueryParams(profile: Option[Profile]): Seq[(String, String)] =
     UrlUtils.buildQueryParams("profileName" -> profile.map(_.profileName.asString), "profileType" -> profile.map(_.profileType.asString))
 
-  def releasesForService(service: String, platform: Platform)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
+  def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where/$service"
-    val params  = UrlUtils.buildQueryParams("platform" -> Some(platform.asString))
     http
-      .GET[Option[WhatsRunningWhere]](baseUrl, params)
+      .GET[Option[WhatsRunningWhere]](baseUrl)
       .map(_.getOrElse {
         logger.error(s"Service $service not found, returning placeholder whatsrunningwhere")
         WhatsRunningWhere(ServiceName(service), Nil)
