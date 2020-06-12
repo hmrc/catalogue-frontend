@@ -25,7 +25,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeHeaders
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
-import uk.gov.hmrc.cataloguefrontend.model.Environment.Integration
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
@@ -58,6 +58,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
                  |    "versions": [
                  |      {
                  |        "environment": "integration",
+                 |        "platform": "ecs",
                  |        "versionNumber": "1.57.0",
                  |        "lastSeen": "2019-05-29T14:09:48Z"
                  |      }
@@ -68,6 +69,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
                  |    "versions": [
                  |      {
                  |        "environment": "integration",
+                 |        "platform": "ecs",
                  |        "versionNumber": "0.44.0",
                  |        "lastSeen": "2019-05-29T14:09:46Z"
                  |      }
@@ -83,16 +85,14 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
-          ),
-          deployedIn = Platform.ECS
+            WhatsRunningWhereVersion(Environment.Integration, Platform.ECS, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
+          )
         ),
         WhatsRunningWhere(
           ServiceName("api-documentation"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("0.44.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:46Z")))
-          ),
-          deployedIn = Platform.ECS
+            WhatsRunningWhereVersion(Environment.Integration, Platform.ECS, VersionNumber("0.44.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:46Z")))
+          )
         )
       )
     }
@@ -113,6 +113,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
                  |    "versions": [
                  |      {
                  |        "environment": "integration",
+                 |        "platform": "ecs",
                  |        "versionNumber": "1.57.0",
                  |        "lastSeen": "2019-05-29T14:09:48Z"
                  |      }
@@ -132,9 +133,8 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
-          ),
-          deployedIn = Platform.ECS
+            WhatsRunningWhereVersion(Environment.Integration, Platform.ECS, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
+          )
         )
       )
     }
@@ -164,6 +164,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |    "versions": [
               |      {
               |        "environment": "integration",
+              |        "platform": "heritage",
               |        "versionNumber": "1.57.0",
               |        "lastSeen": "2019-05-29T14:09:48Z"
               |      }
@@ -174,6 +175,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |    "versions": [
               |      {
               |        "environment": "integration",
+              |        "platform": "heritage",
               |        "versionNumber": "0.44.0",
               |        "lastSeen": "2019-05-29T14:09:46Z"
               |      }
@@ -189,13 +191,13 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
+            WhatsRunningWhereVersion(Environment.Integration, Platform.Heritage, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
           )
         ),
         WhatsRunningWhere(
           ServiceName("api-documentation"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("0.44.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:46Z")))
+            WhatsRunningWhereVersion(Environment.Integration, Platform.Heritage, VersionNumber("0.44.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:46Z")))
           )
         )
       )
@@ -217,6 +219,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
               |    "versions": [
               |      {
               |        "environment": "integration",
+              |        "platform": "heritage",
               |        "versionNumber": "1.57.0",
               |        "lastSeen": "2019-05-29T14:09:48Z"
               |      }
@@ -236,7 +239,7 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
+            WhatsRunningWhereVersion(Environment.Integration, Platform.Heritage, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
           )
         )
       )
@@ -290,9 +293,8 @@ class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with Wi
       response should contain theSameElementsAs Seq(
         Profile(ProfileType.ServiceManager, ProfileName("tcs_all")),
         Profile(ProfileType.ServiceManager, ProfileName("tpsa")),
-        Profile(ProfileType.Team, ProfileName("trusts"))
+        Profile(ProfileType.Team          , ProfileName("trusts"))
       )
     }
   }
-
 }

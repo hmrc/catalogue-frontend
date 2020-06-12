@@ -43,13 +43,13 @@
                         <span id="service_owner_view_component" class="service-owner-view" >
                             <div class="input-group">
                                 <span class="form-control editable-label__field">
-                                        @digitalServiceOwner.map { so =>
-                                            <a href="@{so.umpLink}" target="_blank" id="service_owner_view_field">@{so.displayName}<span class="glyphicon glyphicon-new-window"/></a>
+                                    @digitalServiceOwner.map { so =>
+                                        <a href="@{so.umpLink}" target="_blank" id="service_owner_view_field">@{so.displayName}<span class="glyphicon glyphicon-new-window"/></a>
                                     }.getOrElse {
-                                            <span id="service_owner_view_field">
-                                                @{viewMessages.notSpecifiedText}
-                                            </span>
-                                        }
+                                        <span id="service_owner_view_field">
+                                            @{viewMessages.notSpecifiedText}
+                                        </span>
+                                    }
                                 </span>
                                 <div class="input-group-btn">
                                     @if(request.isSignedIn) {
@@ -58,7 +58,6 @@
                                         </button>
                                     }
                                 </div>
-
                             </div>
                         </span>
                         <span id="service_owner_edit_component" style="display: None">

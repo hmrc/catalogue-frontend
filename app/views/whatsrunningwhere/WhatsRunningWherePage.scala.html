@@ -15,14 +15,15 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ ProfileName, ProfileType, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Platform, ProfileName, ProfileType, WhatsRunningWhere}
 @import uk.gov.hmrc.cataloguefrontend.routes
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform
 
 @this(viewMessages: ViewMessages)
 
-@( environments       : Seq[Environment]
+@( platform           : Platform
+ , environments       : Seq[Environment]
  , whatsRunning       : Seq[WhatsRunningWhere]
  , selectedProfileType: ProfileType
  , profileNames       : Seq[ProfileName]
@@ -31,8 +32,22 @@
 @standard_layout("What's Running Where?", "whats-running-where") {
 
     <header>
-        <h1>What's Running Where?</h1>
+        <h1>What's Running Where? @platform.displayName</h1>
     </header>
+
+    <div class="alert alert-info">
+      <strong>
+         During the migration to the Future Platform, your service may be running different versions on different platforms.
+       </strong>
+       <br/>
+       See <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.FuturePlatformMigrationController.futurePlatformMigration">Migration to Future Platform</a>
+       for which platform your requests are being routed to.
+       <br/>
+       See @platform match {
+         case Platform.ECS      => { <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.heritageReleases()">What's Running Where? @Platform.Heritage.displayName</a> }
+         case Platform.Heritage => { <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.ecsReleases()">What's Running Where? @Platform.ECS.displayName</a> }
+       }
+    </div>
 
     @if(form.hasErrors) {
         <div class="alert alert-danger" role="alert">
@@ -84,7 +99,6 @@
             <tr role="row" id="row@i">
                 <td class="application-name" id="row@{i}_application">
                     <a href="@routes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
-                    @if(wrw.deployedIn == Platform.ECS){ <span class="label label-primary pull-right">ECS</span>}
                 </td>
 
                 @environments.map { env =>
@@ -114,7 +128,6 @@
     searchBox.focus();
     searchBox.setSelectionRange(length, length);
 
-
     function selectProfileType(profileType) {
       document.getElementById('profile_type').value = profileType;
       document.getElementById('profile_name').value = '';
@@ -131,7 +144,9 @@
 @profileTypeTab(profileType: ProfileType) = {
   @defining(profileType == selectedProfileType){ active =>
     <li id="tab-@profileType.asString" class="nav-item @if(active){active}">
-        <a class="nav-link @if(active){active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">@profileType Profile</a>
+        <a class="nav-link @if(active){active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">
+          @profileType Profile
+        </a>
     </li>
   }
 }

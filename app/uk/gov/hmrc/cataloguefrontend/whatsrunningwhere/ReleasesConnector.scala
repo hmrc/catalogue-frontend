@@ -53,7 +53,6 @@ class ReleasesConnector @Inject()(
           logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
           Seq.empty
       }
-      .map(_.map(addPlatformTag(platform)))
   }
 
   def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] = {
@@ -66,9 +65,6 @@ class ReleasesConnector @Inject()(
           Seq.empty
       }
   }
-
-  private def addPlatformTag(platform: Platform)(whatsRunningWhere: WhatsRunningWhere): WhatsRunningWhere =
-    whatsRunningWhere.copy(deployedIn = platform)
 
   private def profileQueryParams(profile: Option[Profile]): Seq[(String, String)] =
     UrlUtils.buildQueryParams("profileName" -> profile.map(_.profileName.asString), "profileType" -> profile.map(_.profileType.asString))

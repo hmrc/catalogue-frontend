@@ -16,7 +16,8 @@
 
 @import partials.ServiceDependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
-@import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag}
+@import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 
@@ -35,6 +36,7 @@
                 <div class="board__heading">
                     <h4 class="environment-name">@slugInfoFlag.displayString</h4>
                     @renderVersion(optEnvData.map(_.version))
+                    @renderPlatform(optEnvData.flatMap(_.optPlatform))
                 </div>
                 <div class="board__body">
                     @renderShutterStatusBadge(optEnvData.flatMap(_.optShutterState))
@@ -96,12 +98,17 @@
 </div>
 
 @renderVersion(optVersion: Option[Version]) = {
-    @if(optVersion.isDefined) {
-        <p class="small">@optVersion.get</p>
-    } else {
-        <!-- needed to ensure each tab nav-item has the same height -->
-        <p class="small">&nbsp;</p>
-    }
+  @optVersion match {
+    case Some(version)   => { <p class="small">@version</p> }
+    case None          => { <p class="small">&nbsp;</p> <!-- needed to ensure each tab nav-item has the same height --> }
+  }
+}
+
+@renderPlatform(optPlatform: Option[Platform]) = {
+  @optPlatform match {
+    case Some(Platform.ECS) => { <span class="label label-primary">@Platform.ECS.displayName</span> <!-- only display ECS since Heritage is the default -->}
+    case _ => { <span class="label">&nbsp;</span> <!-- needed to ensure each tab nav-item has the same height --> }
+  }
 }
 
 @renderShutterStatusBadge(optShutterState: Option[ShutterState]) = {

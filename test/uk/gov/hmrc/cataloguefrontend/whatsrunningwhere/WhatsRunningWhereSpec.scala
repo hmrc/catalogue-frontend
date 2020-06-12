@@ -62,6 +62,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
               |    "versions": [
               |      {
               |        "environment": "integration",
+              |        "platform": "heritage",
               |        "versionNumber": "1.57.0",
               |        "lastSeen": "2019-05-29T14:09:48Z"
               |      }
@@ -72,6 +73,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
               |    "versions": [
               |      {
               |        "environment": "integration",
+              |        "platform": "heritage",
               |        "versionNumber": "0.44.0",
               |        "lastSeen": "2019-05-29T14:09:46Z"
               |      }
@@ -111,6 +113,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
                  |    "versions": [
                  |      {
                  |        "environment": "integration",
+                 |        "platform": "ecs",
                  |        "versionNumber": "1.58.0",
                  |        "lastSeen": "2019-05-29T14:09:48Z"
                  |      }
@@ -121,6 +124,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
                  |    "versions": [
                  |      {
                  |        "environment": "integration",
+                 |        "platform": "ecs",
                  |        "versionNumber": "0.41.0",
                  |        "lastSeen": "2019-05-29T14:09:46Z"
                  |      }

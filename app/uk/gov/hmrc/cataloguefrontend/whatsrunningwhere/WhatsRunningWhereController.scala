@@ -29,10 +29,10 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class WhatsRunningWhereController @Inject()(
   service: WhatsRunningWhereService,
-  page: WhatsRunningWherePage,
-  mcc: MessagesControllerComponents
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  page   : WhatsRunningWherePage,
+  mcc    : MessagesControllerComponents
+)(implicit val ec: ExecutionContext
+) extends FrontendController(mcc) {
 
   def heritageReleases: Action[AnyContent] = releases(Platform.Heritage)
 
@@ -54,17 +54,23 @@ class WhatsRunningWhereController @Inject()(
   private def releases(platform: Platform): Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profile             = profileFrom(form)
-        selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (releases, profiles) <- (service.releases(profile, platform).map(_.sortBy(_.applicationName.asString)), service.profiles).mapN { case (r, p) => (r, p) }
-        environments = distinctEnvironments(releases)
-        profileNames = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield Ok(page(environments, releases, selectedProfileType, profileNames, form))
+        form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
+        profile              =  profileFrom(form)
+        selectedProfileType  =  form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
+        (releases, profiles) <- ( service.releases(profile, platform).map(_.sortBy(_.applicationName.asString))
+                                , service.profiles
+                                ).mapN { (r, p) => (r, p) }
+        environments         =  distinctEnvironments(releases)
+        profileNames         =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+      } yield Ok(page(platform, environments, releases, selectedProfileType, profileNames, form))
     }
 }
 
-case class WhatsRunningWhereFilter(profileName: Option[ProfileName] = None, profileType: Option[ProfileType] = None, serviceName: Option[ServiceName] = None)
+case class WhatsRunningWhereFilter(
+  profileName: Option[ProfileName] = None,
+  profileType: Option[ProfileType] = None,
+  serviceName: Option[ServiceName] = None
+)
 
 object WhatsRunningWhereFilter {
   private def filterEmptyString(x: Option[String]) = x.filter(_.trim.nonEmpty)

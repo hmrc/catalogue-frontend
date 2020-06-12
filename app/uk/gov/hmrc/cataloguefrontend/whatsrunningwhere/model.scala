@@ -26,11 +26,12 @@ import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.ECS
 
 sealed trait Platform {
   def asString: String
+  def displayName: String
 }
 
 object Platform {
-  case object ECS      extends Platform { override val asString = "ecs"      }
-  case object Heritage extends Platform { override val asString = "heritage" }
+  case object ECS      extends Platform { override val asString = "ecs"     ; override val displayName = "Future Platform" }
+  case object Heritage extends Platform { override val asString = "heritage"; override val displayName = "Heritage"        }
 
   val values: List[Platform] =
     List(ECS, Heritage)
@@ -42,12 +43,12 @@ object Platform {
 }
 case class WhatsRunningWhere(
   applicationName: ServiceName,
-  versions       : List[WhatsRunningWhereVersion],
-  deployedIn     : Platform                        = Platform.Heritage
+  versions       : List[WhatsRunningWhereVersion]
 )
 
 case class WhatsRunningWhereVersion(
   environment  : Environment,
+  platform     : Platform,
   versionNumber: VersionNumber,
   lastSeen     : TimeSeen
 )
@@ -91,9 +92,11 @@ object JsonCodecs {
 
   val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] = {
     implicit val wf  = environmentFormat
+    implicit val pf  = platformFormat
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
     ( (__ \ "environment"  ).read[Environment]
+    ~ (__ \ "platform"     ).read[Platform]
     ~ (__ \ "versionNumber").read[VersionNumber]
     ~ (__ \ "lastSeen"     ).read[TimeSeen]
     )(WhatsRunningWhereVersion.apply _)
@@ -104,7 +107,6 @@ object JsonCodecs {
     implicit val wrwvf = whatsRunningWhereVersionReads
     ( (__ \ "applicationName").read[ServiceName]
     ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
-    ~ Reads.pure(Platform.Heritage)
     )(WhatsRunningWhere.apply _)
   }
 
