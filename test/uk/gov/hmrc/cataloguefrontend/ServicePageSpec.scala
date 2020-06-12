@@ -105,8 +105,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
           200,
           Some("""{"applicationName":"service-1",
                  |"versions":[
-                 |{"environment":"production","versionNumber":"0.0.1","lastSeen":"2020-02-14T00:59:33Z"},
-                 |{"environment":"qa","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
+                 |{"environment":"production","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T00:59:33Z"},
+                 |{"environment":"qa","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
                  |]}""".stripMargin))
       )
       serviceEndpoint(
@@ -145,8 +145,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
           200,
           Some("""{"applicationName":"service-1",
           |"versions":[
-          |{"environment":"production","versionNumber":"0.0.1","lastSeen":"2020-02-14T00:59:33Z"},
-          |{"environment":"qa","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
+          |{"environment":"production","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T00:59:33Z"},
+          |{"environment":"qa","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
           |]}""".stripMargin))
       )
 
@@ -191,8 +191,8 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
             200,
             Some("""{"applicationName":"service-1",
                    |"versions":[
-                   |{"environment":"production","versionNumber":"0.0.1","lastSeen":"2020-02-14T00:59:33Z"},
-                   |{"environment":"development","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
+                   |{"environment":"production","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T00:59:33Z"},
+                   |{"environment":"development","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
                    |]}""".stripMargin))
         )
         serviceEndpoint(GET, "/api/sluginfo?name=service-1", willRespondWith = (200, Some(serviceDependenciesData)))
@@ -242,7 +242,7 @@ class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMock
             200,
             Some("""{"applicationName":"service-1",
                    |"versions":[
-                   |{"environment":"development","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
+                   |{"environment":"development","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
                    |]}""".stripMargin))
         )
         serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith  = (200, Some(serviceDetailsData)))

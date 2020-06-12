@@ -61,8 +61,8 @@
           @for(env <- Environment.values) {
 
               @data.get(env) match {
-                case Some(Platform.ECS)      => { <td class="bg-success">@Platform.ECS</td>   }
-                case Some(Platform.Heritage) => { <td class="bg-info">@Platform.Heritage</td> }
+                case Some(Platform.ECS)      => { <td class="bg-success">@Platform.ECS.displayName</td>   }
+                case Some(Platform.Heritage) => { <td class="bg-info">@Platform.Heritage.displayName</td> }
                 case _                       => {}
               }
             </td>
@@ -102,7 +102,7 @@
       var data = new google.visualization.DataTable();
       data.addColumn('string', 'Environment');
       @for(platform <- Platform.values) {
-        data.addColumn('number','@platform');
+        data.addColumn('number','@platform.displayName');
       }
 
       data.addRows([

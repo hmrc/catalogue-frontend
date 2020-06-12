@@ -54,9 +54,10 @@ case class DigitalServiceDetails(
 )
 
 case class EnvData(
-  version: Version,
-  dependencies: Seq[Dependency],
-  optShutterState: Option[ShutterState],
+  version          : Version,
+  optPlatform      : Option[Platform],
+  dependencies     : Seq[Dependency],
+  optShutterState  : Option[ShutterState],
   optTelemetryLinks: Option[Seq[Link]]
 )
 
@@ -281,22 +282,31 @@ class CatalogueController @Inject()(
             deployments <- whatsRunningWhereService.releases(serviceName, Platform.Heritage).map(_.versions)
             res <- Environment.values.traverse { env =>
                     val slugInfoFlag     = SlugInfoFlag.ForEnvironment(env)
-                    val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
+                    val deployedVersions = deployments.filter(_.environment == env).map(x => (x.versionNumber.asVersion, x.platform))
                     // a single environment may have multiple versions during a deployment
                     // return the lowest
-                    deployedVersions.sorted.headOption match {
-                      case Some(version) =>
+                    deployedVersions.sortBy(_._1).headOption match {
+                      case Some((version, platform)) =>
                         val telemetryLinks =
                           (for {
-                            targetEnvironments <- repositoryDetails.environments.toSeq
-                            targetEnvironment  <- targetEnvironments
-                            if targetEnvironment.environment == env
-                          } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)).flatten
+                             targetEnvironments <- repositoryDetails.environments.toSeq
+                             targetEnvironment  <- targetEnvironments
+                             if targetEnvironment.environment == env
+                           } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)
+                          ).flatten
 
-                        (serviceDependencyConnector.getCuratedSlugDependencies(serviceName, slugInfoFlag)
+                        ( serviceDependencyConnector.getCuratedSlugDependencies(serviceName, slugInfoFlag)
                         , shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
                         ).mapN { (dependencies, optShutterState) =>
-                          Some(slugInfoFlag -> EnvData(version, dependencies, optShutterState, Some(telemetryLinks)))
+                          Some(slugInfoFlag ->
+                            EnvData(
+                              version           = version,
+                              optPlatform       = Some(platform),
+                              dependencies      = dependencies,
+                              optShutterState   = optShutterState,
+                              optTelemetryLinks = Some(telemetryLinks)
+                            )
+                          )
                         }
                       case None => Future.successful(None)
                     }
@@ -318,6 +328,7 @@ class CatalogueController @Inject()(
                 SlugInfoFlag.Latest ->
                   EnvData(
                     version           = latestServiceInfo.semanticVersion.get,
+                    optPlatform       = None,
                     dependencies      = librariesOfLatestSlug,
                     optShutterState   = None,
                     optTelemetryLinks = None
