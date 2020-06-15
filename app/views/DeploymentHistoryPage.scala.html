@@ -139,10 +139,9 @@ searchBox.focus();
 searchBox.setSelectionRange(length, length);
 
 function dateFilterChange(e) {
-    // Wait a bit before submitting to allow acceptance tests to fill complete field
-    setTimeout( function () {
-        $('#form').submit();
-    }, 100);
+    // Reload the form with the new date when entered. Designed to be entered
+    // via the date picker, not typed manually
+    $('#form').submit();
 }
 
 function selectEnvironment(e, environment) {
