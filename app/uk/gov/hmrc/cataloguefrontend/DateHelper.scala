@@ -58,7 +58,7 @@ object DateHelper {
       ZonedDateTime.ofInstant(instant, utc)
 
     def asUTCString: String =
-      asUTC.format(`yyyy-MM-dd HH:mm z`)
+      asUTC.format(`yyyy-MM-dd HH:mm:ss z`)
   }
 
   def longToLocalDate(l: Long): LocalDate =
