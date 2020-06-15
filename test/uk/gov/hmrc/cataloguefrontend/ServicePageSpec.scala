@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, Platform}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs
 
 class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
 

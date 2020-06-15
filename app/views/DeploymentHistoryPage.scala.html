@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Deployment
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
@@ -55,10 +56,7 @@
                 <div class="col-xs-2">
                     @select(
                         field = form("platform"),
-                        options = Seq(
-                        "Heritage" -> "Heritage",
-                        "ECS" -> "ECS"
-                        ),
+                        options = Platform.values.map(p => p.asString -> p.displayName),
                         '_default -> "All",
                         '_label -> "Platform",
                         'onchange -> "this.form.submit()",
@@ -104,7 +102,7 @@
                 @deployments.zipWithIndex.map{case (d, i) =>
                 <tr id="row@i">
                   <td id="row@{i}_name" class="service-name">
-                      @if(d.isECS){ <span class="label label-primary pull-right">ECS</span>}
+                      @if(d.isECS){ <span class="label label-primary pull-right">@{d.platform.displayName}</span>}
                       <a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString).url}">@{d.name.asString}</a>
                   </td>
                   <td id="row@{i}_team" class="team">
