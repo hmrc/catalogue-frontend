@@ -16,16 +16,20 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.mockito.MockitoSugar
+import java.time.{Instant, LocalDate}
+
 import org.mockito.ArgumentMatchers.any
+import org.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentHistoryController, ReleasesConnector}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.Heritage
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere._
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import views.html.DeploymentHistoryPage
 
@@ -65,6 +69,39 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Gu
       when(mockedTeamsAndRepositoriesConnector.allTeams(any())).thenReturn(Future.successful(Seq.empty))
       val response = controller.history()(FakeRequest(GET, "/deployments/production"))
       status(response) shouldBe 200
+    }
+    "filter out audit records that do not fit the date range" in new Fixture {
+      import DateHelper._
+
+      val d1 = Instant.ofEpochMilli(LocalDate.parse("2020-01-01").atStartOfDayEpochMillis)
+      val d2 = Instant.ofEpochMilli(LocalDate.parse("2020-02-01").atStartOfDayEpochMillis)
+      val d3 = Instant.ofEpochMilli(LocalDate.parse("2020-03-01").atStartOfDayEpochMillis)
+
+      val deps = Seq(
+        Deployment(
+          Heritage,
+          ServiceName("s1"),
+          Production,
+          VersionNumber("1.1.1"),
+          Seq.empty,
+          TimeSeen(d1),
+          TimeSeen(d3),
+          Seq(
+            DeployerAudit("usera", TimeSeen(d1)),
+            DeployerAudit("userb", TimeSeen(d2)),
+            DeployerAudit("userc", TimeSeen(d3))
+          ))
+      )
+
+      when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any(), any())(any())).thenReturn(Future.successful(deps))
+      when(mockedTeamsAndRepositoriesConnector.allTeams(any())).thenReturn(Future.successful(Seq.empty))
+      val response = controller.history()(FakeRequest(GET, "/deployments/production?from=2020-01-01&to=2020-02-01"))
+      status(response) shouldBe 200
+
+      val responseString = contentAsString(response)
+      responseString.contains("userc") shouldBe false //March shouldn't show for Feb filter
+      responseString.contains("usera") shouldBe true
+      responseString.contains("userb") shouldBe true
     }
   }
 }
