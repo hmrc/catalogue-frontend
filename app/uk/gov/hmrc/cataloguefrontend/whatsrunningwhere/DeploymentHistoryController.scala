@@ -44,6 +44,9 @@ class DeploymentHistoryController @Inject()(
   def history(env: Environment = Production): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
+    def dateRangeContains(from: Long, to: Long, deployTime: Long): Boolean =
+      deployTime >= from && deployTime <= to
+
     form.bindFromRequest().fold(
       formWithErrors => Future.successful(BadRequest(page(env, Seq.empty, Seq.empty, "", formWithErrors))),
       validForm => {
@@ -61,6 +64,7 @@ class DeploymentHistoryController @Inject()(
           explodedDeployments = for {
             d <- deployments
             audit <- d.deployers
+            if dateRangeContains(validForm.from, validForm.to, audit.deployTime.time.toEpochMilli)
           } yield d.copy(deployers = Seq(audit), firstSeen = audit.deployTime, lastSeen = audit.deployTime)
 
           teams <- teamsAndRepositoriesConnector.allTeams
