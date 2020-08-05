@@ -1164,7 +1164,7 @@ h1, .h1,
 h2, .h2,
 h3, .h3 {
   margin-top: 20px;
-  margin-bottom: 10px; }
+  margin-bottom: 5px; }
   h1 small,
   h1 .small, .h1 small,
   .h1 .small,
@@ -11759,7 +11759,7 @@ ul {
   margin-bottom: 1em; }
 
 h1 {
-  margin-bottom: 1.4em;
+  margin-bottom: 0.8em;
   padding-bottom: .2em;
   border-bottom: 3px solid #008770; }
 
@@ -12346,4 +12346,34 @@ table.shutter-events {
 .bobby-violation-pending-badge {
   background-color: #ffbf00;
   border: 1px solid #ffbf00;
+}
+
+.recent-box {
+    margin: 20px;
+    padding: 20px;
+    background-color: #02877021;
+}
+
+.recent-box td {
+    padding: 1px 10px 1px 10px;
+}
+
+.recent-box thead {
+    display:none;
+}
+
+.recent-box thead tr th:first-child,
+.recent-box tbody tr td:first-child {
+  width: 12em;
+  min-width: 12em;
+}
+
+.recent-box-grow {
+  -moz-transition: height .5s;
+  -ms-transition: height .5s;
+  -o-transition: height .5s;
+  -webkit-transition: height .5s;
+  transition: height .5s;
+  overflow: hidden;
+  height:120px; /* If you change this, change the corresponding smallHeight value in catalogue-frontend.css too */
 }

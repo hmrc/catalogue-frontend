@@ -35,6 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
+import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Platform, WhatsRunningWhereService}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
@@ -102,6 +103,9 @@ class CatalogueController @Inject()(
   private lazy val hideArchivedRepositoriesFromTeam: Boolean =
     configuration.get[Boolean]("team.hideArchivedRepositories")
 
+  private lazy val whatsNewDisplayLines  = configuration.get[Int]("whats-new.display.lines")
+  private lazy val blogPostsDisplayLines  = configuration.get[Int]("blog-posts.display.lines")
+
   private val repoTypeToDetailsUrl = Map(
     RepoType.Service   -> routes.CatalogueController.service _,
     RepoType.Other     -> routes.CatalogueController.repository _,
@@ -110,7 +114,10 @@ class CatalogueController @Inject()(
   )
 
   def index(): Action[AnyContent] = Action { implicit request =>
-    Ok(indexPage())
+    val whatsNew = MarkdownLoader.loadAndRenderMarkdownFile("VERSION_HISTORY.md", whatsNewDisplayLines)
+    val blogPosts = MarkdownLoader.loadAndRenderMarkdownFile("BLOG_POSTS.md", blogPostsDisplayLines)
+
+    Ok(indexPage(whatsNew, blogPosts))
   }
 
   def serviceOwner(digitalService: String): Action[AnyContent] = Action {

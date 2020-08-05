@@ -49,7 +49,8 @@ val compile = Seq(
   "org.apache.httpcomponents" %  "httpclient"                 % "4.3.6",
   "com.github.tototoshi"      %% "scala-csv"                  % "1.3.6",
   "com.github.melrief"        %% "purecsv"                    % "0.1.1",
-  "com.opencsv"               %  "opencsv"                    % "4.0"
+  "com.opencsv"               %  "opencsv"                    % "4.0",
+  "org.planet42"              %% "laika-core"                 % "0.15.0"
 )
 
 val test = Seq(
