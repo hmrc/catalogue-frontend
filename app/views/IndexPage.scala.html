@@ -30,8 +30,7 @@
             their <a href="./deployments/production" target="_blank">recent deployments</a>,
             what <a href="./dependencyexplorer" target="_blank">dependencies</a>
             and config they use, and <a href="./teams" target="_blank">who</a> maintains them.
-            You can also <a href="./shuttering-overview/frontend" target="_blank">shutter your service</a> to the outside world
-            and display a <a href="https://confluence.tools.tax.service.gov.uk/x/lRMEBQ" target="_blank">custom outage page</a>,
+            You can also <a href="./shuttering-overview/frontend" target="_blank">shutter your service</a> to the outside world,
             <a href="./bobbyrules" target="_blank">view bobby rules</a>, see what
             <a href="./jdkexplorer" target="_blank">JDK versions are in use</a>, discover
             <a href="./search#" target="_blank">which service corresponds to a given URL</a>, and see how we're doing
@@ -68,11 +67,29 @@
         <h2 id="maintenance">How is the catalogue updated?</h2>
 
         <p>All the data you see here is pulled and rendered automatically from various sources including Github and UMP.
-            If you notice something is not quite right you can usually fix it by updating those directly, and when we next refresh
+            If you <span id="egg">notice something</span> is not quite right you can usually fix it by updating those directly, and when we next refresh
             the data you will see it change here.
 
             If you have any queries, feel free to reach out to <a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops<span class="glyphicon glyphicon-new-window"/></a>
         </p>
 
+        <div class="platops" id="platops">
+            <div class="centerpage"><span class="fast-flicker">Brought</span>to y<span class="flicker">ou</span> by Team Platops</div>
+            <div class="randomplace"><span class="fast-flicker">c</span>ol<span class="flicker">i</span>n</div>
+            <div class="randomplace"><span class="fast-flicker">c</span>ol<span class="flicker">i</span>n</div>
+            <div class="randomplace"><span class="fast-flicker">su</span>n<span class="flicker">n</span>y</div>
+            <div class="randomplace"><span class="fast-flicker">i</span>a<span class="flicker">n</span></div>
+            <div class="randomplace"><span class="fast-flicker">i</span>a<span class="flicker">n</span></div>
+            <div class="randomplace"><span class="fast-flicker">t</span>o<span class="flicker">m</span></div>
+            <div class="randomplace"><span class="fast-flicker">t</span>i<span class="flicker">m</span></div>
+            <div class="randomplace"><span class="fast-flicker">all</span>e<span class="flicker">n</span></div>
+            <div class="randomplace"><span class="fast-flicker">n</span>ig<span class="flicker">e</span>l</div>
+            <div class="randomplace"><span class="fast-flicker">ma</span>r<span class="flicker">c</span>us</div>
+            <div class="randomplace"><span class="fast-flicker">m</span>a<span class="flicker">t</span>t</div>
+        </div>
     </section>
 }
+
+<!-- :) -->
+<script src="@routes.Assets.at("egg.js")"></script>
+<link rel="stylesheet" href="@routes.Assets.at("egg.css")" />
