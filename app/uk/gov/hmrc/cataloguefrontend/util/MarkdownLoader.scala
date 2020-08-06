@@ -28,7 +28,7 @@ object MarkdownLoader {
     .build
 
   def loadAndRenderMarkdownFile(filename: String, maxLines: Int): String = {
-    val source = scala.io.Source.fromFile(filename)
+    val source = scala.io.Source.fromResource(filename)
     val lines = try source.getLines().toList.filterNot(_.isEmpty) finally source.close()
     transformer.transform(lines.take(maxLines).mkString("\n")).getOrElse("<Unable to render at this time>")
   }
