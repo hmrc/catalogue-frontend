@@ -23,7 +23,7 @@ $(function() { //document ready event
    });
 
     function randomiseNames() {
-        $(".randomplace").each(function () {
+        $(".neon-random").each(function () {
 
         var randomtop = Math.floor(Math.random() * ($(document).height() - $(this).height() - 200)),
             randomleft = Math.floor(Math.random() * ($(document).width() - $(this).width() - 200)),
