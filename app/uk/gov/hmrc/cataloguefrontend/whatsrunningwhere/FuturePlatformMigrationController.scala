@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.MessagesControllerComponents
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.whatsrunningwhere.FuturePlatformMigrationPage
 
@@ -32,17 +33,26 @@ class FuturePlatformMigrationController @Inject()(
 )(implicit val ec: ExecutionContext
 ) extends FrontendController(cc) {
 
+  private val deploymentTools: Set[ServiceName] = {
+    Environment.values
+      .map(_.asString)
+      .flatMap(env => Seq(s"captain-$env", s"lbmanager-$env", s"docktor-$env"))
+      .map(ServiceName.apply)
+      .toSet
+  }
+
   def futurePlatformMigration =
     Action.async { implicit request =>
       for {
         servicePlatformMappings <- releasesConnector.getServicePlatformMappings
+        filteredMappings        =  servicePlatformMappings.filterNot(service => deploymentTools.contains(service.serviceName))
         serviceData             =  sortByKeys(
-                                     servicePlatformMappings
+                                     filteredMappings
                                        .groupBy(_.serviceName)
                                        .mapValues(_.map(v => (v.environment, v.platform)).toMap)
                                    )
         platformCount           =  sortByKeys(
-                                     servicePlatformMappings
+                                     filteredMappings
                                        .groupBy(_.environment)
                                        .mapValues(_.groupBy(_.platform).mapValues(_.size))
                                    )
