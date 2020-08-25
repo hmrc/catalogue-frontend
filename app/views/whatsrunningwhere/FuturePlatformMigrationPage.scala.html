@@ -63,9 +63,8 @@
               @data.get(env) match {
                 case Some(Platform.ECS)      => { <td class="bg-success">@Platform.ECS.displayName</td>   }
                 case Some(Platform.Heritage) => { <td class="bg-info">@Platform.Heritage.displayName</td> }
-                case _                       => {}
+                case _                       => { <td /> }
               }
-            </td>
           }
         </tr>
       }
