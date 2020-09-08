@@ -32,7 +32,7 @@ class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
         githubUrl = aLink.copy(url = "https://github.com/hmrc/name")
       )
 
-      githubBadgeType(repo) shouldBe "Open"
+      githubBadgeType(repo) shouldBe "Public"
     }
     "be Private if repository is private" in {
       val repo = aRepo.copy(
