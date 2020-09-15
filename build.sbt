@@ -1,7 +1,6 @@
 import play.core.PlayVersion
 import play.sbt.PlayImport.PlayKeys.playDefaultPort
 import play.sbt.routes.RoutesKeys
-import uk.gov.hmrc.SbtArtifactory
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
 
@@ -10,7 +9,7 @@ val silencerVersion = "1.4.4"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(
-    Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory): _*)
+    Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin): _*)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(publishingSettings: _*)
   .settings(
@@ -21,7 +20,6 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies ++= compile ++ test,
     // ***************
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    resolvers += Resolver.jcenterRepo,
     RoutesKeys.routesImport ++= Seq(
         "uk.gov.hmrc.cataloguefrontend.connector.model.TeamName",
         "uk.gov.hmrc.cataloguefrontend.model.Environment",
@@ -37,7 +35,7 @@ lazy val microservice = Project(appName, file("."))
     // ***************
   )
 
-val bootstrapPlayVersion = "2.15.0"
+val bootstrapPlayVersion = "2.24.0"
 val hmrcMongoVersion     = "0.29.0"
 
 val compile = Seq(
