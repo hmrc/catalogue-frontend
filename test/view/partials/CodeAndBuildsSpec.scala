@@ -38,7 +38,7 @@ class CodeAndBuildsSpec extends AnyWordSpec with Matchers with ScalaCheckDrivenP
 
     "display configuration explorer" in {
       val result = views.html.partials.code_and_builds(repo).body
-      result should include ("href=\"reponame/config\"")
+      result should include ("href=\"/service/reponame/config\"")
       result should include ("Config Explorer")
     }
 
