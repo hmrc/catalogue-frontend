@@ -2,6 +2,7 @@
 
 | Date                  |      Post                                                                                                             | 
 |-----------------------|:---------------------------------------------------------------------------------------------------------------------:|
+| 8th October 2020      |  [Servicemanager(sm) -f or -r when starting services](https://confluence.tools.tax.service.gov.uk/x/Z4InDQ) |
 | 13th July 2020        |  [Sbt Versions Prior to 0.13.16 Will No Longer Be Supported](https://confluence.tools.tax.service.gov.uk/x/jBD4Cw) | 
 | 7th July 2020         |  [Workarounds for Base64 IllegalArgumentException](https://confluence.tools.tax.service.gov.uk/x/FQvaCw) | 
 | 6th July 2020         |  [ReactiveMongo heartbeatFrequencyMS default needs changing](https://confluence.tools.tax.service.gov.uk/x/JAbaCw)| 
