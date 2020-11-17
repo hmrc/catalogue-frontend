@@ -9,7 +9,7 @@
 
     <logger name="uk.gov.hmrc.play.bootstrap.frontend.filters" level="${logger.uk.gov.hmrc.play.bootstrap.frontend.filters:-ERROR}"/>
 
-    <root level="INFO">
+    <root level="WARN">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>
