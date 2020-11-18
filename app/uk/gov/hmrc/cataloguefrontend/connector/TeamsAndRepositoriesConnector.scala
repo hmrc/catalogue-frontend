@@ -199,7 +199,7 @@ class TeamsAndRepositoriesConnector @Inject()(
 
   def lookupLink(service: String)(implicit hc: HeaderCarrier): Future[Option[Link]] =
     http.GET[JenkinsLink](teamsAndServicesBaseUrl + s"/api/jenkins-url/$service")
-    .map(l => Link(l.service, "Build", l.jenkinsURL))
+      .map(l => Link(l.service, "Build", l.jenkinsURL))
       .map(Option.apply)
       .recover {
         case ex: Throwable => None
