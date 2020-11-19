@@ -63,6 +63,49 @@ class TeamsAndRepositoriesConnectorSpec
   private lazy val teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector =
     app.injector.instanceOf[TeamsAndRepositoriesConnector]
 
+  "lookUpLink" should {
+
+    "return a Link if exists" in {
+
+      serviceEndpoint(
+        GET,
+        "/api/jenkins-url/serviceA",
+        willRespondWith = (
+          200,
+          Some(
+            """
+              |	{
+              |		"service": "serviceA",
+              |   "jenkinsURL": "http.jenkins/serviceA"
+              |	}
+              | """.stripMargin
+          )
+        )
+      )
+
+      val response = teamsAndRepositoriesConnector
+        .lookupLink("serviceA")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .futureValue
+
+      response shouldBe Some(Link("serviceA", "Build", "http.jenkins/serviceA"))
+    }
+
+    "return None if Not Found" in {
+
+      serviceEndpoint(
+        GET,
+        "/api/jenkins-url/serviceA",
+        willRespondWith = (404, None)
+      )
+
+      val response = teamsAndRepositoriesConnector
+        .lookupLink("serviceA")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .futureValue
+
+      response shouldBe None
+    }
+  }
+
   "teamsByService" should {
 
     "return a list of team information for each given service" in {
