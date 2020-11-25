@@ -51,7 +51,7 @@
                 <input type="hidden" id="selected-environment" value="@selectedEnv.asString">
                 <div class="col-xs-3">
                     <label for="search" title="Search across all fields" data-toggle="tooltip">Search</label>
-                    <input id="search" class="search form-control" type="text" name="search" value='@form("search").value' autofocus>
+                    <input id="search" class="search form-control" type="text" name="search" value='@form("search").value' autofocus autocomplete="off">
                 </div>
                 <div class="col-xs-2">
                     @select(
