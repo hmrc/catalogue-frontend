@@ -84,7 +84,7 @@
             @repositories.zipWithIndex.map{case (repo, i) =>
             <tr id="row@i">
                 <td class="service-name" id="row@{i}_name">
-                    <a href="@repotypeToDetailsUrl(repo.repoType)(repo.name)">@repo.name</a>
+                    <a class="repo-name" href="@repotypeToDetailsUrl(repo.repoType)(repo.name)">@repo.name</a>
                 </td>
                 <td class="repo-type monospaced" id="row@{i}_repotype">
                     @viewMessages.toTypeText(repo.repoType)
@@ -104,7 +104,9 @@
 
 <!-- listjs configuration -->
 <script>
-    var options = { valueNames: [ 'service-name','repo-type', 'created', 'last-active' ] };
+    var options = { valueNames: [ 'service-name', 'repo-name', 'repo-type', 'created', 'last-active' ],
+                    searchColumns: ['repo-name', 'team', 'version', 'deploy-time', 'deployer'] };
+
     var serviceList = new List('service-list', options);
 </script>
 

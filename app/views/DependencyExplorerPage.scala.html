@@ -135,9 +135,9 @@
                         <table id="search-results" class="table table-striped">
                             <thead>
                             <tr>
-                                <th rowspan="2">Service</th>
-                                <th rowspan="2">Version</th>
-                                <th rowspan="2">Teams</th>
+                                <th rowspan="2"><button class="sort no-border" data-sort="service">Service</button></th>
+                                <th rowspan="2"><button class="sort no-border" data-sort="version">Version</button></th>
+                                <th rowspan="2"><button class="sort no-border" data-sort="teams">Team</button></th>
                                 <th colspan="3" class="text-center">Dependency</th>
                             </tr>
                             <tr>
@@ -149,9 +149,9 @@
                             <tbody class="list">
                             @for(result <- searchResults) {
                                 <tr>
-                                    <td><a href="@routes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
-                                    <td>@result.slugVersion</td>
-                                    <td>@result.teams.map(_.asString).mkString(", ")</td>
+                                    <td class="service"><a href="@routes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
+                                    <td class="version">@result.slugVersion</td>
+                                    <td class="teams">@result.teams.map(_.asString).mkString(", ")</td>
                                     <td>@result.depGroup</td>
                                     <td>@result.depArtefact</td>
                                     <td>@result.depVersion</td>
@@ -175,6 +175,14 @@
         function ready() {
             document.getElementById("group").onchange = updateArtefacts;
             updateArtefacts();
+            updateSortOrder();
+        }
+
+        var options = { valueNames: [ 'service', 'version', 'teams' ] };
+        var serviceList = null;
+
+        function updateSortOrder() {
+        serviceList = new List('service-list', options);
         }
 
         function updateArtefacts() {
