@@ -135,8 +135,8 @@ var serviceList = new List('service-list', options);
 var searchBox = document.getElementById("search");
 
 serviceList.on('searchComplete', function(){
-  var numberOfDeployments = serviceList.update().matchingItems.length;
-  document.getElementById("deploymentCounter").innerHTML = numberOfDeployments;
+  var numberOfDeployments = serviceList.matchingItems.length;
+  document.getElementById("deploymentCounter").textContent = numberOfDeployments;
 });
 
 
