@@ -62,7 +62,7 @@
                     <td class="service-name" id="row@{
                         i
                     }_name">
-                        <a href="/teams/@team.name.asString">@team.name.asString</a>
+                        <a class="team-name" href="/teams/@team.name.asString">@team.name.asString</a>
                     </td>
                     <td class="created monospaced" id="row@{
                         i
@@ -82,7 +82,8 @@
     }
 
     <script>
-       var options = { valueNames: ['service-name', 'created', 'last-active' ] };
+       var options = { valueNames: ['service-name', 'team-name', 'created', 'last-active' ],
+                       searchColumns: ['team-name'] };
 
        var serviceList = new List('teams-list', options);
     </script>

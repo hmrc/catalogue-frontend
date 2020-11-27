@@ -107,7 +107,7 @@
                 <tr id="row@i">
                   <td id="row@{i}_name" class="service-name">
                       @if(d.isECS){ <span class="label label-primary pull-right">@{d.platform.displayName}</span>}
-                      <a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString).url}">@{d.name.asString}</a>
+                      <a class="service-name-link" href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString).url}">@{d.name.asString}</a>
                   </td>
                   <td id="row@{i}_team" class="team">
                     <ul class="list-group">
@@ -129,7 +129,9 @@
 
 <script>
 // listjs configuration
-var options = { valueNames: [ 'service-name','team', 'version', 'deploy-time', 'deployer' ] };
+var options = { valueNames: [ 'service-name', 'service-name-link', 'team', 'version', 'deploy-time', 'deployer' ],
+                searchColumns: ['service-name-link', 'team', 'version', 'deploy-time', 'deployer'] };
+
 var serviceList = new List('service-list', options);
 
 var searchBox = document.getElementById("search");
