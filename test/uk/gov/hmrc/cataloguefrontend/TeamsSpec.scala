@@ -73,7 +73,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite
       val response = WS.url(s"http://localhost:$port/teams").get.futureValue
 
       response.status shouldBe 200
-      response.body   should include("""<a href="/teams/teamA">teamA</a>""")
+      response.body   should include("""<a class="team-name" href="/teams/teamA">teamA</a>""")
       response.body   should include(firstactivityDate.asPattern("yyyy-MM-dd"))
       response.body   should include(lastactivityDate.asPattern("yyyy-MM-dd"))
     }
