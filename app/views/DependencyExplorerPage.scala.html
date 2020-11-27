@@ -136,25 +136,25 @@
                             <thead>
                             <tr>
                                 <th rowspan="2"><button class="sort no-border" data-sort="service">Service</button></th>
-                                <th rowspan="2"><button class="sort no-border" data-sort="version">Version</button></th>
+                                <th rowspan="2">Version</th>
                                 <th rowspan="2"><button class="sort no-border" data-sort="teams">Team</button></th>
                                 <th colspan="3" class="text-center">Dependency</th>
                             </tr>
                             <tr>
                                 <th>Group ID</th>
                                 <th>Artefact ID</th>
-                                <th>Version</th>
+                                <th><button class="sort no-border" data-sort="dep-version">Version</button></th>
                             </tr>
                             </thead>
                             <tbody class="list">
                             @for(result <- searchResults) {
                                 <tr>
                                     <td class="service"><a href="@routes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
-                                    <td class="version">@result.slugVersion</td>
+                                    <td>@result.slugVersion</td>
                                     <td class="teams">@result.teams.map(_.asString).mkString(", ")</td>
                                     <td>@result.depGroup</td>
                                     <td>@result.depArtefact</td>
-                                    <td>@result.depVersion</td>
+                                    <td class="dep-version">@result.depVersion</td>
                                 </tr>
                             }
                             </tbody>
@@ -178,7 +178,7 @@
             updateSortOrder();
         }
 
-        var options = { valueNames: [ 'service', 'version', 'teams' ] };
+        var options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
         var serviceList = null;
 
         function updateSortOrder() {
