@@ -2,6 +2,9 @@
 
 | Date                  |      Post                                                                                                             | 
 |-----------------------|:---------------------------------------------------------------------------------------------------------------------:|
+| 1st December 2020     |  [Cleanup deprecated Play framework configuration keys](https://confluence.tools.tax.service.gov.uk/x/Xo2tDQ)|
+| 1st December 2020     |  [Bobby rule will be applied to Play 2.5 January 5th 2021](https://confluence.tools.tax.service.gov.uk/x/z46tDQ)|
+| 26th October 2020     |  [Service Manager now runs on Python 3](https://confluence.tools.tax.service.gov.uk/x/G45LDQ)|
 | 23rd October 2020     |  [Open Redirect Vulnerability in Language Selector](https://confluence.tools.tax.service.gov.uk/x/Thg6DQ)|
 | 13th October 2020     |  [Play 2.5 - Builds will fail after Nov 30th 2020](https://confluence.tools.tax.service.gov.uk/x/5pQnDQ) |
 | 8th October 2020      |  [Servicemanager(sm) -f or -r when starting services](https://confluence.tools.tax.service.gov.uk/x/Z4InDQ) |
