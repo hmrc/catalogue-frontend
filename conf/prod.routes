@@ -1,4 +1,5 @@
 # Add all the application routes to the app.routes file
+GET       /test-only/atsTest          @uk.gov.hmrc.cataloguefrontend.atsTest.AtsTestController.showAtsTestPage
 ->         /                          app.Routes
 ->         /                          health.Routes
 
