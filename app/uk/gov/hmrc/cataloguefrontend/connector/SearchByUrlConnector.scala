@@ -43,8 +43,7 @@ class SearchByUrlConnector @Inject()(
 
   def search(term: String)(implicit hc: HeaderCarrier): Future[Seq[FrontendRoutes]] =
     http
-      .GET[Option[Seq[FrontendRoutes]]](url, Seq("frontendPath" -> term))
-      .map(_.getOrElse(Seq.empty))
+      .GET[Seq[FrontendRoutes]](url, Seq("frontendPath" -> term))
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
