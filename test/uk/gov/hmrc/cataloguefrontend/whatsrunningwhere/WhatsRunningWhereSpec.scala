@@ -82,7 +82,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
               |]""".stripMargin))
       )
 
-      val response = WS.url(s"http://localhost:$port/whats-running-where").get.futureValue
+      val response = WS.url(s"http://localhost:$port/whats-running-where-heritage").get.futureValue
 
       response.status shouldBe 200
 
@@ -133,7 +133,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneSe
                  |]""".stripMargin))
       )
 
-      val response = WS.url(s"http://localhost:$port/whats-running-where-ecs").get.futureValue
+      val response = WS.url(s"http://localhost:$port/whats-running-where").get.futureValue
 
       response.status shouldBe 200
 
