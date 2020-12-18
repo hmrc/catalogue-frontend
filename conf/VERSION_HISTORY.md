@@ -2,6 +2,7 @@
 
 | Date                  |     Change                                                                                                | 
 |-----------------------|-----------------------------------------------------------------------------------------------------------|
+| 18 December 2020      | The Future Platform progress page has been retired. 
 | 6th August 2020       | We've redesigned this front page! Let us know what you think or if you notice anything in [#team-platops](https://hmrcdigital.slack.com/messages/team-platops/) |
 | 15th June 2020        | Complete overhaul of the [deployments page](./deployments/production), now showing all environments with useful filters |
 | 9th June 2020         | We no longer show archived repositories in the Catalogue |
