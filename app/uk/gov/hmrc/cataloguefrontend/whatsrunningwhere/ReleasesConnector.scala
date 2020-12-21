@@ -90,29 +90,22 @@ class ReleasesConnector @Inject()(
     from: Option[Long]   = None,
     to: Option[Long]     = None,
     team: Option[String] = None,
-    app : Option[String] = None
-  )(implicit
-    hc: HeaderCarrier
-  ): Future[Seq[Deployment]] = {
+    app: Option[String]  = None
+  )(
+    implicit
+    hc: HeaderCarrier): Future[Seq[Deployment]] = {
 
     implicit val rf = JsonCodecs.heritageDeploymentReads
     http.GET[Seq[Deployment]](
       url = s"$serviceUrl/releases-api/deployments/${environment.asString}",
       queryParams = UrlUtils.buildQueryParams(
-        "from" -> from.map(_.toString),
-        "to" -> to.map(_.toString),
-        "team" -> team,
-        "app" -> app,
+        "from"     -> from.map(_.toString),
+        "to"       -> to.map(_.toString),
+        "team"     -> team,
+        "app"      -> app,
         "platform" -> Some(platform.asString)
       )
     )
   }
 
-  def getServicePlatformMappings(implicit hc: HeaderCarrier): Future[Seq[ServicePlatformMapping]] = {
-    implicit val spmr = JsonCodecs.servicePlatformMappingReads
-    http
-      .GET[Seq[ServicePlatformMapping]](
-        url = s"$serviceUrl/releases-api/service-platform-mappings"
-      )
-  }
 }
