@@ -35,20 +35,6 @@
         <h1>What's Running Where? @platform.displayName</h1>
     </header>
 
-    <div class="alert alert-info">
-      <strong>
-         During the migration to the Future Platform, your service may be running different versions on different platforms.
-       </strong>
-       <br/>
-       See <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.FuturePlatformMigrationController.futurePlatformMigration">Migration to Future Platform</a>
-       for which platform your requests are being routed to.
-       <br/>
-       See @platform match {
-         case Platform.ECS      => { <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.heritageReleases()">What's Running Where? @Platform.Heritage.displayName</a> }
-         case Platform.Heritage => { <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.ecsReleases()">What's Running Where? @Platform.ECS.displayName</a> }
-       }
-    </div>
-
     @if(form.hasErrors) {
         <div class="alert alert-danger" role="alert">
             <ul class="list">

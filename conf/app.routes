@@ -66,4 +66,3 @@ GET        /whats-running-where-heritage                uk.gov.hmrc.cataloguefro
 GET        /whats-running-where                        uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.ecsReleases
 
 GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.history(env: Environment)
-GET        /future-platform-migration                   uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.FuturePlatformMigrationController.futurePlatformMigration
