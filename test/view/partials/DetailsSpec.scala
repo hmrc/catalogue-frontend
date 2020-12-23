@@ -37,7 +37,8 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     jenkinsURL   = None,
     environments = None,
     repoType     = RepoType.Other,
-    isPrivate    = true
+    isPrivate    = true,
+    isArchived   = false
   )
 
   val environmentRoute = EnvironmentRoute(

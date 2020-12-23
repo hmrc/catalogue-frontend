@@ -89,7 +89,9 @@ case class RepositoryDetails(
   jenkinsURL  : Option[Link],
   environments: Option[Seq[TargetEnvironment]],
   repoType    : RepoType.RepoType,
-  isPrivate   : Boolean)
+  isPrivate   : Boolean,
+  isArchived  : Boolean
+)
 
 object RepositoryDetails {
   val format: Format[RepositoryDetails] = {
