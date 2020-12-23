@@ -180,7 +180,8 @@ class TeamsAndRepositoriesConnectorSpec
           )
         )))
 
-      responseData.repoType should ===(RepoType.Service)
+      responseData.repoType shouldBe RepoType.Service
+      responseData.isArchived shouldBe false
     }
   }
 

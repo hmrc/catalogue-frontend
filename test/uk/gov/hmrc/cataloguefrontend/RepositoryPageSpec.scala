@@ -116,56 +116,62 @@ class RepositoryPageSpec
   def asDocument(html: String): Document = Jsoup.parse(html)
 
   def repositoryData(repositoryDetails: RepositoryDetails): String =
-    s"""
-      |    {
-      |	     "name": "${repositoryDetails.repositoryName}",
-      |      "isPrivate": false,
-      |      "repoType": "${repositoryDetails.repositoryType}",
-      |      "owningTeams": [ "The True Owners" ],
-      |      "teamNames": ["teamA", "teamB"],
-      |      "description": "some description",
-      |      "createdAt": 1456326530000,
-      |      "lastActive": 1478602555000,
-      |	     "githubUrl": {
-      |		     "name": "github",
-      |        "displayName": "github.com",
-      |		     "url": "https://github.com/hmrc/${repositoryDetails.repositoryName}"
-      |	     },
-      |	     "ci": [
-      |		     {
-      |		       "name": "open1",
-      |		       "displayName": "open 1",
-      |		       "url": "http://open1/${repositoryDetails.repositoryName}"
-      |		     },
-      |		     {
-      |		       "name": "open2",
-      |		       "displayName": "open 2",
-      |		       "url": "http://open2/${repositoryDetails.repositoryName}"
-      |		     }
-      |	     ],
-      |      "environments" : [{
-      |        "name" : "Production",
-      |        "services" : [{
-      |          "name": "ser1",
-      |		       "displayName": "service1",
-      |          "url": "http://ser1/${repositoryDetails.repositoryName}"
-      |        }, {
-      |          "name": "ser2",
-      |		       "displayName": "service2",
-      |          "url": "http://ser2/${repositoryDetails.repositoryName}"
-      |        }]
-      |      },{
-      |        "name" : "Staging",
-      |        "services" : [{
-      |          "name": "ser1",
-      |		       "displayName": "service1",
-      |          "url": "http://ser1/${repositoryDetails.repositoryName}"
-      |        }, {
-      |          "name": "ser2",
-      |		       "displayName": "service2",
-      |          "url": "http://ser2/${repositoryDetails.repositoryName}"
-      |        }]
-      |       }]
-      |     }
-    """.stripMargin
+    s"""{
+       |  "name": "${repositoryDetails.repositoryName}",
+       |  "isPrivate": false,
+       |  "isArchived": false,
+       |  "repoType": "${repositoryDetails.repositoryType}",
+       |  "owningTeams": [ "The True Owners" ],
+       |  "teamNames": ["teamA", "teamB"],
+       |  "description": "some description",
+       |  "createdAt": 1456326530000,
+       |  "lastActive": 1478602555000,
+       |  "githubUrl": {
+       |    "name": "github",
+       |    "displayName": "github.com",
+       |    "url": "https://github.com/hmrc/${repositoryDetails.repositoryName}"
+       |  },
+       |  "ci": [
+       |    {
+       |      "name": "open1",
+       |      "displayName": "open 1",
+       |      "url": "http://open1/${repositoryDetails.repositoryName}"
+       |    },
+       |    {
+       |      "name": "open2",
+       |      "displayName": "open 2",
+       |      "url": "http://open2/${repositoryDetails.repositoryName}"
+       |    }
+       |  ],
+       |  "environments" : [
+       |    {
+       |      "name" : "Production",
+       |      "services" : [
+       |        {
+       |          "name": "ser1",
+       |          "displayName": "service1",
+       |          "url": "http://ser1/${repositoryDetails.repositoryName}"
+       |        }, {
+       |          "name": "ser2",
+       |          "displayName": "service2",
+       |          "url": "http://ser2/${repositoryDetails.repositoryName}"
+       |        }
+       |      ]
+       |    }, {
+       |      "name" : "Staging",
+       |      "services" : [
+       |         {
+       |           "name": "ser1",
+       |           "displayName": "service1",
+       |           "url": "http://ser1/${repositoryDetails.repositoryName}"
+       |         }, {
+       |           "name": "ser2",
+       |           "displayName": "service2",
+       |           "url": "http://ser2/${repositoryDetails.repositoryName}"
+       |        }
+       |      ]
+       |    }
+       |  ]
+       |}
+     """.stripMargin
 }

@@ -26,7 +26,20 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class CodeAndBuildsSpec extends AnyWordSpec with Matchers with ScalaCheckDrivenPropertyChecks {
 
-  val repo = RepositoryDetails(name         = "reponame", description  = "", createdAt    = LocalDateTime.now(), lastActive   = LocalDateTime.now(), owningTeams  = Seq(), teamNames    = Seq(), githubUrl    = Link("repo1", "repository 1", "http://url"), jenkinsURL           = None, environments = None, repoType     = RepoType.Service, isPrivate    = true)
+  val repo = RepositoryDetails(
+    name         = "reponame",
+    description  = "",
+    createdAt    = LocalDateTime.now(),
+    lastActive   = LocalDateTime.now(),
+    owningTeams  = Seq(),
+    teamNames    = Seq(),
+    githubUrl    = Link("repo1", "repository 1", "http://url"),
+    jenkinsURL   = None,
+    environments = None,
+    repoType     = RepoType.Service,
+    isPrivate    = true,
+    isArchived   = false
+  )
 
   val environmentRoute = EnvironmentRoute(
     environment = "EnvName",

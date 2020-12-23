@@ -86,58 +86,66 @@ object JsonData {
 
   val serviceDetailsData =
     s"""
+       |{
+       |  "name": "service-1",
+       |  "isPrivate": false,
+       |  "isArchived": false,
+       |  "description": "some description",
+       |  "createdAt": ${createdAt.epochMillis},
+       |  "lastActive": ${lastActiveAt.epochMillis},
+       |  "repoType": "Service",
+       |  "owningTeams": [
+       |    "The True Owners"
+       |  ],
+       |  "teamNames": ["teamA", "teamB"],
+       |  "githubUrl": {
+       |    "name": "github",
+       |    "displayName": "github.com",
+       |    "url": "https://github.com/hmrc/service-1"
+       |  },
+       |  "environments" : [
        |    {
-       |	    "name": "service-1",
-       |      "isPrivate": false,
-       |      "description": "some description",
-       |      "createdAt": ${createdAt.epochMillis},
-       |      "lastActive": ${lastActiveAt.epochMillis},
-       |      "repoType": "Service",
-       |      "owningTeams": [
-       |        "The True Owners"
-       |      ],
-       |      "teamNames": ["teamA", "teamB"],
-       |	     "githubUrl": {
-       |		     "name": "github",
-       |         "displayName": "github.com",
-       |		     "url": "https://github.com/hmrc/service-1"
-       |	     },
-       |      "environments" : [
-       |      {
-       |        "name" : "Development",
-       |        "services" : [{
+       |      "name" : "Development",
+       |      "services" : [
+       |        {
        |          "name": "jenkins",
-       |		       "displayName": "Jenkins",
+       |          "displayName": "Jenkins",
        |          "url": "https://deploy-dev.co.uk/job/deploy-microservice"
        |        }, {
        |          "name": "grafana",
-       |		       "displayName": "Grafana",
+       |          "displayName": "Grafana",
        |          "url": "https://grafana-dev.co.uk/#/dashboard"
-       |        }]
-       |       }, {
-       |        "name" : "QA",
-       |        "services" : [{
+       |        }
+       |      ]
+       |    }, {
+       |      "name" : "QA",
+       |      "services" : [
+       |        {
        |          "name": "jenkins",
-       |		       "displayName": "Jenkins",
+       |          "displayName": "Jenkins",
        |          "url": "https://deploy-qa.co.uk/job/deploy-microservice"
        |        }, {
        |          "name": "grafana",
-       |		       "displayName": "Grafana",
+       |          "displayName": "Grafana",
        |          "url": "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard"
-       |        }]
-       |      },{
-       |        "name" : "Production",
-       |        "services" : [{
+       |        }
+       |      ]
+       |    }, {
+       |      "name" : "Production",
+       |      "services" : [
+       |        {
        |          "name": "jenkins",
-       |		       "displayName": "Jenkins",
+       |          "displayName": "Jenkins",
        |          "url": "https://deploy-prod.co.uk/job/deploy-microservice"
        |        }, {
        |          "name": "grafana",
-       |		       "displayName": "Grafana",
+       |          "displayName": "Grafana",
        |          "url": "https://grafana-prod.co.uk/#/dashboard"
-       |        }]
-       |       }]
-       |     }
+       |        }
+       |      ]
+       |    }
+       |  ]
+       |}
     """.stripMargin
 
   val serviceJenkinsData: String =
@@ -151,22 +159,22 @@ object JsonData {
   val teamDetailsData =
     """
       |{
-      |    "name" : "teamA",
-      |    "repos": {
-      |     "Service": [
-      |             "service1",
-      |             "service2"
-      |     ],
-      |     "Library": [
-      |             "library1",
-      |             "library2"
-      |     ],
-      |     "Other": [
-      |             "other1",
-      |             "other2"
-      |     ]
-      |    },
-      |    "ownedRepos": []
+      |  "name" : "teamA",
+      |  "repos": {
+      |    "Service": [
+      |      "service1",
+      |      "service2"
+      |    ],
+      |    "Library": [
+      |      "library1",
+      |      "library2"
+      |    ],
+      |    "Other": [
+      |      "other1",
+      |      "other2"
+      |    ]
+      |  },
+      |  "ownedRepos": []
       |}
     """.stripMargin
 
@@ -178,6 +186,7 @@ object JsonData {
        |{
        |  "name": "2fa-prototype",
        |  "isPrivate": false,
+       |  "isArchived": false,
        |  "description": "some description",
        |  "createdAt": ${createdAt.epochMillis},
        |  "lastActive": ${lastActiveAt.epochMillis},
@@ -186,11 +195,10 @@ object JsonData {
        |    "The True Owners"
        |  ],
        |  "teamNames": [
-       |  "CATO",
-       |  "Designers"
+       |    "CATO",
+       |    "Designers"
        |  ],
-       |  "githubUrl":
-       |  {
+       |  "githubUrl": {
        |    "name": "github",
        |    "displayName": "Github.com",
        |    "url": "https://github.com/HMRC/2fa-prototype"
@@ -201,159 +209,159 @@ object JsonData {
 
   val libraryDetailsData =
     """
-      |    {
-      |	     "name": "serv",
-      |      "isPrivate": false,
-      |      "description": "some description",
-      |      "createdAt": 1456326530000,
-      |      "lastActive": 1478602555000,
-      |      "repoType": "Library",
-      |      "owningTeams": [
-      |        "The True Owners"
-      |      ],
-      |      "teamNames": ["teamA", "teamB"],
-      |	     "githubUrl": {
-      |		     "name": "github",
-      |        "displayName": "github.com",
-      |		     "url": "https://github.com/hmrc/serv"
-      |	     }
-      |     }
+      |{
+      |	 "name": "serv",
+      |  "isPrivate": false,
+      |  "isArchived": false,
+      |  "description": "some description",
+      |  "createdAt": 1456326530000,
+      |  "lastActive": 1478602555000,
+      |  "repoType": "Library",
+      |  "owningTeams": [
+      |    "The True Owners"
+      |  ],
+      |  "teamNames": ["teamA", "teamB"],
+      |	 "githubUrl": {
+      |    "name": "github",
+      |    "displayName": "github.com",
+      |    "url": "https://github.com/hmrc/serv"
+      |	 }
+      |}
     """.stripMargin
 
   val deploymentThroughputData =
     """[
-      |    {
-      |        "period": "2015-11",
-      |        "from": "2015-12-01",
-      |        "to": "2016-02-29",
-      |        "throughput": {
-      |            "leadTime": {
-      |                "median": 6
-      |            },
-      |            "interval": {
-      |                "median": 1
-      |            }
-      |        },
-      |        "stability": {
-      |            "hotfixRate": 23,
-      |            "hotfixLeadTime": {
-      |                "median": 6
-      |            }
-      |        }
+      |  {
+      |    "period": "2015-11",
+      |    "from": "2015-12-01",
+      |    "to": "2016-02-29",
+      |    "throughput": {
+      |      "leadTime": {
+      |        "median": 6
+      |      },
+      |      "interval": {
+      |        "median": 1
+      |      }
       |    },
-      |    {
-      |        "period": "2015-12",
-      |        "from": "2015-12-01",
-      |        "to": "2016-02-29",
-      |        "throughput": {
-      |            "leadTime": {
-      |                "median": 6
-      |            },
-      |            "interval": {
-      |                "median": 5
-      |            }
-      |        },
-      |        "stability": {
-      |            "hotfixRate": 23,
-      |            "hotfixLeadTime": {
-      |                "median": 6
-      |            }
-      |        }
-      |    },
-      |    {
-      |        "period": "2016-01",
-      |        "from": "2015-12-01",
-      |        "to": "2016-02-29",
-      |        "throughput": {
-      |            "leadTime": {
-      |                "median": 6
-      |            },
-      |            "interval": {
-      |                "median": 6
-      |            }
-      |        }
+      |    "stability": {
+      |      "hotfixRate": 23,
+      |      "hotfixLeadTime": {
+      |        "median": 6
+      |      }
       |    }
+      |  },
+      |  {
+      |    "period": "2015-12",
+      |    "from": "2015-12-01",
+      |    "to": "2016-02-29",
+      |    "throughput": {
+      |      "leadTime": {
+      |        "median": 6
+      |      },
+      |      "interval": {
+      |        "median": 5
+      |      }
+      |    },
+      |    "stability": {
+      |      "hotfixRate": 23,
+      |      "hotfixLeadTime": {
+      |        "median": 6
+      |      }
+      |    }
+      |  },
+      |  {
+      |    "period": "2016-01",
+      |    "from": "2015-12-01",
+      |    "to": "2016-02-29",
+      |    "throughput": {
+      |      "leadTime": {
+      |        "median": 6
+      |      },
+      |      "interval": {
+      |        "median": 6
+      |      }
+      |    }
+      |  }
       |]
       | """.stripMargin
 
   val jobExecutionTimeData =
-    """
-      |[
-      |    {
-      |        "period":"2016-05",
-      |        "from":"2016-03-01",
-      |        "to":"2016-05-31"
-      |    },
-      |    {
-      |        "period":"2016-06",
-      |        "from":"2016-04-01",
-      |        "to":"2016-06-30",
-      |        "duration":{
-      |            "median":623142
-      |        }
-      |    },
-      |    {
-      |        "period":"2016-07",
-      |        "from":"2016-05-01",
-      |        "to":"2016-07-31",
-      |        "duration":{
-      |            "median":632529
-      |        }
-      |    },
-      |    {
-      |        "period":"2016-08",
-      |        "from":"2016-06-01",
-      |        "to":"2016-08-31",
-      |        "duration":{
-      |            "median":632529
-      |        }
-      |    },
-      |    {
-      |        "period":"2016-09",
-      |        "from":"2016-07-01",
-      |        "to":"2016-09-30",
-      |        "duration":{
-      |            "median":637234
-      |        }
-      |    },
-      |    {
-      |        "period":"2016-10",
-      |        "from":"2016-08-01",
-      |        "to":"2016-10-31"
-      |    },
-      |    {
-      |        "period":"2016-11",
-      |        "from":"2016-09-01",
-      |        "to":"2016-11-30"
-      |    },
-      |    {
-      |        "period":"2016-12",
-      |        "from":"2016-10-01",
-      |        "to":"2016-12-31"
-      |    },
-      |    {
-      |        "period":"2017-01",
-      |        "from":"2016-11-01",
-      |        "to":"2017-01-31"
-      |    },
-      |    {
-      |        "period":"2017-02",
-      |        "from":"2016-12-01",
-      |        "to":"2017-02-28"
-      |    },
-      |    {
-      |        "period":"2017-03",
-      |        "from":"2017-01-01",
-      |        "to":"2017-03-31"
-      |    },
-      |    {
-      |        "period":"2017-04",
-      |        "from":"2017-02-01",
-      |        "to":"2017-04-25",
-      |        "duration":{
-      |            "median":645861
-      |        }
+    """[
+      |  {
+      |    "period":"2016-05",
+      |    "from":"2016-03-01",
+      |    "to":"2016-05-31"
+      |  },
+      |  {
+      |    "period":"2016-06",
+      |    "from":"2016-04-01",
+      |    "to":"2016-06-30",
+      |    "duration":{
+      |      "median":623142
       |    }
+      |  },
+      |  {
+      |    "period":"2016-07",
+      |    "from":"2016-05-01",
+      |    "to":"2016-07-31",
+      |    "duration":{
+      |      "median":632529
+      |    }
+      |  },
+      |  {
+      |    "period":"2016-08",
+      |    "from":"2016-06-01",
+      |    "to":"2016-08-31",
+      |    "duration":{
+      |      "median":632529
+      |    }
+      |  },
+      |  {
+      |    "period":"2016-09",
+      |    "from":"2016-07-01",
+      |    "to":"2016-09-30",
+      |    "duration":{
+      |      "median":637234
+      |    }
+      |  },
+      |  {
+      |    "period":"2016-10",
+      |    "from":"2016-08-01",
+      |    "to":"2016-10-31"
+      |  },
+      |  {
+      |    "period":"2016-11",
+      |    "from":"2016-09-01",
+      |    "to":"2016-11-30"
+      |  },
+      |  {
+      |    "period":"2016-12",
+      |    "from":"2016-10-01",
+      |    "to":"2016-12-31"
+      |  },
+      |  {
+      |    "period":"2017-01",
+      |    "from":"2016-11-01",
+      |    "to":"2017-01-31"
+      |  },
+      |  {
+      |    "period":"2017-02",
+      |    "from":"2016-12-01",
+      |    "to":"2017-02-28"
+      |  },
+      |  {
+      |    "period":"2017-03",
+      |    "from":"2017-01-01",
+      |    "to":"2017-03-31"
+      |  },
+      |  {
+      |    "period":"2017-04",
+      |    "from":"2017-02-01",
+      |    "to":"2017-04-25",
+      |    "duration":{
+      |      "median":645861
+      |    }
+      |  }
       |]""".stripMargin
 
   val digitalServiceData =
@@ -388,47 +396,45 @@ object JsonData {
     """.stripMargin
 
   val configServiceEmpty =
-    """
-      |[
+    """[
       |]
     """.stripMargin
 
   val configServiceService1 =
-    """
-      |[
-      |    {
-      |        "environment": "qa",
-      |        "routes": [
-      |            {
-      |                "frontendPath": "/test/qa/ccc",
-      |                "backendPath": "https://test.co/ccc",
-      |                "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
-      |                "isRegex": false
-      |            }
-      |        ]
-      |    },
-      |    {
-      |        "environment": "production",
-      |        "routes": [
-      |            {
-      |                "frontendPath": "/test/prod/ccc",
-      |                "backendPath": "https://test.co/prod/ccc",
-      |                "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
-      |                "isRegex": false
-      |            }
-      |        ]
-      |    },
-      |    {
-      |        "environment": "development",
-      |        "routes": [
-      |            {
-      |                "frontendPath": "/test/dev/ccc",
-      |                "backendPath": "https://test.co/ccc",
-      |                "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
-      |                "isRegex": false
-      |            }
-      |        ]
-      |    }
+    """[
+      |  {
+      |    "environment": "qa",
+      |    "routes": [
+      |      {
+      |        "frontendPath": "/test/qa/ccc",
+      |        "backendPath": "https://test.co/ccc",
+      |        "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
+      |        "isRegex": false
+      |      }
+      |    ]
+      |  },
+      |  {
+      |    "environment": "production",
+      |    "routes": [
+      |      {
+      |        "frontendPath": "/test/prod/ccc",
+      |        "backendPath": "https://test.co/prod/ccc",
+      |        "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
+      |        "isRegex": false
+      |      }
+      |    ]
+      |  },
+      |  {
+      |    "environment": "development",
+      |    "routes": [
+      |      {
+      |        "frontendPath": "/test/dev/ccc",
+      |        "backendPath": "https://test.co/ccc",
+      |        "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
+      |        "isRegex": false
+      |      }
+      |    ]
+      |  }
       |]
     """.stripMargin
 
@@ -575,77 +581,81 @@ object JsonData {
 """
 
   val serviceData: String =
-    """
+    """{
+      |  "name": "serv",
+      |  "isPrivate": false,
+      |  "isArchived": false,
+      |  "repoType": "Service",
+      |  "owningTeams": [ "The True Owners" ],
+      |  "teamNames": ["teamA", "teamB"],
+      |  "description": "some description",
+      |  "createdAt": 1456326530000,
+      |  "lastActive": 1478602555000,
+      |  "githubUrl": {
+      |    "name": "github",
+      |    "displayName": "github.com",
+      |    "url": "https://github.com/hmrc/serv"
+      |  },
+      |  "environments" : [
       |    {
-      |	     "name": "serv",
-      |      "isPrivate": false,
-      |      "repoType": "Service",
-      |      "owningTeams": [ "The True Owners" ],
-      |      "teamNames": ["teamA", "teamB"],
-      |      "description": "some description",
-      |      "createdAt": 1456326530000,
-      |      "lastActive": 1478602555000,
-      |	     "githubUrl": {
-      |		     "name": "github",
-      |        "displayName": "github.com",
-      |		     "url": "https://github.com/hmrc/serv"
-      |	     },
-      |      "environments" : [{
-      |        "name" : "Production",
-      |        "services" : [{
+      |      "name" : "Production",
+      |      "services" : [
+      |        {
       |          "name": "ser1",
-      |		       "displayName": "service1",
+      |          "displayName": "service1",
       |          "url": "http://ser1/serv"
       |        }, {
       |          "name": "ser2",
-      |		       "displayName": "service2",
+      |          "displayName": "service2",
       |          "url": "http://ser2/serv"
-      |        }]
-      |      },{
-      |        "name" : "Staging",
-      |        "services" : [{
+      |        }
+      |      ]
+      |    }, {
+      |      "name" : "Staging",
+      |      "services" : [
+      |        {
       |          "name": "ser1",
-      |		       "displayName": "service1",
+      |          "displayName": "service1",
       |          "url": "http://ser1/serv"
       |        }, {
       |          "name": "ser2",
-      |		       "displayName": "service2",
+      |          "displayName": "service2",
       |          "url": "http://ser2/serv"
-      |        }]
-      |       }]
-      |     }
+      |        }
+      |      ]
+      |    }
+      |  ]
+      |}
     """.stripMargin
 
   val jenkinsData: String =
-    """
-      |{
-      |   "service": "lib",
-      |   "jenkinsURL": "http://jenkins/lib/"
+    """{
+      |  "service": "lib",
+      |  "jenkinsURL": "http://jenkins/lib/"
       |}
       |""".stripMargin
 
   val libraryData: String =
-    """
-      |    {
-      |	     "name": "lib",
-      |      "isPrivate": false,
-      |      "description": "some description",
-      |      "createdAt": 1456326530000,
-      |      "lastActive": 1478602555000,
-      |      "repoType": "Library",
-      |      "owningTeams": [ "The True Owners" ],
-      |      "teamNames": ["teamA", "teamB"],
-      |	     "githubUrl": {
-      |		     "name": "github",
-      |        "displayName": "github.com",
-      |		     "url": "https://github.com/hmrc/lib"
-      |	     }
-      |     }
+    """{
+      |  "name": "lib",
+      |  "isPrivate": false,
+      |  "isArchived": false,
+      |  "description": "some description",
+      |  "createdAt": 1456326530000,
+      |  "lastActive": 1478602555000,
+      |  "repoType": "Library",
+      |  "owningTeams": [ "The True Owners" ],
+      |  "teamNames": ["teamA", "teamB"],
+      |  "githubUrl": {
+      |    "name": "github",
+      |    "displayName": "github.com",
+      |    "url": "https://github.com/hmrc/lib"
+      |  }
+      |}
     """.stripMargin
 
   val indicatorData: String =
-    """
-      |[
+    """[
       |  {
       |    "period":"2015-11",
       |    "leadTime":{
@@ -698,17 +708,16 @@ object JsonData {
 
   val serviceDependenciesData: String =
     """{
-      | "uri": "/",
-      | "name": "service-name",
-      | "version": "1.0.0",
-      | "runnerVersion": "1.0.0",
-      | "java": {
+      |  "uri": "/",
+      |  "name": "service-name",
+      |  "version": "1.0.0",
+      |  "runnerVersion": "1.0.0",
+      |  "java": {
       |    "version": "1.0.0",
       |    "vendor": "openjdk",
       |    "kind": ""
-      | },
-      | "classpath": "",
-      | "dependencies": []
+      |  },
+      |  "classpath": "",
+      |  "dependencies": []
       }""".stripMargin
-
 }

@@ -31,7 +31,11 @@
 @standard_layout(repository.name, "repositories") {
     <header class="header-with-github-badge">
         <div>
-            <h1>Repository: @repository.name<span>@githubBadgeType(repository)</span></h1>
+            <h1>
+              Repository: @repository.name
+              <span>@githubBadgeType(repository)</span>
+              @if(repository.isArchived) { <span>Archived</span> }
+            </h1>
         </div>
 
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
