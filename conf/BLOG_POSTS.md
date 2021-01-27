@@ -2,6 +2,8 @@
 
 | Date                  |      Post                                                                                                             | 
 |-----------------------|:---------------------------------------------------------------------------------------------------------------------:|
+| 21st January 2021     |  [Removing the sbt-artifactory plugin](https://confluence.tools.tax.service.gov.uk/x/3QIzDg)
+| 12th January 2021     |  [Let's talk about Play](https://confluence.tools.tax.service.gov.uk/x/cBEcDg)
 | 1st December 2020     |  [Cleanup deprecated Play framework configuration keys](https://confluence.tools.tax.service.gov.uk/x/Xo2tDQ)|
 | 1st December 2020     |  [Bobby rule will be applied to Play 2.5 January 5th 2021](https://confluence.tools.tax.service.gov.uk/x/z46tDQ)|
 | 26th October 2020     |  [Service Manager now runs on Python 3](https://confluence.tools.tax.service.gov.uk/x/G45LDQ)|
