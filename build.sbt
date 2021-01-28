@@ -35,8 +35,8 @@ lazy val microservice = Project(appName, file("."))
     // ***************
   )
 
-val bootstrapPlayVersion = "2.24.0"
-val hmrcMongoVersion     = "0.29.0"
+val bootstrapPlayVersion = "3.4.0"
+val hmrcMongoVersion     = "0.34.0"
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-27" % bootstrapPlayVersion,
