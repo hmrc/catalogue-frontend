@@ -24,5 +24,6 @@ npm-debug.log
 *.DS_Store
 .bloop/
 .metals/
-
+.vscode/
+project/metals.sbt
 conf/local.conf

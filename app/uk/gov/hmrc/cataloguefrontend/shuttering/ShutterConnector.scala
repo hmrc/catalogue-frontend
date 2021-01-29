@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, Token}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -82,7 +83,7 @@ class ShutterConnector @Inject()(
         )(
           implicitly[Writes[ShutterStatus]]
         , implicitly[HttpReads[Try[Unit]]]
-        , hc.copy(token = Some(Token(umpToken.value)))
+        , hc.copy(authorization = Some(Authorization(umpToken.value)))
         , implicitly[ExecutionContext]
         )
         .map(_.get)
