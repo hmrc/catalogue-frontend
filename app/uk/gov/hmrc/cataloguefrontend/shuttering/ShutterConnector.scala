@@ -22,7 +22,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, UpstreamErrorResponse}
+import uk.gov.hmrc.http.HttpReads.Implicits
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -77,16 +78,15 @@ class ShutterConnector @Inject()(
     )(implicit hc: HeaderCarrier): Future[Unit] = {
     implicit val isf = ShutterStatus.format
     http
-      .PUT[ShutterStatus, Try[Unit]](
+      .PUT[ShutterStatus, Unit](
           s"${urlStates(st, env)}/${encodePathParam(serviceName)}",
           status
         )(
           implicitly[Writes[ShutterStatus]]
-        , implicitly[HttpReads[Try[Unit]]]
+        , HttpReads.Implicits.throwOnFailure(implicitly[HttpReads[Either[UpstreamErrorResponse, Unit]]])
         , hc.copy(authorization = Some(Authorization(umpToken.value)))
         , implicitly[ExecutionContext]
         )
-        .map(_.get)
   }
 
   /**
