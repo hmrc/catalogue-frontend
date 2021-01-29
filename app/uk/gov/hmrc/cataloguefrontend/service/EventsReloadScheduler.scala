@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
+import akka.actor.Cancellable
 import javax.inject.{Inject, Named, Singleton}
 import play.api._
 import play.api.inject.ApplicationLifecycle
@@ -30,30 +31,21 @@ class EventsReloadScheduler @Inject()(
   configuration: Configuration,
   environment: Environment,
   @Named("appName") appName: String,
-  updateScheduler: UpdateScheduler) {
+  updateScheduler: UpdateScheduler
+) {
 
   private val logger = Logger(getClass)
 
-  val eventReloadIntervalKey    = "event.reload.interval"
-  val umpCacheReloadIntervalKey = "ump.cache.reload.interval"
+  schedule("event.reload")(updateScheduler.startUpdatingEventsReadModel)
 
-  logger.info(s"Starting : $appName : in mode : ${environment.mode}")
-  logger.debug("[Catalogue-frontend] - Starting... ")
+  schedule("ump.cache.reload")(updateScheduler.startUpdatingUmpCacheReadModel)
 
-  scheduleEventsReloadSchedule(appLifecycle, configuration)
-  scheduleUmpCacheReloadSchedule(appLifecycle, configuration)
-
-  private def scheduleEventsReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration): Unit = {
-    val reloadInterval = configuration.getMillis(eventReloadIntervalKey).millis
-    val cancellable    = updateScheduler.startUpdatingEventsReadModel(reloadInterval)
-    appLifecycle.addStopHook(() => Future.successful(cancellable.cancel()))
-  }
-
-  private def scheduleUmpCacheReloadSchedule(appLifecycle: ApplicationLifecycle, configuration: Configuration): Unit = {
-    lazy val umpCacheReloadInterval = configuration.getMillis(umpCacheReloadIntervalKey).milliseconds
-
-    logger.info(s"UMP cache reload interval set to $umpCacheReloadInterval")
-    val cancellable = updateScheduler.startUpdatingUmpCacheReadModel(umpCacheReloadInterval)
-    appLifecycle.addStopHook(() => Future.successful(cancellable.cancel()))
-  }
+  private def schedule(schedulerKey: String)(f: (FiniteDuration) => Cancellable): Unit =
+    if (configuration.get[Boolean](s"$schedulerKey.enabled")) {
+      val interval = configuration.getMillis(s"$schedulerKey.interval").millis
+      logger.info(s"Enabling $schedulerKey scheduler, running every $interval")
+      val cancellable = f(interval)
+      appLifecycle.addStopHook(() => Future.successful(cancellable.cancel()))
+    } else
+      logger.info(s"$schedulerKey scheduler is DISABLED. to enable, configure configure $schedulerKey.enabled=true in config.")
 }
