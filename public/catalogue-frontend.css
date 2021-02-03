@@ -12377,3 +12377,16 @@ table.shutter-events {
   overflow: hidden;
   height:120px; /* If you change this, change the corresponding smallHeight value in catalogue-frontend.css too */
 }
+
+.env-maj-version-behind{
+  background: repeating-linear-gradient(-45deg, transparent, yellow, transparent 20px);
+}
+
+.wrw-table-head{
+  position: sticky;
+  top: 0;
+  background: white;
+}
+.wrw-environment-head{
+  width: 12%;
+}

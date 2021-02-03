@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Platform, ProfileName, ProfileType, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Platform, ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController}
 @import uk.gov.hmrc.cataloguefrontend.routes
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform
@@ -28,11 +28,13 @@
  , selectedProfileType: ProfileType
  , profileNames       : Seq[ProfileName]
  , form               : Form[_]
+,   showDiff           : Option[Boolean]
  )(implicit messages: Messages, request: Request[_])
 @standard_layout("What's Running Where?", "whats-running-where") {
 
     <header>
         <h1>What's Running Where? @platform.displayName</h1>
+        <p>@showDiff.toString</p>
     </header>
 
     @if(form.hasErrors) {
@@ -75,9 +77,9 @@
 
         <table class="table table-striped" id="service-list">
             <thead>
-                <th><button role="button" class="sort no-border" data-sort="application-name">Application Name</button></th>
+                <th class="wrw-table-head"><button role="button" class="sort no-border" data-sort="application-name">Application Name</button></th>
                 @environments.map { env =>
-                    <th>@env.displayString</th>
+                    <th class="wrw-table-head wrw-environment-head">@env.displayString</th>
                 }
             </thead>
             <tbody class="list">
@@ -89,7 +91,13 @@
 
                 @environments.map { env =>
                     @wrw.versions.find(_.environment == env).map { version =>
-                        <td id="row@{i}_version_@{env.asString}">@version.versionNumber.asString</td>
+                        <td id="row@{i}_version_@{env.asString}"
+                        @if(version.versionNumber.asString!=wrw.versions
+                                .find(_.environment==Environment.Production)
+                                .map(_.versionNumber.asString).getOrElse(None)){
+                            class="env-maj-version-behind"
+                        }
+                        >@version.versionNumber.asString</td>
                     }.getOrElse {
                         <td id="row@{i}_version_@{env.asString}"></td>
                     }
@@ -136,3 +144,4 @@
     </li>
   }
 }
+
