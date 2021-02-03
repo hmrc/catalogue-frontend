@@ -21,7 +21,7 @@ import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, PathBindable}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, PathBindable, QueryStringBindable}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.whatsrunningwhere.WhatsRunningWherePage
@@ -36,9 +36,9 @@ class WhatsRunningWhereController @Inject()(
 )(implicit val ec: ExecutionContext
 ) extends FrontendController(mcc) {
 
-  def heritageReleases(showDiff: Option[Boolean]): Action[AnyContent] = releases(Platform.Heritage, showDiff)
+  def heritageReleases(showDiff: Boolean): Action[AnyContent] = releases(Platform.Heritage, showDiff)
 
-  def ecsReleases(showDiff: Option[Boolean]): Action[AnyContent] = releases(Platform.ECS, showDiff)
+  def ecsReleases(showDiff: Boolean): Action[AnyContent] = releases(Platform.ECS, showDiff)
 
   private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
     form.fold(
@@ -53,36 +53,20 @@ class WhatsRunningWhereController @Inject()(
   private def distinctEnvironments(releases: Seq[WhatsRunningWhere]) =
     releases.flatMap(_.versions.map(_.environment)).distinct.sorted
 
-  private def releases(platform: Platform, showDiff: Option[Boolean]): Action[AnyContent] =
+  private def releases(platform: Platform, showDiff: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profile              =  profileFrom(form)
-        selectedProfileType  =  form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (releases, profiles) <- ( service.releasesForProfile(profile, platform).map(_.sortBy(_.applicationName.asString))
-                                , service.profiles
-                                ).mapN { (r, p) => (r, p) }
-        environments         =  distinctEnvironments(releases)
-        profileNames         =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+        form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
+        profile = profileFrom(form)
+        selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
+        (releases, profiles) <- (service.releasesForProfile(profile, platform).map(_.sortBy(_.applicationName.asString))
+          , service.profiles
+          ).mapN { (r, p) => (r, p) }
+        environments = distinctEnvironments(releases)
+        profileNames = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
       } yield Ok(page(platform, environments, releases, selectedProfileType, profileNames, form, showDiff))
     }
 }
-
-//
-//object OptionBinder {
-//  implicit def OptionBindable[T : PathBindable]: PathBindable[Option[T]] = new PathBindable[Option[T]] {
-//    def bind(key: String, value: String): Either[String, Option[T]] =
-//      implicitly[PathBindable[T]].
-//        bind(key, value).
-//        fold(
-//          left => Left(left),
-//          right => Right(Some(right))
-//        )
-//
-//    def unbind(key: String, value: Option[T]): String = value map (_.toString) getOrElse ""
-//  }
-//}
-
 case class WhatsRunningWhereFilter(
   profileName: Option[ProfileName] = None,
   profileType: Option[ProfileType] = None,
