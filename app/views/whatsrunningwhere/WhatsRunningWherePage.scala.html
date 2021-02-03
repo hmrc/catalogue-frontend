@@ -93,7 +93,7 @@
                         <td id="row@{i}_version_@{env.asString}"
                         @if(showDiff && env == Environment.Production) {
                             @if(!matchesStaging(wrw, version)){
-                            class="env-maj-version-behind"
+                                class="env-version-difference"
                             }
                         }
                         >@version.versionNumber.asString</td>
@@ -144,8 +144,10 @@
   }
 }
 
-@matchesStaging(wrw: WhatsRunningWhere, version: WhatsRunningWhereVersion) = @{
-    version.versionNumber.asString==wrw.versions
-            .find(_.environment==Environment.Staging)
-            .map(_.versionNumber.asString).getOrElse(None)
+@matchesStaging(wrw: WhatsRunningWhere, prodVersion: WhatsRunningWhereVersion) = @{
+    wrw.versions.find(_.environment==Environment.Staging).map(_.versionNumber) match {
+        case Some(prodVersion.versionNumber) => true
+        case None => true
+        case _ => false
+    }
 }

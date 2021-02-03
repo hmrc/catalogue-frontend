@@ -12378,7 +12378,7 @@ table.shutter-events {
   height:120px; /* If you change this, change the corresponding smallHeight value in catalogue-frontend.css too */
 }
 
-.env-maj-version-behind{
+.env-version-difference{
   background: repeating-linear-gradient(-45deg, transparent, yellow, transparent 20px);
 }
 
