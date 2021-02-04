@@ -67,6 +67,16 @@ class WhatsRunningWhereController @Inject()(
       } yield Ok(page(platform, environments, releases, selectedProfileType, profileNames, form, showDiff))
     }
 }
+
+object WhatsRunningWhereController {
+  def matchesProduction(wrw: WhatsRunningWhere, prodVersion: WhatsRunningWhereVersion, comparedEnv: Environment): Boolean = {
+    println(wrw.applicationName, prodVersion)
+    wrw.versions.find(_.environment == comparedEnv)
+      .map(_.versionNumber)
+      .contains(prodVersion.versionNumber)
+
+  }
+}
 case class WhatsRunningWhereFilter(
   profileName: Option[ProfileName] = None,
   profileType: Option[ProfileType] = None,
