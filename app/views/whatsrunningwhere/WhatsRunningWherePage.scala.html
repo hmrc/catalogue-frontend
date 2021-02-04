@@ -89,14 +89,14 @@
                 </td>
 
                 @environments.map { env =>
-                    @wrw.versions.find(_.environment == env).map { version =>
+                    @wrw.versions.find(_.environment == env).map { envVersion =>
                         <td id="row@{i}_version_@{env.asString}"
                         @if(showDiff && env == Environment.Production) {
-                            @if(!matchesStaging(wrw, version)){
+                            @if(!matchesProduction(wrw, envVersion, Environment.Staging)){
                                 class="env-version-difference"
                             }
                         }
-                        >@version.versionNumber.asString</td>
+                        >@envVersion.versionNumber.asString</td>
                     }.getOrElse {
                         <td id="row@{i}_version_@{env.asString}"></td>
                     }
@@ -144,10 +144,8 @@
   }
 }
 
-@matchesStaging(wrw: WhatsRunningWhere, prodVersion: WhatsRunningWhereVersion) = @{
-    wrw.versions.find(_.environment==Environment.Staging).map(_.versionNumber) match {
-        case Some(prodVersion.versionNumber) => true
-        case None => true
-        case _ => false
-    }
+@matchesProduction(wrw: WhatsRunningWhere, prodVersion: WhatsRunningWhereVersion, comparedEnv: Environment) = @{
+    wrw.versions.find(_.environment == comparedEnv)
+            .map(_.versionNumber)
+            .contains(prodVersion.versionNumber)
 }
