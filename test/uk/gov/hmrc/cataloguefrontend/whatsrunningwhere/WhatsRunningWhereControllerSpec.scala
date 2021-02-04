@@ -24,7 +24,7 @@ class WhatsRunningWhereControllerSpec extends UnitSpec{
       WhatsRunningWhereController.matchesProduction(wrwMatchesProd, wrwVersionProd, Environment.Staging) shouldBe true
     }
 
-    "return false when compared env version matches production version" in {
+    "return false when compared env version does not match production version" in {
       WhatsRunningWhereController.matchesProduction(wrwNotMatchesProd, wrwVersionProd, Environment.Staging) shouldBe false
     }
 

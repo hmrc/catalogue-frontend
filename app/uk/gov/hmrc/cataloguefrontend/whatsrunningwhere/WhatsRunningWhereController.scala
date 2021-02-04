@@ -70,7 +70,6 @@ class WhatsRunningWhereController @Inject()(
 
 object WhatsRunningWhereController {
   def matchesProduction(wrw: WhatsRunningWhere, prodVersion: WhatsRunningWhereVersion, comparedEnv: Environment): Boolean = {
-    println(wrw.applicationName, prodVersion)
     wrw.versions.find(_.environment == comparedEnv)
       .map(_.versionNumber)
       .contains(prodVersion.versionNumber)
