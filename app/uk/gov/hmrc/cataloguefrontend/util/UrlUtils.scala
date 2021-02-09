@@ -20,6 +20,9 @@ import java.net.URLEncoder
 
 import play.utils.UriEncoding
 
+/** This should be only used for building relative URLs.
+  * When building absolute URLs (e.g. for http-verbs), use uk.gov.hmrc.http.StringContextOps
+  */
 object UrlUtils {
   def encodeQueryParam(param: String): String =
     URLEncoder.encode(param, "UTF-8")

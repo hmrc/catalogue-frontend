@@ -71,10 +71,11 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
     serviceEndpoint(GET, "/api/teams/teamA/dependencies", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/CATO/dependencies", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/repositories?archived=true", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/teams/teamA/slug-dependencies?flag=production", willRespondWith = (200, Some("{}")))
+    serviceEndpoint(GET, "/api/teams/CATO/slug-dependencies?flag=production", willRespondWith = (200, Some("{}")))
   }
 
   "Team services page" should {
-
     "show a list of libraries, services, prototypes and repositories" in {
       serviceEndpoint(
         GET,
@@ -119,9 +120,9 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       val anchorTags   = htmlDocument.getElementsByTag("a").asScala.toList
 
       def assertAnchor(href: String, text: String): Unit =
-        assert(anchorTags.exists { e =>
-          e.text == text && e.attr("href") == href
-        })
+        assert(
+          anchorTags.exists(e => e.text == text && e.attr("href") == href)
+        )
 
       assertAnchor("/library/teamA-lib", "teamA-lib")
       assertAnchor("/service/teamA-serv", "teamA-serv")
@@ -130,7 +131,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
       assertAnchor("/prototype/service2-prototype", "service2-prototype")
       assertAnchor("/repositories/teamA-other", "teamA-other")
     }
-
 
     "filter out archived repositories from a list of libraries, services, prototypes and repositories" in {
       serviceEndpoint(GET, "/api/repositories?archived=true", willRespondWith = (200, Some(
@@ -235,7 +235,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
     }
 
     "show a message if no services are found" in {
-
       serviceEndpoint(
         GET,
         "/api/teams_with_details/teamA",
@@ -481,11 +480,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerP
   }
 
   def mockHttpApiCall(url: String, jsonResponseFile: String, httpCodeToBeReturned: Int = 200): String = {
-
     val json = readFile(jsonResponseFile)
-
     serviceEndpoint(method = GET, url = url, willRespondWith = (httpCodeToBeReturned, Some(json)))
-
     json
   }
 

@@ -21,8 +21,8 @@ import play.api.Logger
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -44,7 +44,7 @@ class RouteRulesConnector @Inject()(
 
   def serviceRoutes(service: String)(implicit hc: HeaderCarrier): Future[EnvironmentRoutes] =
     http
-      .GET[EnvironmentRoutes](s"$url/${encodePathParam(service)}")
+      .GET[EnvironmentRoutes](url"$url/$service")
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)

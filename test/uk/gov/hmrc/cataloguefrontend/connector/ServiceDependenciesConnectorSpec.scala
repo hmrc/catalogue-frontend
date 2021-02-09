@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
@@ -32,10 +31,9 @@ import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class ServiceDependenciesConnectorSpec
     extends AnyWordSpec
@@ -48,7 +46,6 @@ class ServiceDependenciesConnectorSpec
     with ScalaFutures
     with MockitoSugar
     with IntegrationPatience {
-  import ExecutionContext.Implicits.global
 
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()
@@ -152,18 +149,6 @@ class ServiceDependenciesConnectorSpec
         .futureValue
 
       response shouldBe None
-    }
-
-    "return a None for if a communication error occurs" in new Setup {
-      val mockedHttpClient = mock[HttpClient]
-      when(mockedHttpClient.GET(any(), any(), any())(any(), any(), any()))
-        .thenReturn(Future.failed(new RuntimeException("Boom!!")))
-
-      val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig])
-
-      connector
-        .getDependencies("non-existing-repo")
-        .futureValue shouldBe None
     }
   }
 
@@ -353,16 +338,6 @@ class ServiceDependenciesConnectorSpec
         willRespondWith = (Status.NOT_FOUND, None))
 
       serviceDependenciesConnector.getCuratedSlugDependencies(slugName, flag).futureValue shouldBe empty
-    }
-
-    "returns an empty list of dependencies when a communication error occurs" in new Setup {
-      val mockedHttpClient = mock[HttpClient]
-      when(mockedHttpClient.GET(any(), any(), any())(any(), any(), any()))
-        .thenReturn(Future.failed(new RuntimeException("Boom!!")))
-
-      val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig])
-
-      connector.getCuratedSlugDependencies("slugName", flag = SlugInfoFlag.Latest).futureValue shouldBe empty
     }
   }
 

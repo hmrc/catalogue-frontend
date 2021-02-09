@@ -55,14 +55,12 @@ val compile = Seq(
 val test = Seq(
   "uk.gov.hmrc"            %% "bootstrap-test-play-28"   % bootstrapPlayVersion % Test,
   "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28"  % hmrcMongoVersion     % Test,
-  //"org.scalatest"          %% "scalatest"                % "3.2.3"              % Test,
   "org.scalatestplus.play" %% "scalatestplus-play"       % "5.1.0"              % Test,
-  //"org.scalacheck"         %% "scalacheck"               % "1.15.2"             % Test,
   "org.scalatestplus"      %% "scalatestplus-scalacheck" % "3.1.0.0-RC2"        % Test,
   "com.vladsch.flexmark"   %  "flexmark-all"             % "0.35.10"            % Test,
   "com.typesafe.play"      %% "play-test"                % PlayVersion.current  % Test,
   "com.github.tomakehurst" %  "wiremock"                 % "1.58"               % Test,
-  "org.jsoup"              %  "jsoup"                    % "1.13.1"              % Test,
+  "org.jsoup"              %  "jsoup"                    % "1.13.1"             % Test,
   "org.mockito"            %% "mockito-scala"            % "1.10.6"             % Test,
   ws
 )
