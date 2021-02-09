@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,7 +28,7 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ReleasesConnector @Inject()(
-  http: HttpClient,
+  http          : HttpClient,
   servicesConfig: ServicesConfig
 )(
   implicit
@@ -45,9 +45,13 @@ class ReleasesConnector @Inject()(
 
   def releases(profile: Option[Profile], platform: Platform)(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
-    val params  = profileQueryParams(profile) ++ UrlUtils.buildQueryParams("platform" -> Some(platform.asString))
+    val params = Seq(
+      "profileName" -> profile.map(_.profileName.asString),
+      "profileType" -> profile.map(_.profileType.asString),
+      "platform"    -> platform.asString
+    )
     http
-      .GET[Seq[WhatsRunningWhere]](baseUrl, params)
+      .GET[Seq[WhatsRunningWhere]](url"$baseUrl?$params")
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
@@ -58,7 +62,7 @@ class ReleasesConnector @Inject()(
   def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] = {
     val baseUrl = s"$serviceUrl/releases-api/profiles"
     http
-      .GET[Seq[Profile]](baseUrl)
+      .GET[Seq[Profile]](url"$baseUrl")
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $baseUrl: ${ex.getMessage}", ex)
@@ -66,13 +70,10 @@ class ReleasesConnector @Inject()(
       }
   }
 
-  private def profileQueryParams(profile: Option[Profile]): Seq[(String, String)] =
-    UrlUtils.buildQueryParams("profileName" -> profile.map(_.profileName.asString), "profileType" -> profile.map(_.profileType.asString))
-
   def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
-    val baseUrl = s"$serviceUrl/releases-api/whats-running-where/$service"
+    val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
     http
-      .GET[Option[WhatsRunningWhere]](baseUrl)
+      .GET[Option[WhatsRunningWhere]](url"$baseUrl/$service")
       .map(_.getOrElse {
         logger.error(s"Service $service not found, returning placeholder whatsrunningwhere")
         WhatsRunningWhere(ServiceName(service), Nil)
@@ -85,27 +86,23 @@ class ReleasesConnector @Inject()(
   }
 
   def deploymentHistory(
-    platform: Platform,
+    platform   : Platform,
     environment: Environment,
-    from: Option[Long]   = None,
-    to: Option[Long]     = None,
-    team: Option[String] = None,
-    app: Option[String]  = None
-  )(
-    implicit
-    hc: HeaderCarrier): Future[Seq[Deployment]] = {
-
+    from       : Option[Long]   = None,
+    to         : Option[Long]   = None,
+    team       : Option[String] = None,
+    app        : Option[String] = None
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[Deployment]] = {
     implicit val rf = JsonCodecs.heritageDeploymentReads
-    http.GET[Seq[Deployment]](
-      url = s"$serviceUrl/releases-api/deployments/${environment.asString}",
-      queryParams = UrlUtils.buildQueryParams(
-        "from"     -> from.map(_.toString),
-        "to"       -> to.map(_.toString),
-        "team"     -> team,
-        "app"      -> app,
-        "platform" -> Some(platform.asString)
-      )
+    val params = Seq(
+      "from"     -> from.map(_.toString),
+      "to"       -> to.map(_.toString),
+      "team"     -> team,
+      "app"      -> app,
+      "platform" -> Some(platform.asString)
     )
+    http.GET[Seq[Deployment]](url"$serviceUrl/releases-api/deployments/${environment.asString}?$params")
   }
-
 }

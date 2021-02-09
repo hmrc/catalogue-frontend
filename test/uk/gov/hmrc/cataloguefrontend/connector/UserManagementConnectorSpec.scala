@@ -65,7 +65,11 @@ class UserManagementConnectorSpec
       )
       .build()
 
-  private lazy val userManagementConnector: UserManagementConnector = app.injector.instanceOf[UserManagementConnector]
+  private lazy val userManagementConnector: UserManagementConnector =
+    app.injector.instanceOf[UserManagementConnector]
+
+  private lazy val userManagementPortalConfig: UserManagementPortalConfig =
+    app.injector.instanceOf[UserManagementPortalConfig]
 
   "User management connector" should {
     "should get the team members from the user-management service" in {
@@ -122,10 +126,10 @@ class UserManagementConnectorSpec
 
       val userManagementConnector = new UserManagementConnector(
         mockedHttpGet,
-        mock[UserManagementPortalConfig]
+        userManagementPortalConfig
       )
 
-      when(mockedHttpGet.GET(anyString(), any(), any())(any(), any(), any()))
+      when(mockedHttpGet.GET(any())(any(), any(), any()))
         .thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
@@ -188,10 +192,10 @@ class UserManagementConnectorSpec
 
       val userManagementConnector = new UserManagementConnector(
         mockedHttpGet,
-        mock[UserManagementPortalConfig]
+        userManagementPortalConfig
       )
 
-      when(mockedHttpGet.GET(anyString(), any(), any())(any(), any(), any()))
+      when(mockedHttpGet.GET(any())(any(), any(), any()))
         .thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
@@ -273,12 +277,12 @@ class UserManagementConnectorSpec
 
         val userManagementConnector = new UserManagementConnector(
           mockedHttpGet,
-          mock[UserManagementPortalConfig]
+          userManagementPortalConfig
         )
 
         val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
 
-        when(mockedHttpGet.GET(anyString(), any(), any())(any(), any(), any()))
+        when(mockedHttpGet.GET(any())(any(), any(), any()))
           .thenReturn(Future.failed(new RuntimeException("Boooom!")))
 
         val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector

@@ -18,15 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.util
 
 import java.net.URLEncoder
 
-import play.utils.UriEncoding
-
 object UrlUtils {
   def encodeQueryParam(param: String): String =
     URLEncoder.encode(param, "UTF-8")
-
-  def encodePathParam(param: String): String =
-    UriEncoding.encodePathSegment(param, "UTF-8")
-
-  def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
-    queryParams.collect { case (k, Some(v)) => (k, v) }
 }

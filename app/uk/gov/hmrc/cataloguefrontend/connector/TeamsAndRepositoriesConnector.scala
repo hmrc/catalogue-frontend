@@ -19,18 +19,19 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import java.time.LocalDateTime
 
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 object RepoType extends Enumeration {
 
@@ -190,7 +191,10 @@ class TeamsAndRepositoriesConnector @Inject()(
   import TeamsAndRepositoriesConnector._
   import HttpReads.Implicits._
 
-  private val teamsAndServicesBaseUrl: String = servicesConfig.baseUrl("teams-and-repositories")
+  private val logger = Logger(getClass)
+
+  private val teamsAndServicesBaseUrl: String =
+    servicesConfig.baseUrl("teams-and-repositories")
 
   private implicit val tf   = Team.format
   private implicit val tnf  = TeamName.format
@@ -199,34 +203,40 @@ class TeamsAndRepositoriesConnector @Inject()(
   private implicit val rddf = RepositoryDisplayDetails.format
   private implicit val dsf  = DigitalService.format
 
-  def lookupLink(service: String)(implicit hc: HeaderCarrier): Future[Option[Link]] =
-    http.GET[JenkinsLink](teamsAndServicesBaseUrl + s"/api/jenkins-url/$service")
+  def lookupLink(service: String)(implicit hc: HeaderCarrier): Future[Option[Link]] = {
+    val url = url"$teamsAndServicesBaseUrl/api/jenkins-url/$service"
+    http.GET[JenkinsLink](url)
       .map(l => Link(l.service, "Build", l.jenkinsURL))
       .map(Option.apply)
       .recover {
-        case ex: Throwable => None
+        case NonFatal(ex) =>
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          None
       }
+    }
 
   def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
-    http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams")
+    http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/teams")
 
   def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] =
-    http.GET[Seq[String]](teamsAndServicesBaseUrl + s"/api/digital-services")
+    http.GET[Seq[String]](url"$teamsAndServicesBaseUrl/api/digital-services")
 
-  def teamInfo(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Option[Team]] =
+  def teamInfo(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Option[Team]] = {
+    val url = url"$teamsAndServicesBaseUrl/api/teams_with_details/${teamName.asString}"
     http
-      .GET[Option[Team]](teamsAndServicesBaseUrl + s"/api/teams_with_details/${encodePathParam(teamName.asString)}")
+      .GET[Option[Team]](url)
       .recover {
-        case _ => None
+        case NonFatal(ex) =>
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          None
       }
+    }
 
   def teamsWithRepositories(implicit hc: HeaderCarrier): Future[Seq[Team]] =
-    http.GET[Seq[Team]](teamsAndServicesBaseUrl + s"/api/teams_with_repositories")
+    http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/teams_with_repositories")
 
-  def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[DigitalService]] = {
-    val url = teamsAndServicesBaseUrl + s"/api/digital-services/${encodePathParam(digitalServiceName)}"
-    http.GET[Option[DigitalService]](url)
-  }
+  def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[DigitalService]] =
+    http.GET[Option[DigitalService]](url"$teamsAndServicesBaseUrl/api/digital-services/$digitalServiceName")
 
   def allRepositories(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
     repositories(archived = None)
@@ -235,26 +245,23 @@ class TeamsAndRepositoriesConnector @Inject()(
     repositories(archived = Some(true))
 
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] =
-    http.GET[Option[RepositoryDetails]](teamsAndServicesBaseUrl + s"/api/repositories/${encodePathParam(name)}")
+    http.GET[Option[RepositoryDetails]](url"$teamsAndServicesBaseUrl/api/repositories/$name")
 
   def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http.POST[JsValue, Map[ServiceName, Seq[TeamName]]](
-      teamsAndServicesBaseUrl + s"/api/services?teamDetails=true",
+      url"$teamsAndServicesBaseUrl/api/services?teamDetails=true",
       Json.arr(serviceNames.map(toJsFieldJsValueWrapper(_)): _*)
     )
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http.GET[Map[ServiceName, Seq[TeamName]]](
-      url = teamsAndServicesBaseUrl + s"/api/services",
-      queryParams = Seq(("teamDetails", "true")))
-
-  private def repositories(archived: Option[Boolean])
-                          (implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
-    http.GET[Seq[RepositoryDisplayDetails]](
-      url = teamsAndServicesBaseUrl + s"/api/repositories",
-      queryParams = archived.map(a => ("archived", a.toString)).toSeq
+      url"$teamsAndServicesBaseUrl/api/services?teamDetails=true"
     )
 
+  private def repositories(archived: Option[Boolean])(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
+    http.GET[Seq[RepositoryDisplayDetails]](
+      url"$teamsAndServicesBaseUrl/api/repositories?archived=${archived.map(_.toString)}"
+    )
 }
 
 object TeamsAndRepositoriesConnector {
