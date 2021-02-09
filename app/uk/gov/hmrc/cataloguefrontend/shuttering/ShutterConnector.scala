@@ -23,11 +23,9 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpClient, HttpReads, UpstreamErrorResponse}
-import uk.gov.hmrc.http.HttpReads.Implicits
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 @Singleton
 class ShutterConnector @Inject()(

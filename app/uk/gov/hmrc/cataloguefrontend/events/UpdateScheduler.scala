@@ -35,15 +35,22 @@ class UpdateScheduler @Inject()(
 
   def startUpdatingEventsReadModel(interval: FiniteDuration): Cancellable = {
     logger.info(s"Initialising Event read model update every $interval")
-    actorSystem.scheduler.schedule(initialDelay, interval) {
-      readModelService.refreshEventsCache
-    }
+    actorSystem.scheduler.scheduleWithFixedDelay(initialDelay, interval)(
+      toRunnable {
+        readModelService.refreshEventsCache
+      }
+    )
   }
 
   def startUpdatingUmpCacheReadModel(interval: FiniteDuration): Cancellable = {
     logger.info(s"Initialising UMP cache read model update every $interval")
-    actorSystem.scheduler.schedule(initialDelay, interval) {
-      readModelService.refreshUmpCache
-    }
+    actorSystem.scheduler.scheduleWithFixedDelay(initialDelay, interval)(
+      toRunnable {
+        readModelService.refreshUmpCache
+      }
+    )
   }
+
+  private def toRunnable(f: => Unit): Runnable =
+    new Runnable { override def run(): Unit = f }
 }

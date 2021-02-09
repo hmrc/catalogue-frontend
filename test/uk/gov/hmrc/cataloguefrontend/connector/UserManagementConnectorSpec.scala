@@ -23,19 +23,18 @@ import org.mockito.MockitoSugar
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.time.{Millis, Span}
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.FakeHeaders
+import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.{UserManagementPortalConfig, WireMockEndpoints}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpClient}
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
@@ -130,7 +129,7 @@ class UserManagementConnectorSpec
         .thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
-        .getTeamMembersFromUMP(TeamName("teamName"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getTeamMembersFromUMP(TeamName("teamName"))(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
         .left
         .value
@@ -144,7 +143,7 @@ class UserManagementConnectorSpec
       )
 
       val teamDetails = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
         .right
         .value
@@ -164,7 +163,7 @@ class UserManagementConnectorSpec
       )
 
       val res = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders())).futureValue
+        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromRequest(FakeRequest())).futureValue
 
       res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
@@ -176,7 +175,7 @@ class UserManagementConnectorSpec
         httpCode        = 500
       )
       val teamDetails = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
         .left
         .value
@@ -196,7 +195,7 @@ class UserManagementConnectorSpec
         .thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
         .left
         .value
@@ -217,7 +216,7 @@ class UserManagementConnectorSpec
           jsonFileNameOpt = Some("/user-management-response-team2.json")
         )
         val teamsAndMembers = userManagementConnector
-          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
@@ -249,7 +248,7 @@ class UserManagementConnectorSpec
         )
 
         val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
-          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
@@ -283,7 +282,7 @@ class UserManagementConnectorSpec
           .thenReturn(Future.failed(new RuntimeException("Boooom!")))
 
         val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
-          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
@@ -309,7 +308,7 @@ class UserManagementConnectorSpec
         )
 
         val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
-          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
@@ -322,8 +321,8 @@ class UserManagementConnectorSpec
         def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           team1Result.right.value.map(extractor)
 
-        getMembersDetails(_.displayName.value) shouldBe Seq("Joe Black", "James Roger")
-        getMembersDetails(_.username.value)    shouldBe Seq("joe.black", "james.roger")
+        getMembersDetails(_.displayName.value)  shouldBe Seq("Joe Black", "James Roger")
+        getMembersDetails(_.username.value)     shouldBe Seq("joe.black", "james.roger")
         getMembersDetails(_.primaryEmail.value) shouldBe Seq(
           "joe.black@digital.hmrc.gov.uk",
           "james.roger@hmrc.gsi.gov.uk")
@@ -404,7 +403,7 @@ class UserManagementConnectorSpec
     stubUserManagementEndPoint(GET, httpCode, s"/v2/organisations/teams/${teamName.asString}/members", jsonFileNameOpt)
 
     userManagementConnector
-      .getTeamMembersFromUMP(teamName)(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+      .getTeamMembersFromUMP(teamName)(HeaderCarrierConverter.fromRequest(FakeRequest()))
   }
 
   def stubUserManagementEndPoint(
