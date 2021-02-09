@@ -36,7 +36,7 @@ class LeakDetectionConnectorSpec extends UnitSpec with MockitoSugar {
       when(servicesConfig.baseUrl(any()))
         .thenReturn("http://leak-detection:8855")
 
-      when(httpClient.GET(any())(any(), any(), any()))
+      when(httpClient.GET(any(), any(), any())(any(), any(), any()))
         .thenReturn(Future.failed(new BadGatewayException("an exception")))
 
       val leakDetectionConnector = new LeakDetectionConnector(httpClient, servicesConfig)

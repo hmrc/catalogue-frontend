@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import akka.actor.ActorSystem
 import cats.data.OptionT
 import cats.implicits._
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.matchers.should.Matchers._
 import play.api.libs.json.{JsValue, Writes}
 import play.api.libs.ws.WSClient
@@ -170,7 +170,7 @@ trait HttpClientStub {
     override def doDelete(url: String, headers: Seq[(String, String)])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] =
       ???
 
-    override protected def configuration: Option[Config] = None
+    override protected def configuration: Config = ConfigFactory.load()
 
     override def wsClient: WSClient                 = ???
     override protected def actorSystem: ActorSystem = ActorSystem("test-actor-system")

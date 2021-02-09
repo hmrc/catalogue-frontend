@@ -22,9 +22,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpTo
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodePathParam
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpClient, HttpReads, UpstreamErrorResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits
-import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}

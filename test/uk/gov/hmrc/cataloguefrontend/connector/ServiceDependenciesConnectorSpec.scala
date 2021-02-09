@@ -21,8 +21,8 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.Status
@@ -38,7 +38,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.{ExecutionContext, Future}
 
 class ServiceDependenciesConnectorSpec
-    extends AnyFreeSpec
+    extends AnyWordSpec
     with Matchers
     with BeforeAndAfter
     with GuiceOneAppPerSuite
@@ -63,10 +63,8 @@ class ServiceDependenciesConnectorSpec
 
   private lazy val serviceDependenciesConnector = app.injector.instanceOf[ServiceDependenciesConnector]
 
-  "GET Dependencies" - {
-
+  "GET Dependencies" should {
     "return a list of dependencies for a repository" in new Setup {
-
       serviceEndpoint(
         GET,
         "/api/dependencies/repo1",
@@ -147,7 +145,6 @@ class ServiceDependenciesConnectorSpec
     }
 
     "return a None for non existing repository" in new Setup {
-
       serviceEndpoint(GET, "/api/dependencies/non-existing-repo", willRespondWith = (404, None))
 
       val response = serviceDependenciesConnector
@@ -158,9 +155,8 @@ class ServiceDependenciesConnectorSpec
     }
 
     "return a None for if a communication error occurs" in new Setup {
-
       val mockedHttpClient = mock[HttpClient]
-      when(mockedHttpClient.GET(any())(any(), any(), any()))
+      when(mockedHttpClient.GET(any(), any(), any())(any(), any(), any()))
         .thenReturn(Future.failed(new RuntimeException("Boom!!")))
 
       val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig])
@@ -171,8 +167,7 @@ class ServiceDependenciesConnectorSpec
     }
   }
 
-  "GET all dependencies for report" - {
-
+  "GET all dependencies for report" should {
     "return dependencies for all repositories" in new Setup {
 
       serviceEndpoint(
@@ -324,7 +319,7 @@ class ServiceDependenciesConnectorSpec
     }
   }
 
-  "GET curated slug dependencies" - {
+  "GET curated slug dependencies" should {
     "returns a list of curated dependencies for slugInfoFlag" in new Setup {
       val slugName = "slug-name"
       val flag     = SlugInfoFlag.Latest
@@ -362,7 +357,7 @@ class ServiceDependenciesConnectorSpec
 
     "returns an empty list of dependencies when a communication error occurs" in new Setup {
       val mockedHttpClient = mock[HttpClient]
-      when(mockedHttpClient.GET(any(), any())(any(), any(), any()))
+      when(mockedHttpClient.GET(any(), any(), any())(any(), any(), any()))
         .thenReturn(Future.failed(new RuntimeException("Boom!!")))
 
       val connector = new ServiceDependenciesConnector(mockedHttpClient, mock[ServicesConfig])
@@ -371,7 +366,7 @@ class ServiceDependenciesConnectorSpec
     }
   }
 
-  "getJDKVersions" - {
+  "getJDKVersions" should {
     "returns JDK versions with vendor" in new Setup {
       serviceEndpoint(
         GET,
@@ -398,43 +393,43 @@ class ServiceDependenciesConnectorSpec
     }
   }
 
-  "JSON Reader" - {
+  "JSON Reader" should {
     "read json with java section" in {
       import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies.serviceDependenciesReads
-      val json =""" {
-    "uri" : "https://artefactory/slugs/mobile-stub/mobile-stub_0.12.0_0.5.2.tgz",
-    "name" : "mobile-auth-stub",
-    "version" : "0.12.0",
-    "semanticVersion" : {
-        "major" : 0,
-        "minor" : 12,
-        "patch" : 0
-    },
-    "versionLong" : 12000,
-    "runnerVersion" : "0.5.2",
-    "classpath" : "",
-    "jdkVersion" : "1.8.0_191",
-    "dependencies" : [
-        {
-            "path" : "./mobile-auth-stub-0.12.0/lib/org.slf4j.slf4j-api-1.7.25.jar",
-            "version" : "1.7.25",
-            "group" : "org.slf4j",
-            "artifact" : "slf4j-api",
-            "meta" : "fromPom"
+      val json = """{
+        "uri" : "https://artefactory/slugs/mobile-stub/mobile-stub_0.12.0_0.5.2.tgz",
+        "name" : "mobile-auth-stub",
+        "version" : "0.12.0",
+        "semanticVersion" : {
+            "major" : 0,
+            "minor" : 12,
+            "patch" : 0
+        },
+        "versionLong" : 12000,
+        "runnerVersion" : "0.5.2",
+        "classpath" : "",
+        "jdkVersion" : "1.8.0_191",
+        "dependencies" : [
+            {
+                "path" : "./mobile-auth-stub-0.12.0/lib/org.slf4j.slf4j-api-1.7.25.jar",
+                "version" : "1.7.25",
+                "group" : "org.slf4j",
+                "artifact" : "slf4j-api",
+                "meta" : "fromPom"
+            }
+        ],
+        "latest" : false,
+        "qa" : false,
+        "production" : false,
+        "development" : false,
+        "external test" : false,
+        "staging" : false,
+        "java" : {
+            "version" : "1.8.0_191",
+            "kind" : "JDK",
+            "vendor" : "OpenJDK"
         }
-    ],
-    "latest" : false,
-    "qa" : false,
-    "production" : false,
-    "development" : false,
-    "external test" : false,
-    "staging" : false,
-    "java" : {
-        "version" : "1.8.0_191",
-        "kind" : "JDK",
-        "vendor" : "OpenJDK"
-    }
-} """
+      }"""
       val res = Json.fromJson[ServiceDependencies](Json.parse(json)).get
 
       res.java.version shouldBe "1.8.0_191"

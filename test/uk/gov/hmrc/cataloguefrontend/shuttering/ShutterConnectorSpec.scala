@@ -42,14 +42,21 @@ class ShutterConnectorSpec extends AnyWordSpec with MockitoSugar with Matchers w
     val underTest = new ShutterConnector(httpClient, servicesConfig)
 
     // unfortunately the test will receive an unhelpful NullPointerException if expectations are not met
-    def stubEmptyResponseForGet(withPath: String, withParams: Seq[(String, String)]): Unit =
-      when(httpClient.GET(
-        eqTo(withPath),
-        eqTo(withParams))(
-          any[HttpReads[Seq[ShutterEvent]]],
+    def stubEmptyResponseForGet(
+      withPath   : String,
+      withParams : Seq[(String, String)],
+      withHeaders: Seq[(String, String)] = Seq.empty
+    ): Unit =
+      when(
+        httpClient.GET(
+          eqTo(withPath),
+          eqTo(withParams),
+          eqTo(withHeaders)
+        )(any[HttpReads[Seq[ShutterEvent]]],
           eqTo(headerCarrier),
-          eqTo(executionContext)))
-        .thenReturn(Future.successful(Seq.empty))
+          eqTo(executionContext)
+        )
+      ).thenReturn(Future.successful(Seq.empty))
   }
 
   "Shutter Events" should {
