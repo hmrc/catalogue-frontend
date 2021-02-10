@@ -23,25 +23,15 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @Singleton
 class UserManagementPortalConfig @Inject()(servicesConfig: ServicesConfig) {
 
-  private val serviceName = "user-management"
+  private def getConfString(key: String): String =
+    servicesConfig.getConfString(key, sys.error(s"Could not find config '$key'"))
 
-  def umpMyTeamsPageUrl(teamName: TeamName): String = {
-    val frontPageUrlConfigKey = s"$serviceName.myTeamsUrl"
-    val myTeamsUrl = servicesConfig.getConfString(
-      confKey   = frontPageUrlConfigKey,
-      defString = throw new RuntimeException(s"Could not find config $frontPageUrlConfigKey")
-    )
+  def umpMyTeamsPageUrl(teamName: TeamName): String =
+    s"${getConfString(s"user-management.myTeamsUrl")}/${teamName.asString}?edit"
 
-    s"""${myTeamsUrl.appendSlash}${teamName.asString}?edit"""
-  }
+  lazy val userManagementBaseUrl: String =
+    getConfString("user-management.url")
 
-  def userManagementBaseUrl: String = servicesConfig.getConfString(
-    confKey   = s"$serviceName.url",
-    defString = throw new RuntimeException(s"Could not find config $serviceName.url")
-  )
-
-  lazy val userManagementProfileBaseUrl: String = servicesConfig.getConfString(
-    confKey   = s"$serviceName.profileBaseUrl",
-    defString = "#"
-  )
+  lazy val userManagementProfileBaseUrl: String =
+    getConfString("user-management.profileBaseUrl")
 }

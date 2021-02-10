@@ -32,13 +32,11 @@ class DependenciesService @Inject()(
 )(implicit val ec: ExecutionContext) {
 
   def search(serviceName: String, deployments: Seq[WhatsRunningWhereVersion])(implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] =
-    Future
-      .sequence(deployments.map(wrwv => {
-        serviceDependenciesConnector
-          .getSlugDependencies(serviceName, Some(wrwv.versionNumber.asVersion))
-          .map(_.map(_.copy(environment = Some(wrwv.environment))))
-      }))
-      .map(_.flatten)
+    Future.traverse(deployments)(wrwv =>
+      serviceDependenciesConnector
+        .getSlugDependencies(serviceName, Some(wrwv.versionNumber.asVersion))
+        .map(_.map(_.copy(environment = Some(wrwv.environment))))
+    ).map(_.flatten)
 
   def getServicesWithDependency(optTeam: Option[TeamName], flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange)(
     implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =

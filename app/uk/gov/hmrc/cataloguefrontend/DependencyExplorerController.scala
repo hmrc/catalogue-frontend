@@ -23,6 +23,7 @@ import cats.instances.all._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
+import uk.gov.hmrc.http.StringContextOps
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
@@ -30,7 +31,6 @@ import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
-import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodeQueryParam
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependencyExplorerPage
 
@@ -87,10 +87,7 @@ class DependencyExplorerController @Inject()(
           queryString   =  request.queryString - "version" - "versionOp" + ("versionRange" -> Seq(versionRange))
 
          // updating request with new querystring does not update uri!? - build uri manually...
-          queryStr      =  queryString.flatMap { case (k, vs) =>
-                             vs.map(v => encodeQueryParam(k) + "=" + encodeQueryParam(v))
-                           }.mkString("?", "&", "")
-         } yield Redirect(request.path + queryStr)
+         } yield Redirect(url"${request.path}?$queryString".toString)
         ).merge
       // else continue to new API
       } else search2(request)
@@ -204,6 +201,7 @@ object DependencyExplorerController {
     }
 
   def search(team: String = "", flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange): String =
+    // this is relative, so we can't use `url` interpolator
     uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search() +
       s"?team=$team&flag=${flag.asString}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
 }

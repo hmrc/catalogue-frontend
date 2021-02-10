@@ -144,7 +144,7 @@ object UserManagementConnector {
     ) {
 
     def getUmpLink(umpProfileBaseUrl: String): String =
-      username.map(x => s"${umpProfileBaseUrl.appendSlash}$x").getOrElse("USERNAME NOT PROVIDED")
+      username.map(x => url"$umpProfileBaseUrl/$x".toString).getOrElse("USERNAME NOT PROVIDED")
 
     def getDisplayName: String = this.displayName.getOrElse("DISPLAY NAME NOT PROVIDED")
   }

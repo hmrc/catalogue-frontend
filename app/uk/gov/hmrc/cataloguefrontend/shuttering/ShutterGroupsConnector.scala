@@ -22,9 +22,10 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.config.GithubConfig
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 @Singleton
 class ShutterGroupsConnector @Inject()(
@@ -37,7 +38,7 @@ class ShutterGroupsConnector @Inject()(
   val logger = Logger(this.getClass)
 
   def shutterGroups: Future[List[ShutterGroup]] = {
-    val url = s"${githubConf.rawUrl}/hmrc/outage-pages/master/conf/shutter-groups.json"
+    val url = url"${githubConf.rawUrl}/hmrc/outage-pages/master/conf/shutter-groups.json"
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(("Authorization", s"token ${githubConf.token}"))
     implicit val gr = ShutterGroup.reads
     http.GET[Option[List[ShutterGroup]]](url)
@@ -46,8 +47,8 @@ class ShutterGroupsConnector @Inject()(
         List.empty[ShutterGroup]
       })
       .recover {
-        case e =>
-          logger.error(s"Problem retrieving shutter groups at $url, defaulting to an empty list: ${e.getMessage}", e)
+        case NonFatal(ex) =>
+          logger.error(s"Problem retrieving shutter groups at $url, defaulting to an empty list: ${ex.getMessage}", ex)
           List.empty
       }
   }

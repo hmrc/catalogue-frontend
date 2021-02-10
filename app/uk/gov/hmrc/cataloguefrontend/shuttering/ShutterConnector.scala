@@ -35,7 +35,7 @@ class ShutterConnector @Inject()(
 ) {
   import HttpReads.Implicits._
 
-  private val shutterApiBaseUrl = serviceConfig.baseUrl("shutter-api") + "/shutter-api"
+  private val baseUrl = serviceConfig.baseUrl("shutter-api")
 
   private implicit val ssr = ShutterState.reads
   private implicit val ser = ShutterEvent.reads
@@ -47,7 +47,7 @@ class ShutterConnector @Inject()(
     */
   def shutterStates(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
     http.GET[Seq[ShutterState]](
-      url"$shutterApiBaseUrl/${env.asString}/${st.asString}/states"
+      url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states"
     )
 
   /**
@@ -57,7 +57,7 @@ class ShutterConnector @Inject()(
     */
   def shutterState(st: ShutterType, env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
     http.GET[Option[ShutterState]](
-      url"$shutterApiBaseUrl/${env.asString}/${st.asString}/states/$serviceName"
+      url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states/$serviceName"
     )
 
   /**
@@ -75,7 +75,7 @@ class ShutterConnector @Inject()(
     implicit val isf = ShutterStatus.format
     http
       .PUT[ShutterStatus, Unit](
-          url"$shutterApiBaseUrl/${env.asString}/${st.asString}/states/$serviceName",
+          url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states/$serviceName",
           status
         )(
           implicitly[Writes[ShutterStatus]]
@@ -98,14 +98,14 @@ class ShutterConnector @Inject()(
       "data.shutterType" -> st.asString
     )
     http
-      .GET[Seq[ShutterEvent]](url"$shutterApiBaseUrl/events?$queryParams")
+      .GET[Seq[ShutterEvent]](url"$baseUrl/shutter-api/events?$queryParams")
       .map(_.flatMap(_.toShutterStateChangeEvent))
   }
 
   def shutterEventsByTimestampDesc(filter: ShutterEventsFilter)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     http
       .GET[Seq[ShutterEvent]](
-        url"$shutterApiBaseUrl/events?type=${EventType.ShutterStateChange.asString}&${filter.asQueryParams}"
+        url"$baseUrl/shutter-api/events?type=${EventType.ShutterStateChange.asString}&${filter.asQueryParams}"
       )
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
@@ -118,7 +118,7 @@ class ShutterConnector @Inject()(
     implicit hc: HeaderCarrier): Future[Option[OutagePage]] = {
     implicit val ssf = OutagePage.reads
     http.GET[Option[OutagePage]](
-      url"$shutterApiBaseUrl/${env.asString}/outage-pages/$serviceName"
+      url"$baseUrl/shutter-api/${env.asString}/outage-pages/$serviceName"
     )
   }
 
@@ -131,7 +131,7 @@ class ShutterConnector @Inject()(
     implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] = {
     implicit val r = FrontendRouteWarning.reads
     http.GET[Seq[FrontendRouteWarning]](
-      url"$shutterApiBaseUrl/${env.asString}/frontend-route-warnings/$serviceName"
+      url"$baseUrl/shutter-api/${env.asString}/frontend-route-warnings/$serviceName"
     )
   }
 }
