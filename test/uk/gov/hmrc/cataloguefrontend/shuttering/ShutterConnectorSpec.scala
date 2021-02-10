@@ -24,6 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.Future
@@ -42,14 +43,18 @@ class ShutterConnectorSpec extends AnyWordSpec with MockitoSugar with Matchers w
     val underTest = new ShutterConnector(httpClient, servicesConfig)
 
     // unfortunately the test will receive an unhelpful NullPointerException if expectations are not met
-    def stubEmptyResponseForGet(withPath: String, withParams: Seq[(String, String)]): Unit =
-      when(httpClient.GET(
-        eqTo(withPath),
-        eqTo(withParams))(
-          any[HttpReads[Seq[ShutterEvent]]],
+    def stubEmptyResponseForGet(
+      withPath   : String,
+      withParams : Seq[(String, String)]
+    ): Unit =
+      when(
+        httpClient.GET(
+          eqTo(url"$withPath?$withParams")
+        )(any[HttpReads[Seq[ShutterEvent]]],
           eqTo(headerCarrier),
-          eqTo(executionContext)))
-        .thenReturn(Future.successful(Seq.empty))
+          eqTo(executionContext)
+        )
+      ).thenReturn(Future.successful(Seq.empty))
   }
 
   "Shutter Events" should {

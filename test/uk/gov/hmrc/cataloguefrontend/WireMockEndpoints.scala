@@ -68,7 +68,6 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
     willRespondWith: (Int, Option[String]),
     givenJsonBody: Option[String] = None
   ): Unit = {
-
     val queryParamsAsString = queryParameters match {
       case Nil    => ""
       case params => params.map { case (k, v) => s"$k=$v" }.mkString("?", "&", "")
@@ -77,7 +76,7 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
     val builder = new MappingBuilder(method, urlEqualTo(s"$url$queryParamsAsString"))
     requestHeaders.map { case (k, v) => builder.withHeader(k, equalTo(v)) }
 
-    givenJsonBody foreach { b =>
+    givenJsonBody.foreach { b =>
       builder.withRequestBody(equalToJson(b))
     }
 
@@ -92,20 +91,19 @@ trait WireMockEndpoints extends Suite with BeforeAndAfterAll with BeforeAndAfter
 
     endpointMock.register(builder)
   }
-
 }
 
 object PortTester {
 
   def findPort(excluded: Int*): Int =
-    (6001 to 7000).find(port => !excluded.contains(port) && isFree(port)).getOrElse(throw new Exception("No free port"))
+    (6001 to 7000)
+      .find(port => !excluded.contains(port) && isFree(port))
+      .getOrElse(throw new Exception("No free port"))
 
-  private def isFree(port: Int): Boolean = {
-    val triedSocket = Try {
+  private def isFree(port: Int): Boolean =
+    Try {
       val serverSocket = new ServerSocket(port)
       Try(serverSocket.close())
       serverSocket
-    }
-    triedSocket.isSuccess
-  }
+    }.isSuccess
 }

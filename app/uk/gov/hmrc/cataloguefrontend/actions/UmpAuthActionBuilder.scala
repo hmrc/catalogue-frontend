@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpT
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.cataloguefrontend.service.CatalogueErrorHandler
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -63,7 +63,7 @@ class UmpAuthActionBuilder @Inject()(
 
       def refine[A](request: Request[A]): Future[Either[Result, UmpAuthenticatedRequest[A]]] = {
         implicit val hc: HeaderCarrier =
-          HeaderCarrierConverter.fromHeadersAndSession(request.headers, None)
+          HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
         val signInPage =
           appRoutes.AuthController.showSignInPage(targetUrl =

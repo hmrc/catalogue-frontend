@@ -22,19 +22,14 @@ import org.scalatest.wordspec.AnyWordSpec
 class UrlUtilsSpec extends AnyWordSpec with Matchers {
 
   "buildQueryParams" should {
-
     "generate a list of params" in {
       val params: Seq[(String, String)] = UrlUtils.buildQueryParams("foo" -> Some("Bar"), "fizz" -> Some("buzz"))
       params should contain theSameElementsAs Seq(("foo", "Bar"), ("fizz", "buzz"))
-
     }
 
     "drop empty params" in {
       val params = UrlUtils.buildQueryParams("baz" -> Some("buz"), "fizz" -> None)
       params should contain theSameElementsAs Seq(("baz", "buz"))
-
     }
-
   }
-
 }

@@ -28,11 +28,11 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.test.FakeHeaders
+import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 class TeamsAndRepositoriesConnectorSpec
     extends AnyWordSpec
@@ -84,7 +84,7 @@ class TeamsAndRepositoriesConnectorSpec
       )
 
       val response = teamsAndRepositoriesConnector
-        .lookupLink("serviceA")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .lookupLink("serviceA")(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
 
       response shouldBe Some(Link("serviceA", "Build", "http.jenkins/serviceA"))
@@ -99,7 +99,7 @@ class TeamsAndRepositoriesConnectorSpec
       )
 
       val response = teamsAndRepositoriesConnector
-        .lookupLink("serviceA")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .lookupLink("serviceA")(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
 
       response shouldBe None
@@ -128,7 +128,7 @@ class TeamsAndRepositoriesConnectorSpec
       )
 
       val response = teamsAndRepositoriesConnector
-        .teamsByService(Seq("serviceA", "serviceB"))(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .teamsByService(Seq("serviceA", "serviceB"))(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
 
       response.size        shouldBe 2
@@ -144,7 +144,7 @@ class TeamsAndRepositoriesConnectorSpec
 
       val responseData: RepositoryDetails =
         teamsAndRepositoriesConnector
-          .repositoryDetails("service-1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .repositoryDetails("service-1")(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
           .value
 
@@ -190,7 +190,7 @@ class TeamsAndRepositoriesConnectorSpec
       serviceEndpoint(GET, "/api/repositories", willRespondWith = 200 -> Some(JsonData.repositoriesData))
 
       val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
-        .allRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .allRepositories(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
 
       repositories.headOption.value.name          shouldBe "teamA-serv"
@@ -216,7 +216,7 @@ class TeamsAndRepositoriesConnectorSpec
       serviceEndpoint(GET, "/api/repositories?archived=true", willRespondWith = 200 -> Some(JsonData.repositoriesData))
 
       val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
-        .archivedRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+        .archivedRepositories(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
 
       repositories.headOption.value.name          shouldBe "teamA-serv"
@@ -245,7 +245,7 @@ class TeamsAndRepositoriesConnectorSpec
 
       val responseData =
         teamsAndRepositoriesConnector
-          .digitalServiceInfo("service-1")(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .digitalServiceInfo("service-1")(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
           .get
 
@@ -261,7 +261,7 @@ class TeamsAndRepositoriesConnectorSpec
 
       val digitalServiceNames: Seq[String] =
         teamsAndRepositoriesConnector
-          .allDigitalServices(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .allDigitalServices(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
 
       digitalServiceNames shouldBe Seq("digital-service-1", "digital-service-2", "digital-service-3")
@@ -274,7 +274,7 @@ class TeamsAndRepositoriesConnectorSpec
 
       val teams: Seq[Team] =
         teamsAndRepositoriesConnector
-          .teamsWithRepositories(HeaderCarrierConverter.fromHeadersAndSession(FakeHeaders()))
+          .teamsWithRepositories(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
 
       teams.size shouldBe 2

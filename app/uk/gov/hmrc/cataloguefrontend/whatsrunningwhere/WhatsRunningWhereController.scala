@@ -21,7 +21,7 @@ import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, PathBindable, QueryStringBindable}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.whatsrunningwhere.WhatsRunningWherePage
@@ -36,9 +36,11 @@ class WhatsRunningWhereController @Inject()(
 )(implicit val ec: ExecutionContext
 ) extends FrontendController(mcc) {
 
-  def heritageReleases(showDiff: Boolean): Action[AnyContent] = releases(Platform.Heritage, showDiff)
+  def heritageReleases(showDiff: Boolean): Action[AnyContent] =
+    releases(Platform.Heritage, showDiff)
 
-  def ecsReleases(showDiff: Boolean): Action[AnyContent] = releases(Platform.ECS, showDiff)
+  def ecsReleases(showDiff: Boolean): Action[AnyContent] =
+    releases(Platform.ECS, showDiff)
 
   private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
     form.fold(
