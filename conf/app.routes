@@ -66,3 +66,7 @@ GET        /whats-running-where-heritage                uk.gov.hmrc.cataloguefro
 GET        /whats-running-where                         uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.ecsReleases(showDiff: Boolean ?= false)
 
 GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.history(env: Environment)
+
+
+
+GET         /test/health-indicators/:repo                    uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepo(repo: String)

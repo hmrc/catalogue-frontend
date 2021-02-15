@@ -1,0 +1,75 @@
+@*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.RepositoryRating
+
+@(indicator: RepositoryRating
+)(implicit messages: Messages, request: Request[_])
+@standard_layout("Service Health Indicators", "health-indicators"){
+
+  <header>
+      <p id="repo-score-number">@indicator.repositoryScore</p>
+    <h1>Service Health Indicators:  @indicator.repositoryName
+        <a id="health-indicators-help" href="https://github.com/hmrc/health-indicators">?</a>
+    </h1>
+  </header>
+  <div id="health-indicators-display">
+    <h2>Score Breakdown:</h2>
+      <br />
+    <table class="table table-striped" id="service-list">
+        <thead>
+            <th>Indicator</th>
+            <th>Indicator Score</th>
+            <th>Reason</th>
+            <th>Points</th>
+        </thead>
+        @indicator.ratings.map { r =>
+            @r.zipWithIndex.map{ case (rating, i ) =>
+              <section id="section_@{i}_@{rating.ratingType}">
+                <tr role="row" id="section_@{i}_row_1">
+                    <td id="section_@{i}_row_0_col_0">@rating.ratingType</td>
+                    <td id="section_@{i}_row_0_col_1">@rating.ratingScore</td>
+                    @if(rating.breakdown.isEmpty){
+                        <td id="section_@{i}_row_0_col_2"></td>
+                        <td id="section_@{i}_row_0_col_3"></td>
+                    }else{
+                        <td id="section_@{i}_row_0_col_2">@rating.breakdown.head.description</td>
+                        <td id="section_@{i}_row_0_col_3">@rating.breakdown.head.points</td>
+                    }
+                </tr>
+              @rating.breakdown.drop(1).zipWithIndex.map { case (breakdown, j) =>
+                  <tr>
+                      <td id="section_@{i}row@{j+1}_col_0"></td>
+                      <td id="section_@{i}row@{j+1}_col_1"></td>
+                      <td id="section_@{i}row@{j+1}_col_2">@breakdown.description</td>
+                      <td id="section_@{i}row@{j+1}_col_3">@breakdown.points</td>
+                  </tr>
+              }
+            </section>
+        }}
+    </table>
+  </div>
+}
+
+<script>
+    getScoreColour = (score) => {
+        if(score > 0){return "repo-score-green"}
+        else if(score>-200){return "repo-score-amber"}
+        else{return "repo-score-red"}
+    }
+
+    document.getElementById("repo-score-number").classList.add(getScoreColour(@indicator.repositoryScore))
+</script>
