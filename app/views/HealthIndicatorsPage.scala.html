@@ -32,9 +32,9 @@
     <table class="table table-striped" id="service-list">
         <thead>
             <th>Indicator</th>
-            <th>Indicator Score</th>
+            <th>Indicator Total Score</th>
             <th>Reason</th>
-            <th>Points</th>
+            <th>Score Contribution</th>
         </thead>
         @indicator.ratings.map { r =>
             @r.zipWithIndex.map{ case (rating, i ) =>
