@@ -63,6 +63,14 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     }
   }
 
+  "getScoreColour()" should {
+    "return correct class string" in {
+      HealthIndicatorsController.getScoreColour(100) shouldBe "repo-score-green"
+      HealthIndicatorsController.getScoreColour(0) shouldBe "repo-score-amber"
+      HealthIndicatorsController.getScoreColour(100) shouldBe "repo-score-red"
+    }
+  }
+
   private[this] trait Setup {
     lazy val ws                    = app.injector.instanceOf[WSClient]
     implicit val hc: HeaderCarrier = HeaderCarrier()

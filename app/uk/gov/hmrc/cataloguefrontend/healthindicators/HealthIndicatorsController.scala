@@ -37,3 +37,13 @@ class HealthIndicatorsController @Inject()(
       }
     }
 }
+
+object HealthIndicatorsController {
+  def getScoreColour(score: Int): String ={
+    score match {
+      case x if x > 0 => "repo-score-green"
+      case x if x > -100 => "repo-score-amber"
+      case _ => "repo-score-red"
+    }
+  }
+}

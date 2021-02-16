@@ -16,12 +16,16 @@
 
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.RepositoryRating
 
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController
 @(indicator: RepositoryRating
 )(implicit messages: Messages, request: Request[_])
 @standard_layout("Service Health Indicators", "health-indicators"){
 
   <header>
-      <p id="repo-score-number">@indicator.repositoryScore</p>
+      <p id="repo-score-number"
+      class=@HealthIndicatorsController.getScoreColour(indicator.repositoryScore)>
+      @indicator.repositoryScore
+      </p>
     <h1>Service Health Indicators:  @indicator.repositoryName
         <a id="health-indicators-help" href="https://github.com/hmrc/health-indicators" title="What is this?">?</a>
     </h1>
@@ -63,13 +67,3 @@
     </table>
   </div>
 }
-
-<script>
-    getScoreColour = (score) => {
-        if(score > 0){return "repo-score-green"}
-        else if(score>-200){return "repo-score-amber"}
-        else{return "repo-score-red"}
-    }
-
-    document.getElementById("repo-score-number").classList.add(getScoreColour(@indicator.repositoryScore))
-</script>
