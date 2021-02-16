@@ -31,12 +31,9 @@ class HealthIndicatorsController @Inject()(
 
   def indicatorsForRepo(repo: String): Action[AnyContent] =
     Action.async { implicit request =>
-      for {
-        repositoryRating <- healthIndicatorsConnector.getHealthIndicators(repo)
-      } yield
-        repositoryRating match {
-          case Some(_) => Ok(HealthIndicatorsPage(repositoryRating.get))
-          case None    => NotFound(error_404_template())
-        }
+      healthIndicatorsConnector.getHealthIndicators(repo).map {
+        case Some(repositoryRating: RepositoryRating) => Ok(HealthIndicatorsPage(repositoryRating))
+        case None                                     => NotFound(error_404_template())
+      }
     }
 }
