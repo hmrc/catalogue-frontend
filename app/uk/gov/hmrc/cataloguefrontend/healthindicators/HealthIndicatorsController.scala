@@ -25,19 +25,18 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class HealthIndicatorsController @Inject()(
   healthIndicatorsConnector: HealthIndicatorsConnector,
-                                            mcc    : MessagesControllerComponents
-                                          )(implicit val ec: ExecutionContext)
-  extends FrontendController(mcc){
+  mcc: MessagesControllerComponents
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
-     def indicatorsForRepo(repo: String): Action[AnyContent] = {
-
-       Action.async { implicit request =>
-         for {
-           repositoryRating <- healthIndicatorsConnector.getHealthIndicators(repo)
-         } yield repositoryRating match {
-           case Some(_) => Ok(HealthIndicatorsPage(repositoryRating.get))
-           case None => NotFound(error_404_template())
-         }
-       }
-     }
+  def indicatorsForRepo(repo: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      for {
+        repositoryRating <- healthIndicatorsConnector.getHealthIndicators(repo)
+      } yield
+        repositoryRating match {
+          case Some(_) => Ok(HealthIndicatorsPage(repositoryRating.get))
+          case None    => NotFound(error_404_template())
+        }
+    }
 }

@@ -3,8 +3,7 @@ package uk.gov.hmrc.cataloguefrontend.healthindicators
 import com.github.tomakehurst.wiremock.http.RequestMethod.GET
 import org.mockito.MockitoSugar
 import org.scalatest.OptionValues
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
@@ -15,18 +14,10 @@ import play.api.libs.ws.{WSClient, WSResponse}
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.http.HeaderCarrier
 
-class HealthIndicatorsControllerSpec
-  extends AnyWordSpec
-  with Matchers
-  with MockitoSugar
-  with GuiceOneServerPerSuite
-  with WireMockEndpoints
-  with OptionValues
-  with ScalaFutures
-  {
+class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneServerPerSuite with WireMockEndpoints with OptionValues with ScalaFutures {
 
-    implicit val defaultPatience =
-      PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
+  implicit val defaultPatience =
+    PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
 
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()
@@ -34,7 +25,7 @@ class HealthIndicatorsControllerSpec
         Map(
           "microservice.services.health-indicators.port" -> endpointPort,
           "microservice.services.health-indicators.host" -> host,
-          "metrics.jvm" -> false
+          "metrics.jvm"                                  -> false
         ))
       .build()
 
@@ -49,13 +40,11 @@ class HealthIndicatorsControllerSpec
         ))
 
       private val response: WSResponse =
-        ws.url(s"http://localhost:$port/test/health-indicators/team-indicator-dashboard-frontend")
-          .get
-          .futureValue
+        ws.url(s"http://localhost:$port/test/health-indicators/team-indicator-dashboard-frontend").get.futureValue
 
       response.status shouldBe 200
-      response.body should include("""frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)""")
-      response.body should include("""<td id="section_2_row_0_col_2">No Readme defined</td>""")
+      response.body   should include("""frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)""")
+      response.body   should include("""<td id="section_2_row_0_col_2">No Readme defined</td>""")
     }
 
     "respond with status 404 when repository is not found" in new Setup {
@@ -68,19 +57,17 @@ class HealthIndicatorsControllerSpec
         ))
 
       private val response: WSResponse =
-        ws.url(s"http://localhost:$port/test/health-indicators/team-indicator-dashboard-frontend")
-          .get
-          .futureValue
+        ws.url(s"http://localhost:$port/test/health-indicators/team-indicator-dashboard-frontend").get.futureValue
 
       response.status shouldBe 404
     }
   }
 
-    private[this] trait Setup {
-      lazy val ws = app.injector.instanceOf[WSClient]
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val testJson: String =
-        """{
+  private[this] trait Setup {
+    lazy val ws                    = app.injector.instanceOf[WSClient]
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    val testJson: String =
+      """{
           |  "repositoryName": "team-indicator-dashboard-frontend",
           |  "repositoryScore": -450,
           |  "ratings": [
@@ -115,5 +102,5 @@ class HealthIndicatorsControllerSpec
           |    }
           |  ]
           |}""".stripMargin
-    }
+  }
 }

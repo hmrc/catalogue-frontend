@@ -24,14 +24,11 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-
-
 @Singleton
 class HealthIndicatorsConnector @Inject()(
-                                              http          : HttpClient,
-                                              servicesConfig: ServicesConfig
-                                            )(implicit val ec: ExecutionContext
-                                            ) {
+  http: HttpClient,
+  servicesConfig: ServicesConfig
+)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
   private val logger = Logger(getClass)
 
@@ -39,7 +36,7 @@ class HealthIndicatorsConnector @Inject()(
 
   def getHealthIndicators(repoName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryRating]] = {
     implicit val rrR: Reads[RepositoryRating] = RepositoryRating.reads
-    val url = s"$healthIndicatorsBaseUrl/repositories/$repoName"
+    val url                                   = s"$healthIndicatorsBaseUrl/repositories/$repoName"
     http
       .GET[Option[RepositoryRating]](url)
       .recover {
@@ -61,7 +58,7 @@ object Score {
 
 case class Rating(ratingType: String, ratingScore: Int, breakdown: Seq[Score])
 
-object Rating{
+object Rating {
   val reads: Reads[Rating] = {
     implicit val sR: Reads[Score] = Score.reads
     ((__ \ "ratingType").read[String]
@@ -72,7 +69,7 @@ object Rating{
 
 case class RepositoryRating(repositoryName: String, repositoryScore: Int, ratings: Option[Seq[Rating]])
 
-object RepositoryRating{
+object RepositoryRating {
   val reads: Reads[RepositoryRating] = {
     implicit val sR: Reads[Rating] = Rating.reads
     ((__ \ "repositoryName").read[String]

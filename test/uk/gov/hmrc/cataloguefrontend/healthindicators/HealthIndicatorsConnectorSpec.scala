@@ -11,13 +11,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.http.HeaderCarrier
 
-
-class HealthIndicatorsConnectorSpec
-  extends AnyWordSpec
-  with Matchers
-  with GuiceOneAppPerSuite
-  with WireMockEndpoints
-  with OptionValues {
+class HealthIndicatorsConnectorSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with WireMockEndpoints with OptionValues {
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   override def fakeApplication: Application =
@@ -27,10 +21,9 @@ class HealthIndicatorsConnectorSpec
         Map(
           "microservice.services.health-indicators.port" -> endpointPort,
           "microservice.services.health-indicators.host" -> host,
-          "metrics.jvm" -> false
+          "metrics.jvm"                                  -> false
         ))
       .build()
-
 
   private lazy val healthIndicatorsConnector = app.injector.instanceOf[HealthIndicatorsConnector]
 
@@ -39,24 +32,23 @@ class HealthIndicatorsConnectorSpec
       serviceEndpoint(
         GET,
         "/repositories/team-indicator-dashboard-frontend",
-        willRespondWith = (
-          200,
-          Some(testJson
-          ))
+        willRespondWith = (200, Some(testJson))
       )
 
-      val response = healthIndicatorsConnector.getHealthIndicators("team-indicator-dashboard-frontend")
-        .futureValue
-        .value
+      val response = healthIndicatorsConnector.getHealthIndicators("team-indicator-dashboard-frontend").futureValue.value
 
       val ratings = Seq(
-        Rating("BobbyRule", -400,
+        Rating(
+          "BobbyRule",
+          -400,
           Seq(
             Score(-100, "frontend-bootstrap - Bug in Metrics Reporting", None),
-            Score(-100,  "frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)", None)
-          )),
+            Score(-100, "frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)", None)
+          )
+        ),
         Rating("LeakDetection", 0, Seq()),
-        Rating("ReadMe", -50, Seq(Score(-50, "No Readme defined", None))))
+        Rating("ReadMe", -50, Seq(Score(-50, "No Readme defined", None)))
+      )
 
       val expectedResponse = RepositoryRating("team-indicator-dashboard-frontend", -450, Some(ratings))
 
@@ -70,10 +62,9 @@ class HealthIndicatorsConnectorSpec
         willRespondWith = (
           404,
           None
-      ))
+        ))
 
-      val response = healthIndicatorsConnector.getHealthIndicators("team-indicator-dashboard-frontend")
-        .futureValue
+      val response = healthIndicatorsConnector.getHealthIndicators("team-indicator-dashboard-frontend").futureValue
 
       response shouldBe None
     }
