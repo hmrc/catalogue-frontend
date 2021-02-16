@@ -249,10 +249,11 @@ object Version {
 
   def getVersionState(currentVersion: Version, latestVersion: Version): VersionState =
     latestVersion.diff(currentVersion) match {
-      case (0, 0, 0)                                   => VersionState.UpToDate
-      case (0, minor, patch) if minor > 0 || patch > 0 => VersionState.MinorVersionOutOfDate
-      case (major, _, _) if major >= 1                 => VersionState.MajorVersionOutOfDate
-      case _                                           => VersionState.Invalid
+      case (0, 0, 0)                                    => VersionState.UpToDate
+      case (0, minor, patch) if minor > 0 ||
+                                minor == 0 && patch > 0 => VersionState.MinorVersionOutOfDate
+      case (major, _, _) if major >= 1                  => VersionState.MajorVersionOutOfDate
+      case _                                            => VersionState.Invalid // this is really `Ahead`..
     }
 
   def parse(s: String): Option[Version] = {

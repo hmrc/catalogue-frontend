@@ -18,39 +18,43 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import java.time.{Instant, LocalDate}
 
-import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class DependencySpec extends AnyFreeSpec with Matchers {
+class DependencySpec extends AnyWordSpec with Matchers {
 
-  "versionState" - {
-
-    "should return UpToDate if on the latest version" in {
+  "versionState" should {
+    "return UpToDate if on the latest version" in {
       Dependency("library-abc", "uk.gov.hmrc", Version("1.2.3"), Some(Version("1.2.3"))).versionState shouldBe Some(VersionState.UpToDate)
     }
 
-    "should return MinorVersionOutOfDate if on patch version behind" in {
+    "return MinorVersionOutOfDate if on patch version behind" in {
       Dependency("library-abc", "uk.gov.hmrc", Version("1.2.2"), Some(Version("1.2.3"))).versionState shouldBe Some(
         VersionState.MinorVersionOutOfDate)
     }
 
-    "should return MinorVersionOutOfDate if on minor version behind" in {
+    "return MinorVersionOutOfDate if on minor version behind" in {
       Dependency("library-abc", "uk.gov.hmrc", Version("1.1.3"), Some(Version("1.2.3"))).versionState shouldBe Some(
         VersionState.MinorVersionOutOfDate)
     }
 
-    "should return MajorVersionOutOfDate if on minor version behind" in {
+    "return MajorVersionOutOfDate if on minor version behind" in {
       Dependency("library-abc", "uk.gov.hmrc", Version("1.2.3"), Some(Version("2.2.3"))).versionState shouldBe Some(
         VersionState.MajorVersionOutOfDate)
     }
 
-    "should return BobbyRuleViolated if dependency has any broken bobby rules" in {
+    "return Invalid if on minor version ahead" in {
+      Dependency("library-abc", "uk.gov.hmrc", Version("1.4.7"), Some(Version("1.3.13"))).versionState shouldBe Some(
+        VersionState.Invalid)
+    }
+
+    "return BobbyRuleViolated if dependency has any broken bobby rules" in {
       val violation = BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1))
       Dependency("library-abc", "uk.gov.hmrc", Version("1.2.3"), Some(Version("2.2.3")),
         Seq(violation)).versionState shouldBe Some(VersionState.BobbyRuleViolated(violation))
     }
 
-    "should return BobbyRulePending if dependency will break future rules" in {
+    "return BobbyRulePending if dependency will break future rules" in {
       val violation = BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(now = LocalDate.of(200,1,2))
       new Dependency(
           "library-abc"
@@ -62,7 +66,7 @@ class DependencySpec extends AnyFreeSpec with Matchers {
         .versionState shouldBe Some(VersionState.BobbyRulePending(violation))
     }
 
-    "should return BobbyRuleViolation if dependency has both pending and active broken rules" in {
+    "return BobbyRuleViolation if dependency has both pending and active broken rules" in {
       val pendingViolation = BobbyRuleViolation("banned library",  BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2))
       val activeViolation = BobbyRuleViolation("banned library",  BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2))
       new Dependency(
@@ -76,7 +80,7 @@ class DependencySpec extends AnyFreeSpec with Matchers {
         ).versionState shouldBe Some(VersionState.BobbyRuleViolated(activeViolation))
     }
 
-    "should return Invalid if current version is greater than the latest version " in {
+    "return Invalid if current version is greater than the latest version " in {
       Dependency("library-abc", "uk.gov.hmrc", Version("1.0.1"), Some(Version("1.0.0"))).versionState shouldBe Some(
         VersionState.Invalid)
       Dependency("library-abc", "uk.gov.hmrc", Version("1.1.0"), Some(Version("1.0.0"))).versionState shouldBe Some(
@@ -86,9 +90,9 @@ class DependencySpec extends AnyFreeSpec with Matchers {
     }
   }
 
-  "Dependencies" - {
+  "Dependencies" should {
 
-    "provides a list of only dependencies with active bobby rules" in {
+    "provide a list of only dependencies with active bobby rules" in {
       val badDep = new Dependency(
           "library-abc"
         , "uk.gov.hmrc"
@@ -118,7 +122,7 @@ class DependencySpec extends AnyFreeSpec with Matchers {
       deps.toSeq.filter(_.activeBobbyRuleViolations.nonEmpty) shouldBe Seq(badDep)
     }
 
-    "provides a list of only dependencies with pending bobby rules" in {
+    "provide a list of only dependencies with pending bobby rules" in {
       val badDep = new Dependency(
           "library-abc"
         , "uk.gov.hmrc"
