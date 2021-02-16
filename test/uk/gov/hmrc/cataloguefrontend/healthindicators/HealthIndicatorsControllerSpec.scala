@@ -1,3 +1,19 @@
+/*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import com.github.tomakehurst.wiremock.http.RequestMethod.GET
@@ -40,7 +56,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
         ))
 
       private val response: WSResponse =
-        ws.url(s"http://localhost:$port/test/health-indicators/team-indicator-dashboard-frontend").get.futureValue
+        ws.url(s"http://localhost:$port/service/team-indicator-dashboard-frontend/health").get.futureValue
 
       response.status shouldBe 200
       response.body   should include("""frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)""")
@@ -57,7 +73,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
         ))
 
       private val response: WSResponse =
-        ws.url(s"http://localhost:$port/test/health-indicators/team-indicator-dashboard-frontend").get.futureValue
+        ws.url(s"http://localhost:$port/service/team-indicator-dashboard-frontend/health").get.futureValue
 
       response.status shouldBe 404
     }
@@ -67,7 +83,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "return correct class string" in {
       HealthIndicatorsController.getScoreColour(100) shouldBe "repo-score-green"
       HealthIndicatorsController.getScoreColour(0) shouldBe "repo-score-amber"
-      HealthIndicatorsController.getScoreColour(100) shouldBe "repo-score-red"
+      HealthIndicatorsController.getScoreColour(-100) shouldBe "repo-score-red"
     }
   }
 

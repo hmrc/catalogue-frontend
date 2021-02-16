@@ -21,7 +21,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{HealthIndicatorsPage, error_404_template}
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class HealthIndicatorsController @Inject()(
   healthIndicatorsConnector: HealthIndicatorsConnector,
@@ -29,9 +29,9 @@ class HealthIndicatorsController @Inject()(
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
-  def indicatorsForRepo(repo: String): Action[AnyContent] =
+  def indicatorsForRepo(name: String): Action[AnyContent] =
     Action.async { implicit request =>
-      healthIndicatorsConnector.getHealthIndicators(repo).map {
+      healthIndicatorsConnector.getHealthIndicators(name).map {
         case Some(repositoryRating: RepositoryRating) => Ok(HealthIndicatorsPage(repositoryRating))
         case None                                     => NotFound(error_404_template())
       }

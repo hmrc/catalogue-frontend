@@ -15,6 +15,7 @@ GET        /services                                    uk.gov.hmrc.cataloguefro
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
 GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceConfig(name)
 GET        /service/:name/config/raw                    uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceConfigRaw(name)
+GET        /service/:name/health                   uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepo(name: String)
 GET        /libraries                                   uk.gov.hmrc.cataloguefrontend.CatalogueController.allLibraries
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /prototypes                                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allPrototypes
@@ -69,4 +70,3 @@ GET        /deployments/:env                            uk.gov.hmrc.cataloguefro
 
 
 
-GET         /test/health-indicators/:repo                    uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepo(repo: String)
