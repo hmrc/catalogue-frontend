@@ -27,7 +27,12 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
 import uk.gov.hmrc.http.HeaderCarrier
 
-class HealthIndicatorsConnectorSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with WireMockEndpoints with OptionValues {
+class HealthIndicatorsConnectorSpec
+  extends AnyWordSpec
+    with Matchers
+    with GuiceOneAppPerSuite
+    with WireMockEndpoints
+    with OptionValues {
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   override def fakeApplication: Application =
@@ -51,7 +56,8 @@ class HealthIndicatorsConnectorSpec extends AnyWordSpec with Matchers with Guice
         willRespondWith = (200, Some(testJson))
       )
 
-      val response = healthIndicatorsConnector.getHealthIndicators("team-indicator-dashboard-frontend").futureValue.value
+      val response = healthIndicatorsConnector.getHealthIndicators("team-indicator-dashboard-frontend")
+        .futureValue.value
 
       val ratings = Seq(
         Rating(
@@ -80,7 +86,9 @@ class HealthIndicatorsConnectorSpec extends AnyWordSpec with Matchers with Guice
           None
         ))
 
-      val response = healthIndicatorsConnector.getHealthIndicators("team-indicator-dashboard-frontend").futureValue
+      val response = healthIndicatorsConnector
+        .getHealthIndicators("team-indicator-dashboard-frontend")
+        .futureValue
 
       response shouldBe None
     }
