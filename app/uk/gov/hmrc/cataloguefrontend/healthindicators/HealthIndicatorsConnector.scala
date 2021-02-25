@@ -36,7 +36,7 @@ class HealthIndicatorsConnector @Inject()(
 
   def getHealthIndicators(repoName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryRating]] = {
     implicit val rrR: Reads[RepositoryRating] = RepositoryRating.reads
-    val url                                   = s"$healthIndicatorsBaseUrl/repositories/$repoName"
+    val url                                   = s"$healthIndicatorsBaseUrl/health-indicators/repositories/$repoName"
     http
       .GET[Option[RepositoryRating]](url)
       .recover {

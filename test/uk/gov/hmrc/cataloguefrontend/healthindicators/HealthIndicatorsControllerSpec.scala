@@ -56,7 +56,7 @@ class HealthIndicatorsControllerSpec
     "respond with status 200 and contain specified elements" in new Setup {
       serviceEndpoint(
         GET,
-        "/repositories/team-indicator-dashboard-frontend",
+        "/health-indicators/repositories/team-indicator-dashboard-frontend",
         willRespondWith = (
           200,
           Some(testJson)
@@ -73,7 +73,7 @@ class HealthIndicatorsControllerSpec
     "respond with status 404 when repository is not found" in new Setup {
       serviceEndpoint(
         GET,
-        "/repositories/team-indicator-dashboard-frontend",
+        "health-indicators/repositories/team-indicator-dashboard-frontend",
         willRespondWith = (
           404,
           None
