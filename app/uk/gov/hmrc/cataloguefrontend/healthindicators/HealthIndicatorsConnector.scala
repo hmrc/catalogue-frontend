@@ -39,11 +39,6 @@ class HealthIndicatorsConnector @Inject()(
     val url                                   = s"$healthIndicatorsBaseUrl/health-indicators/repositories/$repoName"
     http
       .GET[Option[RepositoryRating]](url)
-      .recover {
-        case ex =>
-          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          None
-      }
   }
 }
 
