@@ -25,6 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
+import uk.gov.hmrc.cataloguefrontend.healthindicators.RatingType.{BobbyRule, LeakDetection, ReadMe}
 import uk.gov.hmrc.http.HeaderCarrier
 
 class HealthIndicatorsConnectorSpec
@@ -61,15 +62,15 @@ class HealthIndicatorsConnectorSpec
 
       val ratings = Seq(
         Rating(
-          "BobbyRule",
+          BobbyRule,
           -400,
           Seq(
             Score(-100, "frontend-bootstrap - Bug in Metrics Reporting", None),
             Score(-100, "frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)", None)
           )
         ),
-        Rating("LeakDetection", 0, Seq()),
-        Rating("ReadMe", -50, Seq(Score(-50, "No Readme defined", None)))
+        Rating(LeakDetection, 0, Seq()),
+        Rating(ReadMe, -50, Seq(Score(-50, "No Readme defined", None)))
       )
 
       val expectedResponse = RepositoryRating("team-indicator-dashboard-frontend", -450, Some(ratings))

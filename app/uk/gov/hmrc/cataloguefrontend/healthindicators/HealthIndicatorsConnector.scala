@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import play.api.Logger
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Reads, __}
+import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue, Reads, __}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -41,6 +41,30 @@ class HealthIndicatorsConnector @Inject()(
       .GET[Option[RepositoryRating]](url)
   }
 }
+sealed trait RatingType
+
+object RatingType {
+  val format: Format[RatingType] = new Format[RatingType] {
+    override def reads(json: JsValue): JsResult[RatingType] =
+      json.validate[String].flatMap {
+        case "ReadMe" => JsSuccess(ReadMe)
+        case "LeakDetection" => JsSuccess(LeakDetection)
+        case "BobbyRule" => JsSuccess(BobbyRule)
+        case s => JsError(s"Invalid RatingType: $s")
+      }
+
+    override def writes(o: RatingType): JsValue =
+      o match {
+        case ReadMe        => JsString("ReadMe")
+        case LeakDetection => JsString("LeakDetection")
+        case BobbyRule     => JsString("BobbyRule")
+        case s                          => JsString(s"$s")
+      }
+  }
+  case object ReadMe extends RatingType
+  case object LeakDetection extends RatingType
+  case object BobbyRule extends RatingType
+}
 
 case class Score(points: Int, description: String, href: Option[String])
 
@@ -51,12 +75,13 @@ object Score {
       ~ (__ \ "href").readNullable[String])(Score.apply _)
 }
 
-case class Rating(ratingType: String, ratingScore: Int, breakdown: Seq[Score])
+case class Rating(ratingType: RatingType, ratingScore: Int, breakdown: Seq[Score])
 
 object Rating {
   val reads: Reads[Rating] = {
     implicit val sR: Reads[Score] = Score.reads
-    ((__ \ "ratingType").read[String]
+    implicit val rtR: Reads[RatingType] = RatingType.format
+    ((__ \ "ratingType").read[RatingType]
       ~ (__ \ "ratingScore").read[Int]
       ~ (__ \ "breakdown").read[Seq[Score]])(Rating.apply _)
   }
