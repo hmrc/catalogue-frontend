@@ -73,7 +73,7 @@ class HealthIndicatorsConnectorSpec
         Rating(ReadMe, -50, Seq(Score(-50, "No Readme defined", None)))
       )
 
-      val expectedResponse = RepositoryRating("team-indicator-dashboard-frontend", -450, Some(ratings))
+      val expectedResponse = RepositoryRating("team-indicator-dashboard-frontend", -450, ratings)
 
       response shouldBe expectedResponse
     }

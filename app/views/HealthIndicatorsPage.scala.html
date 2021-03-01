@@ -40,8 +40,7 @@
             <th>Reason</th>
             <th>Score Contribution</th>
         </thead>
-        @indicator.ratings.map { r =>
-            @r.zipWithIndex.map{ case (rating, i ) =>
+        @indicator.ratings.zipWithIndex.map{ case (rating, i ) =>
               <section id="section_@{i}_@{rating.ratingType}">
                 <tr role="row" id="section_@{i}_row_1">
                     <td id="section_@{i}_row_0_col_0">@rating.ratingType</td>
@@ -63,7 +62,7 @@
                   </tr>
               }
             </section>
-        }}
+        }
     </table>
   </div>
 }
