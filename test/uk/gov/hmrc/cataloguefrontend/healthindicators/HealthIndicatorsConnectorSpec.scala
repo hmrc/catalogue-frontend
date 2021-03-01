@@ -21,31 +21,18 @@ import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
+import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.healthindicators.RatingType.{BobbyRule, LeakDetection, ReadMe}
 import uk.gov.hmrc.http.HeaderCarrier
 
 class HealthIndicatorsConnectorSpec
   extends AnyWordSpec
     with Matchers
-    with GuiceOneAppPerSuite
-    with WireMockEndpoints
-    with OptionValues {
+    with OptionValues
+    with FakeApplicationBuilder{
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
-      .configure(
-        Map(
-          "microservice.services.health-indicators.port" -> endpointPort,
-          "microservice.services.health-indicators.host" -> host,
-          "metrics.jvm"                                  -> false
-        ))
-      .build()
+
 
   private lazy val healthIndicatorsConnector = app.injector.instanceOf[HealthIndicatorsConnector]
 

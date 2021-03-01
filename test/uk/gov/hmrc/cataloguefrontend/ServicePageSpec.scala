@@ -18,9 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
@@ -29,29 +26,7 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs
 
-class ServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints {
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        "microservice.services.teams-and-repositories.port" -> endpointPort,
-        "microservice.services.teams-and-repositories.host" -> host,
-        "microservice.services.indicators.port"             -> endpointPort,
-        "microservice.services.indicators.host"             -> host,
-        "microservice.services.service-dependencies.host"   -> host,
-        "microservice.services.service-dependencies.port"   -> endpointPort,
-        "microservice.services.leak-detection.port"         -> endpointPort,
-        "microservice.services.leak-detection.host"         -> host,
-        "microservice.services.service-configs.port"        -> endpointPort,
-        "microservice.services.service-configs.host"        -> host,
-        "microservice.services.shutter-api.port"            -> endpointPort,
-        "microservice.services.shutter-api.host"            -> host,
-        "microservice.services.releases-api.port"           -> endpointPort,
-        "microservice.services.releases-api.host"           -> host,
-        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                                       -> false
-      )
-      .build()
+class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
   private[this] lazy val ws = app.injector.instanceOf[WSClient]
 

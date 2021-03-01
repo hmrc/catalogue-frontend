@@ -23,34 +23,20 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.{WSClient, WSResponse}
-import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
+import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 
 class HealthIndicatorsControllerSpec
   extends AnyWordSpec
     with Matchers
     with MockitoSugar
-    with GuiceOneServerPerSuite
-    with WireMockEndpoints
+    with FakeApplicationBuilder
     with OptionValues
     with ScalaFutures {
 
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        Map(
-          "microservice.services.health-indicators.port" -> endpointPort,
-          "microservice.services.health-indicators.host" -> host,
-          "metrics.jvm"                                  -> false
-        ))
-      .build()
 
   "HealthIndicatorsController" should {
     "respond with status 200 and contain specified elements" in new Setup {

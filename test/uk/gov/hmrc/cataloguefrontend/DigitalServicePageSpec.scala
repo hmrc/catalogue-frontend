@@ -21,17 +21,15 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.mockito.ArgumentMatchers._
 import org.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.Configuration
 import play.api.libs.ws._
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET => _, _}
-import play.api.{Application, Configuration}
 import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.User
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Username}
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Username}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
@@ -45,23 +43,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.Source
 
-class DigitalServicePageSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints with MockitoSugar with ActionsSupport {
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        "microservice.services.teams-and-repositories.host"  -> host,
-        "microservice.services.teams-and-repositories.port"  -> endpointPort,
-        "microservice.services.indicators.port"              -> endpointPort,
-        "microservice.services.indicators.host"              -> host,
-        "microservice.services.user-management.url"          -> endpointMockUrl,
-        "usermanagement.portal.url"                          -> "http://usermanagement/link",
-        "microservice.services.user-management.frontPageUrl" -> "http://some.ump.fontpage.com",
-        "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-        "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                                        -> false
-      )
-      .build()
+class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with MockitoSugar with ActionsSupport {
 
   private[this] lazy val WS                     = app.injector.instanceOf[WSClient]
   private[this] lazy val viewMessages           = app.injector.instanceOf[ViewMessages]

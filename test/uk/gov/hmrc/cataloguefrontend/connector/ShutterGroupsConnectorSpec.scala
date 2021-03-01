@@ -18,28 +18,14 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest.EitherValues
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
+import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterGroup, ShutterGroupsConnector}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class ShutterGroupsConnectorSpec
     extends UnitSpec
-    with GuiceOneServerPerSuite
-    with WireMockEndpoints
+    with FakeApplicationBuilder
     with EitherValues {
-
-  override def fakeApplication: Application = new GuiceApplicationBuilder()
-    .disable(classOf[com.kenshoo.play.metrics.PlayModule])
-    .configure(Map(
-      "github.open.api.rawurl"     -> endpointMockUrl,
-      "github.open.api.token"      -> "",
-      "play.http.requestHandler"   -> "play.api.http.DefaultHttpRequestHandler",
-      "metrics.jvm"                -> false
-    ))
-    .build()
 
   private lazy val shutterGroupsConnnector = app.injector.instanceOf[ShutterGroupsConnector]
 

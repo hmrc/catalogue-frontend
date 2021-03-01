@@ -20,25 +20,10 @@ import com.github.tomakehurst.wiremock.http.RequestMethod.GET
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest.BeforeAndAfter
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        Map(
-          "microservice.services.teams-and-repositories.port" -> endpointPort,
-          "microservice.services.teams-and-repositories.host" -> host,
-          "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
-          "metrics.jvm"                                       -> false
-        )
-      )
-      .build()
+class DigitalServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
   private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
