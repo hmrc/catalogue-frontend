@@ -20,9 +20,6 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -30,8 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 class RepositoryPageSpec
     extends UnitSpec
     with BeforeAndAfter
-    with GuiceOneServerPerSuite
-    with WireMockEndpoints
+    with FakeApplicationBuilder
     with BeforeAndAfterEach {
 
   case class RepositoryDetails(repositoryName: String, repositoryType: RepoType.RepoType)
@@ -41,20 +37,6 @@ class RepositoryPageSpec
     RepositoryDetails("Library", RepoType.Library),
     RepositoryDetails("Other", RepoType.Other)
   )
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        "microservice.services.teams-and-repositories.host" -> host,
-        "microservice.services.teams-and-repositories.port" -> endpointPort,
-        "microservice.services.service-dependencies.host"   -> host,
-        "microservice.services.service-dependencies.port"   -> endpointPort,
-        "microservice.services.leak-detection.port"         -> endpointPort,
-        "microservice.services.leak-detection.host"         -> host,
-        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                                       -> false
-      )
-      .build()
 
   private[this] lazy val WS = app.injector.instanceOf[WSClient]
 

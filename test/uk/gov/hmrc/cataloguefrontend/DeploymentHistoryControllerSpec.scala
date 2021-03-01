@@ -16,13 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{Instant, LocalDate}
-
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
@@ -33,9 +28,10 @@ import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere._
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import views.html.DeploymentHistoryPage
 
+import java.time.{Instant, LocalDate}
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
+class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with FakeApplicationBuilder {
   import ExecutionContext.Implicits.global
 
   private trait Fixture {
@@ -51,13 +47,6 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Gu
       stubMessagesControllerComponents()
     )
   }
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        "metrics.jvm" -> false
-      )
-      .build()
 
   "history" should {
     "return 400 when given a bad date" in new Fixture {

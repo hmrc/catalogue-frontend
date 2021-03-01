@@ -20,27 +20,23 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.mockito.MockitoSugar
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Millis, Span}
-import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.{Millis, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
+import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.cataloguefrontend.{FakeApplicationBuilder, JsonData}
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 class TeamsAndRepositoriesConnectorSpec
     extends AnyWordSpec
     with Matchers
     with BeforeAndAfter
     with ScalaFutures
-    with GuiceOneServerPerSuite
-    with WireMockEndpoints
+    with FakeApplicationBuilder
     with TypeCheckedTripleEquals
     with OptionValues
     with EitherValues
@@ -49,16 +45,6 @@ class TeamsAndRepositoriesConnectorSpec
   import JsonData.{createdAt, lastActiveAt}
 
   implicit val defaultPatienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        "microservice.services.teams-and-repositories.host" -> host,
-        "microservice.services.teams-and-repositories.port" -> endpointPort,
-        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                                       -> false
-      )
-      .build()
 
   private lazy val teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector =
     app.injector.instanceOf[TeamsAndRepositoriesConnector]
