@@ -16,14 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{Instant, LocalDateTime}
-
 import akka.stream.Materializer
 import org.mockito.ArgumentMatchers.{eq => eqTo, _}
 import org.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
@@ -33,9 +28,10 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, 
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 
+import java.time.{Instant, LocalDateTime}
 import scala.concurrent.{ExecutionContext, Future}
 
-class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
+class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with FakeApplicationBuilder {
   import ExecutionContext.Implicits.global
 
   private val now: LocalDateTime = LocalDateTime.now()
@@ -49,13 +45,6 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Gui
     mockedDependenciesConnector,
     stubMessagesControllerComponents()
   )
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        "metrics.jvm" -> false
-      )
-      .build()
 
   "dependencyReport" should {
 

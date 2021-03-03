@@ -12390,3 +12390,39 @@ table.shutter-events {
 .wrw-environment-head{
   width: 12%;
 }
+
+#repo-score-number{
+  border-radius: 20px;
+  border-style: solid;
+  border-width: 10px;
+  border-color: white;
+  font-size: 2.4em;
+  color: white;
+  float: right;
+  padding: 3px 7px 0 7px;
+}
+
+.repo-score-amber{
+  background-color: rgba(226, 156, 44, 1);
+}
+
+.repo-score-green{
+  background-color: green;
+}
+
+.repo-score-red{
+  background-color: red;
+}
+
+#health-indicators-help{
+  display: inline;
+  color: white;
+  background-color: grey;
+  border-radius: 100px;
+  padding: 2px 9px;
+  font-size: 0.5em;
+  font-weight: normal;
+  position: relative;
+  bottom: 6px;
+  left: 10px;
+}

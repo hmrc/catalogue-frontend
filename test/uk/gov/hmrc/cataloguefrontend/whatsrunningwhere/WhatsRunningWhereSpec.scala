@@ -18,27 +18,11 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws._
-import uk.gov.hmrc.cataloguefrontend.{JsonData, WireMockEndpoints}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.{FakeApplicationBuilder, JsonData, WireMockEndpoints}
 
-class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        "microservice.services.releases-api.host"           -> host,
-        "microservice.services.releases-api.port"           -> endpointPort,
-        "microservice.services.teams-and-repositories.host" -> host,
-        "microservice.services.teams-and-repositories.port" -> endpointPort,
-        "play.ws.ssl.loose.acceptAnyCertificate"            -> true,
-        "play.http.requestHandler"                          -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                                       -> false
-      )
-      .build()
+class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder with WireMockEndpoints {
 
   private[this] lazy val WS = app.injector.instanceOf[WSClient]
 

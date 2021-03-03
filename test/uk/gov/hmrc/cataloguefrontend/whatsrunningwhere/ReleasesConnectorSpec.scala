@@ -16,31 +16,18 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.Instant
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
-import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
+import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
-class ReleasesConnectorSpec extends UnitSpec with GuiceOneServerPerSuite with WireMockEndpoints with EitherValues {
+import java.time.Instant
 
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
-      .configure(Map(
-        "microservice.services.releases-api.port" -> endpointPort,
-        "microservice.services.releases-api.host" -> host,
-        "play.http.requestHandler"                -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                             -> false
-      ))
-      .build()
+class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with EitherValues {
+
 
   private lazy val releasesConnector = app.injector.instanceOf[ReleasesConnector]
 

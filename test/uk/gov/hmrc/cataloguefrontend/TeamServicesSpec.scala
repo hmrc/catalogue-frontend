@@ -16,15 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.ZoneOffset
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalatest.BeforeAndAfter
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
@@ -32,33 +27,15 @@ import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
+import java.time.ZoneOffset
 import scala.collection.JavaConverters._
 import scala.io.Source
 
-class TeamServicesSpec extends UnitSpec with BeforeAndAfter with GuiceOneServerPerSuite with WireMockEndpoints {
+class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 
   val umpFrontPageUrl = "http://some.ump.fontpage.com"
-
-  override def fakeApplication: Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        "microservice.services.teams-and-repositories.host"  -> host,
-        "microservice.services.teams-and-repositories.port"  -> endpointPort,
-        "microservice.services.service-dependencies.port"    -> endpointPort,
-        "microservice.services.service-dependencies.host"    -> host,
-        "microservice.services.leak-detection.port"          -> endpointPort,
-        "microservice.services.leak-detection.host"          -> host,
-        "microservice.services.user-management.url"          -> endpointMockUrl,
-        "usermanagement.portal.url"                          -> "http://usermanagement/link",
-        "microservice.services.user-management.frontPageUrl" -> umpFrontPageUrl,
-        "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
-        "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                                        -> false,
-        "team.hideArchivedRepositories"                      -> true
-      )
-      .build()
 
   private[this] lazy val WS           = app.injector.instanceOf[WSClient]
   private[this] lazy val viewMessages = app.injector.instanceOf[ViewMessages]
