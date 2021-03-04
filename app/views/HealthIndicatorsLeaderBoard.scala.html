@@ -23,25 +23,34 @@
     <header>
         <h1>Health Indicator Leaderboard</h1>
     </header>
+
     <div id="leaderboard-display">
+       <input type="search" class="search" id="search" type="text" name="repositoryName"/>
         <table class="table table-striped" id="health-indicators-leaderboard">
             <thead>
                 <th>Repository</th>
                 <th>Repository Type</th>
                 <th><button role="button" class="sort no-border" data-sort="repositoryScore" >Score</button></th>
             </thead>
-            @repoRatings.zipWithIndex.map { case (rating, i) =>
-            <tr role="row" id="row_@{i}">
-                <td id="row_@{i}_column_0"><a href="/health-indicators/@{rating.repositoryName}">@rating.repositoryName</a>
-                </td>
-                <td id="row_@{i}_column_1">@rating.repositoryType</td>
-                <td class="repositoryScore" id="row_@{i}_column_2">@rating.repositoryScore</td>
-            </tr>
-            }
+            <tbody class="list">
+                @repoRatings.zipWithIndex.map { case (rating, i) =>
+                    <tr role="row" id="row_@{i}">
+                        <td class="repositoryName" id="row_@{i}_column_0">
+                            <a href="/health-indicators/@{rating.repositoryName}">@rating.repositoryName</a>
+                        </td>
+                        <td id="row_@{i}_column_1">@rating.repositoryType</td>
+                        <td class="repositoryScore" id="row_@{i}_column_2">@rating.repositoryScore</td>
+                    </tr>
+                }
+            </tbody>
         </table>
     </div>
+
     <script>
-            var options = {valueNames: ['repositoryScore']};
-            var indicatorsList = new List('health-indicators-leaderboard', options);
+            var options = {valueNames: ['repositoryScore', 'repositoryName' ] };
+            var indicatorsList = new List('leaderboard-display', options);
+
+            var searchBox = document.getElementById("search");
+            serviceList.search(searchBox.value);
     </script>
-}
+    }
