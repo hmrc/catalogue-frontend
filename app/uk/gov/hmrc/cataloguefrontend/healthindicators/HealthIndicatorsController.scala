@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.{HealthIndicatorsPage, error_404_template}
+import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
@@ -36,6 +36,14 @@ class HealthIndicatorsController @Inject()(
         case None                                     => NotFound(error_404_template())
       }
     }
+
+  def indicatorsForAllRepos(): Action[AnyContent] =
+    Action.async { implicit request =>
+      healthIndicatorsConnector.getAllHealthIndicators().map {
+        case repoRatings: Seq[RepositoryRating] => Ok(HealthIndicatorsLeaderBoard(repoRatings))
+        case _ => NotFound(error_404_template())
+      }
+    }
 }
 
 object HealthIndicatorsController {
@@ -46,4 +54,7 @@ object HealthIndicatorsController {
       case _ => "repo-score-red"
     }
   }
+//  def repositoryLinkBuilder(repoName: String): String ={
+//
+//  }
 }

@@ -23,7 +23,8 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, ExecutionContext, Future}
 @Singleton
 class HealthIndicatorsConnector @Inject()(
   http: HttpClient,
@@ -32,13 +33,20 @@ class HealthIndicatorsConnector @Inject()(
   import HttpReads.Implicits._
   private val logger = Logger(getClass)
 
+  implicit val rrR: Reads[RepositoryRating] = RepositoryRating.reads
+
   private val healthIndicatorsBaseUrl: String = servicesConfig.baseUrl("health-indicators")
 
   def getHealthIndicators(repoName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryRating]] = {
-    implicit val rrR: Reads[RepositoryRating] = RepositoryRating.reads
     val url                                   = s"$healthIndicatorsBaseUrl/health-indicators/repositories/$repoName"
     http
       .GET[Option[RepositoryRating]](url)
+  }
+
+  def getAllHealthIndicators()(implicit hc: HeaderCarrier): Future[Seq[RepositoryRating]] = {
+    val url                                   = s"$healthIndicatorsBaseUrl/health-indicators/repositories/?sort=desc"
+    http
+      .GET[Seq[RepositoryRating]](url)
   }
 }
 sealed trait RatingType
@@ -87,12 +95,13 @@ object Rating {
   }
 }
 
-case class RepositoryRating(repositoryName: String, repositoryScore: Int, ratings: Seq[Rating])
+case class RepositoryRating(repositoryName: String, repositoryType: String, repositoryScore: Int, ratings: Seq[Rating])
 
 object RepositoryRating {
   val reads: Reads[RepositoryRating] = {
     implicit val sR: Reads[Rating] = Rating.reads
     ((__ \ "repositoryName").read[String]
+      ~ (__ \ "repositoryType").read[String]
       ~ (__ \ "repositoryScore").read[Int]
       ~ (__ \ "ratings").read[Seq[Rating]])(RepositoryRating.apply _)
   }
