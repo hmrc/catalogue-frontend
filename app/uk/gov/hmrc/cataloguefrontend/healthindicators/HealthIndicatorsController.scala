@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
+import play.api.data.Form
+import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
@@ -39,22 +42,38 @@ class HealthIndicatorsController @Inject()(
 
   def indicatorsForAllRepos(): Action[AnyContent] =
     Action.async { implicit request =>
+      val form = HealthIndicatorsFilter.form.bindFromRequest
       healthIndicatorsConnector.getAllHealthIndicators().map {
-        case repoRatings: Seq[RepositoryRating] => Ok(HealthIndicatorsLeaderBoard(repoRatings))
+        case repoRatings: Seq[RepositoryRating] => Ok(HealthIndicatorsLeaderBoard(repoRatings, form))
         case _ => NotFound(error_404_template())
       }
     }
 }
 
 object HealthIndicatorsController {
-  def getScoreColour(score: Int): String ={
+  def getScoreColour(score: Int): String = {
     score match {
       case x if x > 0 => "repo-score-green"
       case x if x > -100 => "repo-score-amber"
       case _ => "repo-score-red"
     }
   }
-//  def repositoryLinkBuilder(repoName: String): String ={
-//
-//  }
+}
+
+case class HealthIndicatorsFilter(
+  serviceName: Option[ServiceName] = None
+)
+
+object HealthIndicatorsFilter {
+  private def filterEmptyString(x: Option[String]) = x.filter(_.trim.nonEmpty)
+
+  lazy val form = Form(
+    mapping(
+      "repository_name" -> optional(text)
+        .transform[Option[ServiceName]](
+          filterEmptyString(_).map(ServiceName.apply),
+          _.map(_.asString)
+        )
+    )(HealthIndicatorsFilter.apply)(HealthIndicatorsFilter.unapply)
+  )
 }
