@@ -32,8 +32,6 @@ class HealthIndicatorsController @Inject()(
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
-//  val repoTypes = Seq("Service", "Prototype", "Library", "Other")
-
   def indicatorsForRepo(name: String): Action[AnyContent] =
     Action.async { implicit request =>
       healthIndicatorsConnector.getHealthIndicators(name).map {

@@ -38,7 +38,7 @@ class HealthIndicatorsControllerSpec
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
 
-  "HealthIndicatorsController" should {
+  "HealthIndicatorsController.indicatorsForRepo()" should {
     "respond with status 200 and contain specified elements" in new Setup {
       serviceEndpoint(
         GET,
@@ -69,6 +69,38 @@ class HealthIndicatorsControllerSpec
         ws.url(s"http://localhost:$port/service/team-indicator-dashboard-frontend/health-indicators").get.futureValue
 
       response.status shouldBe 404
+    }
+  }
+
+  "HealthIndicatorsController.indicatorsForAllRepos" should {
+    "respond with status 200 and include all repos when no filters are set" in new Setup {
+      serviceEndpoint(
+        GET,
+        "/health-indicators/repositories/?sort=desc",
+        willRespondWith = (200, Some(testJson3Repo))
+      )
+      private val response: WSResponse =
+        ws.url(s"http://localhost:$port/health-indicators").get.futureValue
+
+      response.status shouldBe 200
+      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
+      response.body should include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
+      response.body should include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
+    }
+
+    "respond with status 200 and include only services when repo_type=Service" in new Setup {
+      serviceEndpoint(
+        GET,
+        "/health-indicators/repositories/?sort=desc",
+        willRespondWith = (200, Some(testJson3Repo))
+      )
+      private val response: WSResponse =
+        ws.url(s"http://localhost:$port/health-indicators?repo_type=Service").get.futureValue
+
+      response.status shouldBe 200
+      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
+      response.body shouldNot include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
+      response.body shouldNot include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
     }
   }
 
@@ -120,5 +152,25 @@ class HealthIndicatorsControllerSpec
           |    }
           |  ]
           |}""".stripMargin
+
+    val testJson3Repo: String =
+     """[{
+    |  "repositoryName": "team-indicator-dashboard-frontend",
+    |  "repositoryType": "Service",
+    |  "repositoryScore": -450,
+    |  "ratings": []
+    |},
+    |{
+    | "repositoryName": "api-platform-scripts",
+    | "repositoryType": "Other",
+    | "repositoryScore": 50,
+    | "ratings": []
+    |},
+    |{
+    | "repositoryName": "the-childcare-service-prototype",
+    | "repositoryType": "Prototype",
+    | "repositoryScore": 50,
+    | "ratings": []
+    |}]""".stripMargin
   }
 }

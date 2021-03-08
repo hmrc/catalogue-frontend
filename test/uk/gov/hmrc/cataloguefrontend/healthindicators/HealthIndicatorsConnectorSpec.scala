@@ -41,7 +41,7 @@ class HealthIndicatorsConnectorSpec
       serviceEndpoint(
         GET,
         "/health-indicators/repositories/team-indicator-dashboard-frontend",
-        willRespondWith = (200, Some(testJson))
+        willRespondWith = (200, Some(testJson1Repo))
       )
 
       val response = healthIndicatorsConnector.getHealthIndicators("team-indicator-dashboard-frontend")
@@ -82,7 +82,28 @@ class HealthIndicatorsConnectorSpec
     }
   }
 
-  private val testJson: String = """{
+  "getAllHealthIndicators()" should {
+    "return a list of repository ratings" in {
+      serviceEndpoint(
+        GET,
+        "/health-indicators/repositories/?sort=desc",
+        willRespondWith = (200, Some(testJson3Repo))
+      )
+
+      val response = healthIndicatorsConnector.getAllHealthIndicators()
+        .futureValue
+
+      val expectedResponse = Seq(
+        RepositoryRating("team-indicator-dashboard-frontend", "Service", -450, Seq.empty),
+        RepositoryRating("api-platform-scripts", "Other", 50, Seq.empty),
+        RepositoryRating("the-childcare-service-prototype", "Prototype", 50, Seq.empty)
+      )
+
+      response shouldBe expectedResponse
+    }
+  }
+
+  private val testJson1Repo: String = """{
                    |  "repositoryName": "team-indicator-dashboard-frontend",
                    |  "repositoryType": "Service",
                    |  "repositoryScore": -450,
@@ -118,4 +139,24 @@ class HealthIndicatorsConnectorSpec
                    |    }
                    |  ]
                    |}""".stripMargin
+
+
+  private val testJson3Repo: String = """[{
+                  |  "repositoryName": "team-indicator-dashboard-frontend",
+                  |  "repositoryType": "Service",
+                  |  "repositoryScore": -450,
+                  |  "ratings": []
+                  |},
+                  |{
+                  | "repositoryName": "api-platform-scripts",
+                  | "repositoryType": "Other",
+                  | "repositoryScore": 50,
+                  | "ratings": []
+                  |},
+                  |{
+                  | "repositoryName": "the-childcare-service-prototype",
+                  | "repositoryType": "Prototype",
+                  | "repositoryScore": 50,
+                  | "ratings": []
+                  |}]""".stripMargin
 }
