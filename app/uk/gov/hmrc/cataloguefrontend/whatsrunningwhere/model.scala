@@ -16,13 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.Instant
+import jdk.nashorn.internal.runtime.PrototypeObject
+import laika.bundle.BundleOrigin.Library
 
+import java.time.Instant
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.ECS
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ProfileType.{ServiceManager, Team}
 
 sealed trait Platform {
   def asString: String
@@ -212,7 +215,6 @@ object ProfileType {
     Team,
     ServiceManager
   )
-
   case object Team extends ProfileType {
     override val asString: String = "team"
   }

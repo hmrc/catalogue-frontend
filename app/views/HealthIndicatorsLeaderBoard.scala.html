@@ -19,8 +19,9 @@
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController
 
 
-@(  repoRatings :  Seq[RepositoryRating]
-,   form        :  Form[_]
+@(  repoRatings :   Seq[RepositoryRating]
+,   form        :   Form[_]
+,   repoTypes:   Seq[String]
 )(implicit messages: Messages, request: Request[_])
 @standard_layout("Service Health Indicators", "health-indicators") {
     <header>
@@ -37,9 +38,15 @@
                     <input type="search" class="search form-control" id="search" type="text" name="repository_name"
                     value='@form("repository_name").value' autofocus/>
                 </div>
+                <br />
+                <br />
+                <select id="profile_name" name="repo_type" onchange="this.form.submit();" style="margin: 20px">
+                @defining(Seq("" -> Messages("Any Repo Type")) ++ repoTypes.map(p => (p, p))){ options =>
+                    @options.map(selectOption(form("repo_type").value))
+                }
+                </select>
             </div>
         </form>
-        <br>
         <table class="table table-striped" id="health-indicators-leaderboard">
 
             <thead>
@@ -73,7 +80,14 @@
             searchBox.setSelectionRange(length, length);
 
             function searchByRepo() {
+                document.getElementById('repo_type').value = '';
                 document.getElementById("form").submit();
             }
     </script>
     }
+
+@selectOption(selected: Option[String])(option: (String, String)) = {
+    <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected"}>
+    @option._2
+    </option>
+}
