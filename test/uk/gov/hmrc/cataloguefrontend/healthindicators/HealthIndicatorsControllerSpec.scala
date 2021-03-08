@@ -49,7 +49,7 @@ class HealthIndicatorsControllerSpec
         ))
 
       private val response: WSResponse =
-        ws.url(s"http://localhost:$port/service/team-indicator-dashboard-frontend/health-indicators").get.futureValue
+        ws.url(s"http://localhost:$port/health-indicators/team-indicator-dashboard-frontend").get.futureValue
 
       response.status shouldBe 200
       response.body   should include("""frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)""")
@@ -86,6 +86,7 @@ class HealthIndicatorsControllerSpec
     val testJson: String =
       """{
           |  "repositoryName": "team-indicator-dashboard-frontend",
+          |  "repositoryType": "Service",
           |  "repositoryScore": -450,
           |  "ratings": [
           |    {

@@ -67,6 +67,6 @@ GET        /whats-running-where                         uk.gov.hmrc.cataloguefro
 
 GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.history(env: Environment)
 
-GET        /health-indicators/:name           uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepo(name: String)
+GET        /health-indicators/:name                     uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepo(name: String)
 
 GET         /test/health-indicators                     uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForAllRepos()
