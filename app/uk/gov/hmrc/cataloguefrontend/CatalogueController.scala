@@ -36,7 +36,7 @@ import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Platform, WhatsRunningWhereService}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
@@ -56,7 +56,6 @@ case class DigitalServiceDetails(
 
 case class EnvData(
   version          : Version,
-  optPlatform      : Option[Platform],
   dependencies     : Seq[Dependency],
   optShutterState  : Option[ShutterState],
   optTelemetryLinks: Option[Seq[Link]]
@@ -289,11 +288,11 @@ class CatalogueController @Inject()(
             deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
             res <- Environment.values.traverse { env =>
                     val slugInfoFlag     = SlugInfoFlag.ForEnvironment(env)
-                    val deployedVersions = deployments.filter(_.environment == env).map(x => (x.versionNumber.asVersion, x.platform))
+                    val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
                     // a single environment may have multiple versions during a deployment
                     // return the lowest
-                    deployedVersions.sortBy(_._1).headOption match {
-                      case Some((version, platform)) =>
+                    deployedVersions.sorted.headOption match {
+                      case Some(version) =>
                         val telemetryLinks =
                           (for {
                              targetEnvironments <- repositoryDetails.environments.toSeq
@@ -308,7 +307,6 @@ class CatalogueController @Inject()(
                           Some(slugInfoFlag ->
                             EnvData(
                               version           = version,
-                              optPlatform       = Some(platform),
                               dependencies      = dependencies,
                               optShutterState   = optShutterState,
                               optTelemetryLinks = Some(telemetryLinks)
@@ -335,7 +333,6 @@ class CatalogueController @Inject()(
                 SlugInfoFlag.Latest ->
                   EnvData(
                     version           = latestServiceInfo.semanticVersion.get,
-                    optPlatform       = None,
                     dependencies      = librariesOfLatestSlug,
                     optShutterState   = None,
                     optTelemetryLinks = None

@@ -15,15 +15,13 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Platform, ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController, WhatsRunningWhereVersion}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController, WhatsRunningWhereVersion}
 @import uk.gov.hmrc.cataloguefrontend.routes
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform
 
 @this(viewMessages: ViewMessages)
 
-@( platform           : Platform
- , environments       : Seq[Environment]
+@( environments       : Seq[Environment]
  , whatsRunning       : Seq[WhatsRunningWhere]
  , selectedProfileType: ProfileType
  , profileNames       : Seq[ProfileName]
@@ -33,7 +31,7 @@
 @standard_layout("What's Running Where?", "whats-running-where") {
 
     <header>
-        <h1>What's Running Where? @platform.displayName</h1>
+        <h1>What's Running Where?</h1>
     </header>
 
     @if(form.hasErrors) {

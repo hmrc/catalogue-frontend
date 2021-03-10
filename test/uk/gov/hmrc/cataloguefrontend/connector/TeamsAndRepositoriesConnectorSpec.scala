@@ -29,7 +29,7 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.{FakeApplicationBuilder, JsonData}
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 class TeamsAndRepositoriesConnectorSpec
     extends AnyWordSpec

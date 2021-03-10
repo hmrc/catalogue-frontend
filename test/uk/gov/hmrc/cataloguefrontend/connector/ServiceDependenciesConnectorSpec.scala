@@ -33,10 +33,8 @@ import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.ExecutionContext
-
 class ServiceDependenciesConnectorSpec
-    extends AnyWordSpec
+  extends AnyWordSpec
     with Matchers
     with BeforeAndAfter
     with GuiceOneAppPerSuite

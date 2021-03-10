@@ -36,7 +36,6 @@
                 <div class="board__heading">
                     <h4 class="environment-name">@slugInfoFlag.displayString</h4>
                     @renderVersion(optEnvData.map(_.version))
-                    @renderPlatform(optEnvData.flatMap(_.optPlatform))
                 </div>
                 <div class="board__body">
                     @renderShutterStatusBadge(optEnvData.flatMap(_.optShutterState))

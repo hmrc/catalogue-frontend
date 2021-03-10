@@ -43,12 +43,11 @@ class ReleasesConnector @Inject()(
   implicit val pf   = JsonCodecs.profileFormat
   implicit val sdf  = JsonCodecs.serviceDeploymentsFormat
 
-  def releases(profile: Option[Profile], platform: Platform)(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
+  def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
     val params = Seq(
       "profileName" -> profile.map(_.profileName.asString),
-      "profileType" -> profile.map(_.profileType.asString),
-      "platform"    -> platform.asString
+      "profileType" -> profile.map(_.profileType.asString)
     )
     http
       .GET[Seq[WhatsRunningWhere]](url"$baseUrl?$params")
@@ -95,7 +94,7 @@ class ReleasesConnector @Inject()(
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[Deployment]] = {
-    implicit val rf = JsonCodecs.heritageDeploymentReads
+    implicit val rf = JsonCodecs.deploymentReads
     val params = Seq(
       "from"     -> from.map(_.toString),
       "to"       -> to.map(_.toString),
