@@ -23,8 +23,8 @@ import scala.concurrent.Future
 
 class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector) {
 
-  def releasesForProfile(profile: Option[Profile], platform: Platform)(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
-    releasesConnector.releases(profile, platform)
+  def releasesForProfile(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
+    releasesConnector.releases(profile)
 
   def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
     releasesConnector.profiles

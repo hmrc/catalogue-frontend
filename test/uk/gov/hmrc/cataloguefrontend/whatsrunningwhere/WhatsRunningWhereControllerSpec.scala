@@ -26,14 +26,14 @@ class WhatsRunningWhereControllerSpec extends UnitSpec{
   "matchesProduction" should {
     val timeSeen = TimeSeen(Instant.now)
 
-    val versionNumberProd= VersionNumber("0.0.0")
+    val versionNumberProd    = VersionNumber("0.0.0")
     val versionNumberNotProd = VersionNumber("1.1.1")
 
-    val wrwVersionProd = WhatsRunningWhereVersion(Environment.Production, Platform.ECS, versionNumberProd, timeSeen)
-    val wrwVersionStagingMatchesProd = WhatsRunningWhereVersion(Environment.Staging, Platform.ECS, versionNumberProd, timeSeen)
-    val wrwVersionStagingNotMatchesProd = WhatsRunningWhereVersion(Environment.Staging, Platform.ECS, versionNumberNotProd, timeSeen)
+    val wrwVersionProd                  = WhatsRunningWhereVersion(Environment.Production, versionNumberProd   , timeSeen)
+    val wrwVersionStagingMatchesProd    = WhatsRunningWhereVersion(Environment.Staging   , versionNumberProd   , timeSeen)
+    val wrwVersionStagingNotMatchesProd = WhatsRunningWhereVersion(Environment.Staging   , versionNumberNotProd, timeSeen)
 
-    val wrwMatchesProd = WhatsRunningWhere(ServiceName("foo"), List(wrwVersionProd, wrwVersionStagingMatchesProd))
+    val wrwMatchesProd    = WhatsRunningWhere(ServiceName("foo"), List(wrwVersionProd, wrwVersionStagingMatchesProd))
     val wrwNotMatchesProd = WhatsRunningWhere(ServiceName("foo"), List(wrwVersionProd, wrwVersionStagingNotMatchesProd))
 
     "return true when compared env version matches production version" in {

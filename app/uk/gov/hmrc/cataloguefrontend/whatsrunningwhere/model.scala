@@ -16,16 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import jdk.nashorn.internal.runtime.PrototypeObject
-import laika.bundle.BundleOrigin.Library
-
 import java.time.Instant
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.ECS
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ProfileType.{ServiceManager, Team}
 
 sealed trait Platform {
   def asString: String
@@ -50,10 +47,9 @@ case class WhatsRunningWhere(
 )
 
 case class WhatsRunningWhereVersion(
-  environment: Environment,
-  platform: Platform,
+  environment  : Environment,
   versionNumber: VersionNumber,
-  lastSeen: TimeSeen
+  lastSeen     : TimeSeen
 )
 
 object JsonCodecs {
@@ -89,20 +85,20 @@ object JsonCodecs {
 
   val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] = {
     implicit val wf  = environmentFormat
-    implicit val pf  = platformFormat
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
-    ((__ \ "environment").read[Environment]
-      ~ (__ \ "platform").read[Platform]
-      ~ (__ \ "versionNumber").read[VersionNumber]
-      ~ (__ \ "lastSeen").read[TimeSeen])(WhatsRunningWhereVersion.apply _)
+    ( (__ \ "environment"  ).read[Environment]
+    ~ (__ \ "versionNumber").read[VersionNumber]
+    ~ (__ \ "lastSeen"     ).read[TimeSeen]
+    )(WhatsRunningWhereVersion.apply _)
   }
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] = {
     implicit val wf    = applicationNameFormat
     implicit val wrwvf = whatsRunningWhereVersionReads
-    ((__ \ "applicationName").read[ServiceName]
-      ~ (__ \ "versions").read[List[WhatsRunningWhereVersion]])(WhatsRunningWhere.apply _)
+    ( (__ \ "applicationName").read[ServiceName]
+    ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
+    )(WhatsRunningWhere.apply _)
   }
 
   val profileTypeFormat: Format[ProfileType] = new Format[ProfileType] {
@@ -160,7 +156,7 @@ object JsonCodecs {
       ~ (__ \ "deployTime").read[TimeSeen])(DeployerAudit.apply _)
   }
 
-  val heritageDeploymentReads: Reads[Deployment] = {
+  val deploymentReads: Reads[Deployment] = {
     implicit val pf  = platformFormat
     implicit val anf = applicationNameFormat
     implicit val ef  = environmentFormat

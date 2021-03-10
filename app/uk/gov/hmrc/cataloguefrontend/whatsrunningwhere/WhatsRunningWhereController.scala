@@ -35,12 +35,6 @@ class WhatsRunningWhereController @Inject()(
 )(implicit val ec: ExecutionContext
 ) extends FrontendController(mcc) {
 
-  def heritageReleases(showDiff: Boolean): Action[AnyContent] =
-    releases(Platform.Heritage, showDiff)
-
-  def ecsReleases(showDiff: Boolean): Action[AnyContent] =
-    releases(Platform.ECS, showDiff)
-
   private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
     form.fold(
       _ => None,
@@ -54,18 +48,18 @@ class WhatsRunningWhereController @Inject()(
   private def distinctEnvironments(releases: Seq[WhatsRunningWhere]) =
     releases.flatMap(_.versions.map(_.environment)).distinct.sorted
 
-  private def releases(platform: Platform, showDiff: Boolean): Action[AnyContent] =
+  def releases(showDiff: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
       for {
         form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
         profile = profileFrom(form)
         selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (releases, profiles) <- (service.releasesForProfile(profile, platform).map(_.sortBy(_.applicationName.asString))
+        (releases, profiles) <- (service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
           , service.profiles
           ).mapN { (r, p) => (r, p) }
         environments = distinctEnvironments(releases)
         profileNames = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield Ok(page(platform, environments, releases, selectedProfileType, profileNames, form, showDiff))
+      } yield Ok(page(environments, releases, selectedProfileType, profileNames, form, showDiff))
     }
 }
 

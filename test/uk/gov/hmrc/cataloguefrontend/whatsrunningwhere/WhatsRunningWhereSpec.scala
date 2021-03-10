@@ -27,59 +27,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
   private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
   "What's running where page" should {
-
-    "show a list of applications, environments and version numbers for Heritage" in {
-
-      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
-
-      serviceEndpoint(GET, "/releases-api/profiles", willRespondWith = (200, Some(JsonData.profiles)))
-
-      serviceEndpoint(
-        GET,
-        "/releases-api/whats-running-where",
-        queryParameters = Seq("platform" -> Platform.Heritage.asString),
-        willRespondWith = (
-          200,
-          Some("""[
-              |  {
-              |    "applicationName": "api-definition",
-              |    "versions": [
-              |      {
-              |        "environment": "integration",
-              |        "platform": "heritage",
-              |        "versionNumber": "1.57.0",
-              |        "lastSeen": "2019-05-29T14:09:48Z"
-              |      }
-              |    ]
-              |  },
-              |  {
-              |    "applicationName": "api-documentation",
-              |    "versions": [
-              |      {
-              |        "environment": "integration",
-              |        "platform": "heritage",
-              |        "versionNumber": "0.44.0",
-              |        "lastSeen": "2019-05-29T14:09:46Z"
-              |      }
-              |    ]
-              |  }
-              |]""".stripMargin))
-      )
-
-      val response = WS.url(s"http://localhost:$port/whats-running-where-heritage").get.futureValue
-
-      response.status shouldBe 200
-
-      response.body should include("api-definition")
-      response.body should include("1.57.0")
-
-      response.body should include("api-documentation")
-      response.body should include("0.44.0")
-
-      response.body should include("integration")
-    }
-
-    "show a list of applications, environments and version numbers for ECS releases" in {
+    "show a list of applications, environments and version numbers for releases" in {
 
       serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
 
@@ -88,7 +36,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
       serviceEndpoint(
         GET,
         "/releases-api/whats-running-where",
-        queryParameters = Seq("platform" -> Platform.ECS.asString),
+        queryParameters = Seq.empty,
         willRespondWith = (
           200,
           Some("""[
@@ -97,7 +45,6 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
                  |    "versions": [
                  |      {
                  |        "environment": "integration",
-                 |        "platform": "ecs",
                  |        "versionNumber": "1.58.0",
                  |        "lastSeen": "2019-05-29T14:09:48Z"
                  |      }
@@ -108,7 +55,6 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
                  |    "versions": [
                  |      {
                  |        "environment": "integration",
-                 |        "platform": "ecs",
                  |        "versionNumber": "0.41.0",
                  |        "lastSeen": "2019-05-29T14:09:46Z"
                  |      }
