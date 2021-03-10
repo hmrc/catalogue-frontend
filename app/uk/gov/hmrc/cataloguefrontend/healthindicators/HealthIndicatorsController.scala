@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
+import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
@@ -46,7 +47,7 @@ class HealthIndicatorsController @Inject()(
         form = HealthIndicatorsFilter.form.bindFromRequest
         repoTypes = allIndicators.map(_.repositoryType).distinct
         filteredIndicators = form.fold(_ => None, _.repoType) match {
-          case Some(rt) => allIndicators.filter(_.repositoryType == rt.asString)
+          case Some(rt) => allIndicators.filter(_.repositoryType == rt)
           case None => allIndicators
         }
       } yield filteredIndicators match {
@@ -87,6 +88,25 @@ sealed trait RepoType {
 }
 
 object RepoType {
+  val format: Format[RepoType] = new Format[RepoType] {
+    override def reads(json: JsValue): JsResult[RepoType] =
+      json.validate[String].flatMap {
+        case "Service"        => JsSuccess(Service)
+        case "Library"        => JsSuccess(Library)
+        case "Prototype"      => JsSuccess(Prototype)
+        case "Other"          => JsSuccess(Other)
+        case s                => JsError(s"Invalid RepoType: $s")
+      }
+
+    override def writes(o: RepoType): JsValue =
+      o match {
+        case Service        => JsString("Service")
+        case Library        => JsString("Library")
+        case Prototype      => JsString("Prototype")
+        case Other          => JsString("Other")
+        case s              => JsString(s"$s")
+      }
+  }
   def parse(s: String): Either[String, RepoType] = {
     values
       .find(_.asString == s)

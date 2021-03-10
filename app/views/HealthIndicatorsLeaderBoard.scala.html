@@ -18,10 +18,10 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController
 
-
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.RepoType
 @(  repoRatings :   Seq[RepositoryRating]
 ,   form        :   Form[_]
-,   repoTypes:   Seq[String]
+,   repoTypes:   Seq[RepoType]
 )(implicit messages: Messages, request: Request[_])
 @standard_layout("Service Health Indicators", "health-indicators") {
     <header>
@@ -41,7 +41,7 @@
                 <br />
                 <br />
                 <select id="profile_name" name="repo_type" onchange="this.form.submit();" style="margin: 20px">
-                @defining(Seq("" -> Messages("Any Repo Type")) ++ repoTypes.map(p => (p, p))){ options =>
+                @defining(Seq("" -> Messages("Any Repo Type")) ++ repoTypes.map(_.asString).map(p => (p, p))){ options =>
                     @options.map(selectOption(form("repo_type").value))
                 }
                 </select>

@@ -93,13 +93,14 @@ object Rating {
   }
 }
 
-case class RepositoryRating(repositoryName: String, repositoryType: String, repositoryScore: Int, ratings: Seq[Rating])
+case class RepositoryRating(repositoryName: String, repositoryType: RepoType, repositoryScore: Int, ratings: Seq[Rating])
 
 object RepositoryRating {
   val reads: Reads[RepositoryRating] = {
-    implicit val sR: Reads[Rating] = Rating.reads
+    implicit val sR: Reads[Rating]    = Rating.reads
+    implicit val rtR: Reads[RepoType] = RepoType.format
     ((__ \ "repositoryName").read[String]
-      ~ (__ \ "repositoryType").read[String]
+      ~ (__ \ "repositoryType").read[RepoType]
       ~ (__ \ "repositoryScore").read[Int]
       ~ (__ \ "ratings").read[Seq[Rating]])(RepositoryRating.apply _)
   }
