@@ -30,15 +30,21 @@ class HealthIndicatorsConnector @Inject()(
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
-  private val logger = Logger(getClass)
+
+  private implicit val repositoryRatingReads: Reads[RepositoryRating] = RepositoryRating.reads
 
   private val healthIndicatorsBaseUrl: String = servicesConfig.baseUrl("health-indicators")
 
   def getHealthIndicators(repoName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryRating]] = {
-    implicit val rrR: Reads[RepositoryRating] = RepositoryRating.reads
-    val url                                   = s"$healthIndicatorsBaseUrl/health-indicators/repositories/$repoName"
+    val url = s"$healthIndicatorsBaseUrl/health-indicators/repositories/$repoName"
     http
       .GET[Option[RepositoryRating]](url)
+  }
+
+  def getAllHealthIndicators()(implicit hc: HeaderCarrier): Future[Seq[RepositoryRating]] = {
+    val url = s"$healthIndicatorsBaseUrl/health-indicators/repositories/?sort=desc"
+    http
+      .GET[Seq[RepositoryRating]](url)
   }
 }
 sealed trait RatingType
@@ -47,10 +53,10 @@ object RatingType {
   val format: Format[RatingType] = new Format[RatingType] {
     override def reads(json: JsValue): JsResult[RatingType] =
       json.validate[String].flatMap {
-        case "ReadMe" => JsSuccess(ReadMe)
+        case "ReadMe"        => JsSuccess(ReadMe)
         case "LeakDetection" => JsSuccess(LeakDetection)
-        case "BobbyRule" => JsSuccess(BobbyRule)
-        case s => JsError(s"Invalid RatingType: $s")
+        case "BobbyRule"     => JsSuccess(BobbyRule)
+        case s               => JsError(s"Invalid RatingType: $s")
       }
 
     override def writes(o: RatingType): JsValue =
@@ -58,7 +64,7 @@ object RatingType {
         case ReadMe        => JsString("ReadMe")
         case LeakDetection => JsString("LeakDetection")
         case BobbyRule     => JsString("BobbyRule")
-        case s                          => JsString(s"$s")
+        case s             => JsString(s"$s")
       }
   }
   case object ReadMe extends RatingType
@@ -79,7 +85,7 @@ case class Rating(ratingType: RatingType, ratingScore: Int, breakdown: Seq[Score
 
 object Rating {
   val reads: Reads[Rating] = {
-    implicit val sR: Reads[Score] = Score.reads
+    implicit val sR: Reads[Score]       = Score.reads
     implicit val rtR: Reads[RatingType] = RatingType.format
     ((__ \ "ratingType").read[RatingType]
       ~ (__ \ "ratingScore").read[Int]
@@ -87,12 +93,14 @@ object Rating {
   }
 }
 
-case class RepositoryRating(repositoryName: String, repositoryScore: Int, ratings: Seq[Rating])
+case class RepositoryRating(repositoryName: String, repositoryType: RepoType, repositoryScore: Int, ratings: Seq[Rating])
 
 object RepositoryRating {
   val reads: Reads[RepositoryRating] = {
-    implicit val sR: Reads[Rating] = Rating.reads
+    implicit val sR: Reads[Rating]    = Rating.reads
+    implicit val rtR: Reads[RepoType] = RepoType.format
     ((__ \ "repositoryName").read[String]
+      ~ (__ \ "repositoryType").read[RepoType]
       ~ (__ \ "repositoryScore").read[Int]
       ~ (__ \ "ratings").read[Seq[Rating]])(RepositoryRating.apply _)
   }

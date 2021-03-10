@@ -1,0 +1,93 @@
+@*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.RepositoryRating
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController
+
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.RepoType
+@(  repoRatings :   Seq[RepositoryRating]
+,   form        :   Form[_]
+,   repoTypes:   Seq[RepoType]
+)(implicit messages: Messages, request: Request[_])
+@standard_layout("Service Health Indicators", "health-indicators") {
+    <header>
+        <h1>Health Indicator Leaderboard</h1>
+    </header>
+
+    <div id="leaderboard-display">
+        <form id="form" method="get">
+            <div class="form-group row">
+                <div class="col-xs-2 padding-reset-right">
+                    <label for="search">Search by repository:</label>
+                </div>
+                <div class="col col-xs-3">
+                    <input type="search" class="search form-control" id="search" type="text" name="repository_name"
+                    value='@form("repository_name").value' autofocus/>
+                </div>
+                <br />
+                <br />
+                <select id="profile_name" name="repo_type" onchange="this.form.submit();" style="margin: 20px">
+                @defining(Seq("" -> Messages("Any Repo Type")) ++ repoTypes.map(_.asString).map(p => (p, p))){ options =>
+                    @options.map(selectOption(form("repo_type").value))
+                }
+                </select>
+            </div>
+        </form>
+        <table class="table table-striped" id="health-indicators-leaderboard">
+
+            <thead>
+                <th>Repository</th>
+                <th>Repository Type</th>
+                <th><button role="button" class="sort no-border" data-sort="repositoryScore">Score</button></th>
+            </thead>
+            <tbody class="list">
+                @repoRatings.zipWithIndex.map { case (rating, i) =>
+                    <tr role="row" id="row_@{i}">
+                        <td class="repositoryName" id="row_@{i}_column_0">
+                            <a href="/health-indicators/@{rating.repositoryName}">@rating.repositoryName</a>
+                        </td>
+                        <td id="row_@{i}_column_1">@rating.repositoryType</td>
+                        <td class="repositoryScore" id="row_@{i}_column_2">@rating.repositoryScore</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+            var options = {valueNames: ['repositoryScore', 'repositoryName' ] };
+            var indicatorsList = new List('leaderboard-display', options);
+
+            var searchBox = document.getElementById("search");
+            indicatorsList.search(searchBox.value);
+
+            var length = searchBox.value.length;
+            searchBox.focus();
+            searchBox.setSelectionRange(length, length);
+
+            function searchByRepo() {
+                document.getElementById('repo_type').value = '';
+                document.getElementById("form").submit();
+            }
+    </script>
+    }
+
+@selectOption(selected: Option[String])(option: (String, String)) = {
+    <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected"}>
+    @option._2
+    </option>
+}
