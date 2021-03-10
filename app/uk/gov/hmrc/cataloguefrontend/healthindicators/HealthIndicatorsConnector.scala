@@ -30,9 +30,8 @@ class HealthIndicatorsConnector @Inject()(
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
-  private val logger = Logger(getClass)
 
-  implicit val rrR: Reads[RepositoryRating] = RepositoryRating.reads
+  private implicit val repositoryRatingReads: Reads[RepositoryRating] = RepositoryRating.reads
 
   private val healthIndicatorsBaseUrl: String = servicesConfig.baseUrl("health-indicators")
 
