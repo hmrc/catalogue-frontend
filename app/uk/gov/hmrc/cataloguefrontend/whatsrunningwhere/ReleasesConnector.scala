@@ -85,7 +85,6 @@ class ReleasesConnector @Inject()(
   }
 
   def deploymentHistory(
-    platform   : Platform,
     environment: Environment,
     from       : Option[Long]   = None,
     to         : Option[Long]   = None,
@@ -100,7 +99,7 @@ class ReleasesConnector @Inject()(
       "to"       -> to.map(_.toString),
       "team"     -> team,
       "app"      -> app,
-      "platform" -> Some(platform.asString)
+      "platform" -> Some("ecs")
     )
     http.GET[Seq[Deployment]](url"$serviceUrl/releases-api/deployments/${environment.asString}?$params")
   }

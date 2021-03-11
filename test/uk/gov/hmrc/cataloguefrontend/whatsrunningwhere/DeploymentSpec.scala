@@ -21,8 +21,7 @@ import java.time.temporal.ChronoUnit
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.Heritage
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 class DeploymentSpec extends AnyFlatSpec with Matchers {
 
@@ -30,9 +29,8 @@ class DeploymentSpec extends AnyFlatSpec with Matchers {
 
     val now = Instant.now()
     val h = Deployment(
-      Heritage,
       ServiceName("foo"),
-      Production,
+      Environment.Production,
       VersionNumber("1.1.1"),
       Seq.empty,
       TimeSeen(now),
