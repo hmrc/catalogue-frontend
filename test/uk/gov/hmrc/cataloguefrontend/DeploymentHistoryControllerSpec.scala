@@ -21,9 +21,8 @@ import org.mockito.MockitoSugar
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.Heritage
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere._
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import views.html.DeploymentHistoryPage
@@ -54,8 +53,10 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
       status(response) shouldBe 400
     }
     "return 200 when given no filters" in new Fixture {
-      when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any(), any())(any())).thenReturn(Future.successful(Seq.empty))
-      when(mockedTeamsAndRepositoriesConnector.allTeams(any())).thenReturn(Future.successful(Seq.empty))
+      when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any())(any()))
+        .thenReturn(Future.successful(Seq.empty))
+      when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
+        .thenReturn(Future.successful(Seq.empty))
       val response = controller.history()(FakeRequest(GET, "/deployments/production"))
       status(response) shouldBe 200
     }
@@ -68,9 +69,8 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
 
       val deps = Seq(
         Deployment(
-          Heritage,
           ServiceName("s1"),
-          Production,
+          Environment.Production,
           VersionNumber("1.1.1"),
           Seq.empty,
           TimeSeen(d1),
@@ -82,8 +82,10 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
           ))
       )
 
-      when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any(), any())(any())).thenReturn(Future.successful(deps))
-      when(mockedTeamsAndRepositoriesConnector.allTeams(any())).thenReturn(Future.successful(Seq.empty))
+      when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any())(any()))
+        .thenReturn(Future.successful(deps))
+      when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
+        .thenReturn(Future.successful(Seq.empty))
       val response = controller.history()(FakeRequest(GET, "/deployments/production?from=2020-01-01&to=2020-02-01"))
       status(response) shouldBe 200
 

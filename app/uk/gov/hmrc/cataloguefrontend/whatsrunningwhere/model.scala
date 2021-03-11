@@ -22,25 +22,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform.ECS
 
-sealed trait Platform {
-  def asString: String
-  def displayName: String
-}
-
-object Platform {
-  case object ECS extends Platform { override val asString      = "ecs"; override val displayName      = "Future Platform" }
-  case object Heritage extends Platform { override val asString = "heritage"; override val displayName = "Heritage" }
-
-  val values: List[Platform] =
-    List(ECS, Heritage)
-
-  def parse(s: String): Either[String, Platform] =
-    values
-      .find(_.asString equalsIgnoreCase s)
-      .toRight(s"Invalid platform - should be one of: ${values.map(_.asString).mkString(", ")}")
-}
 case class WhatsRunningWhere(
   applicationName: ServiceName,
   versions: List[WhatsRunningWhereVersion]
@@ -116,64 +98,57 @@ object JsonCodecs {
   val profileFormat: OFormat[Profile] = {
     implicit val ptf = profileTypeFormat
     implicit val pnf = profileNameFormat
-    ((__ \ "type").format[ProfileType]
-      ~ (__ \ "name").format[ProfileName])(Profile.apply, unlift(Profile.unapply))
+    ( (__ \ "type").format[ProfileType]
+    ~ (__ \ "name").format[ProfileName]
+    )(Profile.apply, unlift(Profile.unapply))
   }
 
-  lazy val platformFormat: Format[Platform] = new Format[Platform] {
-    override def reads(js: JsValue): JsResult[Platform] =
-      js.validate[String]
-        .flatMap(s => toResult(Platform.parse(s)))
-
-    override def writes(platform: Platform): JsValue =
-      JsString(platform.asString)
-  }
-
-  // ECS Deployment Event
+  // Deployment Event
   val deploymentEventFormat: Format[DeploymentEvent] = {
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
     implicit val dsf = deploymentStatusFormat
-    ((__ \ "deploymentId").format[String]
-      ~ (__ \ "status").format[DeploymentStatus]
-      ~ (__ \ "version").format[VersionNumber]
-      ~ (__ \ "time").format[TimeSeen])(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
+    ( (__ \ "deploymentId").format[String]
+    ~ (__ \ "status"      ).format[DeploymentStatus]
+    ~ (__ \ "version"     ).format[VersionNumber]
+    ~ (__ \ "time"        ).format[TimeSeen]
+    )(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
   }
 
   val serviceDeploymentsFormat: Format[ServiceDeployment] = {
     implicit val devf = deploymentEventFormat
     implicit val anf  = applicationNameFormat
     implicit val enf  = environmentFormat
-    ((__ \ "serviceName").format[ServiceName]
-      ~ (__ \ "environment").format[Environment]
-      ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
-      ~ (__ \ "lastCompleted").formatNullable[DeploymentEvent])(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
+    ((__ \ "serviceName"      ).format[ServiceName]
+    ~ (__ \ "environment"     ).format[Environment]
+    ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
+    ~ (__ \ "lastCompleted"   ).formatNullable[DeploymentEvent]
+    )(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
   }
 
   val deployerAuditReads: Reads[DeployerAudit] = {
     implicit val tsf = timeSeenFormat
-    ((__ \ "userName").read[String]
-      ~ (__ \ "deployTime").read[TimeSeen])(DeployerAudit.apply _)
+    ( (__ \ "userName"  ).read[String]
+    ~ (__ \ "deployTime").read[TimeSeen]
+    )(DeployerAudit.apply _)
   }
 
   val deploymentReads: Reads[Deployment] = {
-    implicit val pf  = platformFormat
     implicit val anf = applicationNameFormat
     implicit val ef  = environmentFormat
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
     implicit val dar = deployerAuditReads
     implicit val tmf = teamNameFormat
-    ((__ \ "platform").read[Platform]
-      ~ (__ \ "name").read[ServiceName]
-      ~ (__ \ "environment").read[Environment]
-      ~ (__ \ "version").read[VersionNumber]
-      ~ (__ \ "teams").read[Seq[TeamName]]
-      ~ (__ \ "firstSeen").read[TimeSeen]
-      ~ (__ \ "lastSeen").read[TimeSeen]
-      ~ (__ \ "deployers").read[Seq[DeployerAudit]])(Deployment.apply _)
+    ( (__ \ "name"       ).read[ServiceName]
+    ~ (__ \ "environment").read[Environment]
+    ~ (__ \ "version"    ).read[VersionNumber]
+    ~ (__ \ "teams"      ).read[Seq[TeamName]]
+    ~ (__ \ "firstSeen"  ).read[TimeSeen]
+    ~ (__ \ "lastSeen"   ).read[TimeSeen]
+    ~ (__ \ "deployers"  ).read[Seq[DeployerAudit]]
+    )(Deployment.apply _)
   }
-
 }
 
 case class TimeSeen(time: Instant)
@@ -232,35 +207,34 @@ case class DeploymentStatus(asString: String) extends AnyVal
 
 case class DeploymentEvent(
   deploymentId: String,
-  status: DeploymentStatus,
-  version: VersionNumber,
-  time: TimeSeen
+  status      : DeploymentStatus,
+  version     : VersionNumber,
+  time        : TimeSeen
 )
 
 case class ServiceDeployment(
-  serviceName: ServiceName,
-  environment: Environment,
+  serviceName     : ServiceName,
+  environment     : Environment,
   deploymentEvents: Seq[DeploymentEvent],
-  lastCompleted: Option[DeploymentEvent]
+  lastCompleted   : Option[DeploymentEvent]
 )
 
 case class Deployment(
-  platform: Platform,
-  name: ServiceName,
+  name       : ServiceName,
   environment: Environment,
-  version: VersionNumber,
-  teams: Seq[TeamName],
-  firstSeen: TimeSeen,
-  lastSeen: TimeSeen,
-  deployers: Seq[DeployerAudit] = Seq.empty) {
-
-  lazy val isECS: Boolean = platform == ECS
-
+  version    : VersionNumber,
+  teams      : Seq[TeamName],
+  firstSeen  : TimeSeen,
+  lastSeen   : TimeSeen,
+  deployers  : Seq[DeployerAudit] = Seq.empty
+) {
   lazy val latestDeployer: Option[DeployerAudit] = {
     implicit val order = TimeSeen.timeSeenOrdering
     deployers.sortBy(_.deployTime).lastOption
   }
-
 }
 
-case class DeployerAudit(userName: String, deployTime: TimeSeen)
+case class DeployerAudit(
+  userName  : String,
+  deployTime: TimeSeen
+)

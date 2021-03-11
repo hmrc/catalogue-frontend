@@ -48,24 +48,28 @@ class DeploymentHistoryController @Inject()(
       deployTime >= from && deployTime <= to
 
     form.bindFromRequest().fold(
-      formWithErrors => Future.successful(BadRequest(page(env, Seq.empty, Seq.empty, "", formWithErrors))),
-      validForm => {
-
-        // Either specific platform is specified, or all of them
-        val platforms = validForm.platform.flatMap(p => Platform.parse(p).toOption).map(Seq.apply(_)).getOrElse(Platform.values)
-
+      formWithErrors =>
+        Future.successful(BadRequest(page(env, Seq.empty, Seq.empty, "", formWithErrors))),
+      validForm =>
         for {
-          deployments <- Future.sequence(
-            // We always search with App=None to pull back the whole set for filtering
-            platforms.map(p => releasesConnector.deploymentHistory(p, env, from = Some(validForm.from), to = Some(validForm.to), app = None, team = validForm.team))
-          ).map(_.flatten)
+          deployments <- releasesConnector.deploymentHistory(
+                           env,
+                           from = Some(validForm.from),
+                           to   = Some(validForm.to),
+                           app  = None,
+                           team = validForm.team
+                         )
 
           // Explode the deployments so there is one per deployment event
           explodedDeployments = for {
-            d <- deployments
-            audit <- d.deployers
-            if dateRangeContains(validForm.from, validForm.to, audit.deployTime.time.toEpochMilli)
-          } yield d.copy(deployers = Seq(audit), firstSeen = audit.deployTime, lastSeen = audit.deployTime)
+                                  d     <- deployments
+                                  audit <- d.deployers
+                                  if dateRangeContains(validForm.from, validForm.to, audit.deployTime.time.toEpochMilli)
+                                } yield d.copy(
+                                  deployers = Seq(audit),
+                                  firstSeen = audit.deployTime,
+                                  lastSeen = audit.deployTime
+                                )
 
           teams <- teamsAndRepositoriesConnector.allTeams
         } yield Ok(
@@ -77,7 +81,6 @@ class DeploymentHistoryController @Inject()(
             form.fill(validForm)
           )
         )
-      }
     )
   }
 }
@@ -86,11 +89,18 @@ object DeploymentHistoryController {
 
   import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
-  case class SearchForm(from: Long, to: Long, team: Option[String], search: Option[String], platform: Option[String])
+  case class SearchForm(
+    from  : Long,
+    to    : Long,
+    team  : Option[String],
+    search: Option[String]
+  )
 
-  def defaultFromTime(referenceDate: LocalDate = LocalDate.now()): Long = referenceDate.minusDays(7).atStartOfDayEpochMillis
+  def defaultFromTime(referenceDate: LocalDate = LocalDate.now()): Long =
+    referenceDate.minusDays(7).atStartOfDayEpochMillis
 
-  def defaultToTime(referenceDate: LocalDate = LocalDate.now()): Long = referenceDate.atEndOfDayEpochMillis
+  def defaultToTime(referenceDate: LocalDate = LocalDate.now()): Long =
+    referenceDate.atEndOfDayEpochMillis
 
   lazy val form: Form[SearchForm] = {
     val dateFormat = "yyyy-MM-dd"
@@ -107,8 +117,7 @@ object DeploymentHistoryController {
             .transform[Long](_.atEndOfDayEpochMillis, longToLocalDate)
           ).transform[Long](o => o.getOrElse(defaultToTime()), l => Some(l)),  //Default to now if not set
         "team" -> Forms.optional(Forms.text),
-        "search" -> Forms.optional(Forms.text),
-        "platform" -> Forms.optional(Forms.text)
+        "search" -> Forms.optional(Forms.text)
       )(SearchForm.apply)(SearchForm.unapply)
         verifying("To Date must be greater than or equal to From Date", f => f.to > f.from)
     )

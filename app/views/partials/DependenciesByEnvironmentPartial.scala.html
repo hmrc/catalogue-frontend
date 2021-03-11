@@ -17,7 +17,6 @@
 @import partials.ServiceDependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Platform
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 
@@ -98,40 +97,33 @@
 
 @renderVersion(optVersion: Option[Version]) = {
   @optVersion match {
-    case Some(version)   => { <p class="small">@version</p> }
+    case Some(version) => { <p class="small">@version</p> }
     case None          => { <p class="small">&nbsp;</p> <!-- needed to ensure each tab nav-item has the same height --> }
   }
 }
 
-@renderPlatform(optPlatform: Option[Platform]) = {
-  @optPlatform match {
-    case Some(Platform.ECS) => { <span class="label label-primary">@Platform.ECS.displayName</span> <!-- only display ECS since Heritage is the default -->}
-    case _ => { <span class="label">&nbsp;</span> <!-- needed to ensure each tab nav-item has the same height --> }
+@renderShutterStatusBadge(optShutterState: Option[ShutterState]) = {
+  @if(optShutterState.exists(_.status.value == ShutterStatusValue.Shuttered)) {
+    <div class="environment-badge shutter-badge" data-toggle="tooltip" data-placement="top" title="@messages("shuttered.badge")"></div>
+  } else {
+    <div class="environment-badge no-badge"></div>
   }
 }
 
-@renderShutterStatusBadge(optShutterState: Option[ShutterState]) = {
-    @if(optShutterState.exists(_.status.value == ShutterStatusValue.Shuttered)) {
-        <div class="environment-badge shutter-badge" data-toggle="tooltip" data-placement="top" title="@messages("shuttered.badge")"></div>
-    } else {
-        <div class="environment-badge no-badge"></div>
-    }
-}
-
 @renderActiveBobbyRuleViolationBadge(slugInfoFlag: SlugInfoFlag, dependencies: Seq[Dependency]) = {
-    @if(dependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
-        <div id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-active-badge"
-             data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.active.badge")"></div>
-    } else {
-        <div id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></div>
-   }
+  @if(dependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
+    <div id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-active-badge"
+         data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.active.badge")"></div>
+  } else {
+    <div id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></div>
+  }
 }
 
 @renderPendingBobbyRuleViolationBadge(slugInfoFlag: SlugInfoFlag, dependencies: Seq[Dependency]) = {
-    @if(dependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
-        <div id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-pending-badge"
-             data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.pending.badge")"></div>
-    } else {
-        <div id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></div>
-    }
+  @if(dependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
+    <div id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-pending-badge"
+         data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.pending.badge")"></div>
+  } else {
+    <div id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></div>
+  }
 }
