@@ -26,7 +26,7 @@
  , selectedProfileType: ProfileType
  , profileNames       : Seq[ProfileName]
  , form               : Form[_]
-,   showDiff           : Boolean
+ , showDiff           : Boolean
  )(implicit messages: Messages, request: Request[_])
 @standard_layout("What's Running Where?", "whats-running-where") {
 
@@ -47,6 +47,9 @@
     <div id="whats-running-where-list">
         <form id="form" method="get">
             <input type="hidden" id="profile_type" name="profile_type" value="@selectedProfileType.asString">
+            @if(showDiff) {
+              <input type="hidden" id="showDiff" name="showDiff" value="true">
+            }
             <div class="form-group row">
                 <div class="col-xs-2 padding-reset-right">
                     <label for="search">Application name:</label>
