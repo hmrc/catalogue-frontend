@@ -98,8 +98,7 @@ class ReleasesConnector @Inject()(
       "from"     -> from.map(_.toString),
       "to"       -> to.map(_.toString),
       "team"     -> team,
-      "app"      -> app,
-      "platform" -> Some("ecs")
+      "app"      -> app
     )
     http.GET[Seq[Deployment]](url"$serviceUrl/releases-api/deployments/${environment.asString}?$params")
   }
