@@ -56,6 +56,7 @@ object RatingType {
         case "ReadMe"        => JsSuccess(ReadMe)
         case "LeakDetection" => JsSuccess(LeakDetection)
         case "BobbyRule"     => JsSuccess(BobbyRule)
+        case "BuildStability" => JsSuccess(BuildStability)
         case s               => JsError(s"Invalid RatingType: $s")
       }
 
@@ -64,12 +65,14 @@ object RatingType {
         case ReadMe        => JsString("ReadMe")
         case LeakDetection => JsString("LeakDetection")
         case BobbyRule     => JsString("BobbyRule")
+        case BuildStability => JsString("BuildStability")
         case s             => JsString(s"$s")
       }
   }
   case object ReadMe extends RatingType
   case object LeakDetection extends RatingType
   case object BobbyRule extends RatingType
+  case object BuildStability extends RatingType
 }
 
 case class Score(points: Int, description: String, href: Option[String])

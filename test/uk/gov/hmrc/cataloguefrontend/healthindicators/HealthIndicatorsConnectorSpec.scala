@@ -22,7 +22,7 @@ import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.healthindicators.RatingType.{BobbyRule, LeakDetection, ReadMe}
+import uk.gov.hmrc.cataloguefrontend.healthindicators.RatingType.{BobbyRule, LeakDetection, ReadMe, BuildStability}
 import uk.gov.hmrc.http.HeaderCarrier
 
 class HealthIndicatorsConnectorSpec
@@ -57,7 +57,8 @@ class HealthIndicatorsConnectorSpec
           )
         ),
         Rating(LeakDetection, 0, Seq()),
-        Rating(ReadMe, -50, Seq(Score(-50, "No Readme defined", None)))
+        Rating(ReadMe, -50, Seq(Score(-50, "No Readme defined", None))),
+        Rating(BuildStability, 0, Seq(Score(0, "Build Not Found", None)))
       )
 
       val expectedResponse = RepositoryRating("team-indicator-dashboard-frontend", RepoType.Service, -450, ratings)
@@ -134,6 +135,16 @@ class HealthIndicatorsConnectorSpec
                    |        {
                    |          "points": -50,
                    |          "description": "No Readme defined"
+                   |        }
+                   |      ]
+                   |    },
+                   |{
+                   |      "ratingType": "BuildStability",
+                   |      "ratingScore": 0,
+                   |      "breakdown": [
+                   |        {
+                   |          "points": 0,
+                   |          "description": "Build Not Found"
                    |        }
                    |      ]
                    |    }
