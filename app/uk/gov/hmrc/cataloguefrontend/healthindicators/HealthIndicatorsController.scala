@@ -28,43 +28,43 @@ import scala.concurrent.ExecutionContext
 
 class HealthIndicatorsController @Inject()(
   healthIndicatorsConnector: HealthIndicatorsConnector,
-  mcc: MessagesControllerComponents
+  mcc: MessagesControllerComponents,
+  healthIndicatorsService: HealthIndicatorsService
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
   def indicatorsForRepo(name: String): Action[AnyContent] =
     Action.async { implicit request =>
-      healthIndicatorsConnector.getHealthIndicators(name).map {
+      healthIndicatorsConnector.getRepositoryRating(name).map {
         case Some(repositoryRating: RepositoryRating) => Ok(HealthIndicatorsPage(repositoryRating))
-        case None => NotFound(error_404_template())
+        case None                                     => NotFound(error_404_template())
       }
     }
 
   def indicatorsForAllRepos(): Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        allIndicators <- healthIndicatorsConnector.getAllHealthIndicators()
-        form = HealthIndicatorsFilter.form.bindFromRequest
-        repoTypes = allIndicators.map(_.repositoryType).distinct
+        repoRatingsWithTeams  <- healthIndicatorsService.createRepoRatingsWithTeams
+        form      = HealthIndicatorsFilter.form.bindFromRequest
+        repoTypes = repoRatingsWithTeams.map(_.repositoryType).distinct
         filteredIndicators = form.fold(_ => None, _.repoType) match {
-          case Some(rt) => allIndicators.filter(_.repositoryType == rt)
-          case None => allIndicators
+          case Some(rt) => repoRatingsWithTeams.filter(_.repositoryType == rt)
+          case None     => repoRatingsWithTeams
         }
-      } yield filteredIndicators match {
-          case repoRatings: Seq[RepositoryRating] => Ok(HealthIndicatorsLeaderBoard(repoRatings, form, repoTypes))
-          case _ => NotFound(error_404_template())
-      }
+      } yield
+        filteredIndicators match {
+          case repoRatingsWithTeams => Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, form, repoTypes))
+        }
     }
-  }
+}
 
 object HealthIndicatorsController {
-  def getScoreColour(score: Int): String = {
+  def getScoreColour(score: Int): String =
     score match {
-      case x if x > 0 => "repo-score-green"
+      case x if x > 0    => "repo-score-green"
       case x if x > -100 => "repo-score-amber"
-      case _ => "repo-score-red"
+      case _             => "repo-score-red"
     }
-  }
 }
 
 case class HealthIndicatorsFilter(
@@ -91,27 +91,26 @@ object RepoType {
   val format: Format[RepoType] = new Format[RepoType] {
     override def reads(json: JsValue): JsResult[RepoType] =
       json.validate[String].flatMap {
-        case "Service"        => JsSuccess(Service)
-        case "Library"        => JsSuccess(Library)
-        case "Prototype"      => JsSuccess(Prototype)
-        case "Other"          => JsSuccess(Other)
-        case s                => JsError(s"Invalid RepoType: $s")
+        case "Service"   => JsSuccess(Service)
+        case "Library"   => JsSuccess(Library)
+        case "Prototype" => JsSuccess(Prototype)
+        case "Other"     => JsSuccess(Other)
+        case s           => JsError(s"Invalid RepoType: $s")
       }
 
     override def writes(o: RepoType): JsValue =
       o match {
-        case Service        => JsString("Service")
-        case Library        => JsString("Library")
-        case Prototype      => JsString("Prototype")
-        case Other          => JsString("Other")
-        case s              => JsString(s"$s")
+        case Service   => JsString("Service")
+        case Library   => JsString("Library")
+        case Prototype => JsString("Prototype")
+        case Other     => JsString("Other")
+        case s         => JsString(s"$s")
       }
   }
-  def parse(s: String): Either[String, RepoType] = {
+  def parse(s: String): Either[String, RepoType] =
     values
       .find(_.asString == s)
       .toRight(s"Invalid repoType - should be one of: ${values.map(_.asString).mkString(", ")}")
-  }
 
   val values: List[RepoType] = List(
     Service,
@@ -123,13 +122,13 @@ object RepoType {
   case object Service extends RepoType {
     override def asString: String = "Service"
   }
-  case object Library extends RepoType{
+  case object Library extends RepoType {
     override def asString: String = "Library"
   }
-  case object Prototype extends RepoType{
+  case object Prototype extends RepoType {
     override def asString: String = "Prototype"
   }
-  case object Other extends RepoType{
+  case object Other extends RepoType {
     override def asString: String = "Other"
   }
 }

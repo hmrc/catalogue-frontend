@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
-import play.api.Logger
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue, Reads, __}
+import play.api.libs.json._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -35,13 +34,13 @@ class HealthIndicatorsConnector @Inject()(
 
   private val healthIndicatorsBaseUrl: String = servicesConfig.baseUrl("health-indicators")
 
-  def getHealthIndicators(repoName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryRating]] = {
+  def getRepositoryRating(repoName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryRating]] = {
     val url = s"$healthIndicatorsBaseUrl/health-indicators/repositories/$repoName"
     http
       .GET[Option[RepositoryRating]](url)
   }
 
-  def getAllHealthIndicators()(implicit hc: HeaderCarrier): Future[Seq[RepositoryRating]] = {
+  def getAllRepositoryRatings()(implicit hc: HeaderCarrier): Future[Seq[RepositoryRating]] = {
     val url = s"$healthIndicatorsBaseUrl/health-indicators/repositories/?sort=desc"
     http
       .GET[Seq[RepositoryRating]](url)
