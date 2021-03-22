@@ -23,6 +23,11 @@ import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 
+sealed trait Platform {
+  def asString: String
+  def displayName: String
+}
+
 case class WhatsRunningWhere(
   applicationName: ServiceName,
   versions: List[WhatsRunningWhereVersion]

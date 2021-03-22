@@ -44,7 +44,7 @@ class HealthIndicatorsConnectorSpec
         willRespondWith = (200, Some(testJson1Repo))
       )
 
-      val response = healthIndicatorsConnector.getHealthIndicators("team-indicator-dashboard-frontend")
+      val response = healthIndicatorsConnector.getRepositoryRating("team-indicator-dashboard-frontend")
         .futureValue.value
 
       val ratings = Seq(
@@ -61,7 +61,7 @@ class HealthIndicatorsConnectorSpec
         Rating(BuildStability, 0, Seq(Score(0, "Build Not Found", None)))
       )
 
-      val expectedResponse = RepositoryRating("team-indicator-dashboard-frontend", RepoType.Service, -450, ratings)
+      val expectedResponse = RepositoryRating("team-indicator-dashboard-frontend",RepoType.Service, -450, ratings)
 
       response shouldBe expectedResponse
     }
@@ -76,7 +76,7 @@ class HealthIndicatorsConnectorSpec
         ))
 
       val response = healthIndicatorsConnector
-        .getHealthIndicators("team-indicator-dashboard-frontend")
+        .getRepositoryRating("team-indicator-dashboard-frontend")
         .futureValue
 
       response shouldBe None
@@ -91,12 +91,12 @@ class HealthIndicatorsConnectorSpec
         willRespondWith = (200, Some(testJson3Repo))
       )
 
-      val response = healthIndicatorsConnector.getAllHealthIndicators()
+      val response = healthIndicatorsConnector.getAllRepositoryRatings()
         .futureValue
 
       val expectedResponse = Seq(
-        RepositoryRating("team-indicator-dashboard-frontend", RepoType.Service, -450, Seq.empty),
-        RepositoryRating("api-platform-scripts", RepoType.Other, 50, Seq.empty),
+        RepositoryRating("team-indicator-dashboard-frontend",RepoType.Service, -450, Seq.empty),
+        RepositoryRating("api-platform-scripts",  RepoType.Other, 50, Seq.empty),
         RepositoryRating("the-childcare-service-prototype", RepoType.Prototype, 50, Seq.empty)
       )
 

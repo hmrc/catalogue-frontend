@@ -20,12 +20,10 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.connector.{Team, TeamsAndRepositoriesConnector, model}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
-import java.io
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
@@ -38,7 +36,7 @@ class HealthIndicatorsController @Inject()(
 
   def indicatorsForRepo(name: String): Action[AnyContent] =
     Action.async { implicit request =>
-      healthIndicatorsConnector.getHealthIndicators(name).map {
+      healthIndicatorsConnector.getRepositoryRating(name).map {
         case Some(repositoryRating: RepositoryRating) => Ok(HealthIndicatorsPage(repositoryRating))
         case None                                     => NotFound(error_404_template())
       }
@@ -47,8 +45,7 @@ class HealthIndicatorsController @Inject()(
   def indicatorsForAllRepos(): Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        teamsWithRepos <- teamsAndReposConnector.teamsWithRepositories(hc: HeaderCarrier)
-        allIndicators  <- healthIndicatorsConnector.getAllHealthIndicators()
+        allIndicators  <- healthIndicatorsConnector.getAllRepositoryRatings()
         form      = HealthIndicatorsFilter.form.bindFromRequest
         repoTypes = allIndicators.map(_.repositoryType).distinct
         filteredIndicators = form.fold(_ => None, _.repoType) match {
@@ -61,22 +58,6 @@ class HealthIndicatorsController @Inject()(
           case _                                  => NotFound(error_404_template())
         }
     }
-
-  private def invertTeamsWithRepos(teamsWithRepos: Seq[Team]): Map[String, Seq[String]] = teamsWithRepos.foldLeft(Map.empty[String, Seq[String]]) {
-    case (runningTotal, Team(teamName, _, _, _, maybeRepos)) =>
-      maybeRepos match {
-        case None => runningTotal
-        case Some(repos) =>
-          repos.values.flatten.foldLeft(runningTotal) {
-            case (result, repoName) =>
-              val teams = result.get(repoName) match {
-                case Some(currentTeams) => currentTeams ++ Seq(teamName.asString)
-                case None               => Seq(teamName.asString)
-              }
-              result ++ Map(repoName -> teams)
-          }
-      }
-  }
 }
 
 object HealthIndicatorsController {
