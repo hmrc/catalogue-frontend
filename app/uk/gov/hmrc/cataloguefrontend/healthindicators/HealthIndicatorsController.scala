@@ -30,7 +30,7 @@ import scala.concurrent.ExecutionContext
 class HealthIndicatorsController @Inject()(
   healthIndicatorsConnector: HealthIndicatorsConnector,
   mcc: MessagesControllerComponents,
-  teamsAndReposConnector: TeamsAndRepositoriesConnector
+  healthIndicatorsService: HealthIndicatorsService
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
@@ -45,16 +45,16 @@ class HealthIndicatorsController @Inject()(
   def indicatorsForAllRepos(): Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        allIndicators  <- healthIndicatorsConnector.getAllRepositoryRatings()
+        repoRatingsWithTeams  <- healthIndicatorsService.createRepoRatingsWithTeams
         form      = HealthIndicatorsFilter.form.bindFromRequest
-        repoTypes = allIndicators.map(_.repositoryType).distinct
+        repoTypes = repoRatingsWithTeams.map(_.repositoryType).distinct
         filteredIndicators = form.fold(_ => None, _.repoType) match {
-          case Some(rt) => allIndicators.filter(_.repositoryType == rt)
-          case None     => allIndicators
+          case Some(rt) => repoRatingsWithTeams.filter(_.repositoryType == rt)
+          case None     => repoRatingsWithTeams
         }
       } yield
         filteredIndicators match {
-          case repoRatings: Seq[RepositoryRating] => Ok(HealthIndicatorsLeaderBoard(repoRatings, form, repoTypes))
+          case repoRatingsWithTeams => Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, form, repoTypes))
           case _                                  => NotFound(error_404_template())
         }
     }
