@@ -27,13 +27,7 @@ import play.api.libs.ws.{WSClient, WSResponse}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 
-class HealthIndicatorsControllerSpec
-  extends AnyWordSpec
-    with Matchers
-    with MockitoSugar
-    with FakeApplicationBuilder
-    with OptionValues
-    with ScalaFutures {
+class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with FakeApplicationBuilder with OptionValues with ScalaFutures {
 
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
@@ -79,13 +73,20 @@ class HealthIndicatorsControllerSpec
         "/health-indicators/repositories/?sort=desc",
         willRespondWith = (200, Some(testJson3Repo))
       )
+
+      serviceEndpoint(
+        GET,
+        "/api/teams_with_repositories",
+        willRespondWith = (200, Some(teamsJSON))
+      )
+
       private val response: WSResponse =
         ws.url(s"http://localhost:$port/health-indicators").get.futureValue
 
       response.status shouldBe 200
-      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
-      response.body should include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
-      response.body should include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
+      response.body   should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
+      response.body   should include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
+      response.body   should include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
     }
 
     "respond with status 200 and include only services when repo_type=Service" in new Setup {
@@ -94,20 +95,27 @@ class HealthIndicatorsControllerSpec
         "/health-indicators/repositories/?sort=desc",
         willRespondWith = (200, Some(testJson3Repo))
       )
+
+      serviceEndpoint(
+        GET,
+        "/api/teams_with_repositories",
+        willRespondWith = (200, Some(teamsJSON))
+      )
+
       private val response: WSResponse =
         ws.url(s"http://localhost:$port/health-indicators?repo_type=Service").get.futureValue
 
       response.status shouldBe 200
-      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
-      response.body shouldNot include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
-      response.body shouldNot include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
+      response.body   should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
+      response.body   shouldNot include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
+      response.body   shouldNot include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
     }
   }
 
   "getScoreColour()" should {
     "return correct class string" in {
-      HealthIndicatorsController.getScoreColour(100) shouldBe "repo-score-green"
-      HealthIndicatorsController.getScoreColour(0) shouldBe "repo-score-amber"
+      HealthIndicatorsController.getScoreColour(100)  shouldBe "repo-score-green"
+      HealthIndicatorsController.getScoreColour(0)    shouldBe "repo-score-amber"
       HealthIndicatorsController.getScoreColour(-100) shouldBe "repo-score-red"
     }
   }
@@ -154,7 +162,7 @@ class HealthIndicatorsControllerSpec
           |}""".stripMargin
 
     val testJson3Repo: String =
-     """[{
+      """[{
     |  "repositoryName": "team-indicator-dashboard-frontend",
     |  "repositoryType": "Service",
     |  "repositoryScore": -450,
@@ -172,5 +180,68 @@ class HealthIndicatorsControllerSpec
     | "repositoryScore": 50,
     | "ratings": []
     |}]""".stripMargin
+
+    val teamsJSON: String = """[{
+                      |"name": "BTA",
+                      |"repos": {
+                      |"Service": [
+                      |"add-taxes-frontend",
+                      |"bta-stubs",
+                      |"business-tax-account",
+                      |"business-tax-prototype-hmrc-toolkit",
+                      |"cesa-stub",
+                      |"corporation-tax-frontend",
+                      |"ct",
+                      |"help-and-contact-frontend",
+                      |"sa",
+                      |"tax-account-router-frontend",
+                      |"vat",
+                      |"vat-frontend"
+                      |],
+                      |"Library": [
+                      |"play-health",
+                      |"tar-acceptance-tests"
+                      |],
+                      |"Prototype": [
+                      |"add-manage-BTA-services-prototype",
+                      |"bta-cards-prototype",
+                      |"bta-design-prototype",
+                      |"bta-london-prototype",
+                      |"bta-prototype",
+                      |"business-tax-prototype"
+                      |],
+                      |"Other": [
+                      |"add-taxes-acceptance-tests",
+                      |"alert-config",
+                      |"app-config-base",
+                      |"app-config-development",
+                      |"app-config-externaltest",
+                      |"app-config-production",
+                      |"app-config-qa",
+                      |"app-config-staging",
+                      |"bobby-config",
+                      |"build-jobs",
+                      |"business-tax-account-acceptance-tests",
+                      |"business-tax-account-dashboard",
+                      |"business-tax-account-performance-tests",
+                      |"corporation-tax-performance-tests",
+                      |"grafana-dashboards",
+                      |"hmrc-stubs-core",
+                      |"jenkins-config",
+                      |"jenkins-jobs",
+                      |"kibana-dashboards",
+                      |"mdtp-frontend-routes",
+                      |"outage-pages",
+                      |"performance-test-jobs",
+                      |"play-sso-out",
+                      |"self-assessment-performance-tests",
+                      |"service-manager-config",
+                      |"tar-performance-tests",
+                      |"vat-performance-tests",
+                      |"yta-dashboard"
+                      |]
+                      |},
+                      |"ownedRepos": []
+                      |}]""".stripMargin
   }
 }
