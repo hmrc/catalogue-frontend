@@ -20,7 +20,6 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
@@ -55,7 +54,6 @@ class HealthIndicatorsController @Inject()(
       } yield
         filteredIndicators match {
           case repoRatingsWithTeams => Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, form, repoTypes))
-          case _                                  => NotFound(error_404_template())
         }
     }
 }
