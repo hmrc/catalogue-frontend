@@ -58,8 +58,8 @@
                             <a href="/health-indicators/@{rating.repositoryName}">@rating.repositoryName</a>
                         </td>
                         <td id="row_@{i}_column_1">
-                            @{if(rating.owningTeams.size == 1){rating.owningTeams}
-                            else if(rating.owningTeams.size <=3){rating.owningTeams.toSeq.map(_ + ", ")}
+                            @{if(rating.owningTeams.size == 1){rating.owningTeams.map(_.asString)}
+                            else if(rating.owningTeams.size <=3){rating.owningTeams.map(_.asString + ", ")}
                             else("Multiple")}
                         </td>
                         <td id="row_@{i}_column_2">@rating.repositoryType</td>

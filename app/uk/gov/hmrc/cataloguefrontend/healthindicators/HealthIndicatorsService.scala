@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.{Team, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -31,7 +32,7 @@ class HealthIndicatorsService @Inject()(
 ) {
 
   def createRepoRatingsWithTeams(implicit hc: HeaderCarrier): Future[Seq[RepoRatingsWithTeams]] = {
-    val repoToTeamsFut    = getRepoToTeams
+    val repoToTeamsFut    = teamsAndReposConnector.allTeamsByService
     val allRepoRatingsFut = healthIndicatorsConnector.getAllRepositoryRatings
 
     for {
@@ -39,33 +40,14 @@ class HealthIndicatorsService @Inject()(
       allRepoRatings <- allRepoRatingsFut
       repoRatingsWithTeams = allRepoRatings.map(rr => {
         repoToTeams.get(rr.repositoryName) match {
-          case Some(owningTeamsSet) => RepoRatingsWithTeams(rr.repositoryName, owningTeamsSet, rr.repositoryType, rr.repositoryScore, rr.ratings)
-          case None                 => RepoRatingsWithTeams(rr.repositoryName, Set(), rr.repositoryType, rr.repositoryScore, rr.ratings)
+          case Some(owningTeams) => RepoRatingsWithTeams(rr.repositoryName, owningTeams, rr.repositoryType, rr.repositoryScore, rr.ratings)
+          case None                 => RepoRatingsWithTeams(rr.repositoryName, Seq.empty, rr.repositoryType, rr.repositoryScore, rr.ratings)
         }
       })
 
     } yield repoRatingsWithTeams
   }
-
-  def getRepoToTeams(implicit hc: HeaderCarrier): Future[Map[String, Set[String]]] =
-    teamsAndReposConnector.teamsWithRepositories.map(invertTeamsToRepos)
-
-  private def invertTeamsToRepos(teamsWithRepos: Seq[Team]): Map[String, Set[String]] = teamsWithRepos.foldLeft(Map.empty[String, Set[String]]) {
-    case (runningTotal, Team(teamName, _, _, _, maybeRepos)) =>
-      maybeRepos match {
-        case None => runningTotal
-        case Some(repos) =>
-          repos.values.flatten.foldLeft(runningTotal) {
-            case (result, repoName) =>
-              val teams = result.get(repoName) match {
-                case Some(currentTeams) => currentTeams ++ Set(teamName.asString)
-                case None               => Set(teamName.asString)
-              }
-              result ++ Map(repoName -> teams)
-          }
-      }
-  }
 }
 
-case class RepoRatingsWithTeams(repositoryName: String, owningTeams: Set[String], repositoryType: RepoType, repositoryScore: Int, ratings: Seq[Rating])
+case class RepoRatingsWithTeams(repositoryName: String, owningTeams: Seq[TeamName], repositoryType: RepoType, repositoryScore: Int, ratings: Seq[Rating])
 

@@ -76,7 +76,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
 
       serviceEndpoint(
         GET,
-        "/api/teams_with_repositories",
+        "/api/services?teamDetails=true",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -98,7 +98,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
 
       serviceEndpoint(
         GET,
-        "/api/teams_with_repositories",
+        "/api/services?teamDetails=true",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -181,67 +181,9 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     | "ratings": []
     |}]""".stripMargin
 
-    val teamsJSON: String = """[{
-                      |"name": "BTA",
-                      |"repos": {
-                      |"Service": [
-                      |"add-taxes-frontend",
-                      |"bta-stubs",
-                      |"business-tax-account",
-                      |"business-tax-prototype-hmrc-toolkit",
-                      |"cesa-stub",
-                      |"corporation-tax-frontend",
-                      |"ct",
-                      |"help-and-contact-frontend",
-                      |"sa",
-                      |"tax-account-router-frontend",
-                      |"vat",
-                      |"vat-frontend"
-                      |],
-                      |"Library": [
-                      |"play-health",
-                      |"tar-acceptance-tests"
-                      |],
-                      |"Prototype": [
-                      |"add-manage-BTA-services-prototype",
-                      |"bta-cards-prototype",
-                      |"bta-design-prototype",
-                      |"bta-london-prototype",
-                      |"bta-prototype",
-                      |"business-tax-prototype"
-                      |],
-                      |"Other": [
-                      |"add-taxes-acceptance-tests",
-                      |"alert-config",
-                      |"app-config-base",
-                      |"app-config-development",
-                      |"app-config-externaltest",
-                      |"app-config-production",
-                      |"app-config-qa",
-                      |"app-config-staging",
-                      |"bobby-config",
-                      |"build-jobs",
-                      |"business-tax-account-acceptance-tests",
-                      |"business-tax-account-dashboard",
-                      |"business-tax-account-performance-tests",
-                      |"corporation-tax-performance-tests",
-                      |"grafana-dashboards",
-                      |"hmrc-stubs-core",
-                      |"jenkins-config",
-                      |"jenkins-jobs",
-                      |"kibana-dashboards",
-                      |"mdtp-frontend-routes",
-                      |"outage-pages",
-                      |"performance-test-jobs",
-                      |"play-sso-out",
-                      |"self-assessment-performance-tests",
-                      |"service-manager-config",
-                      |"tar-performance-tests",
-                      |"vat-performance-tests",
-                      |"yta-dashboard"
-                      |]
-                      |},
-                      |"ownedRepos": []
-                      |}]""".stripMargin
+    val teamsJSON: String = """{"team-indicator-dashboard-frontend": [
+                              |"Classic Services Manchester",
+                              |"Classic Services Telford"
+                              |]}""".stripMargin
   }
 }
