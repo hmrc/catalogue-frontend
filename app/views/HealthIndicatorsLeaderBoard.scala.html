@@ -59,7 +59,7 @@
                         </td>
                         <td id="row_@{i}_column_1">
                             @{if(rating.owningTeams.size == 1){rating.owningTeams.map(_.asString)}
-                            else if(rating.owningTeams.size <=3){rating.owningTeams.map(_.asString + ", ")}
+                            else if(rating.owningTeams.size <=3){rating.owningTeams.mkString(", ")}
                             else("Multiple")}
                         </td>
                         <td id="row_@{i}_column_2">@rating.repositoryType</td>
