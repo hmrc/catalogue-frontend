@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.{Team, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -38,16 +38,17 @@ class HealthIndicatorsService @Inject()(
     for {
       repoToTeams    <- repoToTeamsFut
       allRepoRatings <- allRepoRatingsFut
-      repoRatingsWithTeams = allRepoRatings.map(rr => {
-        repoToTeams.get(rr.repositoryName) match {
-          case Some(owningTeams) => RepoRatingsWithTeams(rr.repositoryName, owningTeams, rr.repositoryType, rr.repositoryScore, rr.ratings)
-          case None                 => RepoRatingsWithTeams(rr.repositoryName, Seq.empty, rr.repositoryType, rr.repositoryScore, rr.ratings)
-        }
-      })
-
-    } yield repoRatingsWithTeams
+    } yield
+      allRepoRatings.map { rr =>
+        RepoRatingsWithTeams(
+          rr.repositoryName,
+          owningTeams = repoToTeams.getOrElse(rr.repositoryName, Seq.empty),
+          rr.repositoryType,
+          rr.repositoryScore,
+          rr.ratings
+        )
+      }
   }
 }
 
 case class RepoRatingsWithTeams(repositoryName: String, owningTeams: Seq[TeamName], repositoryType: RepoType, repositoryScore: Int, ratings: Seq[Rating])
-
