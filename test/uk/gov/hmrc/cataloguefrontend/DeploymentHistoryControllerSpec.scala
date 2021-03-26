@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.{ArgumentMatchers, MockitoSugar}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
@@ -37,7 +37,7 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
 
     lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     lazy val mockedReleasesConnector             = mock[ReleasesConnector]
-    lazy val page = new DeploymentHistoryPage()
+    lazy val page                                = new DeploymentHistoryPage()
 
     lazy val controller = new DeploymentHistoryController(
       mockedReleasesConnector,
@@ -48,18 +48,21 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
   }
 
   "history" should {
+
     "return 400 when given a bad date" in new Fixture {
       val response = controller.history()(FakeRequest(GET, "/deployments/production?from=baddate"))
       status(response) shouldBe 400
     }
+
     "return 200 when given no filters" in new Fixture {
-      when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any())(any()))
+      when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any(), any(), any())(any()))
         .thenReturn(Future.successful(Seq.empty))
       when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
         .thenReturn(Future.successful(Seq.empty))
       val response = controller.history()(FakeRequest(GET, "/deployments/production"))
       status(response) shouldBe 200
     }
+
     "filter out audit records that do not fit the date range" in new Fixture {
       import DateHelper._
 
@@ -68,21 +71,17 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
       val d3 = Instant.ofEpochMilli(LocalDate.parse("2020-03-01").atStartOfDayEpochMillis)
 
       val deps = Seq(
-        Deployment(
+        DeploymentHistory(
           ServiceName("s1"),
           Environment.Production,
           VersionNumber("1.1.1"),
           Seq.empty,
           TimeSeen(d1),
-          TimeSeen(d3),
-          Seq(
-            DeployerAudit("usera", TimeSeen(d1)),
-            DeployerAudit("userb", TimeSeen(d2)),
-            DeployerAudit("userc", TimeSeen(d3))
-          ))
+          Username("usera")
+        )
       )
 
-      when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any())(any()))
+      when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any(), any(), any())(any()))
         .thenReturn(Future.successful(deps))
       when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
         .thenReturn(Future.successful(Seq.empty))
@@ -90,9 +89,28 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
       status(response) shouldBe 200
 
       val responseString = contentAsString(response)
-      responseString.contains("userc") shouldBe false //March shouldn't show for Feb filter
       responseString.contains("usera") shouldBe true
-      responseString.contains("userb") shouldBe true
+    }
+
+    "request paginated data based on the page number" in new Fixture {
+      when(
+        mockedReleasesConnector
+          .deploymentHistory(
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            eqTo(Some(2 * DeploymentHistoryController.pageSize)),
+            eqTo(Some(DeploymentHistoryController.pageSize))
+          )(any()))
+        .thenReturn(Future.successful(Seq.empty))
+
+      when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
+        .thenReturn(Future.successful(Seq.empty))
+
+      val response = controller.history()(FakeRequest(GET, "/deployments/production?page=2"))
+      status(response) shouldBe 200
     }
   }
 }

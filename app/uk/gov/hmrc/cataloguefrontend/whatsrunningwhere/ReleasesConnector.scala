@@ -28,7 +28,7 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ReleasesConnector @Inject()(
-  http          : HttpClient,
+  http: HttpClient,
   servicesConfig: ServicesConfig
 )(
   implicit
@@ -86,20 +86,24 @@ class ReleasesConnector @Inject()(
 
   def deploymentHistory(
     environment: Environment,
-    from       : Option[Long]   = None,
-    to         : Option[Long]   = None,
-    team       : Option[String] = None,
-    app        : Option[String] = None
-  )(implicit
-    hc: HeaderCarrier
-  ): Future[Seq[Deployment]] = {
-    implicit val rf = JsonCodecs.deploymentReads
+    from: Option[Long]   = None,
+    to: Option[Long]     = None,
+    team: Option[String] = None,
+    app: Option[String]  = None,
+    skip: Option[Int]    = None,
+    limit: Option[Int]   = None
+  )(
+    implicit
+    hc: HeaderCarrier): Future[Seq[DeploymentHistory]] = {
+    implicit val rf = JsonCodecs.deploymentHistoryReads
     val params = Seq(
-      "from"     -> from.map(_.toString),
-      "to"       -> to.map(_.toString),
-      "team"     -> team,
-      "app"      -> app
+      "from"  -> from.map(_.toString),
+      "to"    -> to.map(_.toString),
+      "team"  -> team,
+      "app"   -> app,
+      "skip"  -> skip.map(_.toString),
+      "limit" -> limit.map(_.toString)
     )
-    http.GET[Seq[Deployment]](url"$serviceUrl/releases-api/deployments/${environment.asString}?$params")
+    http.GET[Seq[DeploymentHistory]](url"$serviceUrl/releases-api/deployments/${environment.asString}?$params")
   }
 }
