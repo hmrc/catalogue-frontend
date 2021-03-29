@@ -17,7 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.mockito.ArgumentMatchers.{any, eq => eqTo}
-import org.mockito.{ArgumentMatchers, MockitoSugar}
+import org.mockito.MockitoSugar
+import play.api.Configuration
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
@@ -43,6 +44,7 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
       mockedReleasesConnector,
       mockedTeamsAndRepositoriesConnector,
       page,
+      Configuration.empty,
       stubMessagesControllerComponents()
     )
   }
@@ -56,7 +58,7 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
 
     "return 200 when given no filters" in new Fixture {
       when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any(), any(), any())(any()))
-        .thenReturn(Future.successful(Seq.empty))
+        .thenReturn(Future.successful(PaginatedDeploymentHistory(history = Seq.empty, 0)))
       when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
         .thenReturn(Future.successful(Seq.empty))
       val response = controller.history()(FakeRequest(GET, "/deployments/production"))
@@ -82,7 +84,7 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
       )
 
       when(mockedReleasesConnector.deploymentHistory(any(), any(), any(), any(), any(), any(), any())(any()))
-        .thenReturn(Future.successful(deps))
+        .thenReturn(Future.successful(PaginatedDeploymentHistory(deps, deps.length)))
       when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
         .thenReturn(Future.successful(Seq.empty))
       val response = controller.history()(FakeRequest(GET, "/deployments/production?from=2020-01-01&to=2020-02-01"))
@@ -104,7 +106,7 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
             eqTo(Some(2 * DeploymentHistoryController.pageSize)),
             eqTo(Some(DeploymentHistoryController.pageSize))
           )(any()))
-        .thenReturn(Future.successful(Seq.empty))
+        .thenReturn(Future.successful(PaginatedDeploymentHistory(Seq.empty, 0)))
 
       when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
         .thenReturn(Future.successful(Seq.empty))

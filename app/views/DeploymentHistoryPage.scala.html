@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentHistory,Pagination}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Username, DeploymentHistory, Pagination}
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
@@ -26,7 +26,7 @@
   selectedEnv       : Environment,
   deployments       : Seq[DeploymentHistory],
   teams             : Seq[Team],
-  userProfileBaseUrl: String,
+  userProfileBaseUrl: Option[String],
   pagination        : Pagination,
   form              : Form[_]
 )(implicit messages: Messages, request: Request[_])
@@ -106,14 +106,7 @@
                   </td>
                   <td id="row@{i}_version"    class="version">@{d.version.asString}</td>
                   <td id="row@{i}_deploytime" class="deploy-time monospaced">@{d.time.time.asUTCString}</td>
-                    <td id="row@{i}_deployer" class="deployer">
-                        @if(d.username.username.equalsIgnoreCase("remoterequest")) {
-                            <span>@{d.username.username}</span>
-                        } else {
-                            <a href="@userProfileBaseUrl/@{d.username.username}" target="_blank">@{d.username.username}<span class="glyphicon glyphicon-new-window"></span></a>
-                        }
-
-                  </td>
+                  <td id="row@{i}_deployer" class="deployer">@userLink(d.username)</td>
                 </tr>
                 }
           </tbody>
@@ -166,17 +159,29 @@ function selectEnvironment(e, environment) {
 @pageNavigation() = {
   <tr>
       <td>
-          @if(pagination.page-1 < 0) {
+          @if(pagination.page <= 0) {
               <a disabled="true" class="btn btn-default" href="#">Prev</a>
           }else {
               <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page-1)}">Prev</a>
           }
       </td>
       <td colspan="3">
-          <span style="color: #6f777b;margin-left: 25%;">Showing @{pagination.page*pagination.pageSize} to @{(pagination.page*pagination.pageSize)+deployments.length}</span>
+          <span style="color: #6f777b;margin-left: 25%;">Showing @{pagination.page*pagination.pageSize} to @{(pagination.page*pagination.pageSize)+deployments.length} of @{pagination.total}</span>
       </td>
       <td style="text-align: right">
-          <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page+1) }">Next</a>
+          @if((pagination.page*pagination.pageSize)+deployments.length >= pagination.total) {
+              <a disabled="true" class="btn btn-default" href="#">Next</a>
+          } else {
+              <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page+1) }">Next</a>
+          }
       </td>
   </tr>
+}
+
+@userLink(username: Username) = {
+    @if(username.asString.equalsIgnoreCase("remoterequest")) {
+        <span>@{username.asString}</span>
+    } else {
+        @userProfileBaseUrl.map { url => <a href= "@url/@{username.asString}" target="_blank">@{username.asString}<span class="glyphicon glyphicon-new-window"></span></a> }.getOrElse(<span>@{username.asString}</span>)
+    }
 }

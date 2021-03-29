@@ -213,6 +213,8 @@ case class ServiceDeployment(
   lastCompleted: Option[DeploymentEvent]
 )
 
+case class PaginatedDeploymentHistory(history: Seq[DeploymentHistory], total: Long)
+
 case class DeploymentHistory(
   name: ServiceName,
   environment: Environment,
@@ -222,9 +224,9 @@ case class DeploymentHistory(
   username: Username
 )
 
-case class Username(username: String)
+case class Username(asString: String)
 
-case class Pagination(page: Int, pageSize: Int)
+case class Pagination(page: Int, pageSize: Int, total: Long)
 
 object Pagination {
   def uriForPage(uri: String, page: Int): URI =

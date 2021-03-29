@@ -19,8 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
-import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpReadsInstances, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -84,6 +83,15 @@ class ReleasesConnector @Inject()(
       }
   }
 
+  private val paginatedHistoryReads: HttpReads[PaginatedDeploymentHistory] = {
+    implicit val rf = JsonCodecs.deploymentHistoryReads
+    for {
+      history <- HttpReadsInstances.readFromJson[Seq[DeploymentHistory]]
+      resp    <- HttpReads.ask.map(_._3)
+      totals = resp.header("X-Total-Count").map(_.toLong).getOrElse(0L)
+    } yield PaginatedDeploymentHistory(history, totals)
+  }
+
   def deploymentHistory(
     environment: Environment,
     from: Option[Long]   = None,
@@ -94,8 +102,9 @@ class ReleasesConnector @Inject()(
     limit: Option[Int]   = None
   )(
     implicit
-    hc: HeaderCarrier): Future[Seq[DeploymentHistory]] = {
-    implicit val rf = JsonCodecs.deploymentHistoryReads
+    hc: HeaderCarrier): Future[PaginatedDeploymentHistory] = {
+
+    implicit val mr: HttpReads[PaginatedDeploymentHistory] = paginatedHistoryReads
     val params = Seq(
       "from"  -> from.map(_.toString),
       "to"    -> to.map(_.toString),
@@ -104,6 +113,8 @@ class ReleasesConnector @Inject()(
       "skip"  -> skip.map(_.toString),
       "limit" -> limit.map(_.toString)
     )
-    http.GET[Seq[DeploymentHistory]](url"$serviceUrl/releases-api/deployments/${environment.asString}?$params")
+
+    http
+      .GET[PaginatedDeploymentHistory](url"$serviceUrl/releases-api/deployments/${environment.asString}?$params")
   }
 }
