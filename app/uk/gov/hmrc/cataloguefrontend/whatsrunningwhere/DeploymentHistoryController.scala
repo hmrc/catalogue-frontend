@@ -82,11 +82,9 @@ class DeploymentHistoryController @Inject()(
 
 object DeploymentHistoryController {
 
-  import uk.gov.hmrc.cataloguefrontend.DateHelper._
-
   case class SearchForm(
-    from: Long,
-    to: Long,
+    from: LocalDate,
+    to: LocalDate,
     team: Option[String],
     search: Option[String],
     page: Option[Int]
@@ -94,35 +92,25 @@ object DeploymentHistoryController {
 
   val pageSize: Int = 50
 
-  def defaultFromTime(referenceDate: LocalDate = LocalDate.now()): Long =
-    referenceDate.minusDays(7).atStartOfDayEpochMillis
+  def defaultFromTime(referenceDate: LocalDate = LocalDate.now()): LocalDate = referenceDate.minusDays(7)
 
-  def defaultToTime(referenceDate: LocalDate = LocalDate.now()): Long =
-    referenceDate.atEndOfDayEpochMillis
+  def defaultToTime(referenceDate: LocalDate = LocalDate.now()): LocalDate = referenceDate
 
   lazy val form: Form[SearchForm] = {
     val dateFormat = "yyyy-MM-dd"
     Form(
       Forms.mapping(
         "from" -> Forms
-          .optional(
-            Forms
-              .localDate(dateFormat)
-              .transform[Long](_.atStartOfDayEpochMillis, longToLocalDate)
-          )
-          .transform[Long](o => o.getOrElse(defaultFromTime()), l => Some(l)), //Default to last week if not set
+          .optional(Forms.localDate(dateFormat))
+          .transform[LocalDate](o => o.getOrElse(defaultFromTime()), l => Some(l)), //Default to last week if not set
         "to" -> Forms
-          .optional(
-            Forms
-              .localDate(dateFormat)
-              .transform[Long](_.atEndOfDayEpochMillis, longToLocalDate)
-          )
-          .transform[Long](o => o.getOrElse(defaultToTime()), l => Some(l)), //Default to now if not set
+          .optional(Forms.localDate(dateFormat))
+          .transform[LocalDate](o => o.getOrElse(defaultToTime()), l => Some(l)), //Default to now if not set
         "team"   -> Forms.optional(Forms.text),
         "search" -> Forms.optional(Forms.text),
         "page"   -> Forms.optional(Forms.number(min = 0))
       )(SearchForm.apply)(SearchForm.unapply)
-        verifying ("To Date must be greater than or equal to From Date", f => f.to > f.from)
+        verifying ("To Date must be greater than or equal to From Date", f => f.to.isAfter(f.from))
     )
   }
 }

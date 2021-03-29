@@ -162,17 +162,17 @@ function selectEnvironment(e, environment) {
           @if(pagination.page <= 0) {
               <a disabled="true" class="btn btn-default" href="#">Prev</a>
           }else {
-              <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page-1)}">Prev</a>
+              <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page - 1)}">Prev</a>
           }
       </td>
       <td colspan="3">
           <span style="color: #6f777b;margin-left: 25%;">Showing @{pagination.page*pagination.pageSize} to @{(pagination.page*pagination.pageSize)+deployments.length} of @{pagination.total}</span>
       </td>
       <td style="text-align: right">
-          @if((pagination.page*pagination.pageSize)+deployments.length >= pagination.total) {
+          @if( (pagination.page * pagination.pageSize) + deployments.length >= pagination.total) {
               <a disabled="true" class="btn btn-default" href="#">Next</a>
           } else {
-              <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page+1) }">Next</a>
+              <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page + 1) }">Next</a>
           }
       </td>
   </tr>

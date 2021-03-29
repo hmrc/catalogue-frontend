@@ -22,6 +22,8 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpReadsInstances, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.{Instant, LocalDate, LocalTime, ZoneOffset}
+import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -94,20 +96,20 @@ class ReleasesConnector @Inject()(
 
   def deploymentHistory(
     environment: Environment,
-    from: Option[Long]   = None,
-    to: Option[Long]     = None,
-    team: Option[String] = None,
-    app: Option[String]  = None,
-    skip: Option[Int]    = None,
-    limit: Option[Int]   = None
+    from: Option[LocalDate] = None,
+    to: Option[LocalDate]   = None,
+    team: Option[String]    = None,
+    app: Option[String]     = None,
+    skip: Option[Int]       = None,
+    limit: Option[Int]      = None
   )(
     implicit
     hc: HeaderCarrier): Future[PaginatedDeploymentHistory] = {
 
     implicit val mr: HttpReads[PaginatedDeploymentHistory] = paginatedHistoryReads
     val params = Seq(
-      "from"  -> from.map(_.toString),
-      "to"    -> to.map(_.toString),
+      "from"  -> from.map(from => DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))),
+      "to"    -> to.map(to => DateTimeFormatter.ISO_INSTANT.format(to.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC))),
       "team"  -> team,
       "app"   -> app,
       "skip"  -> skip.map(_.toString),
