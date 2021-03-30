@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import java.time.Instant
-
+import org.apache.http.client.utils.URIBuilder
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+
+import java.net.URI
+import java.time.Instant
 
 sealed trait Platform {
   def asString: String
@@ -34,9 +36,9 @@ case class WhatsRunningWhere(
 )
 
 case class WhatsRunningWhereVersion(
-  environment  : Environment,
+  environment: Environment,
   versionNumber: VersionNumber,
-  lastSeen     : TimeSeen
+  lastSeen: TimeSeen
 )
 
 object JsonCodecs {
@@ -52,6 +54,7 @@ object JsonCodecs {
   val versionNumberFormat: Format[VersionNumber] = format(VersionNumber.apply, unlift(VersionNumber.unapply))
   val timeSeenFormat: Format[TimeSeen]           = format(TimeSeen.apply, unlift(TimeSeen.unapply))
   val teamNameFormat: Format[TeamName]           = format(TeamName.apply, unlift(TeamName.unapply))
+  val usernameReads: Format[Username]            = format(Username.apply, unlift(Username.unapply))
   val deploymentStatusFormat: Format[DeploymentStatus] =
     format(DeploymentStatus.apply, unlift(DeploymentStatus.unapply))
 
@@ -74,18 +77,16 @@ object JsonCodecs {
     implicit val wf  = environmentFormat
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
-    ( (__ \ "environment"  ).read[Environment]
-    ~ (__ \ "versionNumber").read[VersionNumber]
-    ~ (__ \ "lastSeen"     ).read[TimeSeen]
-    )(WhatsRunningWhereVersion.apply _)
+    ((__ \ "environment").read[Environment]
+      ~ (__ \ "versionNumber").read[VersionNumber]
+      ~ (__ \ "lastSeen").read[TimeSeen])(WhatsRunningWhereVersion.apply _)
   }
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] = {
     implicit val wf    = applicationNameFormat
     implicit val wrwvf = whatsRunningWhereVersionReads
-    ( (__ \ "applicationName").read[ServiceName]
-    ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
-    )(WhatsRunningWhere.apply _)
+    ((__ \ "applicationName").read[ServiceName]
+      ~ (__ \ "versions").read[List[WhatsRunningWhereVersion]])(WhatsRunningWhere.apply _)
   }
 
   val profileTypeFormat: Format[ProfileType] = new Format[ProfileType] {
@@ -103,9 +104,8 @@ object JsonCodecs {
   val profileFormat: OFormat[Profile] = {
     implicit val ptf = profileTypeFormat
     implicit val pnf = profileNameFormat
-    ( (__ \ "type").format[ProfileType]
-    ~ (__ \ "name").format[ProfileName]
-    )(Profile.apply, unlift(Profile.unapply))
+    ((__ \ "type").format[ProfileType]
+      ~ (__ \ "name").format[ProfileName])(Profile.apply, unlift(Profile.unapply))
   }
 
   // Deployment Event
@@ -113,46 +113,35 @@ object JsonCodecs {
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
     implicit val dsf = deploymentStatusFormat
-    ( (__ \ "deploymentId").format[String]
-    ~ (__ \ "status"      ).format[DeploymentStatus]
-    ~ (__ \ "version"     ).format[VersionNumber]
-    ~ (__ \ "time"        ).format[TimeSeen]
-    )(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
+    ((__ \ "deploymentId").format[String]
+      ~ (__ \ "status").format[DeploymentStatus]
+      ~ (__ \ "version").format[VersionNumber]
+      ~ (__ \ "time").format[TimeSeen])(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
   }
 
   val serviceDeploymentsFormat: Format[ServiceDeployment] = {
     implicit val devf = deploymentEventFormat
     implicit val anf  = applicationNameFormat
     implicit val enf  = environmentFormat
-    ((__ \ "serviceName"      ).format[ServiceName]
-    ~ (__ \ "environment"     ).format[Environment]
-    ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
-    ~ (__ \ "lastCompleted"   ).formatNullable[DeploymentEvent]
-    )(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
+    ((__ \ "serviceName").format[ServiceName]
+      ~ (__ \ "environment").format[Environment]
+      ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
+      ~ (__ \ "lastCompleted").formatNullable[DeploymentEvent])(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
   }
 
-  val deployerAuditReads: Reads[DeployerAudit] = {
-    implicit val tsf = timeSeenFormat
-    ( (__ \ "userName"  ).read[String]
-    ~ (__ \ "deployTime").read[TimeSeen]
-    )(DeployerAudit.apply _)
-  }
-
-  val deploymentReads: Reads[Deployment] = {
+  val deploymentHistoryReads: Reads[DeploymentHistory] = {
     implicit val anf = applicationNameFormat
     implicit val ef  = environmentFormat
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
-    implicit val dar = deployerAuditReads
+    implicit val dar = usernameReads
     implicit val tmf = teamNameFormat
-    ( (__ \ "name"       ).read[ServiceName]
-    ~ (__ \ "environment").read[Environment]
-    ~ (__ \ "version"    ).read[VersionNumber]
-    ~ (__ \ "teams"      ).read[Seq[TeamName]]
-    ~ (__ \ "firstSeen"  ).read[TimeSeen]
-    ~ (__ \ "lastSeen"   ).read[TimeSeen]
-    ~ (__ \ "deployers"  ).read[Seq[DeployerAudit]]
-    )(Deployment.apply _)
+    ((__ \ "serviceName").read[ServiceName]
+      ~ (__ \ "environment").read[Environment]
+      ~ (__ \ "version").read[VersionNumber]
+      ~ (__ \ "teams").read[Seq[TeamName]]
+      ~ (__ \ "time").read[TimeSeen]
+      ~ (__ \ "username").read[Username])(DeploymentHistory.apply _)
   }
 }
 
@@ -212,34 +201,36 @@ case class DeploymentStatus(asString: String) extends AnyVal
 
 case class DeploymentEvent(
   deploymentId: String,
-  status      : DeploymentStatus,
-  version     : VersionNumber,
-  time        : TimeSeen
+  status: DeploymentStatus,
+  version: VersionNumber,
+  time: TimeSeen
 )
 
 case class ServiceDeployment(
-  serviceName     : ServiceName,
-  environment     : Environment,
-  deploymentEvents: Seq[DeploymentEvent],
-  lastCompleted   : Option[DeploymentEvent]
-)
-
-case class Deployment(
-  name       : ServiceName,
+  serviceName: ServiceName,
   environment: Environment,
-  version    : VersionNumber,
-  teams      : Seq[TeamName],
-  firstSeen  : TimeSeen,
-  lastSeen   : TimeSeen,
-  deployers  : Seq[DeployerAudit] = Seq.empty
-) {
-  lazy val latestDeployer: Option[DeployerAudit] = {
-    implicit val order = TimeSeen.timeSeenOrdering
-    deployers.sortBy(_.deployTime).lastOption
-  }
-}
-
-case class DeployerAudit(
-  userName  : String,
-  deployTime: TimeSeen
+  deploymentEvents: Seq[DeploymentEvent],
+  lastCompleted: Option[DeploymentEvent]
 )
+
+case class PaginatedDeploymentHistory(history: Seq[DeploymentHistory], total: Long)
+
+case class DeploymentHistory(
+  name: ServiceName,
+  environment: Environment,
+  version: VersionNumber,
+  teams: Seq[TeamName],
+  time: TimeSeen,
+  username: Username
+)
+
+case class Username(asString: String)
+
+case class Pagination(page: Int, pageSize: Int, total: Long)
+
+object Pagination {
+  def uriForPage(uri: String, page: Int): URI =
+    new URIBuilder(uri)
+      .setParameter("page", page.toString)
+      .build()
+}

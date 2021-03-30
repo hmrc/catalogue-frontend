@@ -32,15 +32,14 @@ class DeploymentsFilterSpec extends UnitSpec {
   "form" should {
     "bind the form with defaults if no filters set" in {
       DeploymentHistoryController.form.bind(Map.empty[String, String]).value shouldBe Some(
-        SearchForm(defaultFromTime(), defaultToTime(), None, None)
+        SearchForm(defaultFromTime(), defaultToTime(), None, None, None)
       )
     }
 
     "bind the form with values set" in {
       val formData = Map("from" -> "2020-06-10", "to" -> "2020-06-11", "team" -> "teamA", "search" -> "somesearch", "platform" -> "ecs")
       DeploymentHistoryController.form.bind(formData).value shouldBe Some(
-        SearchForm(LocalDate.parse("2020-06-10").atStartOfDayEpochMillis, LocalDate.parse("2020-06-11").atEndOfDayEpochMillis,
-          Some("teamA"), Some("somesearch"))
+        SearchForm(LocalDate.parse("2020-06-10"), LocalDate.parse("2020-06-11"), Some("teamA"), Some("somesearch"), None)
       )
     }
 
@@ -57,15 +56,20 @@ class DeploymentsFilterSpec extends UnitSpec {
     "allow setting the to date, defaulting from date" in {
       val formData = Map("to" -> "2099-06-10")
       DeploymentHistoryController.form.bind(formData).value shouldBe Some(
-        SearchForm(defaultFromTime(), LocalDate.parse("2099-06-10").atEndOfDayEpochMillis, None, None)
+        SearchForm(defaultFromTime(), LocalDate.parse("2099-06-10"), None, None, None)
       )
     }
 
     "allow setting the from date, defaulting to date" in {
       val formData = Map("from" -> "2020-06-10")
       DeploymentHistoryController.form.bind(formData).value shouldBe Some(
-        SearchForm(LocalDate.parse("2020-06-10").atStartOfDayEpochMillis, defaultToTime(), None, None)
+        SearchForm(LocalDate.parse("2020-06-10"), defaultToTime(), None, None, None)
       )
+    }
+
+    "error if the page is set to a negative number" in {
+      val formData = Map("from" -> "2020-06-11", "to" -> "2020-06-10", "page" -> "-1")
+      DeploymentHistoryController.form.bind(formData).errors.flatMap(_.messages) shouldBe List("error.min")
     }
   }
 }
