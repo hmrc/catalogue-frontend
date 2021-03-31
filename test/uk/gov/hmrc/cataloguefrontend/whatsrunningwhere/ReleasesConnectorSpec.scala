@@ -190,8 +190,9 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
         GET,
         s"/releases-api/deployments/production",
         queryParameters = Seq(
-          "skip"  -> "20",
-          "limit" -> "10"
+          "service" -> "income-tax-submission-frontend",
+          "skip"    -> "20",
+          "limit"   -> "1"
         ),
         extraHeaders = Map(("X-Total-Count" -> "100")),
         willRespondWith = (
@@ -199,7 +200,7 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
           Some("""[
               |{
               | "serviceName":"income-tax-submission-frontend",
-              | "environment":"qa",
+              | "environment":"production",
               | "version":"0.98.0",
               | "teams":[],
               | "time":"2021-03-24T14:16:41Z",
@@ -208,7 +209,10 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
               |]""".stripMargin))
       )
 
-      val response = releasesConnector.deploymentHistory(Environment.Production, skip = Some(20), limit = Some(10))(HeaderCarrierConverter.fromRequest(FakeRequest())).futureValue
+      val response = releasesConnector
+        .deploymentHistory(Environment.Production, service = Some("income-tax-submission-frontend"), skip = Some(20), limit = Some(1))(
+          HeaderCarrierConverter.fromRequest(FakeRequest()))
+        .futureValue
       response.total          shouldBe 100
       response.history.length shouldBe 1
     }

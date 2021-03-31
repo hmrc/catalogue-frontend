@@ -56,12 +56,12 @@ class DeploymentHistoryController @Inject()(
           for {
             deployments <- releasesConnector.deploymentHistory(
                             env,
-                            from  = Some(validForm.from),
-                            to    = Some(validForm.to),
-                            app   = None,
-                            team  = validForm.team,
-                            skip  = validForm.page.map(i => i * pageSize),
-                            limit = Some(pageSize)
+                            from    = Some(validForm.from),
+                            to      = Some(validForm.to),
+                            team    = validForm.team,
+                            service = validForm.service,
+                            skip    = validForm.page.map(i => i * pageSize),
+                            limit   = Some(pageSize)
                           )
             teams <- teamsAndRepositoriesConnector.allTeams
             pagination = Pagination(page = validForm.page.getOrElse(0), pageSize = pageSize, total = deployments.total)
@@ -86,7 +86,7 @@ object DeploymentHistoryController {
     from: LocalDate,
     to: LocalDate,
     team: Option[String],
-    search: Option[String],
+    service: Option[String],
     page: Option[Int]
   )
 
@@ -106,9 +106,9 @@ object DeploymentHistoryController {
         "to" -> Forms
           .optional(Forms.localDate(dateFormat))
           .transform[LocalDate](o => o.getOrElse(defaultToTime()), l => Some(l)), //Default to now if not set
-        "team"   -> Forms.optional(Forms.text),
-        "search" -> Forms.optional(Forms.text),
-        "page"   -> Forms.optional(Forms.number(min = 0))
+        "team"    -> Forms.optional(Forms.text),
+        "service" -> Forms.optional(Forms.text),
+        "page"    -> Forms.optional(Forms.number(min = 0))
       )(SearchForm.apply)(SearchForm.unapply)
         verifying ("To Date must be greater than or equal to From Date", f => f.to.isAfter(f.from))
     )

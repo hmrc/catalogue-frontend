@@ -19,10 +19,10 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpReadsInstances, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpReadsInstances, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.{Instant, LocalDate, LocalTime, ZoneOffset}
+import java.time.{LocalDate, LocalTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -99,7 +99,7 @@ class ReleasesConnector @Inject()(
     from: Option[LocalDate] = None,
     to: Option[LocalDate]   = None,
     team: Option[String]    = None,
-    app: Option[String]     = None,
+    service: Option[String] = None,
     skip: Option[Int]       = None,
     limit: Option[Int]      = None
   )(
@@ -108,12 +108,12 @@ class ReleasesConnector @Inject()(
 
     implicit val mr: HttpReads[PaginatedDeploymentHistory] = paginatedHistoryReads
     val params = Seq(
-      "from"  -> from.map(from => DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))),
-      "to"    -> to.map(to => DateTimeFormatter.ISO_INSTANT.format(to.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC))),
-      "team"  -> team,
-      "app"   -> app,
-      "skip"  -> skip.map(_.toString),
-      "limit" -> limit.map(_.toString)
+      "from"    -> from.map(from => DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))),
+      "to"      -> to.map(to => DateTimeFormatter.ISO_INSTANT.format(to.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC))),
+      "team"    -> team,
+      "service" -> service,
+      "skip"    -> skip.map(_.toString),
+      "limit"   -> limit.map(_.toString)
     )
 
     http

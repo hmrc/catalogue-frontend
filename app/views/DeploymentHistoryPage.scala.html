@@ -51,8 +51,8 @@
             <div class="form-group row">
                 <input type="hidden" id="selected-environment" value="@selectedEnv.asString">
                 <div class="col-xs-5">
-                    <label for="search" title="Search across all fields" data-toggle="tooltip">Search</label>
-                    <input id="search" class="search form-control" type="text" name="search" value='@form("search").value' autofocus autocomplete="off">
+                    <label for="service" title="Search by service name" data-toggle="tooltip">Service</label>
+                    <input id="service" class="search form-control" type="text" name="service" value='@form("service").value' autofocus autocomplete="off">
                 </div>
                 <div class="col-xs-3">
                     @select(
@@ -85,11 +85,11 @@
         <table class="table table-striped">
             @pageNavigation()
             <tr>
-                <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="service-name">Service</button></th>
-                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="team">Teams</button></th>
-                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="version">Version</button></th>
-                <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="deploy-time">Deploy Time</button></th>
-                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="deployer">Deployer</button></th>
+                <th class="col-lg-3"><button role="button" class="no-border" data-sort="service-name">Service</button></th>
+                <th class="col-lg-2"><button role="button" class="no-border" data-sort="team">Teams</button></th>
+                <th class="col-lg-2"><button role="button" class="no-border" data-sort="version">Version</button></th>
+                <th class="col-lg-3"><button role="button" class="no-border" data-sort="deploy-time">Deploy Time</button></th>
+                <th class="col-lg-2"><button role="button" class="no-border" data-sort="deployer">Deployer</button></th>
             </tr>
             <tbody class="list">
                 @deployments.zipWithIndex.map{case (d, i) =>
@@ -116,18 +116,9 @@
 }
 
 <script>
-// listjs configuration
-var options = { valueNames: [ 'service-name', 'service-name-link', 'team', 'version', 'deploy-time', 'deployer' ],
-                searchColumns: ['service-name-link', 'team', 'version', 'deploy-time', 'deployer'] };
-
-var serviceList = new List('service-list', options);
-
+// set autofocus cursor to right of text in search box
 var searchBox = document.getElementById("search");
 
-// re-search the list upon page load.
-serviceList.search(search.value);
-
-// set autofocus cursor to right of text in search box
 var length = searchBox.value.length;
 searchBox.focus();
 searchBox.setSelectionRange(length, length);
