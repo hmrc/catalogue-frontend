@@ -37,9 +37,9 @@ class DeploymentsFilterSpec extends UnitSpec {
     }
 
     "bind the form with values set" in {
-      val formData = Map("from" -> "2020-06-10", "to" -> "2020-06-11", "team" -> "teamA", "search" -> "somesearch", "platform" -> "ecs")
+      val formData = Map("from" -> "2020-06-10", "to" -> "2020-06-11", "team" -> "teamA", "service" -> "some-app", "platform" -> "ecs")
       DeploymentHistoryController.form.bind(formData).value shouldBe Some(
-        SearchForm(LocalDate.parse("2020-06-10"), LocalDate.parse("2020-06-11"), Some("teamA"), Some("somesearch"), None)
+        SearchForm(from = LocalDate.parse("2020-06-10"), to = LocalDate.parse("2020-06-11"), team = Some("teamA"), service = Some("some-app"), page = None)
       )
     }
 
