@@ -38,10 +38,18 @@ class DependenciesService @Inject()(
         .map(_.map(_.copy(environment = Some(wrwv.environment))))
     ).map(_.flatten)
 
-  def getServicesWithDependency(optTeam: Option[TeamName], flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange)(
-    implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] =
+  def getServicesWithDependency(
+    optTeam     : Option[TeamName],
+    flag        : SlugInfoFlag,
+    group       : String,
+    artefact    : String,
+    versionRange: BobbyVersionRange,
+    scope       : DependencyScope
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[ServiceWithDependency]] =
     serviceDependenciesConnector
-      .getServicesWithDependency(flag, group, artefact, versionRange)
+      .getServicesWithDependency(flag, group, artefact, versionRange, scope)
       .map { l =>
         optTeam match {
           case None       => l

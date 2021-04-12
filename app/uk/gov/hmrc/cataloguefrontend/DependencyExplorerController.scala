@@ -24,7 +24,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, ServiceWithDependency, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
@@ -54,7 +54,14 @@ class DependencyExplorerController @Inject()(
         flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
       } yield Ok(page(
-            form.fill(SearchForm("", SlugInfoFlag.Latest.asString, "", "", ""))
+            form.fill(SearchForm(
+              team         = "",
+              flag         = SlugInfoFlag.Latest.asString,
+              scope        = DependencyScope.Compile.asString,
+              group        = "",
+              artefact     = "",
+              versionRange = ""
+            ))
           , teams
           , flags
           , groupArtefacts
@@ -121,9 +128,10 @@ class DependencyExplorerController @Inject()(
                     versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
                     team         =  if (query.team.isEmpty) None else Some(TeamName(query.team))
                     flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
+                    scope        <- EitherT.fromEither[Future](DependencyScope.parse(query.scope)).leftMap(msg => BadRequest(pageWithError(msg)))
                     results      <- EitherT.right[Result] {
                                       service
-                                        .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange)
+                                        .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
                                     }
                     pieData      =  PieData(
                                         "Version spread"
@@ -160,6 +168,7 @@ class DependencyExplorerController @Inject()(
   case class SearchForm(
       team        : String
     , flag        : String
+    , scope       : String
     , group       : String
     , artefact    : String
     , versionRange: String
@@ -172,6 +181,7 @@ class DependencyExplorerController @Inject()(
       Forms.mapping(
           "team"         -> Forms.text
         , "flag"         -> Forms.text.verifying(notEmpty)
+        , "scope"        -> Forms.text.verifying(notEmpty)
         , "group"        -> Forms.text.verifying(notEmpty)
         , "artefact"     -> Forms.text.verifying(notEmpty)
         , "versionRange" -> Forms.default(Forms.text, "")
