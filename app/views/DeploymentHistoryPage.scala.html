@@ -157,7 +157,7 @@ function selectEnvironment(e, environment) {
           }
       </td>
       <td colspan="3">
-          <span style="color: #6f777b;margin-left: 25%;">Showing @{pagination.page*pagination.pageSize} to @{(pagination.page*pagination.pageSize)+deployments.length} of @{pagination.total}</span>
+          <span style="color: #6f777b;margin-left: 25%;">Showing @{(pagination.page*pagination.pageSize)+1} to @{(pagination.page*pagination.pageSize)+deployments.length} of @{pagination.total}</span>
       </td>
       <td style="text-align: right">
           @if( (pagination.page * pagination.pageSize) + deployments.length >= pagination.total) {
