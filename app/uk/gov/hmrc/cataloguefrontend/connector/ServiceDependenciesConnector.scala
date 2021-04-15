@@ -96,7 +96,8 @@ class ServiceDependenciesConnector @Inject()(
     flag        : SlugInfoFlag,
     group       : String,
     artefact    : String,
-    versionRange: BobbyVersionRange
+    versionRange: BobbyVersionRange,
+    scope       : DependencyScope
   )(implicit hc: HeaderCarrier
   ): Future[Seq[ServiceWithDependency]] = {
     implicit val r = ServiceWithDependency.reads
@@ -108,7 +109,7 @@ class ServiceDependenciesConnector @Inject()(
     )
     http
       .GET[Seq[ServiceWithDependency]](
-         url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams"
+         url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams&scope=${scope.asString}"
        )
    }
 

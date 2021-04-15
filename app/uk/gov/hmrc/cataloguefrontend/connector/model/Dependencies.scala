@@ -325,3 +325,30 @@ object GroupArtefacts {
     ~ (__ \ "artefacts"  ).format[List[String]]
     )(GroupArtefacts.apply, unlift(GroupArtefacts.unapply))
 }
+
+sealed trait DependencyScope { def asString: String }
+object DependencyScope {
+  case object Compile extends DependencyScope { val asString = "compile" }
+  case object Test    extends DependencyScope { val asString = "test"    }
+  case object Build   extends DependencyScope { val asString = "build"   }
+
+  val values: List[DependencyScope] =
+    List(Compile, Test, Build)
+
+  def parse(s: String): Either[String, DependencyScope] =
+    values
+      .find(_.asString == s)
+      .toRight(s"Invalid dependency scope - should be one of: ${values.map(_.asString).mkString(", ")}")
+
+  private def toResult[A](e: Either[String, A]): JsResult[A] =
+    e match {
+      case Right(r) => JsSuccess(r)
+      case Left(l)  => JsError(__, l)
+    }
+
+  lazy val format: Format[DependencyScope] =
+    Format(
+      _.validate[String].flatMap(s => toResult(DependencyScope.parse(s))),
+      f => JsString(f.asString)
+    )
+}
