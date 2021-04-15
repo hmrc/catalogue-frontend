@@ -181,7 +181,7 @@ class DependencyExplorerController @Inject()(
       Forms.mapping(
           "team"         -> Forms.text
         , "flag"         -> Forms.text.verifying(notEmpty)
-        , "scope"        -> Forms.text.verifying(notEmpty)
+        , "scope"        -> Forms.default(Forms.text, DependencyScope.Compile.asString)
         , "group"        -> Forms.text.verifying(notEmpty)
         , "artefact"     -> Forms.text.verifying(notEmpty)
         , "versionRange" -> Forms.default(Forms.text, "")
