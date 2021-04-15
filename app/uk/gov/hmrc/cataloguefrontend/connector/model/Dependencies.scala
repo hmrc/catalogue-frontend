@@ -326,11 +326,14 @@ object GroupArtefacts {
     )(GroupArtefacts.apply, unlift(GroupArtefacts.unapply))
 }
 
-sealed trait DependencyScope { def asString: String }
+sealed trait DependencyScope {
+  def asString: String
+  def displayString = asString.capitalize
+}
 object DependencyScope {
-  case object Compile extends DependencyScope { val asString = "compile" }
-  case object Test    extends DependencyScope { val asString = "test"    }
-  case object Build   extends DependencyScope { val asString = "build"   }
+  case object Compile extends DependencyScope { override val asString = "compile" }
+  case object Test    extends DependencyScope { override val asString = "test"    }
+  case object Build   extends DependencyScope { override val asString = "build"   }
 
   val values: List[DependencyScope] =
     List(Compile, Test, Build)

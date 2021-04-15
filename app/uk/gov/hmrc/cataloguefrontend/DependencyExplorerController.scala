@@ -51,7 +51,6 @@ class DependencyExplorerController @Inject()(
     Action.async { implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
-        flags          =  SlugInfoFlag.values
         groupArtefacts <- service.getGroupArtefacts
       } yield Ok(page(
             form.fill(SearchForm(
@@ -63,7 +62,8 @@ class DependencyExplorerController @Inject()(
               versionRange = ""
             ))
           , teams
-          , flags
+          , flags         = SlugInfoFlag.values
+          , scopes        = DependencyScope.values
           , groupArtefacts
           , versionRange  = BobbyVersionRange(None, None, None, "")
           , searchResults = None
@@ -108,12 +108,14 @@ class DependencyExplorerController @Inject()(
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
+        scopes         =  DependencyScope.values
         groupArtefacts <- service.getGroupArtefacts
         res            <- {
           def pageWithError(msg: String) = page(
               form.bindFromRequest().withGlobalError(msg)
             , teams
             , flags
+            , scopes
             , groupArtefacts
             , versionRange  = BobbyVersionRange(None, None, None, "")
             , searchResults = None
@@ -122,7 +124,7 @@ class DependencyExplorerController @Inject()(
           form
             .bindFromRequest()
             .fold(
-                hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, flags, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)))
+                hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, teams, flags, scopes, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)))
               , success   = query =>
                   (for {
                     versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
@@ -152,6 +154,7 @@ class DependencyExplorerController @Inject()(
                         form.bindFromRequest()
                       , teams
                       , flags
+                      , scopes
                       , groupArtefacts
                       , versionRange
                       , Some(results)
