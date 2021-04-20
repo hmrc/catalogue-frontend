@@ -130,9 +130,12 @@
                      </div>
                 }
                 @searchResults match {
-                    case None                => {}
+                    case None                => {
+                        <ul class="list"/>
+                    }
                     case Some(Nil)           => {
                         <p id="search-results-empty">This search did not return any results.</p>
+                        <ul class="list"/>
                     }
                     case Some(searchResults) => {
                         <p>Found @searchResults.size results</p>
@@ -189,7 +192,7 @@
         var serviceList = null;
 
         function updateSortOrder() {
-        serviceList = new List('service-list', options);
+            serviceList = new List('service-list', options);
         }
 
         function updateArtefacts() {
