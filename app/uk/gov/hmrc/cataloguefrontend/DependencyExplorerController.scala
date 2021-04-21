@@ -135,12 +135,12 @@ class DependencyExplorerController @Inject()(
                                       service
                                         .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
                                     }
-                    pieData      =  PieData(
+                    pieData      =  if (results.nonEmpty) Some(PieData(
                                         "Version spread"
                                       , results
                                           .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
                                           .map(r => r._1 -> r._2.size)
-                                      )
+                                      )) else None
                   } yield
                     if (query.asCsv)  {
                       val csv    = CsvUtils.toCsv(toRows(results))
@@ -158,7 +158,7 @@ class DependencyExplorerController @Inject()(
                       , groupArtefacts
                       , versionRange
                       , Some(results)
-                      , Some(pieData)
+                      , pieData
                       ))
                   ).merge
               )
