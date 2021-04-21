@@ -116,13 +116,6 @@
 }
 
 <script>
-// set autofocus cursor to right of text in search box
-var searchBox = document.getElementById("search");
-
-var length = searchBox.value.length;
-searchBox.focus();
-searchBox.setSelectionRange(length, length);
-
 function dateFilterChange(e) {
     // Reload the form with the new date when entered. Designed to be entered
     // via the date picker, not typed manually
