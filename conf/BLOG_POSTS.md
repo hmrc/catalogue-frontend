@@ -2,8 +2,13 @@
 
 | Date                  |      Post                                                                                                             | 
 |-----------------------|:---------------------------------------------------------------------------------------------------------------------:|
-| 21st January 2021     |  [Removing the sbt-artifactory plugin](https://confluence.tools.tax.service.gov.uk/x/3QIzDg)
-| 12th January 2021     |  [Let's talk about Play](https://confluence.tools.tax.service.gov.uk/x/cBEcDg)
+| 20th April 2021       |  [New major version of Bootstrap Play including Play 2.8 support and a new Http Verbs](https://confluence.tools.tax.service.gov.uk/x/kZBJDw)|
+| 16th April 2021       |  [Introducing internal-auth and object-store](https://confluence.tools.tax.service.gov.uk/x/zoVJDw)|
+| 15th April 2021       |  [.base64 suffixed configuration security vulnerability](https://confluence.tools.tax.service.gov.uk/x/-IBJDw)|
+| 14th April 2021       |  [Bintray leak of private microservice .jar files](https://confluence.tools.tax.service.gov.uk/x/LBM0Dw)|
+| 4th March 2021        |  [HMRC Mongo is now available](https://confluence.tools.tax.service.gov.uk/x/uQXKDg)|
+| 21st January 2021     |  [Removing the sbt-artifactory plugin](https://confluence.tools.tax.service.gov.uk/x/3QIzDg)|
+| 12th January 2021     |  [Let's talk about Play](https://confluence.tools.tax.service.gov.uk/x/cBEcDg)|
 | 1st December 2020     |  [Cleanup deprecated Play framework configuration keys](https://confluence.tools.tax.service.gov.uk/x/Xo2tDQ)|
 | 1st December 2020     |  [Bobby rule will be applied to Play 2.5 January 5th 2021](https://confluence.tools.tax.service.gov.uk/x/z46tDQ)|
 | 26th October 2020     |  [Service Manager now runs on Python 3](https://confluence.tools.tax.service.gov.uk/x/G45LDQ)|
@@ -51,4 +56,4 @@
 | 22nd November 2018    |  [Adding context to logs (MDC)](https://confluence.tools.tax.service.gov.uk/x/HYhsC) | 
 | 21st November 2018    |  [Is your Datastream secure?](https://confluence.tools.tax.service.gov.uk/x/uIJsC) | 
 | 2nd November 2018     |  [It's never been easier to get started with a UI Test project](https://confluence.tools.tax.service.gov.uk/x/UQk1C) | 
-| 1st November 2018     |  [Config - it’s kinda complicated.](https://confluence.tools.tax.service.gov.uk/x/ugU1C) | 
+| 1st November 2018     |  [Config - it’s kinda complicated.](https://confluence.tools.tax.service.gov.uk/x/ugU1C) |
