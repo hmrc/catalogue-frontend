@@ -69,13 +69,13 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
+            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("1.57.0"))
           )
         ),
         WhatsRunningWhere(
           ServiceName("api-documentation"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("0.44.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:46Z")))
+            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("0.44.0"))
           )
         )
       )
@@ -95,17 +95,16 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
         willRespondWith = (
           200,
           Some("""[
-                 |  {
-                 |    "applicationName": "api-definition",
-                 |    "versions": [
-                 |      {
-                 |        "environment": "integration",
-                 |        "versionNumber": "1.57.0",
-                 |        "lastSeen": "2019-05-29T14:09:48Z"
-                 |      }
-                 |    ]
-                 |  }
-                 |]""".stripMargin))
+                   {
+                     "applicationName": "api-definition",
+                     "versions": [
+                       {
+                         "environment": "integration",
+                         "versionNumber": "1.57.0"
+                       }
+                     ]
+                   }
+                 ]"""))
       )
 
       val response =
@@ -119,7 +118,7 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("1.57.0"), lastSeen = TimeSeen(Instant.parse("2019-05-29T14:09:48Z")))
+            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("1.57.0"))
           )
         )
       )
