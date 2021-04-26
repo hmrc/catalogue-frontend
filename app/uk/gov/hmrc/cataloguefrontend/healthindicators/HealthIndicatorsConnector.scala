@@ -52,26 +52,32 @@ object RatingType {
   val format: Format[RatingType] = new Format[RatingType] {
     override def reads(json: JsValue): JsResult[RatingType] =
       json.validate[String].flatMap {
-        case "ReadMe"        => JsSuccess(ReadMe)
-        case "LeakDetection" => JsSuccess(LeakDetection)
-        case "BobbyRule"     => JsSuccess(BobbyRule)
+        case "ReadMe"         => JsSuccess(ReadMe)
+        case "LeakDetection"  => JsSuccess(LeakDetection)
+        case "BobbyRule"      => JsSuccess(BobbyRule)
         case "BuildStability" => JsSuccess(BuildStability)
-        case s               => JsError(s"Invalid RatingType: $s")
+        case "AlertConfig"    => JsSuccess(AlertConfig)
+        case "OpenPR"         => JsSuccess(OpenPR)
+        case s                => JsError(s"Invalid RatingType: $s")
       }
 
     override def writes(o: RatingType): JsValue =
       o match {
-        case ReadMe        => JsString("ReadMe")
-        case LeakDetection => JsString("LeakDetection")
-        case BobbyRule     => JsString("BobbyRule")
+        case ReadMe         => JsString("ReadMe")
+        case LeakDetection  => JsString("LeakDetection")
+        case BobbyRule      => JsString("BobbyRule")
         case BuildStability => JsString("BuildStability")
-        case s             => JsString(s"$s")
+        case AlertConfig    => JsString("AlertConfig")
+        case OpenPR         => JsString("OpenPR")
+        case s              => JsString(s"$s")
       }
   }
   case object ReadMe extends RatingType
   case object LeakDetection extends RatingType
   case object BobbyRule extends RatingType
   case object BuildStability extends RatingType
+  case object AlertConfig extends RatingType
+  case object OpenPR extends RatingType
 }
 
 case class Score(points: Int, description: String, href: Option[String])
