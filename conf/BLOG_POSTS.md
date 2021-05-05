@@ -2,8 +2,10 @@
 
 | Date                  |      Post                                                                                                             | 
 |-----------------------|:---------------------------------------------------------------------------------------------------------------------:|
+| 5th May 2021          |  [New version of sbt-auto-build](https://confluence.tools.tax.service.gov.uk/x/rR5xDw)|  
 | 20th April 2021       |  [New major version of Bootstrap Play including Play 2.8 support and a new Http Verbs](https://confluence.tools.tax.service.gov.uk/x/kZBJDw)|
 | 16th April 2021       |  [Introducing internal-auth and object-store](https://confluence.tools.tax.service.gov.uk/x/zoVJDw)|
+| 15th April 2021       |  [Action required: Bintray sunset 1st May 2021 - update your resolvers/plugins to avoid being impacted](https://confluence.tools.tax.service.gov.uk/x/soRJDw)|
 | 15th April 2021       |  [.base64 suffixed configuration security vulnerability](https://confluence.tools.tax.service.gov.uk/x/-IBJDw)|
 | 14th April 2021       |  [Bintray leak of private microservice .jar files](https://confluence.tools.tax.service.gov.uk/x/LBM0Dw)|
 | 4th March 2021        |  [HMRC Mongo is now available](https://confluence.tools.tax.service.gov.uk/x/uQXKDg)|
