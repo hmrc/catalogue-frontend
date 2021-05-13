@@ -36,9 +36,9 @@
                 </div>
                 <br />
                 <br />
-                <select id="profile_name" name="repo_type" onchange="this.form.submit();" style="margin: 20px">
+                <select id="profile_name" name="repoType" onchange="this.form.submit();" style="margin: 20px">
                 @defining(Seq("" -> Messages("Any Repo Type")) ++ repoTypes.map(_.asString).map(p => (p, p))){ options =>
-                    @options.map(selectOption(form("repo_type").value))
+                    @options.map(selectOption(form("repoType").value))
                 }
                 </select>
             </div>
@@ -82,14 +82,12 @@
             searchBox.setSelectionRange(length, length);
 
             function searchByRepo() {
-                document.getElementById('repo_type').value = '';
+                document.getElementById('repoType').value = '';
                 document.getElementById("form").submit();
             }
     </script>
     }
 
 @selectOption(selected: Option[String])(option: (String, String)) = {
-    <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected"}>
-    @option._2
-    </option>
+    <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected"}> @{option._1} </option>
 }

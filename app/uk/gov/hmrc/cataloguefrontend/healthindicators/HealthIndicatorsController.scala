@@ -43,18 +43,11 @@ class HealthIndicatorsController @Inject()(
 
   def indicatorsForAllRepos(): Action[AnyContent] =
     Action.async { implicit request =>
+      val form = HealthIndicatorsFilter.form.bindFromRequest
+      val repoType = form.fold(_ => None, _.repoType)
       for {
-        repoRatingsWithTeams  <- healthIndicatorsService.createRepoRatingsWithTeams
-        form      = HealthIndicatorsFilter.form.bindFromRequest
-        repoTypes = repoRatingsWithTeams.map(_.repositoryType).distinct
-        filteredIndicators = form.fold(_ => None, _.repoType) match {
-          case Some(rt) => repoRatingsWithTeams.filter(_.repositoryType == rt)
-          case None     => repoRatingsWithTeams
-        }
-      } yield
-        filteredIndicators match {
-          case repoRatingsWithTeams => Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, form, repoTypes))
-        }
+        repoRatingsWithTeams <- healthIndicatorsService.createRepoRatingsWithTeams(repoType)
+      } yield Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, form, RepoType.values))
     }
 }
 
@@ -74,7 +67,7 @@ case class HealthIndicatorsFilter(
 object HealthIndicatorsFilter {
   lazy val form: Form[HealthIndicatorsFilter] = Form(
     mapping(
-      "repo_type" -> optional(text)
+      "repoType" -> optional(text)
         .transform[Option[RepoType]](
           _.flatMap(s => RepoType.parse(s).toOption),
           _.map(_.asString)
