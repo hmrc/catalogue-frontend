@@ -36,7 +36,7 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
       when(mockHealthIndicatorsConnector.getAllRepositoryRatings(None)) thenReturn
         Future.successful(Seq.empty)
 
-      healthIndicatorsService.createRepoRatingsWithTeams(None).futureValue shouldBe
+      healthIndicatorsService.findRepoRatingsWithTeams(None).futureValue shouldBe
         Seq()
     }
 
@@ -47,7 +47,7 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
       when(mockHealthIndicatorsConnector.getAllRepositoryRatings(Some(RepoType.Service))) thenReturn
         Future.successful(Seq(RepositoryRating("foo", RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty)))))
 
-      healthIndicatorsService.createRepoRatingsWithTeams(Some(RepoType.Service)).futureValue shouldBe
+      healthIndicatorsService.findRepoRatingsWithTeams(Some(RepoType.Service)).futureValue shouldBe
         Seq(RepoRatingsWithTeams("foo", Seq.empty, RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty))))
     }
 
@@ -58,7 +58,7 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
       when(mockHealthIndicatorsConnector.getAllRepositoryRatings(Some(RepoType.Service))) thenReturn
         Future.successful(Seq(RepositoryRating("bar", RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty)))))
 
-      healthIndicatorsService.createRepoRatingsWithTeams(Some(RepoType.Service)).futureValue shouldBe
+      healthIndicatorsService.findRepoRatingsWithTeams(Some(RepoType.Service)).futureValue shouldBe
         Seq(RepoRatingsWithTeams("bar", Seq(TeamName("foo")), RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty))))
     }
   }

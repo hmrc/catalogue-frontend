@@ -45,7 +45,7 @@ class HealthIndicatorsController @Inject()(
     Action.async { implicit request =>
       RepoType.parse(repoType).fold(_ => Future.successful(Redirect(routes.HealthIndicatorsController.indicatorsForRepoType(RepoType.Service.asString))),
         r => for {
-          repoRatingsWithTeams <- healthIndicatorsService.createRepoRatingsWithTeams(Some(r))
+          repoRatingsWithTeams <- healthIndicatorsService.findRepoRatingsWithTeams(Some(r))
           form = HealthIndicatorsFilter.form.bindFromRequest
         } yield Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, form, RepoType.values))
       )
