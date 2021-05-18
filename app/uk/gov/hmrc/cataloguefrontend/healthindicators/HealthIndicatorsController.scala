@@ -24,7 +24,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class HealthIndicatorsController @Inject()(
   healthIndicatorsConnector: HealthIndicatorsConnector,
@@ -41,13 +41,14 @@ class HealthIndicatorsController @Inject()(
       }
     }
 
-  def indicatorsForAllRepos(): Action[AnyContent] =
+  def indicatorsForRepoType(repoType: String): Action[AnyContent] =
     Action.async { implicit request =>
-      val form = HealthIndicatorsFilter.form.bindFromRequest
-      val repoType = form.fold(_ => None, _.repoType)
-      for {
-        repoRatingsWithTeams <- healthIndicatorsService.createRepoRatingsWithTeams(repoType)
-      } yield Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, form, RepoType.values))
+      RepoType.parse(repoType).fold(_ => Future.successful(Redirect(routes.HealthIndicatorsController.indicatorsForRepoType(RepoType.Service.asString))),
+        r => for {
+          repoRatingsWithTeams <- healthIndicatorsService.createRepoRatingsWithTeams(Some(r))
+          form = HealthIndicatorsFilter.form.bindFromRequest
+        } yield Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, form, RepoType.values))
+      )
     }
 }
 
@@ -88,6 +89,7 @@ object RepoType {
         case "Library"   => JsSuccess(Library)
         case "Prototype" => JsSuccess(Prototype)
         case "Other"     => JsSuccess(Other)
+        case "All Types" => JsSuccess(AllTypes)
         case s           => JsError(s"Invalid RepoType: $s")
       }
 
@@ -97,6 +99,7 @@ object RepoType {
         case Library   => JsString("Library")
         case Prototype => JsString("Prototype")
         case Other     => JsString("Other")
+        case AllTypes => JsString("All Types")
         case s         => JsString(s"$s")
       }
   }
@@ -109,7 +112,8 @@ object RepoType {
     Service,
     Library,
     Prototype,
-    Other
+    Other,
+    AllTypes
   )
 
   case object Service extends RepoType {
@@ -123,5 +127,8 @@ object RepoType {
   }
   case object Other extends RepoType {
     override def asString: String = "Other"
+  }
+  case object AllTypes extends RepoType {
+    override def asString: String = "All Types"
   }
 }

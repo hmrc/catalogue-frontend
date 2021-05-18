@@ -66,12 +66,12 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     }
   }
 
-  "HealthIndicatorsController.indicatorsForAllRepos" should {
-    "respond with status 200 and include all repos when no filters are set" in new Setup {
+  "HealthIndicatorsController.indicatorsForRepoType" should {
+    "respond with status 200 and redirect to Services when no query params set" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc",
-        willRespondWith = (200, Some(testJson3Repo))
+        "/health-indicators/repositories/?sort=desc&repoType=Service",
+        willRespondWith = (200, Some(testJsonRepoTypeService))
       )
 
       serviceEndpoint(
@@ -84,16 +84,14 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
         ws.url(s"http://localhost:$port/health-indicators").get.futureValue
 
       response.status shouldBe 200
-      response.body   should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
-      response.body   should include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
-      response.body   should include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
+      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
     }
 
-    "respond with status 200 and include only services when repo_type=Service" in new Setup {
+    "respond with status 200 and include repo type service when repoType=Service" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc",
-        willRespondWith = (200, Some(testJson3Repo))
+        "/health-indicators/repositories/?sort=desc&repoType=Service",
+        willRespondWith = (200, Some(testJsonRepoTypeService))
       )
 
       serviceEndpoint(
@@ -103,12 +101,72 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
       )
 
       private val response: WSResponse =
-        ws.url(s"http://localhost:$port/health-indicators?repo_type=Service").get.futureValue
+        ws.url(s"http://localhost:$port/health-indicators?repoType=Service").get.futureValue
 
       response.status shouldBe 200
-      response.body   should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
-      response.body   shouldNot include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
-      response.body   shouldNot include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
+      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
+    }
+
+    "respond with status 200 and include all repo types when repoType=AllTypes" in new Setup {
+      serviceEndpoint(
+        GET,
+        "/health-indicators/repositories/?sort=desc",
+        willRespondWith = (200, Some(testJson3RepoTypes))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/services?teamDetails=true",
+        willRespondWith = (200, Some(teamsJSON))
+      )
+
+      private val response: WSResponse =
+        ws.url(s"http://localhost:$port/health-indicators?repoType=All+Types").get.futureValue
+
+      response.status shouldBe 200
+      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
+      response.body should include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
+      response.body should include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
+    }
+
+    "respond with status 200 and include repo type other when repoType=Other" in new Setup {
+      serviceEndpoint(
+        GET,
+        "/health-indicators/repositories/?sort=desc&repoType=Other",
+        willRespondWith = (200, Some(testJsonRepoTypeOther))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/services?teamDetails=true",
+        willRespondWith = (200, Some(teamsJSON))
+      )
+
+      private val response: WSResponse =
+        ws.url(s"http://localhost:$port/health-indicators?repoType=Other").get.futureValue
+
+      response.status shouldBe 200
+      response.body should include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
+    }
+
+    "respond with status 200 and include repo type prototype when repoType=Prototype" in new Setup {
+      serviceEndpoint(
+        GET,
+        "/health-indicators/repositories/?sort=desc&repoType=Prototype",
+        willRespondWith = (200, Some(testJsonRepoTypePrototype))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/services?teamDetails=true",
+        willRespondWith = (200, Some(teamsJSON))
+      )
+
+      private val response: WSResponse =
+        ws.url(s"http://localhost:$port/health-indicators?repoType=Prototype").get.futureValue
+
+      response.status shouldBe 200
+      response.body should include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
     }
   }
 
@@ -161,7 +219,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
           |  ]
           |}""".stripMargin
 
-    val testJson3Repo: String =
+    val testJson3RepoTypes: String =
       """[{
     |  "repositoryName": "team-indicator-dashboard-frontend",
     |  "repositoryType": "Service",
@@ -180,6 +238,34 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     | "repositoryScore": 50,
     | "ratings": []
     |}]""".stripMargin
+
+    val testJsonRepoTypeService: String =
+      """[{
+        |  "repositoryName": "team-indicator-dashboard-frontend",
+        |  "repositoryType": "Service",
+        |  "repositoryScore": -450,
+        |  "ratings": []
+        |}
+        |]""".stripMargin
+
+    val testJsonRepoTypeOther: String =
+      """[
+        |{
+        | "repositoryName": "api-platform-scripts",
+        | "repositoryType": "Other",
+        | "repositoryScore": 50,
+        | "ratings": []
+        |}]""".stripMargin
+
+    val testJsonRepoTypePrototype: String =
+      """[
+        |{
+        | "repositoryName": "the-childcare-service-prototype",
+        | "repositoryType": "Prototype",
+        | "repositoryScore": 50,
+        | "ratings": []
+        |}]""".stripMargin
+
 
     val teamsJSON: String = """{"team-indicator-dashboard-frontend": [
                               |"Classic Services Manchester",
