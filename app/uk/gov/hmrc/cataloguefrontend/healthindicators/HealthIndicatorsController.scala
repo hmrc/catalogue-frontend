@@ -24,7 +24,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class HealthIndicatorsController @Inject()(
   healthIndicatorsConnector: HealthIndicatorsConnector,
@@ -41,20 +41,13 @@ class HealthIndicatorsController @Inject()(
       }
     }
 
-  def indicatorsForAllRepos(): Action[AnyContent] =
+  def indicatorsForRepoType(repoType: String, repositoryName: String): Action[AnyContent] =
     Action.async { implicit request =>
-      for {
-        repoRatingsWithTeams  <- healthIndicatorsService.createRepoRatingsWithTeams
-        form      = HealthIndicatorsFilter.form.bindFromRequest
-        repoTypes = repoRatingsWithTeams.map(_.repositoryType).distinct
-        filteredIndicators = form.fold(_ => None, _.repoType) match {
-          case Some(rt) => repoRatingsWithTeams.filter(_.repositoryType == rt)
-          case None     => repoRatingsWithTeams
-        }
-      } yield
-        filteredIndicators match {
-          case repoRatingsWithTeams => Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, form, repoTypes))
-        }
+      RepoType.parse(repoType).fold(_ => Future.successful(Redirect(routes.HealthIndicatorsController.indicatorsForRepoType(RepoType.Service.asString, repositoryName))),
+        r => for {
+          repoRatingsWithTeams <- healthIndicatorsService.findRepoRatingsWithTeams(r)
+        } yield Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, r, repositoryName, RepoType.values))
+      )
     }
 }
 
@@ -74,7 +67,7 @@ case class HealthIndicatorsFilter(
 object HealthIndicatorsFilter {
   lazy val form: Form[HealthIndicatorsFilter] = Form(
     mapping(
-      "repo_type" -> optional(text)
+      "repoType" -> optional(text)
         .transform[Option[RepoType]](
           _.flatMap(s => RepoType.parse(s).toOption),
           _.map(_.asString)
@@ -95,6 +88,7 @@ object RepoType {
         case "Library"   => JsSuccess(Library)
         case "Prototype" => JsSuccess(Prototype)
         case "Other"     => JsSuccess(Other)
+        case "All Types" => JsSuccess(AllTypes)
         case s           => JsError(s"Invalid RepoType: $s")
       }
 
@@ -104,6 +98,7 @@ object RepoType {
         case Library   => JsString("Library")
         case Prototype => JsString("Prototype")
         case Other     => JsString("Other")
+        case AllTypes => JsString("All Types")
         case s         => JsString(s"$s")
       }
   }
@@ -116,7 +111,8 @@ object RepoType {
     Service,
     Library,
     Prototype,
-    Other
+    Other,
+    AllTypes
   )
 
   case object Service extends RepoType {
@@ -130,5 +126,8 @@ object RepoType {
   }
   case object Other extends RepoType {
     override def asString: String = "Other"
+  }
+  case object AllTypes extends RepoType {
+    override def asString: String = "All Types"
   }
 }

@@ -22,7 +22,8 @@ import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.healthindicators.RatingType.{BobbyRule, LeakDetection, ReadMe, BuildStability}
+import uk.gov.hmrc.cataloguefrontend.healthindicators.RatingType.{BobbyRule, BuildStability, LeakDetection, ReadMe}
+import uk.gov.hmrc.cataloguefrontend.healthindicators.RepoType.AllTypes
 import uk.gov.hmrc.http.HeaderCarrier
 
 class HealthIndicatorsConnectorSpec
@@ -91,7 +92,7 @@ class HealthIndicatorsConnectorSpec
         willRespondWith = (200, Some(testJson3Repo))
       )
 
-      val response = healthIndicatorsConnector.getAllRepositoryRatings()
+      val response = healthIndicatorsConnector.getAllRepositoryRatings(RepoType.AllTypes)
         .futureValue
 
       val expectedResponse = Seq(

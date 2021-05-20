@@ -40,8 +40,10 @@ class HealthIndicatorsConnector @Inject()(
       .GET[Option[RepositoryRating]](url)
   }
 
-  def getAllRepositoryRatings()(implicit hc: HeaderCarrier): Future[Seq[RepositoryRating]] = {
-    val url = s"$healthIndicatorsBaseUrl/health-indicators/repositories/?sort=desc"
+  def getAllRepositoryRatings(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[RepositoryRating]] = {
+    // AllTypes is represented on the backend by sending no RepoType parameter
+    val repoTypeQueryP = if(repoType == RepoType.AllTypes) "" else "&repoType=" + repoType.asString
+    val url = s"$healthIndicatorsBaseUrl/health-indicators/repositories/?sort=desc" ++ repoTypeQueryP
     http
       .GET[Seq[RepositoryRating]](url)
   }

@@ -31,9 +31,9 @@ class HealthIndicatorsService @Inject()(
   implicit ec: ExecutionContext
 ) {
 
-  def createRepoRatingsWithTeams(implicit hc: HeaderCarrier): Future[Seq[RepoRatingsWithTeams]] = {
+  def findRepoRatingsWithTeams(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[RepoRatingsWithTeams]] = {
     val repoToTeamsFut    = teamsAndReposConnector.allTeamsByService
-    val allRepoRatingsFut = healthIndicatorsConnector.getAllRepositoryRatings
+    val allRepoRatingsFut = healthIndicatorsConnector.getAllRepositoryRatings(repoType)
 
     for {
       repoToTeams    <- repoToTeamsFut
