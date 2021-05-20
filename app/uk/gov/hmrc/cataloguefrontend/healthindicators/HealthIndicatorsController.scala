@@ -41,13 +41,12 @@ class HealthIndicatorsController @Inject()(
       }
     }
 
-  def indicatorsForRepoType(repoType: String): Action[AnyContent] =
+  def indicatorsForRepoType(repoType: String, repositoryName: String): Action[AnyContent] =
     Action.async { implicit request =>
-      RepoType.parse(repoType).fold(_ => Future.successful(Redirect(routes.HealthIndicatorsController.indicatorsForRepoType(RepoType.Service.asString))),
+      RepoType.parse(repoType).fold(_ => Future.successful(Redirect(routes.HealthIndicatorsController.indicatorsForRepoType(RepoType.Service.asString, repositoryName))),
         r => for {
-          repoRatingsWithTeams <- healthIndicatorsService.findRepoRatingsWithTeams(Some(r))
-          form = HealthIndicatorsFilter.form.bindFromRequest
-        } yield Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, form, RepoType.values))
+          repoRatingsWithTeams <- healthIndicatorsService.findRepoRatingsWithTeams(r)
+        } yield Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, r, repositoryName, RepoType.values))
       )
     }
 }

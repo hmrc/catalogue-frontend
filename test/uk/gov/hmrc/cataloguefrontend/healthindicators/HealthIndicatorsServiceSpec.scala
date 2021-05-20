@@ -33,10 +33,10 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
       when(mockTeamsAndReposConnector.allTeamsByService) thenReturn
         Future.successful(Map.empty)
 
-      when(mockHealthIndicatorsConnector.getAllRepositoryRatings(None)) thenReturn
+      when(mockHealthIndicatorsConnector.getAllRepositoryRatings(RepoType.Service)) thenReturn
         Future.successful(Seq.empty)
 
-      healthIndicatorsService.findRepoRatingsWithTeams(None).futureValue shouldBe
+      healthIndicatorsService.findRepoRatingsWithTeams(RepoType.Service).futureValue shouldBe
         Seq()
     }
 
@@ -44,10 +44,10 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
       when(mockTeamsAndReposConnector.allTeamsByService) thenReturn
         Future.successful(Map.empty)
 
-      when(mockHealthIndicatorsConnector.getAllRepositoryRatings(Some(RepoType.Service))) thenReturn
+      when(mockHealthIndicatorsConnector.getAllRepositoryRatings(RepoType.Service)) thenReturn
         Future.successful(Seq(RepositoryRating("foo", RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty)))))
 
-      healthIndicatorsService.findRepoRatingsWithTeams(Some(RepoType.Service)).futureValue shouldBe
+      healthIndicatorsService.findRepoRatingsWithTeams(RepoType.Service).futureValue shouldBe
         Seq(RepoRatingsWithTeams("foo", Seq.empty, RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty))))
     }
 
@@ -55,10 +55,10 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
       when(mockTeamsAndReposConnector.allTeamsByService) thenReturn
         Future.successful(Map("bar" -> Seq(TeamName("foo"))))
 
-      when(mockHealthIndicatorsConnector.getAllRepositoryRatings(Some(RepoType.Service))) thenReturn
+      when(mockHealthIndicatorsConnector.getAllRepositoryRatings(RepoType.Service)) thenReturn
         Future.successful(Seq(RepositoryRating("bar", RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty)))))
 
-      healthIndicatorsService.findRepoRatingsWithTeams(Some(RepoType.Service)).futureValue shouldBe
+      healthIndicatorsService.findRepoRatingsWithTeams(RepoType.Service).futureValue shouldBe
         Seq(RepoRatingsWithTeams("bar", Seq(TeamName("foo")), RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty))))
     }
   }

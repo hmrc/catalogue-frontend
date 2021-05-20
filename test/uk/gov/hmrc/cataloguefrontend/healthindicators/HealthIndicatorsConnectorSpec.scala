@@ -92,7 +92,7 @@ class HealthIndicatorsConnectorSpec
         willRespondWith = (200, Some(testJson3Repo))
       )
 
-      val response = healthIndicatorsConnector.getAllRepositoryRatings(Some(RepoType.AllTypes))
+      val response = healthIndicatorsConnector.getAllRepositoryRatings(RepoType.AllTypes)
         .futureValue
 
       val expectedResponse = Seq(
