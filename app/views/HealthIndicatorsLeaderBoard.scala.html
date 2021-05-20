@@ -16,8 +16,8 @@
 
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.{RepoRatingsWithTeams, RepoType}
 @(  repoRatings :   Seq[RepoRatingsWithTeams]
-,   repoType : RepoType,
-    repositoryName : String
+,   repoType : RepoType
+,   repositoryName : String
 ,   repoTypes:   Seq[RepoType]
 )(implicit messages: Messages, request: Request[_])
 @standard_layout("Service Health Indicators", "health-indicators") {
