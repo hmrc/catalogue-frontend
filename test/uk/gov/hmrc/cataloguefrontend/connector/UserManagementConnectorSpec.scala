@@ -16,49 +16,45 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import com.github.tomakehurst.wiremock.http.RequestMethod
-import com.github.tomakehurst.wiremock.http.RequestMethod._
+import com.github.tomakehurst.wiremock.client.WireMock._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar
-import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
+import org.scalatest.{BeforeAndAfterEach, EitherValues, OptionValues}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.{UserManagementPortalConfig, WireMockEndpoints}
+import uk.gov.hmrc.cataloguefrontend.UserManagementPortalConfig
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpClient}
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.http.test.WireMockSupport
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 import org.scalatest.concurrent.IntegrationPatience
 
 class UserManagementConnectorSpec
-    extends AnyWordSpec
-    with Matchers
-    with TypeCheckedTripleEquals
-    with BeforeAndAfter
-    with GuiceOneServerPerSuite
-    with WireMockEndpoints
-    with ScalaFutures
-    with IntegrationPatience
-    with EitherValues
-    with MockitoSugar
-    with OptionValues {
+  extends AnyWordSpec
+     with Matchers
+     with BeforeAndAfterEach
+     with GuiceOneServerPerSuite
+     with ScalaFutures
+     with IntegrationPatience
+     with EitherValues
+     with OptionValues
+     with WireMockSupport
+     with MockitoSugar {
 
   import ExecutionContext.Implicits.global
 
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()
       .configure(
-        "microservice.services.user-management.url"        -> endpointMockUrl,
+        "microservice.services.user-management.url"        -> wireMockUrl,
         "microservice.services.user-management.myTeamsUrl" -> "http://some.ump.com/myTeams",
         "play.http.requestHandler"                         -> "play.api.http.DefaultHttpRequestHandler",
         "metrics.jvm"                                      -> false
@@ -70,6 +66,8 @@ class UserManagementConnectorSpec
 
   private lazy val userManagementPortalConfig: UserManagementPortalConfig =
     app.injector.instanceOf[UserManagementPortalConfig]
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "User management connector" should {
     "should get the team members from the user-management service" in {
@@ -133,7 +131,7 @@ class UserManagementConnectorSpec
         .thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
-        .getTeamMembersFromUMP(TeamName("teamName"))(HeaderCarrierConverter.fromRequest(FakeRequest()))
+        .getTeamMembersFromUMP(TeamName("teamName"))
         .futureValue
         .left
         .value
@@ -141,13 +139,13 @@ class UserManagementConnectorSpec
     }
 
     "should get the team details from the user-management service" in {
-      stubUserManagementEndPoint(
-        url             = "/v2/organisations/teams/TEAM-A",
-        jsonFileNameOpt = Some("/user-management-team-details-response.json")
-      )
+      stubFor(
+          get(urlEqualTo(s"/v2/organisations/teams/TEAM-A"))
+            .willReturn(aResponse().withStatus(200).withBody(readFile("/user-management-team-details-response.json")))
+        )
 
       val teamDetails = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromRequest(FakeRequest()))
+        .getTeamDetails(TeamName("TEAM-A"))
         .futureValue
         .right
         .value
@@ -161,25 +159,25 @@ class UserManagementConnectorSpec
     }
 
     "no organization/data field in json for team details" in {
-      stubUserManagementEndPoint(
-        url             = "/v2/organisations/teams/TEAM-A",
-        jsonFileNameOpt = Some("/user-management-team-details-nodata-response.json")
-      )
+      stubFor(
+          get(urlEqualTo(s"/v2/organisations/teams/TEAM-A"))
+            .willReturn(aResponse().withStatus(200).withBody(readFile("/user-management-team-details-nodata-response.json")))
+        )
 
       val res = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromRequest(FakeRequest())).futureValue
+        .getTeamDetails(TeamName("TEAM-A")).futureValue
 
       res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     "api returns an error code for team details" in {
-      stubUserManagementEndPoint(
-        url             = "/v2/organisations/teams/TEAM-A",
-        jsonFileNameOpt = None,
-        httpCode        = 500
-      )
+      stubFor(
+          get(urlEqualTo(s"/v2/organisations/teams/TEAM-A"))
+            .willReturn(aResponse().withStatus(500))
+        )
+
       val teamDetails = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromRequest(FakeRequest()))
+        .getTeamDetails(TeamName("TEAM-A"))
         .futureValue
         .left
         .value
@@ -199,7 +197,7 @@ class UserManagementConnectorSpec
         .thenReturn(Future.failed(new RuntimeException("some error")))
 
       val error: UMPError = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))(HeaderCarrierConverter.fromRequest(FakeRequest()))
+        .getTeamDetails(TeamName("TEAM-A"))
         .futureValue
         .left
         .value
@@ -210,17 +208,18 @@ class UserManagementConnectorSpec
       "should get the team members for multiple teams" in {
         val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
 
-        stubUserManagementEndPoint(
-          url             = "/v2/organisations/teams/Team1/members",
-          jsonFileNameOpt = Some("/user-management-response-team1.json")
+        stubFor(
+          get(urlEqualTo("/v2/organisations/teams/Team1/members"))
+            .willReturn(aResponse().withStatus(200).withBody(readFile("/user-management-response-team1.json")))
         )
 
-        stubUserManagementEndPoint(
-          url             = "/v2/organisations/teams/Team2/members",
-          jsonFileNameOpt = Some("/user-management-response-team2.json")
+        stubFor(
+          get(urlEqualTo("/v2/organisations/teams/Team2/members"))
+            .willReturn(aResponse().withStatus(200).withBody(readFile("/user-management-response-team2.json")))
         )
+
         val teamsAndMembers = userManagementConnector
-          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromRequest(FakeRequest()))
+          .getTeamMembersForTeams(teamNames)
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
@@ -228,31 +227,31 @@ class UserManagementConnectorSpec
         def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
           teamsAndMembers.values.flatMap(_.right.value).map(extractor)
 
-        getMembersDetails(_.displayName.value) shouldBe Seq("Joe Black", "James Roger", "Casey Binge", "Marc Palazzo")
-        getMembersDetails(_.username.value)    shouldBe Seq("joe.black", "james.roger", "casey.binge", "marc.palazzo")
+        getMembersDetails(_.displayName.value)  shouldBe Seq("Joe Black", "James Roger", "Casey Binge", "Marc Palazzo")
+        getMembersDetails(_.username.value)     shouldBe Seq("joe.black", "james.roger", "casey.binge", "marc.palazzo")
         getMembersDetails(_.primaryEmail.value) shouldBe Seq(
           "joe.black@digital.hmrc.gov.uk",
           "james.roger@hmrc.gsi.gov.uk",
           "casey.binge@digital.hmrc.gov.uk",
-          "marc.palazzo@hmrc.gsi.gov.uk")
+          "marc.palazzo@hmrc.gsi.gov.uk"
+        )
       }
 
       "should return an Http error for calls with non-200 status codes" in {
         val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
 
-        stubUserManagementEndPoint(
-          url             = "/v2/organisations/teams/Team1/members",
-          jsonFileNameOpt = Some("/user-management-response-team1.json")
+        stubFor(
+          get(urlEqualTo("/v2/organisations/teams/Team1/members"))
+            .willReturn(aResponse().withStatus(200).withBody(readFile("/user-management-response-team1.json")))
         )
 
-        stubUserManagementEndPoint(
-          url             = "/v2/organisations/teams/Team2/members",
-          jsonFileNameOpt = None,
-          httpCode        = 404
+        stubFor(
+          get(urlEqualTo("/v2/organisations/teams/Team2/members"))
+            .willReturn(aResponse().withStatus(404))
         )
 
         val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
-          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromRequest(FakeRequest()))
+          .getTeamMembersForTeams(teamNames)
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
@@ -286,7 +285,7 @@ class UserManagementConnectorSpec
           .thenReturn(Future.failed(new RuntimeException("Boooom!")))
 
         val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
-          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromRequest(FakeRequest()))
+          .getTeamMembersForTeams(teamNames)
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
@@ -301,18 +300,18 @@ class UserManagementConnectorSpec
       "should return a no data error if the json from UMP doesn't conform to the expected shape" in {
         val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
 
-        stubUserManagementEndPoint(
-          url             = "/v2/organisations/teams/Team1/members",
-          jsonFileNameOpt = Some("/user-management-response-team1.json")
+        stubFor(
+          get(urlEqualTo("/v2/organisations/teams/Team1/members"))
+            .willReturn(aResponse().withStatus(200).withBody(readFile("/user-management-response-team1.json")))
         )
 
-        stubUserManagementEndPoint(
-          url             = "/v2/organisations/teams/Team2/members",
-          jsonFileNameOpt = Some("/user-management-team-details-nodata-response.json")
+        stubFor(
+          get(urlEqualTo("/v2/organisations/teams/Team2/members"))
+            .willReturn(aResponse().withStatus(200).withBody(readFile("/user-management-team-details-nodata-response.json")))
         )
 
         val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
-          .getTeamMembersForTeams(teamNames)(HeaderCarrierConverter.fromRequest(FakeRequest()))
+          .getTeamMembersForTeams(teamNames)
           .futureValue
 
         teamsAndMembers.keys should contain theSameElementsAs teamNames
@@ -335,9 +334,9 @@ class UserManagementConnectorSpec
 
     "getAllUsersFromUMP" should {
       "should get the users" in {
-        stubUserManagementEndPoint(
-          url             = "/v2/organisations/users",
-          jsonFileNameOpt = Some("/all-users.json")
+        stubFor(
+          get(urlEqualTo("/v2/organisations/users"))
+            .willReturn(aResponse().withStatus(200).withBody(readFile("/all-users.json")))
         )
 
         val allUsers = userManagementConnector.getAllUsersFromUMP.futureValue
@@ -358,13 +357,12 @@ class UserManagementConnectorSpec
   }
 
   "getDisplayName" should {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-    val userId                     = UmpUserId("ricky.micky")
+    val userId = UmpUserId("ricky.micky")
 
     "should return user's displayName if exists in UMP" in {
-      stubUserManagementEndPoint(
-        url             = s"/v2/organisations/users/$userId",
-        jsonFileNameOpt = Some("/single-user.json")
+      stubFor(
+        get(urlEqualTo(s"/v2/organisations/users/$userId"))
+          .willReturn(aResponse().withStatus(200).withBody(readFile("/single-user.json")))
       )
 
       val displayName = userManagementConnector.getDisplayName(userId).futureValue
@@ -373,10 +371,9 @@ class UserManagementConnectorSpec
     }
 
     "should return None if UMP doesn't know about a given user" in {
-      stubUserManagementEndPoint(
-        httpCode        = 404,
-        url             = s"/v2/organisations/users/$userId",
-        jsonFileNameOpt = None
+      stubFor(
+        get(urlEqualTo(s"/v2/organisations/users/$userId"))
+          .willReturn(aResponse().withStatus(404))
       )
 
       val displayName = userManagementConnector.getDisplayName(userId).futureValue
@@ -387,43 +384,37 @@ class UserManagementConnectorSpec
     "should throw BadGatewayException if UMP returns sth different than 200 or 404" in {
       val unexpectedStatusCode = 500
       val relativeUrl          = s"/v2/organisations/users/$userId"
-      stubUserManagementEndPoint(
-        httpCode        = unexpectedStatusCode,
-        url             = relativeUrl,
-        jsonFileNameOpt = None
+      stubFor(
+        get(urlEqualTo(relativeUrl))
+          .willReturn(aResponse().withStatus(unexpectedStatusCode))
       )
 
       val e = userManagementConnector.getDisplayName(userId).failed.futureValue
       e shouldBe an[BadGatewayException]
-      e.getMessage shouldBe s"Received status: $unexpectedStatusCode from GET to $endpointMockUrl$relativeUrl"
+      e.getMessage shouldBe s"Received status: $unexpectedStatusCode from GET to $wireMockUrl$relativeUrl"
     }
   }
 
-  def callExternalMockedService(
-    teamName: TeamName,
-    jsonFileNameOpt: Option[String],
-    httpCode: Int = 200): Future[Either[UMPError, Seq[TeamMember]]] = {
+  private def readFile(fileName: String): String =
+    Source.fromURL(getClass.getResource(fileName)).getLines().mkString("\n")
 
-    stubUserManagementEndPoint(GET, httpCode, s"/v2/organisations/teams/${teamName.asString}/members", jsonFileNameOpt)
+  def callExternalMockedService(
+    teamName       : TeamName,
+    jsonFileNameOpt: Option[String],
+    httpCode       : Int = 200
+  ): Future[Either[UMPError, Seq[TeamMember]]] = {
+
+    val optJson: Option[String] =
+      jsonFileNameOpt.map(readFile)
+
+    stubFor(
+      get(urlEqualTo(s"/v2/organisations/teams/${teamName.asString}/members"))
+        .willReturn(
+          optJson.foldLeft(aResponse().withStatus(httpCode))(_ withBody _)
+        )
+    )
 
     userManagementConnector
-      .getTeamMembersFromUMP(teamName)(HeaderCarrierConverter.fromRequest(FakeRequest()))
-  }
-
-  def stubUserManagementEndPoint(
-    method: RequestMethod = GET,
-    httpCode: Int         = 200,
-    url: String,
-    jsonFileNameOpt: Option[String]
-  ): Unit = {
-
-    val json: Option[String] =
-      jsonFileNameOpt.map(x => Source.fromURL(getClass.getResource(x)).getLines().mkString("\n"))
-
-    serviceEndpoint(
-      method          = method,
-      url             = url,
-      requestHeaders  = Map("Token" -> "None", "requester" -> "None"),
-      willRespondWith = (httpCode, json))
+      .getTeamMembersFromUMP(teamName)
   }
 }

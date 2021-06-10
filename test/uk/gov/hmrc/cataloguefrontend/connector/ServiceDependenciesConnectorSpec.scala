@@ -16,18 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
+import com.github.tomakehurst.wiremock.client.WireMock._
+import org.scalatest.{BeforeAndAfterEach, OptionValues}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import uk.gov.hmrc.cataloguefrontend.WireMockEndpoints
+import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
@@ -35,83 +33,85 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 class ServiceDependenciesConnectorSpec
   extends AnyWordSpec
-    with Matchers
-    with BeforeAndAfter
-    with GuiceOneAppPerSuite
-    with WireMockEndpoints
-    with EitherValues
-    with OptionValues
-    with ScalaFutures
-    with MockitoSugar
-    with IntegrationPatience {
+     with Matchers
+     with GuiceOneAppPerSuite
+     with BeforeAndAfterEach
+     with WireMockSupport
+     with OptionValues
+     with ScalaFutures
+     with IntegrationPatience {
 
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()
       .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(
         Map(
-          "microservice.services.service-dependencies.port" -> endpointPort,
-          "microservice.services.service-dependencies.host" -> host,
+          "microservice.services.service-dependencies.port" -> wireMockPort,
+          "microservice.services.service-dependencies.host" -> wireMockHost,
           "metrics.jvm"                                     -> false
-        ))
+        )
+      )
       .build()
 
   private lazy val serviceDependenciesConnector = app.injector.instanceOf[ServiceDependenciesConnector]
 
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
   "GET Dependencies" should {
-    "return a list of dependencies for a repository" in new Setup {
-      serviceEndpoint(
-        GET,
-        "/api/dependencies/repo1",
-        willRespondWith = (
-          200,
-          Some(
-            """{
-          |  "repositoryName": "repo1",
-          |  "libraryDependencies": [
-          |    {
-          |      "name": "frontend-bootstrap",
-          |      "group": "uk.gov.hmrc",
-          |      "currentVersion": "7.11.0",
-          |      "latestVersion": "8.80.0",
-          |      "bobbyRuleViolations": []
-          |    },
-          |    {
-          |      "name": "play-config",
-          |      "group": "uk.gov.hmrc",
-          |      "currentVersion": "3.0.0",
-          |      "latestVersion": "7.70.0",
-          |      "bobbyRuleViolations": []
-          |    }
-          |  ],
-          |  "sbtPluginsDependencies": [
-          |    {
-          |      "name": "plugin-1",
-          |      "group": "org",
-          |      "currentVersion": "1.0.0",
-          |      "latestVersion": "1.1.0",
-          |      "bobbyRuleViolations": []
-          |    },
-          |    {
-          |      "name": "plugin-2",
-          |      "group": "uk.gov.hmrc",
-          |      "currentVersion": "2.0.0",
-          |      "latestVersion": "2.1.0",
-          |      "bobbyRuleViolations": []
-          |    }
-          |  ],
-          |  "otherDependencies": [
-          |    {
-          |      "name": "sbt",
-          |      "group": "uk.gov.hmrc",
-          |      "currentVersion": "0.13.8",
-          |      "latestVersion": "0.13.15",
-          |      "bobbyRuleViolations": []
-          |    }
-          |  ],
-          |  "lastUpdated": "2017-11-08T16:31:38.975Z"
-          |}""".stripMargin
-          ))
+    "return a list of dependencies for a repository" in {
+      stubFor(
+        get(urlEqualTo("/api/dependencies/repo1"))
+          .willReturn(
+            aResponse()
+            .withStatus(200)
+            .withBody(
+              """{
+                  "repositoryName": "repo1",
+                  "libraryDependencies": [
+                    {
+                      "name": "frontend-bootstrap",
+                      "group": "uk.gov.hmrc",
+                      "currentVersion": "7.11.0",
+                      "latestVersion": "8.80.0",
+                      "bobbyRuleViolations": []
+                    },
+                    {
+                      "name": "play-config",
+                      "group": "uk.gov.hmrc",
+                      "currentVersion": "3.0.0",
+                      "latestVersion": "7.70.0",
+                      "bobbyRuleViolations": []
+                    }
+                  ],
+                  "sbtPluginsDependencies": [
+                    {
+                      "name": "plugin-1",
+                      "group": "org",
+                      "currentVersion": "1.0.0",
+                      "latestVersion": "1.1.0",
+                      "bobbyRuleViolations": []
+                    },
+                    {
+                      "name": "plugin-2",
+                      "group": "uk.gov.hmrc",
+                      "currentVersion": "2.0.0",
+                      "latestVersion": "2.1.0",
+                      "bobbyRuleViolations": []
+                    }
+                  ],
+                  "otherDependencies": [
+                    {
+                      "name": "sbt",
+                      "group": "uk.gov.hmrc",
+                      "currentVersion": "0.13.8",
+                      "latestVersion": "0.13.15",
+                      "bobbyRuleViolations": []
+                    }
+                  ],
+                  "lastUpdated": "2017-11-08T16:31:38.975Z"
+                }"""
+              )
+          )
       )
 
       val response = serviceDependenciesConnector
@@ -139,8 +139,11 @@ class ServiceDependenciesConnectorSpec
         )
     }
 
-    "return a None for non existing repository" in new Setup {
-      serviceEndpoint(GET, "/api/dependencies/non-existing-repo", willRespondWith = (404, None))
+    "return a None for non existing repository" in {
+      stubFor(
+        get(urlEqualTo("/api/dependencies/non-existing-repo"))
+          .willReturn(aResponse().withStatus(404))
+      )
 
       val response = serviceDependenciesConnector
         .getDependencies("non-existing-repo")
@@ -151,107 +154,107 @@ class ServiceDependenciesConnectorSpec
   }
 
   "GET all dependencies for report" should {
-    "return dependencies for all repositories" in new Setup {
-
-      serviceEndpoint(
-        GET,
-        "/api/dependencies",
-        willRespondWith = (
-          200,
-          Some(
-            """[
-          |  {
-          |    "repositoryName": "repo1",
-          |    "libraryDependencies": [
-          |      {
-          |        "name": "frontend-bootstrap",
-          |        "group": "uk.gov.hmrc",
-          |        "currentVersion": "7.11.0",
-          |        "latestVersion": "8.80.0",
-          |        "bobbyRuleViolations": []
-          |      },
-          |      {
-          |        "name": "play-config",
-          |        "group": "uk.gov.hmrc",
-          |        "currentVersion": "3.0.0",
-          |        "latestVersion": "7.70.0",
-          |        "bobbyRuleViolations": []
-          |      }
-          |    ],
-          |    "sbtPluginsDependencies": [
-          |      {
-          |        "name": "plugin-1",
-          |        "group": "org",
-          |        "currentVersion": "1.0.0",
-          |        "latestVersion": "1.1.0",
-          |        "bobbyRuleViolations": []
-          |      },
-          |      {
-          |        "name": "plugin-2",
-          |        "group": "uk.gov.hmrc",
-          |        "currentVersion": "2.0.0",
-          |        "latestVersion": "2.1.0",
-          |        "bobbyRuleViolations": []
-          |      }
-          |    ],
-          |    "otherDependencies": [
-          |      {
-          |        "name": "sbt",
-          |        "group": "uk.gov.hmrc",
-          |        "currentVersion": "0.13.7",
-          |        "latestVersion": "0.13.15",
-          |        "bobbyRuleViolations": []
-          |      }
-          |    ],
-          |    "lastUpdated": "2017-11-08T16:31:38.975Z"
-          |  },
-          |  {
-          |    "repositoryName": "repo2",
-          |    "libraryDependencies": [
-          |      {
-          |        "name": "some-lib-1",
-          |        "group": "uk.gov.hmrc",
-          |        "currentVersion": "7.77.0",
-          |        "latestVersion": "8.80.0",
-          |        "bobbyRuleViolations": []
-          |      },
-          |      {
-          |        "name": "some-lib-2",
-          |        "group": "uk.gov.hmrc",
-          |        "currentVersion": "3.0.0",
-          |        "latestVersion": "7.70.0",
-          |        "bobbyRuleViolations": []
-          |      }
-          |    ],
-          |    "sbtPluginsDependencies": [
-          |      {
-          |        "name": "plugin-3",
-          |        "group": "org",
-          |        "currentVersion": "1.0.0",
-          |        "latestVersion": "1.1.0",
-          |        "bobbyRuleViolations": []
-          |      },
-          |      {
-          |        "name": "plugin-4",
-          |        "group": "uk.gov.hmrc",
-          |        "currentVersion": "2.0.0",
-          |        "latestVersion": "2.1.0",
-          |        "bobbyRuleViolations": []
-          |      }
-          |    ],
-          |    "otherDependencies": [
-          |      {
-          |        "name": "sbt",
-          |        "group": "uk.gov.hmrc",
-          |        "currentVersion": "0.13.8",
-          |        "latestVersion": "0.13.15",
-          |        "bobbyRuleViolations": []
-          |      }
-          |    ],
-          |    "lastUpdated": "2017-11-08T16:31:38.975Z"
-          |  }
-          |]""".stripMargin
-          ))
+    "return dependencies for all repositories" in {
+      stubFor(
+        get(urlEqualTo("/api/dependencies"))
+          .willReturn(
+            aResponse()
+            .withStatus(200)
+            .withBody(
+              """[
+                  {
+                    "repositoryName": "repo1",
+                    "libraryDependencies": [
+                      {
+                        "name": "frontend-bootstrap",
+                        "group": "uk.gov.hmrc",
+                        "currentVersion": "7.11.0",
+                        "latestVersion": "8.80.0",
+                        "bobbyRuleViolations": []
+                      },
+                      {
+                        "name": "play-config",
+                        "group": "uk.gov.hmrc",
+                        "currentVersion": "3.0.0",
+                        "latestVersion": "7.70.0",
+                        "bobbyRuleViolations": []
+                      }
+                    ],
+                    "sbtPluginsDependencies": [
+                      {
+                        "name": "plugin-1",
+                        "group": "org",
+                        "currentVersion": "1.0.0",
+                        "latestVersion": "1.1.0",
+                        "bobbyRuleViolations": []
+                      },
+                      {
+                        "name": "plugin-2",
+                        "group": "uk.gov.hmrc",
+                        "currentVersion": "2.0.0",
+                        "latestVersion": "2.1.0",
+                        "bobbyRuleViolations": []
+                      }
+                    ],
+                    "otherDependencies": [
+                      {
+                        "name": "sbt",
+                        "group": "uk.gov.hmrc",
+                        "currentVersion": "0.13.7",
+                        "latestVersion": "0.13.15",
+                        "bobbyRuleViolations": []
+                      }
+                    ],
+                    "lastUpdated": "2017-11-08T16:31:38.975Z"
+                  },
+                  {
+                    "repositoryName": "repo2",
+                    "libraryDependencies": [
+                      {
+                        "name": "some-lib-1",
+                        "group": "uk.gov.hmrc",
+                        "currentVersion": "7.77.0",
+                        "latestVersion": "8.80.0",
+                        "bobbyRuleViolations": []
+                      },
+                      {
+                        "name": "some-lib-2",
+                        "group": "uk.gov.hmrc",
+                        "currentVersion": "3.0.0",
+                        "latestVersion": "7.70.0",
+                        "bobbyRuleViolations": []
+                      }
+                    ],
+                    "sbtPluginsDependencies": [
+                      {
+                        "name": "plugin-3",
+                        "group": "org",
+                        "currentVersion": "1.0.0",
+                        "latestVersion": "1.1.0",
+                        "bobbyRuleViolations": []
+                      },
+                      {
+                        "name": "plugin-4",
+                        "group": "uk.gov.hmrc",
+                        "currentVersion": "2.0.0",
+                        "latestVersion": "2.1.0",
+                        "bobbyRuleViolations": []
+                      }
+                    ],
+                    "otherDependencies": [
+                      {
+                        "name": "sbt",
+                        "group": "uk.gov.hmrc",
+                        "currentVersion": "0.13.8",
+                        "latestVersion": "0.13.15",
+                        "bobbyRuleViolations": []
+                      }
+                    ],
+                    "lastUpdated": "2017-11-08T16:31:38.975Z"
+                  }
+                ]"""
+            )
+          )
       )
 
       val response = serviceDependenciesConnector
@@ -303,23 +306,32 @@ class ServiceDependenciesConnectorSpec
   }
 
   "GET curated slug dependencies" should {
-    "returns a list of curated dependencies for slugInfoFlag" in new Setup {
+    "returns a list of curated dependencies for slugInfoFlag" in {
       val slugName = "slug-name"
       val flag     = SlugInfoFlag.Latest
-      serviceEndpoint(GET, url = s"/api/slug-dependencies/$slugName?flag=${flag.asString}",
-        willRespondWith = (Status.OK, Some(
-          """|[{
-             |  "name": "dep1",
-             |  "group": "uk.gov.hmrc",
-             |  "currentVersion": {"major": 1, "minor": 0, "patch": 0, "original": "1.0.0"},
-             |  "bobbyRuleViolations": []
-             | },
-             | {"name": "dep2",
-             |  "group": "uk.gov.hmrc",
-             |  "currentVersion": {"major": 2, "minor": 0, "patch": 0, "original": "2.0.0"},
-             |  "latestVersion": {"major": 2, "minor": 1, "patch": 0, "original": "2.1.0"},
-             |  "bobbyRuleViolations": []
-             | }]""".stripMargin)))
+      stubFor(
+        get(urlEqualTo(s"/api/slug-dependencies/$slugName?flag=${flag.asString}"))
+          .willReturn(
+            aResponse()
+            .withStatus(200)
+            .withBody(
+              """[
+                  {
+                   "name": "dep1",
+                   "group": "uk.gov.hmrc",
+                   "currentVersion": {"major": 1, "minor": 0, "patch": 0, "original": "1.0.0"},
+                   "bobbyRuleViolations": []
+                  },
+                  {"name": "dep2",
+                   "group": "uk.gov.hmrc",
+                   "currentVersion": {"major": 2, "minor": 0, "patch": 0, "original": "2.0.0"},
+                   "latestVersion": {"major": 2, "minor": 1, "patch": 0, "original": "2.1.0"},
+                   "bobbyRuleViolations": []
+                  }
+                 ]"""
+             )
+          )
+      )
 
       val response = serviceDependenciesConnector.getCuratedSlugDependencies(slugName, flag).futureValue
 
@@ -329,28 +341,33 @@ class ServiceDependenciesConnectorSpec
       )
     }
 
-    "returns an empty list of dependencies for an unknown slug" in new Setup {
+    "returns an empty list of dependencies for an unknown slug" in {
       val slugName = "slug-name"
       val flag     = SlugInfoFlag.ForEnvironment(Environment.ExternalTest)
-      serviceEndpoint(GET, url = s"/api/slug-dependencies/$slugName?flag=${flag.asString}",
-        willRespondWith = (Status.NOT_FOUND, None))
+      stubFor(
+        get(urlEqualTo(s"/api/slug-dependencies/$slugName?flag=${flag.asString}"))
+          .willReturn(aResponse().withStatus(404))
+      )
 
       serviceDependenciesConnector.getCuratedSlugDependencies(slugName, flag).futureValue shouldBe empty
     }
   }
 
   "getJDKVersions" should {
-    "returns JDK versions with vendor" in new Setup {
-      serviceEndpoint(
-        GET,
-        s"/api/jdkVersions?flag=${SlugInfoFlag.ForEnvironment(Environment.Production).asString}",
-        willRespondWith = (
-          200,
-          Some(
-            """[
-              | {"name":"something-api",  "version":"1.8.0_181", "vendor": "Oracle", "kind": "JDK"}
-              |,{"name":"service-backend","version":"1.8.0_191", "vendor": "OpenJDK", "kind": "JRE"}
-              |]""".stripMargin)))
+    "returns JDK versions with vendor" in {
+      stubFor(
+        get(urlEqualTo(s"/api/jdkVersions?flag=${SlugInfoFlag.ForEnvironment(Environment.Production).asString}"))
+          .willReturn(
+            aResponse()
+            .withStatus(200)
+            .withBody(
+              """[
+                  {"name":"something-api",  "version":"1.8.0_181", "vendor": "Oracle", "kind": "JDK"}
+                 ,{"name":"service-backend","version":"1.8.0_191", "vendor": "OpenJDK", "kind": "JRE"}
+                 ]"""
+            )
+          )
+      )
 
       val response = serviceDependenciesConnector.getJDKVersions(SlugInfoFlag.ForEnvironment(Environment.Production)).futureValue
 
@@ -409,9 +426,5 @@ class ServiceDependenciesConnectorSpec
       res.java.vendor  shouldBe "OpenJDK"
       res.java.kind    shouldBe "JDK"
     }
-
-  }
-  private trait Setup {
-    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   }
 }

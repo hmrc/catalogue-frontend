@@ -16,38 +16,57 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.scalatest.EitherValues
-import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
+import com.github.tomakehurst.wiremock.client.WireMock._
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterGroup, ShutterGroupsConnector}
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class ShutterGroupsConnectorSpec
-    extends UnitSpec
-    with FakeApplicationBuilder
-    with EitherValues {
+  extends AnyWordSpec
+     with Matchers
+     with BeforeAndAfterEach
+     with GuiceOneAppPerSuite
+     with WireMockSupport
+     with ScalaFutures
+     with IntegrationPatience {
+
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
+      .configure(
+        Map(
+          "github.open.api.rawurl" -> wireMockUrl,
+          "github.open.api.key"    -> "t",
+          "metrics.jvm"            -> false
+        ))
+      .build()
 
   private lazy val shutterGroupsConnnector = app.injector.instanceOf[ShutterGroupsConnector]
 
   "shutterGroups" should {
-
     "return all shutter groups if the file is valid" in {
-      serviceEndpoint(
-        GET,
-        "/hmrc/outage-pages/master/conf/shutter-groups.json",
-        willRespondWith = (
-          200,
-          Some(
-           """{
-             |  "FE-GROUP": [
-             |    "fe1",
-             |    "fe2"
-             |  ],
-             |  "API-GROUP": [
-             |    "api1",
-             |    "api2"
-             |  ]
-             |}""".stripMargin
+      stubFor(
+        get(urlEqualTo("/hmrc/outage-pages/master/conf/shutter-groups.json"))
+          .willReturn(
+            aResponse()
+            .withStatus(200)
+            .withBody(
+               """{
+                 "FE-GROUP": [
+                   "fe1",
+                   "fe2"
+                 ],
+                 "API-GROUP": [
+                   "api1",
+                   "api2"
+                 ]
+               }"""
           ))
       )
 
@@ -57,22 +76,28 @@ class ShutterGroupsConnectorSpec
         ShutterGroup("FE-GROUP", List("fe1", "fe2")),
         ShutterGroup("API-GROUP", List("api1", "api2"))
       )
+
+      verify(
+        getRequestedFor(urlEqualTo("/hmrc/outage-pages/master/conf/shutter-groups.json"))
+          .withHeader("Authorization", equalTo("token t"))
+      )
     }
 
     "return an empty list of shutter groups if there is a problem parsing the file (invalid json)" in {
-      serviceEndpoint(
-        GET,
-        "/hmrc/outage-pages/master/conf/shutter-groups.json",
-        willRespondWith = (
-          200,
-          Some(
-            """{
-              |  "FE-GROUP": [
-              |    "fe1"
-              |    "fe2"
-              |  ]
-              |}""".stripMargin
-          ))
+      stubFor(
+        get(urlEqualTo("/hmrc/outage-pages/master/conf/shutter-groups.json"))
+          .willReturn(
+            aResponse()
+            .withStatus(200)
+            .withBody(
+              """{
+                "FE-GROUP": [
+                  "fe1"
+                  "fe2"
+                ]
+              }"""
+            )
+          )
       )
 
       val response = shutterGroupsConnnector.shutterGroups.futureValue
@@ -81,12 +106,10 @@ class ShutterGroupsConnectorSpec
     }
 
     "return an empty list of shutter groups if the file is not found" in {
-      serviceEndpoint(
-        GET,
-        "/hmrc/outage-pages/master/conf/shutter-groups.json",
-        willRespondWith = (
-          404, None
-      ))
+      stubFor(
+        get(urlEqualTo("/hmrc/outage-pages/master/conf/shutter-groups.json"))
+          .willReturn(aResponse().withStatus(404))
+      )
 
       val response = shutterGroupsConnnector.shutterGroups.futureValue
 

@@ -46,11 +46,6 @@ class UserManagementAuthConnectorSpec
      with ScalaCheckDrivenPropertyChecks {
   import ExecutionContext.Implicits.global
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    reset()
-  }
-
   "authenticate" should {
 
     "return authorization token when UMP auth service returns OK containing it" in new Setup {
@@ -98,7 +93,7 @@ class UserManagementAuthConnectorSpec
 
         val e = connector.authenticate(username, password).failed.futureValue
         e shouldBe an[BadGatewayException]
-        e.getMessage shouldBe s"Received $status from POST to $stubUrl/v1/login"
+        e.getMessage shouldBe s"Received $status from POST to $wireMockUrl/v1/login"
 
         verify(postRequestedFor(urlEqualTo("/v1/login"))
           .withRequestBody(equalTo(Json.obj("username" -> username, "password" -> password).toString))
@@ -152,7 +147,7 @@ class UserManagementAuthConnectorSpec
 
         val e = connector.getUser(umpToken).failed.futureValue
         e shouldBe an[BadGatewayException]
-        e.getMessage shouldBe s"Received $unsupportedStatus from GET to $stubUrl/v1/login"
+        e.getMessage shouldBe s"Received $unsupportedStatus from GET to $wireMockUrl/v1/login"
 
         verify(getRequestedFor(urlEqualTo("/v1/login"))
           .withHeader("Token", equalTo(umpToken.value))
@@ -168,7 +163,7 @@ class UserManagementAuthConnectorSpec
     val userManagementAuthConfig              = new UserManagementAuthConfig(
       new ServicesConfig(
         Configuration(
-          "microservice.services.user-management-auth.url" -> stubUrl
+          "microservice.services.user-management-auth.url" -> wireMockUrl
         )
       )
     )

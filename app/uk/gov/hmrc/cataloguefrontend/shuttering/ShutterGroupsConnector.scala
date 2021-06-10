@@ -29,7 +29,7 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ShutterGroupsConnector @Inject() (
-  http: HttpClient,
+  http      : HttpClient,
   githubConf: GithubConfig
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
@@ -37,11 +37,13 @@ class ShutterGroupsConnector @Inject() (
   val logger = Logger(this.getClass)
 
   def shutterGroups: Future[List[ShutterGroup]] = {
-    val url                        = url"${githubConf.rawUrl}/hmrc/outage-pages/master/conf/shutter-groups.json"
-    implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(("Authorization", s"token ${githubConf.token}"))
-    implicit val gr                = ShutterGroup.reads
-    http
-      .GET[Option[List[ShutterGroup]]](url)
+    val url = url"${githubConf.rawUrl}/hmrc/outage-pages/master/conf/shutter-groups.json"
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    implicit val gr = ShutterGroup.reads
+    http.GET[Option[List[ShutterGroup]]](
+      url,
+      headers = Seq("Authorization" -> s"token ${githubConf.token}")
+    )
       .map(_.getOrElse {
         logger.info(s"No shutter groups found at $url, defaulting to an empty list")
         List.empty[ShutterGroup]
@@ -55,7 +57,7 @@ class ShutterGroupsConnector @Inject() (
 }
 
 case class ShutterGroup(
-  name: String,
+  name    : String,
   services: List[String]
 )
 

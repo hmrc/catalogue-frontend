@@ -35,16 +35,17 @@ class LeakDetectionConnectorSpec
   val servicesConfig =
     new ServicesConfig(
       Configuration(
-        "microservice.services.leak-detection.host" -> stubHost,
-        "microservice.services.leak-detection.port" -> stubPort
+        "microservice.services.leak-detection.host" -> wireMockHost,
+        "microservice.services.leak-detection.port" -> wireMockPort
       )
     )
+
   val leakDetectionConnector = new LeakDetectionConnector(httpClient, servicesConfig)
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "repositoriesWithLeaks" should {
     "return repositories with leaks" in {
-      implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-
       stubFor(
         get(urlEqualTo("/reports/repositories"))
           .willReturn(
@@ -66,8 +67,6 @@ class LeakDetectionConnectorSpec
     }
 
     "return empty if leak detection service returns status different than 2xx" in {
-      implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-
       stubFor(
         get(urlEqualTo("/reports/repositories"))
           .willReturn(aResponse().withStatus(502))
