@@ -16,32 +16,66 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import org.mockito.ArgumentMatchers._
-import org.mockito.MockitoSugar
+import com.github.tomakehurst.wiremock.client.WireMock._
+import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
-import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.{HttpClientSupport, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-class LeakDetectionConnectorSpec extends UnitSpec with MockitoSugar {
+class LeakDetectionConnectorSpec
+   extends UnitSpec
+     with HttpClientSupport
+     with WireMockSupport
+ {
   import ExecutionContext.Implicits.global
 
+  val servicesConfig =
+    new ServicesConfig(
+      Configuration(
+        "microservice.services.leak-detection.host" -> stubHost,
+        "microservice.services.leak-detection.port" -> stubPort
+      )
+    )
+  val leakDetectionConnector = new LeakDetectionConnector(httpClient, servicesConfig)
+
   "repositoriesWithLeaks" should {
+    "return repositories with leaks" in {
+      implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+
+      stubFor(
+        get(urlEqualTo("/reports/repositories"))
+          .willReturn(
+            aResponse()
+            .withStatus(200)
+            .withBody("""["repo1","repo2"]""")
+          )
+      )
+
+      leakDetectionConnector.repositoriesWithLeaks.futureValue shouldBe Seq(
+        RepositoryWithLeaks("repo1"),
+        RepositoryWithLeaks("repo2")
+      )
+
+      verify(
+        getRequestedFor(urlEqualTo("/reports/repositories"))
+          .withHeader("Accept", equalTo("application/json"))
+      )
+    }
+
     "return empty if leak detection service returns status different than 2xx" in {
       implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-      val servicesConfig                        = mock[ServicesConfig]
-      val httpClient                            = mock[HttpClient]
 
-      when(servicesConfig.baseUrl(any()))
-        .thenReturn("http://leak-detection:8855")
-
-      when(httpClient.GET(any(), any(), any())(any(), any(), any()))
-        .thenReturn(Future.failed(new BadGatewayException("an exception")))
-
-      val leakDetectionConnector = new LeakDetectionConnector(httpClient, servicesConfig)
+      stubFor(
+        get(urlEqualTo("/reports/repositories"))
+          .willReturn(aResponse().withStatus(502))
+      )
 
       leakDetectionConnector.repositoriesWithLeaks.futureValue shouldBe Seq.empty
+
+      verify(getRequestedFor(urlEqualTo("/reports/repositories")))
     }
   }
 }

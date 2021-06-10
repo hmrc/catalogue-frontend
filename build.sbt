@@ -17,7 +17,6 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
     // ***************
-    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
     RoutesKeys.routesImport ++= Seq(
         "uk.gov.hmrc.cataloguefrontend.connector.model.TeamName",
         "uk.gov.hmrc.cataloguefrontend.model.Environment",
