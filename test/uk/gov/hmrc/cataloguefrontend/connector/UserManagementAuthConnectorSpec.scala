@@ -18,26 +18,38 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import java.util.UUID
 
-import org.mockito.MockitoSugar
+import com.github.tomakehurst.wiremock.client.WireMock._
+import org.scalacheck.Gen
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import play.api.Configuration
 import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.Username
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
+import uk.gov.hmrc.http.test.{HttpClientSupport, WireMockSupport}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext
-import scala.util.Random
 
 class UserManagementAuthConnectorSpec
   extends AnyWordSpec
-  with Matchers
-  with HttpClientStub
-  with MockitoSugar
-  with ScalaFutures {
+     with Matchers
+     with WireMockSupport
+     with HttpClientSupport
+     with ScalaFutures
+     with BeforeAndAfterEach
+     with ScalaCheckDrivenPropertyChecks {
   import ExecutionContext.Implicits.global
+
+  override protected def beforeEach(): Unit = {
+    super.beforeEach()
+    reset()
+  }
 
   "authenticate" should {
 
@@ -45,88 +57,106 @@ class UserManagementAuthConnectorSpec
       val token  = UUID.randomUUID().toString
       val userId = "john.smith"
 
-      expect
-        .POST(
-          to      = s"$userMgtAuthUrl/v1/login",
-          payload = Json.obj("username" -> username, "password" -> password)
-        )
-        .returning(
-          status = OK,
-          json   = Json.obj("Token" -> token, "uid" -> userId)
-        )
+      stubFor(
+        post(urlEqualTo("/v1/login"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+              .withBody(Json.obj("Token" -> token, "uid" -> userId).toString)
+          )
+      )
 
       connector.authenticate(username, password).futureValue shouldBe Right(
         TokenAndUserId(UmpToken(token), UmpUserId(userId)))
+
+      verify(postRequestedFor(urlEqualTo("/v1/login"))
+        .withRequestBody(equalTo(Json.obj("username" -> username, "password" -> password).toString))
+      )
     }
 
-    UNAUTHORIZED :: FORBIDDEN :: Nil foreach { status =>
+    List(UNAUTHORIZED, FORBIDDEN).foreach { status =>
       s"return unauthorized when UMP auth service returns $status" in new Setup {
-        expect
-          .POST(
-            to      = s"$userMgtAuthUrl/v1/login",
-            payload = Json.obj("username" -> username, "password" -> password)
-          )
-          .returning(status)
+        stubFor(
+          post(urlEqualTo("/v1/login"))
+            .willReturn(aResponse().withStatus(status))
+        )
 
         connector.authenticate(username, password).futureValue shouldBe Left(UmpUnauthorized)
+
+        verify(postRequestedFor(urlEqualTo("/v1/login"))
+          .withRequestBody(equalTo(Json.obj("username" -> username, "password" -> password).toString))
+        )
       }
     }
 
-    CREATED +: NOT_FOUND +: INTERNAL_SERVER_ERROR +: Nil foreach { status =>
+    List(CREATED, NOT_FOUND, INTERNAL_SERVER_ERROR).foreach { status =>
       s"throw BadGatewayException for unrecognized $status status" in new Setup {
-        expect
-          .POST(
-            to      = s"$userMgtAuthUrl/v1/login",
-            payload = Json.obj("username" -> username, "password" -> password)
-          )
-          .returning(status)
+        stubFor(
+          post(urlEqualTo("/v1/login"))
+            .willReturn(aResponse().withStatus(status))
+        )
 
         val e = connector.authenticate(username, password).failed.futureValue
         e shouldBe an[BadGatewayException]
-        e.getMessage shouldBe s"Received $status from POST to $userMgtAuthUrl/v1/login"
+        e.getMessage shouldBe s"Received $status from POST to $stubUrl/v1/login"
+
+        verify(postRequestedFor(urlEqualTo("/v1/login"))
+          .withRequestBody(equalTo(Json.obj("username" -> username, "password" -> password).toString))
+        )
       }
     }
   }
 
   "isValid" should {
     "return User if UMP Auth service returns 200 OK" in new Setup {
-      val umpToken = UmpToken("value")
-      expect
-        .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
-        .returning(
-          status = OK,
-          json   = Json.obj("uid" -> username, "groups" -> JsArray(Seq.empty))
-        )
+      stubFor(
+        get(urlEqualTo("/v1/login"))
+          .willReturn(
+            aResponse()
+              .withStatus(OK)
+              .withBody(Json.obj("uid" -> username, "groups" -> JsArray(Seq.empty)).toString)
+          )
+      )
 
+      val umpToken = UmpToken("value")
       connector.getUser(umpToken).futureValue shouldBe Some(User(Username("username"), groups = List.empty))
+
+      verify(getRequestedFor(urlEqualTo("/v1/login"))
+        .withHeader("Token", equalTo(umpToken.value))
+      )
     }
 
-    UNAUTHORIZED :: FORBIDDEN :: Nil foreach { status =>
+    List(UNAUTHORIZED, FORBIDDEN).foreach { status =>
       s"return false if UMP returns $status status" in new Setup {
-        val umpToken = UmpToken("value")
-        expect
-          .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
-          .returning(status)
+        stubFor(
+          get(urlEqualTo("/v1/login"))
+            .willReturn(aResponse().withStatus(status))
+        )
 
+        val umpToken = UmpToken("value")
         connector.getUser(umpToken).futureValue shouldBe None
+
+        verify(getRequestedFor(urlEqualTo("/v1/login"))
+          .withHeader("Token", equalTo(umpToken.value))
+        )
       }
     }
 
     "throw BadGatewayException if UMP Auth Service returns other unexpected status" in new Setup {
       val umpToken = UmpToken("value")
-      val unsupportedStatusCodes =
-        Random
-          .shuffle((201 to 599).filterNot(s => s == UNAUTHORIZED || s == FORBIDDEN))
-          .take(10)
-
-      unsupportedStatusCodes.foreach { unsupportedStatus =>
-        expect
-          .GET(to = s"$userMgtAuthUrl/v1/login")(headerCarrier.withExtraHeaders("Token" -> umpToken.value))
-          .returning(unsupportedStatus)
+      forAll(Gen.choose(201, 599).suchThat(_ != UNAUTHORIZED).suchThat(_ != FORBIDDEN)) { unsupportedStatus =>
+        stubFor(
+          get(urlEqualTo("/v1/login"))
+            .willReturn(aResponse().withStatus(unsupportedStatus))
+        )
 
         val e = connector.getUser(umpToken).failed.futureValue
         e shouldBe an[BadGatewayException]
-        e.getMessage shouldBe s"Received $unsupportedStatus from GET to $userMgtAuthUrl/v1/login"
+        e.getMessage shouldBe s"Received $unsupportedStatus from GET to $stubUrl/v1/login"
+
+        verify(getRequestedFor(urlEqualTo("/v1/login"))
+          .withHeader("Token", equalTo(umpToken.value))
+        )
       }
     }
   }
@@ -135,11 +165,13 @@ class UserManagementAuthConnectorSpec
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
     val username                              = "username"
     val password                              = "password"
-    val userManagementAuthConfig              = mock[UserManagementAuthConfig]
-    val userMgtAuthUrl                        = "http://usermgt-auth:9999"
-
-    when(userManagementAuthConfig.baseUrl)
-      .thenReturn(userMgtAuthUrl)
+    val userManagementAuthConfig              = new UserManagementAuthConfig(
+      new ServicesConfig(
+        Configuration(
+          "microservice.services.user-management-auth.url" -> stubUrl
+        )
+      )
+    )
 
     val connector = new UserManagementAuthConnector(httpClient, userManagementAuthConfig)
   }
