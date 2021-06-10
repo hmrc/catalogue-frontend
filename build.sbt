@@ -4,18 +4,15 @@ import play.sbt.routes.RoutesKeys
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
 
-val appName = "catalogue-frontend"
+val silencerVersion = "1.7.5"
 
-val silencerVersion = "1.7.2"
-
-lazy val microservice = Project(appName, file("."))
-  .enablePlugins(
-    Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin): _*)
+lazy val microservice = Project("catalogue-frontend", file("."))
+  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(publishingSettings: _*)
   .settings(
     majorVersion := 4,
-    scalaVersion := "2.12.13",
+    scalaVersion := "2.12.14",
     scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
