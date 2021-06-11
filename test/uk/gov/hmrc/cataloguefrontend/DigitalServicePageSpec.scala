@@ -55,7 +55,7 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
 
   "DigitalService page" should {
 
-    "show a list of libraries, services, prototypes and repositories" in {
+    "show a list of libraries, services, prototypes and repositories" in new MockedCatalogueFrontendSetup {
       serviceEndpoint(
         GET,
         s"/api/digital-services/$digitalServiceName",
@@ -229,8 +229,8 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
             json
           )))
 
-      mockHttpApiCall(s"/v2/organisations/teams/$team1/members", "/user-management-response-team1.json")
-      mockHttpApiCall(s"/v2/organisations/teams/$team2/members", "/user-management-response-team2.json")
+      serviceEndpoint(method = GET, url = s"/v2/organisations/teams/$team1/members", willRespondWith = (200, Some(readFile("/user-management-response-team1.json"))))
+      serviceEndpoint(method = GET, url = s"/v2/organisations/teams/$team2/members", willRespondWith = (200, Some(readFile("/user-management-response-team2.json"))))
 
       val response = WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get.futureValue
 
@@ -322,8 +322,10 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
     private val umpAuthenticatedPassThrough =
       new UmpAuthenticatedPassThrough(userManagementAuthConnector, controllerComponents, catalogueErrorHandler)
 
-    when(mockedModelService.getDigitalServiceOwner(any())).thenReturn(Some(serviceOwner))
-    when(userManagementPortalConfig.userManagementProfileBaseUrl) thenReturn "http://things.things.com"
+    when(mockedModelService.getDigitalServiceOwner(any()))
+      .thenReturn(Some(serviceOwner))
+    when(userManagementPortalConfig.userManagementProfileBaseUrl)
+      .thenReturn("http://things.things.com")
 
     val catalogueController = new CatalogueController(
       userManagementConnector       = userManagementConnectorMock,
@@ -357,15 +359,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
 
   private def asDocument(html: String): Document =
     Jsoup.parse(html)
-
-  private def mockHttpApiCall(url: String, jsonResponseFile: String, httpCodeToBeReturned: Int = 200): String = {
-
-    val json = readFile(jsonResponseFile)
-
-    serviceEndpoint(method = GET, url = url, willRespondWith = (httpCodeToBeReturned, Some(json)))
-
-    json
-  }
 
   private def readFile(jsonFilePath: String): String =
     Source.fromURL(getClass.getResource(jsonFilePath)).getLines().mkString("\n")
