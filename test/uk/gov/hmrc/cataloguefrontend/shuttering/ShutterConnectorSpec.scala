@@ -16,77 +16,68 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import com.github.tomakehurst.wiremock.client.WireMock._
 import org.mockito.MockitoSugar
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
-import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.{HttpClientSupport, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.concurrent.Future
-
-class ShutterConnectorSpec extends AnyWordSpec with MockitoSugar with Matchers with ScalaFutures {
-
-  import ShutterConnectorSpec._
+class ShutterConnectorSpec
+  extends AnyWordSpec
+     with MockitoSugar
+     with Matchers
+     with ScalaFutures
+     with IntegrationPatience
+     with WireMockSupport
+     with HttpClientSupport {
 
   private trait Fixture {
     val servicesConfig = mock[ServicesConfig]
-    when(servicesConfig.baseUrl("shutter-api")).thenReturn(SomeBaseUrl)
+    when(servicesConfig.baseUrl("shutter-api"))
+      .thenReturn(wireMockUrl)
 
     implicit val headerCarrier = HeaderCarrier()
     implicit val executionContext = scala.concurrent.ExecutionContext.global
-    val httpClient = mock[HttpClient]
-    val underTest = new ShutterConnector(httpClient, servicesConfig)
-
-    // unfortunately the test will receive an unhelpful NullPointerException if expectations are not met
-    def stubEmptyResponseForGet(
-      withPath   : String,
-      withParams : Seq[(String, String)]
-    ): Unit =
-      when(
-        httpClient.GET(
-          eqTo(url"$withPath?$withParams")
-        )(any[HttpReads[Seq[ShutterEvent]]],
-          eqTo(headerCarrier),
-          eqTo(executionContext)
-        )
-      ).thenReturn(Future.successful(Seq.empty))
+    val connector = new ShutterConnector(httpClient, servicesConfig)
   }
 
   "Shutter Events" should {
     "be filtered by environment only when no service name is specified" in new Fixture {
       val filter = ShutterEventsFilter(environment = Environment.QA, serviceName = None)
-      stubEmptyResponseForGet(
-        withPath   = s"$SomeBaseUrl/shutter-api/events",
-        withParams = Seq(
-          "type"             -> "shutter-state-change",
-          "data.environment" -> "qa"
-        )
+      stubFor(
+        get(urlPathEqualTo("/shutter-api/events"))
+          .willReturn(aResponse().withBody("[]"))
       )
 
-      underTest.shutterEventsByTimestampDesc(filter).futureValue shouldBe empty
+      connector.shutterEventsByTimestampDesc(filter).futureValue shouldBe empty
+
+      wireMockServer.verify(
+        getRequestedFor(urlPathEqualTo("/shutter-api/events"))
+          .withQueryParam("type"            , equalTo("shutter-state-change"))
+          .withQueryParam("data.environment", equalTo("qa"))
+      )
     }
 
     "be filtered by serviceName and environment when a service name is specified" in new Fixture {
       val filter = ShutterEventsFilter(environment = Environment.QA, serviceName = Some("abc-frontend"))
-      stubEmptyResponseForGet(
-        withPath   = s"$SomeBaseUrl/shutter-api/events",
-        withParams = Seq(
-          "type"             -> "shutter-state-change",
-          "data.environment" -> "qa",
-          "data.serviceName" -> "abc-frontend"
-        )
+      stubFor(
+        get(urlPathEqualTo("/shutter-api/events"))
+          .willReturn(aResponse().withBody("[]"))
       )
 
-      underTest.shutterEventsByTimestampDesc(filter).futureValue shouldBe empty
+      connector.shutterEventsByTimestampDesc(filter).futureValue shouldBe empty
+
+      wireMockServer.verify(
+        getRequestedFor(urlPathEqualTo("/shutter-api/events"))
+          .withQueryParam("type"            , equalTo("shutter-state-change"))
+          .withQueryParam("data.environment", equalTo("qa"))
+          .withQueryParam("data.serviceName", equalTo("abc-frontend"))
+      )
     }
   }
-}
-
-private object ShutterConnectorSpec {
-  val SomeBaseUrl = "http://somebaseurl"
 }

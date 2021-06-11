@@ -87,7 +87,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
           ))
       )
 
-      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
+      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
 
       val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
@@ -155,7 +155,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
           ))
       )
 
-      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
+      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
 
       val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
@@ -201,7 +201,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
           ))
       )
 
-      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
+      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
 
       val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
@@ -230,7 +230,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
           ))
       )
 
-      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
+      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
 
       val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
@@ -260,7 +260,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
           ))
       )
 
-      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/large-user-management-response.json")
+      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("large-user-management-response.json"))))
 
       val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
@@ -299,7 +299,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
           ))
       )
 
-      mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", "/user-management-response.json")
+      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
+
       val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
       response.status shouldBe 200
@@ -332,7 +333,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
             ))
         )
 
-        mockHttpApiCall(s"/v2/organisations/teams/$teamName/members", fileName)
+        serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile(fileName))))
 
         val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
@@ -346,8 +347,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
           .text() shouldBe s"Team $teamName is not defined in the User Management Portal, please add it here"
       }
 
-      verifyForFile("/user-management-empty-members.json")
-      verifyForFile("/user-management-no-members.json")
+      verifyForFile("user-management-empty-members.json")
+      verifyForFile("user-management-no-members.json")
     }
 
     "show error message if UMP is not available" in {
@@ -369,10 +370,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
           ))
       )
 
-      mockHttpApiCall(
-        url = s"/v2/organisations/teams/$teamName/members",
-        "/user-management-response.json",
-        httpCodeToBeReturned = 404)
+      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (404, Some(readFile("user-management-response.json"))))
 
       val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
 
@@ -400,7 +398,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
           ))
       )
 
-      mockHttpApiCall(s"/v2/organisations/teams/$teamName", "/user-management-team-details-response.json")
+      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
 
       val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
 
@@ -456,17 +454,17 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     teamMembersLiElements(4).text() should include("Mx P")
   }
 
-  def mockHttpApiCall(url: String, jsonResponseFile: String, httpCodeToBeReturned: Int = 200): String = {
-    val json = readFile(jsonResponseFile)
-    serviceEndpoint(method = GET, url = url, willRespondWith = (httpCodeToBeReturned, Some(json)))
-    json
+  def readFile(jsonFilePath: String): String = {
+    val path = "__files/" + jsonFilePath
+    try {
+      Source.fromResource(path).getLines.mkString("\n")
+    } catch {
+      case _: NullPointerException => sys.error(s"Could not find file $path")
+    }
   }
-
-  def readFile(jsonFilePath: String): String =
-    Source.fromURL(getClass.getResource(jsonFilePath)).getLines().mkString("\n")
 
   def extractMembers(jsonString: String): Seq[TeamMember] =
     (Json.parse(jsonString) \\ "members").headOption
-      .map(js => js.as[Seq[TeamMember]])
-      .getOrElse(throw new RuntimeException(s"not able to extract team members from json: $jsonString"))
+      .map(_.as[Seq[TeamMember]])
+      .getOrElse(sys.error(s"not able to extract team members from json: $jsonString"))
 }

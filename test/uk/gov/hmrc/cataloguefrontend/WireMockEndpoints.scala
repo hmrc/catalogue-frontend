@@ -28,7 +28,6 @@ trait WireMockEndpoints extends WireMockSupport {
   def serviceEndpoint(
     method         : RequestMethod,
     url            : String,
-    extraHeaders   : Map[String, String]   = Map.empty,
     requestHeaders : Map[String, String]   = Map.empty,
     queryParameters: Seq[(String, String)] = Nil,
     willRespondWith: (Int, Option[String]),
@@ -45,9 +44,7 @@ trait WireMockEndpoints extends WireMockSupport {
     givenJsonBody.foreach(b => builder.withRequestBody(equalToJson(b)))
 
     val response = new ResponseDefinitionBuilder().withStatus(willRespondWith._1)
-    val resp = willRespondWith._2.fold(response)(response.withBody)
-    extraHeaders.foreach { case (n, v) => resp.withHeader(n, v) }
-    builder.willReturn(resp)
+    builder.willReturn(willRespondWith._2.fold(response)(response.withBody))
 
     wireMockServer.addStubMapping(builder.build)
   }

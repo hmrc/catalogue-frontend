@@ -63,7 +63,6 @@ class ServiceDependenciesConnectorSpec
         get(urlEqualTo("/api/dependencies/repo1"))
           .willReturn(
             aResponse()
-            .withStatus(200)
             .withBody(
               """{
                   "repositoryName": "repo1",
@@ -159,7 +158,6 @@ class ServiceDependenciesConnectorSpec
         get(urlEqualTo("/api/dependencies"))
           .willReturn(
             aResponse()
-            .withStatus(200)
             .withBody(
               """[
                   {
@@ -313,7 +311,6 @@ class ServiceDependenciesConnectorSpec
         get(urlEqualTo(s"/api/slug-dependencies/$slugName?flag=${flag.asString}"))
           .willReturn(
             aResponse()
-            .withStatus(200)
             .withBody(
               """[
                   {
@@ -359,7 +356,6 @@ class ServiceDependenciesConnectorSpec
         get(urlEqualTo(s"/api/jdkVersions?flag=${SlugInfoFlag.ForEnvironment(Environment.Production).asString}"))
           .willReturn(
             aResponse()
-            .withStatus(200)
             .withBody(
               """[
                   {"name":"something-api",  "version":"1.8.0_181", "vendor": "Oracle", "kind": "JDK"}

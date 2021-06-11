@@ -229,8 +229,8 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
             json
           )))
 
-      serviceEndpoint(method = GET, url = s"/v2/organisations/teams/$team1/members", willRespondWith = (200, Some(readFile("/user-management-response-team1.json"))))
-      serviceEndpoint(method = GET, url = s"/v2/organisations/teams/$team2/members", willRespondWith = (200, Some(readFile("/user-management-response-team2.json"))))
+      serviceEndpoint(method = GET, url = s"/v2/organisations/teams/$team1/members", willRespondWith = (200, Some(readFile("user-management-response-team1.json"))))
+      serviceEndpoint(method = GET, url = s"/v2/organisations/teams/$team2/members", willRespondWith = (200, Some(readFile("user-management-response-team2.json"))))
 
       val response = WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get.futureValue
 
@@ -360,8 +360,14 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
   private def asDocument(html: String): Document =
     Jsoup.parse(html)
 
-  private def readFile(jsonFilePath: String): String =
-    Source.fromURL(getClass.getResource(jsonFilePath)).getLines().mkString("\n")
+  def readFile(jsonFilePath: String): String = {
+    val path = "__files/" + jsonFilePath
+    try {
+      Source.fromResource(path).getLines.mkString("\n")
+    } catch {
+      case _: NullPointerException => sys.error(s"Could not find file $path")
+    }
+  }
 
   private def verifyTeamMemberHrefLinks(document: Document): Boolean = {
     val hrefs = document.select("#team_members [href]").iterator.asScala.toList

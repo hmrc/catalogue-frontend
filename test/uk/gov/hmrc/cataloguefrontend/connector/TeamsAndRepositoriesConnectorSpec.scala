@@ -69,7 +69,6 @@ class TeamsAndRepositoriesConnectorSpec
         get(urlEqualTo("/api/jenkins-url/serviceA"))
           .willReturn(
             aResponse()
-            .withStatus(200)
             .withBody(
               """
                 {
@@ -106,11 +105,11 @@ class TeamsAndRepositoriesConnectorSpec
     "convert the json string to RepositoryDetails" in {
       stubFor(
         get(urlEqualTo("/api/repositories/service-1"))
-          .willReturn(aResponse().withStatus(200).withBody(JsonData.repositoryData()))
+          .willReturn(aResponse().withBody(JsonData.repositoryData()))
       )
       stubFor(
         post(urlEqualTo("/api/jenkins-url/service01"))
-          .willReturn(aResponse().withStatus(200).withBody(JsonData.serviceJenkinsData))
+          .willReturn(aResponse().withBody(JsonData.serviceJenkinsData))
       )
 
       val responseData: RepositoryDetails =
@@ -160,7 +159,7 @@ class TeamsAndRepositoriesConnectorSpec
     "return all the repositories returned by the api" in {
       stubFor(
         get(urlEqualTo("/api/repositories"))
-          .willReturn(aResponse().withStatus(200).withBody(JsonData.repositoriesData))
+          .willReturn(aResponse().withBody(JsonData.repositoriesData))
       )
 
       val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
@@ -189,7 +188,7 @@ class TeamsAndRepositoriesConnectorSpec
     "return all the archived repositories returned by the api" in {
       stubFor(
         get(urlEqualTo("/api/repositories?archived=true"))
-          .willReturn(aResponse().withStatus(200).withBody(JsonData.repositoriesData))
+          .willReturn(aResponse().withBody(JsonData.repositoriesData))
       )
 
       val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
@@ -217,18 +216,18 @@ class TeamsAndRepositoriesConnectorSpec
     "convert the json string to DigitalServiceDetails" in {
       stubFor(
         get(urlEqualTo("/api/digital-services/service-1"))
-          .willReturn(aResponse().withStatus(200).withBody(JsonData.digitalServiceData))
+          .willReturn(aResponse().withBody(JsonData.digitalServiceData))
       )
 
       val responseData =
         teamsAndRepositoriesConnector
           .digitalServiceInfo("service-1")(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
-          .get
+          .value
 
       responseData.name shouldBe "service-1"
 
-      responseData.repositories.size should ===(3)
+      responseData.repositories.size shouldBe 3
     }
   }
 
@@ -236,7 +235,7 @@ class TeamsAndRepositoriesConnectorSpec
     "return all the digital service names" in {
       stubFor(
         get(urlEqualTo("/api/digital-services"))
-          .willReturn(aResponse().withStatus(200).withBody(JsonData.digitalServiceNamesData))
+          .willReturn(aResponse().withBody(JsonData.digitalServiceNamesData))
       )
 
       val digitalServiceNames: Seq[String] =
@@ -252,7 +251,7 @@ class TeamsAndRepositoriesConnectorSpec
     "return all the teams and their repositories" in {
       stubFor(
         get(urlEqualTo("/api/teams?includeRepos=true"))
-          .willReturn(aResponse().withStatus(200).withBody(JsonData.teams))
+          .willReturn(aResponse().withBody(JsonData.teams))
       )
 
       val teams: Seq[Team] =

@@ -32,13 +32,13 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     // ***************
   )
 
-val bootstrapPlayVersion = "5.4.0-SNAPSHOT"
-val hmrcMongoVersion     = "0.49.0"
+val bootstrapPlayVersion = "5.7.0"
+val hmrcMongoVersion     = "0.51.0"
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-28" % bootstrapPlayVersion,
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-28"         % hmrcMongoVersion,
-  "org.typelevel"             %% "cats-core"                  % "2.3.1",
+  "org.typelevel"             %% "cats-core"                  % "2.6.1",
   "org.apache.httpcomponents" %  "httpcore"                   % "4.3.3",
   "org.yaml"                  %  "snakeyaml"                  % "1.27",
   "org.apache.httpcomponents" %  "httpclient"                 % "4.3.6",
@@ -51,11 +51,8 @@ val compile = Seq(
 val test = Seq(
   "uk.gov.hmrc"            %% "bootstrap-test-play-28"   % bootstrapPlayVersion % Test,
   "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28"  % hmrcMongoVersion     % Test,
-  "org.scalatestplus.play" %% "scalatestplus-play"       % "5.1.0"              % Test,
   "org.scalatestplus"      %% "scalatestplus-scalacheck" % "3.1.0.0-RC2"        % Test,
   "com.vladsch.flexmark"   %  "flexmark-all"             % "0.35.10"            % Test,
-  "com.typesafe.play"      %% "play-test"                % PlayVersion.current  % Test,
-  "com.github.tomakehurst" %  "wiremock"                 % "1.58"               % Test,
   "org.jsoup"              %  "jsoup"                    % "1.13.1"             % Test,
   "org.mockito"            %% "mockito-scala"            % "1.10.6"             % Test,
   ws

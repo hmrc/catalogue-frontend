@@ -48,11 +48,7 @@ class LeakDetectionConnectorSpec
     "return repositories with leaks" in {
       stubFor(
         get(urlEqualTo("/reports/repositories"))
-          .willReturn(
-            aResponse()
-            .withStatus(200)
-            .withBody("""["repo1","repo2"]""")
-          )
+          .willReturn(aResponse().withBody("""["repo1","repo2"]"""))
       )
 
       leakDetectionConnector.repositoriesWithLeaks.futureValue shouldBe Seq(

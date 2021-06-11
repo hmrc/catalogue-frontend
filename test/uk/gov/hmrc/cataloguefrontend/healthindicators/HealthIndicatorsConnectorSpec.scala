@@ -55,11 +55,7 @@ class HealthIndicatorsConnectorSpec
     "return a indicator for a repo when given a valid repo name" in {
       stubFor(
         get(urlEqualTo("/health-indicators/indicators/team-indicator-dashboard-frontend"))
-          .willReturn(
-            aResponse()
-            .withStatus(200)
-            .withBody(testJson1Repo)
-          )
+          .willReturn(aResponse().withBody(testJson1Repo))
       )
 
       val response = healthIndicatorsConnector.getIndicator("team-indicator-dashboard-frontend")

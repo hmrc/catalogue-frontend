@@ -55,7 +55,6 @@ class ShutterGroupsConnectorSpec
         get(urlEqualTo("/hmrc/outage-pages/master/conf/shutter-groups.json"))
           .willReturn(
             aResponse()
-            .withStatus(200)
             .withBody(
                """{
                  "FE-GROUP": [
@@ -88,7 +87,6 @@ class ShutterGroupsConnectorSpec
         get(urlEqualTo("/hmrc/outage-pages/master/conf/shutter-groups.json"))
           .willReturn(
             aResponse()
-            .withStatus(200)
             .withBody(
               """{
                 "FE-GROUP": [

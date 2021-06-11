@@ -46,19 +46,16 @@ class UserManagementAuthConnectorSpec
      with ScalaCheckDrivenPropertyChecks {
   import ExecutionContext.Implicits.global
 
-  "authenticate" should {
+  import org.scalacheck.Shrink.shrinkAny // disable shrinking here
 
+  "authenticate" should {
     "return authorization token when UMP auth service returns OK containing it" in new Setup {
       val token  = UUID.randomUUID().toString
       val userId = "john.smith"
 
       stubFor(
         post(urlEqualTo("/v1/login"))
-          .willReturn(
-            aResponse()
-              .withStatus(200)
-              .withBody(Json.obj("Token" -> token, "uid" -> userId).toString)
-          )
+          .willReturn(aResponse().withBody(Json.obj("Token" -> token, "uid" -> userId).toString))
       )
 
       connector.authenticate(username, password).futureValue shouldBe Right(
