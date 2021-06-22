@@ -188,7 +188,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
           |  "overallScore": -450,
           |  "weightedMetrics": [
           |    {
-          |      "metricType": "BobbyRule",
+          |      "metricType": "bobby-rule",
           |      "score": -400,
           |      "breakdown": [
           |        {
@@ -202,12 +202,12 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
           |      ]
           |    },
           |    {
-          |      "metricType": "LeakDetection",
+          |      "metricType": "leak-detection",
           |      "score": 0,
           |      "breakdown": []
           |    },
           |    {
-          |      "metricType": "ReadMe",
+          |      "metricType": "read-me",
           |      "score": -50,
           |      "breakdown": [
           |        {

@@ -110,7 +110,7 @@ class HealthIndicatorsConnectorSpec
                    |  "overallScore": -450,
                    |  "weightedMetrics": [
                    |    {
-                   |      "metricType": "BobbyRule",
+                   |      "metricType": "bobby-rule",
                    |      "score": -400,
                    |      "breakdown": [
                    |        {
@@ -124,12 +124,12 @@ class HealthIndicatorsConnectorSpec
                    |      ]
                    |    },
                    |    {
-                   |      "metricType": "LeakDetection",
+                   |      "metricType": "leak-detection",
                    |      "score": 0,
                    |      "breakdown": []
                    |    },
                    |    {
-                   |      "metricType": "ReadMe",
+                   |      "metricType": "read-me",
                    |      "score": -50,
                    |      "breakdown": [
                    |        {
@@ -139,7 +139,7 @@ class HealthIndicatorsConnectorSpec
                    |      ]
                    |    },
                    |{
-                   |      "metricType": "BuildStability",
+                   |      "metricType": "build-stability",
                    |      "score": 0,
                    |      "breakdown": [
                    |        {
