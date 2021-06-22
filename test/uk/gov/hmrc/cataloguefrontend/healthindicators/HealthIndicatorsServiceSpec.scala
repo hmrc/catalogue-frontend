@@ -33,10 +33,10 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
       when(mockTeamsAndReposConnector.allTeamsByService) thenReturn
         Future.successful(Map.empty)
 
-      when(mockHealthIndicatorsConnector.getAllRepositoryRatings(RepoType.Service)) thenReturn
+      when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
         Future.successful(Seq.empty)
 
-      healthIndicatorsService.findRepoRatingsWithTeams(RepoType.Service).futureValue shouldBe
+      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service).futureValue shouldBe
         Seq()
     }
 
@@ -44,26 +44,26 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
       when(mockTeamsAndReposConnector.allTeamsByService) thenReturn
         Future.successful(Map.empty)
 
-      when(mockHealthIndicatorsConnector.getAllRepositoryRatings(RepoType.Service)) thenReturn
-        Future.successful(Seq(RepositoryRating("foo", RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty)))))
+      when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
+        Future.successful(Seq(Indicator("foo", RepoType.Service, 10, Seq(WeightedMetric(MetricType.ReadMe, 10, Seq.empty)))))
 
-      healthIndicatorsService.findRepoRatingsWithTeams(RepoType.Service).futureValue shouldBe
-        Seq(RepoRatingsWithTeams("foo", Seq.empty, RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty))))
+      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service).futureValue shouldBe
+        Seq(IndicatorsWithTeams("foo", Seq.empty, RepoType.Service, 10, Seq(WeightedMetric(MetricType.ReadMe, 10, Seq.empty))))
     }
 
-    "return correct RepoRatingsWithTeams when TARConnector returns teams and HIConnector returns RepoRatings" in new Setup {
+    "return correct IndicatorsWithTeams when TARConnector returns teams and HIConnector returns Indicators" in new Setup {
       when(mockTeamsAndReposConnector.allTeamsByService) thenReturn
         Future.successful(Map("bar" -> Seq(TeamName("foo"))))
 
-      when(mockHealthIndicatorsConnector.getAllRepositoryRatings(RepoType.Service)) thenReturn
-        Future.successful(Seq(RepositoryRating("bar", RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty)))))
+      when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
+        Future.successful(Seq(Indicator("bar", RepoType.Service, 10, Seq(WeightedMetric(MetricType.ReadMe, 10, Seq.empty)))))
 
-      healthIndicatorsService.findRepoRatingsWithTeams(RepoType.Service).futureValue shouldBe
-        Seq(RepoRatingsWithTeams("bar", Seq(TeamName("foo")), RepoType.Service, 10, Seq(Rating(RatingType.ReadMe, 10, Seq.empty))))
+      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service).futureValue shouldBe
+        Seq(IndicatorsWithTeams("bar", Seq(TeamName("foo")), RepoType.Service, 10, Seq(WeightedMetric(MetricType.ReadMe, 10, Seq.empty))))
     }
   }
   private[this] trait Setup {
-    implicit val hc: HeaderCarrier              = HeaderCarrier()
+    implicit val hc: HeaderCarrier                                = HeaderCarrier()
     val mockTeamsAndReposConnector: TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     val mockHealthIndicatorsConnector: HealthIndicatorsConnector  = mock[HealthIndicatorsConnector]
     val healthIndicatorsService                                   = new HealthIndicatorsService(mockTeamsAndReposConnector, mockHealthIndicatorsConnector)

@@ -35,18 +35,18 @@ class HealthIndicatorsController @Inject()(
 
   def indicatorsForRepo(name: String): Action[AnyContent] =
     Action.async { implicit request =>
-      healthIndicatorsConnector.getRepositoryRating(name).map {
-        case Some(repositoryRating: RepositoryRating) => Ok(HealthIndicatorsPage(repositoryRating))
-        case None                                     => NotFound(error_404_template())
+      healthIndicatorsConnector.getIndicator(name).map {
+        case Some(indicator: Indicator) => Ok(HealthIndicatorsPage(indicator))
+        case None                       => NotFound(error_404_template())
       }
     }
 
-  def indicatorsForRepoType(repoType: String, repositoryName: String): Action[AnyContent] =
+  def indicatorsForRepoType(repoType: String, repoName: String): Action[AnyContent] =
     Action.async { implicit request =>
-      RepoType.parse(repoType).fold(_ => Future.successful(Redirect(routes.HealthIndicatorsController.indicatorsForRepoType(RepoType.Service.asString, repositoryName))),
+      RepoType.parse(repoType).fold(_ => Future.successful(Redirect(routes.HealthIndicatorsController.indicatorsForRepoType(RepoType.Service.asString, repoName))),
         r => for {
-          repoRatingsWithTeams <- healthIndicatorsService.findRepoRatingsWithTeams(r)
-        } yield Ok(HealthIndicatorsLeaderBoard(repoRatingsWithTeams, r, repositoryName, RepoType.values))
+          indicatorsWithTeams <- healthIndicatorsService.findIndicatorsWithTeams(r)
+        } yield Ok(HealthIndicatorsLeaderBoard(indicatorsWithTeams, r, repoName, RepoType.values))
       )
     }
 }

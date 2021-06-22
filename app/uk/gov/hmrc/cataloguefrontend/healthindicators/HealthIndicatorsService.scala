@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.ServiceName
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -31,24 +32,24 @@ class HealthIndicatorsService @Inject()(
   implicit ec: ExecutionContext
 ) {
 
-  def findRepoRatingsWithTeams(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[RepoRatingsWithTeams]] = {
-    val repoToTeamsFut    = teamsAndReposConnector.allTeamsByService
-    val allRepoRatingsFut = healthIndicatorsConnector.getAllRepositoryRatings(repoType)
+  def findIndicatorsWithTeams(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[IndicatorsWithTeams]] = {
+    val eventualTeamLookUp: Future[Map[ServiceName, Seq[TeamName]]] = teamsAndReposConnector.allTeamsByService
+    val eventualIndicators: Future[Seq[Indicator]] = healthIndicatorsConnector.getAllIndicators(repoType)
 
     for {
-      repoToTeams    <- repoToTeamsFut
-      allRepoRatings <- allRepoRatingsFut
+      repoToTeams <- eventualTeamLookUp
+      indicators  <- eventualIndicators
     } yield
-      allRepoRatings.map { rr =>
-        RepoRatingsWithTeams(
-          rr.repositoryName,
-          owningTeams = repoToTeams.getOrElse(rr.repositoryName, Seq.empty),
-          rr.repositoryType,
-          rr.repositoryScore,
-          rr.ratings
+      indicators.map { rr =>
+        IndicatorsWithTeams(
+          rr.repoName,
+          owningTeams = repoToTeams.getOrElse(rr.repoName, Seq.empty),
+          rr.repoType,
+          rr.overallScore,
+          rr.weightedMetrics
         )
       }
   }
 }
 
-case class RepoRatingsWithTeams(repositoryName: String, owningTeams: Seq[TeamName], repositoryType: RepoType, repositoryScore: Int, ratings: Seq[Rating])
+case class IndicatorsWithTeams(repoName: String, owningTeams: Seq[TeamName], repoType: RepoType, overallScore: Int, weightedMetric: Seq[WeightedMetric])

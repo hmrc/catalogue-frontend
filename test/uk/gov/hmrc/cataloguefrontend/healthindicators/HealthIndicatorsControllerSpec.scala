@@ -183,13 +183,13 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val testJson: String =
       """{
-          |  "repositoryName": "team-indicator-dashboard-frontend",
-          |  "repositoryType": "Service",
-          |  "repositoryScore": -450,
-          |  "ratings": [
+          |  "repoName": "team-indicator-dashboard-frontend",
+          |  "repoType": "Service",
+          |  "overallScore": -450,
+          |  "weightedMetrics": [
           |    {
-          |      "ratingType": "BobbyRule",
-          |      "ratingScore": -400,
+          |      "metricType": "BobbyRule",
+          |      "score": -400,
           |      "breakdown": [
           |        {
           |          "points": -100,
@@ -202,13 +202,13 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
           |      ]
           |    },
           |    {
-          |      "ratingType": "LeakDetection",
-          |      "ratingScore": 0,
+          |      "metricType": "LeakDetection",
+          |      "score": 0,
           |      "breakdown": []
           |    },
           |    {
-          |      "ratingType": "ReadMe",
-          |      "ratingScore": -50,
+          |      "metricType": "ReadMe",
+          |      "score": -50,
           |      "breakdown": [
           |        {
           |          "points": -50,
@@ -221,49 +221,49 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
 
     val testJson3RepoTypes: String =
       """[{
-    |  "repositoryName": "team-indicator-dashboard-frontend",
-    |  "repositoryType": "Service",
-    |  "repositoryScore": -450,
-    |  "ratings": []
+    |  "repoName": "team-indicator-dashboard-frontend",
+    |  "repoType": "Service",
+    |  "overallScore": -450,
+    |  "weightedMetrics": []
     |},
     |{
-    | "repositoryName": "api-platform-scripts",
-    | "repositoryType": "Other",
-    | "repositoryScore": 50,
-    | "ratings": []
+    | "repoName": "api-platform-scripts",
+    | "repoType": "Other",
+    | "overallScore": 50,
+    | "weightedMetrics": []
     |},
     |{
-    | "repositoryName": "the-childcare-service-prototype",
-    | "repositoryType": "Prototype",
-    | "repositoryScore": 50,
-    | "ratings": []
+    | "repoName": "the-childcare-service-prototype",
+    | "repoType": "Prototype",
+    | "overallScore": 50,
+    | "weightedMetrics": []
     |}]""".stripMargin
 
     val testJsonRepoTypeService: String =
       """[{
-        |  "repositoryName": "team-indicator-dashboard-frontend",
-        |  "repositoryType": "Service",
-        |  "repositoryScore": -450,
-        |  "ratings": []
+        |  "repoName": "team-indicator-dashboard-frontend",
+        |  "repoType": "Service",
+        |  "overallScore": -450,
+        |  "weightedMetrics": []
         |}
         |]""".stripMargin
 
     val testJsonRepoTypeOther: String =
       """[
         |{
-        | "repositoryName": "api-platform-scripts",
-        | "repositoryType": "Other",
-        | "repositoryScore": 50,
-        | "ratings": []
+        | "repoName": "api-platform-scripts",
+        | "repoType": "Other",
+        | "overallScore": 50,
+        | "weightedMetrics": []
         |}]""".stripMargin
 
     val testJsonRepoTypePrototype: String =
       """[
         |{
-        | "repositoryName": "the-childcare-service-prototype",
-        | "repositoryType": "Prototype",
-        | "repositoryScore": 50,
-        | "ratings": []
+        | "repoName": "the-childcare-service-prototype",
+        | "repoType": "Prototype",
+        | "overallScore": 50,
+        | "weightedMetrics": []
         |}]""".stripMargin
 
 

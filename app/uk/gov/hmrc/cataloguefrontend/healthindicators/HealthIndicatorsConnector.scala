@@ -30,88 +30,88 @@ class HealthIndicatorsConnector @Inject()(
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
 
-  private implicit val repositoryRatingReads: Reads[RepositoryRating] = RepositoryRating.reads
+  private implicit val indicatorReads: Reads[Indicator] = Indicator.reads
 
   private val healthIndicatorsBaseUrl: String = servicesConfig.baseUrl("health-indicators")
 
-  def getRepositoryRating(repoName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryRating]] = {
+  def getIndicator(repoName: String)(implicit hc: HeaderCarrier): Future[Option[Indicator]] = {
     val url = s"$healthIndicatorsBaseUrl/health-indicators/repositories/$repoName"
     http
-      .GET[Option[RepositoryRating]](url)
+      .GET[Option[Indicator]](url)
   }
 
-  def getAllRepositoryRatings(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[RepositoryRating]] = {
+  def getAllIndicators(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[Indicator]] = {
     // AllTypes is represented on the backend by sending no RepoType parameter
     val repoTypeQueryP = if(repoType == RepoType.AllTypes) "" else "&repoType=" + repoType.asString
     val url = s"$healthIndicatorsBaseUrl/health-indicators/repositories/?sort=desc" ++ repoTypeQueryP
     http
-      .GET[Seq[RepositoryRating]](url)
+      .GET[Seq[Indicator]](url)
   }
 }
-sealed trait RatingType
+sealed trait MetricType
 
-object RatingType {
-  val format: Format[RatingType] = new Format[RatingType] {
-    override def reads(json: JsValue): JsResult[RatingType] =
+object MetricType {
+  val format: Format[MetricType] = new Format[MetricType] {
+    override def reads(json: JsValue): JsResult[MetricType] =
       json.validate[String].flatMap {
-        case "ReadMe"         => JsSuccess(ReadMe)
-        case "LeakDetection"  => JsSuccess(LeakDetection)
-        case "BobbyRule"      => JsSuccess(BobbyRule)
-        case "BuildStability" => JsSuccess(BuildStability)
-        case "AlertConfig"    => JsSuccess(AlertConfig)
-        case "OpenPR"         => JsSuccess(OpenPR)
-        case s                => JsError(s"Invalid RatingType: $s")
+        case "read-me"         => JsSuccess(ReadMe)
+        case "leak-detection"  => JsSuccess(LeakDetection)
+        case "bobby-rule"      => JsSuccess(BobbyRule)
+        case "build-stability" => JsSuccess(BuildStability)
+        case "alert-config"    => JsSuccess(AlertConfig)
+        case "open-pr"         => JsSuccess(OpenPR)
+        case s                => JsError(s"Invalid MetricType: $s")
       }
 
-    override def writes(o: RatingType): JsValue =
+    override def writes(o: MetricType): JsValue =
       o match {
-        case ReadMe         => JsString("ReadMe")
-        case LeakDetection  => JsString("LeakDetection")
-        case BobbyRule      => JsString("BobbyRule")
-        case BuildStability => JsString("BuildStability")
-        case AlertConfig    => JsString("AlertConfig")
-        case OpenPR         => JsString("OpenPR")
+        case ReadMe         => JsString("read-me")
+        case LeakDetection  => JsString("leak-detection")
+        case BobbyRule      => JsString("bobby-rule")
+        case BuildStability => JsString("build-stability")
+        case AlertConfig    => JsString("alert-config")
+        case OpenPR         => JsString("open-pr")
         case s              => JsString(s"$s")
       }
   }
-  case object ReadMe extends RatingType
-  case object LeakDetection extends RatingType
-  case object BobbyRule extends RatingType
-  case object BuildStability extends RatingType
-  case object AlertConfig extends RatingType
-  case object OpenPR extends RatingType
+  case object ReadMe extends MetricType
+  case object LeakDetection extends MetricType
+  case object BobbyRule extends MetricType
+  case object BuildStability extends MetricType
+  case object AlertConfig extends MetricType
+  case object OpenPR extends MetricType
 }
 
-case class Score(points: Int, description: String, href: Option[String])
+case class Breakdown(points: Int, description: String, href: Option[String])
 
-object Score {
-  val reads: Reads[Score] =
+object Breakdown {
+  val reads: Reads[Breakdown] =
     ((__ \ "points").read[Int]
       ~ (__ \ "description").read[String]
-      ~ (__ \ "href").readNullable[String])(Score.apply _)
+      ~ (__ \ "href").readNullable[String])(Breakdown.apply _)
 }
 
-case class Rating(ratingType: RatingType, ratingScore: Int, breakdown: Seq[Score])
+case class WeightedMetric(metricType: MetricType, score: Int, breakdown: Seq[Breakdown])
 
-object Rating {
-  val reads: Reads[Rating] = {
-    implicit val sR: Reads[Score]       = Score.reads
-    implicit val rtR: Reads[RatingType] = RatingType.format
-    ((__ \ "ratingType").read[RatingType]
-      ~ (__ \ "ratingScore").read[Int]
-      ~ (__ \ "breakdown").read[Seq[Score]])(Rating.apply _)
+object WeightedMetric {
+  val reads: Reads[WeightedMetric] = {
+    implicit val sR: Reads[Breakdown]   = Breakdown.reads
+    implicit val rtR: Reads[MetricType] = MetricType.format
+    ((__ \ "metricType").read[MetricType]
+      ~ (__ \ "score").read[Int]
+      ~ (__ \ "breakdown").read[Seq[Breakdown]])(WeightedMetric.apply _)
   }
 }
 
-case class RepositoryRating(repositoryName: String, repositoryType: RepoType, repositoryScore: Int, ratings: Seq[Rating])
+case class Indicator(repoName: String, repoType: RepoType, overallScore: Int, weightedMetrics: Seq[WeightedMetric])
 
-object RepositoryRating {
-  val reads: Reads[RepositoryRating] = {
-    implicit val sR: Reads[Rating]    = Rating.reads
-    implicit val rtR: Reads[RepoType] = RepoType.format
-    ((__ \ "repositoryName").read[String]
-      ~ (__ \ "repositoryType").read[RepoType]
-      ~ (__ \ "repositoryScore").read[Int]
-      ~ (__ \ "ratings").read[Seq[Rating]])(RepositoryRating.apply _)
+object Indicator {
+  val reads: Reads[Indicator] = {
+    implicit val sR: Reads[WeightedMetric]   = WeightedMetric.reads
+    implicit val rtR: Reads[RepoType]        = RepoType.format
+    ((__ \ "repoName").read[String]
+      ~ (__ \ "repoType").read[RepoType]
+      ~ (__ \ "overallScore").read[Int]
+      ~ (__ \ "weightedMetrics").read[Seq[WeightedMetric]])(Indicator.apply _)
   }
 }
