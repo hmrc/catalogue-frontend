@@ -35,45 +35,36 @@ class HealthIndicatorsConnector @Inject()(
   private val healthIndicatorsBaseUrl: String = servicesConfig.baseUrl("health-indicators")
 
   def getIndicator(repoName: String)(implicit hc: HeaderCarrier): Future[Option[Indicator]] = {
-    val url = s"$healthIndicatorsBaseUrl/health-indicators/repositories/$repoName"
+    val url = s"$healthIndicatorsBaseUrl/health-indicators/indicators/$repoName"
     http
       .GET[Option[Indicator]](url)
   }
 
   def getAllIndicators(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[Indicator]] = {
     // AllTypes is represented on the backend by sending no RepoType parameter
-    val repoTypeQueryP = if(repoType == RepoType.AllTypes) "" else "&repoType=" + repoType.asString
-    val url = s"$healthIndicatorsBaseUrl/health-indicators/repositories/?sort=desc" ++ repoTypeQueryP
+    val repoTypeQueryP = if(repoType != RepoType.AllTypes) Seq("repoType" -> repoType.asString) else Seq.empty
+    val allQueryParams = Seq("sort" -> "desc") ++ repoTypeQueryP
     http
-      .GET[Seq[Indicator]](url)
+      .GET[Seq[Indicator]](s"$healthIndicatorsBaseUrl/health-indicators/indicators", allQueryParams)
   }
 }
 sealed trait MetricType
 
 object MetricType {
-  val format: Format[MetricType] = new Format[MetricType] {
+
+  val reads: Reads[MetricType] = new Reads[MetricType] {
     override def reads(json: JsValue): JsResult[MetricType] =
       json.validate[String].flatMap {
-        case "read-me"         => JsSuccess(ReadMe)
-        case "leak-detection"  => JsSuccess(LeakDetection)
-        case "bobby-rule"      => JsSuccess(BobbyRule)
+        case "read-me" => JsSuccess(ReadMe)
+        case "leak-detection" => JsSuccess(LeakDetection)
+        case "bobby-rule" => JsSuccess(BobbyRule)
         case "build-stability" => JsSuccess(BuildStability)
-        case "alert-config"    => JsSuccess(AlertConfig)
-        case "open-pr"         => JsSuccess(OpenPR)
-        case s                => JsError(s"Invalid MetricType: $s")
-      }
-
-    override def writes(o: MetricType): JsValue =
-      o match {
-        case ReadMe         => JsString("read-me")
-        case LeakDetection  => JsString("leak-detection")
-        case BobbyRule      => JsString("bobby-rule")
-        case BuildStability => JsString("build-stability")
-        case AlertConfig    => JsString("alert-config")
-        case OpenPR         => JsString("open-pr")
-        case s              => JsString(s"$s")
+        case "alert-config" => JsSuccess(AlertConfig)
+        case "open-pr" => JsSuccess(OpenPR)
+        case s => JsError(s"Invalid MetricType: $s")
       }
   }
+
   case object ReadMe extends MetricType
   case object LeakDetection extends MetricType
   case object BobbyRule extends MetricType
@@ -96,7 +87,7 @@ case class WeightedMetric(metricType: MetricType, score: Int, breakdown: Seq[Bre
 object WeightedMetric {
   val reads: Reads[WeightedMetric] = {
     implicit val sR: Reads[Breakdown]   = Breakdown.reads
-    implicit val rtR: Reads[MetricType] = MetricType.format
+    implicit val rtR: Reads[MetricType] = MetricType.reads
     ((__ \ "metricType").read[MetricType]
       ~ (__ \ "score").read[Int]
       ~ (__ \ "breakdown").read[Seq[Breakdown]])(WeightedMetric.apply _)

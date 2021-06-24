@@ -40,7 +40,7 @@ class HealthIndicatorsConnectorSpec
     "return a indicator for a repo when given a valid repo name" in {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/team-indicator-dashboard-frontend",
+        "/health-indicators/indicators/team-indicator-dashboard-frontend",
         willRespondWith = (200, Some(testJson1Repo))
       )
 
@@ -69,7 +69,7 @@ class HealthIndicatorsConnectorSpec
     "return None when repo is not found" in {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/team-indicator-dashboard-frontend",
+        "/health-indicators/indicators/team-indicator-dashboard-frontend",
         willRespondWith = (
           404,
           None
@@ -87,7 +87,7 @@ class HealthIndicatorsConnectorSpec
     "return a list of indicators" in {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc",
+        "/health-indicators/indicators?sort=desc",
         willRespondWith = (200, Some(testJson3Repo))
       )
 

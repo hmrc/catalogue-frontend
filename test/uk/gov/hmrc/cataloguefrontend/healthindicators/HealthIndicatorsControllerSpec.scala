@@ -36,7 +36,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and contain specified elements" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/team-indicator-dashboard-frontend",
+        "/health-indicators/indicators/team-indicator-dashboard-frontend",
         willRespondWith = (
           200,
           Some(testJson)
@@ -53,7 +53,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 404 when repository is not found" in new Setup {
       serviceEndpoint(
         GET,
-        "health-indicators/repositories/team-indicator-dashboard-frontend",
+        "health-indicators/indicators/team-indicator-dashboard-frontend",
         willRespondWith = (
           404,
           None
@@ -70,7 +70,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and redirect to Services when no query params set" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc&repoType=Service",
+        "/health-indicators/indicators?sort=desc&repoType=Service",
         willRespondWith = (200, Some(testJsonRepoTypeService))
       )
 
@@ -90,7 +90,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and include repo type service when repoType=Service" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc&repoType=Service",
+        "/health-indicators/indicators?sort=desc&repoType=Service",
         willRespondWith = (200, Some(testJsonRepoTypeService))
       )
 
@@ -110,7 +110,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and include all repo types when repoType=AllTypes" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc",
+        "/health-indicators/indicators?sort=desc",
         willRespondWith = (200, Some(testJson3RepoTypes))
       )
 
@@ -132,7 +132,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and include repo type other when repoType=Other" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc&repoType=Other",
+        "/health-indicators/indicators?sort=desc&repoType=Other",
         willRespondWith = (200, Some(testJsonRepoTypeOther))
       )
 
@@ -152,7 +152,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and include repo type prototype when repoType=Prototype" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc&repoType=Prototype",
+        "/health-indicators/indicators?sort=desc&repoType=Prototype",
         willRespondWith = (200, Some(testJsonRepoTypePrototype))
       )
 

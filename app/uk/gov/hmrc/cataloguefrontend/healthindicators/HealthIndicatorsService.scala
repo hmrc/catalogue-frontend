@@ -40,13 +40,13 @@ class HealthIndicatorsService @Inject()(
       repoToTeams <- eventualTeamLookUp
       indicators  <- eventualIndicators
     } yield
-      indicators.map { rr =>
+      indicators.map { i =>
         IndicatorsWithTeams(
-          rr.repoName,
-          owningTeams = repoToTeams.getOrElse(rr.repoName, Seq.empty),
-          rr.repoType,
-          rr.overallScore,
-          rr.weightedMetrics
+          i.repoName,
+          owningTeams = repoToTeams.getOrElse(i.repoName, Seq.empty),
+          i.repoType,
+          i.overallScore,
+          i.weightedMetrics
         )
       }
   }
