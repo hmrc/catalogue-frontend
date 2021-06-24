@@ -42,11 +42,10 @@ trait JDKVersionFormats {
     })
 
   val jdkFormat: Reads[JDKVersion] =
-    ( (__ \ "name"   ).read[String]
-    ~ (__ \ "version").read[String]
-    ~ (__ \ "vendor" ).read[Vendor](vendorRead)
-    ~ (__ \ "kind"   ).read[Kind](kindRead)
-    )(JDKVersion)
+    ((__ \ "name").read[String]
+      ~ (__ \ "version").read[String]
+      ~ (__ \ "vendor").read[Vendor](vendorRead)
+      ~ (__ \ "kind").read[Kind](kindRead))(JDKVersion)
 }
 
 object JDKVersionFormats extends JDKVersionFormats

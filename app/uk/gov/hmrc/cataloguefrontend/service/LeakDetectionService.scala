@@ -23,18 +23,17 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class LeakDetectionService @Inject()(
+class LeakDetectionService @Inject() (
   leakDetectionConnector: LeakDetectionConnector,
-  configuration         : Configuration
+  configuration: Configuration
 )(implicit val ec: ExecutionContext) {
 
   def urlIfLeaksFound(repoName: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
     repositoriesWithLeaks.map { reposWithLeaks =>
-      if (hasLeaks(reposWithLeaks)(repoName)) {
+      if (hasLeaks(reposWithLeaks)(repoName))
         Some(s"$leakDetectionPublicUrl/reports/repositories/$repoName")
-      } else {
+      else
         None
-      }
     }
 
   private val leakDetectionPublicUrl: String    = configuration.get[String]("lds.publicUrl")
@@ -42,11 +41,10 @@ class LeakDetectionService @Inject()(
   private val repositoriesToIgnore: Seq[String] = configuration.get[Seq[String]]("lds.noWarningsOn")
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] =
-    if (ldsIntegrationEnabled) {
+    if (ldsIntegrationEnabled)
       leakDetectionConnector.repositoriesWithLeaks
-    } else {
+    else
       Future.successful(Nil)
-    }
 
   def hasLeaks(reposWithLeaks: Seq[RepositoryWithLeaks])(repoName: String): Boolean =
     reposWithLeaks.exists(_.name == repoName)

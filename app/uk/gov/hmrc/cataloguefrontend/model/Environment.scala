@@ -21,12 +21,12 @@ import play.api.mvc.{PathBindable, QueryStringBindable}
 sealed trait Environment { def asString: String; def displayString: String }
 
 object Environment {
-  case object Development  extends Environment { val asString = "development" ; override def displayString = "Development"   }
-  case object Integration  extends Environment { val asString = "integration" ; override def displayString = "Integration"   }
-  case object QA           extends Environment { val asString = "qa"          ; override def displayString = "QA"            }
-  case object Staging      extends Environment { val asString = "staging"     ; override def displayString = "Staging"       }
+  case object Development extends Environment { val asString = "development"; override def displayString = "Development" }
+  case object Integration extends Environment { val asString = "integration"; override def displayString = "Integration" }
+  case object QA extends Environment { val asString = "qa"; override def displayString = "QA" }
+  case object Staging extends Environment { val asString = "staging"; override def displayString = "Staging" }
   case object ExternalTest extends Environment { val asString = "externaltest"; override def displayString = "External Test" }
-  case object Production   extends Environment { val asString = "production"  ; override def displayString = "Production"    }
+  case object Production extends Environment { val asString = "production"; override def displayString = "Production" }
 
   val values: List[Environment] =
     // this list is sorted
@@ -56,9 +56,9 @@ object Environment {
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Environment]] =
         params.get(Name).map { values =>
           values.toList match {
-            case Nil => Left("missing environment value")
+            case Nil         => Left("missing environment value")
             case head :: Nil => pathBindable.bind(key, head)
-            case _ => Left("too many environment values")
+            case _           => Left("too many environment values")
           }
         }
 
@@ -69,8 +69,8 @@ object Environment {
 
 trait SlugInfoFlag { def asString: String; def displayString: String }
 object SlugInfoFlag {
-  case object Latest                           extends SlugInfoFlag { override def asString = "latest"    ; override def displayString = "Latest"          }
-  case class  ForEnvironment(env: Environment) extends SlugInfoFlag { override def asString = env.asString; override def displayString = env.displayString }
+  case object Latest extends SlugInfoFlag { override def asString = "latest"; override def displayString = "Latest" }
+  case class ForEnvironment(env: Environment) extends SlugInfoFlag { override def asString = env.asString; override def displayString = env.displayString }
 
   val values: List[SlugInfoFlag] =
     Latest :: Environment.values.map(ForEnvironment.apply)

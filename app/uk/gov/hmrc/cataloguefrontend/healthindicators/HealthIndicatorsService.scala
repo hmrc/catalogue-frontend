@@ -25,30 +25,29 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HealthIndicatorsService @Inject()(
+class HealthIndicatorsService @Inject() (
   teamsAndReposConnector: TeamsAndRepositoriesConnector,
   healthIndicatorsConnector: HealthIndicatorsConnector
-)(
-  implicit ec: ExecutionContext
+)(implicit
+  ec: ExecutionContext
 ) {
 
   def findIndicatorsWithTeams(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[IndicatorsWithTeams]] = {
     val eventualTeamLookUp: Future[Map[ServiceName, Seq[TeamName]]] = teamsAndReposConnector.allTeamsByService
-    val eventualIndicators: Future[Seq[Indicator]] = healthIndicatorsConnector.getAllIndicators(repoType)
+    val eventualIndicators: Future[Seq[Indicator]]                  = healthIndicatorsConnector.getAllIndicators(repoType)
 
     for {
       repoToTeams <- eventualTeamLookUp
       indicators  <- eventualIndicators
-    } yield
-      indicators.map { i =>
-        IndicatorsWithTeams(
-          i.repoName,
-          owningTeams = repoToTeams.getOrElse(i.repoName, Seq.empty),
-          i.repoType,
-          i.overallScore,
-          i.weightedMetrics
-        )
-      }
+    } yield indicators.map { i =>
+      IndicatorsWithTeams(
+        i.repoName,
+        owningTeams = repoToTeams.getOrElse(i.repoName, Seq.empty),
+        i.repoType,
+        i.overallScore,
+        i.weightedMetrics
+      )
+    }
   }
 }
 

@@ -21,7 +21,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 @Singleton
-class UserManagementPortalConfig @Inject()(servicesConfig: ServicesConfig) {
+class UserManagementPortalConfig @Inject() (servicesConfig: ServicesConfig) {
 
   private def getConfString(key: String): String =
     servicesConfig.getConfString(key, sys.error(s"Could not find config '$key'"))

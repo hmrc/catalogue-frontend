@@ -27,11 +27,10 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ServiceDependenciesConnector @Inject()(
-  http          : HttpClient,
+class ServiceDependenciesConnector @Inject() (
+  http: HttpClient,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext
-) {
+)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
 
   private val servicesDependenciesBaseUrl: String =
@@ -53,39 +52,37 @@ class ServiceDependenciesConnector @Inject()(
   }
 
   def getSlugDependencies(
-      serviceName: String
-    , version    : Option[Version] = None
-    )(implicit hc: HeaderCarrier
-    ): Future[Seq[ServiceDependencies]] =
+    serviceName: String,
+    version: Option[Version] = None
+  )(implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] =
     http.GET[Seq[ServiceDependencies]](
       url"$servicesDependenciesBaseUrl/api/sluginfos?name=$serviceName&version=${version.map(_.toString)}"
     )
 
   def getSlugInfo(
-    serviceName: String
-  , version    : Option[Version] = None
-  )(implicit hc: HeaderCarrier
-  ): Future[Option[ServiceDependencies]] =
+    serviceName: String,
+    version: Option[Version] = None
+  )(implicit hc: HeaderCarrier): Future[Option[ServiceDependencies]] =
     http.GET[Option[ServiceDependencies]](
       url"$servicesDependenciesBaseUrl/api/sluginfo?name=$serviceName&version=${version.map(_.toString)}"
     )
 
   def getCuratedSlugDependencies(
-    serviceName: String
-  , flag       : SlugInfoFlag
-  )(implicit hc: HeaderCarrier
-  ): Future[Seq[Dependency]] = {
+    serviceName: String,
+    flag: SlugInfoFlag
+  )(implicit hc: HeaderCarrier): Future[Seq[Dependency]] = {
     import Dependencies.Implicits.readsDependency
-    http.GET[Option[Seq[Dependency]]](
-      url"$servicesDependenciesBaseUrl/api/slug-dependencies/$serviceName?flag=${flag.asString}"
-    ).map(_.getOrElse(Seq.empty))
+    http
+      .GET[Option[Seq[Dependency]]](
+        url"$servicesDependenciesBaseUrl/api/slug-dependencies/$serviceName?flag=${flag.asString}"
+      )
+      .map(_.getOrElse(Seq.empty))
   }
 
   def getCuratedSlugDependenciesForTeam(
-    teamName: TeamName
-  , flag    : SlugInfoFlag
-  )(implicit hc: HeaderCarrier
-  ): Future[Map[String, Seq[Dependency]]] = {
+    teamName: TeamName,
+    flag: SlugInfoFlag
+  )(implicit hc: HeaderCarrier): Future[Map[String, Seq[Dependency]]] = {
     import Dependencies.Implicits.readsDependency
     http.GET[Map[String, Seq[Dependency]]](
       url"$servicesDependenciesBaseUrl/api/teams/${teamName.asString}/slug-dependencies?flag=${flag.asString}"
@@ -93,13 +90,12 @@ class ServiceDependenciesConnector @Inject()(
   }
 
   def getServicesWithDependency(
-    flag        : SlugInfoFlag,
-    group       : String,
-    artefact    : String,
+    flag: SlugInfoFlag,
+    group: String,
+    artefact: String,
     versionRange: BobbyVersionRange,
-    scope       : DependencyScope
-  )(implicit hc: HeaderCarrier
-  ): Future[Seq[ServiceWithDependency]] = {
+    scope: DependencyScope
+  )(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] = {
     implicit val r = ServiceWithDependency.reads
     val queryParams = Seq(
       "flag"         -> flag.asString,
@@ -109,14 +105,14 @@ class ServiceDependenciesConnector @Inject()(
     )
     http
       .GET[Seq[ServiceWithDependency]](
-         url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams&scope=${scope.asString}"
-       )
-   }
+        url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams&scope=${scope.asString}"
+      )
+  }
 
-   def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] = {
-     implicit val r = GroupArtefacts.apiFormat
-     http.GET[List[GroupArtefacts]](url"$servicesDependenciesBaseUrl/api/groupArtefacts")
-   }
+  def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] = {
+    implicit val r = GroupArtefacts.apiFormat
+    http.GET[List[GroupArtefacts]](url"$servicesDependenciesBaseUrl/api/groupArtefacts")
+  }
 
   def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] = {
     implicit val r = JDKVersionFormats.jdkFormat
@@ -125,13 +121,14 @@ class ServiceDependenciesConnector @Inject()(
     )
   }
 
-  def getBobbyRuleViolations(implicit hc:HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] = {
+  def getBobbyRuleViolations(implicit hc: HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] = {
     implicit val brvr = BobbyRulesSummary.reads
-    http.GET[BobbyRulesSummary](url"$servicesDependenciesBaseUrl/api/bobbyViolations")
+    http
+      .GET[BobbyRulesSummary](url"$servicesDependenciesBaseUrl/api/bobbyViolations")
       .map(_.summary)
   }
 
-  def getHistoricBobbyRuleViolations(implicit hc:HeaderCarrier): Future[HistoricBobbyRulesSummary] = {
+  def getHistoricBobbyRuleViolations(implicit hc: HeaderCarrier): Future[HistoricBobbyRulesSummary] = {
     implicit val brvr = HistoricBobbyRulesSummary.reads
     http.GET[HistoricBobbyRulesSummary](url"$servicesDependenciesBaseUrl/api/historicBobbyViolations")
   }

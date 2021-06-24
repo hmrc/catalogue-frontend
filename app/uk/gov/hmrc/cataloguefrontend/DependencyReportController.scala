@@ -32,23 +32,24 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import scala.concurrent.{ExecutionContext, Future}
 
 case class DependencyReport(
-  repository    : String,
-  team          : String,
+  repository: String,
+  team: String,
   digitalService: String,
   dependencyName: String,
   dependencyType: String,
   currentVersion: String,
-  latestVersion : String,
-  colour        : String,
-  timestamp     : Long = new Date().getTime)
+  latestVersion: String,
+  colour: String,
+  timestamp: Long = new Date().getTime
+)
 
 @Singleton
-class DependencyReportController @Inject()(
+class DependencyReportController @Inject() (
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  serviceDependencyConnector   : ServiceDependenciesConnector,
-  cc                           : MessagesControllerComponents
-)(implicit val ec: ExecutionContext
-) extends FrontendController(cc) {
+  serviceDependencyConnector: ServiceDependenciesConnector,
+  cc: MessagesControllerComponents
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(cc) {
 
   implicit val drFormat: OFormat[DependencyReport] = Json.format[DependencyReport]
 
@@ -62,27 +63,27 @@ class DependencyReportController @Inject()(
 
     val libraryDependencyReportLines = dependencies.libraryDependencies.map { d =>
       DependencyReport(
-        repository     = repoName,
-        team           = findTeamNames(repoName, allTeams).map(_.asString).mkString(";"),
+        repository = repoName,
+        team = findTeamNames(repoName, allTeams).map(_.asString).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
         dependencyName = d.name,
         dependencyType = "library",
         currentVersion = d.currentVersion.toString,
-        latestVersion  = d.latestVersion.getOrElse("Unknown").toString,
-        colour         = getColour(d.currentVersion, d.latestVersion)
+        latestVersion = d.latestVersion.getOrElse("Unknown").toString,
+        colour = getColour(d.currentVersion, d.latestVersion)
       )
     }
 
     val sbtPluginDependencyReportLines = dependencies.sbtPluginsDependencies.map { d =>
       DependencyReport(
-        repository     = repoName,
-        team           = findTeamNames(repoName, allTeams).map(_.asString).mkString(";"),
+        repository = repoName,
+        team = findTeamNames(repoName, allTeams).map(_.asString).mkString(";"),
         digitalService = findDigitalServiceName(repoName, digitalServices),
         dependencyName = d.name,
         dependencyType = "plugin",
         currentVersion = d.currentVersion.toString,
-        latestVersion  = d.latestVersion.getOrElse("Unknown").toString,
-        colour         = getColour(d.currentVersion, d.latestVersion)
+        latestVersion = d.latestVersion.getOrElse("Unknown").toString,
+        colour = getColour(d.currentVersion, d.latestVersion)
       )
     }
 
@@ -112,24 +113,25 @@ class DependencyReportController @Inject()(
       case None                                     => "grey"
     }
 
-  def dependencyReport(): Action[AnyContent] = Action.async { implicit request =>
-    for {
-      allTeams         <- teamsAndRepositoriesConnector.teamsWithRepositories
-      digitalServices1 <- teamsAndRepositoriesConnector.allDigitalServices
-      digitalServices  <- Future.sequence {
-                            digitalServices1.map(teamsAndRepositoriesConnector.digitalServiceInfo)
-                          }
-                          .map(_.flatten)
-      allDependencies  <- serviceDependencyConnector.getAllDependencies
-      deps             =  allDependencies.flatMap { dependencies =>
-                            getDependencies(digitalServices, allTeams, dependencies)
-                          }
-      csv              =  CsvUtils.toCsv(CsvUtils.toRows(deps, ignoreFields = Seq("timestamp")))
-      source           =  Source.single(ByteString(csv, "UTF-8"))
-    } yield
-      Result(
+  def dependencyReport(): Action[AnyContent] =
+    Action.async { implicit request =>
+      for {
+        allTeams         <- teamsAndRepositoriesConnector.teamsWithRepositories
+        digitalServices1 <- teamsAndRepositoriesConnector.allDigitalServices
+        digitalServices <- Future
+                             .sequence {
+                               digitalServices1.map(teamsAndRepositoriesConnector.digitalServiceInfo)
+                             }
+                             .map(_.flatten)
+        allDependencies <- serviceDependencyConnector.getAllDependencies
+        deps = allDependencies.flatMap { dependencies =>
+                 getDependencies(digitalServices, allTeams, dependencies)
+               }
+        csv    = CsvUtils.toCsv(CsvUtils.toRows(deps, ignoreFields = Seq("timestamp")))
+        source = Source.single(ByteString(csv, "UTF-8"))
+      } yield Result(
         header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"deprep.csv\"")),
-        body   = HttpEntity.Streamed(source, None, Some("text/csv"))
+        body = HttpEntity.Streamed(source, None, Some("text/csv"))
       )
-  }
+    }
 }

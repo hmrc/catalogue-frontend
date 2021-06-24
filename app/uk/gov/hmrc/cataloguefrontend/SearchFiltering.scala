@@ -28,7 +28,9 @@ object SearchFiltering {
         .filter(x =>
           q.repoType.fold(true)(repoType =>
             repoType.equalsIgnoreCase(x.repoType.toString)
-              || ("service".equalsIgnoreCase(repoType) && x.repoType == RepoType.Service)))
+              || ("service".equalsIgnoreCase(repoType) && x.repoType == RepoType.Service)
+          )
+        )
   }
 
   implicit class TeamResult(teams: Seq[Team]) {
@@ -40,8 +42,6 @@ object SearchFiltering {
   implicit class DigitalServiceNameResult(digitalServiceNames: Seq[String]) {
 
     def filter(digitalServiceNameFilter: DigitalServiceNameFilter): Seq[String] =
-      digitalServiceNames.filter(
-        digitalServiceName => digitalServiceNameFilter.value.fold(true)(value => digitalServiceName.toLowerCase.contains(value.toLowerCase))
-      )
+      digitalServiceNames.filter(digitalServiceName => digitalServiceNameFilter.value.fold(true)(value => digitalServiceName.toLowerCase.contains(value.toLowerCase)))
   }
 }

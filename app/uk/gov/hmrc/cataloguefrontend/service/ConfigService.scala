@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class ConfigService @Inject()(configConnector: ConfigConnector) {
+class ConfigService @Inject() (configConnector: ConfigConnector) {
   import ConfigService._
 
   def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
@@ -41,8 +41,8 @@ object ConfigService {
 
   trait ConfigEnvironment { def asString: String }
   object ConfigEnvironment {
-    case object Local                            extends ConfigEnvironment { override def asString = "local"      }
-    case class  ForEnvironment(env: Environment) extends ConfigEnvironment { override def asString = env.asString }
+    case object Local extends ConfigEnvironment { override def asString = "local" }
+    case class ForEnvironment(env: Environment) extends ConfigEnvironment { override def asString = env.asString }
 
     val values: List[ConfigEnvironment] =
       Local :: Environment.values.map(ForEnvironment.apply)
@@ -50,13 +50,15 @@ object ConfigService {
     val reads: Reads[ConfigEnvironment] =
       new Reads[ConfigEnvironment] {
         override def reads(json: JsValue) =
-          json.validate[String]
+          json
+            .validate[String]
             .flatMap {
               case "local" => JsSuccess(ConfigEnvironment.Local)
-              case s       => Environment.parse(s) match {
-                                case Some(env) => JsSuccess(ForEnvironment(env))
-                                case None      => JsError(__, s"Invalid Environment '$s'")
-                              }
+              case s =>
+                Environment.parse(s) match {
+                  case Some(env) => JsSuccess(ForEnvironment(env))
+                  case None      => JsError(__, s"Invalid Environment '$s'")
+                }
             }
       }
   }
@@ -67,8 +69,9 @@ object ConfigService {
     val reads: Reads[ConfigByEnvironment] = {
       implicit val cer  = ConfigEnvironment.reads
       implicit val cser = ConfigSourceEntries.reads
-      Reads.of[Map[String, Seq[ConfigSourceEntries]]]
-        .map(_.map { case (k , v) => (JsString(k).as[ConfigEnvironment], v) })
+      Reads
+        .of[Map[String, Seq[ConfigSourceEntries]]]
+        .map(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) })
     }
   }
 
@@ -78,26 +81,27 @@ object ConfigService {
     val reads: Reads[ConfigByKey] = {
       implicit val cer  = ConfigEnvironment.reads
       implicit val csvf = ConfigSourceValue.reads
-      Reads.of[Map[KeyName, Map[String, Seq[ConfigSourceValue]]]]
-        .map(_.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v)}))
+      Reads
+        .of[Map[KeyName, Map[String, Seq[ConfigSourceValue]]]]
+        .map(_.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) }))
     }
   }
 
   case class ConfigSourceEntries(
-      source    : String
-    , precedence: Int
-    , entries   : Map[KeyName, String] = Map()
-    )
+    source: String,
+    precedence: Int,
+    entries: Map[KeyName, String] = Map()
+  )
 
   object ConfigSourceEntries {
-     val reads = Json.reads[ConfigSourceEntries]
+    val reads = Json.reads[ConfigSourceEntries]
   }
 
   case class ConfigSourceValue(
-      source    : String
-    , precedence: Int
-    , value     : String
-    )
+    source: String,
+    precedence: Int,
+    value: String
+  )
 
   object ConfigSourceValue {
     val reads = Json.reads[ConfigSourceValue]
@@ -106,7 +110,7 @@ object ConfigService {
   def sortBySourcePrecedence(entries: Option[Seq[ConfigSourceValue]]): Seq[ConfigSourceValue] =
     entries.map(_.sortBy(_.precedence)).getOrElse(Seq())
 
-  def friendlySourceName(source: String, environment: ConfigEnvironment): String = {
+  def friendlySourceName(source: String, environment: ConfigEnvironment): String =
     source match {
       case "referenceConf"              => "Microservice reference.conf files"
       case "applicationConf"            => "Microservice application.conf file"
@@ -116,5 +120,4 @@ object ConfigService {
       case "appConfigCommonOverridable" => "App-config-common overridable settings"
       case _                            => source
     }
-  }
 }

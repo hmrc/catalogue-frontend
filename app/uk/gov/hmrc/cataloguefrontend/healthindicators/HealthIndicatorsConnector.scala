@@ -24,7 +24,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 @Singleton
-class HealthIndicatorsConnector @Inject()(
+class HealthIndicatorsConnector @Inject() (
   http: HttpClient,
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
@@ -42,7 +42,7 @@ class HealthIndicatorsConnector @Inject()(
 
   def getAllIndicators(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[Indicator]] = {
     // AllTypes is represented on the backend by sending no RepoType parameter
-    val repoTypeQueryP = if(repoType != RepoType.AllTypes) Seq("repoType" -> repoType.asString) else Seq.empty
+    val repoTypeQueryP = if (repoType != RepoType.AllTypes) Seq("repoType" -> repoType.asString) else Seq.empty
     val allQueryParams = Seq("sort" -> "desc") ++ repoTypeQueryP
     http
       .GET[Seq[Indicator]](s"$healthIndicatorsBaseUrl/health-indicators/indicators", allQueryParams)
@@ -55,13 +55,13 @@ object MetricType {
   val reads: Reads[MetricType] = new Reads[MetricType] {
     override def reads(json: JsValue): JsResult[MetricType] =
       json.validate[String].flatMap {
-        case "read-me" => JsSuccess(ReadMe)
-        case "leak-detection" => JsSuccess(LeakDetection)
-        case "bobby-rule" => JsSuccess(BobbyRule)
+        case "read-me"         => JsSuccess(ReadMe)
+        case "leak-detection"  => JsSuccess(LeakDetection)
+        case "bobby-rule"      => JsSuccess(BobbyRule)
         case "build-stability" => JsSuccess(BuildStability)
-        case "alert-config" => JsSuccess(AlertConfig)
-        case "open-pr" => JsSuccess(OpenPR)
-        case s => JsError(s"Invalid MetricType: $s")
+        case "alert-config"    => JsSuccess(AlertConfig)
+        case "open-pr"         => JsSuccess(OpenPR)
+        case s                 => JsError(s"Invalid MetricType: $s")
       }
   }
 
@@ -98,8 +98,8 @@ case class Indicator(repoName: String, repoType: RepoType, overallScore: Int, we
 
 object Indicator {
   val reads: Reads[Indicator] = {
-    implicit val sR: Reads[WeightedMetric]   = WeightedMetric.reads
-    implicit val rtR: Reads[RepoType]        = RepoType.format
+    implicit val sR: Reads[WeightedMetric] = WeightedMetric.reads
+    implicit val rtR: Reads[RepoType]      = RepoType.format
     ((__ \ "repoName").read[String]
       ~ (__ \ "repoType").read[RepoType]
       ~ (__ \ "overallScore").read[Int]

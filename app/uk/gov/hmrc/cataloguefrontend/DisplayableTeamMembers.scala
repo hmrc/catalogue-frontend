@@ -24,13 +24,13 @@ object DisplayableTeamMembers {
 
   def apply(teamName: TeamName, umpProfileBaseUrl: String, teamMembers: Seq[TeamMember]): Seq[DisplayableTeamMember] = {
 
-    val displayableTeamMembers = teamMembers.map(
-      tm =>
-        DisplayableTeamMember(
-          displayName    = tm.getDisplayName,
-          isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.asString.toLowerCase)),
-          umpLink        = tm.getUmpLink(umpProfileBaseUrl)
-      ))
+    val displayableTeamMembers = teamMembers.map(tm =>
+      DisplayableTeamMember(
+        displayName = tm.getDisplayName,
+        isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.asString.toLowerCase)),
+        umpLink = tm.getUmpLink(umpProfileBaseUrl)
+      )
+    )
 
     val (serviceOwners, others) = displayableTeamMembers.partition(_.isServiceOwner)
     serviceOwners.sortBy(_.displayName) ++ others.sortBy(_.displayName)
@@ -43,8 +43,9 @@ object DisplayableTeamMember {
 
   implicit val displayableTeamMemberFormat: OFormat[DisplayableTeamMember] = Json.format[DisplayableTeamMember]
 
-  def apply(tm: TeamMember, umpProfileBaseUrl: String): DisplayableTeamMember = DisplayableTeamMember(
-    displayName = tm.getDisplayName,
-    umpLink     = tm.getUmpLink(umpProfileBaseUrl)
-  )
+  def apply(tm: TeamMember, umpProfileBaseUrl: String): DisplayableTeamMember =
+    DisplayableTeamMember(
+      displayName = tm.getDisplayName,
+      umpLink = tm.getUmpLink(umpProfileBaseUrl)
+    )
 }

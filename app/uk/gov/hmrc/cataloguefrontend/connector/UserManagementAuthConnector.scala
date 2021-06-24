@@ -27,8 +27,8 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UserManagementAuthConnector @Inject()(
-  http                    : HttpClient,
+class UserManagementAuthConnector @Inject() (
+  http: HttpClient,
   userManagementAuthConfig: UserManagementAuthConfig
 )(implicit val ec: ExecutionContext) {
   import UserManagementAuthConnector._
@@ -36,14 +36,10 @@ class UserManagementAuthConnector @Inject()(
 
   private val logger = Logger(getClass)
 
-  def authenticate(username: String, password: String)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[UmpUnauthorized, TokenAndUserId]] = {
+  def authenticate(username: String, password: String)(implicit headerCarrier: HeaderCarrier): Future[Either[UmpUnauthorized, TokenAndUserId]] = {
     implicit val tokenAndUserIdReads: HttpReads[Either[UmpUnauthorized, TokenAndUserId]] =
       new HttpReads[Either[UmpUnauthorized, TokenAndUserId]] {
-        override def read(
-          method: String,
-          url: String,
-          response: HttpResponse): Either[UmpUnauthorized, TokenAndUserId] =
+        override def read(method: String, url: String, response: HttpResponse): Either[UmpUnauthorized, TokenAndUserId] =
           response.status match {
             case OK =>
               val token  = UmpToken((response.json \ "Token").as[String])
@@ -51,8 +47,7 @@ class UserManagementAuthConnector @Inject()(
               Right(TokenAndUserId(token, userId))
 
             case UNAUTHORIZED | FORBIDDEN =>
-              logger.info(
-                s"Failed to authenticate for username: $username, response was: ${response.status} ${response.body}")
+              logger.info(s"Failed to authenticate for username: $username, response was: ${response.status} ${response.body}")
               Left(UmpUnauthorized)
 
             case other => throw new BadGatewayException(s"Received $other from $method to $url")
@@ -60,7 +55,7 @@ class UserManagementAuthConnector @Inject()(
       }
 
     http.POST[JsObject, Either[UmpUnauthorized, TokenAndUserId]](
-      url  = s"$baseUrl/v1/login",
+      url = s"$baseUrl/v1/login",
       body = Json.obj("username" -> username, "password" -> password)
     )
   }
@@ -69,9 +64,10 @@ class UserManagementAuthConnector @Inject()(
     val responseReads = new HttpReads[Option[User]] {
       def read(method: String, url: String, response: HttpResponse): Option[User] =
         response.status match {
-          case OK                       => val username = (response.json \ "uid"   ).as[String]
-                                           val groups   = (response.json \ "groups").as[List[String]]
-                                           Some(User(Username(username), groups))
+          case OK =>
+            val username = (response.json \ "uid").as[String]
+            val groups   = (response.json \ "groups").as[List[String]]
+            Some(User(Username(username), groups))
           case UNAUTHORIZED | FORBIDDEN => None
           case other                    => throw new BadGatewayException(s"Received $other from $method to $url")
         }
@@ -83,7 +79,7 @@ class UserManagementAuthConnector @Inject()(
 }
 
 @Singleton
-class UserManagementAuthConfig @Inject()(servicesConfig: ServicesConfig) {
+class UserManagementAuthConfig @Inject() (servicesConfig: ServicesConfig) {
   val baseUrl: String = {
     val key = "user-management-auth.url"
     servicesConfig.getConfString(key, throw new Exception(s"Expected to find $key in configuration"))
@@ -114,7 +110,7 @@ object UserManagementAuthConnector {
   case object UmpUnauthorized
 
   final case class User(
-      username: Username
-    , groups  : List[String]
-    )
+    username: Username,
+    groups: List[String]
+  )
 }

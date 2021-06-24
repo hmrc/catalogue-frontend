@@ -19,12 +19,11 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 object ShutterLinkUtils {
-  def hostName(env: Environment) = {
+  def hostName(env: Environment) =
     env match {
       case Environment.Production => "www.tax.service.gov.uk"
-      case _ => s"www.${env.asString}.tax.service.gov.uk"
+      case _                      => s"www.${env.asString}.tax.service.gov.uk"
     }
-  }
 
   def mkLink(env: Environment, serviceLink: String) =
     s"https://${hostName(env)}$serviceLink/platops-shutter-testing"

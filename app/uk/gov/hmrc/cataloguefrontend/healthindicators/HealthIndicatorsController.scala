@@ -26,7 +26,7 @@ import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class HealthIndicatorsController @Inject()(
+class HealthIndicatorsController @Inject() (
   healthIndicatorsConnector: HealthIndicatorsConnector,
   mcc: MessagesControllerComponents,
   healthIndicatorsService: HealthIndicatorsService
@@ -43,11 +43,15 @@ class HealthIndicatorsController @Inject()(
 
   def indicatorsForRepoType(repoType: String, repoName: String): Action[AnyContent] =
     Action.async { implicit request =>
-      RepoType.parse(repoType).fold(_ => Future.successful(Redirect(routes.HealthIndicatorsController.indicatorsForRepoType(RepoType.Service.asString, repoName))),
-        r => for {
-          indicatorsWithTeams <- healthIndicatorsService.findIndicatorsWithTeams(r)
-        } yield Ok(HealthIndicatorsLeaderBoard(indicatorsWithTeams, r, repoName, RepoType.values))
-      )
+      RepoType
+        .parse(repoType)
+        .fold(
+          _ => Future.successful(Redirect(routes.HealthIndicatorsController.indicatorsForRepoType(RepoType.Service.asString, repoName))),
+          r =>
+            for {
+              indicatorsWithTeams <- healthIndicatorsService.findIndicatorsWithTeams(r)
+            } yield Ok(HealthIndicatorsLeaderBoard(indicatorsWithTeams, r, repoName, RepoType.values))
+        )
     }
 }
 
@@ -98,7 +102,7 @@ object RepoType {
         case Library   => JsString("Library")
         case Prototype => JsString("Prototype")
         case Other     => JsString("Other")
-        case AllTypes => JsString("All Types")
+        case AllTypes  => JsString("All Types")
         case s         => JsString(s"$s")
       }
   }

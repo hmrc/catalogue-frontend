@@ -25,20 +25,20 @@ import views.html.BobbyExplorerPage
 
 import scala.concurrent.ExecutionContext
 
-class BobbyExplorerController @Inject()(
-    mcc         : MessagesControllerComponents,
-    page        : BobbyExplorerPage,
-    bobbyService: BobbyService,
-    serviceDeps : ServiceDependenciesConnector
-  )(implicit val ec: ExecutionContext
-  ) extends FrontendController(mcc) {
+class BobbyExplorerController @Inject() (
+  mcc: MessagesControllerComponents,
+  page: BobbyExplorerPage,
+  bobbyService: BobbyService,
+  serviceDeps: ServiceDependenciesConnector
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
   def list(): Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        rules    <- bobbyService.getRules
-        counts   <- serviceDeps.getBobbyRuleViolations
-        response =  Ok(page(rules, counts))
+        rules  <- bobbyService.getRules
+        counts <- serviceDeps.getBobbyRuleViolations
+        response = Ok(page(rules, counts))
       } yield response
     }
 }

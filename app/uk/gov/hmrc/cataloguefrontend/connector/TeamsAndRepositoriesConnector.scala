@@ -44,9 +44,7 @@ object RepoType extends Enumeration {
       override def reads(json: JsValue) =
         json match {
           case JsString(s) => JsSuccess(RepoType.withName(s))
-          case _ => JsError(
-                      __,
-                     JsonValidationError(s"Expected value to be a String contained within ${RepoType.values}, got $json instead."))
+          case _           => JsError(__, JsonValidationError(s"Expected value to be a String contained within ${RepoType.values}, got $json instead."))
         }
 
       override def writes(rt: RepoType) =
@@ -73,25 +71,24 @@ object TargetEnvironment {
   val format: Format[TargetEnvironment] = {
     implicit val ef = TeamsAndRepositoriesEnvironment.format
     implicit val lf = Link.format
-    ( (__ \ "name"    ).format[Environment]
-    ~ (__ \ "services").format[Seq[Link]]
-    )(TargetEnvironment.apply, unlift(TargetEnvironment.unapply))
+    ((__ \ "name").format[Environment]
+      ~ (__ \ "services").format[Seq[Link]])(TargetEnvironment.apply, unlift(TargetEnvironment.unapply))
   }
 }
 
 case class RepositoryDetails(
-  name        : String,
-  description : String,
-  createdAt   : LocalDateTime,
-  lastActive  : LocalDateTime,
-  owningTeams : Seq[TeamName],
-  teamNames   : Seq[TeamName],
-  githubUrl   : Link,
-  jenkinsURL  : Option[Link],
+  name: String,
+  description: String,
+  createdAt: LocalDateTime,
+  lastActive: LocalDateTime,
+  owningTeams: Seq[TeamName],
+  teamNames: Seq[TeamName],
+  githubUrl: Link,
+  jenkinsURL: Option[Link],
   environments: Option[Seq[TargetEnvironment]],
-  repoType    : RepoType.RepoType,
-  isPrivate   : Boolean,
-  isArchived  : Boolean
+  repoType: RepoType.RepoType,
+  isPrivate: Boolean,
+  isArchived: Boolean
 )
 
 object RepositoryDetails {
@@ -104,11 +101,7 @@ object RepositoryDetails {
   }
 }
 
-case class RepositoryDisplayDetails(
-  name         : String,
-  createdAt    : LocalDateTime,
-  lastUpdatedAt: LocalDateTime,
-  repoType     : RepoType.RepoType)
+case class RepositoryDisplayDetails(name: String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime, repoType: RepoType.RepoType)
 
 object RepositoryDisplayDetails {
   val format: OFormat[RepositoryDisplayDetails] = {
@@ -118,11 +111,11 @@ object RepositoryDisplayDetails {
 }
 
 case class Team(
-  name                    : TeamName,
-  firstActiveDate         : Option[LocalDateTime],
-  lastActiveDate          : Option[LocalDateTime],
+  name: TeamName,
+  firstActiveDate: Option[LocalDateTime],
+  lastActiveDate: Option[LocalDateTime],
   firstServiceCreationDate: Option[LocalDateTime],
-  repos                   : Option[Map[String, Seq[String]]]
+  repos: Option[Map[String, Seq[String]]]
 ) {
   //Teams and repos lists legacy java services as 'Other', so relaxing the auth check to be agnostic to repo type
   def allServiceNames: List[String] = repos.getOrElse(Map.empty).values.flatten.toList
@@ -138,12 +131,7 @@ object Team {
 case class DigitalService(name: String, lastUpdatedAt: Long, repositories: Seq[DigitalServiceRepository])
 
 object DigitalService {
-  case class DigitalServiceRepository(
-    name         : String,
-    createdAt    : LocalDateTime,
-    lastUpdatedAt: LocalDateTime,
-    repoType     : RepoType.RepoType,
-    teamNames    : Seq[TeamName])
+  case class DigitalServiceRepository(name: String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime, repoType: RepoType.RepoType, teamNames: Seq[TeamName])
 
   object DigitalServiceRepository {
     val format: OFormat[DigitalServiceRepository] = {
@@ -165,7 +153,8 @@ object TeamsAndRepositoriesEnvironment {
     // https://github.com/hmrc/app-config-base/blob/227e006901c96ad10230a2f88a305b70645bf7d1/teams-and-repositories.conf
     new Format[Environment] {
       override def reads(json: JsValue) =
-        json.validate[String]
+        json
+          .validate[String]
           .flatMap {
             case "Production"    => JsSuccess(Environment.Production)
             case "External Test" => JsSuccess(Environment.ExternalTest)
@@ -182,12 +171,11 @@ object TeamsAndRepositoriesEnvironment {
 }
 
 @Singleton
-class TeamsAndRepositoriesConnector @Inject()(
-  http          : HttpClient,
+class TeamsAndRepositoriesConnector @Inject() (
+  http: HttpClient,
   servicesConfig: ServicesConfig,
-  configuration:  Configuration
-)(implicit val ec: ExecutionContext
-) {
+  configuration: Configuration
+)(implicit val ec: ExecutionContext) {
   import TeamsAndRepositoriesConnector._
   import HttpReads.Implicits._
 
@@ -205,7 +193,8 @@ class TeamsAndRepositoriesConnector @Inject()(
 
   def lookupLink(service: String)(implicit hc: HeaderCarrier): Future[Option[Link]] = {
     val url = url"$teamsAndServicesBaseUrl/api/jenkins-url/$service"
-    http.GET[JenkinsLink](url)
+    http
+      .GET[JenkinsLink](url)
       .map(l => Link(l.service, "Build", l.jenkinsURL))
       .map(Option.apply)
       .recover {
@@ -213,7 +202,7 @@ class TeamsAndRepositoriesConnector @Inject()(
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           None
       }
-    }
+  }
 
   def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
     http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/teams")
@@ -230,7 +219,7 @@ class TeamsAndRepositoriesConnector @Inject()(
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           None
       }
-    }
+  }
 
   def teamsWithRepositories(implicit hc: HeaderCarrier): Future[Seq[Team]] =
     http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/teams_with_repositories")

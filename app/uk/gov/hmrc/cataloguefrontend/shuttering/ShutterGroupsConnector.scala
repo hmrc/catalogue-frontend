@@ -28,20 +28,20 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class ShutterGroupsConnector @Inject()(
-  http      : HttpClient,
+class ShutterGroupsConnector @Inject() (
+  http: HttpClient,
   githubConf: GithubConfig
-)(implicit val ec: ExecutionContext
-) {
+)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
 
   val logger = Logger(this.getClass)
 
   def shutterGroups: Future[List[ShutterGroup]] = {
-    val url = url"${githubConf.rawUrl}/hmrc/outage-pages/master/conf/shutter-groups.json"
+    val url                        = url"${githubConf.rawUrl}/hmrc/outage-pages/master/conf/shutter-groups.json"
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(("Authorization", s"token ${githubConf.token}"))
-    implicit val gr = ShutterGroup.reads
-    http.GET[Option[List[ShutterGroup]]](url)
+    implicit val gr                = ShutterGroup.reads
+    http
+      .GET[Option[List[ShutterGroup]]](url)
       .map(_.getOrElse {
         logger.info(s"No shutter groups found at $url, defaulting to an empty list")
         List.empty[ShutterGroup]
@@ -55,9 +55,9 @@ class ShutterGroupsConnector @Inject()(
 }
 
 case class ShutterGroup(
-    name    : String
-  , services: List[String]
-  )
+  name: String,
+  services: List[String]
+)
 
 object ShutterGroup {
 
@@ -76,10 +76,12 @@ object ShutterGroup {
 
   val reads = new Reads[List[ShutterGroup]] {
     def reads(js: JsValue): JsResult[List[ShutterGroup]] =
-      js.validate[JsObject].flatMap(
-        _.fields.toList.traverse { case (name, jsarray) =>
-          jsarray.validate[List[String]].map(ShutterGroup(name, _))
-        }
-      )
+      js.validate[JsObject]
+        .flatMap(
+          _.fields.toList.traverse {
+            case (name, jsarray) =>
+              jsarray.validate[List[String]].map(ShutterGroup(name, _))
+          }
+        )
   }
 }

@@ -28,10 +28,10 @@ import uk.gov.hmrc.http.StringContextOps
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-case class UserManagementConnector @Inject()(
-    httpClient                : HttpClient
-  , userManagementPortalConfig: UserManagementPortalConfig
-  )(implicit val ec: ExecutionContext) {
+case class UserManagementConnector @Inject() (
+  httpClient: HttpClient,
+  userManagementPortalConfig: UserManagementPortalConfig
+)(implicit val ec: ExecutionContext) {
 
   import UserManagementConnector._
   import userManagementPortalConfig._
@@ -43,22 +43,28 @@ case class UserManagementConnector @Inject()(
   }
 
   def getTeamMembersForTeams(teamNames: Seq[TeamName])(implicit hc: HeaderCarrier): Future[Map[TeamName, Either[UMPError, Seq[TeamMember]]]] =
-     Future.sequence(
-       teamNames.map { teamName =>
-         getTeamMembersFromUMP(teamName).map(umpErrorOrTeamMembers => (teamName, umpErrorOrTeamMembers))
-       }
-     ).map(_.toMap)
+    Future
+      .sequence(
+        teamNames.map { teamName =>
+          getTeamMembersFromUMP(teamName).map(umpErrorOrTeamMembers => (teamName, umpErrorOrTeamMembers))
+        }
+      )
+      .map(_.toMap)
 
   def getTeamMembersFromUMP(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    val url = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}/members"
-    httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
+    val url              = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}/members"
+    httpClient
+      .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {
-          case 200      => (response.json \ "members").validate[List[TeamMember]].fold(
-                               errors => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors"))
-                             , Right.apply
-                             )
+          case 200 =>
+            (response.json \ "members")
+              .validate[List[TeamMember]]
+              .fold(
+                errors => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors")),
+                Right.apply
+              )
           case 404      => Left(UMPError.UnknownTeam)
           case httpCode => Left(UMPError.HTTPError(httpCode))
         }
@@ -72,14 +78,15 @@ case class UserManagementConnector @Inject()(
 
   def getAllUsersFromUMP: Future[Either[UMPError, Seq[TeamMember]]] = {
     val newHeaderCarrier = HeaderCarrier().withExtraHeaders("requester" -> "None", "Token" -> "None")
-    val url = url"$userManagementBaseUrl/v2/organisations/users"
-    httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
+    val url              = url"$userManagementBaseUrl/v2/organisations/users"
+    httpClient
+      .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {
-          case 200      => (response.json \\ "users").headOption
-                             .map(_.as[Seq[TeamMember]])
-                             .fold[Either[UMPError, Seq[TeamMember]]](
-                               ifEmpty = Left(UMPError.ConnectionError(s"Could not parse response from $url")))(Right.apply)
+          case 200 =>
+            (response.json \\ "users").headOption
+              .map(_.as[Seq[TeamMember]])
+              .fold[Either[UMPError, Seq[TeamMember]]](ifEmpty = Left(UMPError.ConnectionError(s"Could not parse response from $url")))(Right.apply)
           case httpCode => Left(UMPError.HTTPError(httpCode))
         }
       }
@@ -93,13 +100,17 @@ case class UserManagementConnector @Inject()(
   def getTeamDetails(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Either[UMPError, TeamDetails]] = {
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
     val url              = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}"
-    httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
+    httpClient
+      .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {
-          case 200      => response.json.validate[TeamDetails].fold(
-                               errors => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors"))
-                             , Right.apply
-                             )
+          case 200 =>
+            response.json
+              .validate[TeamDetails]
+              .fold(
+                errors => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors")),
+                Right.apply
+              )
           case 404      => Left(UMPError.UnknownTeam)
           case httpCode => Left(UMPError.HTTPError(httpCode))
         }
@@ -114,7 +125,8 @@ case class UserManagementConnector @Inject()(
   def getDisplayName(userId: UmpUserId)(implicit hc: HeaderCarrier): Future[Option[DisplayName]] = {
     val url              = url"$userManagementBaseUrl/v2/organisations/users/${userId.value}"
     val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    httpClient.GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
+    httpClient
+      .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
       .map { response =>
         response.status match {
           case 200   => (response.json \ "displayName").asOpt[String].map(DisplayName.apply)
@@ -129,19 +141,19 @@ object UserManagementConnector {
   sealed trait UMPError
 
   object UMPError {
-    case object UnknownTeam                   extends UMPError
-    case class HTTPError(code: Int)           extends UMPError
+    case object UnknownTeam extends UMPError
+    case class HTTPError(code: Int) extends UMPError
     case class ConnectionError(error: String) extends UMPError
   }
 
   case class TeamMember(
-      displayName    : Option[String]
-    , familyName     : Option[String]
-    , givenName      : Option[String]
-    , primaryEmail   : Option[String]
-    , serviceOwnerFor: Option[Seq[String]]
-    , username       : Option[String]
-    ) {
+    displayName: Option[String],
+    familyName: Option[String],
+    givenName: Option[String],
+    primaryEmail: Option[String],
+    serviceOwnerFor: Option[Seq[String]],
+    username: Option[String]
+  ) {
 
     def getUmpLink(umpProfileBaseUrl: String): String =
       username.map(x => url"$umpProfileBaseUrl/$x".toString).getOrElse("USERNAME NOT PROVIDED")
@@ -150,14 +162,14 @@ object UserManagementConnector {
   }
 
   case class TeamDetails(
-      description      : Option[String]
-    , location         : Option[String]
-    , organisation     : Option[String]
-    , documentation    : Option[String]
-    , slack            : Option[String]
-    , slackNotification: Option[String]
-    , team             : String
-    )
+    description: Option[String],
+    location: Option[String],
+    organisation: Option[String],
+    documentation: Option[String],
+    slack: Option[String],
+    slackNotification: Option[String],
+    team: String
+  )
 
   implicit val teamMemberFormat: OFormat[TeamMember] = Json.format[TeamMember]
   implicit val teamDetailsReads: Reads[TeamDetails]  = Json.reads[TeamDetails]

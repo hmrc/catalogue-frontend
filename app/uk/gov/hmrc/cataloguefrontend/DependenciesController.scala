@@ -27,7 +27,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class DependenciesController @Inject()(
+class DependenciesController @Inject() (
   mcc: MessagesControllerComponents,
   dependenciesService: DependenciesService,
   whatsRunningWhereService: WhatsRunningWhereService,
@@ -35,10 +35,11 @@ class DependenciesController @Inject()(
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
-  def service(name: String): Action[AnyContent] = Action.async { implicit request =>
-    for {
-      deployments         <- whatsRunningWhereService.releasesForService(name).map(_.versions)
-      serviceDependencies <- dependenciesService.search(name, deployments)
-    } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.semanticVersion)(Ordering[Option[Version]].reverse)))
-  }
+  def service(name: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      for {
+        deployments         <- whatsRunningWhereService.releasesForService(name).map(_.versions)
+        serviceDependencies <- dependenciesService.search(name, deployments)
+      } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.semanticVersion)(Ordering[Option[Version]].reverse)))
+    }
 }

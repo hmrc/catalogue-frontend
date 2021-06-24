@@ -27,24 +27,26 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DependenciesService @Inject()(
+class DependenciesService @Inject() (
   serviceDependenciesConnector: ServiceDependenciesConnector
 )(implicit val ec: ExecutionContext) {
 
   def search(serviceName: String, deployments: Seq[WhatsRunningWhereVersion])(implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] =
-    Future.traverse(deployments)(wrwv =>
-      serviceDependenciesConnector
-        .getSlugDependencies(serviceName, Some(wrwv.versionNumber.asVersion))
-        .map(_.map(_.copy(environment = Some(wrwv.environment))))
-    ).map(_.flatten)
+    Future
+      .traverse(deployments)(wrwv =>
+        serviceDependenciesConnector
+          .getSlugDependencies(serviceName, Some(wrwv.versionNumber.asVersion))
+          .map(_.map(_.copy(environment = Some(wrwv.environment))))
+      )
+      .map(_.flatten)
 
   def getServicesWithDependency(
-    optTeam     : Option[TeamName],
-    flag        : SlugInfoFlag,
-    group       : String,
-    artefact    : String,
+    optTeam: Option[TeamName],
+    flag: SlugInfoFlag,
+    group: String,
+    artefact: String,
     versionRange: BobbyVersionRange,
-    scope       : DependencyScope
+    scope: DependencyScope
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[ServiceWithDependency]] =
@@ -56,8 +58,10 @@ class DependenciesService @Inject()(
           case Some(team) => l.filter(_.teams.contains(team))
         }
       }
-      .map(_.sortBy(_.slugName)
-        .sorted(Ordering.by((_: ServiceWithDependency).depSemanticVersion).reverse))
+      .map(
+        _.sortBy(_.slugName)
+          .sorted(Ordering.by((_: ServiceWithDependency).depSemanticVersion).reverse)
+      )
 
   def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] =
     serviceDependenciesConnector.getGroupArtefacts

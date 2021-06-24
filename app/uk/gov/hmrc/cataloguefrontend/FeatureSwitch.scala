@@ -16,9 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-
 case class FeatureSwitch(name: String, isEnabled: Boolean)
-
 
 object FeatureSwitch {
 

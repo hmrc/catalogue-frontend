@@ -27,18 +27,17 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class SearchByUrlConnector @Inject()(
+class SearchByUrlConnector @Inject() (
   http: HttpClient,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext
-) {
+)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
 
   private val url: String = s"${servicesConfig.baseUrl("service-configs")}/frontend-route/search"
 
-  implicit val frontendRouteReads: Reads[FrontendRoute] = Json.using[Json.WithDefaultValues].reads[FrontendRoute]
+  implicit val frontendRouteReads: Reads[FrontendRoute]   = Json.using[Json.WithDefaultValues].reads[FrontendRoute]
   implicit val frontendRoutesReads: Reads[FrontendRoutes] = Json.reads[FrontendRoutes]
 
   def search(term: String)(implicit hc: HeaderCarrier): Future[Seq[FrontendRoutes]] =
