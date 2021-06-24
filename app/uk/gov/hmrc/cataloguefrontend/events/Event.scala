@@ -30,11 +30,7 @@ object EventData extends EventData {
 }
 
 // this gets persisted
-case class Event(
-  eventType: EventType.Value,
-  timestamp: Long = new Date().getTime,
-  data: JsObject,
-  metadata: JsObject = JsObject(Seq.empty))
+case class Event(eventType: EventType.Value, timestamp: Long = new Date().getTime, data: JsObject, metadata: JsObject = JsObject(Seq.empty))
 
 object Event {
   implicit val format = Json.format[Event]

@@ -28,18 +28,17 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class RouteRulesConnector @Inject()(
-  http          : HttpClient,
+class RouteRulesConnector @Inject() (
+  http: HttpClient,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext
-) {
+)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
 
   private val url: String = s"${servicesConfig.baseUrl("service-configs")}/frontend-route"
 
-  implicit val routeReads: Reads[Route] = Json.reads[Route]
+  implicit val routeReads: Reads[Route]                       = Json.reads[Route]
   implicit val environmentRouteReads: Reads[EnvironmentRoute] = Json.using[Json.WithDefaultValues].reads[EnvironmentRoute]
 
   def serviceRoutes(service: String)(implicit hc: HeaderCarrier): Future[EnvironmentRoutes] =

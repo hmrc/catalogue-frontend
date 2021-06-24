@@ -30,11 +30,8 @@ import views.html.sign_in
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AuthController @Inject()(
-  authService: AuthService,
-  configuration: Configuration,
-  mcc: MessagesControllerComponents)(implicit ec: ExecutionContext
-) extends FrontendController(mcc) {
+class AuthController @Inject() (authService: AuthService, configuration: Configuration, mcc: MessagesControllerComponents)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
   import AuthController._
 
@@ -58,12 +55,12 @@ class AuthController @Inject()(
                 val targetUrl = signInData.targetUrl.getOrElse(routes.CatalogueController.index.url)
                 Redirect(targetUrl)
                   .withSession(
-                      UmpToken.SESSION_KEY_NAME    -> token
-                    , DisplayName.SESSION_KEY_NAME -> displayName
-                    )
+                    UmpToken.SESSION_KEY_NAME    -> token,
+                    DisplayName.SESSION_KEY_NAME -> displayName
+                  )
               case Left(_) =>
                 BadRequest(sign_in(boundForm.withGlobalError(Messages("sign-in.wrong-credentials")), selfServiceUrl))
-          }
+            }
       )
   }
 
@@ -77,21 +74,22 @@ class AuthController @Inject()(
 object AuthController {
 
   final case class SignInData(
-      username : String
-    , password : String
-    , targetUrl: Option[String]
-    )
+    username: String,
+    password: String,
+    targetUrl: Option[String]
+  )
 
   private val signinForm =
     Form(
-      Forms.mapping(
-          "username"  -> Forms.text
-        , "password"  -> Forms.text
-        , "targetUrl" -> Forms.optional(Forms.text)
+      Forms
+        .mapping(
+          "username"  -> Forms.text,
+          "password"  -> Forms.text,
+          "targetUrl" -> Forms.optional(Forms.text)
         )(SignInData.apply)(SignInData.unapply)
-          .verifying(
-            "sign-in.wrong-credentials",
-            signInData => signInData.username.nonEmpty && signInData.password.nonEmpty
-          )
+        .verifying(
+          "sign-in.wrong-credentials",
+          signInData => signInData.username.nonEmpty && signInData.password.nonEmpty
+        )
     )
 }

@@ -28,12 +28,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class WhatsRunningWhereController @Inject()(
+class WhatsRunningWhereController @Inject() (
   service: WhatsRunningWhereService,
-  page   : WhatsRunningWherePage,
-  mcc    : MessagesControllerComponents
-)(implicit val ec: ExecutionContext
-) extends FrontendController(mcc) {
+  page: WhatsRunningWherePage,
+  mcc: MessagesControllerComponents
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
   private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
     form.fold(
@@ -52,11 +52,9 @@ class WhatsRunningWhereController @Inject()(
     Action.async { implicit request =>
       for {
         form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profile = profileFrom(form)
+        profile             = profileFrom(form)
         selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        (releases, profiles) <- (service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
-          , service.profiles
-          ).mapN { (r, p) => (r, p) }
+        (releases, profiles) <- (service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString)), service.profiles).mapN((r, p) => (r, p))
         environments = distinctEnvironments(releases)
         profileNames = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
       } yield Ok(page(environments, releases, selectedProfileType, profileNames, form, showDiff))
@@ -64,12 +62,12 @@ class WhatsRunningWhereController @Inject()(
 }
 
 object WhatsRunningWhereController {
-  def matchesProduction(wrw: WhatsRunningWhere, prodVersion: WhatsRunningWhereVersion, comparedEnv: Environment): Boolean = {
-    wrw.versions.find(_.environment == comparedEnv)
+  def matchesProduction(wrw: WhatsRunningWhere, prodVersion: WhatsRunningWhereVersion, comparedEnv: Environment): Boolean =
+    wrw.versions
+      .find(_.environment == comparedEnv)
       .map(_.versionNumber)
       .contains(prodVersion.versionNumber)
 
-  }
 }
 case class WhatsRunningWhereFilter(
   profileName: Option[ProfileName] = None,

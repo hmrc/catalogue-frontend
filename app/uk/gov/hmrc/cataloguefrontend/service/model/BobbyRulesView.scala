@@ -18,4 +18,4 @@ package uk.gov.hmrc.cataloguefrontend.service.model
 
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 
-case class BobbyRulesView (upcoming: BobbyRuleSet, active: BobbyRuleSet)
+case class BobbyRulesView(upcoming: BobbyRuleSet, active: BobbyRuleSet)

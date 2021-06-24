@@ -28,12 +28,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class ReleasesConnector @Inject()(
+class ReleasesConnector @Inject() (
   http: HttpClient,
   servicesConfig: ServicesConfig
-)(
-  implicit
-  ec: ExecutionContext) {
+)(implicit ec: ExecutionContext) {
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
@@ -97,14 +95,12 @@ class ReleasesConnector @Inject()(
   def deploymentHistory(
     environment: Environment,
     from: Option[LocalDate] = None,
-    to: Option[LocalDate]   = None,
-    team: Option[String]    = None,
+    to: Option[LocalDate] = None,
+    team: Option[String] = None,
     service: Option[String] = None,
-    skip: Option[Int]       = None,
-    limit: Option[Int]      = None
-  )(
-    implicit
-    hc: HeaderCarrier): Future[PaginatedDeploymentHistory] = {
+    skip: Option[Int] = None,
+    limit: Option[Int] = None
+  )(implicit hc: HeaderCarrier): Future[PaginatedDeploymentHistory] = {
 
     implicit val mr: HttpReads[PaginatedDeploymentHistory] = paginatedHistoryReads
     val params = Seq(

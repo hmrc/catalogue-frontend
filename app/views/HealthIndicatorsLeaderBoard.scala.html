@@ -14,10 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.healthindicators.{RepoRatingsWithTeams, RepoType}
-@(  repoRatings :   Seq[RepoRatingsWithTeams]
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.{IndicatorsWithTeams, RepoType}
+@(  indicatorsWithTeams :   Seq[IndicatorsWithTeams]
 ,   repoType : RepoType
-,   repositoryName : String
+,   repoName : String
 ,   repoTypes:   Seq[RepoType]
 )(implicit messages: Messages, request: Request[_])
 @standard_layout("Service Health Indicators", "health-indicators") {
@@ -32,8 +32,8 @@
                     <label for="search">Search by repository:</label>
                 </div>
                 <div class="col col-xs-3">
-                    <input type="search" class="search form-control" id="search" type="text" name="repositoryName"
-                    value='@repositoryName' autofocus/>
+                    <input type="search" class="search form-control" id="search" type="text" name="repoName"
+                    value='@repoName' autofocus/>
                 </div>
                 <br />
                 <br />
@@ -50,21 +50,21 @@
                 <th>Repository</th>
                 <th>Owning Teams</th>
                 <th>Repository Type</th>
-                <th><button role="button" class="sort no-border" data-sort="repositoryScore">Score</button></th>
+                <th><button role="button" class="sort no-border" data-sort="OverallScore">Score</button></th>
             </thead>
             <tbody class="list">
-                @repoRatings.zipWithIndex.map { case (rating, i) =>
+                @indicatorsWithTeams.zipWithIndex.map { case (indicator, i) =>
                     <tr role="row" id="row_@{i}">
-                        <td class="repositoryName" id="row_@{i}_column_0">
-                            <a href="/health-indicators/@{rating.repositoryName}">@rating.repositoryName</a>
+                        <td class="repoName" id="row_@{i}_column_0">
+                            <a href="/health-indicators/@{indicator.repoName}">@indicator.repoName</a>
                         </td>
                         <td id="row_@{i}_column_1">
-                            @{if(rating.owningTeams.size == 1){rating.owningTeams.map(_.asString)}
-                            else if(rating.owningTeams.size <=3){rating.owningTeams.map(_.asString).mkString(", ")}
+                            @{if(indicator.owningTeams.size == 1){indicator.owningTeams.map(_.asString)}
+                            else if(indicator.owningTeams.size <=3){indicator.owningTeams.map(_.asString).mkString(", ")}
                             else("Multiple")}
                         </td>
-                        <td id="row_@{i}_column_2">@rating.repositoryType</td>
-                        <td class="repositoryScore" id="row_@{i}_column_3">@rating.repositoryScore</td>
+                        <td id="row_@{i}_column_2">@indicator.repoType</td>
+                        <td class="overallScore" id="row_@{i}_column_3">@indicator.overallScore</td>
                     </tr>
                 }
             </tbody>
@@ -72,7 +72,7 @@
     </div>
 
     <script>
-            var options = {valueNames: ['repositoryScore', 'repositoryName' ] };
+            var options = {valueNames: ['overallScore', 'repoName' ] };
             var indicatorsList = new List('leaderboard-display', options);
 
             var searchBox = document.getElementById("search");

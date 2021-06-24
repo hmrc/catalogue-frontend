@@ -24,8 +24,8 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class UpdateScheduler @Inject()(
-  actorSystem     : ActorSystem,
+class UpdateScheduler @Inject() (
+  actorSystem: ActorSystem,
   readModelService: ReadModelService
 )(implicit val ec: ExecutionContext) {
 

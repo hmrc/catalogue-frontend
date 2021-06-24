@@ -24,10 +24,9 @@ import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
 import views.html._
 
 @Singleton
-class CatalogueErrorHandler @Inject()(val messagesApi: MessagesApi) extends FrontendErrorHandler {
+class CatalogueErrorHandler @Inject() (val messagesApi: MessagesApi) extends FrontendErrorHandler {
 
-  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(
-    implicit request: Request[_]) =
+  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: Request[_]) =
     error_template(pageTitle, heading, message)
 
   override def notFoundTemplate(implicit request: Request[_]): Html =

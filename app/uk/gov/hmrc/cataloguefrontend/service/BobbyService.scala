@@ -26,32 +26,31 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class BobbyService @Inject()(configConnector: ConfigConnector, clock: Clock)(implicit val ec: ExecutionContext) {
+class BobbyService @Inject() (configConnector: ConfigConnector, clock: Clock)(implicit val ec: ExecutionContext) {
 
   def getRules()(implicit hc: HeaderCarrier): Future[BobbyRulesView] = {
     val today = LocalDate.now(clock)
 
     def sort(ruleset: BobbyRuleSet, sortDateLt: (LocalDate, LocalDate) => Boolean) = {
       def sortRulesLt(x: BobbyRule, y: BobbyRule) =
-        if (x.from == y.from) {
+        if (x.from == y.from)
           if (x.group == y.group) x.artefact < y.artefact
           else x.group < y.group
-        }
         else sortDateLt(x.from, y.from)
 
       BobbyRuleSet(
-          libraries = ruleset.libraries.sortWith(sortRulesLt)
-        , plugins   = ruleset.plugins.sortWith(sortRulesLt)
-        )
+        libraries = ruleset.libraries.sortWith(sortRulesLt),
+        plugins = ruleset.plugins.sortWith(sortRulesLt)
+      )
     }
 
     configConnector.bobbyRules
       .map { ruleset =>
         val (upcomingLibraries, activeLibraries) = ruleset.libraries.partition(_.from isAfter today)
-        val (upcomingPlugins  , activePlugins  ) = ruleset.plugins.partition(_.from isAfter today)
+        val (upcomingPlugins, activePlugins)     = ruleset.plugins.partition(_.from isAfter today)
         BobbyRulesView(
-          upcoming = sort(BobbyRuleSet(upcomingLibraries, upcomingPlugins), _ isBefore _)
-        , active   = sort(BobbyRuleSet(activeLibraries  , activePlugins  ), _ isAfter  _)
+          upcoming = sort(BobbyRuleSet(upcomingLibraries, upcomingPlugins), _ isBefore _),
+          active = sort(BobbyRuleSet(activeLibraries, activePlugins), _ isAfter _)
         )
       }
   }

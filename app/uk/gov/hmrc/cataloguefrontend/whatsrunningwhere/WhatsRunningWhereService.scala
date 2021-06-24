@@ -21,7 +21,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector) {
+class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector) {
 
   def releasesForProfile(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     releasesConnector.releases(profile)

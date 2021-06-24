@@ -21,7 +21,7 @@ import play.api.Configuration
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
-class ViewMessages @Inject()(configuration: Configuration) {
+class ViewMessages @Inject() (configuration: Configuration) {
   val noJobExecutionData: String = "<p>It's possible that there is no Jenkins job set up for this repository, or a job exists " +
     "but there is no past build data available. If you think you're seeing this message in error or have any other feedback, " +
     "please let us know in " +
@@ -50,8 +50,7 @@ class ViewMessages @Inject()(configuration: Configuration) {
   val informationalText: String = configuration.get[String](s"info-panel-text")
 
   def noJobExecutionTimeDataHtml =
-    Html(
-      s"""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>$noJobExecutionData</p>")
+    Html(s"""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>$noJobExecutionData</p>")
 
   def toTypeText(repoType: RepoType.RepoType): String =
     repoType match {

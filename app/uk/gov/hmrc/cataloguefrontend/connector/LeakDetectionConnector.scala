@@ -26,11 +26,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class LeakDetectionConnector @Inject()(
-  http          : HttpClient,
+class LeakDetectionConnector @Inject() (
+  http: HttpClient,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext
-){
+)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)

@@ -24,17 +24,16 @@ object ServiceInfoView {
    * and assume that they represent 'test-only' library dependencies.
    */
   def buildToolsFrom(
-    optMasterDependencies: Option[Dependencies]
-  , librariesOfLatestSlug: Seq[Dependency]
+    optMasterDependencies: Option[Dependencies],
+    librariesOfLatestSlug: Seq[Dependency]
   ): Option[Dependencies] =
     optMasterDependencies.map { masterDependencies =>
       val libraryNamesInLatestSlug = librariesOfLatestSlug.map(_.name).toSet
       masterDependencies.copy(
-        libraryDependencies =
-          masterDependencies.libraryDependencies
-            .filterNot { library =>
-              libraryNamesInLatestSlug.contains(library.name)
-            }
+        libraryDependencies = masterDependencies.libraryDependencies
+          .filterNot { library =>
+            libraryNamesInLatestSlug.contains(library.name)
+          }
       )
     }
 }

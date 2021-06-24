@@ -26,27 +26,29 @@ import views.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class JDKVersionController @Inject()(
-  cc                 : MessagesControllerComponents,
+class JDKVersionController @Inject() (
+  cc: MessagesControllerComponents,
   dependenciesService: DependenciesService,
-  jdkPage            : JdkVersionPage,
-  jdkCountsPage      : JdkAcrossEnvironmentsPage
-)(implicit val ec: ExecutionContext
-) extends FrontendController(cc) {
+  jdkPage: JdkVersionPage,
+  jdkCountsPage: JdkAcrossEnvironmentsPage
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(cc) {
 
-  def findLatestVersions(flag: String) = Action.async { implicit request =>
-    for {
+  def findLatestVersions(flag: String) =
+    Action.async { implicit request =>
+      for {
         flag        <- Future.successful(SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest))
         jdkVersions <- dependenciesService.getJDKVersions(flag)
-    } yield Ok(jdkPage(jdkVersions.sortBy(byJDKVersion), SlugInfoFlag.values, flag))
-  }
+      } yield Ok(jdkPage(jdkVersions.sortBy(byJDKVersion), SlugInfoFlag.values, flag))
+    }
 
-  def compareAllEnvironments() = Action.async { implicit request =>
-    for {
-       envs      <- Future.sequence(SlugInfoFlag.values.map(dependenciesService.getJDKCountsForEnv))
-       jdks      =  envs.flatMap(_.usage.keys).distinct.sortBy(byJDKVersion)
-    } yield Ok(jdkCountsPage(envs, jdks))
-  }
+  def compareAllEnvironments() =
+    Action.async { implicit request =>
+      for {
+        envs <- Future.sequence(SlugInfoFlag.values.map(dependenciesService.getJDKCountsForEnv))
+        jdks = envs.flatMap(_.usage.keys).distinct.sortBy(byJDKVersion)
+      } yield Ok(jdkCountsPage(envs, jdks))
+    }
 
   private def byJDKVersion(v: JDKVersion) =
     v.version.replaceAll("\\D", "").toInt

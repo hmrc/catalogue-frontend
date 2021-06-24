@@ -22,30 +22,34 @@ import play.api.libs.json.{JsValue, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
 case class BobbyRulesSummary(
-    date   : LocalDate
-  , summary: Map[(BobbyRule, SlugInfoFlag), Int]
-  )
+  date: LocalDate,
+  summary: Map[(BobbyRule, SlugInfoFlag), Int]
+)
 
 case class HistoricBobbyRulesSummary(
-    date   : LocalDate
-  , summary: Map[(BobbyRule, SlugInfoFlag), List[Int]]
-  )
+  date: LocalDate,
+  summary: Map[(BobbyRule, SlugInfoFlag), List[Int]]
+)
 
 private object DataFormat {
   private implicit val brvf = BobbyRule.reads
 
   private def f[A](map: List[(JsValue, Map[String, A])]): Map[(BobbyRule, SlugInfoFlag), A] =
-    map.flatMap { case (k1, v1) =>
-      v1.map { case (k2, v2) =>
-        ( ( k1.as[BobbyRule]
-          , SlugInfoFlag.parse(k2).getOrElse(sys.error(s"Invalid SlugInfoFlag $k2")) // TODO propagate failure into client Format
-          )
-        , v2
-        )
-      }
+    map.flatMap {
+      case (k1, v1) =>
+        v1.map {
+          case (k2, v2) =>
+            (
+              (
+                k1.as[BobbyRule],
+                SlugInfoFlag.parse(k2).getOrElse(sys.error(s"Invalid SlugInfoFlag $k2")) // TODO propagate failure into client Format
+              ),
+              v2
+            )
+        }
     }.toMap
 
-  def dataReads[A : Reads]: Reads[Map[(BobbyRule, SlugInfoFlag), A]] =
+  def dataReads[A: Reads]: Reads[Map[(BobbyRule, SlugInfoFlag), A]] =
     implicitly[Reads[List[(JsValue, Map[String, A])]]].map(f[A])
 }
 
@@ -53,9 +57,8 @@ object BobbyRulesSummary {
 
   val reads: Reads[BobbyRulesSummary] = {
     implicit val df = DataFormat.dataReads[Int]
-    ( (__ \ "date"   ).read[LocalDate]
-    ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), Int]]
-    )(BobbyRulesSummary.apply _)
+    ((__ \ "date").read[LocalDate]
+      ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), Int]])(BobbyRulesSummary.apply _)
   }
 }
 
@@ -63,8 +66,7 @@ object HistoricBobbyRulesSummary {
 
   val reads: Reads[HistoricBobbyRulesSummary] = {
     implicit val df = DataFormat.dataReads[List[Int]]
-    ( (__ \ "date"   ).read[LocalDate]
-    ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), List[Int]]]
-    )(HistoricBobbyRulesSummary.apply _)
+    ((__ \ "date").read[LocalDate]
+      ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), List[Int]]])(HistoricBobbyRulesSummary.apply _)
   }
 }

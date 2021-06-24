@@ -25,6 +25,6 @@ object ShutterEventsView {
   private def statusReason(status: ShutterStatus): Option[String] =
     status match {
       case Shuttered(reason, _, _) => reason
-      case Unshuttered => None
+      case Unshuttered             => None
     }
 }

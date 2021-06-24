@@ -20,7 +20,6 @@ import play.api.libs.json.Format
 import play.api.libs.functional.syntax._
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
-
 case class Username(value: String) extends AnyVal
 
 case class TeamName(asString: String) extends AnyVal
@@ -50,9 +49,9 @@ object TeamName {
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, TeamName]] =
         params.get(Name).map { values =>
           values.toList match {
-            case Nil => Left("missing team value")
+            case Nil         => Left("missing team value")
             case head :: Nil => pathBindable.bind(key, head)
-            case _ => Left("too many team values")
+            case _           => Left("too many team values")
           }
         }
 

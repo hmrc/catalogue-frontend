@@ -24,7 +24,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class FutureHelpers @Inject()(metrics: Metrics) {
+class FutureHelpers @Inject() (metrics: Metrics) {
 
   lazy val defaultRegistry: MetricRegistry = metrics.defaultRegistry
 

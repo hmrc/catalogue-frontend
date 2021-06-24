@@ -14,19 +14,19 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.healthindicators.RepositoryRating
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.Indicator
 
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController
-@(indicator: RepositoryRating
+@(indicator: Indicator
 )(implicit messages: Messages, request: Request[_])
 @standard_layout("Service Health Indicators", "health-indicators"){
 
   <header>
       <p id="repo-score-number"
-      class=@HealthIndicatorsController.getScoreColour(indicator.repositoryScore)>
-      @indicator.repositoryScore
+      class=@HealthIndicatorsController.getScoreColour(indicator.overallScore)>
+      @indicator.overallScore
       </p>
-    <h1>Service Health Indicators:  @indicator.repositoryName
+    <h1>Service Health Indicators:  @indicator.repoName
         <a id="health-indicators-help" href="https://github.com/hmrc/health-indicators" title="What is this?">?</a>
     </h1>
   </header>
@@ -40,20 +40,20 @@
             <th>Reason</th>
             <th>Score Contribution</th>
         </thead>
-        @indicator.ratings.zipWithIndex.map{ case (rating, i ) =>
-              <section id="section_@{i}_@{rating.ratingType}">
+        @indicator.weightedMetrics.zipWithIndex.map{ case (indicator, i ) =>
+              <section id="section_@{i}_@{indicator.metricType}">
                 <tr role="row" id="section_@{i}_row_1">
-                    <td id="section_@{i}_row_0_col_0">@rating.ratingType</td>
-                    <td id="section_@{i}_row_0_col_1">@rating.ratingScore</td>
-                    @if(rating.breakdown.isEmpty){
+                    <td id="section_@{i}_row_0_col_0">@indicator.metricType</td>
+                    <td id="section_@{i}_row_0_col_1">@indicator.score</td>
+                    @if(indicator.breakdown.isEmpty){
                         <td id="section_@{i}_row_0_col_2"></td>
                         <td id="section_@{i}_row_0_col_3"></td>
                     }else{
-                        <td id="section_@{i}_row_0_col_2">@rating.breakdown.head.description</td>
-                        <td id="section_@{i}_row_0_col_3">@rating.breakdown.head.points</td>
+                        <td id="section_@{i}_row_0_col_2">@indicator.breakdown.head.description</td>
+                        <td id="section_@{i}_row_0_col_3">@indicator.breakdown.head.points</td>
                     }
                 </tr>
-              @rating.breakdown.drop(1).zipWithIndex.map { case (breakdown, j) =>
+              @indicator.breakdown.drop(1).zipWithIndex.map { case (breakdown, j) =>
                   <tr>
                       <td id="section_@{i}row@{j+1}_col_0"></td>
                       <td id="section_@{i}row@{j+1}_col_1"></td>

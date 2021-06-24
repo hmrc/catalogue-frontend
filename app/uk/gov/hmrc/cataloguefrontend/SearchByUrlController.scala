@@ -27,36 +27,34 @@ import views.html.SearchByUrlPage
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SearchByUrlController @Inject()(
-  mcc               : MessagesControllerComponents,
+class SearchByUrlController @Inject() (
+  mcc: MessagesControllerComponents,
   searchByUrlService: SearchByUrlService,
-  searchByUrlPage   : SearchByUrlPage
-)(implicit val ec: ExecutionContext
-) extends FrontendController(mcc) {
+  searchByUrlPage: SearchByUrlPage
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
   private val serviceNameToUrl = routes.CatalogueController.service _
 
-  def searchLanding: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(searchByUrlPage(UrlSearchFilter.form, Nil, serviceNameToUrl)))
-  }
+  def searchLanding: Action[AnyContent] =
+    Action.async { implicit request =>
+      Future.successful(Ok(searchByUrlPage(UrlSearchFilter.form, Nil, serviceNameToUrl)))
+    }
 
-  def searchUrl = Action.async { implicit request =>
-    UrlSearchFilter.form
-      .bindFromRequest()
-      .fold(
-        formWithErrors => Future.successful(Ok(searchByUrlPage(formWithErrors, Nil, serviceNameToUrl))),
-        query => {
-          searchByUrlService
-            .search(query.name)
-            .map { results =>
-              Ok(searchByUrlPage(
-                  UrlSearchFilter.form.bindFromRequest(),
-                  results,
-                  serviceNameToUrl))
-            }
-        }
-      )
-  }
+  def searchUrl =
+    Action.async { implicit request =>
+      UrlSearchFilter.form
+        .bindFromRequest()
+        .fold(
+          formWithErrors => Future.successful(Ok(searchByUrlPage(formWithErrors, Nil, serviceNameToUrl))),
+          query =>
+            searchByUrlService
+              .search(query.name)
+              .map { results =>
+                Ok(searchByUrlPage(UrlSearchFilter.form.bindFromRequest(), results, serviceNameToUrl))
+              }
+        )
+    }
 
   case class UrlSearchFilter(name: Option[String] = None) {
     def isEmpty: Boolean = name.isEmpty

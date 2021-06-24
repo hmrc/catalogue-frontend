@@ -30,23 +30,23 @@ import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 @Singleton
-class ShutterOverviewController @Inject()(
-    mcc                        : MessagesControllerComponents
-  , verifySignInStatus         : VerifySignInStatus
-  , shutterOverviewPage        : ShutterOverviewPage
-  , frontendRoutesWarningPage  : FrontendRouteWarningsPage
-  , shutterService             : ShutterService
-  , catalogueConfig            : CatalogueConfig
-  )(implicit val ec: ExecutionContext
-  ) extends FrontendController(mcc) {
+class ShutterOverviewController @Inject() (
+  mcc: MessagesControllerComponents,
+  verifySignInStatus: VerifySignInStatus,
+  shutterOverviewPage: ShutterOverviewPage,
+  frontendRoutesWarningPage: FrontendRouteWarningsPage,
+  shutterService: ShutterService,
+  catalogueConfig: CatalogueConfig
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
   private val logger = Logger(getClass)
 
   def allStates(shutterType: ShutterType): Action[AnyContent] =
     allStatesForEnv(
-        shutterType = shutterType
-      , env         = Environment.Production
-      )
+      shutterType = shutterType,
+      env = Environment.Production
+    )
 
   def allStatesForEnv(shutterType: ShutterType, env: Environment): Action[AnyContent] =
     verifySignInStatus.async { implicit request =>
@@ -61,9 +61,9 @@ class ShutterOverviewController @Inject()(
                                    }
                                    .map(ws => (env, ws))
                                }
-        hasGlobalPerm       =  request.optUser.map(_.groups.contains(catalogueConfig.shutterPlatformGroup)).getOrElse(false)
-        killSwitchLink      =  if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
-        page                =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, request.isSignedIn, killSwitchLink)
+        hasGlobalPerm  = request.optUser.map(_.groups.contains(catalogueConfig.shutterPlatformGroup)).getOrElse(false)
+        killSwitchLink = if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
+        page           = shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, request.isSignedIn, killSwitchLink)
       } yield Ok(page)
     }
 
@@ -74,13 +74,13 @@ class ShutterOverviewController @Inject()(
                              shutterService
                                .frontendRouteWarnings(env, serviceName)
                                .recover {
-                                  case NonFatal(ex) =>
-                                    logger.error(s"Could not retrieve frontend route warnings for service '$serviceName' in env: '${env.asString}': ${ex.getMessage}", ex)
-                                    Seq.empty
+                                 case NonFatal(ex) =>
+                                   logger.error(s"Could not retrieve frontend route warnings for service '$serviceName' in env: '${env.asString}': ${ex.getMessage}", ex)
+                                   Seq.empty
                                }
                                .map(ws => (env, ws))
                            }
-        page            =  frontendRoutesWarningPage(envsAndWarnings.toMap, env, serviceName)
+        page = frontendRoutesWarningPage(envsAndWarnings.toMap, env, serviceName)
       } yield Ok(page)
     }
 }

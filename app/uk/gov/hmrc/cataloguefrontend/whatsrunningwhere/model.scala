@@ -75,17 +75,15 @@ object JsonCodecs {
   val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] = {
     implicit val wf  = environmentFormat
     implicit val vnf = versionNumberFormat
-    ( (__ \ "environment"  ).read[Environment]
-    ~ (__ \ "versionNumber").read[VersionNumber]
-    )(WhatsRunningWhereVersion.apply _)
+    ((__ \ "environment").read[Environment]
+      ~ (__ \ "versionNumber").read[VersionNumber])(WhatsRunningWhereVersion.apply _)
   }
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] = {
     implicit val wf    = applicationNameFormat
     implicit val wrwvf = whatsRunningWhereVersionReads
-    ( (__ \ "applicationName").read[ServiceName]
-    ~ (__ \ "versions").read[List[WhatsRunningWhereVersion]]
-    )(WhatsRunningWhere.apply _)
+    ((__ \ "applicationName").read[ServiceName]
+      ~ (__ \ "versions").read[List[WhatsRunningWhereVersion]])(WhatsRunningWhere.apply _)
   }
 
   val profileTypeFormat: Format[ProfileType] = new Format[ProfileType] {

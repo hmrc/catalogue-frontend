@@ -26,7 +26,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 @Singleton
-class EventsReloadScheduler @Inject()(
+class EventsReloadScheduler @Inject() (
   appLifecycle: ApplicationLifecycle,
   configuration: Configuration,
   environment: Environment,

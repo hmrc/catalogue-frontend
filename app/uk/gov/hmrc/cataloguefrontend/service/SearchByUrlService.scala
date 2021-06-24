@@ -25,21 +25,19 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SearchByUrlService @Inject()(
+class SearchByUrlService @Inject() (
   searchByUrlConnector: SearchByUrlConnector
 )(implicit val ec: ExecutionContext) {
 
   import SearchByUrlService._
 
   def search(term: Option[String], environment: String = "production")(implicit hc: HeaderCarrier): Future[Seq[FrontendRoutes]] =
-    if (isValidSearchTerm(term)) {
+    if (isValidSearchTerm(term))
       searchByUrlConnector
         .search(takeUrlPath(term.get))
         .map(results => results.filter(frontendRoute => frontendRoute.environment == environment))
-    }
-    else {
+    else
       Future.successful(Nil)
-    }
 
   private def isValidSearchTerm(term: Option[String]): Boolean = {
     if (term.isEmpty || term.getOrElse("").trim.isEmpty || term.getOrElse("").trim == "/")
@@ -49,10 +47,10 @@ class SearchByUrlService @Inject()(
       val url = new URI(term.get)
 
       Option(url.getPath).getOrElse("").nonEmpty &&
-        (!Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") ||
-          Option(url.getHost).getOrElse("").isEmpty &&
-            Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") &&
-            url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim.nonEmpty)
+      (!Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") ||
+      Option(url.getHost).getOrElse("").isEmpty &&
+      Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") &&
+      url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim.nonEmpty)
     } catch {
       case e: URISyntaxException => false
     }
@@ -64,8 +62,10 @@ class SearchByUrlService @Inject()(
     if (Option(url.getHost).getOrElse("").trim.nonEmpty)
       return url.getPath.trim
 
-    if (Option(url.getHost).getOrElse("").trim.isEmpty &&
-      Option(url.getPath).getOrElse("").contains("tax.service.gov.uk"))
+    if (
+      Option(url.getHost).getOrElse("").trim.isEmpty &&
+      Option(url.getPath).getOrElse("").contains("tax.service.gov.uk")
+    )
       return url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim
 
     url.getPath.trim
@@ -73,6 +73,6 @@ class SearchByUrlService @Inject()(
 }
 
 object SearchByUrlService {
-  case class FrontendRoute(frontendPath: String, backendPath :String, ruleConfigurationUrl: String = "", isRegex: Boolean = false)
+  case class FrontendRoute(frontendPath: String, backendPath: String, ruleConfigurationUrl: String = "", isRegex: Boolean = false)
   case class FrontendRoutes(service: String, environment: String, routes: Seq[FrontendRoute])
 }

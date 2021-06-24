@@ -22,21 +22,21 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class RouteRulesService @Inject()(
+class RouteRulesService @Inject() (
   routeRulesConnector: RouteRulesConnector
 )(implicit val ec: ExecutionContext) {
   import RouteRulesService._
 
   def serviceRoutes(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRoutes] =
-    routeRulesConnector.serviceRoutes(serviceName).map(environmentRoutes =>
-      ServiceRoutes(environmentRoutes)
-    )
+    routeRulesConnector.serviceRoutes(serviceName).map(environmentRoutes => ServiceRoutes(environmentRoutes))
 
   def serviceUrl(serviceName: String, environment: String = "production")(implicit hc: HeaderCarrier): Future[Option[EnvironmentRoute]] =
-    routeRulesConnector.serviceRoutes(serviceName).map(environmentRoutes =>
-      environmentRoutes
-        .find(environmentRoute => environmentRoute.environment == environment)
-    )
+    routeRulesConnector
+      .serviceRoutes(serviceName)
+      .map(environmentRoutes =>
+        environmentRoutes
+          .find(environmentRoute => environmentRoute.environment == environment)
+      )
 }
 
 @Singleton
@@ -49,22 +49,28 @@ object RouteRulesService {
         .orElse(None)
 
     private def hasDifferentRoutesToReferenceEnvironment(environmentRoute: EnvironmentRoute, referenceEnvironmentRoute: EnvironmentRoute) =
-      environmentRoute.routes.map(route => route.frontendPath)
+      environmentRoute.routes
+        .map(route => route.frontendPath)
         .diff(referenceEnvironmentRoute.routes.map(route => route.frontendPath))
         .nonEmpty
 
     private def filterRoutesToDifferences(environmentRoute: EnvironmentRoute, referenceEnvironmentRoute: EnvironmentRoute) =
       environmentRoute.routes
-        .filter(r => environmentRoute.routes.map(route => route.frontendPath)
-                     .diff(referenceEnvironmentRoute.routes.map(route => route.frontendPath)).contains(r.frontendPath))
+        .filter(r =>
+          environmentRoute.routes
+            .map(route => route.frontendPath)
+            .diff(referenceEnvironmentRoute.routes.map(route => route.frontendPath))
+            .contains(r.frontendPath)
+        )
 
     val inconsistentRoutes: Seq[EnvironmentRoute] =
-      referenceEnvironmentRoutes.map(refEnvRoutes => {
-        environmentRoutes
-          .filter(environmentRoute => environmentRoute.environment != refEnvRoutes.environment)
-          .filter(environmentRoute => hasDifferentRoutesToReferenceEnvironment(environmentRoute, refEnvRoutes))
-          .map(environmentRoute => environmentRoute.copy(routes=filterRoutesToDifferences(environmentRoute, refEnvRoutes)))
-      })
+      referenceEnvironmentRoutes
+        .map { refEnvRoutes =>
+          environmentRoutes
+            .filter(environmentRoute => environmentRoute.environment != refEnvRoutes.environment)
+            .filter(environmentRoute => hasDifferentRoutesToReferenceEnvironment(environmentRoute, refEnvRoutes))
+            .map(environmentRoute => environmentRoute.copy(routes = filterRoutesToDifferences(environmentRoute, refEnvRoutes)))
+        }
         .getOrElse(Nil)
 
     val hasInconsistentRoutes: Boolean = inconsistentRoutes.nonEmpty

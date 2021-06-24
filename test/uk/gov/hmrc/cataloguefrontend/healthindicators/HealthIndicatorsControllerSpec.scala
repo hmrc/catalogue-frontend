@@ -36,7 +36,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and contain specified elements" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/team-indicator-dashboard-frontend",
+        "/health-indicators/indicators/team-indicator-dashboard-frontend",
         willRespondWith = (
           200,
           Some(testJson)
@@ -53,7 +53,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 404 when repository is not found" in new Setup {
       serviceEndpoint(
         GET,
-        "health-indicators/repositories/team-indicator-dashboard-frontend",
+        "health-indicators/indicators/team-indicator-dashboard-frontend",
         willRespondWith = (
           404,
           None
@@ -70,7 +70,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and redirect to Services when no query params set" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc&repoType=Service",
+        "/health-indicators/indicators?sort=desc&repoType=Service",
         willRespondWith = (200, Some(testJsonRepoTypeService))
       )
 
@@ -90,7 +90,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and include repo type service when repoType=Service" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc&repoType=Service",
+        "/health-indicators/indicators?sort=desc&repoType=Service",
         willRespondWith = (200, Some(testJsonRepoTypeService))
       )
 
@@ -110,7 +110,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and include all repo types when repoType=AllTypes" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc",
+        "/health-indicators/indicators?sort=desc",
         willRespondWith = (200, Some(testJson3RepoTypes))
       )
 
@@ -132,7 +132,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and include repo type other when repoType=Other" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc&repoType=Other",
+        "/health-indicators/indicators?sort=desc&repoType=Other",
         willRespondWith = (200, Some(testJsonRepoTypeOther))
       )
 
@@ -152,7 +152,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     "respond with status 200 and include repo type prototype when repoType=Prototype" in new Setup {
       serviceEndpoint(
         GET,
-        "/health-indicators/repositories/?sort=desc&repoType=Prototype",
+        "/health-indicators/indicators?sort=desc&repoType=Prototype",
         willRespondWith = (200, Some(testJsonRepoTypePrototype))
       )
 
@@ -183,13 +183,13 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val testJson: String =
       """{
-          |  "repositoryName": "team-indicator-dashboard-frontend",
-          |  "repositoryType": "Service",
-          |  "repositoryScore": -450,
-          |  "ratings": [
+          |  "repoName": "team-indicator-dashboard-frontend",
+          |  "repoType": "Service",
+          |  "overallScore": -450,
+          |  "weightedMetrics": [
           |    {
-          |      "ratingType": "BobbyRule",
-          |      "ratingScore": -400,
+          |      "metricType": "bobby-rule",
+          |      "score": -400,
           |      "breakdown": [
           |        {
           |          "points": -100,
@@ -202,13 +202,13 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
           |      ]
           |    },
           |    {
-          |      "ratingType": "LeakDetection",
-          |      "ratingScore": 0,
+          |      "metricType": "leak-detection",
+          |      "score": 0,
           |      "breakdown": []
           |    },
           |    {
-          |      "ratingType": "ReadMe",
-          |      "ratingScore": -50,
+          |      "metricType": "read-me",
+          |      "score": -50,
           |      "breakdown": [
           |        {
           |          "points": -50,
@@ -221,49 +221,49 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
 
     val testJson3RepoTypes: String =
       """[{
-    |  "repositoryName": "team-indicator-dashboard-frontend",
-    |  "repositoryType": "Service",
-    |  "repositoryScore": -450,
-    |  "ratings": []
+    |  "repoName": "team-indicator-dashboard-frontend",
+    |  "repoType": "Service",
+    |  "overallScore": -450,
+    |  "weightedMetrics": []
     |},
     |{
-    | "repositoryName": "api-platform-scripts",
-    | "repositoryType": "Other",
-    | "repositoryScore": 50,
-    | "ratings": []
+    | "repoName": "api-platform-scripts",
+    | "repoType": "Other",
+    | "overallScore": 50,
+    | "weightedMetrics": []
     |},
     |{
-    | "repositoryName": "the-childcare-service-prototype",
-    | "repositoryType": "Prototype",
-    | "repositoryScore": 50,
-    | "ratings": []
+    | "repoName": "the-childcare-service-prototype",
+    | "repoType": "Prototype",
+    | "overallScore": 50,
+    | "weightedMetrics": []
     |}]""".stripMargin
 
     val testJsonRepoTypeService: String =
       """[{
-        |  "repositoryName": "team-indicator-dashboard-frontend",
-        |  "repositoryType": "Service",
-        |  "repositoryScore": -450,
-        |  "ratings": []
+        |  "repoName": "team-indicator-dashboard-frontend",
+        |  "repoType": "Service",
+        |  "overallScore": -450,
+        |  "weightedMetrics": []
         |}
         |]""".stripMargin
 
     val testJsonRepoTypeOther: String =
       """[
         |{
-        | "repositoryName": "api-platform-scripts",
-        | "repositoryType": "Other",
-        | "repositoryScore": 50,
-        | "ratings": []
+        | "repoName": "api-platform-scripts",
+        | "repoType": "Other",
+        | "overallScore": 50,
+        | "weightedMetrics": []
         |}]""".stripMargin
 
     val testJsonRepoTypePrototype: String =
       """[
         |{
-        | "repositoryName": "the-childcare-service-prototype",
-        | "repositoryType": "Prototype",
-        | "repositoryScore": 50,
-        | "ratings": []
+        | "repoName": "the-childcare-service-prototype",
+        | "repoType": "Prototype",
+        | "overallScore": 50,
+        | "weightedMetrics": []
         |}]""".stripMargin
 
 

@@ -26,8 +26,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvi
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final case class UmpVerifiedRequest[A](request: Request[A], override val messagesApi: MessagesApi, optUser: Option[User])
-    extends MessagesRequest[A](request, messagesApi) {
+final case class UmpVerifiedRequest[A](request: Request[A], override val messagesApi: MessagesApi, optUser: Option[User]) extends MessagesRequest[A](request, messagesApi) {
   def isSignedIn = optUser.isDefined
 }
 
@@ -37,11 +36,11 @@ final case class UmpVerifiedRequest[A](request: Request[A], override val message
   * Use [[UmpAuthActionBuilder]] Action if it should only proceed when there is a valid UmpToken.
   */
 @Singleton
-class VerifySignInStatus @Inject()(
+class VerifySignInStatus @Inject() (
   userManagementAuthConnector: UserManagementAuthConnector,
-  cc                         : MessagesControllerComponents
+  cc: MessagesControllerComponents
 )(implicit val ec: ExecutionContext)
-  extends ActionBuilder[UmpVerifiedRequest, AnyContent]
+    extends ActionBuilder[UmpVerifiedRequest, AnyContent]
     with FrontendHeaderCarrierProvider {
 
   def invokeBlock[A](request: Request[A], block: UmpVerifiedRequest[A] => Future[Result]): Future[Result] = {

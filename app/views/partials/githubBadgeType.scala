@@ -20,9 +20,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 
 object githubBadgeType extends (RepositoryDetails => String) {
   def apply(rd: RepositoryDetails): String =
-    if (rd.isPrivate) {
+    if (rd.isPrivate)
       "Private"
-    } else {
+    else
       "Public"
-    }
 }

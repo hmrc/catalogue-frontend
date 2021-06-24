@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.ServiceName
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -24,31 +25,30 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HealthIndicatorsService @Inject()(
+class HealthIndicatorsService @Inject() (
   teamsAndReposConnector: TeamsAndRepositoriesConnector,
   healthIndicatorsConnector: HealthIndicatorsConnector
-)(
-  implicit ec: ExecutionContext
+)(implicit
+  ec: ExecutionContext
 ) {
 
-  def findRepoRatingsWithTeams(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[RepoRatingsWithTeams]] = {
-    val repoToTeamsFut    = teamsAndReposConnector.allTeamsByService
-    val allRepoRatingsFut = healthIndicatorsConnector.getAllRepositoryRatings(repoType)
+  def findIndicatorsWithTeams(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[IndicatorsWithTeams]] = {
+    val eventualTeamLookUp: Future[Map[ServiceName, Seq[TeamName]]] = teamsAndReposConnector.allTeamsByService
+    val eventualIndicators: Future[Seq[Indicator]]                  = healthIndicatorsConnector.getAllIndicators(repoType)
 
     for {
-      repoToTeams    <- repoToTeamsFut
-      allRepoRatings <- allRepoRatingsFut
-    } yield
-      allRepoRatings.map { rr =>
-        RepoRatingsWithTeams(
-          rr.repositoryName,
-          owningTeams = repoToTeams.getOrElse(rr.repositoryName, Seq.empty),
-          rr.repositoryType,
-          rr.repositoryScore,
-          rr.ratings
-        )
-      }
+      repoToTeams <- eventualTeamLookUp
+      indicators  <- eventualIndicators
+    } yield indicators.map { i =>
+      IndicatorsWithTeams(
+        i.repoName,
+        owningTeams = repoToTeams.getOrElse(i.repoName, Seq.empty),
+        i.repoType,
+        i.overallScore,
+        i.weightedMetrics
+      )
+    }
   }
 }
 
-case class RepoRatingsWithTeams(repositoryName: String, owningTeams: Seq[TeamName], repositoryType: RepoType, repositoryScore: Int, ratings: Seq[Rating])
+case class IndicatorsWithTeams(repoName: String, owningTeams: Seq[TeamName], repoType: RepoType, overallScore: Int, weightedMetric: Seq[WeightedMetric])

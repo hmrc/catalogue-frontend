@@ -25,11 +25,10 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ConfigConnector @Inject()(
-  http          : HttpClient,
+class ConfigConnector @Inject() (
+  http: HttpClient,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext
-){
+)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
 
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")

@@ -23,9 +23,9 @@ import java.util.Date
 object DateHelper {
   val utc = ZoneId.of("UTC")
 
-  val `dd-MM-yyyy HH:mm`: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-  val `dd MMM uuuu HH:mm`: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm")
-  val `yyyy-MM-dd HH:mm z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z")
+  val `dd-MM-yyyy HH:mm`: DateTimeFormatter      = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+  val `dd MMM uuuu HH:mm`: DateTimeFormatter     = DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm")
+  val `yyyy-MM-dd HH:mm z`: DateTimeFormatter    = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z")
   val `yyyy-MM-dd HH:mm:ss z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
 
   implicit class JavaDateToLocalDateTime(d: Date) {

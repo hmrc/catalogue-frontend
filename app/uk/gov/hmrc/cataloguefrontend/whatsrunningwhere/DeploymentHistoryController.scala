@@ -32,7 +32,7 @@ import views.html.DeploymentHistoryPage
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DeploymentHistoryController @Inject()(
+class DeploymentHistoryController @Inject() (
   releasesConnector: ReleasesConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   page: DeploymentHistoryPage,
@@ -45,28 +45,28 @@ class DeploymentHistoryController @Inject()(
 
   private val userProfileUrl = config.getOptional[String]("microservice.services.user-management.profileBaseUrl")
 
-  def history(env: Environment = Production): Action[AnyContent] = Action.async { implicit request =>
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+  def history(env: Environment = Production): Action[AnyContent] =
+    Action.async { implicit request =>
+      implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    form
-      .bindFromRequest()
-      .fold(
-        formWithErrors => Future.successful(BadRequest(page(env, Seq.empty, Seq.empty, None, Pagination(0, pageSize, 0), formWithErrors))),
-        validForm =>
-          for {
-            deployments <- releasesConnector.deploymentHistory(
-                            env,
-                            from    = Some(validForm.from),
-                            to      = Some(validForm.to),
-                            team    = validForm.team,
-                            service = validForm.service,
-                            skip    = validForm.page.map(i => i * pageSize),
-                            limit   = Some(pageSize)
-                          )
-            teams <- teamsAndRepositoriesConnector.allTeams
-            pagination = Pagination(page = validForm.page.getOrElse(0), pageSize = pageSize, total = deployments.total)
-          } yield
-            Ok(
+      form
+        .bindFromRequest()
+        .fold(
+          formWithErrors => Future.successful(BadRequest(page(env, Seq.empty, Seq.empty, None, Pagination(0, pageSize, 0), formWithErrors))),
+          validForm =>
+            for {
+              deployments <- releasesConnector.deploymentHistory(
+                               env,
+                               from = Some(validForm.from),
+                               to = Some(validForm.to),
+                               team = validForm.team,
+                               service = validForm.service,
+                               skip = validForm.page.map(i => i * pageSize),
+                               limit = Some(pageSize)
+                             )
+              teams <- teamsAndRepositoriesConnector.allTeams
+              pagination = Pagination(page = validForm.page.getOrElse(0), pageSize = pageSize, total = deployments.total)
+            } yield Ok(
               page(
                 env,
                 deployments.history,
@@ -75,9 +75,9 @@ class DeploymentHistoryController @Inject()(
                 pagination,
                 form.fill(validForm)
               )
-          )
-      )
-  }
+            )
+        )
+    }
 }
 
 object DeploymentHistoryController {

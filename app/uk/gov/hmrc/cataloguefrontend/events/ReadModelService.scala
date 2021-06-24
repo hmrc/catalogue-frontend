@@ -24,8 +24,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMembe
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReadModelService @Inject()(
-  eventService           : EventService,
+class ReadModelService @Inject() (
+  eventService: EventService,
   userManagementConnector: UserManagementConnector
 )(implicit val ec: ExecutionContext) {
 

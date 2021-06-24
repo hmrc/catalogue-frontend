@@ -28,17 +28,17 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EventRepository @Inject()(
-    mongoComponent: MongoComponent
-  , futureHelpers : FutureHelpers
-  )(implicit ec: ExecutionContext
-  ) extends PlayMongoRepository[Event](
-      mongoComponent = mongoComponent
-    , collectionName = "events"
-    , domainFormat   = Event.format
-    , indexes        = Seq(
-                         IndexModel(descending("timestamp"), IndexOptions().name("eventTimestampIdx"))
-                       )
+class EventRepository @Inject() (
+  mongoComponent: MongoComponent,
+  futureHelpers: FutureHelpers
+)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[Event](
+      mongoComponent = mongoComponent,
+      collectionName = "events",
+      domainFormat = Event.format,
+      indexes = Seq(
+        IndexModel(descending("timestamp"), IndexOptions().name("eventTimestampIdx"))
+      )
     ) {
 
   def add(event: Event): Future[Boolean] =
@@ -53,9 +53,9 @@ class EventRepository @Inject()(
     futureHelpers.withTimerAndCounter("mongo.read") {
       collection
         .find(
-            filter = and(equal("eventType", eventType.toString))
-         )
-         .sort(ascending("timestamp"))
+          filter = and(equal("eventType", eventType.toString))
+        )
+        .sort(ascending("timestamp"))
         .toFuture
     }
 

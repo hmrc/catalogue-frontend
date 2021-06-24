@@ -30,32 +30,35 @@ import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 @Singleton
-class ShutterEventsController @Inject()(
-  mcc      : MessagesControllerComponents,
+class ShutterEventsController @Inject() (
+  mcc: MessagesControllerComponents,
   connector: ShutterConnector
-)(implicit val ec: ExecutionContext
-) extends FrontendController(mcc) {
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
   private val logger = Logger(getClass)
 
-  def shutterEvents: Action[AnyContent] = Action {
-    Redirect(routes.ShutterEventsController.shutterEventsList(Environment.Production))
-  }
+  def shutterEvents: Action[AnyContent] =
+    Action {
+      Redirect(routes.ShutterEventsController.shutterEventsList(Environment.Production))
+    }
 
-  def shutterEventsList(env: Environment, serviceName: Option[String]): Action[AnyContent] = Action.async { implicit request =>
-    val filter = filterFor(env, serviceName)
-    val form = ShutterEventsForm.fromFilter(filter)
+  def shutterEventsList(env: Environment, serviceName: Option[String]): Action[AnyContent] =
+    Action.async { implicit request =>
+      val filter = filterFor(env, serviceName)
+      val form   = ShutterEventsForm.fromFilter(filter)
 
-    connector
-      .shutterEventsByTimestampDesc(filter)
-      .recover {
-        case NonFatal(ex) =>
-          logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
-          Seq.empty
-      }.map { events =>
-        Ok(ShutterEventsPage(events, form, Environment.values))
-      }
-  }
+      connector
+        .shutterEventsByTimestampDesc(filter)
+        .recover {
+          case NonFatal(ex) =>
+            logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
+            Seq.empty
+        }
+        .map { events =>
+          Ok(ShutterEventsPage(events, form, Environment.values))
+        }
+    }
 
   private def filterFor(env: Environment, serviceNameOpt: Option[String]): ShutterEventsFilter =
     ShutterEventsFilter(env, serviceNameOpt.filter(_.trim.nonEmpty))

@@ -33,87 +33,90 @@ import views.html.BobbyRulesTrendPage
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BobbyRulesTrendController @Inject()(
-    mcc            : MessagesControllerComponents
-  , service        : DependenciesService
-  , configConnector: ConfigConnector
-  , serviceDeps    : ServiceDependenciesConnector
-  , page           : BobbyRulesTrendPage
-  )(implicit val ec: ExecutionContext
-  ) extends FrontendController(mcc) {
+class BobbyRulesTrendController @Inject() (
+  mcc: MessagesControllerComponents,
+  service: DependenciesService,
+  configConnector: ConfigConnector,
+  serviceDeps: ServiceDependenciesConnector,
+  page: BobbyRulesTrendPage
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
 
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
       for {
         allRules <- configConnector.bobbyRules.map(_.libraries)
-      } yield
-        Ok(page(
-              form.fill(SearchForm(rules = Seq.empty))
-            , allRules
-            , flags = SlugInfoFlag.values
-            , data  = None
-            ))
+      } yield Ok(
+        page(
+          form.fill(SearchForm(rules = Seq.empty)),
+          allRules,
+          flags = SlugInfoFlag.values,
+          data = None
+        )
+      )
     }
 
   def display: Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        allRules      <- configConnector.bobbyRules
-                           .map(_.libraries)
-                           .map(_.sortBy(- _.from.toEpochDay))
-        pageWithError =  (msg: String) => page(
-                                              form.bindFromRequest().withGlobalError(msg)
-                                            , allRules
-                                            , flags = SlugInfoFlag.values
-                                            , data  = None
-                                            )
+        allRules <- configConnector.bobbyRules
+                      .map(_.libraries)
+                      .map(_.sortBy(-_.from.toEpochDay))
+        pageWithError = (msg: String) =>
+                          page(
+                            form.bindFromRequest().withGlobalError(msg),
+                            allRules,
+                            flags = SlugInfoFlag.values,
+                            data = None
+                          )
         res <- form
-                .bindFromRequest()
-                .fold(
-                    hasErrors = formWithErrors =>
-                      Future.successful(BadRequest(page( formWithErrors
-                                                       , allRules
-                                                       , flags = SlugInfoFlag.values
-                                                       , data  = None
-                                                       )))
-                  , success   = query =>
-                      (for {
-                        violations <- EitherT.right[Result](serviceDeps.getHistoricBobbyRuleViolations)
-                        countData = violations
-                                      .summary
-                                      .filter { case ((r, _), _) => query.rules.contains(s"${r.group}:${r.artefact}:${r.range.range}") }
-                      } yield Ok(page(
-                            form.bindFromRequest()
-                          , allRules
-                          , flags = SlugInfoFlag.values
-                          , Some(countData
-                                   .groupBy { case ((_, e), _) => e }
-                                   .mapValues(cd =>
-                                      BobbyRulesTrendController.GraphData(
-                                          columns = List(("string", "Date")) ++
-                                                    List(("number", "Total")) ++
-                                                    cd.map(_._1).map { case (r, _) => s"${r.group}:${r.artefact}:${r.range.range}"}.toList.map(("number", _))
-                                        , rows    = cd.map(_._2.toList).toList.transpose
-                                                      .map(x => List(x.sum) ++ x)
-                                                      .zipWithIndex.map { case (x, i) => List("\"" + violations.date.plusDays(i).format(DateTimeFormatter.ofPattern("dd MMM")) + "\"") ++ x }
-
-                                        )))
-                          ))
-                      ).merge
-                )
+                 .bindFromRequest()
+                 .fold(
+                   hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, allRules, flags = SlugInfoFlag.values, data = None))),
+                   success = query =>
+                     (for {
+                       violations <- EitherT.right[Result](serviceDeps.getHistoricBobbyRuleViolations)
+                       countData = violations.summary
+                                     .filter { case ((r, _), _) => query.rules.contains(s"${r.group}:${r.artefact}:${r.range.range}") }
+                     } yield Ok(
+                       page(
+                         form.bindFromRequest(),
+                         allRules,
+                         flags = SlugInfoFlag.values,
+                         Some(
+                           countData
+                             .groupBy { case ((_, e), _) => e }
+                             .mapValues(cd =>
+                               BobbyRulesTrendController.GraphData(
+                                 columns = List(("string", "Date")) ++
+                                   List(("number", "Total")) ++
+                                   cd.map(_._1).map { case (r, _) => s"${r.group}:${r.artefact}:${r.range.range}" }.toList.map(("number", _)),
+                                 rows = cd
+                                   .map(_._2.toList)
+                                   .toList
+                                   .transpose
+                                   .map(x => List(x.sum) ++ x)
+                                   .zipWithIndex
+                                   .map { case (x, i) => List("\"" + violations.date.plusDays(i).format(DateTimeFormatter.ofPattern("dd MMM")) + "\"") ++ x }
+                               )
+                             )
+                         )
+                       )
+                     )).merge
+                 )
       } yield res
     }
 
   case class SearchForm(
-      rules: Seq[String]
-    )
+    rules: Seq[String]
+  )
 
   def form() = {
     import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmptySeq
     Form(
       Forms.mapping(
-          "rules" -> Forms.seq(Forms.text).verifying(notEmptySeq)
-        )(SearchForm.apply)(SearchForm.unapply)
+        "rules" -> Forms.seq(Forms.text).verifying(notEmptySeq)
+      )(SearchForm.apply)(SearchForm.unapply)
     )
   }
 }
@@ -124,7 +127,7 @@ object BobbyRulesTrendController {
       s"?rules[]=$group:$artefact:${versionRange.range}"
 
   case class GraphData(
-      columns: List[(String, String)]
-    , rows   : List[List[Any]]
-    )
+    columns: List[(String, String)],
+    rows: List[List[Any]]
+  )
 }

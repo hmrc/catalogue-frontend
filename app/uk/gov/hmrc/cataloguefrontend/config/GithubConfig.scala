@@ -20,7 +20,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
 
 @Singleton
-class GithubConfig @Inject()(configuration: Configuration) {
+class GithubConfig @Inject() (configuration: Configuration) {
 
   val rawUrl = configuration.get[String]("github.open.api.rawurl")
   val token  = configuration.get[String]("github.open.api.key")
