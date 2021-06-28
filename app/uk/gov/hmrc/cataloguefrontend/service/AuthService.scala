@@ -58,9 +58,7 @@ class AuthService @Inject() (
       ownedServiceNames: List[String] <- teams
                                            .traverse { team =>
                                              val providedServices = requiredServiceNames.toList.intersect(team.allServiceNames)
-                                             if (providedServices.isEmpty)
-                                               Future(List.empty)
-                                             else {
+                                             if (providedServices.nonEmpty) {
                                                logger.debug(
                                                  s"checking access for ${request.user.username.value}: Team ${team.name} is found to have GitHub access to services: ${providedServices
                                                    .mkString(",")}"
@@ -69,7 +67,7 @@ class AuthService @Inject() (
                                                  .getTeamMembersFromUMP(team.name)
                                                  .map {
                                                    case Left(UMPError.UnknownTeam) => // Not all teams returned from TeamsAndRepositories (github) exist in UMP
-                                                     logger.debug(s"Team `${team.name}` not found in UMP")
+                                                     logger.warn(s"Team `${team.name}` not found in UMP")
                                                      List.empty
                                                    case Left(umpErr) => sys.error(s"Failed to lookup team members for team `${team.name}` from ump: $umpErr")
                                                    case Right(teamMembers) =>
@@ -77,10 +75,12 @@ class AuthService @Inject() (
                                                        logger.debug(s"checking access for ${request.user.username.value}: Is a member of team ${team.name} according to UMP")
                                                        providedServices
                                                      } else {
-                                                       logger.debug(s"checking access for ${request.user.username.value}: Is not a member of team ${team.name} according to UMP")
+                                                       logger.warn(s"checking access for ${request.user.username.value}: Is not a member of team ${team.name} according to UMP")
                                                        List.empty
                                                      }
                                                  }
+                                             } else {
+                                               Future(List.empty)
                                              }
                                            }
                                            .map(_.flatten)
@@ -90,7 +90,7 @@ class AuthService @Inject() (
     } yield NonEmptyList
       .fromList(missingServices)
       .map { s =>
-        logger.debug(s"checking access for ${request.user.username.value}: Denied access to shutter the following services: ${missingServices.mkString(",")}")
+        logger.warn(s"checking access for ${request.user.username.value}: Denied access to shutter the following services: ${missingServices.mkString(",")}")
         Left(ServiceForbidden(s))
       }
       .getOrElse {
