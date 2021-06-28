@@ -50,9 +50,9 @@ class AuthControllerSpec
 
   "Authenticating" should {
 
-    "redirect to landing page if successful and UMP auth in session" in new Setup {
-      val username            = "n/a"
-      val password            = "n/a"
+    "redirect to landing page with ump token in session on successful login" in new Setup {
+      val username            = "john.smith"
+      val password            = "password"
       val request             = FakeRequest().withFormUrlEncodedBody("username" -> username, "password" -> password)
       val expectedToken       = UmpToken("ump-token")
       val expectedDisplayName = DisplayName("John Smith")
@@ -60,7 +60,23 @@ class AuthControllerSpec
       when(authService.authenticate(eqTo(username), eqTo(password))(any()))
         .thenReturn(Future(Right(TokenAndDisplayName(expectedToken, expectedDisplayName))))
 
-      val result = controller.submit(request)
+      val result: Future[Result] = controller.submit(request)
+
+      redirectLocation(result).get                     shouldBe routes.CatalogueController.index().url
+      Helpers.session(result).apply("ump.token")       shouldBe expectedToken.value
+      Helpers.session(result).apply("ump.displayName") shouldBe expectedDisplayName.value
+    }
+
+    "lower case username sent to ump and redirect to landing page on successful login" in new Setup {
+      val password            = "password"
+      val request             = FakeRequest().withFormUrlEncodedBody("username" -> "John.Smith", "password" -> password)
+      val expectedToken       = UmpToken("ump-token")
+      val expectedDisplayName = DisplayName("John Smith")
+
+      when(authService.authenticate(eqTo("john.smith"), eqTo(password))(any()))
+        .thenReturn(Future(Right(TokenAndDisplayName(expectedToken, expectedDisplayName))))
+
+      val result: Future[Result] = controller.submit(request)
 
       redirectLocation(result).get                     shouldBe routes.CatalogueController.index().url
       Helpers.session(result).apply("ump.token")       shouldBe expectedToken.value
