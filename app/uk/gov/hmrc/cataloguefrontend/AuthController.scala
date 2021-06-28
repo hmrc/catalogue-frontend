@@ -48,8 +48,10 @@ class AuthController @Inject() (authService: AuthService, configuration: Configu
       .fold(
         formWithErrors => Future.successful(BadRequest(sign_in(formWithErrors, selfServiceUrl))),
         signInData =>
+          //Bug fix: User management accepts capitalised names for login. These capitalised names are then returned in the uid field
+          //of token lookups. User names returned in other parts of the user management api are always lower case.
           authService
-            .authenticate(signInData.username, signInData.password)
+            .authenticate(signInData.username.toLowerCase, signInData.password)
             .map {
               case Right(TokenAndDisplayName(UmpToken(token), DisplayName(displayName))) =>
                 val targetUrl = signInData.targetUrl.getOrElse(routes.CatalogueController.index.url)
