@@ -38,7 +38,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
 
       serviceEndpoint(
         GET,
-        "/api/teams",
+        "/api/teams?includeRepos=true",
         willRespondWith = (
           200,
           Some(
@@ -46,8 +46,8 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
                 [
                   {
                     "name":"teamA",
-                    "firstActiveDate": ${firstactivityDate.toInstant(ZoneOffset.UTC).toEpochMilli},
-                    "lastActiveDate": ${lastactivityDate.toInstant(ZoneOffset.UTC).toEpochMilli},
+                    "firstActiveDate": "${firstactivityDate.toInstant(ZoneOffset.UTC)}",
+                    "lastActiveDate": "${lastactivityDate.toInstant(ZoneOffset.UTC)}",
                     "repos": {},
                     "ownedRepos": []
                   }

@@ -116,7 +116,7 @@ class DependencyReportController @Inject() (
   def dependencyReport(): Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        allTeams         <- teamsAndRepositoriesConnector.teamsWithRepositories
+        allTeams         <- teamsAndRepositoriesConnector.allTeams
         digitalServices1 <- teamsAndRepositoriesConnector.allDigitalServices
         digitalServices <- Future
                              .sequence {

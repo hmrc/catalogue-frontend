@@ -22,8 +22,6 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController
 
 class DeploymentsFilterSpec extends UnitSpec {
-
-  import DateHelper._
   import DeploymentHistoryController._
 
   val formData: Map[String, String] =

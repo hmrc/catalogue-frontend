@@ -101,7 +101,7 @@ class AuthServiceSpec
 
     "allow service belonging to team containing user" in new Setup {
       forAll(repoTypeGen) { repoType =>
-        when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
+        when(teamsAndRepositoriesConnector.allTeams(any()))
           .thenReturn(Future(List(team(TeamName("team1"), Map(repoType -> List("service1"))))))
 
         when(userManagementConnector.getTeamMembersFromUMP(TeamName(mockEq("team1")))(any()))
@@ -115,7 +115,7 @@ class AuthServiceSpec
 
     "allow service belonging to multiple teams, one of which contains user" in new Setup {
       forAll(repoTypeGen) { repoType =>
-        when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
+        when(teamsAndRepositoriesConnector.allTeams(any()))
           .thenReturn(Future(List(
               team(TeamName("team1"), Map(repoType -> List("service1")))
             , team(TeamName("team2"), Map(repoType -> List("service1")))
@@ -134,7 +134,7 @@ class AuthServiceSpec
     }
 
     "deny service which are not found in any team" in new Setup {
-      when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
+      when(teamsAndRepositoriesConnector.allTeams(any()))
         .thenReturn(Future(List(team(TeamName("team1"), Map.empty))))
 
       val res = service.authorizeServices(NonEmptyList.of("service1"))(request, hc).futureValue
@@ -144,7 +144,7 @@ class AuthServiceSpec
 
     "deny service which belong to teams not containing user" in new Setup {
       forAll(repoTypeGen) { repoType =>
-        when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
+        when(teamsAndRepositoriesConnector.allTeams(any()))
           .thenReturn(Future(List(team(TeamName("team1"), Map(repoType -> List("service1"))))))
 
         when(userManagementConnector.getTeamMembersFromUMP(TeamName(mockEq("team1")))(any()))
@@ -158,7 +158,7 @@ class AuthServiceSpec
 
     "only report service once if denied from multiple teams" in new Setup {
       forAll(repoTypeGen) { repoType =>
-        when(teamsAndRepositoriesConnector.teamsWithRepositories(any()))
+        when(teamsAndRepositoriesConnector.allTeams(any()))
           .thenReturn(Future(List(
               team(TeamName("team1"), Map(repoType -> List("service1")))
             , team(TeamName("team2"), Map(repoType -> List("service1")))

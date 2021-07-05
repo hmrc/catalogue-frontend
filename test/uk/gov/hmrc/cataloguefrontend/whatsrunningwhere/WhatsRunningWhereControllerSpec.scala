@@ -19,9 +19,6 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-import java.time.Instant
-
-
 class WhatsRunningWhereControllerSpec extends UnitSpec{
   "matchesProduction" should {
     val versionNumberProd    = VersionNumber("0.0.0")

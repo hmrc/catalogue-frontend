@@ -24,8 +24,6 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
-import java.time.Instant
-
 class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with EitherValues {
 
   private lazy val releasesConnector = app.injector.instanceOf[ReleasesConnector]
@@ -216,5 +214,4 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
       response.history.length shouldBe 1
     }
   }
-
 }

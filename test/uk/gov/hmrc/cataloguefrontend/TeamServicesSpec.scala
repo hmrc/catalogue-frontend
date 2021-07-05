@@ -56,7 +56,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show a list of libraries, services, prototypes and repositories" in {
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/teamA",
+        "/api/teams/teamA?includeRepos=true",
         willRespondWith = (
           200,
           Some(
@@ -124,7 +124,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/teamA",
+        "/api/teams/teamA?includeRepos=true",
         willRespondWith = (
           200,
           Some(
@@ -188,7 +188,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show user management portal link" ignore {
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/teamA",
+        "/api/teams/teamA",
         willRespondWith = (
           200,
           Some(
@@ -214,7 +214,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show a message if no services are found" in {
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/teamA",
+        "/api/teams/teamA?includeRepos=true",
         willRespondWith = (
           200,
           Some(
@@ -244,7 +244,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/" + teamName,
+        s"/api/teams/$teamName?includeRepos=true",
         willRespondWith = (
           200,
           Some(
@@ -277,7 +277,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show a First Active and Last Active fields in the Details box" in {
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/" + teamName,
+        s"/api/teams/$teamName?includeRepos=true",
         willRespondWith = (
           200,
           Some(
@@ -316,7 +316,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
         serviceEndpoint(
           GET,
-          "/api/teams_with_details/" + teamName,
+          s"/api/teams/$teamName",
           willRespondWith = (
             200,
             Some(
@@ -353,7 +353,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show error message if UMP is not available" in {
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/teamA",
+        "/api/teams/teamA?includeRepos=true",
         willRespondWith = (
           200,
           Some(
@@ -386,7 +386,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
       serviceEndpoint(
         GET,
-        "/api/teams_with_details/" + teamName,
+        s"/api/teams/$teamName?includeRepos=true",
         willRespondWith = (
           200,
           Some(
