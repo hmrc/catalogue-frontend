@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import java.time.LocalDateTime
+
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -161,7 +163,7 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
     "show service owner" in new MockedCatalogueFrontendSetup {
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
-        .thenReturn(Future(Some(DigitalService(digitalServiceName, 0L, Seq.empty))))
+        .thenReturn(Future(Some(DigitalService(digitalServiceName, LocalDateTime.now(), Seq.empty))))
 
       when(userManagementConnectorMock.getTeamMembersForTeams(any())(any()))
         .thenReturn(Future(Map.empty[TeamName, Either[UMPError, Seq[TeamMember]]]))
@@ -244,7 +246,7 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       val teamName = TeamName("Team1")
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
-        .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
+        .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, LocalDateTime.now(), Nil))))
       when(userManagementConnectorMock.getTeamMembersForTeams(any())(any()))
         .thenReturn(
           Future.successful(
@@ -265,7 +267,7 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       val teamName = TeamName("Team1")
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
-        .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
+        .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, LocalDateTime.now(), Nil))))
       when(userManagementConnectorMock.getTeamMembersForTeams(any())(any()))
         .thenReturn(
           Future.successful(
@@ -286,7 +288,7 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       val teamName = TeamName("Team1")
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
-        .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, 1, Nil))))
+        .thenReturn(Future.successful(Some(DigitalService(digitalServiceName, LocalDateTime.now(), Nil))))
       when(userManagementConnectorMock.getTeamMembersForTeams(any())(any()))
         .thenReturn(
           Future.successful(

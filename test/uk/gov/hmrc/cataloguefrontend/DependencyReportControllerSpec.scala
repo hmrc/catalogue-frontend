@@ -57,11 +57,11 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Fak
 
       when(mockedTeamsAndRepositoriesConnector.digitalServiceInfo(eqTo(digitalService1))(any()))
         .thenReturn(
-          Future.successful(Some(DigitalService(digitalService1, 1, Seq(digitalServiceRepository("repo-1"))))))
+          Future.successful(Some(DigitalService(digitalService1, LocalDateTime.now(), Seq(digitalServiceRepository("repo-1"))))))
 
       when(mockedTeamsAndRepositoriesConnector.digitalServiceInfo(eqTo(digitalService2))(any()))
         .thenReturn(
-          Future.successful(Some(DigitalService(digitalService2, 1, Seq(digitalServiceRepository("repo-2"))))))
+          Future.successful(Some(DigitalService(digitalService2, LocalDateTime.now(), Seq(digitalServiceRepository("repo-2"))))))
     }
 
     def mockTeamsAndTheirRepositories() = {
