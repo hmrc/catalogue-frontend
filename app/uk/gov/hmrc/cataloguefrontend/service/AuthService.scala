@@ -51,7 +51,7 @@ class AuthService @Inject() (
   )(implicit request: UmpAuthenticatedRequest[A], hc: HeaderCarrier): Future[Either[ServiceForbidden, Unit]] = {
     logger.debug(s"Attempt to authorize ${request.user.username.value} to shutter the following services: ${requiredServiceNames.toList.mkString(",")}")
     for {
-      teams <- teamsAndRepositoriesConnector.teamsWithRepositories.map(_.toList)
+      teams <- teamsAndRepositoriesConnector.allTeams.map(_.toList)
 
       // services owned by user's teams
       // services that are not required have been filtered out, so should be a subset of requiredServiceNames

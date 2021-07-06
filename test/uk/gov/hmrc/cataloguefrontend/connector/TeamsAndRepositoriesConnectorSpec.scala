@@ -50,9 +50,7 @@ class TeamsAndRepositoriesConnectorSpec
     app.injector.instanceOf[TeamsAndRepositoriesConnector]
 
   "lookUpLink" should {
-
     "return a Link if exists" in {
-
       serviceEndpoint(
         GET,
         "/api/jenkins-url/serviceA",
@@ -77,7 +75,6 @@ class TeamsAndRepositoriesConnectorSpec
     }
 
     "return None if Not Found" in {
-
       serviceEndpoint(
         GET,
         "/api/jenkins-url/serviceA",
@@ -93,9 +90,7 @@ class TeamsAndRepositoriesConnectorSpec
   }
 
   "teamsByService" should {
-
     "return a list of team information for each given service" in {
-
       serviceEndpoint(
         POST,
         "/api/services?teamDetails=true",
@@ -254,13 +249,13 @@ class TeamsAndRepositoriesConnectorSpec
     }
   }
 
-  "teamsWithRepositories" should {
+  "teams" should {
     "return all the teams and their repositories" in {
-      serviceEndpoint(GET, "/api/teams_with_repositories", willRespondWith = (200, Some(JsonData.teamsWithRepos)))
+      serviceEndpoint(GET, "/api/teams?includeRepos=true", willRespondWith = (200, Some(JsonData.teams)))
 
       val teams: Seq[Team] =
         teamsAndRepositoriesConnector
-          .teamsWithRepositories(HeaderCarrierConverter.fromRequest(FakeRequest()))
+          .allTeams(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
 
       teams.size shouldBe 2

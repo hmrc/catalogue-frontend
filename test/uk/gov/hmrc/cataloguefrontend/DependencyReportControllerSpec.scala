@@ -74,7 +74,7 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Fak
           Some(Map("Service" -> Seq(), "Library" -> Seq(), "Prototype" -> Seq(), "Other" -> repositories))
         )
 
-      when(mockedTeamsAndRepositoriesConnector.teamsWithRepositories(any()))
+      when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
         .thenReturn(Future.successful(Seq(team("team1", Seq("repo-1")), team("team2", Seq("repo-2")))))
     }
 

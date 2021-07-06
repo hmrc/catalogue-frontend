@@ -34,7 +34,7 @@ object JsonData {
       |]
     """.stripMargin
 
-  val teamsWithRepos =
+  val teams =
     """
       |[
       |  {

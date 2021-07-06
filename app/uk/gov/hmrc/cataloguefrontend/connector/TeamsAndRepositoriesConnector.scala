@@ -71,24 +71,25 @@ object TargetEnvironment {
   val format: Format[TargetEnvironment] = {
     implicit val ef = TeamsAndRepositoriesEnvironment.format
     implicit val lf = Link.format
-    ((__ \ "name").format[Environment]
-      ~ (__ \ "services").format[Seq[Link]])(TargetEnvironment.apply, unlift(TargetEnvironment.unapply))
+    ( (__ \ "name"    ).format[Environment]
+    ~ (__ \ "services").format[Seq[Link]]
+    )(TargetEnvironment.apply, unlift(TargetEnvironment.unapply))
   }
 }
 
 case class RepositoryDetails(
-  name: String,
-  description: String,
-  createdAt: LocalDateTime,
-  lastActive: LocalDateTime,
-  owningTeams: Seq[TeamName],
-  teamNames: Seq[TeamName],
-  githubUrl: Link,
-  jenkinsURL: Option[Link],
+  name        : String,
+  description : String,
+  createdAt   : LocalDateTime,
+  lastActive  : LocalDateTime,
+  owningTeams : Seq[TeamName],
+  teamNames   : Seq[TeamName],
+  githubUrl   : Link,
+  jenkinsURL  : Option[Link],
   environments: Option[Seq[TargetEnvironment]],
-  repoType: RepoType.RepoType,
-  isPrivate: Boolean,
-  isArchived: Boolean
+  repoType    : RepoType.RepoType,
+  isPrivate   : Boolean,
+  isArchived  : Boolean
 )
 
 object RepositoryDetails {
@@ -101,7 +102,12 @@ object RepositoryDetails {
   }
 }
 
-case class RepositoryDisplayDetails(name: String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime, repoType: RepoType.RepoType)
+case class RepositoryDisplayDetails(
+  name         : String,
+  createdAt    : LocalDateTime,
+  lastUpdatedAt: LocalDateTime,
+  repoType     : RepoType.RepoType
+)
 
 object RepositoryDisplayDetails {
   val format: OFormat[RepositoryDisplayDetails] = {
@@ -111,14 +117,15 @@ object RepositoryDisplayDetails {
 }
 
 case class Team(
-  name: TeamName,
-  firstActiveDate: Option[LocalDateTime],
-  lastActiveDate: Option[LocalDateTime],
+  name                    : TeamName,
+  firstActiveDate         : Option[LocalDateTime],
+  lastActiveDate          : Option[LocalDateTime],
   firstServiceCreationDate: Option[LocalDateTime],
-  repos: Option[Map[String, Seq[String]]]
+  repos                   : Option[Map[String, Seq[String]]]
 ) {
   //Teams and repos lists legacy java services as 'Other', so relaxing the auth check to be agnostic to repo type
-  def allServiceNames: List[String] = repos.getOrElse(Map.empty).values.flatten.toList
+  def allServiceNames: List[String] =
+    repos.getOrElse(Map.empty).values.flatten.toList
 }
 
 object Team {
@@ -128,10 +135,20 @@ object Team {
   }
 }
 
-case class DigitalService(name: String, lastUpdatedAt: Long, repositories: Seq[DigitalServiceRepository])
+case class DigitalService(
+  name         : String,
+  lastUpdatedAt: Long,
+  repositories : Seq[DigitalServiceRepository]
+)
 
 object DigitalService {
-  case class DigitalServiceRepository(name: String, createdAt: LocalDateTime, lastUpdatedAt: LocalDateTime, repoType: RepoType.RepoType, teamNames: Seq[TeamName])
+  case class DigitalServiceRepository(
+    name         : String,
+    createdAt    : LocalDateTime,
+    lastUpdatedAt: LocalDateTime,
+    repoType     : RepoType.RepoType,
+    teamNames    : Seq[TeamName]
+  )
 
   object DigitalServiceRepository {
     val format: OFormat[DigitalServiceRepository] = {
@@ -172,9 +189,9 @@ object TeamsAndRepositoriesEnvironment {
 
 @Singleton
 class TeamsAndRepositoriesConnector @Inject() (
-  http: HttpClient,
+  http          : HttpClient,
   servicesConfig: ServicesConfig,
-  configuration: Configuration
+  configuration : Configuration
 )(implicit val ec: ExecutionContext) {
   import TeamsAndRepositoriesConnector._
   import HttpReads.Implicits._
@@ -205,13 +222,10 @@ class TeamsAndRepositoriesConnector @Inject() (
   }
 
   def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
-    http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/teams")
-
-  def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] =
-    http.GET[Seq[String]](url"$teamsAndServicesBaseUrl/api/digital-services")
+    http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/teams?includeRepos=true")
 
   def teamInfo(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Option[Team]] = {
-    val url = url"$teamsAndServicesBaseUrl/api/teams_with_details/${teamName.asString}"
+    val url = url"$teamsAndServicesBaseUrl/api/teams/${teamName.asString}?includeRepos=true"
     http
       .GET[Option[Team]](url)
       .recover {
@@ -221,8 +235,8 @@ class TeamsAndRepositoriesConnector @Inject() (
       }
   }
 
-  def teamsWithRepositories(implicit hc: HeaderCarrier): Future[Seq[Team]] =
-    http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/teams_with_repositories")
+  def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] =
+    http.GET[Seq[String]](url"$teamsAndServicesBaseUrl/api/digital-services")
 
   def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[DigitalService]] =
     http.GET[Option[DigitalService]](url"$teamsAndServicesBaseUrl/api/digital-services/$digitalServiceName")
