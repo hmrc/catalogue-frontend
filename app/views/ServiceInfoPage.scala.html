@@ -27,7 +27,9 @@
 
 @this(dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial, buildToolsPartial: BuildToolsPartial, viewMessages: ViewMessages)
 
-@(repositoryDetails            : RepositoryDetails,
+@(
+  serviceName                  : String,
+  repositoryDetails            : RepositoryDetails,
   optMasterDependencies        : Option[Dependencies],
   repositoryCreationDate       : LocalDateTime,
   envDatas                     : Map[SlugInfoFlag, EnvData],
@@ -37,11 +39,11 @@
 )(implicit messages: Messages, request: Request[_])
 
 
-@standard_layout(repositoryDetails.name, "services") {
+@standard_layout(serviceName, "services") {
     <header class="header-with-github-badge">
         <div>
             <h1 id="service-header">
-              Service: @repositoryDetails.name
+              Service: @serviceName
               <span>@githubBadgeType(repositoryDetails)</span>
               @if(repositoryDetails.isArchived) { <span>Archived</span> }
             </h1>
@@ -84,7 +86,7 @@
             </div>
 
             <div class="col-md-6">
-                @partials.code_and_builds(repositoryDetails)
+                @partials.code_and_builds(serviceName, repositoryDetails)
             </div>
         </div>
 

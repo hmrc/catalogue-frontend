@@ -16,19 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import java.time.LocalDateTime
-
-import javax.inject.{Inject, Singleton}
-import play.api.{Configuration, Logger}
-import play.api.libs.json._
+import play.api.Logger
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
-import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.LocalDateTime
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -187,13 +185,9 @@ object TeamsAndRepositoriesEnvironment {
 }
 
 @Singleton
-class TeamsAndRepositoriesConnector @Inject() (
-  http          : HttpClient,
-  servicesConfig: ServicesConfig,
-  configuration : Configuration
-)(implicit val ec: ExecutionContext) {
-  import TeamsAndRepositoriesConnector._
+class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConfig)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
+  import TeamsAndRepositoriesConnector._
 
   private val logger = Logger(getClass)
 

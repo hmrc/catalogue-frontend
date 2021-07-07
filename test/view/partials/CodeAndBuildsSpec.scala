@@ -50,13 +50,13 @@ class CodeAndBuildsSpec extends AnyWordSpec with Matchers with ScalaCheckDrivenP
   "code_and_builds" should {
 
     "display configuration explorer" in {
-      val result = views.html.partials.code_and_builds(repo).body
-      result should include ("href=\"/service/reponame/config\"")
+      val result = views.html.partials.code_and_builds("aService", repo).body
+      result should include ("href=\"/service/aService/config\"")
       result should include ("Config Explorer")
     }
 
     "display the service dependencies link when the repo type is a Service" in {
-      val result = views.html.partials.code_and_builds(repo).body
+      val result = views.html.partials.code_and_builds("aService", repo).body
       result should include("""href="/dependencies/reponame"""")
       result should include("Service Dependencies")
     }
@@ -64,7 +64,7 @@ class CodeAndBuildsSpec extends AnyWordSpec with Matchers with ScalaCheckDrivenP
     import org.scalacheck._
     "not display the service dependencies link when the repo type is anything other than a Service" in {
       forAll(Gen.oneOf(RepoType.Library, RepoType.Other, RepoType.Prototype)) { genRepoType =>
-        val result = views.html.partials.code_and_builds(repo.copy(repoType = genRepoType)).body
+        val result = views.html.partials.code_and_builds("aService", repo.copy(repoType = genRepoType)).body
         result should not include("""href="/dependencies/reponame"""")
         result should not include("Service Dependencies")
       }

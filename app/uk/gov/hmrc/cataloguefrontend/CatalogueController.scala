@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.LocalDateTime
+import cats.data.OptionT
 import cats.implicits._
-
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
+import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
@@ -34,6 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
@@ -42,6 +41,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
+import java.time.LocalDateTime
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class TeamActivityDates(
@@ -113,6 +114,10 @@ class CatalogueController @Inject() (
     RepoType.Library   -> routes.CatalogueController.library _,
     RepoType.Prototype -> routes.CatalogueController.prototype _
   )
+
+  private val logger = Logger(getClass)
+
+  private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
 
   def index(): Action[AnyContent] =
     Action { implicit request =>
@@ -192,7 +197,7 @@ class CatalogueController @Inject() (
                 )
               )
             )
-        case None => Future.successful(NotFound(error_404_template()))
+        case None => Future.successful(notFound)
       }
     }
 
@@ -266,7 +271,7 @@ class CatalogueController @Inject() (
               )
             )
           }
-        case _ => Future.successful(NotFound(error_404_template()))
+        case _ => Future.successful(notFound)
       }
     }
 
@@ -294,61 +299,73 @@ class CatalogueController @Inject() (
       } yield Ok(serviceConfigRawPage(serviceName, configByEnvironment))
     }
 
-  def service(serviceName: String): Action[AnyContent] =
-    Action.async { implicit request =>
-      teamsAndRepositoriesConnector.repositoryDetails(serviceName).flatMap {
-        case Some(repositoryDetails) if repositoryDetails.repoType == RepoType.Service  => buildServicePage(serviceName, repositoryDetails)
-        case _ => Future.successful(NotFound(error_404_template()))
-      }
+  def service(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
+
+    def buildServicePageFromItsArtifactName(serviceName: String): Future[Result] = configService.findArtifactName(serviceName).flatMap {
+      case ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName).getOrElse(notFound)
+      case ArtifactNameNotFound => Future.successful(notFound)
+      case ArtifactNameError(error) =>
+        logger.error(error)
+        Future.successful(InternalServerError)
     }
 
+    def buildServicePageFromRepoName(repoName: String): OptionT[Future, Result] = OptionT(teamsAndRepositoriesConnector.repositoryDetails(repoName))
+      .semiflatMap {
+        case repositoryDetails if repositoryDetails.repoType == RepoType.Service => buildServicePage(serviceName, repositoryDetails)
+        case _ => Future.successful(notFound)
+      }
+
+    buildServicePageFromRepoName(serviceName).getOrElseF(buildServicePageFromItsArtifactName(serviceName))
+  }
+
   private def buildServicePage(serviceName: String, repositoryDetails: RepositoryDetails)(implicit hc: HeaderCarrier, messages: Messages, request: Request[_]) = {
+    val repositoryName = repositoryDetails.name
     val futEnvDatas: Future[Map[SlugInfoFlag, EnvData]] =
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         res <- Environment.values.traverse { env =>
-          val slugInfoFlag = SlugInfoFlag.ForEnvironment(env)
-          val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
-          // a single environment may have multiple versions during a deployment
-          // return the lowest
-          deployedVersions.sorted.headOption match {
-            case Some(version) =>
-              val telemetryLinks =
-                (for {
-                  targetEnvironments <- repositoryDetails.environments.toSeq
-                  targetEnvironment <- targetEnvironments
-                  if targetEnvironment.environment == env
-                } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)).flatten
+                 val slugInfoFlag     = SlugInfoFlag.ForEnvironment(env)
+                 val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
+                 // a single environment may have multiple versions during a deployment
+                 // return the lowest
+                 deployedVersions.sorted.headOption match {
+                   case Some(version) =>
+                     val telemetryLinks =
+                       (for {
+                         targetEnvironments <- repositoryDetails.environments.toSeq
+                         targetEnvironment  <- targetEnvironments
+                         if targetEnvironment.environment == env
+                       } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)).flatten
 
-              (
-                serviceDependencyConnector.getCuratedSlugDependencies(serviceName, slugInfoFlag),
-                shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
-                ).mapN { (dependencies, optShutterState) =>
-                Some(
-                  slugInfoFlag ->
-                    EnvData(
-                      version = version,
-                      dependencies = dependencies,
-                      optShutterState = optShutterState,
-                      optTelemetryLinks = Some(telemetryLinks)
-                    )
-                )
-              }
-            case None => Future.successful(None)
-          }
-        }
+                     (
+                       serviceDependencyConnector.getCuratedSlugDependencies(repositoryName, slugInfoFlag),
+                       shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
+                     ).mapN { (dependencies, optShutterState) =>
+                       Some(
+                         slugInfoFlag ->
+                           EnvData(
+                             version = version,
+                             dependencies = dependencies,
+                             optShutterState = optShutterState,
+                             optTelemetryLinks = Some(telemetryLinks)
+                           )
+                       )
+                     }
+                   case None => Future.successful(None)
+                 }
+               }
       } yield res.collect { case Some(v) => v }.toMap
 
     (
-      teamsAndRepositoriesConnector.lookupLink(serviceName),
+      teamsAndRepositoriesConnector.lookupLink(repositoryName),
       futEnvDatas,
-      serviceDependencyConnector.getDependencies(serviceName),
-      serviceDependencyConnector.getCuratedSlugDependencies(serviceName, SlugInfoFlag.Latest),
-      leakDetectionService.urlIfLeaksFound(serviceName),
+      serviceDependencyConnector.getDependencies(repositoryName),
+      serviceDependencyConnector.getCuratedSlugDependencies(repositoryName, SlugInfoFlag.Latest),
+      leakDetectionService.urlIfLeaksFound(repositoryName),
       routeRulesService.serviceUrl(serviceName),
       routeRulesService.serviceRoutes(serviceName),
-      serviceDependencyConnector.getSlugInfo(serviceName)
-      ).mapN { (jenkinsLink, envDatas, optMasterDependencies, librariesOfLatestSlug, urlIfLeaksFound, serviceUrl, serviceRoutes, optLatestServiceInfo) =>
+      serviceDependencyConnector.getSlugInfo(repositoryName)
+    ).mapN { (jenkinsLink, envDatas, optMasterDependencies, librariesOfLatestSlug, urlIfLeaksFound, serviceUrl, serviceRoutes, optLatestServiceInfo) =>
       val optLatestData: Option[(SlugInfoFlag, EnvData)] =
         optLatestServiceInfo.map { latestServiceInfo =>
           SlugInfoFlag.Latest ->
@@ -362,6 +379,7 @@ class CatalogueController @Inject() (
 
       Ok(
         serviceInfoPage(
+          serviceName = serviceName,
           repositoryDetails = repositoryDetails.copy(jenkinsURL = jenkinsLink),
           optMasterDependencies = optMasterDependencies,
           repositoryCreationDate = repositoryDetails.createdAt,
@@ -385,7 +403,7 @@ class CatalogueController @Inject() (
         case Some(s) if s.repoType == Library =>
           Ok(libraryInfoPage(s.copy(jenkinsURL = jenkinsLink), optDependencies, urlIfLeaksFound))
         case _ =>
-          NotFound(error_404_template())
+          notFound
       }
     }
 
@@ -397,7 +415,7 @@ class CatalogueController @Inject() (
       } yield repository match {
         case Some(s) if s.repoType == RepoType.Prototype =>
           Ok(prototypeInfoPage(s.copy(environments = None), s.createdAt, urlIfLeaksFound))
-        case None => NotFound(error_404_template())
+        case None => notFound
       }
     }
 
@@ -426,7 +444,7 @@ class CatalogueController @Inject() (
               optUrlIfLeaksFound
             )
           )
-        case _ => NotFound(error_404_template())
+        case _ => notFound
       }
     }
 

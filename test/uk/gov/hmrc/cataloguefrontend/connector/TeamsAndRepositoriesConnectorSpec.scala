@@ -90,7 +90,7 @@ class TeamsAndRepositoriesConnectorSpec
 
   "repositoryDetails" should {
     "convert the json string to RepositoryDetails" in {
-      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(JsonData.serviceDetailsData)))
+      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(JsonData.repositoryData())))
       serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(JsonData.serviceJenkinsData)))
 
       val responseData: RepositoryDetails =
