@@ -24,7 +24,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
-import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -86,35 +85,6 @@ class TeamsAndRepositoriesConnectorSpec
         .futureValue
 
       response shouldBe None
-    }
-  }
-
-  "teamsByService" should {
-    "return a list of team information for each given service" in {
-      serviceEndpoint(
-        POST,
-        "/api/services?teamDetails=true",
-        givenJsonBody = Some(Json.arr("serviceA", "serviceB").toString()),
-        willRespondWith = (
-          200,
-          Some(
-            """
-          |	{
-          |		"serviceA": ["teamA","teamB"],
-          |		"serviceB": ["teamA"]
-          |	}
-          | """.stripMargin
-          )
-        )
-      )
-
-      val response = teamsAndRepositoriesConnector
-        .teamsByService(Seq("serviceA", "serviceB"))(HeaderCarrierConverter.fromRequest(FakeRequest()))
-        .futureValue
-
-      response.size        shouldBe 2
-      response("serviceA") shouldBe Seq(TeamName("teamA"), TeamName("teamB"))
-      response("serviceB") shouldBe Seq(TeamName("teamA"))
     }
   }
 

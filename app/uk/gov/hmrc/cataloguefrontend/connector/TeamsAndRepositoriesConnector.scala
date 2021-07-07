@@ -20,7 +20,6 @@ import java.time.LocalDateTime
 
 import javax.inject.{Inject, Singleton}
 import play.api.{Configuration, Logger}
-import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
@@ -137,7 +136,7 @@ object Team {
 
 case class DigitalService(
   name         : String,
-  lastUpdatedAt: Long,
+  lastUpdatedAt: LocalDateTime,
   repositories : Seq[DigitalServiceRepository]
 )
 
@@ -250,15 +249,9 @@ class TeamsAndRepositoriesConnector @Inject() (
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] =
     http.GET[Option[RepositoryDetails]](url"$teamsAndServicesBaseUrl/api/repositories/$name")
 
-  def teamsByService(serviceNames: Seq[String])(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
-    http.POST[JsValue, Map[ServiceName, Seq[TeamName]]](
-      url"$teamsAndServicesBaseUrl/api/services?teamDetails=true",
-      Json.arr(serviceNames.map(toJsFieldJsValueWrapper(_)): _*)
-    )
-
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http.GET[Map[ServiceName, Seq[TeamName]]](
-      url"$teamsAndServicesBaseUrl/api/services?teamDetails=true"
+      url"$teamsAndServicesBaseUrl/api/repository_teams"
     )
 
   private def repositories(archived: Option[Boolean])(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =

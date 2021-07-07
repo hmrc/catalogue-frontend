@@ -19,18 +19,21 @@ package uk.gov.hmrc.cataloguefrontend.healthindicators
 import com.github.tomakehurst.wiremock.http.RequestMethod.GET
 import org.mockito.MockitoSugar
 import org.scalatest.OptionValues
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.ws.{WSClient, WSResponse}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 
-class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with FakeApplicationBuilder with OptionValues with ScalaFutures {
-
-  implicit val defaultPatience =
-    PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
+class HealthIndicatorsControllerSpec
+  extends AnyWordSpec
+     with Matchers
+     with MockitoSugar
+     with FakeApplicationBuilder
+     with OptionValues
+     with ScalaFutures
+     with IntegrationPatience {
 
   "HealthIndicatorsController.indicatorsForRepo()" should {
     "respond with status 200 and contain specified elements" in new Setup {
@@ -76,7 +79,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
 
       serviceEndpoint(
         GET,
-        "/api/services?teamDetails=true",
+        "/api/repository_teams",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -96,7 +99,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
 
       serviceEndpoint(
         GET,
-        "/api/services?teamDetails=true",
+        "/api/repository_teams",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -116,7 +119,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
 
       serviceEndpoint(
         GET,
-        "/api/services?teamDetails=true",
+        "/api/repository_teams",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -138,7 +141,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
 
       serviceEndpoint(
         GET,
-        "/api/services?teamDetails=true",
+        "/api/repository_teams",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -158,7 +161,7 @@ class HealthIndicatorsControllerSpec extends AnyWordSpec with Matchers with Mock
 
       serviceEndpoint(
         GET,
-        "/api/services?teamDetails=true",
+        "/api/repository_teams",
         willRespondWith = (200, Some(teamsJSON))
       )
 
