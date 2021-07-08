@@ -316,6 +316,7 @@ class CatalogueController @Inject() (
       }
 
     buildServicePageFromRepoName(serviceName).getOrElseF(buildServicePageFromItsArtifactName(serviceName))
+
   }
 
   private def buildServicePage(serviceName: String, repositoryDetails: RepositoryDetails)(implicit hc: HeaderCarrier, messages: Messages, request: Request[_]) = {
