@@ -16,32 +16,46 @@
 
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
-import com.github.tomakehurst.wiremock.http.RequestMethod.GET
+import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.healthindicators.MetricType.{BobbyRule, BuildStability, LeakDetection, ReadMe}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.WireMockSupport
 
 class HealthIndicatorsConnectorSpec
   extends AnyWordSpec
-    with Matchers
-    with OptionValues
-    with FakeApplicationBuilder{
+     with Matchers
+     with OptionValues
+     with GuiceOneAppPerSuite
+     with WireMockSupport {
 
-  private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+  private implicit val hc: HeaderCarrier = HeaderCarrier()
 
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
+      .configure(
+        Map(
+          "microservice.services.health-indicators.port" -> wireMockPort,
+          "microservice.services.health-indicators.host" -> wireMockHost,
+          "metrics.jvm"                                  -> false
+        )
+      )
+      .build()
 
   private lazy val healthIndicatorsConnector = app.injector.instanceOf[HealthIndicatorsConnector]
 
   "getIndicator()" should {
     "return a indicator for a repo when given a valid repo name" in {
-      serviceEndpoint(
-        GET,
-        "/health-indicators/indicators/team-indicator-dashboard-frontend",
-        willRespondWith = (200, Some(testJson1Repo))
+      stubFor(
+        get(urlEqualTo("/health-indicators/indicators/team-indicator-dashboard-frontend"))
+          .willReturn(aResponse().withBody(testJson1Repo))
       )
 
       val response = healthIndicatorsConnector.getIndicator("team-indicator-dashboard-frontend")
@@ -67,13 +81,10 @@ class HealthIndicatorsConnectorSpec
     }
 
     "return None when repo is not found" in {
-      serviceEndpoint(
-        GET,
-        "/health-indicators/indicators/team-indicator-dashboard-frontend",
-        willRespondWith = (
-          404,
-          None
-        ))
+      stubFor(
+        get(urlEqualTo("/health-indicators/indicators/team-indicator-dashboard-frontend"))
+          .willReturn(aResponse().withStatus(404))
+      )
 
       val response = healthIndicatorsConnector
         .getIndicator("team-indicator-dashboard-frontend")
@@ -85,10 +96,9 @@ class HealthIndicatorsConnectorSpec
 
   "getAllIndicators()" should {
     "return a list of indicators" in {
-      serviceEndpoint(
-        GET,
-        "/health-indicators/indicators?sort=desc",
-        willRespondWith = (200, Some(testJson3Repo))
+      stubFor(
+        get(urlEqualTo("/health-indicators/indicators?sort=desc"))
+          .willReturn(aResponse().withBody(testJson3Repo))
       )
 
       val response = healthIndicatorsConnector.getAllIndicators(RepoType.AllTypes)
@@ -104,70 +114,72 @@ class HealthIndicatorsConnectorSpec
     }
   }
 
-  private val testJson1Repo: String = """{
-                   |  "repoName": "team-indicator-dashboard-frontend",
-                   |  "repoType": "Service",
-                   |  "overallScore": -450,
-                   |  "weightedMetrics": [
-                   |    {
-                   |      "metricType": "bobby-rule",
-                   |      "score": -400,
-                   |      "breakdown": [
-                   |        {
-                   |          "points": -100,
-                   |          "description": "frontend-bootstrap - Bug in Metrics Reporting"
-                   |        },
-                   |        {
-                   |          "points": -100,
-                   |          "description": "frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)"
-                   |        }
-                   |      ]
-                   |    },
-                   |    {
-                   |      "metricType": "leak-detection",
-                   |      "score": 0,
-                   |      "breakdown": []
-                   |    },
-                   |    {
-                   |      "metricType": "read-me",
-                   |      "score": -50,
-                   |      "breakdown": [
-                   |        {
-                   |          "points": -50,
-                   |          "description": "No Readme defined"
-                   |        }
-                   |      ]
-                   |    },
-                   |{
-                   |      "metricType": "build-stability",
-                   |      "score": 0,
-                   |      "breakdown": [
-                   |        {
-                   |          "points": 0,
-                   |          "description": "Build Not Found"
-                   |        }
-                   |      ]
-                   |    }
-                   |  ]
-                   |}""".stripMargin
+  private val testJson1Repo: String =
+    """{
+        "repoName": "team-indicator-dashboard-frontend",
+        "repoType": "Service",
+        "overallScore": -450,
+        "weightedMetrics": [
+          {
+            "metricType": "bobby-rule",
+            "score": -400,
+            "breakdown": [
+              {
+                "points": -100,
+                "description": "frontend-bootstrap - Bug in Metrics Reporting"
+              },
+              {
+                "points": -100,
+                "description": "frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)"
+              }
+            ]
+          },
+          {
+            "metricType": "leak-detection",
+            "score": 0,
+            "breakdown": []
+          },
+          {
+            "metricType": "read-me",
+            "score": -50,
+            "breakdown": [
+              {
+                "points": -50,
+                "description": "No Readme defined"
+              }
+            ]
+          },
+      {
+            "metricType": "build-stability",
+            "score": 0,
+            "breakdown": [
+              {
+                "points": 0,
+                "description": "Build Not Found"
+              }
+            ]
+          }
+        ]
+      }"""
 
 
-  private val testJson3Repo: String = """[{
-                  |  "repoName": "team-indicator-dashboard-frontend",
-                  |  "repoType": "Service",
-                  |  "overallScore": -450,
-                  |  "weightedMetrics": []
-                  |},
-                  |{
-                  | "repoName": "api-platform-scripts",
-                  | "repoType": "Other",
-                  | "overallScore": 50,
-                  | "weightedMetrics": []
-                  |},
-                  |{
-                  | "repoName": "the-childcare-service-prototype",
-                  | "repoType": "Prototype",
-                  | "overallScore": 50,
-                  | "weightedMetrics": []
-                  |}]""".stripMargin
+  private val testJson3Repo: String =
+    """[{
+        "repoName": "team-indicator-dashboard-frontend",
+        "repoType": "Service",
+        "overallScore": -450,
+        "weightedMetrics": []
+      },
+      {
+       "repoName": "api-platform-scripts",
+       "repoType": "Other",
+       "overallScore": 50,
+       "weightedMetrics": []
+      },
+      {
+       "repoName": "the-childcare-service-prototype",
+       "repoType": "Prototype",
+       "overallScore": 50,
+       "weightedMetrics": []
+      }]"""
 }

@@ -16,52 +16,66 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.mockito.MockitoSugar
+import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{BeforeAndAfterEach, EitherValues, OptionValues}
+import org.scalatest.concurrent.{ScalaFutures, IntegrationPatience}
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.time.{Millis, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{BeforeAndAfter, EitherValues, OptionValues}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
 import play.api.test.FakeRequest
+import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.{FakeApplicationBuilder, JsonData}
+import uk.gov.hmrc.cataloguefrontend.JsonData
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 class TeamsAndRepositoriesConnectorSpec
-    extends AnyWordSpec
-    with Matchers
-    with BeforeAndAfter
-    with ScalaFutures
-    with FakeApplicationBuilder
-    with TypeCheckedTripleEquals
-    with OptionValues
-    with EitherValues
-    with MockitoSugar {
+  extends AnyWordSpec
+     with Matchers
+     with BeforeAndAfterEach
+     with ScalaFutures
+     with IntegrationPatience
+     with GuiceOneAppPerSuite
+     with WireMockSupport
+     with TypeCheckedTripleEquals
+     with OptionValues
+     with EitherValues {
 
   import JsonData.{createdAt, lastActiveAt}
 
-  implicit val defaultPatienceConfig: PatienceConfig = PatienceConfig(Span(200, Millis), Span(15, Millis))
+  override def fakeApplication: Application =
+    new GuiceApplicationBuilder()
+      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
+      .configure(
+        Map(
+          "microservice.services.teams-and-repositories.host" -> wireMockHost,
+          "microservice.services.teams-and-repositories.port" -> wireMockPort,
+          "metrics.jvm"            -> false
+        ))
+      .build()
 
   private lazy val teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector =
     app.injector.instanceOf[TeamsAndRepositoriesConnector]
 
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
   "lookUpLink" should {
     "return a Link if exists" in {
-      serviceEndpoint(
-        GET,
-        "/api/jenkins-url/serviceA",
-        willRespondWith = (
-          200,
-          Some(
-            """
-              |	{
-              |		"service": "serviceA",
-              |   "jenkinsURL": "http.jenkins/serviceA"
-              |	}
-              | """.stripMargin
+      stubFor(
+        get(urlEqualTo("/api/jenkins-url/serviceA"))
+          .willReturn(
+            aResponse()
+            .withBody(
+              """
+                {
+                  "service": "serviceA",
+                  "jenkinsURL": "http.jenkins/serviceA"
+                }
+              """
           )
         )
       )
@@ -74,10 +88,9 @@ class TeamsAndRepositoriesConnectorSpec
     }
 
     "return None if Not Found" in {
-      serviceEndpoint(
-        GET,
-        "/api/jenkins-url/serviceA",
-        willRespondWith = (404, None)
+      stubFor(
+        get(urlEqualTo("/api/jenkins-url/serviceA"))
+          .willReturn(aResponse().withStatus(404))
       )
 
       val response = teamsAndRepositoriesConnector
@@ -90,8 +103,14 @@ class TeamsAndRepositoriesConnectorSpec
 
   "repositoryDetails" should {
     "convert the json string to RepositoryDetails" in {
-      serviceEndpoint(GET, "/api/repositories/service-1", willRespondWith = (200, Some(JsonData.repositoryData())))
-      serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(JsonData.serviceJenkinsData)))
+      stubFor(
+        get(urlEqualTo("/api/repositories/service-1"))
+          .willReturn(aResponse().withBody(JsonData.repositoryData()))
+      )
+      stubFor(
+        post(urlEqualTo("/api/jenkins-url/service01"))
+          .willReturn(aResponse().withBody(JsonData.serviceJenkinsData))
+      )
 
       val responseData: RepositoryDetails =
         teamsAndRepositoriesConnector
@@ -138,7 +157,10 @@ class TeamsAndRepositoriesConnectorSpec
 
   "allRepositories" should {
     "return all the repositories returned by the api" in {
-      serviceEndpoint(GET, "/api/repositories", willRespondWith = 200 -> Some(JsonData.repositoriesData))
+      stubFor(
+        get(urlEqualTo("/api/repositories"))
+          .willReturn(aResponse().withBody(JsonData.repositoriesData))
+      )
 
       val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
         .allRepositories(HeaderCarrierConverter.fromRequest(FakeRequest()))
@@ -164,7 +186,10 @@ class TeamsAndRepositoriesConnectorSpec
 
   "archivedRepositories" should {
     "return all the archived repositories returned by the api" in {
-      serviceEndpoint(GET, "/api/repositories?archived=true", willRespondWith = 200 -> Some(JsonData.repositoriesData))
+      stubFor(
+        get(urlEqualTo("/api/repositories?archived=true"))
+          .willReturn(aResponse().withBody(JsonData.repositoriesData))
+      )
 
       val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
         .archivedRepositories(HeaderCarrierConverter.fromRequest(FakeRequest()))
@@ -189,26 +214,29 @@ class TeamsAndRepositoriesConnectorSpec
 
   "digitalServiceInfo" should {
     "convert the json string to DigitalServiceDetails" in {
-      serviceEndpoint(
-        GET,
-        "/api/digital-services/service-1",
-        willRespondWith = (200, Some(JsonData.digitalServiceData)))
+      stubFor(
+        get(urlEqualTo("/api/digital-services/service-1"))
+          .willReturn(aResponse().withBody(JsonData.digitalServiceData))
+      )
 
       val responseData =
         teamsAndRepositoriesConnector
           .digitalServiceInfo("service-1")(HeaderCarrierConverter.fromRequest(FakeRequest()))
           .futureValue
-          .get
+          .value
 
       responseData.name shouldBe "service-1"
 
-      responseData.repositories.size should ===(3)
+      responseData.repositories.size shouldBe 3
     }
   }
 
   "allDigitalServices" should {
     "return all the digital service names" in {
-      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(JsonData.digitalServiceNamesData)))
+      stubFor(
+        get(urlEqualTo("/api/digital-services"))
+          .willReturn(aResponse().withBody(JsonData.digitalServiceNamesData))
+      )
 
       val digitalServiceNames: Seq[String] =
         teamsAndRepositoriesConnector
@@ -221,7 +249,10 @@ class TeamsAndRepositoriesConnectorSpec
 
   "teams" should {
     "return all the teams and their repositories" in {
-      serviceEndpoint(GET, "/api/teams?includeRepos=true", willRespondWith = (200, Some(JsonData.teams)))
+      stubFor(
+        get(urlEqualTo("/api/teams?includeRepos=true"))
+          .willReturn(aResponse().withBody(JsonData.teams))
+      )
 
       val teams: Seq[Team] =
         teamsAndRepositoriesConnector

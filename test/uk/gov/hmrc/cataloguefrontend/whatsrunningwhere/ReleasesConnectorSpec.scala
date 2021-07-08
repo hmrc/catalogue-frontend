@@ -16,52 +16,59 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import com.github.tomakehurst.wiremock.http.RequestMethod._
-import org.scalatest._
-import play.api.test.FakeRequest
+import com.github.tomakehurst.wiremock.client.WireMock._
+import org.scalatest.EitherValues
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.WireMockSupport
 
-class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with EitherValues {
+class ReleasesConnectorSpec
+  extends UnitSpec
+     with FakeApplicationBuilder
+     with WireMockSupport
+     with EitherValues {
 
   private lazy val releasesConnector = app.injector.instanceOf[ReleasesConnector]
 
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
   "WhatsRunningWhere" should {
     "return all releases if profile not supplied" in {
-      serviceEndpoint(
-        GET,
-        "/releases-api/whats-running-where",
-        queryParameters = Seq.empty,
-        willRespondWith = (
-          200,
-          Some("""[
-                 |  {
-                 |    "applicationName": "api-definition",
-                 |    "versions": [
-                 |      {
-                 |        "environment": "integration",
-                 |        "versionNumber": "1.57.0",
-                 |        "lastSeen": "2019-05-29T14:09:48Z"
-                 |      }
-                 |    ]
-                 |  },
-                 |  {
-                 |    "applicationName": "api-documentation",
-                 |    "versions": [
-                 |      {
-                 |        "environment": "integration",
-                 |        "versionNumber": "0.44.0",
-                 |        "lastSeen": "2019-05-29T14:09:46Z"
-                 |      }
-                 |    ]
-                 |  }
-                 |]""".stripMargin))
+      stubFor(
+        get(urlPathEqualTo("/releases-api/whats-running-where"))
+          .willReturn(
+            aResponse()
+            .withBody(
+              """[
+                   {
+                     "applicationName": "api-definition",
+                     "versions": [
+                       {
+                         "environment": "integration",
+                         "versionNumber": "1.57.0",
+                         "lastSeen": "2019-05-29T14:09:48Z"
+                       }
+                     ]
+                   },
+                   {
+                     "applicationName": "api-documentation",
+                     "versions": [
+                       {
+                         "environment": "integration",
+                         "versionNumber": "0.44.0",
+                         "lastSeen": "2019-05-29T14:09:46Z"
+                       }
+                     ]
+                   }
+                 ]"""
+            )
+          )
       )
 
       val response =
-        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromRequest(FakeRequest())).futureValue
+        releasesConnector.releases(profile = None).futureValue
 
       response should contain theSameElementsAs Seq(
         WhatsRunningWhere(
@@ -83,16 +90,12 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
       val profileType = ProfileType.ServiceManager
       val profileName = ProfileName("profile1")
 
-      serviceEndpoint(
-        GET,
-        s"/releases-api/whats-running-where",
-        queryParameters = Seq(
-          "profileName" -> profileName.asString,
-          "profileType" -> profileType.asString
-        ),
-        willRespondWith = (
-          200,
-          Some("""[
+      stubFor(
+        get(urlPathEqualTo("/releases-api/whats-running-where"))
+          .willReturn(
+            aResponse()
+            .withBody(
+              """[
                    {
                      "applicationName": "api-definition",
                      "versions": [
@@ -102,14 +105,14 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
                        }
                      ]
                    }
-                 ]"""))
+                 ]"""
+            )
+          )
       )
 
       val response =
         releasesConnector
-          .releases(profile = Some(Profile(profileType, profileName)))(
-            HeaderCarrierConverter.fromRequest(FakeRequest())
-          )
+          .releases(profile = Some(Profile(profileType, profileName)))
           .futureValue
 
       response should contain theSameElementsAs Seq(
@@ -120,18 +123,26 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
           )
         )
       )
+
+      wireMockServer.verify(
+        getRequestedFor(urlPathEqualTo("/releases-api/whats-running-where"))
+          .withQueryParam("profileName", equalTo(profileName.asString))
+          .withQueryParam("profileType", equalTo(profileType.asString))
+      )
     }
 
     "return empty upon error" in {
-      serviceEndpoint(
-        GET,
-        s"/releases-api/whats-running-where",
-        queryParameters = Seq.empty,
-        willRespondWith = (500, Some("errors!"))
+      stubFor(
+        get(urlPathEqualTo("/releases-api/whats-running-where"))
+          .willReturn(
+            aResponse()
+            .withStatus(500)
+            .withBody("errors!")
+          )
       )
 
       val response =
-        releasesConnector.releases(profile = None)(HeaderCarrierConverter.fromRequest(FakeRequest())).futureValue
+        releasesConnector.releases(profile = None).futureValue
 
       response shouldBe Seq.empty
     }
@@ -139,38 +150,40 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
 
   "profiles" should {
     "return all profileNames" in {
-      serviceEndpoint(
-        GET,
-        s"/releases-api/profiles",
-        willRespondWith = (
-          200,
-          Some("""[
-              |  {"type": "servicemanager",
-              |   "name": "tcs_all",
-              |   "apps": [
-              |     "identity-verification-frontend",
-              |     "identity-verification"
-              |    ]
-              |  },
-              |  {"type": "servicemanager",
-              |   "name": "tpsa",
-              |   "apps": [
-              |     "dtxe",
-              |     "dtxe-validator"
-              |    ]
-              |  },
-              |  {"type": "team",
-              |   "name": "trusts",
-              |   "apps": [
-              |     "trust-registration-api",
-              |     "trust-registration-stub"
-              |   ]
-              |  }
-              |]""".stripMargin))
+      stubFor(
+        get(urlPathEqualTo("/releases-api/profiles"))
+          .willReturn(
+            aResponse()
+            .withBody(
+              """[
+                { "type": "servicemanager",
+                  "name": "tcs_all",
+                  "apps": [
+                    "identity-verification-frontend",
+                    "identity-verification"
+                   ]
+                },
+                { "type": "servicemanager",
+                  "name": "tpsa",
+                  "apps": [
+                    "dtxe",
+                    "dtxe-validator"
+                  ]
+                },
+                { "type": "team",
+                  "name": "trusts",
+                  "apps": [
+                    "trust-registration-api",
+                    "trust-registration-stub"
+                  ]
+                }
+              ]"""
+            )
+          )
       )
 
       val response =
-        releasesConnector.profiles(HeaderCarrierConverter.fromRequest(FakeRequest())).futureValue
+        releasesConnector.profiles.futureValue
 
       response should contain theSameElementsAs Seq(
         Profile(ProfileType.ServiceManager, ProfileName("tcs_all")),
@@ -182,36 +195,42 @@ class ReleasesConnectorSpec extends UnitSpec with FakeApplicationBuilder with Ei
 
   "deploymentHistory" should {
     "return a paginated deployment history with total extracted from header" in {
-
-      serviceEndpoint(
-        GET,
-        s"/releases-api/deployments/production",
-        queryParameters = Seq(
-          "service" -> "income-tax-submission-frontend",
-          "skip"    -> "20",
-          "limit"   -> "1"
-        ),
-        extraHeaders = Map(("X-Total-Count" -> "100")),
-        willRespondWith = (
-          200,
-          Some("""[
-              |{
-              | "serviceName":"income-tax-submission-frontend",
-              | "environment":"production",
-              | "version":"0.98.0",
-              | "teams":[],
-              | "time":"2021-03-24T14:16:41Z",
-              | "username":"remoteRequest"
-              |}
-              |]""".stripMargin))
+      stubFor(
+        get(urlPathEqualTo("/releases-api/deployments/production"))
+          .willReturn(
+            aResponse()
+            .withBody(
+              """[
+                {
+                "serviceName":"income-tax-submission-frontend",
+                "environment":"production",
+                "version":"0.98.0",
+                "teams":[],
+                "time":"2021-03-24T14:16:41Z",
+                "username":"remoteRequest"
+                }
+              ]"""
+            )
+            .withHeader("X-Total-Count", "100")
+          )
       )
 
       val response = releasesConnector
-        .deploymentHistory(Environment.Production, service = Some("income-tax-submission-frontend"), skip = Some(20), limit = Some(1))(
-          HeaderCarrierConverter.fromRequest(FakeRequest()))
+        .deploymentHistory(
+          Environment.Production,
+          service = Some("income-tax-submission-frontend"),
+          skip    = Some(20),
+          limit   = Some(1))
         .futureValue
       response.total          shouldBe 100
       response.history.length shouldBe 1
+
+      wireMockServer.verify(
+        getRequestedFor(urlPathEqualTo("/releases-api/deployments/production"))
+          .withQueryParam("service", equalTo("income-tax-submission-frontend"))
+          .withQueryParam("skip"   , equalTo("20"))
+          .withQueryParam("limit"  , equalTo("1"))
+      )
     }
   }
 }

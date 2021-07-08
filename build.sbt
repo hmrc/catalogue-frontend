@@ -4,23 +4,19 @@ import play.sbt.routes.RoutesKeys
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
 
-val appName = "catalogue-frontend"
+val silencerVersion = "1.7.5"
 
-val silencerVersion = "1.7.2"
-
-lazy val microservice = Project(appName, file("."))
-  .enablePlugins(
-    Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin): _*)
+lazy val microservice = Project("catalogue-frontend", file("."))
+  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(publishingSettings: _*)
   .settings(
     majorVersion := 4,
-    scalaVersion := "2.12.13",
+    scalaVersion := "2.12.14",
     scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
     // ***************
-    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
     RoutesKeys.routesImport ++= Seq(
         "uk.gov.hmrc.cataloguefrontend.connector.model.TeamName",
         "uk.gov.hmrc.cataloguefrontend.model.Environment",
@@ -36,13 +32,13 @@ lazy val microservice = Project(appName, file("."))
     // ***************
   )
 
-val bootstrapPlayVersion = "4.0.0"
-val hmrcMongoVersion     = "0.47.0"
+val bootstrapPlayVersion = "5.7.0"
+val hmrcMongoVersion     = "0.51.0"
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-28" % bootstrapPlayVersion,
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-28"         % hmrcMongoVersion,
-  "org.typelevel"             %% "cats-core"                  % "2.3.1",
+  "org.typelevel"             %% "cats-core"                  % "2.6.1",
   "org.apache.httpcomponents" %  "httpcore"                   % "4.3.3",
   "org.yaml"                  %  "snakeyaml"                  % "1.27",
   "org.apache.httpcomponents" %  "httpclient"                 % "4.3.6",
@@ -55,11 +51,8 @@ val compile = Seq(
 val test = Seq(
   "uk.gov.hmrc"            %% "bootstrap-test-play-28"   % bootstrapPlayVersion % Test,
   "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28"  % hmrcMongoVersion     % Test,
-  "org.scalatestplus.play" %% "scalatestplus-play"       % "5.1.0"              % Test,
   "org.scalatestplus"      %% "scalatestplus-scalacheck" % "3.1.0.0-RC2"        % Test,
   "com.vladsch.flexmark"   %  "flexmark-all"             % "0.35.10"            % Test,
-  "com.typesafe.play"      %% "play-test"                % PlayVersion.current  % Test,
-  "com.github.tomakehurst" %  "wiremock"                 % "1.58"               % Test,
   "org.jsoup"              %  "jsoup"                    % "1.13.1"             % Test,
   "org.mockito"            %% "mockito-scala"            % "1.10.6"             % Test,
   ws
