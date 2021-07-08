@@ -110,6 +110,39 @@ class SlugInfoServiceSpec
     }
   }
 
+  "DependenciesService.sortAndSeparateDependencies" should {
+    "return the original dependency list and no transitive dependencies when theres no dot files" in {
+      val depFoo = ServiceDependency("org.foo", "foo", "1.0.0")
+      val serviceDeps = ServiceDependencies(
+        uri= "",
+        name = "test", version = Some("1.0.0"), runnerVersion = "0.5.4", java = ServiceJDKVersion("1.8.222", "openjdk", "jre"), classpath = "",
+        dependencies = Seq(depFoo),
+        environment = None
+      )
+      DependenciesService.sortAndSeparateDependencies(serviceDeps) shouldBe (Seq(depFoo), Seq.empty)
+    }
+
+    "return a list of direct and transitive dependencies when there is a dot file" in {
+      val depFoo = ServiceDependency("org.foo", "foo", "1.0.0")
+      val depBar = ServiceDependency("org.bar", "bar", "1.0.0")
+      val serviceDeps = ServiceDependencies(
+        uri= "",
+        name = "test", version = Some("1.0.0"), runnerVersion = "0.5.4", java = ServiceJDKVersion("1.8.222", "openjdk", "jre"), classpath = "",
+        dependencies = Seq(depFoo, depBar),
+        environment = None,
+        dependencyDotCompile = Some(
+          """
+            |"org.foo:foo:1.0.0"[label=""]
+            |"org.bar:bar:1.0.0"[label=""]
+            |"root:root:0.0.0"[label=""]
+            |"root:root:0.0.0" -> "org.foo:foo:1.0.0"
+            |"org.foo:foo:1.0.0" -> "org.bar:bar:1.0.0"
+            |""".stripMargin)
+      )
+      DependenciesService.sortAndSeparateDependencies(serviceDeps) shouldBe (Seq(depFoo), Seq(TransitiveServiceDependency(depBar, depFoo)))
+    }
+  }
+
 
   case class Boot(
     mockedServiceDependenciesConnector: ServiceDependenciesConnector,

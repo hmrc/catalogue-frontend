@@ -1,0 +1,155 @@
+@*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
+
+@this(viewMessages: ViewMessages)
+
+@(serviceName: String, dotData: Option[String], scope: DependencyScope)(implicit request: Request[_])
+
+@standard_layout(postContent = graph) {
+
+  <div class="row">
+      <div class="col-sm-12">
+          <h2>Dependency Graph: @serviceName - @scope.displayString</h2>
+          <hr/>
+
+          @DependencyScope.values.map { value =>
+              @if(value == scope) {
+                  <u>@value.displayString</u>
+              } else {
+                  <a href='?scope=@{
+                      value.asString
+                  }'>@value.displayString</a>
+              }
+          }
+
+      </div>
+  </div>
+}
+
+@graph = {
+    <!-- todo: rehost these locally -->
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.4.16/dagre-d3.min.js"></script>
+    <script type="application/javascript" src="@routes.Assets.at("graphlib-dot.js")"></script>
+    <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+            }
+
+            .node {
+                white-space: nowrap;
+            }
+
+            .node rect,
+            .node circle,
+            .node ellipse {
+                color: blue;
+                stroke: #333;
+                fill: #fff;
+                stroke-width: 1.5px;
+            }
+
+            .cluster rect {
+                stroke: #333;
+                fill: #000;
+                fill-opacity: 0.1;
+                stroke-width: 1.5px;
+            }
+
+            .edgePath path.path {
+                stroke: #333;
+                stroke-width: 1.5px;
+                fill: none;
+            }
+            svg div{
+                font-weight: normal;
+                color: #333333;
+            }
+        svg b {
+            color #aaa;
+        }
+    </style>
+
+    <style>
+            h1, h2 {
+                color: #333;
+            }
+    </style>
+
+    @if(dotData.isEmpty) {
+      <i>No graph data exists for this build</i>
+    }
+    <svg width=100% height=1080>
+        <g/>
+    </svg>
+
+    <script>
+
+        const dotData = '@dotData.getOrElse("")'
+
+        function decodeData(data) {
+            // to make it render properly we need to replace the outer < of the label with " and add a labelType
+            return decodeURIComponent(data)
+                    .replaceAll('label=<', 'labelType="html" label="')
+                    .replaceAll('> style=', '" style=')
+        }
+
+        function initialize(data) {
+            // Set up zoom support
+            var svg = d3.select("svg"),
+                    inner = d3.select("svg g"),
+                    zoom = d3.behavior.zoom().on("zoom", function () {
+                        inner.attr("transform", "translate(" + d3.event.translate + ")" +
+                                "scale(" + d3.event.scale + ")");
+                    });
+            svg.attr("width", window.innerWidth);
+
+            svg.call(zoom);
+            // Create and configure the renderer
+            var render = dagreD3.render();
+
+            let offsetX = 20
+            let offsetY = 20
+            let initialScale = 0.75;
+
+            function tryDraw(inputGraph) {
+                let g;
+                {
+                    g = graphlibDot.read(inputGraph);
+                    g.graph().rankdir = "LR";
+                    d3.select("svg g").call(render, g);
+
+                    // Center the graph
+
+                    zoom.translate([offsetX, offsetY])
+                        .scale(initialScale)
+                        .event(svg);
+                    svg.attr('height', g.graph().height * initialScale + 40);
+                }
+            }
+            tryDraw(decodeData(data));
+        }
+
+        $(document).ready(e => {
+            initialize(dotData)
+        })
+
+    </script>
+}
