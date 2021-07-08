@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
-class ConfigService @Inject() (configConnector: ConfigConnector) {
+class ConfigService @Inject() (configConnector: ConfigConnector)(implicit ec: ExecutionContext) {
   import ConfigService._
 
   def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
@@ -32,6 +33,24 @@ class ConfigService @Inject() (configConnector: ConfigConnector) {
 
   def configByKey(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     configConnector.configByKey(serviceName)
+
+  def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
+    configByKey(serviceName)
+      .map(
+        _.getOrElse("artifact_name", Map.empty)
+          .mapValues(values => ConfigService.sortBySourcePrecedence(Some(values)).headOption.map(_.value))
+          .values
+          .flatten
+          .groupBy(identity)
+          .keys
+          .toList
+      )
+      .map {
+        case Nil                 => ArtifactNameNotFound
+        case artifactName :: Nil => ArtifactNameFound(artifactName)
+        case list =>
+          ArtifactNameError(s"Different artifact names found for service in different environments - [${list.mkString(",")}]")
+      }
 }
 
 @Singleton
@@ -120,4 +139,13 @@ object ConfigService {
       case "appConfigCommonOverridable" => "App-config-common overridable settings"
       case _                            => source
     }
+
+  sealed trait ArtifactNameResult
+
+  object ArtifactNameResult {
+    case class ArtifactNameFound(name: String) extends ArtifactNameResult
+    case object ArtifactNameNotFound extends ArtifactNameResult
+    case class ArtifactNameError(error: String) extends ArtifactNameResult
+  }
+
 }

@@ -84,10 +84,10 @@ object JsonData {
         |{"name":"teamB-other", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Other"}
         |]""".stripMargin
 
-  val serviceDetailsData =
+  def repositoryData(repoName: String = "service-1") =
     s"""
        |{
-       |  "name": "service-1",
+       |  "name": "$repoName",
        |  "isPrivate": false,
        |  "isArchived": false,
        |  "description": "some description",
@@ -101,7 +101,7 @@ object JsonData {
        |  "githubUrl": {
        |    "name": "github",
        |    "displayName": "github.com",
-       |    "url": "https://github.com/hmrc/service-1"
+       |    "url": "https://github.com/hmrc/$repoName"
        |  },
        |  "environments" : [
        |    {

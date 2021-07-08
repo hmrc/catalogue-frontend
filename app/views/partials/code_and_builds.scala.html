@@ -20,7 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
-@(repo: RepositoryDetails)
+@(serviceName: String, repo: RepositoryDetails)
 
 <div id="code-and-build">
     <div class="board">
@@ -28,13 +28,13 @@
         <div class="board__body">
             <ul class="list list--minimal list-two-columns">
                 <li class="list-item"><a id="link-to-@{repo.githubUrl.id}" href="@{repo.githubUrl.url}" target="_blank">@{repo.githubUrl.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
-                <li class="list-item"><a id="link-to-@{repo.name}-config" href="@{CatalogueController.serviceConfig(repo.name)}" target="_blank">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
+                <li class="list-item"><a id="link-to-@{repo.name}-config" href="@{CatalogueController.serviceConfig(serviceName)}" target="_blank">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
             @for(ciLink <- repo.jenkinsURL) {
                 <li class="list-item"><a id="link-to-@{ciLink.id}" href="@{ciLink.url}" target="_blank">@{ciLink.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
             }
             @if(repo.repoType == RepoType.Service) {
                 <li class="list-item"><a id="link-to-dependency-explorer" href="@{DependenciesController.service(repo.name)}" target="_blank">Service Dependencies<span class="glyphicon glyphicon-new-window"/></a></li>
-                <li class="list-item"><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, repo.name)}" target="_blank">Frontend Route Warnings<span class="glyphicon glyphicon-new-window"/></a></li>
+                <li class="list-item"><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, serviceName)}" target="_blank">Frontend Route Warnings<span class="glyphicon glyphicon-new-window"/></a></li>
             }
             </ul>
         </div>
