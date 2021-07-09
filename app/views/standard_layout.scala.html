@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
 @import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 
-@(title: String = "Home", active: String = "")(content: Html)(implicit request: Request[_])
+@(title: String = "Home", active: String = "", head: Html = Html(""), preContent: Html = Html(""), postContent: Html = Html(""))(content: Html)(implicit request: Request[_])
 <!DOCTYPE html>
 <html>
     <head>
@@ -31,7 +31,7 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
         <script src="@routes.Assets.at("catalogue-frontend.js")"></script>
-
+        @head
         <style>
 
         table .sort {
@@ -121,9 +121,15 @@
                 </ul>
             </div>
         </nav>
+
+        @preContent
+
         <section class="container">
             @content
         </section>
+
+        @postContent
+
         <script>
 
             (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function()

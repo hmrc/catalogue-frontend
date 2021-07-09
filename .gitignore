@@ -27,3 +27,4 @@ npm-debug.log
 .vscode/
 project/metals.sbt
 conf/local.conf
+.bsp/sbt.json

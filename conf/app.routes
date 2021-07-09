@@ -33,6 +33,7 @@ GET        /search                                      uk.gov.hmrc.cataloguefro
 POST       /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchUrl
 
 GET        /dependencies/:name                          uk.gov.hmrc.cataloguefrontend.DependenciesController.service(name)
+GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefrontend.DependenciesController.graphs(name, version, scope: String ?= "compile")
 
 GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.landing
 GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search

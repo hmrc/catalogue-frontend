@@ -136,6 +136,7 @@ class ServiceDependenciesConnectorSpec
         Seq(
           Dependency("sbt", "uk.gov.hmrc", Version("0.13.8"), Some(Version("0.13.15")))
         )
+
     }
 
     "return a None for non existing repository" in {
@@ -414,6 +415,11 @@ class ServiceDependenciesConnectorSpec
             "version" : "1.8.0_191",
             "kind" : "JDK",
             "vendor" : "OpenJDK"
+        },
+        "dependencyDot": {
+            "compile": "",
+            "build": "",
+            "test": ""
         }
       }"""
       val res = Json.fromJson[ServiceDependencies](Json.parse(json)).get

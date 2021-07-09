@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import javax.inject._
 import play.api.libs.json.{Json, Reads}
-import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.util.DependencyGraphParser
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -39,6 +40,10 @@ class DependenciesService @Inject() (
           .map(_.map(_.copy(environment = Some(wrwv.environment))))
       )
       .map(_.flatten)
+
+  def getServiceDependencies(serviceName: String, version: Version)(implicit hc: HeaderCarrier): Future[Option[ServiceDependencies]] =
+    serviceDependenciesConnector
+      .getSlugDependencies(serviceName, Some(version)).map(_.headOption)
 
   def getServicesWithDependency(
     optTeam: Option[TeamName],
@@ -85,27 +90,42 @@ object DependenciesService {
 
   def sortDependencies(dependencies: Seq[ServiceDependency]): Seq[ServiceDependency] =
     dependencies.sortBy(serviceDependency => (serviceDependency.group, serviceDependency.artifact))
+
+  def sortAndSeparateDependencies(serviceDependencies: ServiceDependencies): (Seq[ServiceDependency], Seq[TransitiveServiceDependency]) =
+    serviceDependencies.dependencyDotCompile
+      .fold(
+        (serviceDependencies.dependencies, Seq.empty[TransitiveServiceDependency])
+      )(graph =>
+        DependencyGraphParser
+          .parse(graph)
+          .dependenciesWithImportPath
+          .partition(_._2.length == 2) match {
+          case (direct, transitive) => (
+            direct.map(_._1).sortBy(d => (d.group, d.artifact)),
+            transitive.map(t => TransitiveServiceDependency(t._1, t._2.takeRight(2).head)).sortBy(d => (d.dependency.group, d.dependency.artifact))
+          )
+        }
+      )
 }
 
 case class ServiceJDKVersion(version: String, vendor: String, kind: String)
 
-case class ServiceDependency(
-  path: String,
-  group: String,
-  artifact: String,
-  version: String,
-  meta: String = ""
-)
+case class ServiceDependency(group: String, artifact: String, version: String)
+
+case class TransitiveServiceDependency(dependency: ServiceDependency, importedBy: ServiceDependency)
 
 case class ServiceDependencies(
-  uri: String,
-  name: String,
-  version: Option[String],
-  runnerVersion: String,
-  java: ServiceJDKVersion,
-  classpath: String,
-  dependencies: Seq[ServiceDependency],
-  environment: Option[Environment] = None
+  uri                 : String,
+  name                : String,
+  version             : Option[String],
+  runnerVersion       : String,
+  java                : ServiceJDKVersion,
+  classpath           : String,
+  dependencies        : Seq[ServiceDependency],
+  environment         : Option[Environment] = None,
+  dependencyDotCompile: Option[String] = None,
+  dependencyDotTest   : Option[String] = None,
+  dependencyDotBuild  : Option[String] = None
 ) {
   val isEmpty: Boolean = dependencies.isEmpty
 
@@ -120,9 +140,9 @@ object ServiceDependencies {
   import play.api.libs.json.__
 
   implicit val jdkr = (
-    (__ \ "version").read[String]
-      ~ (__ \ "vendor").read[String]
-      ~ (__ \ "kind").read[String]
+        (__ \ "version").read[String]
+      ~ (__ \ "vendor" ).read[String]
+      ~ (__ \ "kind"   ).read[String]
   )(ServiceJDKVersion)
 
   implicit val dependencyReads: Reads[ServiceDependency] = Json.using[Json.WithDefaultValues].reads[ServiceDependency]
@@ -130,14 +150,17 @@ object ServiceDependencies {
   implicit val serviceDependenciesReads: Reads[ServiceDependencies] = {
     implicit val envf = JsonCodecs.environmentFormat
     (
-      (__ \ "uri").read[String]
-        ~ (__ \ "name").read[String]
-        ~ (__ \ "version").readNullable[String]
-        ~ (__ \ "runnerVersion").read[String]
-        ~ (__ \ "java").read[ServiceJDKVersion]
-        ~ (__ \ "classpath").read[String]
-        ~ (__ \ "dependencies").read[Seq[ServiceDependency]]
-        ~ (__ \ "environment").readNullable[Environment]
+          (__ \ "uri"                      ).read[String]
+        ~ (__ \ "name"                     ).read[String]
+        ~ (__ \ "version"                  ).readNullable[String]
+        ~ (__ \ "runnerVersion"            ).read[String]
+        ~ (__ \ "java"                     ).read[ServiceJDKVersion]
+        ~ (__ \ "classpath"                ).read[String]
+        ~ (__ \ "dependencies"             ).read[Seq[ServiceDependency]]
+        ~ (__ \ "environment"              ).readNullable[Environment]
+        ~ (__ \ "dependencyDot" \ "compile").readNullable[String].map(_.filter(_.nonEmpty))
+        ~ (__ \ "dependencyDot" \ "test"   ).readNullable[String].map(_.filter(_.nonEmpty))
+        ~ (__ \ "dependencyDot" \ "build"  ).readNullable[String].map(_.filter(_.nonEmpty))
     )(ServiceDependencies.apply _)
   }
 
