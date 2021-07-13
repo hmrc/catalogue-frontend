@@ -63,39 +63,39 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
           200,
           Some(
             s"""{
-           |  "name": "$digitalServiceName",
-           |  "lastUpdatedAt": 1494240869000,
-           |  "repositories": [
-           |    {
-           |      "name": "A",
-           |      "createdAt": 1456326530000,
-           |      "lastUpdatedAt": 1494240809000,
-           |      "repoType": "Service",
-           |      "teamNames": ["Team1", "Team2"]
-           |    },
-           |    {
-           |      "name": "B",
-           |      "createdAt": 1491916469000,
-           |      "lastUpdatedAt": 1494240869000,
-           |      "repoType": "Prototype",
-           |      "teamNames": ["Team1"]
-           |    },
-           |    {
-           |      "name": "C",
-           |      "createdAt": 1454669716000,
-           |      "lastUpdatedAt": 1494240838000,
-           |      "repoType": "Library",
-           |      "teamNames": ["Team2"]
-           |    },
-           |    {
-           |      "name": "D",
-           |      "createdAt": 1454669716000,
-           |      "lastUpdatedAt": 1494240838000,
-           |      "repoType": "Other",
-           |      "teamNames": ["Team3"]
-           |    }
-           |  ]
-           |}""".stripMargin
+             "name": "$digitalServiceName",
+             "lastUpdatedAt": "2017-05-08T10:54:29Z",
+             "repositories": [
+               {
+                 "name": "A",
+                 "createdAt": "2016-02-24T15:08:50Z",
+                 "lastUpdatedAt": "2017-05-08T10:53:29Z",
+                 "repoType": "Service",
+                 "teamNames": ["Team1", "Team2"]
+               },
+               {
+                 "name": "B",
+                 "createdAt": "2017-04-11T13:14:29Z",
+                 "lastUpdatedAt": "2017-05-08T10:54:29Z",
+                 "repoType": "Prototype",
+                 "teamNames": ["Team1"]
+               },
+               {
+                 "name": "C",
+                 "createdAt": "2016-02-05T10:55:16Z",
+                 "lastUpdatedAt": "2017-05-08T10:53:58Z",
+                 "repoType": "Library",
+                 "teamNames": ["Team2"]
+               },
+               {
+                 "name": "D",
+                 "createdAt": "2016-02-05T10:55:16Z",
+                 "lastUpdatedAt": "2017-05-08T10:53:58Z",
+                 "repoType": "Other",
+                 "teamNames": ["Team3"]
+               }
+             ]
+           }"""
           ))
       )
 
@@ -117,10 +117,10 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
           200,
           Some(
             s"""{
-           |   "name":"$digitalServiceName",
-           |   "lastUpdatedAt":12345,
-           |   "repositories":[]
-           | }""".stripMargin
+              "name":"$digitalServiceName",
+              "lastUpdatedAt": "2017-05-08T10:53:58Z",
+              "repositories":[]
+            }"""
           ))
       )
 
@@ -144,10 +144,10 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
           200,
           Some(
             s"""{
-           |   "name":"$digitalServiceName",
-           |   "lastUpdatedAt":12345,
-           |   "repositories":[]
-           | }""".stripMargin
+              "name":"$digitalServiceName",
+              "lastUpdatedAt": "2017-05-08T10:53:58Z",
+              "repositories":[]
+            }""".stripMargin
           ))
       )
       val response = WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get.futureValue
@@ -205,20 +205,20 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
 
       val json =
         s"""
-           |{
-           |  "name": "Catalogue",
-           |  "lastUpdatedAt": 1494864193000,
-           |  "repositories": [
-           |    {
-           |      "name": "catalogue-frontend",
-           |      "createdAt": 1456326530000,
-           |      "lastUpdatedAt": 1494864193000,
-           |      "repoType": "Service",
-           |      "teamNames": [ "$team1", "$team2"]
-           |    }
-           |  ]
-           |}
-        """.stripMargin
+           {
+             "name": "Catalogue",
+             "lastUpdatedAt": "2017-05-15T16:03:13Z",
+             "repositories": [
+               {
+                 "name": "catalogue-frontend",
+                 "createdAt": "2016-02-24T15:08:50Z",
+                 "lastUpdatedAt": "2017-05-15T16:03:13Z",
+                 "repoType": "Service",
+                 "teamNames": [ "$team1", "$team2"]
+               }
+             ]
+           }
+        """
 
       serviceEndpoint(
         GET,

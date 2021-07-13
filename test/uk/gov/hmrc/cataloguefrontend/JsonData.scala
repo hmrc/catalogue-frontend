@@ -72,371 +72,367 @@ object JsonData {
       |]
     """.stripMargin
 
-  import DateHelper._
-
   val createdAt    = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
   val lastActiveAt = LocalDateTime.of(2016, 10, 12, 10, 30, 12)
 
   val repositoriesData =
-    s"""|[
-        |{"name":"teamA-serv", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Service"},
-        |{"name":"teamB-library", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Library"},
-        |{"name":"teamB-other", "createdAt": ${createdAt.epochMillis}, "lastUpdatedAt": ${lastActiveAt.epochMillis}, "repoType":"Other"}
-        |]""".stripMargin
+    s"""[
+        {"name":"teamA-serv", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Service"},
+        {"name":"teamB-library", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Library"},
+        {"name":"teamB-other", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Other"}
+        ]"""
 
   def repositoryData(repoName: String = "service-1") =
     s"""
-       |{
-       |  "name": "$repoName",
-       |  "isPrivate": false,
-       |  "isArchived": false,
-       |  "description": "some description",
-       |  "createdAt": ${createdAt.epochMillis},
-       |  "lastActive": ${lastActiveAt.epochMillis},
-       |  "repoType": "Service",
-       |  "owningTeams": [
-       |    "The True Owners"
-       |  ],
-       |  "teamNames": ["teamA", "teamB"],
-       |  "githubUrl": {
-       |    "name": "github",
-       |    "displayName": "github.com",
-       |    "url": "https://github.com/hmrc/$repoName"
-       |  },
-       |  "environments" : [
-       |    {
-       |      "name" : "Development",
-       |      "services" : [
-       |        {
-       |          "name": "jenkins",
-       |          "displayName": "Jenkins",
-       |          "url": "https://deploy-dev.co.uk/job/deploy-microservice"
-       |        }, {
-       |          "name": "grafana",
-       |          "displayName": "Grafana",
-       |          "url": "https://grafana-dev.co.uk/#/dashboard"
-       |        }
-       |      ]
-       |    }, {
-       |      "name" : "QA",
-       |      "services" : [
-       |        {
-       |          "name": "jenkins",
-       |          "displayName": "Jenkins",
-       |          "url": "https://deploy-qa.co.uk/job/deploy-microservice"
-       |        }, {
-       |          "name": "grafana",
-       |          "displayName": "Grafana",
-       |          "url": "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard"
-       |        }
-       |      ]
-       |    }, {
-       |      "name" : "Production",
-       |      "services" : [
-       |        {
-       |          "name": "jenkins",
-       |          "displayName": "Jenkins",
-       |          "url": "https://deploy-prod.co.uk/job/deploy-microservice"
-       |        }, {
-       |          "name": "grafana",
-       |          "displayName": "Grafana",
-       |          "url": "https://grafana-prod.co.uk/#/dashboard"
-       |        }
-       |      ]
-       |    }
-       |  ]
-       |}
-    """.stripMargin
+       {
+         "name": "$repoName",
+         "isPrivate": false,
+         "isArchived": false,
+         "description": "some description",
+         "createdAt": "$createdAt",
+         "lastActive": "$lastActiveAt",
+         "repoType": "Service",
+         "owningTeams": [
+           "The True Owners"
+         ],
+         "teamNames": ["teamA", "teamB"],
+         "githubUrl": {
+           "name": "github",
+           "displayName": "github.com",
+           "url": "https://github.com/hmrc/$repoName"
+         },
+         "environments" : [
+           {
+             "name" : "Development",
+             "services" : [
+               {
+                 "name": "jenkins",
+                 "displayName": "Jenkins",
+                 "url": "https://deploy-dev.co.uk/job/deploy-microservice"
+               }, {
+                 "name": "grafana",
+                 "displayName": "Grafana",
+                 "url": "https://grafana-dev.co.uk/#/dashboard"
+               }
+             ]
+           }, {
+             "name" : "QA",
+             "services" : [
+               {
+                 "name": "jenkins",
+                 "displayName": "Jenkins",
+                 "url": "https://deploy-qa.co.uk/job/deploy-microservice"
+               }, {
+                 "name": "grafana",
+                 "displayName": "Grafana",
+                 "url": "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard"
+               }
+             ]
+           }, {
+             "name" : "Production",
+             "services" : [
+               {
+                 "name": "jenkins",
+                 "displayName": "Jenkins",
+                 "url": "https://deploy-prod.co.uk/job/deploy-microservice"
+               }, {
+                 "name": "grafana",
+                 "displayName": "Grafana",
+                 "url": "https://grafana-prod.co.uk/#/dashboard"
+               }
+             ]
+           }
+         ]
+       }
+    """
 
   val serviceJenkinsData: String =
     """
-      |{
-      |   "service": "service-1",
-      |   "jenkinsURL": "http://jenkins/service-1/"
-      |}
-      |""".stripMargin
+      {
+         "service": "service-1",
+         "jenkinsURL": "http://jenkins/service-1/"
+      }
+      """
 
   val teamDetailsData =
     """
-      |{
-      |  "name" : "teamA",
-      |  "repos": {
-      |    "Service": [
-      |      "service1",
-      |      "service2"
-      |    ],
-      |    "Library": [
-      |      "library1",
-      |      "library2"
-      |    ],
-      |    "Other": [
-      |      "other1",
-      |      "other2"
-      |    ]
-      |  },
-      |  "ownedRepos": []
-      |}
-    """.stripMargin
+      {
+        "name" : "teamA",
+        "repos": {
+          "Service": [
+            "service1",
+            "service2"
+          ],
+          "Library": [
+            "library1",
+            "library2"
+          ],
+          "Other": [
+            "other1",
+            "other2"
+          ]
+        },
+        "ownedRepos": []
+      }
+    """
 
   val teamsAndRepositories =
     s""" [$teamDetailsData] """
 
   val prototypeDetailsData =
     s"""
-       |{
-       |  "name": "2fa-prototype",
-       |  "isPrivate": false,
-       |  "isArchived": false,
-       |  "description": "some description",
-       |  "createdAt": ${createdAt.epochMillis},
-       |  "lastActive": ${lastActiveAt.epochMillis},
-       |  "repoType": "Prototype",
-       |  "owningTeams": [
-       |    "The True Owners"
-       |  ],
-       |  "teamNames": [
-       |    "CATO",
-       |    "Designers"
-       |  ],
-       |  "githubUrl": {
-       |    "name": "github",
-       |    "displayName": "Github.com",
-       |    "url": "https://github.com/HMRC/2fa-prototype"
-       |  },
-       |  "environments": [ ]
-       |}
-    """.stripMargin
+       {
+         "name": "2fa-prototype",
+         "isPrivate": false,
+         "isArchived": false,
+         "description": "some description",
+         "createdAt": "$createdAt",
+         "lastActive": "$lastActiveAt",
+         "repoType": "Prototype",
+         "owningTeams": [
+           "The True Owners"
+         ],
+         "teamNames": [
+           "CATO",
+           "Designers"
+         ],
+         "githubUrl": {
+           "name": "github",
+           "displayName": "Github.com",
+           "url": "https://github.com/HMRC/2fa-prototype"
+         },
+         "environments": [ ]
+       }
+    """
 
   val libraryDetailsData =
     """
-      |{
-      |	 "name": "serv",
-      |  "isPrivate": false,
-      |  "isArchived": false,
-      |  "description": "some description",
-      |  "createdAt": 1456326530000,
-      |  "lastActive": 1478602555000,
-      |  "repoType": "Library",
-      |  "owningTeams": [
-      |    "The True Owners"
-      |  ],
-      |  "teamNames": ["teamA", "teamB"],
-      |	 "githubUrl": {
-      |    "name": "github",
-      |    "displayName": "github.com",
-      |    "url": "https://github.com/hmrc/serv"
-      |	 }
-      |}
-    """.stripMargin
+      {
+        "name": "serv",
+        "isPrivate": false,
+        "isArchived": false,
+        "description": "some description",
+        "createdAt": "2016-02-24T15:08:50Z",
+        "lastActive": "2016-11-08T10:55:55Z",
+        "repoType": "Library",
+        "owningTeams": [
+          "The True Owners"
+        ],
+        "teamNames": ["teamA", "teamB"],
+        "githubUrl": {
+          "name": "github",
+          "displayName": "github.com",
+          "url": "https://github.com/hmrc/serv"
+        }
+      }
+    """
 
   val deploymentThroughputData =
     """[
-      |  {
-      |    "period": "2015-11",
-      |    "from": "2015-12-01",
-      |    "to": "2016-02-29",
-      |    "throughput": {
-      |      "leadTime": {
-      |        "median": 6
-      |      },
-      |      "interval": {
-      |        "median": 1
-      |      }
-      |    },
-      |    "stability": {
-      |      "hotfixRate": 23,
-      |      "hotfixLeadTime": {
-      |        "median": 6
-      |      }
-      |    }
-      |  },
-      |  {
-      |    "period": "2015-12",
-      |    "from": "2015-12-01",
-      |    "to": "2016-02-29",
-      |    "throughput": {
-      |      "leadTime": {
-      |        "median": 6
-      |      },
-      |      "interval": {
-      |        "median": 5
-      |      }
-      |    },
-      |    "stability": {
-      |      "hotfixRate": 23,
-      |      "hotfixLeadTime": {
-      |        "median": 6
-      |      }
-      |    }
-      |  },
-      |  {
-      |    "period": "2016-01",
-      |    "from": "2015-12-01",
-      |    "to": "2016-02-29",
-      |    "throughput": {
-      |      "leadTime": {
-      |        "median": 6
-      |      },
-      |      "interval": {
-      |        "median": 6
-      |      }
-      |    }
-      |  }
-      |]
-      | """.stripMargin
+        {
+          "period": "2015-11",
+          "from": "2015-12-01",
+          "to": "2016-02-29",
+          "throughput": {
+            "leadTime": {
+              "median": 6
+            },
+            "interval": {
+              "median": 1
+            }
+          },
+          "stability": {
+            "hotfixRate": 23,
+            "hotfixLeadTime": {
+              "median": 6
+            }
+          }
+        },
+        {
+          "period": "2015-12",
+          "from": "2015-12-01",
+          "to": "2016-02-29",
+          "throughput": {
+            "leadTime": {
+              "median": 6
+            },
+            "interval": {
+              "median": 5
+            }
+          },
+          "stability": {
+            "hotfixRate": 23,
+            "hotfixLeadTime": {
+              "median": 6
+            }
+          }
+        },
+        {
+          "period": "2016-01",
+          "from": "2015-12-01",
+          "to": "2016-02-29",
+          "throughput": {
+            "leadTime": {
+              "median": 6
+            },
+            "interval": {
+              "median": 6
+            }
+          }
+        }
+      ]
+      """
 
   val jobExecutionTimeData =
     """[
-      |  {
-      |    "period":"2016-05",
-      |    "from":"2016-03-01",
-      |    "to":"2016-05-31"
-      |  },
-      |  {
-      |    "period":"2016-06",
-      |    "from":"2016-04-01",
-      |    "to":"2016-06-30",
-      |    "duration":{
-      |      "median":623142
-      |    }
-      |  },
-      |  {
-      |    "period":"2016-07",
-      |    "from":"2016-05-01",
-      |    "to":"2016-07-31",
-      |    "duration":{
-      |      "median":632529
-      |    }
-      |  },
-      |  {
-      |    "period":"2016-08",
-      |    "from":"2016-06-01",
-      |    "to":"2016-08-31",
-      |    "duration":{
-      |      "median":632529
-      |    }
-      |  },
-      |  {
-      |    "period":"2016-09",
-      |    "from":"2016-07-01",
-      |    "to":"2016-09-30",
-      |    "duration":{
-      |      "median":637234
-      |    }
-      |  },
-      |  {
-      |    "period":"2016-10",
-      |    "from":"2016-08-01",
-      |    "to":"2016-10-31"
-      |  },
-      |  {
-      |    "period":"2016-11",
-      |    "from":"2016-09-01",
-      |    "to":"2016-11-30"
-      |  },
-      |  {
-      |    "period":"2016-12",
-      |    "from":"2016-10-01",
-      |    "to":"2016-12-31"
-      |  },
-      |  {
-      |    "period":"2017-01",
-      |    "from":"2016-11-01",
-      |    "to":"2017-01-31"
-      |  },
-      |  {
-      |    "period":"2017-02",
-      |    "from":"2016-12-01",
-      |    "to":"2017-02-28"
-      |  },
-      |  {
-      |    "period":"2017-03",
-      |    "from":"2017-01-01",
-      |    "to":"2017-03-31"
-      |  },
-      |  {
-      |    "period":"2017-04",
-      |    "from":"2017-02-01",
-      |    "to":"2017-04-25",
-      |    "duration":{
-      |      "median":645861
-      |    }
-      |  }
-      |]""".stripMargin
+        {
+          "period":"2016-05",
+          "from":"2016-03-01",
+          "to":"2016-05-31"
+        },
+        {
+          "period":"2016-06",
+          "from":"2016-04-01",
+          "to":"2016-06-30",
+          "duration":{
+            "median":623142
+          }
+        },
+        {
+          "period":"2016-07",
+          "from":"2016-05-01",
+          "to":"2016-07-31",
+          "duration":{
+            "median":632529
+          }
+        },
+        {
+          "period":"2016-08",
+          "from":"2016-06-01",
+          "to":"2016-08-31",
+          "duration":{
+            "median":632529
+          }
+        },
+        {
+          "period":"2016-09",
+          "from":"2016-07-01",
+          "to":"2016-09-30",
+          "duration":{
+            "median":637234
+          }
+        },
+        {
+          "period":"2016-10",
+          "from":"2016-08-01",
+          "to":"2016-10-31"
+        },
+        {
+          "period":"2016-11",
+          "from":"2016-09-01",
+          "to":"2016-11-30"
+        },
+        {
+          "period":"2016-12",
+          "from":"2016-10-01",
+          "to":"2016-12-31"
+        },
+        {
+          "period":"2017-01",
+          "from":"2016-11-01",
+          "to":"2017-01-31"
+        },
+        {
+          "period":"2017-02",
+          "from":"2016-12-01",
+          "to":"2017-02-28"
+        },
+        {
+          "period":"2017-03",
+          "from":"2017-01-01",
+          "to":"2017-03-31"
+        },
+        {
+          "period":"2017-04",
+          "from":"2017-02-01",
+          "to":"2017-04-25",
+          "duration":{
+            "median":645861
+          }
+        }
+      ]"""
 
   val digitalServiceData =
     """
-      |{
-      |  "name": "service-1",
-      |  "lastUpdatedAt": 1494240869000,
-      |  "repositories": [
-      |    {
-      |      "name": "catalogue-frontend",
-      |      "createdAt": "2016-02-24T15:08:50",
-      |      "lastUpdatedAt": "2017-05-08T10:53:29",
-      |      "repoType": "Service",
-      |      "teamNames": ["Team1", "Team2"]
-      |    },
-      |    {
-      |      "name": "repository-jobs",
-      |      "createdAt": "2017-04-11T13:14:29",
-      |      "lastUpdatedAt": "2017-05-08T10:54:29",
-      |      "repoType": "Service",
-      |      "teamNames": ["Team1"]
-      |    },
-      |    {
-      |      "name": "teams-and-repositories",
-      |      "createdAt": "2016-02-05T10:55:16",
-      |      "lastUpdatedAt": "2017-05-08T10:53:58",
-      |      "repoType": "Service",
-      |      "teamNames": ["Team2"]
-      |    }
-      |  ]
-      |}
-    """.stripMargin
+      {
+        "name": "service-1",
+        "lastUpdatedAt": "2017-05-08T10:54:29Z",
+        "repositories": [
+          {
+            "name": "catalogue-frontend",
+            "createdAt": "2016-02-24T15:08:50",
+            "lastUpdatedAt": "2017-05-08T10:53:29",
+            "repoType": "Service",
+            "teamNames": ["Team1", "Team2"]
+          },
+          {
+            "name": "repository-jobs",
+            "createdAt": "2017-04-11T13:14:29",
+            "lastUpdatedAt": "2017-05-08T10:54:29",
+            "repoType": "Service",
+            "teamNames": ["Team1"]
+          },
+          {
+            "name": "teams-and-repositories",
+            "createdAt": "2016-02-05T10:55:16",
+            "lastUpdatedAt": "2017-05-08T10:53:58",
+            "repoType": "Service",
+            "teamNames": ["Team2"]
+          }
+        ]
+      }
+    """
 
   val configServiceEmpty =
-    """[
-      |]
-    """.stripMargin
+    "[]"
 
   val configServiceService1 =
     """[
-      |  {
-      |    "environment": "qa",
-      |    "routes": [
-      |      {
-      |        "frontendPath": "/test/qa/ccc",
-      |        "backendPath": "https://test.co/ccc",
-      |        "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
-      |        "isRegex": false
-      |      }
-      |    ]
-      |  },
-      |  {
-      |    "environment": "production",
-      |    "routes": [
-      |      {
-      |        "frontendPath": "/test/prod/ccc",
-      |        "backendPath": "https://test.co/prod/ccc",
-      |        "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
-      |        "isRegex": false
-      |      }
-      |    ]
-      |  },
-      |  {
-      |    "environment": "development",
-      |    "routes": [
-      |      {
-      |        "frontendPath": "/test/dev/ccc",
-      |        "backendPath": "https://test.co/ccc",
-      |        "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
-      |        "isRegex": false
-      |      }
-      |    ]
-      |  }
-      |]
-    """.stripMargin
+        {
+          "environment": "qa",
+          "routes": [
+            {
+              "frontendPath": "/test/qa/ccc",
+              "backendPath": "https://test.co/ccc",
+              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
+              "isRegex": false
+            }
+          ]
+        },
+        {
+          "environment": "production",
+          "routes": [
+            {
+              "frontendPath": "/test/prod/ccc",
+              "backendPath": "https://test.co/prod/ccc",
+              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
+              "isRegex": false
+            }
+          ]
+        },
+        {
+          "environment": "development",
+          "routes": [
+            {
+              "frontendPath": "/test/dev/ccc",
+              "backendPath": "https://test.co/ccc",
+              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
+              "isRegex": false
+            }
+          ]
+        }
+      ]
+    """
 
 
   val dependenciesWithRuleViolation =
@@ -582,109 +578,109 @@ object JsonData {
 
   val serviceData: String =
     """{
-      |  "name": "serv",
-      |  "isPrivate": false,
-      |  "isArchived": false,
-      |  "repoType": "Service",
-      |  "owningTeams": [ "The True Owners" ],
-      |  "teamNames": ["teamA", "teamB"],
-      |  "description": "some description",
-      |  "createdAt": 1456326530000,
-      |  "lastActive": 1478602555000,
-      |  "githubUrl": {
-      |    "name": "github",
-      |    "displayName": "github.com",
-      |    "url": "https://github.com/hmrc/serv"
-      |  },
-      |  "environments" : [
-      |    {
-      |      "name" : "Production",
-      |      "services" : [
-      |        {
-      |          "name": "ser1",
-      |          "displayName": "service1",
-      |          "url": "http://ser1/serv"
-      |        }, {
-      |          "name": "ser2",
-      |          "displayName": "service2",
-      |          "url": "http://ser2/serv"
-      |        }
-      |      ]
-      |    }, {
-      |      "name" : "Staging",
-      |      "services" : [
-      |        {
-      |          "name": "ser1",
-      |          "displayName": "service1",
-      |          "url": "http://ser1/serv"
-      |        }, {
-      |          "name": "ser2",
-      |          "displayName": "service2",
-      |          "url": "http://ser2/serv"
-      |        }
-      |      ]
-      |    }
-      |  ]
-      |}
-    """.stripMargin
+        "name": "serv",
+        "isPrivate": false,
+        "isArchived": false,
+        "repoType": "Service",
+        "owningTeams": [ "The True Owners" ],
+        "teamNames": ["teamA", "teamB"],
+        "description": "some description",
+        "createdAt": "2016-02-24T15:08:50Z",
+        "lastActive": "2016-11-08T10:55:55Z",
+        "githubUrl": {
+          "name": "github",
+          "displayName": "github.com",
+          "url": "https://github.com/hmrc/serv"
+        },
+        "environments" : [
+          {
+            "name" : "Production",
+            "services" : [
+              {
+                "name": "ser1",
+                "displayName": "service1",
+                "url": "http://ser1/serv"
+              }, {
+                "name": "ser2",
+                "displayName": "service2",
+                "url": "http://ser2/serv"
+              }
+            ]
+          }, {
+            "name" : "Staging",
+            "services" : [
+              {
+                "name": "ser1",
+                "displayName": "service1",
+                "url": "http://ser1/serv"
+              }, {
+                "name": "ser2",
+                "displayName": "service2",
+                "url": "http://ser2/serv"
+              }
+            ]
+          }
+        ]
+      }
+    """
 
   val jenkinsData: String =
     """{
-      |  "service": "lib",
-      |  "jenkinsURL": "http://jenkins/lib/"
-      |}
-      |""".stripMargin
+        "service": "lib",
+        "jenkinsURL": "http://jenkins/lib/"
+      }
+      """
 
   val libraryData: String =
     """{
-      |  "name": "lib",
-      |  "isPrivate": false,
-      |  "isArchived": false,
-      |  "description": "some description",
-      |  "createdAt": 1456326530000,
-      |  "lastActive": 1478602555000,
-      |  "repoType": "Library",
-      |  "owningTeams": [ "The True Owners" ],
-      |  "teamNames": ["teamA", "teamB"],
-      |  "githubUrl": {
-      |    "name": "github",
-      |    "displayName": "github.com",
-      |    "url": "https://github.com/hmrc/lib"
-      |  }
-      |}
-    """.stripMargin
+        "name": "lib",
+        "isPrivate": false,
+        "isArchived": false,
+        "description": "some description",
+        "createdAt": "2016-02-24T15:08:50Z",
+        "lastActive": "2016-11-08T10:55:55Z",
+        "repoType": "Library",
+        "owningTeams": [ "The True Owners" ],
+        "teamNames": ["teamA", "teamB"],
+        "githubUrl": {
+          "name": "github",
+          "displayName": "github.com",
+          "url": "https://github.com/hmrc/lib"
+        }
+      }
+    """
 
   val indicatorData: String =
     """[
-      |  {
-      |    "period":"2015-11",
-      |    "leadTime":{
-      |      "median":6
-      |    },
-      |    "interval":{
-      |      "median":1
-      |    }
-      |  },
-      |  {
-      |    "period":"2015-12",
-      |    "leadTime":{
-      |      "median":6
-      |    },
-      |    "interval":{
-      |      "median":5
-      |    }
-      |  },
-      |  {
-      |    "period":"2016-01",
-      |    "leadTime":{
-      |      "median":6
-      |    },
-      |    "interval":{
-      |      "median":6
-      |    }
-      |  }
-      |]
-    """.stripMargin
+        {
+          "period":"2015-11",
+          "leadTime":{
+            "median":6
+          },
+          "interval":{
+            "median":1
+          }
+        },
+        {
+          "period":"2015-12",
+          "leadTime":{
+            "median":6
+          },
+          "interval":{
+            "median":5
+          }
+        },
+        {
+          "period":"2016-01",
+          "leadTime":{
+            "median":6
+          },
+          "interval":{
+            "median":6
+          }
+        }
+      ]
+    """
 
   def shutterApiData(shutterType: ShutterType, env: Environment, status: ShutterStatusValue) =
     s"""
@@ -700,24 +696,20 @@ object JsonData {
     """
 
   val profiles: String =
-    """
-    |[
-    |
-    |]
-    """".stripMargin
+    "[]"
 
   val serviceDependenciesData: String =
     """{
-      |  "uri": "/",
-      |  "name": "service-name",
-      |  "version": "1.0.0",
-      |  "runnerVersion": "1.0.0",
-      |  "java": {
-      |    "version": "1.0.0",
-      |    "vendor": "openjdk",
-      |    "kind": ""
-      |  },
-      |  "classpath": "",
-      |  "dependencies": []
-      }""".stripMargin
+        "uri": "/",
+        "name": "service-name",
+        "version": "1.0.0",
+        "runnerVersion": "1.0.0",
+        "java": {
+          "version": "1.0.0",
+          "vendor": "openjdk",
+          "kind": ""
+        },
+        "classpath": "",
+        "dependencies": []
+      }"""
 }

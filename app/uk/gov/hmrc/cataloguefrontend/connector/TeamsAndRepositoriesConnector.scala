@@ -114,11 +114,10 @@ object RepositoryDisplayDetails {
 }
 
 case class Team(
-  name                    : TeamName,
-  firstActiveDate         : Option[LocalDateTime],
-  lastActiveDate          : Option[LocalDateTime],
-  firstServiceCreationDate: Option[LocalDateTime],
-  repos                   : Option[Map[String, Seq[String]]]
+  name           : TeamName,
+  createdDate    : Option[LocalDateTime],
+  lastActiveDate : Option[LocalDateTime],
+  repos          : Option[Map[String, Seq[String]]]
 ) {
   //Teams and repos lists legacy java services as 'Other', so relaxing the auth check to be agnostic to repo type
   def allServiceNames: List[String] =

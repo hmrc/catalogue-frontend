@@ -31,11 +31,10 @@ class LeakDetectionServiceSpec extends AnyWordSpec with Matchers {
 
     "determine if at least one of team's repos has leaks" in new Setup {
       val team = Team(
-        name                     = TeamName("team0"),
-        firstActiveDate          = None,
-        lastActiveDate           = None,
-        firstServiceCreationDate = None,
-        repos                    = Some(Map("library" -> List("repo1", "repo2")))
+        name           = TeamName("team0"),
+        createdDate    = None,
+        lastActiveDate = None,
+        repos          = Some(Map("library" -> List("repo1", "repo2")))
       )
 
       val repoWithLeak = RepositoryWithLeaks("repo1")
@@ -45,11 +44,10 @@ class LeakDetectionServiceSpec extends AnyWordSpec with Matchers {
 
     "determine if a team has no leaks" in new Setup {
       val team = Team(
-        name                     = TeamName("team0"),
-        firstActiveDate          = None,
-        lastActiveDate           = None,
-        firstServiceCreationDate = None,
-        repos                    = Some(Map("library" -> List("repo1", "repo2")))
+        name            = TeamName("team0"),
+        createdDate     = None,
+        lastActiveDate  = None,
+        repos           = Some(Map("library" -> List("repo1", "repo2")))
       )
 
       val repoWithLeak = RepositoryWithLeaks("repo3")
@@ -59,11 +57,10 @@ class LeakDetectionServiceSpec extends AnyWordSpec with Matchers {
 
     "filter repositories in the exclusion list" in new Setup {
       val team = Team(
-        name                     = TeamName("team0"),
-        firstActiveDate          = None,
-        lastActiveDate           = None,
-        firstServiceCreationDate = None,
-        repos                    = Some(Map("library" -> List("a-repo-to-ignore")))
+        name            = TeamName("team0"),
+        createdDate     = None,
+        lastActiveDate  = None,
+        repos           = Some(Map("library" -> List("a-repo-to-ignore")))
       )
 
       val repoToIgnore = RepositoryWithLeaks("a-repo-to-ignore")

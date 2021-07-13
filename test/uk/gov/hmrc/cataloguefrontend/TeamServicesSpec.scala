@@ -27,7 +27,6 @@ import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-import java.time.ZoneOffset
 import scala.collection.JavaConverters._
 import scala.io.Source
 
@@ -63,8 +62,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
             """
                {
                  "name": "teamA",
-                 "firstActiveDate":1234560,
-                 "lastActiveDate":1234561,
+                 "createdDate": "2009-02-13T21:20:00Z",
+                 "lastActiveDate": "2009-02-13T21:36:40Z",
                  "repos":{
                     "Library": [
                         "teamA-lib"
@@ -112,15 +111,16 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "filter out archived repositories from a list of libraries, services, prototypes and repositories" in {
       serviceEndpoint(GET, "/api/repositories?archived=true", willRespondWith = (200, Some(
         """
-          |[{
-          |  "name": "service1-prototype",
-          |  "createdAt": 12345,
-          |  "lastUpdatedAt": 67890,
-          |  "repoType": "Prototype",
-          |  "language": "Scala",
-          |  "archived": true
-          |}]
-          |""".stripMargin)))
+          [{
+            "name": "service1-prototype",
+            "createdAt": "2009-02-13T21:20:00Z",
+            "lastUpdatedAt": "2009-02-13T21:36:40Z",
+            "repoType": "Prototype",
+            "language": "Scala",
+            "archived": true
+          }]
+          """
+        )))
 
       serviceEndpoint(
         GET,
@@ -131,8 +131,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
             """
                {
                  "name": "teamA",
-                 "firstActiveDate":1234560,
-                 "lastActiveDate":1234561,
+                 "createdDate": "2009-02-13T21:20:00Z",
+                 "lastActiveDate": "2009-02-13T21:36:40Z",
                  "repos":{
                     "Library": [
                         "teamA-lib"
@@ -221,8 +221,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
             """
               {
                 "name":"teamA",
-                "firstActiveDate":12345,
-                "lastActiveDate":1234567,
+                "createdDate": "2009-02-13T21:20:00Z",
+                "lastActiveDate": "2009-02-13T21:36:40Z",
                 "repos": { "Library": [], "Service": [] },
                 "ownedRepos" : []
               }
@@ -251,8 +251,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
             s"""
               {
                 "name":"$teamName",
-                "firstActiveDate":12345,
-                "lastActiveDate":1234567,
+                "createdDate": "2009-02-13T21:20:00Z",
+                "lastActiveDate": "2009-02-13T21:36:40Z",
                 "repos": { "Library": [], "Service": [] },
                 "ownedRepos": []
               }
@@ -284,14 +284,11 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
             s"""
                {
                 "name": "$teamName",
-                "firstActiveDate":${createdAt.toInstant(ZoneOffset.UTC).toEpochMilli},
-                "lastActiveDate":${lastActiveAt.toInstant(ZoneOffset.UTC).toEpochMilli},
+                "createdDate": "$createdAt",
+                "lastActiveDate": "$lastActiveAt",
                 "repos":{
-                   "Library": [
-                   ],
-                   "Service": [
-                           "service1"
-                   ]
+                   "Library": [],
+                   "Service": [ "service1" ]
                 },
                 "ownedRepos": []
                }
@@ -324,8 +321,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
               s"""
                 {
                   "name": "$teamName",
-                  "firstActiveDate": 12345,
-                  "lastActiveDate": 1234567,
+                  "createdDate": "2009-02-13T21:20:00Z",
+                  "lastActiveDate": "2009-02-13T21:36:40Z",
                   "repos": {"Library":[], "Service": [] },
                   "ownedRepos": []
                 }
@@ -361,8 +358,8 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
             """
               {
                 "name": "teamA",
-                "firstActiveDate": 12345,
-                "lastActiveDate": 1234567,
+                "createdDate": "2009-02-13T21:20:00Z",
+                "lastActiveDate": "2009-02-13T21:36:40Z",
                 "repos": {"Library":[], "Service": [] },
                 "ownedRepos" : []
               }
@@ -405,7 +402,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       response.status shouldBe 200
       val document = asDocument(response.body)
 
-      document.select("#team-first-active").text() shouldBe "First Active: None"
+      document.select("#team-created").text() shouldBe "Created: None"
       document.select("#team-last-active").text()  shouldBe "Last Active: None"
 
       document.select("#team-description").asScala.head.text()   shouldBe "Description: TEAM-A is a great team"
