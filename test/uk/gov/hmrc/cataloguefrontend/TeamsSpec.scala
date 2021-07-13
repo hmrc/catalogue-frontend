@@ -21,7 +21,7 @@ import org.scalatest.BeforeAndAfter
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.LocalDateTime
 
 class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
@@ -46,8 +46,8 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
                 [
                   {
                     "name":"teamA",
-                    "firstActiveDate": "${firstactivityDate.toInstant(ZoneOffset.UTC)}",
-                    "lastActiveDate": "${lastactivityDate.toInstant(ZoneOffset.UTC)}",
+                    "createdDate": "$firstactivityDate",
+                    "lastActiveDate": "$lastactivityDate",
                     "repos": {},
                     "ownedRepos": []
                   }

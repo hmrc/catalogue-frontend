@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependency, TransitiveServiceDependency}
+import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
 
 import scala.annotation.tailrec
 

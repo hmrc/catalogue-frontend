@@ -46,9 +46,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class TeamActivityDates(
-  firstActive: Option[LocalDateTime],
-  lastActive: Option[LocalDateTime],
-  firstServiceCreationDate: Option[LocalDateTime]
+  created   : Option[LocalDateTime],
+  lastActive: Option[LocalDateTime]
 )
 
 case class DigitalServiceDetails(
@@ -255,19 +254,22 @@ class CatalogueController @Inject() (
           ).mapN { (teamMembers, teamDetails, reposWithLeaks, masterTeamDependencies, prodDependencies, reposToHide) =>
             Ok(
               teamInfoPage(
-                teamName = teamInfo.name,
-                repos = teamInfo.repos.getOrElse(Map.empty).map {
-                  case (repoType, repos) =>
-                    repoType -> repos.filterNot(reposToHide.contains(_))
-                },
-                activityDates = TeamActivityDates(teamInfo.firstActiveDate, teamInfo.lastActiveDate, teamInfo.firstServiceCreationDate),
-                errorOrTeamMembers = convertToDisplayableTeamMembers(teamInfo.name, teamMembers),
-                errorOrTeamDetails = teamDetails,
-                umpMyTeamsUrl = umpMyTeamsPageUrl(teamInfo.name),
-                leaksFoundForTeam = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks),
-                hasLeaks = leakDetectionService.hasLeaks(reposWithLeaks),
+                teamName               = teamInfo.name,
+                repos                  = teamInfo.repos.getOrElse(Map.empty).map {
+                                           case (repoType, repos) =>
+                                             repoType -> repos.filterNot(reposToHide.contains(_))
+                                         },
+                activityDates          = TeamActivityDates(
+                                           created    = teamInfo.createdDate,
+                                           lastActive = teamInfo.lastActiveDate
+                                         ),
+                errorOrTeamMembers     = convertToDisplayableTeamMembers(teamInfo.name, teamMembers),
+                errorOrTeamDetails     = teamDetails,
+                umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name),
+                leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks),
+                hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
                 masterTeamDependencies = masterTeamDependencies.filterNot(repo => reposToHide.contains(repo.repositoryName)),
-                prodDependencies = prodDependencies
+                prodDependencies       = prodDependencies
               )
             )
           }

@@ -61,9 +61,9 @@
                     <div class="board__body">
 
                         <ul class="list list--minimal" id="team_details">
-                            <li id="team-first-active">
-                                <label>First Active: </label>
-                                @activityDates.firstActive.map(_.displayFormat).getOrElse("None")
+                            <li id="team-created">
+                                <label>Created: </label>
+                                @activityDates.created.map(_.displayFormat).getOrElse("None")
                             </li>
                             <li id="team-last-active">
                                 <label>Last Active: </label>

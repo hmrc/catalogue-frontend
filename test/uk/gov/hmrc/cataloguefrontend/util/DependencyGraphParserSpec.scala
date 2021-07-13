@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.util
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependency, TransitiveServiceDependency}
+import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
 import uk.gov.hmrc.cataloguefrontend.util.DependencyGraphParser.{Arrow, DependencyGraph, Node}
 
 class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {

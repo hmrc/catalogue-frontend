@@ -188,11 +188,10 @@ class AuthServiceSpec
   }
 
   def team(name: TeamName, repoMap: Map[RepoType.RepoType, List[String]]) = Team(
-      name                     = name
-    , firstActiveDate          = None
-    , lastActiveDate           = None
-    , firstServiceCreationDate = None
-    , repos                    = Some(repoMap.map { case (k, v) => k.toString -> v })
+      name           = name
+    , createdDate    = None
+    , lastActiveDate = None
+    , repos          = Some(repoMap.map { case (k, v) => k.toString -> v })
     )
 
   def teamMember(username: String) = TeamMember(

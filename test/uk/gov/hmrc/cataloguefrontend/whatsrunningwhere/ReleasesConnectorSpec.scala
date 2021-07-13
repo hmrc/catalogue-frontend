@@ -220,7 +220,8 @@ class ReleasesConnectorSpec
           Environment.Production,
           service = Some("income-tax-submission-frontend"),
           skip    = Some(20),
-          limit   = Some(1))
+          limit   = Some(1)
+        )
         .futureValue
       response.total          shouldBe 100
       response.history.length shouldBe 1

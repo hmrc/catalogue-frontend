@@ -263,30 +263,26 @@ class TeamsAndRepositoriesConnectorSpec
       teams      should contain theSameElementsAs
         Seq(
           Team(
-            TeamName("team1"),
-            None,
-            None,
-            None,
-            Some(
-              Map(
-                "Service"   -> Seq("service1", "service2"),
-                "Library"   -> Seq("lib1", "lib2"),
-                "Prototype" -> Seq(),
-                "Other"     -> Seq("other1", "other2")
-              ))
+            name           = TeamName("team1"),
+            createdDate    = None,
+            lastActiveDate = None,
+            repos          = Some(Map(
+                              "Service"   -> Seq("service1", "service2"),
+                              "Library"   -> Seq("lib1", "lib2"),
+                              "Prototype" -> Seq(),
+                              "Other"     -> Seq("other1", "other2")
+                             ))
           ),
           Team(
-            TeamName("team2"),
-            None,
-            None,
-            None,
-            Some(
-              Map(
-                "Service"   -> Seq("service3", "service4"),
-                "Library"   -> Seq("lib3", "lib4"),
-                "Prototype" -> Seq("prototype1"),
-                "Other"     -> Seq("other3", "other4")
-              ))
+            name           = TeamName("team2"),
+            createdDate    = None,
+            lastActiveDate = None,
+            repos          = Some(Map(
+                               "Service"   -> Seq("service3", "service4"),
+                               "Library"   -> Seq("lib3", "lib4"),
+                               "Prototype" -> Seq("prototype1"),
+                               "Other"     -> Seq("other3", "other4")
+                             ))
           )
         )
     }
