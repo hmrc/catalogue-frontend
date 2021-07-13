@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import org.scalatest.BeforeAndAfter
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
@@ -27,8 +26,6 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
   private[this] lazy val WS = app.injector.instanceOf[WSClient]
-
-  def asDocument(html: String): Document = Jsoup.parse(html)
 
   "Repositories list" should {
     "show a list of all repositories when 'All' is selected" in {
@@ -46,16 +43,16 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       response.status shouldBe 200
       response.body   should include("<h1>Repositories</h1>")
 
-      val document = asDocument(response.body)
+      val document = Jsoup.parse(response.body)
 
       document.select("#row0_name").select("td a").text()             shouldBe "teamA-serv"
-      document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/service/teamA-serv"
+      document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-serv"
       document.select("#row0_created").text()                         shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
       document.select("#row0_repotype").text()                        shouldBe "Service"
       document.select("#row0_lastActive").text()                      shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
 
       document.select("#row1_name").select("td a").text()             shouldBe "teamB-library"
-      document.select("#row1_name").select("td a[href]").attr("href") shouldBe "/library/teamB-library"
+      document.select("#row1_name").select("td a[href]").attr("href") shouldBe "/repositories/teamB-library"
       document.select("#row1_created").text()                         shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
       document.select("#row1_repotype").text()                        shouldBe "Library"
       document.select("#row1_lastActive").text()                      shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
@@ -77,20 +74,20 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
             JsonData.repositoriesData
           )))
 
-      val response = WS.url(s"http://localhost:$port/repositories?name=&type=Library").get.futureValue
+      val response = WS.url(s"http://localhost:$port/repositories?repoType=Library").get.futureValue
 
       response.status shouldBe 200
       response.body   should include("<h1>Repositories</h1>")
 
-      val document = asDocument(response.body)
+      val document = Jsoup.parse(response.body)
 
       document.select("tbody.list").select("tr").size() shouldBe 1
 
-      document.select("#row0_name").select("td a").text()             shouldBe "teamB-library"
-      document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/library/teamB-library"
-      document.select("#row0_created").text()                         shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
-      document.select("#row0_repotype").text()                        shouldBe "Library"
-      document.select("#row0_lastActive").text()                      shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
+      document.select("#row0_name"      ).select("td a").text()             shouldBe "teamB-library"
+      document.select("#row0_name"      ).select("td a[href]").attr("href") shouldBe "/repositories/teamB-library"
+      document.select("#row0_created"   ).text()                            shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
+      document.select("#row0_repotype"  ).text()                            shouldBe "Library"
+      document.select("#row0_lastActive").text()                            shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
     }
   }
 }

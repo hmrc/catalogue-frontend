@@ -26,10 +26,9 @@ import play.api.mvc._
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Library
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
@@ -37,7 +36,6 @@ import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, LeakDetectionServic
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
@@ -106,13 +104,6 @@ class CatalogueController @Inject() (
 
   private lazy val whatsNewDisplayLines  = configuration.get[Int]("whats-new.display.lines")
   private lazy val blogPostsDisplayLines = configuration.get[Int]("blog-posts.display.lines")
-
-  private val repoTypeToDetailsUrl = Map(
-    RepoType.Service   -> routes.CatalogueController.service _,
-    RepoType.Other     -> routes.CatalogueController.repository _,
-    RepoType.Library   -> routes.CatalogueController.library _,
-    RepoType.Prototype -> routes.CatalogueController.prototype _
-  )
 
   private val logger = Logger(getClass)
 
@@ -301,26 +292,37 @@ class CatalogueController @Inject() (
       } yield Ok(serviceConfigRawPage(serviceName, configByEnvironment))
     }
 
-  def service(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
+  /** Renders the service page by either the repository name, or the artefact name (if configured).
+    * This is where it differs from accessing through the generic `/repositories/name` endpoint, which only
+    * considers the name of the repository.
+    */
+  def service(serviceName: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      def buildServicePageFromItsArtifactName(serviceName: String): Future[Result] =
+        configService.findArtifactName(serviceName).flatMap {
+          case ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName).getOrElse(notFound)
+          case ArtifactNameNotFound            => Future.successful(notFound)
+          case ArtifactNameError(error)        => logger.error(error)
+                                                  Future.successful(InternalServerError)
+        }
 
-    def buildServicePageFromItsArtifactName(serviceName: String): Future[Result] = configService.findArtifactName(serviceName).flatMap {
-      case ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName).getOrElse(notFound)
-      case ArtifactNameNotFound => Future.successful(notFound)
-      case ArtifactNameError(error) =>
-        logger.error(error)
-        Future.successful(InternalServerError)
+      def buildServicePageFromRepoName(repoName: String): OptionT[Future, Result] =
+        OptionT(teamsAndRepositoriesConnector.repositoryDetails(repoName))
+          .semiflatMap {
+            case repositoryDetails if repositoryDetails.repoType == RepoType.Service => renderServicePage(serviceName, repositoryDetails)
+            case _ => Future.successful(notFound)
+          }
+
+      buildServicePageFromRepoName(serviceName).getOrElseF(buildServicePageFromItsArtifactName(serviceName))
     }
 
-    def buildServicePageFromRepoName(repoName: String): OptionT[Future, Result] = OptionT(teamsAndRepositoriesConnector.repositoryDetails(repoName))
-      .semiflatMap {
-        case repositoryDetails if repositoryDetails.repoType == RepoType.Service => buildServicePage(serviceName, repositoryDetails)
-        case _ => Future.successful(notFound)
-      }
-
-    buildServicePageFromRepoName(serviceName).getOrElseF(buildServicePageFromItsArtifactName(serviceName))
-  }
-
-  private def buildServicePage(serviceName: String, repositoryDetails: RepositoryDetails)(implicit hc: HeaderCarrier, messages: Messages, request: Request[_]) = {
+  private def renderServicePage(
+    serviceName      : String,
+    repositoryDetails: RepositoryDetails
+  )(implicit
+    messages: Messages,
+    request : Request[_]
+  ): Future[Result] = {
     val repositoryName = repositoryDetails.name
     val futEnvDatas: Future[Map[SlugInfoFlag, EnvData]] =
       for {
@@ -367,105 +369,118 @@ class CatalogueController @Inject() (
       routeRulesService.serviceUrl(serviceName),
       routeRulesService.serviceRoutes(serviceName),
       serviceDependencyConnector.getSlugInfo(repositoryName)
-    ).mapN { (jenkinsLink, envDatas, optMasterDependencies, librariesOfLatestSlug, urlIfLeaksFound, serviceUrl, serviceRoutes, optLatestServiceInfo) =>
+    ).mapN { (jenkinsLink,
+              envDatas,
+              optMasterDependencies,
+              librariesOfLatestSlug,
+              urlIfLeaksFound,
+              serviceUrl,
+              serviceRoutes,
+              optLatestServiceInfo
+             ) =>
       val optLatestData: Option[(SlugInfoFlag, EnvData)] =
         optLatestServiceInfo.map { latestServiceInfo =>
           SlugInfoFlag.Latest ->
             EnvData(
-              version = latestServiceInfo.semanticVersion.get,
-              dependencies = librariesOfLatestSlug,
-              optShutterState = None,
+              version           = latestServiceInfo.semanticVersion.get,
+              dependencies      = librariesOfLatestSlug,
+              optShutterState   = None,
               optTelemetryLinks = None
             )
         }
 
       Ok(
         serviceInfoPage(
-          serviceName = serviceName,
-          repositoryDetails = repositoryDetails.copy(jenkinsURL = jenkinsLink),
-          optMasterDependencies = optMasterDependencies,
-          repositoryCreationDate = repositoryDetails.createdAt,
-          envDatas = optLatestData.fold(envDatas)(envDatas + _),
-          linkToLeakDetection = urlIfLeaksFound,
+          serviceName                = serviceName,
+          repositoryDetails          = repositoryDetails.copy(jenkinsURL = jenkinsLink),
+          optMasterDependencies      = optMasterDependencies,
+          repositoryCreationDate     = repositoryDetails.createdAt,
+          envDatas                   = optLatestData.fold(envDatas)(envDatas + _),
+          linkToLeakDetection        = urlIfLeaksFound,
           productionEnvironmentRoute = serviceUrl,
-          serviceRoutes = serviceRoutes
+          serviceRoutes              = serviceRoutes
         )
       )
     }
   }
 
   def library(name: String): Action[AnyContent] =
-    Action.async { implicit request =>
-      for {
-        library         <- teamsAndRepositoriesConnector.repositoryDetails(name)
-        jenkinsLink     <- teamsAndRepositoriesConnector.lookupLink(name)
-        optDependencies <- serviceDependencyConnector.getDependencies(name)
-        urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
-      } yield library match {
-        case Some(s) if s.repoType == Library =>
-          Ok(libraryInfoPage(s.copy(jenkinsURL = jenkinsLink), optDependencies, urlIfLeaksFound))
-        case _ =>
-          notFound
-      }
-    }
+    Action(Redirect(routes.CatalogueController.repository(name)))
 
   def prototype(name: String): Action[AnyContent] =
-    Action.async { implicit request =>
-      for {
-        repository      <- teamsAndRepositoriesConnector.repositoryDetails(name)
-        urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
-      } yield repository match {
-        case Some(s) if s.repoType == RepoType.Prototype =>
-          Ok(prototypeInfoPage(s.copy(environments = None), s.createdAt, urlIfLeaksFound))
-        case None => notFound
-      }
-    }
+    Action(Redirect(routes.CatalogueController.repository(name)))
 
   def repository(name: String): Action[AnyContent] =
     Action.async { implicit request =>
-      for {
-        repository <- teamsAndRepositoriesConnector
-                        .repositoryDetails(name)
-                        .map(
-                          _.map(repo =>
-                            repo.copy(teamNames = {
-                              val (owners, other) = repo.teamNames.partition(s => repo.owningTeams.contains(s))
-                              owners.sorted ++ other.sorted
-                            })
-                          )
-                        )
-        jenkinsLinks       <- teamsAndRepositoriesConnector.lookupLink(name)
-        optDependencies    <- serviceDependencyConnector.getDependencies(name)
-        optUrlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(name)
-      } yield repository match {
-        case Some(repositoryDetails) =>
-          Ok(
-            repositoryInfoPage(
-              repositoryDetails.copy(jenkinsURL = jenkinsLinks),
-              optDependencies,
-              optUrlIfLeaksFound
-            )
-          )
-        case _ => notFound
-      }
+      OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
+        .semiflatMap(repoDetails =>
+          repoDetails.repoType match {
+            case RepoType.Service   => renderServicePage(
+                                         serviceName       = repoDetails.name,
+                                         repositoryDetails = repoDetails
+                                       )
+            case RepoType.Library   => renderLibrary(repoDetails)
+            case RepoType.Prototype => renderPrototype(repoDetails)
+            case RepoType.Other     => renderOther(repoDetails)
+            case _                  => Future.successful(notFound)
+          }
+        )
+        .getOrElseF(Future.successful(notFound))
     }
+
+  def renderLibrary(repoDetails: RepositoryDetails)(implicit request: Request[_]): Future[Result] =
+    for {
+      jenkinsLink     <- teamsAndRepositoriesConnector.lookupLink(repoDetails.name)
+      optDependencies <- serviceDependencyConnector.getDependencies(repoDetails.name)
+      urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
+    } yield
+      Ok(libraryInfoPage(
+        repoDetails.copy(jenkinsURL = jenkinsLink),
+        optDependencies,
+        urlIfLeaksFound
+      ))
+
+  private def renderPrototype(repoDetails: RepositoryDetails)(implicit messages: Messages, request: Request[_]): Future[Result] =
+    for {
+      urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
+    } yield
+      Ok(prototypeInfoPage(
+        repoDetails.copy(environments = None),
+        urlIfLeaksFound
+      ))
+
+  private def renderOther(repoDetails: RepositoryDetails)(implicit messages: Messages, request: Request[_]): Future[Result] =
+    for {
+      jenkinsLinks      <- teamsAndRepositoriesConnector.lookupLink(repoDetails.name)
+      optDependencies   <- serviceDependencyConnector.getDependencies(repoDetails.name)
+      urlIfLeaksFound   <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
+      (owners, writers) =  repoDetails.teamNames.partition(s => repoDetails.owningTeams.contains(s))
+    } yield
+      Ok(repositoryInfoPage(
+        repoDetails.copy(
+          jenkinsURL = jenkinsLinks,
+          teamNames  = owners.sorted ++ writers.sorted
+        ),
+        optDependencies,
+        urlIfLeaksFound
+      ))
 
   def allServices: Action[AnyContent] =
     Action {
-      Redirect("/repositories?name=&type=Service")
+      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Service.toString)))
     }
 
   def allLibraries: Action[AnyContent] =
     Action {
-      Redirect("/repositories?name=&type=Library")
+      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Library.toString)))
     }
 
   def allPrototypes: Action[AnyContent] =
     Action {
-      Redirect("/repositories?name=&type=Prototype")
+      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Prototype.toString)))
     }
 
-  def allRepositories(): Action[AnyContent] =
+  def allRepositories(repoType: Option[String]): Action[AnyContent] =
     Action.async { implicit request =>
       import SearchFiltering._
 
@@ -473,12 +488,11 @@ class CatalogueController @Inject() (
         RepoListFilter.form
           .bindFromRequest()
           .fold(
-            formWithErrors => Ok(repositoriesListPage(repositories = Seq.empty, repoTypeToDetailsUrl, formWithErrors)),
+            formWithErrors => Ok(repositoriesListPage(repositories = Seq.empty, formWithErrors)),
             query =>
               Ok(
                 repositoriesListPage(
                   repositories = repositories.filter(query),
-                  repoTypeToDetailsUrl,
                   RepoListFilter.form.bindFromRequest()
                 )
               )
@@ -531,7 +545,7 @@ object DigitalServiceNameFilter {
 }
 
 case class RepoListFilter(
-  name: Option[String] = None,
+  name    : Option[String] = None,
   repoType: Option[String] = None
 ) {
   def isEmpty: Boolean = name.isEmpty && repoType.isEmpty
@@ -540,8 +554,8 @@ case class RepoListFilter(
 object RepoListFilter {
   lazy val form = Form(
     mapping(
-      "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "type" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+      "name"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+      "repoType" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(RepoListFilter.apply)(RepoListFilter.unapply)
   )
 }

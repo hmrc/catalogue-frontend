@@ -33,27 +33,11 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with FakeApplicationB
   }
 
   "A library page" should {
-
-    "return a 404 when teams and services returns a 404" in {
-      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (404, None))
-
-      val response = WS.url(s"http://localhost:$port/services/serv").get.futureValue
-      response.status shouldBe 404
-    }
-
-    "return a 404 when a Service is viewed as a Library" in {
-      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(serviceData)))
-
-      val response = WS.url(s"http://localhost:$port/library/serv").get.futureValue
-      response.status shouldBe 404
-    }
-
     "show the teams owning the service with github and ci links and info box" in {
-
       serviceEndpoint(GET, "/api/repositories/lib", willRespondWith = (200, Some(libraryData)))
       serviceEndpoint(GET, "/api/jenkins-url/lib", willRespondWith = (200, Some(jenkinsData)))
 
-      val response = WS.url(s"http://localhost:$port/library/lib").get.futureValue
+      val response = WS.url(s"http://localhost:$port/repositories/lib").get.futureValue
       response.status shouldBe 200
       response.body   should include(s"links on this page are automatically generated")
       response.body   should include(s"teamA")
@@ -67,11 +51,12 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with FakeApplicationB
       response.body   should not include "http://ser2/serv"
     }
 
-    "Render dependencies with red, green, amber and grey colours" in {
+    "render dependencies with red, green, amber and grey colours" in {
       serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                      = (200, Some(libraryData)))
       serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
 
-      val response = WS.url(s"http://localhost:$port/library/service-name").get.futureValue
+      val response = WS.url(s"http://localhost:$port/repositories/service-name").get.futureValue
+      response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)
 

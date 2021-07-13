@@ -23,10 +23,13 @@
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 
-@(repository: RepositoryDetails,
-  optDependencies: Option[Dependencies],
+@(repository         : RepositoryDetails,
+  optDependencies    : Option[Dependencies],
   linkToLeakDetection: Option[String]
-)(implicit messages: Messages, request: Request[_])
+)(implicit
+  messages: Messages,
+  request: Request[_]
+)
 
 @standard_layout(repository.name, "repositories") {
     <header class="header-with-github-badge">

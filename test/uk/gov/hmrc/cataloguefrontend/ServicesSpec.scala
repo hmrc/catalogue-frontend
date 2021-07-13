@@ -37,11 +37,10 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
 
   "/services" should {
     "redirect to the repositories page with the appropriate filters" in {
-
       val result = catalogueController.allServices(FakeRequest())
 
       status(result)           shouldBe 303
-      redirectLocation(result) shouldBe Some("/repositories?name=&type=Service")
+      redirectLocation(result) shouldBe Some("/repositories?repoType=Service")
     }
   }
 
