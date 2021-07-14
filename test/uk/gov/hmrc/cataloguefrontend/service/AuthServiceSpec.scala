@@ -22,7 +22,6 @@ import cats.data.NonEmptyList
 import cats.implicits._
 import org.mockito.ArgumentMatchers.{any, eq => mockEq}
 import org.mockito.MockitoSugar
-import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.ScalaFutures
@@ -34,6 +33,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Username}
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.util.Generators.repoTypeGen
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -98,10 +98,8 @@ class AuthServiceSpec
       , displayName = DisplayName("Username")
       )
 
-    val serviceGen: Gen[RepoType.RepoType] = Gen.oneOf(RepoType.Service, RepoType.Other)
-
     "allow service belonging to team containing user" in new Setup {
-      forAll(serviceGen) { repoType =>
+      forAll(repoTypeGen) { repoType =>
         when(teamsAndRepositoriesConnector.allTeams(any()))
           .thenReturn(Future(List(team(TeamName("team1"), Map(repoType -> List("service1"))))))
 
@@ -115,7 +113,7 @@ class AuthServiceSpec
     }
 
     "allow service belonging to multiple teams, one of which contains user" in new Setup {
-      forAll(serviceGen) { repoType =>
+      forAll(repoTypeGen) { repoType =>
         when(teamsAndRepositoriesConnector.allTeams(any()))
           .thenReturn(Future(List(
               team(TeamName("team1"), Map(repoType -> List("service1")))
@@ -144,7 +142,7 @@ class AuthServiceSpec
     }
 
     "deny service which belong to teams not containing user" in new Setup {
-      forAll(serviceGen) { repoType =>
+      forAll(repoTypeGen) { repoType =>
         when(teamsAndRepositoriesConnector.allTeams(any()))
           .thenReturn(Future(List(team(TeamName("team1"), Map(repoType -> List("service1"))))))
 
@@ -158,7 +156,7 @@ class AuthServiceSpec
     }
 
     "only report service once if denied from multiple teams" in new Setup {
-      forAll(serviceGen) { repoType =>
+      forAll(repoTypeGen) { repoType =>
         when(teamsAndRepositoriesConnector.allTeams(any()))
           .thenReturn(Future(List(
               team(TeamName("team1"), Map(repoType -> List("service1")))
@@ -188,7 +186,7 @@ class AuthServiceSpec
     val service                       = new AuthService(userManagementAuthConnector, userManagementConnector, teamsAndRepositoriesConnector)
   }
 
-  def team(name: TeamName, repoMap: Map[RepoType.RepoType, List[String]]) = Team(
+  def team(name: TeamName, repoMap: Map[RepoType, List[String]]) = Team(
       name           = name
     , createdDate    = None
     , lastActiveDate = None

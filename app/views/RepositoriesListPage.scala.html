@@ -86,7 +86,7 @@
                     <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
                 </td>
                 <td class="repo-type monospaced" id="row@{i}_repotype">
-                    @viewMessages.toTypeText(repo.repoType)
+                    @repo.repoType.asString
                 </td>
                 <td class="created monospaced" id="row@{i}_created">
                     @repo.createdAt.asPattern("yyyy-MM-dd")
@@ -110,5 +110,5 @@
 </script>
 
 @repoTypes = @{
-    ("" ,"All") +: RepoType.values.map(v => (v.toString, v.toString)).toList
+    ("" ,"All") +: RepoType.values.map(v => (v.asString, v.asString)).toList
 }

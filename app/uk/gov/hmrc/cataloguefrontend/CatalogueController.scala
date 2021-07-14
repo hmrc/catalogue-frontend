@@ -50,8 +50,8 @@ case class TeamActivityDates(
 
 case class DigitalServiceDetails(
   digitalServiceName: String,
-  teamMembersLookUp: Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]],
-  repos: Map[String, Seq[String]]
+  teamMembersLookUp : Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]],
+  repos             : Map[RepoType, Seq[String]]
 )
 
 case class EnvData(
@@ -201,9 +201,9 @@ class CatalogueController @Inject() (
       Ok(toJson(filteredUsers))
     }
 
-  private def getRepos(data: DigitalService): Map[String, Seq[String]] = {
-    val emptyMapOfRepoTypes = RepoType.values.map(v => v.toString -> List.empty[String]).toMap
-    val mapOfRepoTypes      = data.repositories.groupBy(_.repoType).map { case (k, v) => k.toString -> v.map(_.name) }
+  private def getRepos(data: DigitalService): Map[RepoType, Seq[String]] = {
+    val emptyMapOfRepoTypes = RepoType.values.map(_ -> List.empty[String]).toMap
+    val mapOfRepoTypes      = data.repositories.groupBy(_.repoType).mapValues(_.map(_.name))
 
     emptyMapOfRepoTypes ++ mapOfRepoTypes
   }
@@ -232,43 +232,42 @@ class CatalogueController @Inject() (
 
   def team(teamName: TeamName): Action[AnyContent] =
     Action.async { implicit request =>
-      teamsAndRepositoriesConnector.teamInfo(teamName)
-        .flatMap {
-          case Some(teamInfo) =>
-            (
-              userManagementConnector.getTeamMembersFromUMP(teamName),
-              userManagementConnector.getTeamDetails(teamName),
-              leakDetectionService.repositoriesWithLeaks,
-              serviceDependencyConnector.dependenciesForTeam(teamName),
-              serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),
-              if (hideArchivedRepositoriesFromTeam)
-                teamsAndRepositoriesConnector.archivedRepositories.map(_.map(_.name))
-              else
-                Future.successful(Nil)
-            ).mapN { (teamMembers, teamDetails, reposWithLeaks, masterTeamDependencies, prodDependencies, reposToHide) =>
-              Ok(
-                teamInfoPage(
-                  teamName               = teamInfo.name,
-                  repos                  = teamInfo.repos.getOrElse(Map.empty).map {
-                                            case (repoType, repos) =>
-                                              repoType -> repos.filterNot(reposToHide.contains(_))
-                                          },
-                  activityDates          = TeamActivityDates(
-                                            created    = teamInfo.createdDate,
-                                            lastActive = teamInfo.lastActiveDate
-                                          ),
-                  errorOrTeamMembers     = convertToDisplayableTeamMembers(teamInfo.name, teamMembers),
-                  errorOrTeamDetails     = teamDetails,
-                  umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name),
-                  leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks),
-                  hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
-                  masterTeamDependencies = masterTeamDependencies.filterNot(repo => reposToHide.contains(repo.repositoryName)),
-                  prodDependencies       = prodDependencies
-                )
+      teamsAndRepositoriesConnector.teamInfo(teamName).flatMap {
+        case Some(teamInfo) =>
+          (
+            userManagementConnector.getTeamMembersFromUMP(teamName),
+            userManagementConnector.getTeamDetails(teamName),
+            leakDetectionService.repositoriesWithLeaks,
+            serviceDependencyConnector.dependenciesForTeam(teamName),
+            serviceDependencyConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),
+            if (hideArchivedRepositoriesFromTeam)
+              teamsAndRepositoriesConnector.archivedRepositories.map(_.map(_.name))
+            else
+              Future.successful(Nil)
+          ).mapN { (teamMembers, teamDetails, reposWithLeaks, masterTeamDependencies, prodDependencies, reposToHide) =>
+            Ok(
+              teamInfoPage(
+                teamName               = teamInfo.name,
+                repos                  = teamInfo.repos.getOrElse(Map.empty).map {
+                                           case (repoType, repos) =>
+                                             repoType -> repos.filterNot(reposToHide.contains(_))
+                                         },
+                activityDates          = TeamActivityDates(
+                                           created    = teamInfo.createdDate,
+                                           lastActive = teamInfo.lastActiveDate
+                                         ),
+                errorOrTeamMembers     = convertToDisplayableTeamMembers(teamInfo.name, teamMembers),
+                errorOrTeamDetails     = teamDetails,
+                umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name),
+                leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks),
+                hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
+                masterTeamDependencies = masterTeamDependencies.filterNot(repo => reposToHide.contains(repo.repositoryName)),
+                prodDependencies       = prodDependencies
               )
-            }
-          case _ => Future.successful(notFound)
-        }
+            )
+          }
+        case _ => Future.successful(notFound)
+      }
     }
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
@@ -416,7 +415,7 @@ class CatalogueController @Inject() (
   def repository(name: String): Action[AnyContent] =
     Action.async { implicit request =>
       OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
-        .semiflatMap(repoDetails =>
+        .foldF(Future.successful(notFound))(repoDetails =>
           repoDetails.repoType match {
             case RepoType.Service   => renderServicePage(
                                          serviceName       = repoDetails.name,
@@ -425,10 +424,8 @@ class CatalogueController @Inject() (
             case RepoType.Library   => renderLibrary(repoDetails)
             case RepoType.Prototype => renderPrototype(repoDetails)
             case RepoType.Other     => renderOther(repoDetails)
-            case _                  => Future.successful(notFound)
           }
         )
-        .getOrElseF(Future.successful(notFound))
     }
 
   def renderLibrary(repoDetails: RepositoryDetails)(implicit request: Request[_]): Future[Result] =
@@ -457,7 +454,7 @@ class CatalogueController @Inject() (
       jenkinsLinks      <- teamsAndRepositoriesConnector.lookupLink(repoDetails.name)
       optDependencies   <- serviceDependencyConnector.getDependencies(repoDetails.name)
       urlIfLeaksFound   <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
-      (owners, writers) =  repoDetails.teamNames.partition(s => repoDetails.owningTeams.contains(s))
+      (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains)
     } yield
       Ok(repositoryInfoPage(
         repoDetails.copy(
@@ -470,17 +467,17 @@ class CatalogueController @Inject() (
 
   def allServices: Action[AnyContent] =
     Action {
-      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Service.toString)))
+      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Service.asString)))
     }
 
   def allLibraries: Action[AnyContent] =
     Action {
-      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Library.toString)))
+      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Library.asString)))
     }
 
   def allPrototypes: Action[AnyContent] =
     Action {
-      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Prototype.toString)))
+      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
     }
 
   def allRepositories(repoType: Option[String]): Action[AnyContent] =

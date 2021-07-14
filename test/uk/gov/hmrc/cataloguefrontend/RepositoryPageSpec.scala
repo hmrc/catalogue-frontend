@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
@@ -30,7 +29,10 @@ class RepositoryPageSpec
     with FakeApplicationBuilder
     with BeforeAndAfterEach {
 
-  case class RepositoryDetails(repositoryName: String, repositoryType: RepoType.RepoType)
+  case class RepositoryDetails(
+    repositoryName: String,
+    repositoryType: RepoType
+  )
 
   val repositoryDetails = Seq(
     RepositoryDetails("Service", RepoType.Service),

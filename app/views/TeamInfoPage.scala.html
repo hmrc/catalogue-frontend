@@ -19,7 +19,6 @@
 @import uk.gov.hmrc.cataloguefrontend.{DisplayableTeamMember, TeamActivityDates, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, TeamDetails}
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-@import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependencies, Dependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
@@ -193,7 +192,7 @@
                   <ul class="list list--minimal">
                   @for(repo <- repos) {
                       <li class="list-item" id="@repo">
-                          <a href="/repositories/@repo">
+                          <a href="@appRoutes.CatalogueController.repository(repo)">
                               @if(hasLeaks(repo)) {
                                   <div class="leak-detected">@repo <span class="glyphicon glyphicon-warning-sign"/></div>
                               } else {

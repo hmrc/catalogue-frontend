@@ -17,19 +17,19 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 @import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-@import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @import uk.gov.hmrc.cataloguefrontend.actions.UmpVerifiedRequest
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(viewMessages: ViewMessages)
 
-@(timestampedRepos: DigitalServiceDetails,
-  digitalServiceOwner: Option[DisplayableTeamMember]
+@(digitalServiceDetails: DigitalServiceDetails,
+  digitalServiceOwner  : Option[DisplayableTeamMember]
 )(implicit request: UmpVerifiedRequest[_])
 
-@standard_layout(timestampedRepos.digitalServiceName, "digital-services") {
+@standard_layout(digitalServiceDetails.digitalServiceName, "digital-services") {
     <header>
-        <h1>Digital Service: @{timestampedRepos.digitalServiceName}</h1>
+        <h1>Digital Service: @{digitalServiceDetails.digitalServiceName}</h1>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
@@ -84,7 +84,7 @@
         <div class="col-md-12">
             <div class="board">
                 <h3 class="board__heading">Contributing Teams</h3>
-                @for((teamName, errorOrMembers) <- timestampedRepos.teamMembersLookUp) {
+                @for((teamName, errorOrMembers) <- digitalServiceDetails.teamMembersLookUp) {
                    <h4 class="sub__heading"><a href="/teams/@teamName.asString">@teamName.asString</a></h4>
 
                    <div class="board__body">
@@ -126,16 +126,13 @@
 
     <section class="section-wrapper">
         <div class="row">
-
-            @showRepositories(timestampedRepos.repos, RepoType.Service, "Services", "service", "service")
-            @showRepositories(timestampedRepos.repos, RepoType.Library, "Libraries", "library", "library")
-            @showRepositories(timestampedRepos.repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
-            @showRepositories(timestampedRepos.repos, RepoType.Other, "Repositories", "other", "repositories")
+            @showRepositories(digitalServiceDetails.repos.getOrElse(RepoType.Service  , Seq.empty), "Services"    , "service")
+            @showRepositories(digitalServiceDetails.repos.getOrElse(RepoType.Library  , Seq.empty), "Libraries"   , "library")
+            @showRepositories(digitalServiceDetails.repos.getOrElse(RepoType.Prototype, Seq.empty), "Prototypes"  , "prototype")
+            @showRepositories(digitalServiceDetails.repos.getOrElse(RepoType.Other    , Seq.empty), "Repositories", "other")
 
         </div>
     </section>
-
-
 
 
     <div id="snackbar" class="snackbar"></div>
@@ -182,7 +179,7 @@
         function saveServiceOwner() {
             var digitalServiceOwnerName = $('#service_owner_edit_input').val();
             var data = {
-                service: "@{timestampedRepos.digitalServiceName}",
+                service: "@{digitalServiceDetails.digitalServiceName}",
                 displayName: digitalServiceOwnerName
             };
 
@@ -234,25 +231,22 @@
 
 }
 
-@showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {
-    @repos.get(repoType.toString).map { repositories =>
-        <div class="col-md-3">
-            <div id="@headerName" class="board">
-                <h3 class="board__heading">@headerName</h3>
+@showRepositories(repos: Seq[String], headerName: String, typeName: String) = {
+  <div class="col-md-3">
+    <div id="@headerName" class="board">
+      <h3 class="board__heading">@headerName</h3>
 
-                <div class="board__body">
-                    @if(repositories.isEmpty) {
-                        <p>@Html(viewMessages.noRepoOfTypeForDigitalService(typeName))</p>
-
-                    } else {
-                        <ul class="list list--minimal">
-                        @for(repository <- repositories) {
-                            <li class="list-item" id="@repository"><a href="/@href/@{repository}">@repository</a></li>
-                        }
-                        </ul>
-                    }
-                </div>
-            </div>
-        </div>
-    }
+      <div class="board__body">
+        @if(repos.isEmpty) {
+          <p>@Html(viewMessages.noRepoOfTypeForDigitalService(typeName))</p>
+        } else {
+          <ul class="list list--minimal">
+            @for(repo <- repos) {
+              <li class="list-item" id="@repo"><a href="@appRoutes.CatalogueController.repository(repo)">@repo</a></li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  </div>
 }

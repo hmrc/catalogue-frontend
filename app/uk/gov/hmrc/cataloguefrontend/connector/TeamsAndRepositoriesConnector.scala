@@ -30,22 +30,30 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-object RepoType extends Enumeration {
+sealed trait RepoType { def asString: String }
+object RepoType {
+  case object Service   extends RepoType { override val asString = "Service"   }
+  case object Library   extends RepoType { override val asString = "Library"   }
+  case object Prototype extends RepoType { override val asString = "Prototype" }
+  case object Other     extends RepoType { override val asString = "Other"     }
 
-  type RepoType = Value
+  val values: List[RepoType] = List(Service, Library, Prototype, Other)
 
-  val Service, Library, Prototype, Other = Value
+  def parse(s: String): Either[String, RepoType] =
+    values
+      .find(_.asString == s)
+      .toRight(s"Invalid repoType - should be one of: ${values.map(_.asString).mkString(", ")}")
 
   val format: Format[RepoType] =
     new Format[RepoType] {
-      override def reads(json: JsValue) =
+      override def reads(json: JsValue): JsResult[RepoType] =
         json match {
-          case JsString(s) => JsSuccess(RepoType.withName(s))
-          case _           => JsError(__, JsonValidationError(s"Expected value to be a String contained within ${RepoType.values}, got $json instead."))
+          case JsString(s) => parse(s).fold(msg => JsError(msg), rt => JsSuccess(rt))
+          case _           => JsError("String value expected")
         }
 
-      override def writes(rt: RepoType) =
-        JsString(rt.toString)
+      override def writes(rt: RepoType): JsValue =
+        JsString(rt.asString)
     }
 }
 
@@ -84,7 +92,7 @@ case class RepositoryDetails(
   githubUrl   : Link,
   jenkinsURL  : Option[Link],
   environments: Option[Seq[TargetEnvironment]],
-  repoType    : RepoType.RepoType,
+  repoType    : RepoType,
   isPrivate   : Boolean,
   isArchived  : Boolean
 )
@@ -103,7 +111,7 @@ case class RepositoryDisplayDetails(
   name         : String,
   createdAt    : LocalDateTime,
   lastUpdatedAt: LocalDateTime,
-  repoType     : RepoType.RepoType
+  repoType     : RepoType
 )
 
 object RepositoryDisplayDetails {
@@ -117,7 +125,7 @@ case class Team(
   name           : TeamName,
   createdDate    : Option[LocalDateTime],
   lastActiveDate : Option[LocalDateTime],
-  repos          : Option[Map[RepoType.Value, Seq[String]]]
+  repos          : Option[Map[RepoType, Seq[String]]]
 )
 
 object Team {
@@ -127,9 +135,9 @@ object Team {
     ~ (__ \ "createdDate"   ).formatNullable[LocalDateTime]
     ~ (__ \ "lastActiveDate").formatNullable[LocalDateTime]
     ~ (__ \ "repos"         ).formatNullable[Map[String, Seq[String]]]
-                             .inmap[Option[Map[RepoType.Value, Seq[String]]]](
-                               _.map(_.map { case (k, v) => RepoType.withName(k) -> v }),
-                               _.map(_.map { case (k, v) => k.toString           -> v })
+                             .inmap[Option[Map[RepoType, Seq[String]]]](
+                               _.map(_.map { case (k, v) => RepoType.parse(k).getOrElse(sys.error("Invalid repoType")) -> v }),
+                               _.map(_.map { case (k, v) => k.asString                                                 -> v })
                              )
     )(apply, unlift(unapply))
   }
@@ -146,7 +154,7 @@ object DigitalService {
     name         : String,
     createdAt    : LocalDateTime,
     lastUpdatedAt: LocalDateTime,
-    repoType     : RepoType.RepoType,
+    repoType     : RepoType,
     teamNames    : Seq[TeamName]
   )
 

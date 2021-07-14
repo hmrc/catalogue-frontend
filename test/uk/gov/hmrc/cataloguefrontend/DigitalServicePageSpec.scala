@@ -103,8 +103,8 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
 
       response.status shouldBe 200
 
-      response.body should include("""<a href="/prototype/B">B</a>""")
-      response.body should include("""<a href="/library/C">C</a>""")
+      response.body should include("""<a href="/repositories/B">B</a>""")
+      response.body should include("""<a href="/repositories/C">C</a>""")
       response.body should include("""<a href="/repositories/D">D</a>""")
     }
 
