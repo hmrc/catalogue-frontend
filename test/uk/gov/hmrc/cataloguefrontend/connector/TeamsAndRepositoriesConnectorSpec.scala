@@ -267,10 +267,10 @@ class TeamsAndRepositoriesConnectorSpec
             createdDate    = None,
             lastActiveDate = None,
             repos          = Some(Map(
-                              "Service"   -> Seq("service1", "service2"),
-                              "Library"   -> Seq("lib1", "lib2"),
-                              "Prototype" -> Seq(),
-                              "Other"     -> Seq("other1", "other2")
+                              RepoType.Service   -> Seq("service1", "service2"),
+                              RepoType.Library   -> Seq("lib1", "lib2"),
+                              RepoType.Prototype -> Seq(),
+                              RepoType.Other     -> Seq("other1", "other2")
                              ))
           ),
           Team(
@@ -278,10 +278,10 @@ class TeamsAndRepositoriesConnectorSpec
             createdDate    = None,
             lastActiveDate = None,
             repos          = Some(Map(
-                               "Service"   -> Seq("service3", "service4"),
-                               "Library"   -> Seq("lib3", "lib4"),
-                               "Prototype" -> Seq("prototype1"),
-                               "Other"     -> Seq("other3", "other4")
+                               RepoType.Service   -> Seq("service3", "service4"),
+                               RepoType.Library   -> Seq("lib3", "lib4"),
+                               RepoType.Prototype -> Seq("prototype1"),
+                               RepoType.Other     -> Seq("other3", "other4")
                              ))
           )
         )

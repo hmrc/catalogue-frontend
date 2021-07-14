@@ -70,7 +70,12 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Fak
           name            = TeamName(teamName),
           createdDate     = None,
           lastActiveDate  = None,
-          repos           = Some(Map("Service" -> Seq(), "Library" -> Seq(), "Prototype" -> Seq(), "Other" -> repositories))
+          repos           = Some(Map(
+                              RepoType.Service   -> Seq(),
+                              RepoType.Library   -> Seq(),
+                              RepoType.Prototype -> Seq(),
+                              RepoType.Other     -> repositories
+                            ))
         )
 
       when(mockedTeamsAndRepositoriesConnector.allTeams(any()))

@@ -70,7 +70,7 @@ object TargetEnvironment {
     implicit val lf = Link.format
     ( (__ \ "name"    ).format[Environment]
     ~ (__ \ "services").format[Seq[Link]]
-    )(TargetEnvironment.apply, unlift(TargetEnvironment.unapply))
+    )(apply, unlift(unapply))
   }
 }
 
@@ -117,17 +117,21 @@ case class Team(
   name           : TeamName,
   createdDate    : Option[LocalDateTime],
   lastActiveDate : Option[LocalDateTime],
-  repos          : Option[Map[String, Seq[String]]]
-) {
-  //Teams and repos lists legacy java services as 'Other', so relaxing the auth check to be agnostic to repo type
-  def allServiceNames: List[String] =
-    repos.getOrElse(Map.empty).values.flatten.toList
-}
+  repos          : Option[Map[RepoType.Value, Seq[String]]]
+)
 
 object Team {
   val format: OFormat[Team] = {
     implicit val tnf = TeamName.format
-    Json.format[Team]
+    ( (__ \ "name"          ).format[TeamName]
+    ~ (__ \ "createdDate"   ).formatNullable[LocalDateTime]
+    ~ (__ \ "lastActiveDate").formatNullable[LocalDateTime]
+    ~ (__ \ "repos"         ).formatNullable[Map[String, Seq[String]]]
+                             .inmap[Option[Map[RepoType.Value, Seq[String]]]](
+                               _.map(_.map { case (k, v) => RepoType.withName(k) -> v }),
+                               _.map(_.map { case (k, v) => k.toString           -> v })
+                             )
+    )(apply, unlift(unapply))
   }
 }
 

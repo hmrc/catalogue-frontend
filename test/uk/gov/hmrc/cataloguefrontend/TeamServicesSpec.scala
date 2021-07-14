@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
+import org.jsoup.nodes.{Document, Element}
 import org.scalatest.BeforeAndAfter
 import play.api.libs.json.Json
 import play.api.libs.ws._
@@ -95,17 +95,12 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       val htmlDocument = asDocument(response.body)
       val anchorTags   = htmlDocument.getElementsByTag("a").asScala.toList
 
-      def assertAnchor(href: String, text: String): Unit =
-        assert(
-          anchorTags.exists(e => e.text == text && e.attr("href") == href)
-        )
-
-      assertAnchor("/library/teamA-lib", "teamA-lib")
-      assertAnchor("/service/teamA-serv", "teamA-serv")
-      assertAnchor("/service/teamA-frontend", "teamA-frontend")
-      assertAnchor("/prototype/service1-prototype", "service1-prototype")
-      assertAnchor("/prototype/service2-prototype", "service2-prototype")
-      assertAnchor("/repositories/teamA-other", "teamA-other")
+      findAnchor(anchorTags, "/repositories/teamA-lib"         , "teamA-lib"         ) shouldBe defined
+      findAnchor(anchorTags, "/repositories/teamA-serv"        , "teamA-serv"        ) shouldBe defined
+      findAnchor(anchorTags, "/repositories/teamA-frontend"    , "teamA-frontend"    ) shouldBe defined
+      findAnchor(anchorTags, "/repositories/service1-prototype", "service1-prototype") shouldBe defined
+      findAnchor(anchorTags, "/repositories/service2-prototype", "service2-prototype") shouldBe defined
+      findAnchor(anchorTags, "/repositories/teamA-other"       , "teamA-other"       ) shouldBe defined
     }
 
     "filter out archived repositories from a list of libraries, services, prototypes and repositories" in {
@@ -164,25 +159,12 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       val htmlDocument = asDocument(response.body)
       val anchorTags   = htmlDocument.getElementsByTag("a").asScala.toList
 
-      def assertAnchor(href: String, text: String): Unit =
-        assert(anchorTags.exists { e =>
-          e.text == text && e.attr("href") == href
-        })
-
-      def assertNoAnchor(href: String, text: String): Unit = {
-        val anchorExists = anchorTags.exists { e =>
-          e.text == text && e.attr("href") == href
-        }
-        assert(!anchorExists)
-      }
-
-      assertAnchor("/library/teamA-lib", "teamA-lib")
-      assertAnchor("/service/teamA-serv", "teamA-serv")
-      assertAnchor("/service/teamA-frontend", "teamA-frontend")
-      // Note: assert that this anchor does NOT exist
-      assertNoAnchor("/prototype/service1-prototype", "service1-prototype")
-      assertAnchor("/prototype/service2-prototype", "service2-prototype")
-      assertAnchor("/repositories/teamA-other", "teamA-other")
+      findAnchor(anchorTags, "/repositories/teamA-lib"         , "teamA-lib"         ) shouldBe defined
+      findAnchor(anchorTags, "/repositories/teamA-serv"        , "teamA-serv"        ) shouldBe defined
+      findAnchor(anchorTags, "/repositories/teamA-frontend"    , "teamA-frontend"    ) shouldBe defined
+      findAnchor(anchorTags, "/repositories/service1-prototype", "service1-prototype") shouldBe empty // Note: assert that this anchor does NOT exist
+      findAnchor(anchorTags, "/repositories/service2-prototype", "service2-prototype") shouldBe defined
+      findAnchor(anchorTags, "/repositories/teamA-other"       , "teamA-other"       ) shouldBe defined
     }
 
     "show user management portal link" ignore {
@@ -464,4 +446,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     (Json.parse(jsonString) \\ "members").headOption
       .map(_.as[Seq[TeamMember]])
       .getOrElse(sys.error(s"not able to extract team members from json: $jsonString"))
+
+    def findAnchor(anchorTags: Seq[Element], href: String, text: String): Option[Element] =
+      anchorTags.find(e => e.text == text && e.attr("href") == href)
 }
