@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
@@ -30,7 +29,10 @@ class RepositoryPageSpec
     with FakeApplicationBuilder
     with BeforeAndAfterEach {
 
-  case class RepositoryDetails(repositoryName: String, repositoryType: RepoType.RepoType)
+  case class RepositoryDetails(
+    repositoryName: String,
+    repositoryType: RepoType
+  )
 
   val repositoryDetails = Seq(
     RepositoryDetails("Service", RepoType.Service),
@@ -46,7 +48,6 @@ class RepositoryPageSpec
   }
 
   "A repository page" should {
-
     "return a 404 when the teams-and-repositories microservice returns a 404" in {
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (404, None))
 
@@ -55,7 +56,6 @@ class RepositoryPageSpec
     }
 
     "show the teams owning the repository with github links for a Service, Library and Other" in {
-
       repositoryDetails.foreach { repositoryDetails =>
         serviceEndpoint(
           GET,
@@ -73,8 +73,7 @@ class RepositoryPageSpec
       }
     }
 
-    "Render dependencies with red, green, amber and grey colours" in {
-
+    "render dependencies with red, green, amber and grey colours" in {
       serviceEndpoint(
         GET,
         "/api/repositories/service-name",
@@ -88,6 +87,7 @@ class RepositoryPageSpec
       )
 
       val response = WS.url(s"http://localhost:$port/repositories/service-name").get.futureValue
+      response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)
 
@@ -95,65 +95,64 @@ class RepositoryPageSpec
     }
   }
 
-  def asDocument(html: String): Document = Jsoup.parse(html)
-
   def repositoryData(repositoryDetails: RepositoryDetails): String =
-    s"""{
-       |  "name": "${repositoryDetails.repositoryName}",
-       |  "isPrivate": false,
-       |  "isArchived": false,
-       |  "repoType": "${repositoryDetails.repositoryType}",
-       |  "owningTeams": [ "The True Owners" ],
-       |  "teamNames": ["teamA", "teamB"],
-       |  "description": "some description",
-       |  "createdAt": 1456326530000,
-       |  "lastActive": 1478602555000,
-       |  "githubUrl": {
-       |    "name": "github",
-       |    "displayName": "github.com",
-       |    "url": "https://github.com/hmrc/${repositoryDetails.repositoryName}"
-       |  },
-       |  "ci": [
-       |    {
-       |      "name": "open1",
-       |      "displayName": "open 1",
-       |      "url": "http://open1/${repositoryDetails.repositoryName}"
-       |    },
-       |    {
-       |      "name": "open2",
-       |      "displayName": "open 2",
-       |      "url": "http://open2/${repositoryDetails.repositoryName}"
-       |    }
-       |  ],
-       |  "environments" : [
-       |    {
-       |      "name" : "Production",
-       |      "services" : [
-       |        {
-       |          "name": "ser1",
-       |          "displayName": "service1",
-       |          "url": "http://ser1/${repositoryDetails.repositoryName}"
-       |        }, {
-       |          "name": "ser2",
-       |          "displayName": "service2",
-       |          "url": "http://ser2/${repositoryDetails.repositoryName}"
-       |        }
-       |      ]
-       |    }, {
-       |      "name" : "Staging",
-       |      "services" : [
-       |         {
-       |           "name": "ser1",
-       |           "displayName": "service1",
-       |           "url": "http://ser1/${repositoryDetails.repositoryName}"
-       |         }, {
-       |           "name": "ser2",
-       |           "displayName": "service2",
-       |           "url": "http://ser2/${repositoryDetails.repositoryName}"
-       |        }
-       |      ]
-       |    }
-       |  ]
-       |}
-     """.stripMargin
+    s"""
+      {
+        "name": "${repositoryDetails.repositoryName}",
+        "isPrivate": false,
+        "isArchived": false,
+        "repoType": "${repositoryDetails.repositoryType}",
+        "owningTeams": [ "The True Owners" ],
+        "teamNames": ["teamA", "teamB"],
+        "description": "some description",
+        "createdAt": 1456326530000,
+        "lastActive": 1478602555000,
+        "githubUrl": {
+          "name": "github",
+          "displayName": "github.com",
+          "url": "https://github.com/hmrc/${repositoryDetails.repositoryName}"
+        },
+        "ci": [
+          {
+            "name": "open1",
+            "displayName": "open 1",
+            "url": "http://open1/${repositoryDetails.repositoryName}"
+          },
+          {
+            "name": "open2",
+            "displayName": "open 2",
+            "url": "http://open2/${repositoryDetails.repositoryName}"
+          }
+        ],
+        "environments" : [
+          {
+            "name" : "Production",
+            "services" : [
+              {
+                "name": "ser1",
+                "displayName": "service1",
+                "url": "http://ser1/${repositoryDetails.repositoryName}"
+              }, {
+                "name": "ser2",
+                "displayName": "service2",
+                "url": "http://ser2/${repositoryDetails.repositoryName}"
+              }
+            ]
+          }, {
+            "name" : "Staging",
+            "services" : [
+               {
+                 "name": "ser1",
+                 "displayName": "service1",
+                 "url": "http://ser1/${repositoryDetails.repositoryName}"
+               }, {
+                 "name": "ser2",
+                 "displayName": "service2",
+                 "url": "http://ser2/${repositoryDetails.repositoryName}"
+              }
+            ]
+          }
+        ]
+      }
+    """
 }

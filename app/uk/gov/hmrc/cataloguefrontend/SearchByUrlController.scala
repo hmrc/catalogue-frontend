@@ -28,11 +28,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SearchByUrlController @Inject() (
-  mcc: MessagesControllerComponents,
+  mcc               : MessagesControllerComponents,
   searchByUrlService: SearchByUrlService,
-  searchByUrlPage: SearchByUrlPage
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  searchByUrlPage   : SearchByUrlPage
+)(implicit
+  ec: ExecutionContext
+) extends FrontendController(mcc) {
 
   private val serviceNameToUrl = routes.CatalogueController.service _
 

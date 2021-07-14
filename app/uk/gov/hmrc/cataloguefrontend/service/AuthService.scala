@@ -21,9 +21,9 @@ import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthenticatedRequest
+import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementAuthConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, UMPError}
-import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementAuthConnector, UserManagementConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,7 +57,9 @@ class AuthService @Inject() (
       // services that are not required have been filtered out, so should be a subset of requiredServiceNames
       ownedServiceNames: List[String] <- teams
                                            .traverse { team =>
-                                             val providedServices = requiredServiceNames.toList.intersect(team.allServiceNames)
+                                             // legacy java services are identified as 'Other', so relaxing the auth check to be agnostic to repo type.
+                                             val teamServices = team.repos.getOrElse(Map.empty).values.flatten.toList
+                                             val providedServices = requiredServiceNames.toList.intersect(teamServices)
                                              if (providedServices.nonEmpty) {
                                                logger.debug(
                                                  s"checking access for ${request.user.username.value}: Team ${team.name} is found to have GitHub access to services: ${providedServices

@@ -91,7 +91,6 @@ class AuthServiceSpec
   }
 
   "AuthService.authorizeServices" should {
-
     implicit val request = UmpAuthenticatedRequest(
         request     = FakeRequest()
       , token       = UmpToken("token")
@@ -187,11 +186,11 @@ class AuthServiceSpec
     val service                       = new AuthService(userManagementAuthConnector, userManagementConnector, teamsAndRepositoriesConnector)
   }
 
-  def team(name: TeamName, repoMap: Map[RepoType.RepoType, List[String]]) = Team(
+  def team(name: TeamName, repoMap: Map[RepoType, List[String]]) = Team(
       name           = name
     , createdDate    = None
     , lastActiveDate = None
-    , repos          = Some(repoMap.map { case (k, v) => k.toString -> v })
+    , repos          = Some(repoMap)
     )
 
   def teamMember(username: String) = TeamMember(

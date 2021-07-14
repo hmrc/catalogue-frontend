@@ -37,11 +37,10 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
 
   "/prototypes" should {
     "redirect to the repositories page with a filter showing only prototypes" in {
-
       val result = catalogueController.allPrototypes(FakeRequest())
 
       status(result)           shouldBe 303
-      redirectLocation(result) shouldBe Some("/repositories?name=&type=Prototype")
+      redirectLocation(result) shouldBe Some("/repositories?repoType=Prototype")
     }
   }
 

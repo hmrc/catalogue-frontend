@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.connector.{RepositoryWithLeaks, Team}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepositoryWithLeaks, RepoType, Team}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 import scala.concurrent.ExecutionContext
@@ -28,13 +28,12 @@ class LeakDetectionServiceSpec extends AnyWordSpec with Matchers {
   import ExecutionContext.Implicits.global
 
   "Service" should {
-
     "determine if at least one of team's repos has leaks" in new Setup {
       val team = Team(
         name           = TeamName("team0"),
         createdDate    = None,
         lastActiveDate = None,
-        repos          = Some(Map("library" -> List("repo1", "repo2")))
+        repos          = Some(Map(RepoType.Library -> List("repo1", "repo2")))
       )
 
       val repoWithLeak = RepositoryWithLeaks("repo1")
@@ -47,7 +46,7 @@ class LeakDetectionServiceSpec extends AnyWordSpec with Matchers {
         name            = TeamName("team0"),
         createdDate     = None,
         lastActiveDate  = None,
-        repos           = Some(Map("library" -> List("repo1", "repo2")))
+        repos           = Some(Map(RepoType.Library -> List("repo1", "repo2")))
       )
 
       val repoWithLeak = RepositoryWithLeaks("repo3")
@@ -60,7 +59,7 @@ class LeakDetectionServiceSpec extends AnyWordSpec with Matchers {
         name            = TeamName("team0"),
         createdDate     = None,
         lastActiveDate  = None,
-        repos           = Some(Map("library" -> List("a-repo-to-ignore")))
+        repos           = Some(Map(RepoType.Library -> List("a-repo-to-ignore")))
       )
 
       val repoToIgnore = RepositoryWithLeaks("a-repo-to-ignore")

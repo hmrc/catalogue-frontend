@@ -1,7 +1,5 @@
 # microservice specific routes
 
-GET        /repositories                                uk.gov.hmrc.cataloguefrontend.CatalogueController.allRepositories
-GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 GET        /teams                                       uk.gov.hmrc.cataloguefrontend.CatalogueController.allTeams
 GET        /teams/:teamName                             uk.gov.hmrc.cataloguefrontend.CatalogueController.team(teamName: TeamName)
 GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.CatalogueController.outOfDateTeamDependencies(teamName: TeamName)
@@ -11,6 +9,8 @@ GET        /digital-service/owner/:digitalServiceName   uk.gov.hmrc.cataloguefro
 POST       /digital-service/owner                       uk.gov.hmrc.cataloguefrontend.CatalogueController.saveServiceOwner()
 GET        /users                                       uk.gov.hmrc.cataloguefrontend.CatalogueController.allUsers
 
+GET        /repositories                                uk.gov.hmrc.cataloguefrontend.CatalogueController.allRepositories(repoType: Option[String] ?= None)
+GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 GET        /services                                    uk.gov.hmrc.cataloguefrontend.CatalogueController.allServices
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
 GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceConfig(name)
@@ -19,6 +19,7 @@ GET        /libraries                                   uk.gov.hmrc.cataloguefro
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /prototypes                                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allPrototypes
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
+
 GET        /assets/*file                                controllers.Assets.at(path="/public", file)
 GET        /                                            uk.gov.hmrc.cataloguefrontend.CatalogueController.index
 GET        /admin/metrics                               @com.kenshoo.play.metrics.MetricsController.metrics

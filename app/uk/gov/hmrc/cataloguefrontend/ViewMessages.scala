@@ -19,7 +19,6 @@ package uk.gov.hmrc.cataloguefrontend
 import javax.inject.Inject
 import play.api.Configuration
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 class ViewMessages @Inject() (configuration: Configuration) {
   val noJobExecutionData: String = "<p>It's possible that there is no Jenkins job set up for this repository, or a job exists " +
@@ -51,12 +50,6 @@ class ViewMessages @Inject() (configuration: Configuration) {
 
   def noJobExecutionTimeDataHtml =
     Html(s"""<h2 class="chart-message text-center">No data to show</h2>""" + s"<p>$noJobExecutionData</p>")
-
-  def toTypeText(repoType: RepoType.RepoType): String =
-    repoType match {
-      case RepoType.Service => "Service"
-      case t                => t.toString
-    }
 
   val notSpecifiedText = "Not specified"
 

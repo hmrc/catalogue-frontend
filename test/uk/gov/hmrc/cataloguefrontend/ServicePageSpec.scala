@@ -38,7 +38,6 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
   implicit val wrwf = JsonCodecs.whatsRunningWhereReads
 
   "A service page" should {
-
     "return a 404 when a Library is viewed as a service" in {
       serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
       val response = ws.url(s"http://localhost:$port/service/serv").get.futureValue
@@ -58,7 +57,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(
         GET,
         "/config-by-key/serv",
-        willRespondWith = (200, Some("""{
+        willRespondWith = (200, Some(
+          """{
             "key1": {
               "production": [
                 {
@@ -68,7 +68,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
                 }
               ]
             }
-           }"""))
+          }"""
+        ))
       )
 
       val response = ws.url(s"http://localhost:$port/service/serv").get.futureValue
@@ -80,7 +81,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(
         GET,
         "/config-by-key/serv",
-        willRespondWith = (200, Some("""{
+        willRespondWith = (200, Some(
+          """{
             "artifact_name": {
               "production": [
                 {
@@ -97,7 +99,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
                 }
               ]
             }
-           }"""))
+          }"""
+        ))
       )
 
       val response = ws.url(s"http://localhost:$port/service/serv").get.futureValue
@@ -113,31 +116,33 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
   case class ServicePageBehaviour(serviceName: String, repoName: String) {
     trait Setup {
-      if(serviceName == repoName){
+      if (serviceName == repoName)
         serviceEndpoint(GET, s"/api/repositories/$serviceName", willRespondWith = (200, Some(repositoryData(repoName))))
-      } else {
+      else {
         serviceEndpoint(GET, s"/api/repositories/$serviceName", willRespondWith = (404, None))
         serviceEndpoint(
           GET,
           s"/config-by-key/$serviceName",
-          willRespondWith = (200, Some(s"""{
-            "artifact_name": {
-              "production": [
-                {
-                  "source": "appConfig",
-                  "precedence": 10,
-                  "value": "$repoName"
-                }
-              ],
-              "qa": [
-                {
-                  "source": "appConfig",
-                  "precedence": 10,
-                  "value": "$repoName"
-                }
-              ]
-            }
-           }"""))
+          willRespondWith = (200, Some(
+            s"""{
+              "artifact_name": {
+                "production": [
+                  {
+                    "source": "appConfig",
+                    "precedence": 10,
+                    "value": "$repoName"
+                  }
+                ],
+                "qa": [
+                  {
+                    "source": "appConfig",
+                    "precedence": 10,
+                    "value": "$repoName"
+                  }
+                ]
+              }
+            }"""
+          ))
         )
 
         serviceEndpoint(GET, s"/api/repositories/$repoName", willRespondWith = (200, Some(repositoryData(repoName))))
@@ -149,11 +154,15 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(
         GET,
         s"/releases-api/whats-running-where/$serviceName",
-        willRespondWith = (200, Some(s"""{"applicationName":"service-1",
-                                        |"versions":[
-                                        |{"environment":"production","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T00:59:33Z"},
-                                        |{"environment":"qa","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
-                                        |]}""".stripMargin))
+        willRespondWith = (200, Some(
+          s"""{
+            "applicationName": "service-1",
+            "versions": [
+              {"environment": "production", "platform": "heritage", "versionNumber": "0.0.1", "lastSeen": "2020-02-14T00:59:33Z" },
+              {"environment": "qa"        , "platform": "heritage", "versionNumber": "0.0.1", "lastSeen": "2020-02-14T01:00:14Z" }
+            ]
+          }"""
+        ))
       )
 
       val response = ws.url(s"http://localhost:$port/service/$serviceName").get.futureValue
@@ -185,27 +194,31 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     }
 
     "link to environments" should {
-
       "show only show links to envs for which the service is deployed to" in new Setup {
         serviceEndpoint(GET, s"/api/jenkins-url/$repoName", willRespondWith = (200, Some(serviceJenkinsData)))
         serviceEndpoint(
           GET,
           s"/releases-api/whats-running-where/$serviceName",
-          willRespondWith = (200, Some("""{"applicationName":"service-1",
-                                         |"versions":[
-                                         |{"environment":"production","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T00:59:33Z"},
-                                         |{"environment":"development","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
-                                         |]}""".stripMargin))
+          willRespondWith = (200, Some(
+            """{
+              "applicationName": "service-1",
+              "versions": [
+                {"environment": "production",  "platform": "heritage", "versionNumber": "0.0.1", "lastSeen": "2020-02-14T00:59:33Z" },
+                {"environment": "development", "platform": "heritage", "versionNumber": "0.0.1", "lastSeen": "2020-02-14T01:00:14Z" }
+              ]
+            }"""
+          ))
         )
         val response = ws.url(s"http://localhost:$port/service/$serviceName").get.futureValue
         response.status shouldBe 200
-        response.body     should include("links on this page are automatically generated")
-        response.body     should include("teamA")
-        response.body     should include("teamB")
-        response.body     should include("service-1")
-        response.body     should include("github.com")
-        response.body     should include("http://jenkins/service-1/")
-        response.body     should include("Grafana")
+
+        response.body should include("links on this page are automatically generated")
+        response.body should include("teamA")
+        response.body should include("teamB")
+        response.body should include("service-1")
+        response.body should include("github.com")
+        response.body should include("http://jenkins/service-1/")
+        response.body should include("Grafana")
 
         response.body should include("some description")
 
@@ -219,6 +232,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
       "show 'Not deployed' for envs in which the service is not deployed" in new Setup  {
         val response = ws.url(s"http://localhost:$port/service/$serviceName").get.futureValue
+        response.status shouldBe 200
 
         // Links for environments should not be present
         response.body should not include regex("""https:\/\/(?!grafana-dev).*\/#\/dashboard""")
@@ -233,26 +247,30 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         serviceEndpoint(
           GET,
           s"/releases-api/whats-running-where/$serviceName",
-          willRespondWith = (200, Some("""{"applicationName":"service-1",
-                                         |"versions":[
-                                         |{"environment":"development","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
-                                         |]}""".stripMargin))
+          willRespondWith = (200, Some(
+            """{
+              "applicationName":"service-1",
+              "versions":[
+                {"environment":"development","platform":"heritage","versionNumber":"0.0.1","lastSeen":"2020-02-14T01:00:14Z"}
+              ]
+            }"""
+          ))
         )
 
         val response = ws.url(s"http://localhost:$port/service/$serviceName").get.futureValue
+        response.status shouldBe 200
 
         response.body should not include "Jenkins"
         response.body should include("Grafana")
       }
     }
 
-    "Render platform dependencies section" in new Setup {
+    "render platform dependencies section" in new Setup {
       val response = ws.url(s"http://localhost:$port/service/$serviceName").get.futureValue
+      response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)
-
       document.select("#platform-dependencies-latest").size() should be > 0
     }
   }
-
 }

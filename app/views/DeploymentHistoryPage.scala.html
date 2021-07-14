@@ -95,12 +95,12 @@
                 @deployments.zipWithIndex.map{case (d, i) =>
                 <tr id="row@i">
                   <td id="row@{i}_name" class="service-name">
-                      <a class="service-name-link" href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString).url}">@{d.name.asString}</a>
+                      <a class="service-name-link" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString)">@{d.name.asString}</a>
                   </td>
                   <td id="row@{i}_team" class="team">
                     <ul class="list-group">
                     @for(team <- d.teams) {
-                      <li><a href="@{uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team).url}">@{team.asString}</a></li>
+                      <li><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team)">@{team.asString}</a></li>
                     }
                     </ul>
                   </td>

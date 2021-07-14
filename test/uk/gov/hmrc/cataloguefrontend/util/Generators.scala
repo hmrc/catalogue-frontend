@@ -19,7 +19,6 @@ package uk.gov.hmrc.cataloguefrontend.util
 import org.scalacheck.Gen
 import org.scalacheck.Gen.oneOf
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 
 object Generators {
 

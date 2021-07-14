@@ -37,11 +37,10 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
 
   "/libraries" should {
     "redirect to the repositories page with the appropriate filters" in {
-
       val result = catalogueController.allLibraries(FakeRequest())
 
       status(result)           shouldBe 303
-      redirectLocation(result) shouldBe Some("/repositories?name=&type=Library")
+      redirectLocation(result) shouldBe Some("/repositories?repoType=Library")
     }
   }
 

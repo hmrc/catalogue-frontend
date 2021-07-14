@@ -19,7 +19,6 @@
 @import uk.gov.hmrc.cataloguefrontend.{DisplayableTeamMember, TeamActivityDates, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, TeamDetails}
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-@import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependencies, Dependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
@@ -27,7 +26,7 @@
 @this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
 
 @(teamName              : TeamName,
-  repos                 : Map[String, Seq[String]],
+  repos                 : Map[RepoType, Seq[String]],
   activityDates         : TeamActivityDates,
   errorOrTeamMembers    : Either[UMPError, Seq[DisplayableTeamMember]],
   errorOrTeamDetails    : Either[UMPError, TeamDetails],
@@ -162,10 +161,10 @@
         </div>
 
         <div class="row">
-            @showRepositories(repos, RepoType.Service, "Services", "service", "service")
-            @showRepositories(repos, RepoType.Library, "Libraries", "library", "library")
-            @showRepositories(repos, RepoType.Prototype, "Prototypes", "prototype", "prototype")
-            @showRepositories(repos, RepoType.Other, "Repositories", "repository", "repositories")
+            @showRepositories(repos.getOrElse(RepoType.Service  , Seq.empty), "Services"    , "service")
+            @showRepositories(repos.getOrElse(RepoType.Library  , Seq.empty), "Libraries"   , "library")
+            @showRepositories(repos.getOrElse(RepoType.Prototype, Seq.empty), "Prototypes"  , "prototype")
+            @showRepositories(repos.getOrElse(RepoType.Other    , Seq.empty), "Repositories", "repository")
         </div>
     </section>
 
@@ -182,33 +181,29 @@
   </div>
 }
 
-@showRepositories(repos: Map[String, Seq[String]], repoType: RepoType, headerName: String, typeName: String, href: String) = {
-    @repos.get(repoType.toString).map { repositories =>
-        <div class="col-md-3">
-            <div id="@headerName" class="board">
-                <h3 class="board__heading">@headerName</h3>
-
-                <div class="board__body">
-                    @if(repositories.isEmpty) {
-                        <p>@Html(viewMessages.noRepoOfTypeForTeam(typeName))</p>
-
-                    } else {
-                        <ul class="list list--minimal">
-                        @for(repository <- repositories) {
-                            <li class="list-item" id="@{ repository }">
-                                <a href="/@href/@{ repository }">
-                                    @if(hasLeaks(repository)) {
-                                        <div class="leak-detected">@repository <span class="glyphicon glyphicon-warning-sign"/></div>
-                                    } else {
-                                        @repository
-                                    }
-                                </a>
-                            </li>
-                        }
-                        </ul>
-                    }
-                </div>
-            </div>
-        </div>
-    }
+@showRepositories(repos: Seq[String], headerName: String, typeName: String) = {
+  <div class="col-md-3">
+      <div id="@headerName" class="board">
+          <h3 class="board__heading">@headerName</h3>
+          <div class="board__body">
+              @if(repos.isEmpty) {
+                  <p>@Html(viewMessages.noRepoOfTypeForTeam(typeName))</p>
+              } else {
+                  <ul class="list list--minimal">
+                  @for(repo <- repos) {
+                      <li class="list-item" id="@repo">
+                          <a href="@appRoutes.CatalogueController.repository(repo)">
+                              @if(hasLeaks(repo)) {
+                                  <div class="leak-detected">@repo <span class="glyphicon glyphicon-warning-sign"/></div>
+                              } else {
+                                  @repo
+                              }
+                          </a>
+                      </li>
+                  }
+                  </ul>
+              }
+          </div>
+      </div>
+  </div>
 }

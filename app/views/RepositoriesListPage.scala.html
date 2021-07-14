@@ -24,7 +24,6 @@
 @this(viewMessages: ViewMessages)
 
 @(repositories: Seq[RepositoryDisplayDetails],
-  repotypeToDetailsUrl: Map[RepoType.Value, String => Call],
   form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
@@ -58,17 +57,17 @@
 
                 <div class="col col-xs-2">
                     @select(
-                        field = form("type"),
+                        field   = form("repoType"),
                         options = Seq(
-                            "Library" -> "Library",
+                            "Library"   -> "Library",
                             "Prototype" -> "Prototype",
-                            "Service" -> "Service",
-                            "Other" -> "Other"
+                            "Service"   -> "Service",
+                            "Other"     -> "Other"
                         ),
                         '_default -> "All",
-                        '_label -> "",
+                        '_label   -> "",
                         'onchange -> "this.form.submit()",
-                        'id -> "type-search"
+                        'id       -> "type-search"
                     )
             </div>
             </div>
@@ -84,10 +83,10 @@
             @repositories.zipWithIndex.map{case (repo, i) =>
             <tr id="row@i">
                 <td class="service-name" id="row@{i}_name">
-                    <a class="repo-name" href="@repotypeToDetailsUrl(repo.repoType)(repo.name)">@repo.name</a>
+                    <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
                 </td>
                 <td class="repo-type monospaced" id="row@{i}_repotype">
-                    @viewMessages.toTypeText(repo.repoType)
+                    @repo.repoType.asString
                 </td>
                 <td class="created monospaced" id="row@{i}_created">
                     @repo.createdAt.asPattern("yyyy-MM-dd")
@@ -111,8 +110,5 @@
 </script>
 
 @repoTypes = @{
-    ("" ,"All") +: RepoType.values.map {v =>
-        if (v == RepoType.Service) (v.toString, "Service")
-        else (v.toString, v.toString)
-    }.toList
+    ("" ,"All") +: RepoType.values.map(v => (v.asString, v.asString)).toList
 }

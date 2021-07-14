@@ -20,7 +20,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType.RepoType
 
 class RepoTypeSpec extends AnyWordSpec with Matchers {
 

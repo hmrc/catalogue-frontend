@@ -34,12 +34,10 @@ class PrototypePageSpec
   }
 
   "A prototype page" should {
-
     "show the teams owning the prototype" in {
-
       serviceEndpoint(GET, "/api/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
 
-      val response = WS.url(s"http://localhost:$port/prototype/2fa-prototype").get.futureValue
+      val response = WS.url(s"http://localhost:$port/repositories/2fa-prototype").get.futureValue
       response.status shouldBe 200
       response.body   should include("links on this page are automatically generated")
       response.body   should include("Designers")
