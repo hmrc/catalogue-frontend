@@ -21,7 +21,7 @@ import play.api.data.Forms.{mapping, optional, text}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
+import views.html.{HealthIndicatorsHistory, HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -52,6 +52,16 @@ class HealthIndicatorsController @Inject() (
               indicatorsWithTeams <- healthIndicatorsService.findIndicatorsWithTeams(r)
             } yield Ok(HealthIndicatorsLeaderBoard(indicatorsWithTeams, r, repoName, RepoType.values))
         )
+    }
+
+
+  def historyForRepo(repoName: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      healthIndicatorsConnector.getHistoricIndicators(repoName).map {
+        case Some(historicIndicatorAPI: HistoricIndicatorAPI) => Ok(HealthIndicatorsHistory(historicIndicatorAPI))
+        case None                                             => NotFound(error_404_template())
+      }
+
     }
 }
 

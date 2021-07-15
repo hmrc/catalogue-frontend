@@ -1,0 +1,46 @@
+@*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.HistoricIndicatorAPI
+@import java.time.format.DateTimeFormatter
+@import java.time.ZoneId
+@( history: HistoricIndicatorAPI)(implicit messages: Messages, request: Request[_])
+@standard_layout("Service Health Indicators History") {
+    <header>
+        <h1>Health Indicator History: @history.repoName</h1>
+    </header>
+
+    <div id="chart"></div>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+            <script>
+                    google.charts.load('current', {packages: ['corechart']});
+                    google.charts.setOnLoadCallback(drawChart);
+
+                    function drawChart() {
+                        var data = new google.visualization.DataTable();
+                        data.addColumn('string', 'Date');
+                        data.addColumn('number', 'Score')
+                        data.addRows([ @history.dataPoints.map { d =>
+                            ["@DateTimeFormatter.ofPattern("yyyy-MM").withZone(ZoneId.of("UTC")).format(d.timestamp)", @d.overallScore],
+                            }])
+
+                        var chart = new google.visualization.LineChart(document.getElementById('chart'));
+                        chart.draw(data, null);
+                    }
+            </script>
+
+}
