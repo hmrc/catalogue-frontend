@@ -61,9 +61,9 @@ class ShutterOverviewController @Inject() (
                                    }
                                    .map(ws => (env, ws))
                                }
-        hasGlobalPerm  = request.optUser.map(_.groups.contains(catalogueConfig.shutterPlatformGroup)).getOrElse(false)
+        hasGlobalPerm  = request.optUser.exists(_.groups.contains(catalogueConfig.shutterPlatformGroup))
         killSwitchLink = if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
-        page           = shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, request.isSignedIn, killSwitchLink)
+        page           = shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, killSwitchLink)
       } yield Ok(page)
     }
 
