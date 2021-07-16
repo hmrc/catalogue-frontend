@@ -24,7 +24,6 @@
 @( shutterStates : Map[Environment, Seq[ShutterStateData]]
  , shutterType   : ShutterType
  , selectedEnv   : Environment
- , isSignedIn    : Boolean
  , killSwitchLink: Option[String]
  )(implicit request: Request[_], messages: Messages)
 
@@ -56,7 +55,6 @@
         <div class="shuttered-checkbox"><input id="shuttered-only" type="checkbox" name="shuttered-only" value="false" onclick="filterUnshuttered()"> Only Show Shuttered @{shutterType}s</div>
     </div>
 
-  @if(isSignedIn) {
       <div class="row tabs-bottom">
           <div class="sm-col-12">
               <p class="shutter-info-link">
@@ -67,7 +65,7 @@
                   .</p>
           </div>
       </div>
-  }
+
   <div id="service-list" class="row tabs-bottom">
       <table id="shutter-state-table" class="table table-striped">
           <tr>
@@ -76,7 +74,7 @@
               <th id="last-update-by-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-user">Last Updated By</button></p></th>
               <th id="date-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-date">Date</button></p></th>
               <th id="events-link"><p class="shutter-overview-header">Events</p></th>
-              @if(isSignedIn) { <th id="update-header"><p class="shutter-overview-header">Update</p></th> }
+              <th id="update-header"><p class="shutter-overview-header">Update</p></th>
           </tr>
 
           <tbody class="list">
@@ -166,13 +164,11 @@
               @Html("No events")
             }
           </td>
-          @if(isSignedIn) {
             <td id="row@{i}_update" class="shutter-update">
               <a id="shutter-link" class="shutter-row-link" href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
                 @changeValueFor(state.status.value)
               </a>
             </td>
-          }
       </tr>
     }
 }
