@@ -11913,6 +11913,16 @@ section span.other-teams-message {
 .padding-reset-right {
   padding-right: 0; }
 
+.newversion {
+  color: darkgrey;
+  font-weight: bold;
+}
+
+.newversion a {
+  color: darkgrey;
+  font-weight: bold;
+}
+
 .verybad {
   color: red;
   font-weight: bold;

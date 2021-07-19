@@ -24,7 +24,8 @@
  , showLink              : Boolean
  )
 
-@defining(masterTeamDependencies.filter(_.hasOutOfDateDependencies)) { outOfDateDependencies =>
+@* value to show thoses were later versions are available? *@
+@defining(masterTeamDependencies.filter(_.hasBobbyViolations)) { outOfDateDependencies =>
 
 <div id="team-dependencies" class="board">
     <h3 class="board__heading">Out of Date Platform Dependencies for Team @teamName.asString</h3>
@@ -54,9 +55,9 @@
                          <span class="col-xs-2"><label>Violation</label></span>
 
                      </li>
-                     @partials.dependency_section(dependency.libraryDependencies.filter(_.isOutOfDate))
-                     @partials.dependency_section(dependency.sbtPluginsDependencies.filter(_.isOutOfDate))
-                     @partials.dependency_section(dependency.otherDependencies.filter(_.isOutOfDate))
+                     @partials.dependency_section(dependency.libraryDependencies.filter(_.hasBobbyViolations))
+                     @partials.dependency_section(dependency.sbtPluginsDependencies.filter(_.hasBobbyViolations))
+                     @partials.dependency_section(dependency.otherDependencies.filter(_.hasBobbyViolations))
 
                  </ul>
                }
