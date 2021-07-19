@@ -179,20 +179,32 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
     }
 
     "show edit button if user is signed-in" in {
-      val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
-      val request               = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), optUser = Some(User(username = Username("username"), groups = List.empty)))
+      val user = User(username = Username("username"), groups = List.empty)
+      val request  = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), optUser = Some(user))
       val document =
-        Jsoup.parse(new DigitalServiceInfoPage(mock[ViewMessages])(digitalServiceDetails, None)(request).toString)
+        Jsoup.parse(
+          new DigitalServiceInfoPage(mock[ViewMessages])(
+            digitalServiceName  = "",
+            teamMembersLookUp   = Map.empty,
+            repos               = Map.empty,
+            digitalServiceOwner = None
+          )(request).toString
+        )
 
       document.select("#edit-button").isEmpty shouldBe false
     }
 
     "don't show edit button if user is NOT singed-in" in {
-      val digitalServiceDetails = DigitalServiceDetails("", Map.empty, Map.empty)
-      val request               = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), optUser = None)
-
+      val request  = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), optUser = None)
       val document =
-        Jsoup.parse(new DigitalServiceInfoPage(mock[ViewMessages])(digitalServiceDetails, None)(request).toString)
+        Jsoup.parse(
+          new DigitalServiceInfoPage(mock[ViewMessages])(
+            digitalServiceName  = "",
+            teamMembersLookUp   = Map.empty,
+            repos               = Map.empty,
+            digitalServiceOwner = None
+          )(request).toString
+        )
 
       document.select("#edit-button").isEmpty shouldBe true
     }

@@ -15,7 +15,8 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
-@import uk.gov.hmrc.cataloguefrontend.{DigitalServiceDetails, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @import uk.gov.hmrc.cataloguefrontend.actions.UmpVerifiedRequest
@@ -23,13 +24,15 @@
 
 @this(viewMessages: ViewMessages)
 
-@(digitalServiceDetails: DigitalServiceDetails,
-  digitalServiceOwner  : Option[DisplayableTeamMember]
+@(digitalServiceName : String,
+  teamMembersLookUp  : Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]],
+  repos              : Map[RepoType, Seq[String]],
+  digitalServiceOwner: Option[DisplayableTeamMember]
 )(implicit request: UmpVerifiedRequest[_])
 
-@standard_layout(digitalServiceDetails.digitalServiceName, "digital-services") {
+@standard_layout(digitalServiceName, "digital-services") {
     <header>
-        <h1>Digital Service: @{digitalServiceDetails.digitalServiceName}</h1>
+        <h1>Digital Service: @{digitalServiceName}</h1>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </header>
 
@@ -84,7 +87,7 @@
         <div class="col-md-12">
             <div class="board">
                 <h3 class="board__heading">Contributing Teams</h3>
-                @for((teamName, errorOrMembers) <- digitalServiceDetails.teamMembersLookUp) {
+                @for((teamName, errorOrMembers) <- teamMembersLookUp) {
                    <h4 class="sub__heading"><a href="/teams/@teamName.asString">@teamName.asString</a></h4>
 
                    <div class="board__body">
@@ -126,10 +129,10 @@
 
     <section class="section-wrapper">
         <div class="row">
-            @showRepositories(digitalServiceDetails.repos.getOrElse(RepoType.Service  , Seq.empty), "Services"    , "service")
-            @showRepositories(digitalServiceDetails.repos.getOrElse(RepoType.Library  , Seq.empty), "Libraries"   , "library")
-            @showRepositories(digitalServiceDetails.repos.getOrElse(RepoType.Prototype, Seq.empty), "Prototypes"  , "prototype")
-            @showRepositories(digitalServiceDetails.repos.getOrElse(RepoType.Other    , Seq.empty), "Repositories", "other")
+            @showRepositories(repos.getOrElse(RepoType.Service  , Seq.empty), "Services"    , "service")
+            @showRepositories(repos.getOrElse(RepoType.Library  , Seq.empty), "Libraries"   , "library")
+            @showRepositories(repos.getOrElse(RepoType.Prototype, Seq.empty), "Prototypes"  , "prototype")
+            @showRepositories(repos.getOrElse(RepoType.Other    , Seq.empty), "Repositories", "other")
 
         </div>
     </section>
@@ -179,7 +182,7 @@
         function saveServiceOwner() {
             var digitalServiceOwnerName = $('#service_owner_edit_input').val();
             var data = {
-                service: "@{digitalServiceDetails.digitalServiceName}",
+                service: "@{digitalServiceName}",
                 displayName: digitalServiceOwnerName
             };
 

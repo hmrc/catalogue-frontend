@@ -48,12 +48,6 @@ case class TeamActivityDates(
   lastActive: Option[LocalDateTime]
 )
 
-case class DigitalServiceDetails(
-  digitalServiceName: String,
-  teamMembersLookUp : Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]],
-  repos             : Map[RepoType, Seq[String]]
-)
-
 case class EnvData(
   version: Version,
   dependencies: Seq[Dependency],
@@ -174,16 +168,19 @@ class CatalogueController @Inject() (
       teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName).flatMap {
         case Some(digitalService) =>
           val teamNames: Set[TeamName] = digitalService.repositories.flatMap(_.teamNames).toSet
+          val repos                    = digitalService.repositories.groupBy(_.repoType).mapValues(_.map(_.name))
           userManagementConnector
             .getTeamMembersForTeams(teamNames.toSeq)
             .map(convertToDisplayableTeamMembers)
             .map(teamMembers =>
               Ok(
                 digitalServiceInfoPage(
-                  DigitalServiceDetails(digitalService.name, teamMembers, getRepos(digitalService)),
-                  readModelService
-                    .getDigitalServiceOwner(digitalServiceName)
-                    .map(DisplayableTeamMember(_, userManagementProfileBaseUrl))
+                  digitalServiceName  = digitalService.name,
+                  teamMembersLookUp   = teamMembers,
+                  repos               = repos,
+                  digitalServiceOwner = readModelService
+                                          .getDigitalServiceOwner(digitalServiceName)
+                                          .map(DisplayableTeamMember(_, userManagementProfileBaseUrl))
                 )
               )
             )
@@ -200,13 +197,6 @@ class CatalogueController @Inject() (
 
       Ok(toJson(filteredUsers))
     }
-
-  private def getRepos(data: DigitalService): Map[RepoType, Seq[String]] = {
-    val emptyMapOfRepoTypes = RepoType.values.map(_ -> List.empty[String]).toMap
-    val mapOfRepoTypes      = data.repositories.groupBy(_.repoType).mapValues(_.map(_.name))
-
-    emptyMapOfRepoTypes ++ mapOfRepoTypes
-  }
 
   def allDigitalServices: Action[AnyContent] =
     Action.async { implicit request =>
