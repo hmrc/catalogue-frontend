@@ -22,13 +22,17 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 object DisplayableTeamMembers {
 
-  def apply(teamName: TeamName, umpProfileBaseUrl: String, teamMembers: Seq[TeamMember]): Seq[DisplayableTeamMember] = {
+  def apply(
+    teamName         : TeamName,
+    umpProfileBaseUrl: String,
+    teamMembers      : Seq[TeamMember]
+   ): Seq[DisplayableTeamMember] = {
 
     val displayableTeamMembers = teamMembers.map(tm =>
       DisplayableTeamMember(
-        displayName = tm.getDisplayName,
+        displayName    = tm.getDisplayName,
         isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.asString.toLowerCase)),
-        umpLink = tm.getUmpLink(umpProfileBaseUrl)
+        umpLink        = tm.getUmpLink(umpProfileBaseUrl)
       )
     )
 
@@ -37,7 +41,11 @@ object DisplayableTeamMembers {
   }
 }
 
-case class DisplayableTeamMember(displayName: String, isServiceOwner: Boolean = false, umpLink: String)
+case class DisplayableTeamMember(
+  displayName   : String,
+  isServiceOwner: Boolean = false,
+  umpLink       : String
+)
 
 object DisplayableTeamMember {
 
