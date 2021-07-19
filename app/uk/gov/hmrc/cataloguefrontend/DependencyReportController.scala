@@ -103,14 +103,13 @@ class DependencyReportController @Inject() (
       .getOrElse("Unknown")
 
   private def getColour(currentVersion: Version, optLatestVersion: Option[Version]): String =
-    optLatestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion)) match {
-      case Some(VersionState.UpToDate)              => "green"
-      case Some(VersionState.MinorVersionOutOfDate) => "amber"
-      case Some(VersionState.MajorVersionOutOfDate) => "red"
-      case Some(VersionState.Invalid)               => "N/A"
+    // TODO this never returns BobbyRule state...
+    // see Dependency#versionState
+    optLatestVersion.flatMap(latestVersion => Version.getVersionState(currentVersion, latestVersion)) match {
       case Some(_: VersionState.BobbyRuleViolated)  => "verybad"
       case Some(_: VersionState.BobbyRulePending)   => "pending"
-      case None                                     => "grey"
+      case Some(VersionState.NewVersionAvailable)   => "newversion"
+      case _                                        => "grey"
     }
 
   def dependencyReport(): Action[AnyContent] =

@@ -25,10 +25,8 @@ import uk.gov.hmrc.http.controllers.RestFormats
 
 sealed trait VersionState
 object VersionState {
-  case object UpToDate extends VersionState
-  case object MinorVersionOutOfDate extends VersionState
-  case object MajorVersionOutOfDate extends VersionState
-  case object Invalid extends VersionState
+  case object NewVersionAvailable extends VersionState
+  case object Invalid             extends VersionState
   case class BobbyRuleViolated(violation: BobbyRuleViolation) extends VersionState
   case class BobbyRulePending(violation: BobbyRuleViolation) extends VersionState
 }
@@ -100,25 +98,29 @@ case class Dependency(
     else if (pendingBobbyRuleViolations.nonEmpty)
       Some(VersionState.BobbyRulePending(pendingBobbyRuleViolations.sorted.head))
     else
-      latestVersion.map(latestVersion => Version.getVersionState(currentVersion, latestVersion))
+      latestVersion.flatMap(latestVersion => Version.getVersionState(currentVersion, latestVersion))
 
-  def isOutOfDate: Boolean =
-    !versionState.contains(VersionState.UpToDate)
+  def hasBobbyViolations: Boolean =
+    versionState match {
+      case Some(_: VersionState.BobbyRuleViolated)  => true
+      case Some(_: VersionState.BobbyRulePending)   => true
+      case _                                        => false
+    }
+
 }
 
 case class Dependencies(
-  repositoryName: String,
-  libraryDependencies: Seq[Dependency],
+  repositoryName        : String,
+  libraryDependencies   : Seq[Dependency],
   sbtPluginsDependencies: Seq[Dependency],
-  otherDependencies: Seq[Dependency],
-  lastUpdated: Instant
+  otherDependencies     : Seq[Dependency],
+  lastUpdated           : Instant
 ) {
-
   def toSeq: Seq[Dependency] =
     libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies
 
-  def hasOutOfDateDependencies: Boolean =
-    toSeq.exists(_.isOutOfDate)
+  def hasBobbyViolations: Boolean =
+    toSeq.exists(_.hasBobbyViolations)
 }
 
 object Dependencies {
@@ -140,8 +142,8 @@ case class BobbyVersion(version: Version, inclusive: Boolean)
 case class BobbyVersionRange(
   lowerBound: Option[BobbyVersion],
   upperBound: Option[BobbyVersion],
-  qualifier: Option[String],
-  range: String
+  qualifier : Option[String],
+  range     : String
 ) {
 
   def rangeDescr: Option[(String, String)] = {
@@ -262,15 +264,17 @@ object Version {
       x.compare(y)
   }
 
-  def getVersionState(currentVersion: Version, latestVersion: Version): VersionState =
+  def getVersionState(currentVersion: Version, latestVersion: Version): Option[VersionState] =
     latestVersion.diff(currentVersion) match {
-      case (0, 0, 0) => VersionState.UpToDate
-      case (0, minor, patch)
-          if minor > 0 ||
-            minor == 0 && patch > 0 =>
-        VersionState.MinorVersionOutOfDate
-      case (major, _, _) if major >= 1 => VersionState.MajorVersionOutOfDate
-      case _                           => VersionState.Invalid // this is really `Ahead`..
+      case (major, minor, patch)
+          if (major >  0                           ) ||
+             (major == 0 && minor >  0             ) ||
+             (major == 0 && minor == 0 && patch > 0)
+        => Some(VersionState.NewVersionAvailable)
+      case (major, minor, patch)
+        => None
+      case _
+        => Some(VersionState.Invalid)
     }
 
   def parse(s: String): Option[Version] = {
