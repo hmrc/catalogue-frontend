@@ -90,18 +90,20 @@
             </div>
         </div>
 
-        @dependenciesByEnvironmentPartial(envDatas)
+        @dependenciesByEnvironmentPartial(serviceName, envDatas)
 
-        <div class="row">
-            <div class="col-md-12">
+        @if(optMasterDependencies.isDefined) {
+            <div class="row">
+                <div class="col-md-12">
                 @buildToolsPartial(
-                  ServiceInfoView.buildToolsFrom(
-                    optMasterDependencies = optMasterDependencies
-                  , librariesOfLatestSlug = envDatas.get(SlugInfoFlag.Latest).toSeq.flatMap(_.dependencies)
-                  )
+                    ServiceInfoView.buildToolsFrom(
+                        optMasterDependencies = optMasterDependencies
+                        , librariesOfLatestSlug = envDatas.get(SlugInfoFlag.Latest).toSeq.flatMap(_.dependencies)
+                    )
                 )
+                </div>
             </div>
-        </div>
+        }
     </section>
 
     <div class="alert alert-success" role="alert" id="@repositoryDetails.name">

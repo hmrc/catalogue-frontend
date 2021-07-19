@@ -29,6 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignIn
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
@@ -391,11 +392,15 @@ class CatalogueController @Inject() (
             )
         }
 
+      // slugs build before the inclusion of the dependency graph data wont have build deps, so they'll still need to retrieved
+      // the old api.
+      val optLegacyLatestDependencies = if(librariesOfLatestSlug.exists(_.scope.contains(DependencyScope.Build))) None else optMasterDependencies
+
       Ok(
         serviceInfoPage(
           serviceName                = serviceName,
           repositoryDetails          = repositoryDetails.copy(jenkinsURL = jenkinsLink),
-          optMasterDependencies      = optMasterDependencies,
+          optMasterDependencies      = optLegacyLatestDependencies,
           repositoryCreationDate     = repositoryDetails.createdAt,
           envDatas                   = optLatestData.fold(envDatas)(envDatas + _),
           linkToLeakDetection        = urlIfLeaksFound,

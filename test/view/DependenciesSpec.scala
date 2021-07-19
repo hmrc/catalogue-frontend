@@ -114,20 +114,6 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
       verifyTitle(document, "#plugin3-major-behind-icon", "major version behind")
     }
 
-    "show grey and question mark icon if there is no latest version available (not found)" in {
-      val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
-
-      document.select("#lib5-no-latest-version").get(0).text() shouldBe "lib5-no-latest-version 3.0.0 (not found)"
-      verifyColour(document, "#lib5-no-latest-version", "grey")
-      verifyIcon(document, "#lib5-no-latest-version-icon", "glyphicon", "glyphicon-question-sign")
-      verifyTitle(document, "#lib5-no-latest-version-icon", "not found")
-
-      document.select("#plugin5-no-latest-version").get(0).text() shouldBe "plugin5-no-latest-version 3.0.0 (not found)"
-      verifyColour(document, "#plugin5-no-latest-version", "grey")
-      verifyIcon(document, "#plugin5-no-latest-version-icon", "glyphicon", "glyphicon-question-sign")
-      verifyTitle(document, "#plugin5-no-latest-version-icon", "not found")
-    }
-
     "show black and question mark icon if versions are invalid (eg: current version > latest version) - (this scenario should not happen unless the reloading of the libraries' latest versions has been failing)" in {
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
@@ -236,21 +222,6 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
       document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 2.0.0"
       verifyColour(document, "#sbt", "red")
       verifyIcon(document, "#sbt-icon", "glyphicon", "glyphicon-ban-circle")
-
-    }
-
-    "show grey and (not found) if there is no latest version available" in {
-      val dependencies = Dependencies(
-        "service",
-        Nil,
-        Nil,
-        Seq(Dependency("sbt", "org.scala-sbt", Version("1.0.0"), None)),
-        lastUpdated = Instant.now)
-      val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
-
-      document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 (not found)"
-      verifyColour(document, "#sbt", "grey")
-      verifyIcon(document, "#sbt-icon", "glyphicon", "glyphicon-question-sign")
 
     }
 

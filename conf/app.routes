@@ -33,7 +33,8 @@ GET        /sign-out                                    @uk.gov.hmrc.cataloguefr
 GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchLanding
 POST       /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchUrl
 
-GET        /dependencies/:name                          uk.gov.hmrc.cataloguefrontend.DependenciesController.service(name)
+GET        /dependencies/:name                          uk.gov.hmrc.cataloguefrontend.DependenciesController.services(name)
+GET        /dependencies/:name/:version                 uk.gov.hmrc.cataloguefrontend.DependenciesController.service(name, version)
 GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefrontend.DependenciesController.graphs(name, version, scope: String ?= "compile")
 
 GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.landing

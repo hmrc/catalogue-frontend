@@ -16,38 +16,59 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, VersionState}
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.model.ImportedBy
 @(dependencies: Seq[Dependency])
 
+@defining(dependencies.filter(_.importBy.isDefined)) { transitiveDependencies =>
+    @for(dependency <- dependencies.filter(_.importBy.isEmpty).sortBy(_.name))  {
+      <li>
+        <div class="">
+            @dependencyRow(dependency)
+        </div>
 
-@for(dependency <- dependencies.sortBy(_.name))  {
-  <li>
-      <div class="@{getColourClass(dependency)}" id="@{dependency.name}">
-          <span class="col-xs-4 left-aligned">
-              <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}" title="@{getAltText(dependency)}"> </span>
-              @if(dependency.latestVersion.isDefined && !dependency.isExternal) {
-                  <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}">@dependency.name</a>
-              } else {
-                  @dependency.name
-              }
-          </span>
-          <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion.toString</span>
-          <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">
-              <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"> </span>
-              @dependency.latestVersion.map(_.toString).getOrElse("(not found)")
-          </span>
-          <span id="@{dependency.name}-bobbyrule" class="col-xs-2">
-              @dependency.versionState match {
-                  case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
-                  case Some(VersionState.BobbyRulePending (violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
-                  case _                                               => { }
-              }
-          </span>
-      </div>
-  </li>
+        <div class="">
+            <ul>
+            @for(transitiveDependency <- transitiveDependencies.filter(_.importBy.contains(ImportedBy(dependency.name, dependency.group, dependency.currentVersion)))) {
+                <li>
+                @dependencyRow(transitiveDependency)
+                </li>
+            }
+            </ul>
+        </div>
+      </li>
+    }
+}
+
+@dependencyRow(dependency: Dependency) = {
+    <div class="@{getColourClass(dependency)} row" id="@{dependency.name}">
+        <span class="col-xs-4 left-aligned">
+            <span class="@if(dependency.importBy.isDefined){transitive}"></span>
+            <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}" title="@{getAltText(dependency)}"> </span>
+            @if(dependency.latestVersion.isDefined && !dependency.isExternal) {
+                <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}">@dependency.name</a>
+            } else {
+                @dependency.name
+            }
+        </span>
+        <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion.toString</span>
+        <span id="@{dependency.name}-latestVersion-version" class="col-xs-3">
+            @dependency.latestVersion.map(lv => {
+                <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"></span>
+                <span>{lv.toString}</span>
+            }).getOrElse("")
+        </span>
+        <span id="@{dependency.name}-bobbyrule" class="col-xs-2">
+        @dependency.versionState match {
+            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
+            case Some(VersionState.BobbyRulePending (violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
+            case _                                               => { }
+        }
+        </span>
+    </div>
 }
 
 @getColourClass(dependency: Dependency) = @{
-    dependency.versionState.fold("grey") {
+    dependency.versionState.fold("darkgrey") {
         case VersionState.UpToDate              => "green"
         case VersionState.MinorVersionOutOfDate => "amber"
         case VersionState.MajorVersionOutOfDate => "red"
@@ -58,7 +79,7 @@
 }
 
 @getIconClass(dependency: Dependency) = @{
-    " medium-glyphicon glyphicon " + dependency.versionState.fold("glyphicon-question-sign") {
+    " medium-glyphicon glyphicon " + dependency.versionState.fold("") {
         case VersionState.UpToDate              => "glyphicon-ok-circle"
         case VersionState.MinorVersionOutOfDate => "glyphicon-alert"
         case VersionState.MajorVersionOutOfDate => "glyphicon-ban-circle"
@@ -69,7 +90,7 @@
 }
 
 @getAltText(dependency: Dependency) = @{
-    dependency.versionState.fold("not found") {
+    dependency.versionState.fold("") {
         case VersionState.UpToDate              => "up to date"
         case VersionState.MinorVersionOutOfDate => "minor version behind"
         case VersionState.MajorVersionOutOfDate => "major version behind"
