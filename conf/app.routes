@@ -24,8 +24,6 @@ GET        /assets/*file                                controllers.Assets.at(pa
 GET        /                                            uk.gov.hmrc.cataloguefrontend.CatalogueController.index
 GET        /admin/metrics                               @com.kenshoo.play.metrics.MetricsController.metrics
 
-GET        /dependencyReport                            uk.gov.hmrc.cataloguefrontend.DependencyReportController.dependencyReport
-
 GET        /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.showSignInPage(targetUrl: Option[String] ?= None)
 POST       /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.submit
 GET        /sign-out                                    @uk.gov.hmrc.cataloguefrontend.AuthController.signOut
