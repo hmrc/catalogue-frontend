@@ -60,12 +60,12 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
     "show green and ok icon if versions are the same" in {
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
-      document.select("#lib1-up-to-date").get(0).text() shouldBe "lib1-up-to-date 1.0.0 1.0.0"
+      document.select("#lib1-up-to-date").get(0).text() shouldBe "uk.gov.hmrc:lib1-up-to-date 1.0.0 1.0.0"
       verifyColour(document, "#lib1-up-to-date", "green")
       verifyIcon(document, "#lib1-up-to-date-icon", "glyphicon", "glyphicon-ok-circle")
       verifyTitle(document, "#lib1-up-to-date-icon", "up to date")
 
-      document.select("#plugin1-up-to-date").get(0).text() shouldBe "plugin1-up-to-date 1.0.0 1.0.0"
+      document.select("#plugin1-up-to-date").get(0).text() shouldBe "uk.gov.hmrc:plugin1-up-to-date 1.0.0 1.0.0"
       verifyColour(document, "#plugin1-up-to-date", "green")
       verifyIcon(document, "#plugin1-up-to-date-icon", "glyphicon", "glyphicon-ok-circle")
       verifyTitle(document, "#plugin1-up-to-date-icon", "up to date")
@@ -74,12 +74,12 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
     "show amber and alert icon if there is a minor version discrepancy" in {
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
-      document.select("#lib2-minor-behind").get(0).text() shouldBe "lib2-minor-behind 2.0.0 2.1.0"
+      document.select("#lib2-minor-behind").get(0).text() shouldBe "uk.gov.hmrc:lib2-minor-behind 2.0.0 2.1.0"
       verifyColour(document, "#lib2-minor-behind", "amber")
       verifyIcon(document, "#lib2-minor-behind-icon", "glyphicon", "glyphicon-alert")
       verifyTitle(document, "#lib2-minor-behind-icon", "minor version behind")
 
-      document.select("#plugin2-minor-behind").get(0).text() shouldBe "plugin2-minor-behind 2.0.0 2.1.0"
+      document.select("#plugin2-minor-behind").get(0).text() shouldBe "uk.gov.hmrc:plugin2-minor-behind 2.0.0 2.1.0"
       verifyColour(document, "#plugin2-minor-behind", "amber")
       verifyIcon(document, "#plugin2-minor-behind-icon", "glyphicon", "glyphicon-alert")
       verifyTitle(document, "#plugin2-minor-behind-icon", "minor version behind")
@@ -88,12 +88,12 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
     "show amber and alert icon if there is a patch version discrepancy" in {
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
-      document.select("#lib4-patch-behind").get(0).text() shouldBe "lib4-patch-behind 3.0.0 3.0.1"
+      document.select("#lib4-patch-behind").get(0).text() shouldBe "uk.gov.hmrc:lib4-patch-behind 3.0.0 3.0.1"
       verifyColour(document, "#lib4-patch-behind", "amber")
       verifyIcon(document, "#lib4-patch-behind-icon", "glyphicon", "glyphicon-alert")
       verifyTitle(document, "#lib4-patch-behind-icon", "minor version behind")
 
-      document.select("#plugin4-patch-behind").get(0).text() shouldBe "plugin4-patch-behind 3.0.0 3.0.1"
+      document.select("#plugin4-patch-behind").get(0).text() shouldBe "uk.gov.hmrc:plugin4-patch-behind 3.0.0 3.0.1"
       verifyColour(document, "#plugin4-patch-behind", "amber")
       verifyIcon(document, "#plugin4-patch-behind-icon", "glyphicon", "glyphicon-alert")
       verifyTitle(document, "#plugin4-patch-behind-icon", "minor version behind")
@@ -103,35 +103,21 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
     "show red and ban icon if there is a major version discrepancy" in {
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
-      document.select("#lib3-major-behind").get(0).text() shouldBe "lib3-major-behind 3.0.0 4.0.0"
+      document.select("#lib3-major-behind").get(0).text() shouldBe "uk.gov.hmrc:lib3-major-behind 3.0.0 4.0.0"
       verifyColour(document, "#lib3-major-behind", "red")
       verifyIcon(document, "#lib3-major-behind-icon", "glyphicon", "glyphicon-ban-circle")
       verifyTitle(document, "#lib3-major-behind-icon", "major version behind")
 
-      document.select("#plugin3-major-behind").get(0).text() shouldBe "plugin3-major-behind 3.0.0 4.0.0"
+      document.select("#plugin3-major-behind").get(0).text() shouldBe "uk.gov.hmrc:plugin3-major-behind 3.0.0 4.0.0"
       verifyColour(document, "#plugin3-major-behind", "red")
       verifyIcon(document, "#plugin3-major-behind-icon", "glyphicon", "glyphicon-ban-circle")
       verifyTitle(document, "#plugin3-major-behind-icon", "major version behind")
     }
 
-    "show grey and question mark icon if there is no latest version available (not found)" in {
-      val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
-
-      document.select("#lib5-no-latest-version").get(0).text() shouldBe "lib5-no-latest-version 3.0.0 (not found)"
-      verifyColour(document, "#lib5-no-latest-version", "grey")
-      verifyIcon(document, "#lib5-no-latest-version-icon", "glyphicon", "glyphicon-question-sign")
-      verifyTitle(document, "#lib5-no-latest-version-icon", "not found")
-
-      document.select("#plugin5-no-latest-version").get(0).text() shouldBe "plugin5-no-latest-version 3.0.0 (not found)"
-      verifyColour(document, "#plugin5-no-latest-version", "grey")
-      verifyIcon(document, "#plugin5-no-latest-version-icon", "glyphicon", "glyphicon-question-sign")
-      verifyTitle(document, "#plugin5-no-latest-version-icon", "not found")
-    }
-
     "show black and question mark icon if versions are invalid (eg: current version > latest version) - (this scenario should not happen unless the reloading of the libraries' latest versions has been failing)" in {
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
-      document.select("#lib6-invalid-ahead-current").get(0).text() shouldBe "lib6-invalid-ahead-current 4.0.0 3.0.1"
+      document.select("#lib6-invalid-ahead-current").get(0).text() shouldBe "uk.gov.hmrc:lib6-invalid-ahead-current 4.0.0 3.0.1"
       verifyColour(document, "#lib6-invalid-ahead-current", "black")
       verifyIcon(document, "#lib6-invalid-ahead-current-icon", "glyphicon", "glyphicon-question-sign")
       verifyTitle(document, "#lib6-invalid-ahead-current-icon", "invalid version difference")
@@ -139,7 +125,7 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
       document
         .select("#plugin6-invalid-ahead-current")
         .get(0)
-        .text() shouldBe "plugin6-invalid-ahead-current 4.0.0 3.0.1"
+        .text() shouldBe "uk.gov.hmrc:plugin6-invalid-ahead-current 4.0.0 3.0.1"
       verifyColour(document, "#plugin6-invalid-ahead-current", "black")
       verifyIcon(document, "#lib6-invalid-ahead-current-icon", "glyphicon", "glyphicon-question-sign")
       verifyTitle(document, "#lib6-invalid-ahead-current-icon", "invalid version difference")
@@ -186,7 +172,7 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
           lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
-      document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 1.0.0"
+      document.select("#sbt").get(0).text() shouldBe "org.scala-sbt:sbt 1.0.0 1.0.0"
       verifyColour(document, "#sbt", "green")
       verifyIcon(document, "#sbt-icon", "glyphicon", "glyphicon-ok-circle")
     }
@@ -201,7 +187,7 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
           lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
-      document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 1.1.0"
+      document.select("#sbt").get(0).text() shouldBe "org.scala-sbt:sbt 1.0.0 1.1.0"
       verifyColour(document, "#sbt", "amber")
       verifyIcon(document, "#sbt-icon", "glyphicon", "glyphicon-alert")
 
@@ -217,7 +203,7 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
           lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
-      document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 1.0.1"
+      document.select("#sbt").get(0).text() shouldBe "org.scala-sbt:sbt 1.0.0 1.0.1"
       verifyColour(document, "#sbt", "amber")
       verifyIcon(document, "#sbt-icon", "glyphicon", "glyphicon-alert")
 
@@ -233,24 +219,9 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
           lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
-      document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 2.0.0"
+      document.select("#sbt").get(0).text() shouldBe "org.scala-sbt:sbt 1.0.0 2.0.0"
       verifyColour(document, "#sbt", "red")
       verifyIcon(document, "#sbt-icon", "glyphicon", "glyphicon-ban-circle")
-
-    }
-
-    "show grey and (not found) if there is no latest version available" in {
-      val dependencies = Dependencies(
-        "service",
-        Nil,
-        Nil,
-        Seq(Dependency("sbt", "org.scala-sbt", Version("1.0.0"), None)),
-        lastUpdated = Instant.now)
-      val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
-
-      document.select("#sbt").get(0).text() shouldBe "sbt 1.0.0 (not found)"
-      verifyColour(document, "#sbt", "grey")
-      verifyIcon(document, "#sbt-icon", "glyphicon", "glyphicon-question-sign")
 
     }
 
@@ -264,7 +235,7 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
           lastUpdated = Instant.now)
       val document = asDocument(new DependenciesPartial(viewMessages)(Some(dependencies)))
 
-      document.select("#sbt").get(0).text() shouldBe "sbt 5.0.0 1.0.0"
+      document.select("#sbt").get(0).text() shouldBe "org.scala-sbt:sbt 5.0.0 1.0.0"
       verifyColour(document, "#sbt", "black")
     }
   }

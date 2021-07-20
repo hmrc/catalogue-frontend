@@ -66,12 +66,26 @@ object BobbyRuleViolation {
   }
 }
 
+
+case class ImportedBy(name: String, group:String, currentVersion: Version)
+
+object ImportedBy {
+  val format = {
+    implicit val vf = Version.format
+    ((__ \ "name").format[String]
+    ~ (__ \ "group").format[String]
+    ~ (__ \ "currentVersion").format[Version])(ImportedBy.apply, unlift(ImportedBy.unapply))
+  }
+}
+
 case class Dependency(
-  name: String,
-  group: String,
-  currentVersion: Version,
-  latestVersion: Option[Version],
-  bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty
+  name               : String,
+  group              : String,
+  currentVersion     : Version,
+  latestVersion      : Option[Version],
+  bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty,
+  importBy           : Option[ImportedBy]      = None,
+  scope              : Option[DependencyScope] = None
 ) {
 
   val isExternal =
@@ -110,9 +124,10 @@ case class Dependencies(
 object Dependencies {
   object Implicits {
     @silent("never used") private implicit val dtr = RestFormats.dateTimeFormats
-    private implicit val vf                        = Version.format
-    private implicit val brvr                      = BobbyRuleViolation.format
-
+    private implicit val vf                         = Version.format
+    private implicit val brvr                       = BobbyRuleViolation.format
+    private implicit val ibf                        = ImportedBy.format
+    private implicit val sf                         = DependencyScope.format
     implicit val readsDependency: Reads[Dependency] = Json.reads[Dependency]
     implicit val reads: Reads[Dependencies]         = Json.reads[Dependencies]
   }
