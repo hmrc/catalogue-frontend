@@ -24,76 +24,88 @@ import org.scalatest.wordspec.AnyWordSpec
 class DependencySpec extends AnyWordSpec with Matchers {
 
   "versionState" should {
-    "return UpToDate if on the latest version" in {
-      Dependency("library-abc", "uk.gov.hmrc", Version("1.2.3"), Some(Version("1.2.3"))).versionState shouldBe Some(VersionState.UpToDate)
+    "return None if on the latest version" in {
+      Dependency(
+        name           = "library-abc",
+        group          = "uk.gov.hmrc",
+        currentVersion = Version("1.2.3"),
+        latestVersion  = Some(Version("1.2.3"))
+      ).versionState shouldBe None
     }
 
-    "return MinorVersionOutOfDate if on patch version behind" in {
-      Dependency("library-abc", "uk.gov.hmrc", Version("1.2.2"), Some(Version("1.2.3"))).versionState shouldBe Some(
-        VersionState.MinorVersionOutOfDate)
+    "return None if version is ahead" in {
+      Dependency(
+        name           = "library-abc",
+        group          = "uk.gov.hmrc",
+        currentVersion = Version("1.4.7"),
+        latestVersion  = Some(Version("1.3.13"))
+      ).versionState shouldBe None
     }
 
-    "return MinorVersionOutOfDate if on minor version behind" in {
-      Dependency("library-abc", "uk.gov.hmrc", Version("1.1.3"), Some(Version("1.2.3"))).versionState shouldBe Some(
-        VersionState.MinorVersionOutOfDate)
+    "return NewVersionAvailable if on patch version behind" in {
+      Dependency(
+        name           = "library-abc",
+        group          = "uk.gov.hmrc",
+        currentVersion = Version("1.2.2"),
+        latestVersion  = Some(Version("1.2.3"))
+      ).versionState shouldBe Some(VersionState.NewVersionAvailable)
     }
 
-    "return MajorVersionOutOfDate if on minor version behind" in {
-      Dependency("library-abc", "uk.gov.hmrc", Version("1.2.3"), Some(Version("2.2.3"))).versionState shouldBe Some(
-        VersionState.MajorVersionOutOfDate)
+    "return NewVersionAvailable if on minor version behind" in {
+      Dependency(
+        name           = "library-abc",
+        group          = "uk.gov.hmrc",
+        currentVersion = Version("1.1.3"),
+        latestVersion  = Some(Version("1.2.3"))
+      ).versionState shouldBe Some(VersionState.NewVersionAvailable)
     }
 
-    "return Invalid if on minor version ahead" in {
-      Dependency("library-abc", "uk.gov.hmrc", Version("1.4.7"), Some(Version("1.3.13"))).versionState shouldBe Some(
-        VersionState.Invalid)
+    "return NewVersionAvailable if on major version behind" in {
+      Dependency(
+        name           = "library-abc",
+        group          = "uk.gov.hmrc",
+        currentVersion = Version("1.2.3"),
+        latestVersion  = Some(Version("2.2.3"))
+      ).versionState shouldBe Some(VersionState.NewVersionAvailable)
     }
+
+    val activeViolation = BobbyRuleViolation("banned library",  BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2))
+    val pendingViolation = BobbyRuleViolation("banned library",  BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2))
 
     "return BobbyRuleViolated if dependency has any broken bobby rules" in {
-      val violation = BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1))
-      Dependency("library-abc", "uk.gov.hmrc", Version("1.2.3"), Some(Version("2.2.3")),
-        Seq(violation)).versionState shouldBe Some(VersionState.BobbyRuleViolated(violation))
+      Dependency(
+        name                = "library-abc",
+        group               = "uk.gov.hmrc",
+        currentVersion      = Version("1.2.3"),
+        latestVersion       = Some(Version("2.2.3")),
+        bobbyRuleViolations = Seq(activeViolation)
+      ).versionState shouldBe Some(VersionState.BobbyRuleViolated(activeViolation))
     }
 
     "return BobbyRulePending if dependency will break future rules" in {
-      val violation = BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(now = LocalDate.of(200,1,2))
-      new Dependency(
-          "library-abc"
-        , "uk.gov.hmrc"
-        , Version("1.2.3")
-        , Some(Version("2.2.3"))
-        , Seq(violation)
-        )
-        .versionState shouldBe Some(VersionState.BobbyRulePending(violation))
+      Dependency(
+        name                = "library-abc",
+        group               = "uk.gov.hmrc",
+        currentVersion      = Version("1.2.3"),
+        latestVersion       = Some(Version("2.2.3")),
+        bobbyRuleViolations = Seq(pendingViolation)
+      ).versionState shouldBe Some(VersionState.BobbyRulePending(pendingViolation))
     }
 
     "return BobbyRuleViolation if dependency has both pending and active broken rules" in {
-      val pendingViolation = BobbyRuleViolation("banned library",  BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2))
-      val activeViolation = BobbyRuleViolation("banned library",  BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2))
-      new Dependency(
-          "library-abc"
-        , "uk.gov.hmrc"
-        , Version("1.2.3")
-        , Some(Version("2.2.3"))
-        , Seq( pendingViolation
-             , activeViolation
-             )
-        ).versionState shouldBe Some(VersionState.BobbyRuleViolated(activeViolation))
-    }
-
-    "return Invalid if current version is greater than the latest version " in {
-      Dependency("library-abc", "uk.gov.hmrc", Version("1.0.1"), Some(Version("1.0.0"))).versionState shouldBe Some(
-        VersionState.Invalid)
-      Dependency("library-abc", "uk.gov.hmrc", Version("1.1.0"), Some(Version("1.0.0"))).versionState shouldBe Some(
-        VersionState.Invalid)
-      Dependency("library-abc", "uk.gov.hmrc", Version("2.0.0"), Some(Version("1.0.0"))).versionState shouldBe Some(
-        VersionState.Invalid)
+      Dependency(
+        name                = "library-abc",
+        group               = "uk.gov.hmrc",
+        currentVersion      = Version("1.2.3"),
+        latestVersion       = Some(Version("2.2.3")),
+        bobbyRuleViolations = Seq(pendingViolation, activeViolation)
+      ).versionState shouldBe Some(VersionState.BobbyRuleViolated(activeViolation))
     }
   }
 
   "Dependencies" should {
-
     "provide a list of only dependencies with active bobby rules" in {
-      val badDep = new Dependency(
+      val badDep = Dependency(
           "library-abc"
         , "uk.gov.hmrc"
         , Version("1.2.3")
@@ -101,52 +113,57 @@ class DependencySpec extends AnyWordSpec with Matchers {
         , Seq(BobbyRuleViolation("banned library",  BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2)))
         )
 
-      val pendingDep = new Dependency(
-          "library-xyz"
-        , "uk.gov.hmrc"
-        , Version("1.2.3")
-        , Some(Version("2.2.3"))
-        , Seq(BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2)))
+      val pendingDep = Dependency(
+        name                = "xyz",
+        group               = "uk.gov.hmrc",
+        currentVersion      = Version("1.2.3"),
+        latestVersion       = Some(Version("2.2.3")),
+        bobbyRuleViolations = Seq(BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2)))
         )
 
       val goodDep = Dependency("library-lol", "uk.gov.hmrc", Version("1.2.3"), Some(Version("2.2.3")))
 
       val deps = Dependencies(
-          repositoryName         = "repo"
-        , libraryDependencies    = Seq(badDep, goodDep, pendingDep)
-        , sbtPluginsDependencies = Seq()
-        , otherDependencies      = Seq()
-        , lastUpdated            = Instant.now
+          repositoryName         = "repo",
+          libraryDependencies    = Seq(badDep, goodDep, pendingDep),
+          sbtPluginsDependencies = Seq(),
+          otherDependencies      = Seq(),
+          lastUpdated            = Instant.now
         )
 
       deps.toSeq.filter(_.activeBobbyRuleViolations.nonEmpty) shouldBe Seq(badDep)
     }
 
     "provide a list of only dependencies with pending bobby rules" in {
-      val badDep = new Dependency(
-          "library-abc"
-        , "uk.gov.hmrc"
-        , Version("1.2.3")
-        , Some(Version("2.2.3"))
-        , Seq(BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2)))
+      val badDep = Dependency(
+          name                = "library-abc",
+          group               = "uk.gov.hmrc",
+          currentVersion      = Version("1.2.3"),
+          latestVersion       = Some(Version("2.2.3")),
+          bobbyRuleViolations = Seq(BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1))(now = LocalDate.of(2000,1,2)))
         )
 
-      val pendingDep = new Dependency(
-          "library-xyz"
-        , "uk.gov.hmrc"
-        , Version("1.2.3")
-        , Some(Version("2.2.3"))
-        , Seq(BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2)))
+      val pendingDep = Dependency(
+          name                = "library-xyz",
+          group               = "uk.gov.hmrc",
+          currentVersion      = Version("1.2.3"),
+          latestVersion       = Some(Version("2.2.3")),
+          bobbyRuleViolations = Seq(BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(now = LocalDate.of(2000,1,2)))
         )
 
-      val goodDep = Dependency("library-lol", "uk.gov.hmrc", Version("1.2.3"), Some(Version("2.2.3")))
+      val goodDep = Dependency(
+          name                = "library-lol",
+          group               = "uk.gov.hmrc",
+          currentVersion      = Version("1.2.3"),
+          latestVersion       = Some(Version("2.2.3"))
+        )
 
       val deps = Dependencies(
-          repositoryName         = "repo"
-        , libraryDependencies    = Seq(badDep, goodDep, pendingDep)
-        , sbtPluginsDependencies = Seq()
-        , otherDependencies      = Seq()
-        , lastUpdated            = Instant.now
+          repositoryName         = "repo",
+          libraryDependencies    = Seq(badDep, goodDep, pendingDep),
+          sbtPluginsDependencies = Seq(),
+          otherDependencies      = Seq(),
+          lastUpdated            = Instant.now
         )
 
       deps.toSeq.filter(_.pendingBobbyRuleViolations.nonEmpty) shouldBe Seq(pendingDep)

@@ -69,17 +69,11 @@
         !sbtPluginsDependencies.isExternal
     }
 
-
-
-
-
-
-
-
     @dependencyDataAvailable() = @{
         mayBeDependencies.isDefined &&
-        (mayBeDependencies.get.libraryDependencies.nonEmpty ||
-            mayBeDependencies.get.sbtPluginsDependencies.nonEmpty ||
-            mayBeDependencies.get.otherDependencies.nonEmpty)
+        ( mayBeDependencies.get.libraryDependencies.nonEmpty ||
+          mayBeDependencies.get.sbtPluginsDependencies.nonEmpty ||
+          mayBeDependencies.get.otherDependencies.nonEmpty
+        )
     }
 </div>
