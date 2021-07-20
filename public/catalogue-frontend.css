@@ -11913,31 +11913,37 @@ section span.other-teams-message {
 .padding-reset-right {
   padding-right: 0; }
 
-.newversion {
-  color: darkgrey;
+.version-ok {
+  color: dimgrey;
+}
+.version-ok a {
+  color: dimgrey;
+}
+
+.version-new-available {
+  color: dimgrey;
+  font-weight: bold;
+}
+.version-new-available a {
+  color: dimgrey;
   font-weight: bold;
 }
 
-.newversion a {
-  color: darkgrey;
+.version-active-violation {
+  color: #ce312f;
+  font-weight: bold;
+}
+.version-active-violation a {
+  color: #ce312f;
   font-weight: bold;
 }
 
-.verybad {
-  color: red;
-  font-weight: bold;
-}
-.verybad a {
-  color: red;
-  font-weight: bold;
-}
-
-.pending {
-  color: red;
+.version-pending-violation {
+  color: orange;
   font-weight: normal;
 }
-.pending a {
-  color: red;
+.version-pending-violation a {
+  color: orange;
   font-weight: normal;
 }
 
@@ -12349,13 +12355,13 @@ table.shutter-events {
 }
 
 .bobby-violation-active-badge {
-  background-color: #a94442;
-  border: 1px solid #a94442;
+  background-color: #ce312f;
+  border: 1px solid #ce312f;
 }
 
 .bobby-violation-pending-badge {
-  background-color: #ffbf00;
-  border: 1px solid #ffbf00;
+  background-color: orange;
+  border: 1px solid orange;
 }
 
 .recent-box {

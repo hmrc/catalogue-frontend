@@ -59,8 +59,8 @@
         </span>
         <span id="@{dependency.name}-bobbyrule" class="col-xs-2">
         @dependency.versionState match {
-            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
             case Some(VersionState.BobbyRulePending (violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
+            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
             case _                                               => { }
         }
         </span>
@@ -69,18 +69,18 @@
 
 @getColourClass(dependency: Dependency) = @{
     dependency.versionState match  {
-        case Some(VersionState.NewVersionAvailable )  => "newversion"
-        case Some(_: VersionState.BobbyRuleViolated)  => "verybad"
-        case Some(_: VersionState.BobbyRulePending )  => "pending"
-        case _                                        => "grey"
+        case Some(VersionState.NewVersionAvailable )  => "version-new-available"
+        case Some(_: VersionState.BobbyRuleViolated)  => "version-active-violation"
+        case Some(_: VersionState.BobbyRulePending )  => "version-pending-violation"
+        case _                                        => "version-ok"
     }
 }
 
 @icon(dependency: Dependency) = @{
   dependency.versionState match {
     case Some(VersionState.NewVersionAvailable )  => <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon glyphicon-alert"  title="new version available"></span>
+    case Some(_: VersionState.BobbyRulePending )  => <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon glyphicon-alert"  title="bobby rule pending"></span>
     case Some(_: VersionState.BobbyRuleViolated)  => <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon glyphicon-remove" title="bobby rule violated"></span>
-    case Some(_: VersionState.BobbyRulePending )  => <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon glyphicon-remove" title="bobby rule pending"></span>
     case _                                        => <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon"                  title="">&nbsp;</span>
   }
 }
