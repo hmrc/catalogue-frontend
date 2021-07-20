@@ -116,7 +116,7 @@ case class Dependencies(
   otherDependencies     : Seq[Dependency],
   lastUpdated           : Instant
 ) {
-  def toSeq: Seq[Dependency] =
+  def toSeq: Seq[Dependency] = // TODO rename allDependencies or flattenDependencies
     libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies
 
   def hasBobbyViolations: Boolean =

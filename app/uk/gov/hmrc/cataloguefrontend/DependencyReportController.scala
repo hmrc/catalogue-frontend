@@ -106,10 +106,10 @@ class DependencyReportController @Inject() (
     // TODO this never returns BobbyRule state...
     // see Dependency#versionState
     optLatestVersion.flatMap(latestVersion => Version.getVersionState(currentVersion, latestVersion)) match {
-      case Some(_: VersionState.BobbyRuleViolated)  => "verybad"
-      case Some(_: VersionState.BobbyRulePending)   => "pending"
-      case Some(VersionState.NewVersionAvailable)   => "newversion"
-      case _                                        => "grey"
+      case Some(_: VersionState.BobbyRuleViolated)  => "version-active-violation"
+      case Some(_: VersionState.BobbyRulePending)   => "version-pending-violation"
+      case Some(VersionState.NewVersionAvailable)   => "version-new-available"
+      case _                                        => "version-ok"
     }
 
   def dependencyReport(): Action[AnyContent] =
