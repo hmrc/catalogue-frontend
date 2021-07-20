@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 @Singleton
@@ -31,6 +33,7 @@ class HealthIndicatorsConnector @Inject() (
   import HttpReads.Implicits._
 
   private implicit val indicatorReads: Reads[Indicator] = Indicator.reads
+  private implicit val historicIndicatorReads: Reads[HistoricIndicatorAPI] = HistoricIndicatorAPI.format
 
   private val healthIndicatorsBaseUrl: String = servicesConfig.baseUrl("health-indicators")
 
@@ -46,6 +49,12 @@ class HealthIndicatorsConnector @Inject() (
     val allQueryParams = Seq("sort" -> "desc") ++ repoTypeQueryP
     http
       .GET[Seq[Indicator]](s"$healthIndicatorsBaseUrl/health-indicators/indicators", allQueryParams)
+  }
+
+  def getHistoricIndicators(repoName: String)(implicit hc: HeaderCarrier): Future[Option[HistoricIndicatorAPI]] = {
+    val url = s"$healthIndicatorsBaseUrl/health-indicators/history/$repoName"
+    http
+      .GET[Option[HistoricIndicatorAPI]](url)
   }
 }
 sealed trait MetricType
@@ -106,3 +115,25 @@ object Indicator {
       ~ (__ \ "weightedMetrics").read[Seq[WeightedMetric]])(Indicator.apply _)
   }
 }
+
+
+case class DataPoint(timestamp: Instant, overallScore: Int)
+
+object DataPoint {
+  val format: OFormat[DataPoint] = {
+    implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
+    ((__ \ "timestamp").format[Instant]
+      ~ (__ \ "overallScore").format[Int])(DataPoint.apply, unlift(DataPoint.unapply))
+  }
+}
+
+case class HistoricIndicatorAPI(repoName: String, dataPoints: Seq[DataPoint])
+
+object HistoricIndicatorAPI {
+  val format: OFormat[HistoricIndicatorAPI] = {
+    implicit val dataFormat: Format[DataPoint] = DataPoint.format
+    ((__ \ "repoName").format[String]
+      ~ (__ \ "dataPoints").format[Seq[DataPoint]])(HistoricIndicatorAPI.apply, unlift(HistoricIndicatorAPI.unapply))
+  }
+}
+

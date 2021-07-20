@@ -69,3 +69,4 @@ GET        /deployments/:env                            uk.gov.hmrc.cataloguefro
 
 GET        /health-indicators                           uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepoType(repoType: String ?= "", repositoryName: String ?= "")
 GET        /health-indicators/:name                     uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepo(name: String)
+GET        /health-indicators/:name/history             uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.historyForRepo(name: String)
