@@ -112,7 +112,6 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Fak
         )))
 
     "return the dependencyReport in csv" in {
-
       mockDigitalService()
       mockTeamsAndTheirRepositories()
       mockAllDependencies()
@@ -126,12 +125,12 @@ class DependencyReportControllerSpec extends UnitSpec with MockitoSugar with Fak
       csvLines.length shouldBe 7
 
       csvLines(0) shouldBe "repository,dependencyName,digitalService,colour,dependencyType,team,latestVersion,currentVersion"
-      csvLines    should contain("repo-1,LIBRARY-1,digital-service-1,green,library,team1,1.0.0,1.0.0")
-      csvLines    should contain("repo-1,LIBRARY-2,digital-service-1,red,library,team1,3.0.0,2.0.0")
-      csvLines    should contain("repo-1,PLUGIN-1,digital-service-1,amber,plugin,team1,1.1.0,1.0.0")
-      csvLines    should contain("repo-1,PLUGIN-2,digital-service-1,red,plugin,team1,3.0.0,2.0.0")
-      csvLines    should contain("repo-2,LIBRARY-3,digital-service-2,green,library,team2,3.0.0,3.0.0")
-      csvLines    should contain("repo-2,PLUGIN-3,digital-service-2,red,plugin,team2,4.0.0,3.0.0")
+      csvLines    should contain("repo-1,LIBRARY-1,digital-service-1,version-ok,library,team1,1.0.0,1.0.0")
+      csvLines    should contain("repo-1,LIBRARY-2,digital-service-1,version-new-available,library,team1,3.0.0,2.0.0")
+      csvLines    should contain("repo-1,PLUGIN-1,digital-service-1,version-new-available,plugin,team1,1.1.0,1.0.0")
+      csvLines    should contain("repo-1,PLUGIN-2,digital-service-1,version-new-available,plugin,team1,3.0.0,2.0.0")
+      csvLines    should contain("repo-2,LIBRARY-3,digital-service-2,version-ok,library,team2,3.0.0,3.0.0")
+      csvLines    should contain("repo-2,PLUGIN-3,digital-service-2,version-new-available,plugin,team2,4.0.0,3.0.0")
     }
   }
 
