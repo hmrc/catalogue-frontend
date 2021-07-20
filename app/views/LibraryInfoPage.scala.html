@@ -40,8 +40,8 @@
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
-    @partials.bobby_violations_banner(environment = None, optDependencies.toSeq.flatMap(_.toSeq), pending = false)
-    @partials.bobby_violations_banner(environment = None, optDependencies.toSeq.flatMap(_.toSeq), pending = true )
+    @partials.bobby_violations_banner(environment = None, optDependencies.toSeq.flatMap(_.toDependencySeq), pending = false)
+    @partials.bobby_violations_banner(environment = None, optDependencies.toSeq.flatMap(_.toDependencySeq), pending = true )
 
     <section class="section-wrapper">
         <div class="row">

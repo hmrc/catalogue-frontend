@@ -131,7 +131,7 @@ class DependencySpec extends AnyWordSpec with Matchers {
           lastUpdated            = Instant.now
         )
 
-      deps.toSeq.filter(_.activeBobbyRuleViolations.nonEmpty) shouldBe Seq(badDep)
+      deps.toDependencySeq.filter(_.activeBobbyRuleViolations.nonEmpty) shouldBe Seq(badDep)
     }
 
     "provide a list of only dependencies with pending bobby rules" in {
@@ -166,7 +166,7 @@ class DependencySpec extends AnyWordSpec with Matchers {
           lastUpdated            = Instant.now
         )
 
-      deps.toSeq.filter(_.pendingBobbyRuleViolations.nonEmpty) shouldBe Seq(pendingDep)
+      deps.toDependencySeq.filter(_.pendingBobbyRuleViolations.nonEmpty) shouldBe Seq(pendingDep)
     }
   }
 }

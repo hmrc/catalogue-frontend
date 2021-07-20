@@ -34,8 +34,8 @@ object VersionState {
 // TODO avoid caching LocalDate, and provide to isActive function
 case class BobbyRuleViolation(
   reason: String,
-  range: BobbyVersionRange,
-  from: LocalDate
+  range : BobbyVersionRange,
+  from  : LocalDate
 )(implicit now: LocalDate = LocalDate.now()) {
   def isActive: Boolean = now.isAfter(from)
 }
@@ -43,9 +43,10 @@ case class BobbyRuleViolation(
 object BobbyRuleViolation {
   val format = {
     implicit val bvf = BobbyVersionRange.format
-    ((__ \ "reason").read[String]
-      ~ (__ \ "range").read[BobbyVersionRange]
-      ~ (__ \ "from").read[LocalDate])(BobbyRuleViolation.apply _)
+    ( (__ \ "reason").read[String]
+    ~ (__ \ "range" ).read[BobbyVersionRange]
+    ~ (__ \ "from"  ).read[LocalDate]
+    )(BobbyRuleViolation.apply _)
   }
 
   implicit val ordering = new Ordering[BobbyRuleViolation] {
@@ -70,9 +71,10 @@ case class ImportedBy(name: String, group:String, currentVersion: Version)
 object ImportedBy {
   val format = {
     implicit val vf = Version.format
-    ((__ \ "name").format[String]
-    ~ (__ \ "group").format[String]
-    ~ (__ \ "currentVersion").format[Version])(ImportedBy.apply, unlift(ImportedBy.unapply))
+    ( (__ \ "name"          ).format[String]
+    ~ (__ \ "group"         ).format[String]
+    ~ (__ \ "currentVersion").format[Version]
+    )(ImportedBy.apply, unlift(ImportedBy.unapply))
   }
 }
 
@@ -98,15 +100,31 @@ case class Dependency(
     else if (pendingBobbyRuleViolations.nonEmpty)
       Some(VersionState.BobbyRulePending(pendingBobbyRuleViolations.sorted.head))
     else
-      latestVersion.flatMap(latestVersion => Version.getVersionState(currentVersion, latestVersion))
+      latestVersion.fold[Option[VersionState]](None){ latestVersion =>
+        Version.isNewVersionAvailable(currentVersion, latestVersion) match {
+          case Some(true)  => Some(VersionState.NewVersionAvailable)
+          case Some(false) => None
+          case None        => Some(VersionState.Invalid)
+        }
+      }
 
   def hasBobbyViolations: Boolean =
     versionState match {
-      case Some(_: VersionState.BobbyRuleViolated)  => true
-      case Some(_: VersionState.BobbyRulePending)   => true
-      case _                                        => false
+      case Some(_: VersionState.BobbyRuleViolated) => true
+      case Some(_: VersionState.BobbyRulePending)  => true
+      case _                                       => false
     }
 
+
+  // rename reportable or something
+  def isOutOfDate: Boolean = {
+    versionState match {
+      case Some(VersionState.NewVersionAvailable)  => true
+      case Some(_: VersionState.BobbyRuleViolated) => true
+      case Some(_: VersionState.BobbyRulePending)  => true
+      case _                                       => false
+    }
+  }
 }
 
 case class Dependencies(
@@ -116,11 +134,14 @@ case class Dependencies(
   otherDependencies     : Seq[Dependency],
   lastUpdated           : Instant
 ) {
-  def toSeq: Seq[Dependency] = // TODO rename allDependencies or flattenDependencies
+  def toDependencySeq: Seq[Dependency] =
     libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies
 
   def hasBobbyViolations: Boolean =
-    toSeq.exists(_.hasBobbyViolations)
+    toDependencySeq.exists(_.hasBobbyViolations)
+
+  def hasOutOfDateDependencies: Boolean =
+    toDependencySeq.exists(_.isOutOfDate)
 }
 
 object Dependencies {
@@ -264,17 +285,17 @@ object Version {
       x.compare(y)
   }
 
-  def getVersionState(currentVersion: Version, latestVersion: Version): Option[VersionState] =
+  def isNewVersionAvailable(currentVersion: Version, latestVersion: Version): Option[Boolean] =
     latestVersion.diff(currentVersion) match {
       case (major, minor, patch)
           if (major >  0                           ) ||
              (major == 0 && minor >  0             ) ||
              (major == 0 && minor == 0 && patch > 0)
-        => Some(VersionState.NewVersionAvailable)
+        => Some(true)
       case (major, minor, patch)
-        => None
+        => Some(false)
       case _
-        => Some(VersionState.Invalid)
+        => None
     }
 
   def parse(s: String): Option[Version] = {
@@ -312,12 +333,12 @@ object Version {
 }
 
 case class ServiceWithDependency(
-  slugName: String,
-  slugVersion: String,
-  teams: List[TeamName],
-  depGroup: String,
-  depArtefact: String,
-  depVersion: String,
+  slugName          : String,
+  slugVersion       : String,
+  teams             : List[TeamName],
+  depGroup          : String,
+  depArtefact       : String,
+  depVersion        : String,
   depSemanticVersion: Option[Version]
 )
 
@@ -327,13 +348,14 @@ object ServiceWithDependency {
 
   val reads: Reads[ServiceWithDependency] = {
     implicit val tnf = TeamName.format
-    ((__ \ "slugName").read[String]
-      ~ (__ \ "slugVersion").read[String]
-      ~ (__ \ "teams").read[List[TeamName]]
-      ~ (__ \ "depGroup").read[String]
-      ~ (__ \ "depArtefact").read[String]
-      ~ (__ \ "depVersion").read[String]
-      ~ (__ \ "depVersion").read[String].map(Version.parse))(ServiceWithDependency.apply _)
+    ( (__ \ "slugName"   ).read[String]
+    ~ (__ \ "slugVersion").read[String]
+    ~ (__ \ "teams"      ).read[List[TeamName]]
+    ~ (__ \ "depGroup"   ).read[String]
+    ~ (__ \ "depArtefact").read[String]
+    ~ (__ \ "depVersion" ).read[String]
+    ~ (__ \ "depVersion" ).read[String].map(Version.parse)
+    )(ServiceWithDependency.apply _)
   }
 }
 
@@ -341,8 +363,9 @@ case class GroupArtefacts(group: String, artefacts: List[String])
 
 object GroupArtefacts {
   val apiFormat: OFormat[GroupArtefacts] =
-    ((__ \ "group").format[String]
-      ~ (__ \ "artefacts").format[List[String]])(GroupArtefacts.apply, unlift(GroupArtefacts.unapply))
+    ( (__ \ "group"    ).format[String]
+    ~ (__ \ "artefacts").format[List[String]]
+    )(GroupArtefacts.apply, unlift(GroupArtefacts.unapply))
 }
 
 sealed trait DependencyScope {
@@ -351,8 +374,8 @@ sealed trait DependencyScope {
 }
 object DependencyScope {
   case object Compile extends DependencyScope { override val asString = "compile" }
-  case object Test extends DependencyScope { override val asString = "test" }
-  case object Build extends DependencyScope { override val asString = "build" }
+  case object Test    extends DependencyScope { override val asString = "test"    }
+  case object Build   extends DependencyScope { override val asString = "build"   }
 
   val values: List[DependencyScope] =
     List(Compile, Test, Build)
