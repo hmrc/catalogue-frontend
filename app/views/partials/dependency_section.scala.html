@@ -42,12 +42,12 @@
 @dependencyRow(dependency: Dependency) = {
     <div class="@{getColourClass(dependency)} row" id="@{dependency.name}">
         <span class="col-xs-4 left-aligned">
-            <span class="@if(dependency.importBy.isDefined){transitive}"></span>
+            <span class="@if(dependency.importBy.isDefined){transitive}"><!-- indentation --></span>
             <span id="@{dependency.name}-icon" class="@{getIconClass(dependency)}" title="@{getAltText(dependency)}"> </span>
             @if(dependency.latestVersion.isDefined && !dependency.isExternal) {
-                <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}">@dependency.name</a>
+                <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}"> <span class="dep-group">@dependency.group:</span><span class="dep-name">@dependency.name</span></a>
             } else {
-                @dependency.name
+                <span class="dep-group">@dependency.group:</span><span class="dep-name">@dependency.name</span>
             }
         </span>
         <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion.toString</span>

@@ -374,7 +374,7 @@ class CatalogueController @Inject() (
       serviceDependencyConnector.getSlugInfo(repositoryName)
     ).mapN { (jenkinsLink,
               envDatas,
-              optMasterDependencies,
+              optDependenciesFromGithub,
               librariesOfLatestSlug,
               urlIfLeaksFound,
               serviceUrl,
@@ -392,20 +392,20 @@ class CatalogueController @Inject() (
             )
         }
 
-      // slugs build before the inclusion of the dependency graph data wont have build deps, so they'll still need to retrieved
-      // the old api.
-      val optLegacyLatestDependencies = if(librariesOfLatestSlug.exists(_.scope.contains(DependencyScope.Build))) None else optMasterDependencies
+      // slugs build before the inclusion of the dependency graph data wont have build deps, so we fallback to getting them from github
+      // this will be deprecated once dependency graphs data covers the majority of slugs
+      val optLegacyLatestDependencies = if(librariesOfLatestSlug.exists(_.scope.contains(DependencyScope.Build))) None else optDependenciesFromGithub
 
       Ok(
         serviceInfoPage(
-          serviceName                = serviceName,
-          repositoryDetails          = repositoryDetails.copy(jenkinsURL = jenkinsLink),
-          optMasterDependencies      = optLegacyLatestDependencies,
-          repositoryCreationDate     = repositoryDetails.createdAt,
-          envDatas                   = optLatestData.fold(envDatas)(envDatas + _),
-          linkToLeakDetection        = urlIfLeaksFound,
-          productionEnvironmentRoute = serviceUrl,
-          serviceRoutes              = serviceRoutes
+          serviceName                 = serviceName,
+          repositoryDetails           = repositoryDetails.copy(jenkinsURL = jenkinsLink),
+          optLegacyLatestDependencies = optLegacyLatestDependencies,
+          repositoryCreationDate      = repositoryDetails.createdAt,
+          envDatas                    = optLatestData.fold(envDatas)(envDatas + _),
+          linkToLeakDetection         = urlIfLeaksFound,
+          productionEnvironmentRoute  = serviceUrl,
+          serviceRoutes               = serviceRoutes
         )
       )
     }

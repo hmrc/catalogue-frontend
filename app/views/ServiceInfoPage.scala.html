@@ -30,7 +30,7 @@
 @(
   serviceName                  : String,
   repositoryDetails            : RepositoryDetails,
-  optMasterDependencies        : Option[Dependencies],
+  optLegacyLatestDependencies  : Option[Dependencies],
   repositoryCreationDate       : LocalDateTime,
   envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
@@ -92,13 +92,13 @@
 
         @dependenciesByEnvironmentPartial(serviceName, envDatas)
 
-        @if(optMasterDependencies.isDefined) {
+        @if(optLegacyLatestDependencies.isDefined) {
             <div class="row">
                 <div class="col-md-12">
                 @buildToolsPartial(
                     ServiceInfoView.buildToolsFrom(
-                        optMasterDependencies = optMasterDependencies
-                        , librariesOfLatestSlug = envDatas.get(SlugInfoFlag.Latest).toSeq.flatMap(_.dependencies)
+                          optLegacyLatestDependencies = optLegacyLatestDependencies
+                        , librariesOfLatestSlug       = envDatas.get(SlugInfoFlag.Latest).toSeq.flatMap(_.dependencies)
                     )
                 )
                 </div>
