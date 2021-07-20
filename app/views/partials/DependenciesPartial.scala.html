@@ -57,7 +57,7 @@
             </ul>
         </div>
         @if(mayBeDependencies.exists(dependencies => dependencies.libraryDependencies.nonEmpty || dependencies.sbtPluginsDependencies.nonEmpty || dependencies.otherDependencies.nonEmpty)) {
-            @partials.dependency_legend(includeUpToDate = true)
+            @partials.dependency_legend(showNewVersionAvailable = true)
         }
     </div>
 

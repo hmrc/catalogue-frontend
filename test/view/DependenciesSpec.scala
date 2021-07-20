@@ -61,11 +61,6 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
       document.select("#lib1-up-to-date").get(0).text() shouldBe "uk.gov.hmrc:lib1-up-to-date 1.0.0 1.0.0"
       document.select("#lib1-up-to-date").hasClass("version-ok") shouldBe true
 
-      import collection.JavaConverters._
-      println("a) " + document)
-      println("b) " + document.select("#lib1-up-to-date-icon"))
-      println("c) " + document.select("#lib1-up-to-date-icon").asScala.headOption.map(_.classNames().asScala).mkString(", "))
-
       document.select("#plugin1-up-to-date").get(0).text() shouldBe "uk.gov.hmrc:plugin1-up-to-date 1.0.0 1.0.0"
       document.select("#plugin1-up-to-date").hasClass("version-ok") shouldBe true
     }

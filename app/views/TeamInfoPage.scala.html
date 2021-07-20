@@ -44,10 +44,10 @@
     </header>
 
     @partials.team_leak_detection_banner(leaksFoundForTeam)
-    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.toSeq), pending = false, team = true)
-    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.toSeq), pending = true , team = true)
-    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.toSeq), pending = false, team = true)
-    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.toSeq), pending = true , team = true)
+    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.toDependencySeq), pending = false, team = true)
+    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.toDependencySeq), pending = true , team = true)
+    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.toDependencySeq), pending = false, team = true)
+    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.toDependencySeq), pending = true , team = true)
 
     <section class="section-wrapper">
 
