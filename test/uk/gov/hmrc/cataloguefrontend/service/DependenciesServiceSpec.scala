@@ -119,7 +119,7 @@ class SlugInfoServiceSpec
         dependencies = Seq(depFoo),
         environment = None
       )
-      DependenciesService.sortAndSeparateDependencies(serviceDeps) shouldBe (Seq(depFoo), Seq.empty)
+      DependenciesService.sortAndSeparateDependencies(serviceDeps) shouldBe ((Seq(depFoo), Seq.empty))
     }
 
     "return a list of direct and transitive dependencies when there is a dot file" in {

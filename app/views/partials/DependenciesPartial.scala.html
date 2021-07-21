@@ -56,8 +56,8 @@
 
             </ul>
         </div>
-        @if(mayBeDependencies.exists(dependencies => dependencies.libraryDependencies.nonEmpty || dependencies.sbtPluginsDependencies.nonEmpty || dependencies.otherDependencies.nonEmpty)) {
-            @partials.dependency_legend(includeUpToDate = true)
+        @if(mayBeDependencies.exists(_.toDependencySeq.nonEmpty)) {
+            @partials.dependency_legend(showNewVersionAvailable = true)
         }
     </div>
 
@@ -69,17 +69,7 @@
         !sbtPluginsDependencies.isExternal
     }
 
-
-
-
-
-
-
-
     @dependencyDataAvailable() = @{
-        mayBeDependencies.isDefined &&
-        (mayBeDependencies.get.libraryDependencies.nonEmpty ||
-            mayBeDependencies.get.sbtPluginsDependencies.nonEmpty ||
-            mayBeDependencies.get.otherDependencies.nonEmpty)
+        mayBeDependencies.exists(_.toDependencySeq.nonEmpty)
     }
 </div>

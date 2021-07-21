@@ -30,9 +30,9 @@
     <div class="board__body">
         <div class="col-xs-8">
             <ul class="list list--minimal list-group row">
-                @if(dependencyDataAvailable()) {
+                @if(mayBeDependencies.exists(_.toDependencySeq.nonEmpty)) {
 
-                    @if(mayBeDependencies.map(_.libraryDependencies.nonEmpty).getOrElse(false)) {
+                    @if(mayBeDependencies.exists(_.libraryDependencies.nonEmpty)) {
                     <li>
                         <span class="col-xs-4"><label>Test libraries</label></span>
                         <span class="col-xs-3"><label>Current Version</label></span>
@@ -42,7 +42,7 @@
                     @partials.dependency_section(mayBeDependencies.get.libraryDependencies)
                     }
 
-                    @if(mayBeDependencies.map(_.libraryDependencies.isEmpty).getOrElse(true)) {
+                    @if(mayBeDependencies.exists(_.libraryDependencies.isEmpty)) {
                     <li>
                         <span class="col-xs-4"><label>Sbt plugins</label></span>
                         <span class="col-xs-3"><label>Current Version</label></span>
@@ -63,12 +63,8 @@
                 }
             </ul>
         </div>
-        @if(dependencyDataAvailable()) {
-            @partials.dependency_legend(includeUpToDate = true)
+        @if(mayBeDependencies.exists(_.toDependencySeq.nonEmpty)) {
+            @partials.dependency_legend(showNewVersionAvailable = true)
         }
     </div>
-
-    @dependencyDataAvailable() = @{
-        mayBeDependencies.toSeq.nonEmpty
-    }
 </div>

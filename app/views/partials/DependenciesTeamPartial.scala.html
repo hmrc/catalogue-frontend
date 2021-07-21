@@ -24,6 +24,7 @@
  , showLink              : Boolean
  )
 
+@* value to show thoses were later versions are available? *@
 @defining(masterTeamDependencies.filter(_.hasOutOfDateDependencies)) { outOfDateDependencies =>
 
 <div id="team-dependencies" class="board">
@@ -54,7 +55,7 @@
                          <span class="col-xs-2"><label>Violation</label></span>
 
                      </li>
-                     @partials.dependency_section(dependency.libraryDependencies.filter(_.isOutOfDate))
+                     @partials.dependency_section(dependency.libraryDependencies.filter(_.isOutOfDate).sortBy(_.scope))
                      @partials.dependency_section(dependency.sbtPluginsDependencies.filter(_.isOutOfDate))
                      @partials.dependency_section(dependency.otherDependencies.filter(_.isOutOfDate))
 
@@ -63,7 +64,7 @@
              }
         </div>
         @if(masterTeamDependencies.nonEmpty) {
-          @partials.dependency_legend(includeUpToDate = false)
+          @partials.dependency_legend(showNewVersionAvailable = true)
         }
       }
     </div>
