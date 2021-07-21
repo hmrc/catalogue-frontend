@@ -70,12 +70,12 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
       document.select("#lib2-minor-behind").get(0).text() shouldBe "uk.gov.hmrc:lib2-minor-behind 2.0.0 2.1.0"
       document.select("#lib2-minor-behind").hasClass("version-new-available") shouldBe true
-      document.select("#lib2-minor-behind-icon").hasClass("glyphicon-alert") shouldBe true
+      document.select("#lib2-minor-behind-icon").hasClass("glyphicon-arrow-up") shouldBe true
       document.select("#lib2-minor-behind-icon").attr("title").contains("minor version behind")
 
       document.select("#plugin2-minor-behind").get(0).text() shouldBe "uk.gov.hmrc:plugin2-minor-behind 2.0.0 2.1.0"
       document.select("#plugin2-minor-behind").hasClass("version-new-available") shouldBe true
-      document.select("#plugin2-minor-behind-icon").hasClass("glyphicon-alert") shouldBe true
+      document.select("#plugin2-minor-behind-icon").hasClass("glyphicon-arrow-up") shouldBe true
       document.select("#plugin2-minor-behind-icon").attr("title").contains("minor version behind")
     }
   }
@@ -107,7 +107,7 @@ class DependenciesSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
       document.select("#sbt").get(0).text() shouldBe "org.scala-sbt:sbt 1.0.0 1.1.0"
       document.select("#sbt").hasClass("version-new-available") shouldBe true
-      document.select("#sbt-icon").hasClass("glyphicon-alert") shouldBe true
+      document.select("#sbt-icon").hasClass("glyphicon-arrow-up") shouldBe true
     }
   }
 
