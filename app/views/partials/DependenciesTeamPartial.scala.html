@@ -55,8 +55,7 @@
                          <span class="col-xs-2"><label>Violation</label></span>
 
                      </li>
-                     @* TODO order by scope (or version state) *@
-                     @partials.dependency_section(dependency.libraryDependencies.filter(_.isOutOfDate))
+                     @partials.dependency_section(dependency.libraryDependencies.filter(_.isOutOfDate).sortBy(_.scope))
                      @partials.dependency_section(dependency.sbtPluginsDependencies.filter(_.isOutOfDate))
                      @partials.dependency_section(dependency.otherDependencies.filter(_.isOutOfDate))
 

@@ -396,4 +396,9 @@ object DependencyScope {
       _.validate[String].flatMap(s => toResult(DependencyScope.parse(s))),
       f => JsString(f.asString)
     )
+
+  implicit val dependencyScopeOrdering: Ordering[DependencyScope] = new Ordering[DependencyScope] {
+    def compare(x: DependencyScope, y: DependencyScope): Int =
+      values.indexOf(x) - values.indexOf(y)
+  }
 }
