@@ -11929,20 +11929,16 @@ section span.other-teams-message {
 
 .version-active-violation {
   color: #ce312f;
-  font-weight: bold;
 }
 .version-active-violation a {
   color: #ce312f;
-  font-weight: bold;
 }
 
 .version-pending-violation {
   color: orange;
-  font-weight: normal;
 }
 .version-pending-violation a {
   color: orange;
-  font-weight: normal;
 }
 
 .red {
