@@ -78,9 +78,9 @@
 
 @icon(dependency: Dependency) = {
   @dependency.versionState match {
-    case Some(VersionState.NewVersionAvailable )  => { <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon glyphicon-alert"  title="new version available"></span> }
-    case Some(_: VersionState.BobbyRulePending )  => { <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon glyphicon-alert"  title="bobby rule pending"></span> }
-    case Some(_: VersionState.BobbyRuleViolated)  => { <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon glyphicon-remove" title="bobby rule violated"></span> }
-    case _                                        => { <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon"                  title="">&nbsp;</span> }
+    case Some(VersionState.NewVersionAvailable )  => { <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon glyphicon-arrow-up" title="new version available"></span> }
+    case Some(_: VersionState.BobbyRulePending )  => { <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon glyphicon-alert"    title="bobby rule pending"></span> }
+    case Some(_: VersionState.BobbyRuleViolated)  => { <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon glyphicon-remove"   title="bobby rule violated"></span> }
+    case _                                        => { <span id="@{dependency.name}-icon" class="medium-glyphicon glyphicon"                    title="">&nbsp;</span> }
   }
 }

@@ -11922,11 +11922,9 @@ section span.other-teams-message {
 
 .version-new-available {
   color: dimgrey;
-  font-weight: bold;
 }
 .version-new-available a {
   color: dimgrey;
-  font-weight: bold;
 }
 
 .version-active-violation {
