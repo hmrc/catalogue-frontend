@@ -78,8 +78,6 @@ object RouteRulesService {
     val isDefined: Boolean = environmentRoutes.nonEmpty
   }
 
-  type EnvironmentRoutes = Seq[EnvironmentRoute]
-
   case class EnvironmentRoute(environment: String, routes: Seq[Route])
 
   case class Route(frontendPath: String, backendPath: String, ruleConfigurationUrl: String, isRegex: Boolean = false)

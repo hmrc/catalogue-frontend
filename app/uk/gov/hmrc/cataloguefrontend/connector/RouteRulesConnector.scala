@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{Json, Reads}
-import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService._
+import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, Route}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -41,9 +41,9 @@ class RouteRulesConnector @Inject() (
   implicit val routeReads: Reads[Route]                       = Json.reads[Route]
   implicit val environmentRouteReads: Reads[EnvironmentRoute] = Json.using[Json.WithDefaultValues].reads[EnvironmentRoute]
 
-  def serviceRoutes(service: String)(implicit hc: HeaderCarrier): Future[EnvironmentRoutes] =
+  def serviceRoutes(service: String)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] =
     http
-      .GET[EnvironmentRoutes](url"$url/$service")
+      .GET[Seq[EnvironmentRoute]](url"$url/$service")
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
