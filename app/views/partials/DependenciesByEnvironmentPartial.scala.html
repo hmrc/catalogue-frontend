@@ -19,12 +19,11 @@
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
-
+@import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
 
 @this(dependenciesPartial: ServiceDependenciesPartial, viewMessages: ViewMessages)
 
-@(envDatas: Map[SlugInfoFlag, EnvData]
-)(implicit messages: Messages)
+@(serviceName: String, envDatas: Map[SlugInfoFlag, EnvData])(implicit messages: Messages)
 
 <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
   @for(slugInfoFlag <- SlugInfoFlag.values) {
@@ -50,7 +49,7 @@
 
 <div id="environmentPanes" class="tab-content environment-panes">
   @for(slugInfoFlag <- SlugInfoFlag.values) {
-    @defining(envDatas.get(slugInfoFlag)){ optEnvData =>
+    @defining(envDatas.get(slugInfoFlag)){ optEnvData: Option[EnvData] =>
       <div id="@{slugInfoFlag.asString}-pane" class="tab-pane @if(slugInfoFlag == SlugInfoFlag.Latest) { active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab">
 
       @if(slugInfoFlag != SlugInfoFlag.Latest) {
@@ -85,11 +84,49 @@
         <div class="row">
             <div class="col-md-12">
                 @dependenciesPartial(
-                    optEnvData.toSeq.flatMap(_.dependencies)
+                    optEnvData.toSeq.flatMap(_.dependencies.filter(_.scope.contains(DependencyScope.Compile)))
                   , s"platform-dependencies-${slugInfoFlag.asString}"
+                  , "Platform Dependencies"
+                  , serviceName
+                  , optEnvData.map(_.version)
                   )
             </div>
         </div>
+
+        @defining( optEnvData.toSeq.flatMap(_.dependencies.filter(_.scope.contains(DependencyScope.Test)))) { testDependencies =>
+          @if(testDependencies.nonEmpty){
+              <div class="row">
+                  <div class="col-md-12">
+                  @dependenciesPartial(
+                        testDependencies
+                      , s"test-dependencies-${slugInfoFlag.asString}"
+                      , "Test Dependencies"
+                      , serviceName
+                      , optEnvData.map(_.version)
+                  )
+                  </div>
+              </div>
+
+          }
+        }
+
+          @defining(optEnvData.toSeq.flatMap(_.dependencies.filter(_.scope.contains(DependencyScope.Build)))) { buildDependencies =>
+              @if(buildDependencies.nonEmpty) {
+                  <div class="row">
+                      <div class="col-md-12">
+                      @dependenciesPartial(
+                          buildDependencies
+                          , s"build-dependencies-${slugInfoFlag.asString}"
+                          , "Sbt Plugins"
+                          , serviceName
+                          , optEnvData.map(_.version)
+                      )
+                      </div>
+                  </div>
+              }
+          }
+
+
       </div>
     }
   }

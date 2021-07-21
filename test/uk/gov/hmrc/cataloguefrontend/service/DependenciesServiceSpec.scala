@@ -139,7 +139,8 @@ class SlugInfoServiceSpec
             |"org.foo:foo:1.0.0" -> "org.bar:bar:1.0.0"
             |""".stripMargin)
       )
-      DependenciesService.sortAndSeparateDependencies(serviceDeps) shouldBe (Seq(depFoo), Seq(TransitiveServiceDependency(depBar, depFoo)))
+      DependenciesService.sortAndSeparateDependencies(serviceDeps)._1 shouldBe Seq(depFoo)
+      DependenciesService.sortAndSeparateDependencies(serviceDeps)._2 shouldBe Seq(TransitiveServiceDependency(depBar, depFoo))
     }
   }
 

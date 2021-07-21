@@ -39,12 +39,19 @@ class DependenciesController @Inject() (
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
-  def service(name: String): Action[AnyContent] =
+  def services(name: String): Action[AnyContent] =
     Action.async { implicit request =>
       for {
         deployments         <- whatsRunningWhereService.releasesForService(name).map(_.versions)
         serviceDependencies <- dependenciesService.search(name, deployments)
       } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.semanticVersion)(Ordering[Option[Version]].reverse)))
+    }
+
+  def service(name: String, version: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      dependenciesService.getServiceDependencies(name, Version(version)).map( maybeDeps =>
+        Ok(dependenciesPage(name, maybeDeps.toSeq))
+      )
     }
 
   def graphs(name :String, version: String, scope: String): Action[AnyContent] =
