@@ -38,7 +38,7 @@
         @if(showLink) {
           <p>Click <a href="/teams/@teamName.asString/out-of-date-dependencies">here</a> to open in dedicated window. (Useful for build monitors)</p>
         }
-        <div class="col-xs-8">
+        <div class="col-xs-9">
              @for(dependency <- masterTeamDependencies) {
                @defining(prodDependencies.getOrElse(dependency.repositoryName, Seq.empty)){ prodDependencies =>
                  <ul class="list list--minimal list-group row" id="ood-@dependency.repositoryName">
@@ -64,7 +64,9 @@
              }
         </div>
         @if(masterTeamDependencies.nonEmpty) {
-          @partials.dependency_legend(showNewVersionAvailable = true)
+        <div class="col-xs-3">
+            @partials.dependency_legend(showNewVersionAvailable = true)
+        </div>
         }
       }
     </div>
