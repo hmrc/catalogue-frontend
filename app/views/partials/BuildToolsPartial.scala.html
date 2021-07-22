@@ -28,7 +28,7 @@
         <img class="info-icon" src="/assets/infoicon.svg" data-toggle="tooltip" data-placement="right" title="@messages("latestbuild.info")"/>
     </h3>
     <div class="board__body">
-        <div class="col-xs-8">
+        <div class="col-xs-9">
             <ul class="list list--minimal list-group row">
                 @if(mayBeDependencies.exists(_.toDependencySeq.nonEmpty)) {
 
@@ -64,7 +64,9 @@
             </ul>
         </div>
         @if(mayBeDependencies.exists(_.toDependencySeq.nonEmpty)) {
+            <div class="col-xs-3">
             @partials.dependency_legend(showNewVersionAvailable = true)
+            </div>
         }
     </div>
 </div>
