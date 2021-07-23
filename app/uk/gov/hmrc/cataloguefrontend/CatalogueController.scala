@@ -50,39 +50,39 @@ case class TeamActivityDates(
 )
 
 case class EnvData(
-  version: Version,
-  dependencies: Seq[Dependency],
-  optShutterState: Option[ShutterState],
+  version          : Version,
+  dependencies     : Seq[Dependency],
+  optShutterState  : Option[ShutterState],
   optTelemetryLinks: Option[Seq[Link]]
 )
 
 @Singleton
 class CatalogueController @Inject() (
-  userManagementConnector: UserManagementConnector,
+  userManagementConnector      : UserManagementConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  configService: ConfigService,
-  routeRulesService: RouteRulesService,
-  serviceDependencyConnector: ServiceDependenciesConnector,
-  leakDetectionService: LeakDetectionService,
-  eventService: EventService,
-  readModelService: ReadModelService,
-  shutterService: ShutterService,
-  verifySignInStatus: VerifySignInStatus,
-  umpAuthActionBuilder: UmpAuthActionBuilder,
-  userManagementPortalConfig: UserManagementPortalConfig,
-  configuration: Configuration,
-  mcc: MessagesControllerComponents,
-  digitalServiceInfoPage: DigitalServiceInfoPage,
-  whatsRunningWhereService: WhatsRunningWhereService,
-  indexPage: IndexPage,
-  teamInfoPage: TeamInfoPage,
-  serviceInfoPage: ServiceInfoPage,
-  serviceConfigPage: ServiceConfigPage,
-  serviceConfigRawPage: ServiceConfigRawPage,
-  libraryInfoPage: LibraryInfoPage,
-  prototypeInfoPage: PrototypeInfoPage,
-  repositoryInfoPage: RepositoryInfoPage,
-  repositoriesListPage: RepositoriesListPage,
+  configService                : ConfigService,
+  routeRulesService            : RouteRulesService,
+  serviceDependencyConnector   : ServiceDependenciesConnector,
+  leakDetectionService         : LeakDetectionService,
+  eventService                 : EventService,
+  readModelService             : ReadModelService,
+  shutterService               : ShutterService,
+  verifySignInStatus           : VerifySignInStatus,
+  umpAuthActionBuilder         : UmpAuthActionBuilder,
+  userManagementPortalConfig   : UserManagementPortalConfig,
+  configuration                : Configuration,
+  mcc                          : MessagesControllerComponents,
+  digitalServiceInfoPage       : DigitalServiceInfoPage,
+  whatsRunningWhereService     : WhatsRunningWhereService,
+  indexPage                    : IndexPage,
+  teamInfoPage                 : TeamInfoPage,
+  serviceInfoPage              : ServiceInfoPage,
+  serviceConfigPage            : ServiceConfigPage,
+  serviceConfigRawPage         : ServiceConfigRawPage,
+  libraryInfoPage              : LibraryInfoPage,
+  prototypeInfoPage            : PrototypeInfoPage,
+  repositoryInfoPage           : RepositoryInfoPage,
+  repositoriesListPage         : RepositoriesListPage,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
@@ -241,7 +241,7 @@ class CatalogueController @Inject() (
                 teamName               = teamInfo.name,
                 repos                  = teamInfo.repos.getOrElse(Map.empty).map {
                                            case (repoType, repos) =>
-                                             repoType -> repos.filterNot(reposToHide.contains(_))
+                                             repoType -> repos.filterNot(reposToHide.contains)
                                          },
                 activityDates          = TeamActivityDates(
                                            created    = teamInfo.createdDate,

@@ -26,119 +26,111 @@ import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, RepositoryDisplayDetai
 class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
 
   "RepositoryFiltering" should {
-
     "get repositories filtered by only repository name" in {
-
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service)
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false),
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false)
       )
 
       repositories.filter(RepoListFilter(name       = Some("serv1"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other)
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false)
       )
-
     }
 
     "get repositories filtered by partial repository name and case insensitive" in {
-
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("FOO", createdAt   = now, lastUpdatedAt = now, RepoType.Service)
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false),
+        RepositoryDisplayDetails("FOO", createdAt   = now, lastUpdatedAt = now, RepoType.Service, archived = false)
       )
 
       repositories.filter(RepoListFilter(name       = Some("eRV"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other)
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false)
       )
-
     }
 
     "get repositories filtered by only repository type" in {
-
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service)
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false),
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false)
       )
 
       repositories.filter(RepoListFilter(repoType   = Some("Other"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other))
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false)
+      )
     }
 
     "get repositories filtered repository type using 'service' as type " in {
-
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other)
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false)
       )
 
       repositories.filter(RepoListFilter(repoType   = Some("service"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service))
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false)
+      )
     }
 
     "get repositories filtered repository type using 'deployable' as type " in {
-
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other)
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false)
       )
 
       repositories.filter(RepoListFilter(repoType   = Some("Service"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service))
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false)
+      )
     }
 
     "get repositories filtered by both name and repository type" in {
-
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv4", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service)
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false),
+        RepositoryDisplayDetails("serv4", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false),
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false)
       )
 
       repositories.filter(RepoListFilter(name       = Some("serv1"), repoType = Some("Other"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt      = now, RepoType.Other))
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false)
+      )
     }
 
     "get all repositories (no filter)" in {
-
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service)
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false),
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false),
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false)
       )
 
       repositories.filter(RepoListFilter()) shouldBe repositories
     }
-
   }
-
 }

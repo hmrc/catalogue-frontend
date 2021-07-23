@@ -83,7 +83,7 @@
             @repositories.zipWithIndex.map{case (repo, i) =>
             <tr id="row@i">
                 <td class="service-name" id="row@{i}_name">
-                    <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
+                    <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name @if(repo.archived) { (archived) }</a>
                 </td>
                 <td class="repo-type monospaced" id="row@{i}_repotype">
                     @repo.repoType.asString
