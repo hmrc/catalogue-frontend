@@ -15,9 +15,9 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController, WhatsRunningWhereVersion}
-@import uk.gov.hmrc.cataloguefrontend.routes
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController, WhatsRunningWhereVersion}
 
 @this(viewMessages: ViewMessages)
 
@@ -86,7 +86,7 @@
             @whatsRunning.zipWithIndex.map { case (wrw, i) =>
             <tr role="row" id="row@i">
                 <td class="application-name" id="row@{i}_application">
-                    <a href="@routes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
+                    <a href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
                 </td>
 
                 @environments.map { env =>

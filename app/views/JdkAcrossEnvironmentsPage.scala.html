@@ -21,9 +21,6 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, Vendor, Oracle, OpenJDK}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import play.twirl.api.Html
-@import uk.gov.hmrc.cataloguefrontend.routes
-
-
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(viewMessages: ViewMessages)
@@ -47,11 +44,12 @@
         <thead>
             <tr>
                 <th>Environment</th>
-                @jdks.map(jdk => {
-                  jdk.vendor match {
-                      case Oracle => <th> <img src="/assets/img/oracle2.gif" width="68px" alt="Oracle"/> {jdk.version} </th>
-                      case OpenJDK => <th> <img src="/assets/img/openjdk.png" width="55px" alt="OpenJDK"/> {jdk.version} </th>
-                  }})
+                @for(jdk <- jdks) {
+                  @jdk.vendor match {
+                      case Oracle  => { <th> <img src="@routes.Assets.versioned("img/oracle2.gif")" width="68px" alt="Oracle"/> @jdk.version </th> }
+                      case OpenJDK => { <th> <img src="@routes.Assets.versioned("img/openjdk.png")" width="55px" alt="OpenJDK"/> @jdk.version </th> }
+                  }
+                }
             </tr>
 
         </thead>
@@ -59,7 +57,7 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@routes.JDKVersionController.findLatestVersions(d.env.asString)">@d.env.displayString</a></td>
+              <td><a href="@appRoutes.JDKVersionController.findLatestVersions(d.env.asString)">@d.env.displayString</a></td>
               @for(jdk <- jdks) { <td>@{d.usage.getOrElse(jdk, 0)}</td>}
           </tr>
 

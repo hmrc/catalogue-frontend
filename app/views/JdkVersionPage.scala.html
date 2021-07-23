@@ -21,7 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKVersion, Oracle, OpenJDK}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import play.twirl.api.Html
-@import uk.gov.hmrc.cataloguefrontend.routes
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(viewMessages: ViewMessages)
 
@@ -137,12 +137,12 @@
 
 @jdkVersion(version: JDKVersion) = {
     <tr id="jdk-slug-@version.name">
-        <td><a href="@routes.CatalogueController.repository(version.name)">@version.name</a></td>
-        <td>@{version.vendor match {
-            case Oracle  => <img src="/assets/img/oracle2.gif" width="70px" alt="Oracle"/>
-            case OpenJDK => <img src="/assets/img/openjdk.png" width="70px" alt="OpenJDK"/>
-            }
-        }
+        <td><a href="@appRoutes.CatalogueController.repository(version.name)">@version.name</a></td>
+        <td>
+          @version.vendor match {
+            case Oracle  => { <img src="@routes.Assets.versioned("img/oracle2.gif")" width="70px" alt="Oracle" /> }
+            case OpenJDK => { <img src="@routes.Assets.versioned("img/openjdk.png")" width="70px" alt="OpenJDK"/> }
+          }
         </td>
         <td>@version.version</td>
         <td>@version.kind</td>
