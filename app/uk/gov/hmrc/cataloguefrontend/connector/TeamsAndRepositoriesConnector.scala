@@ -216,9 +216,8 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
   def lookupLink(service: String)(implicit hc: HeaderCarrier): Future[Option[Link]] = {
     val url = url"$teamsAndServicesBaseUrl/api/jenkins-url/$service"
     http
-      .GET[JenkinsLink](url)
-      .map(l => Link(l.service, "Build", l.jenkinsURL))
-      .map(Option.apply)
+      .GET[Option[JenkinsLink]](url)
+      .map(_.map(l => Link(l.service, "Build", l.jenkinsURL)))
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
