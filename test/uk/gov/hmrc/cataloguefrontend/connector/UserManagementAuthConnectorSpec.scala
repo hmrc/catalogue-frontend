@@ -137,14 +137,10 @@ class UserManagementAuthConnectorSpec
     "throw BadGatewayException if UMP Auth Service returns other unexpected status" in new Setup {
       val umpToken = UmpToken("value")
       forAll(
-        Gen.choose(201, 599)
+        Gen.choose(400, 599)
           // handled differently
           .suchThat(_ != UNAUTHORIZED)
           .suchThat(_ != FORBIDDEN)
-          // NPE for missing Location headers
-          .suchThat(_ != MOVED_PERMANENTLY)
-          .suchThat(_ != TEMPORARY_REDIRECT)
-          .suchThat(_ != PERMANENT_REDIRECT)
       ) { unsupportedStatus =>
         stubFor(
           get(urlEqualTo("/v1/login"))

@@ -19,10 +19,10 @@
 @standard_layout(Messages("global.error.pageNotFound404.title")) {
     <div id="error_content">
         <div id="error_video">
-            <video id="video" poster="/assets/videos/error.jpg" autoplay muted loop>
-                <source src="/assets/videos/error.mp4" type="video/mp4">
-                <source src="/assets/videos/error.ogv" type="video/ogg">
-                <source src="/assets/videos/error.webm" type="video/webm">
+            <video id="video" poster="@routes.Assets.versioned("videos/error.jpg")" autoplay muted loop>
+                <source src="@routes.Assets.versioned("videos/error.mp4")" type="video/mp4">
+                <source src="@routes.Assets.versioned("videos/error.ogv")" type="video/ogg">
+                <source src="@routes.Assets.versioned("videos/error.webm")" type="video/webm">
             </video>
             <div class="overlay">
                 <h3>we are looking for your page... but we can't find it</h3>
