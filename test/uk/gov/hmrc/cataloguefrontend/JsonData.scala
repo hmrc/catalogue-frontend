@@ -77,9 +77,9 @@ object JsonData {
 
   val repositoriesData =
     s"""[
-        {"name":"teamA-serv", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Service"},
-        {"name":"teamB-library", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Library"},
-        {"name":"teamB-other", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Other"}
+          { "name":"teamA-serv"   , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Service", "archived": false },
+          { "name":"teamB-library", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Library", "archived": false },
+          { "name":"teamB-other"  , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Other"  , "archived": false }
         ]"""
 
   def repositoryData(repoName: String = "service-1") =

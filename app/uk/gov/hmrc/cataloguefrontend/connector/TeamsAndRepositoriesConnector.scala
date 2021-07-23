@@ -111,7 +111,8 @@ case class RepositoryDisplayDetails(
   name         : String,
   createdAt    : LocalDateTime,
   lastUpdatedAt: LocalDateTime,
-  repoType     : RepoType
+  repoType     : RepoType,
+  archived     : Boolean
 )
 
 object RepositoryDisplayDetails {
@@ -261,7 +262,7 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
 
   private def repositories(archived: Option[Boolean])(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
     http.GET[Seq[RepositoryDisplayDetails]](
-      url"$teamsAndServicesBaseUrl/api/repositories?archived=${archived.map(_.toString)}"
+      url"$teamsAndServicesBaseUrl/api/repositories?archived=$archived"
     )
 }
 
