@@ -15,7 +15,10 @@ for service-dependency to work properly.
 
 The front page of the Catalogue has two sections for displaying the most recent significant changes and blog posts.
 
-These are manually curated lists, rendered from two markdown files in this repo: `VERSION_HISTORY.md` and `BLOG_POSTS.md`.
+These are manually curated lists, rendered from two markdown files in this repo:
+  - [`VERSION_HISTORY.md`](conf/VERSION_HISTORY.md)
+  - [`BLOG_POSTS.md`](conf/BLOG_POSTS.md)
+
 They support Github flavour markdown.
 
 Two config variables define how many lines of the file to render:
