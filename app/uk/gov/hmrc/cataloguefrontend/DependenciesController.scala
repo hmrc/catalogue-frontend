@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.utils.UriEncoding
-import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{DependenciesService, ServiceDependencies}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
@@ -31,27 +30,27 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class DependenciesController @Inject() (
-  mcc: MessagesControllerComponents,
-  dependenciesService: DependenciesService,
+  mcc                     : MessagesControllerComponents,
+  dependenciesService     : DependenciesService,
   whatsRunningWhereService: WhatsRunningWhereService,
-  dependenciesPage: DependenciesPage,
-  graphsPage: DependencyGraphs
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  dependenciesPage        : DependenciesPage,
+  graphsPage              : DependencyGraphs
+)(implicit
+  val ec: ExecutionContext
+) extends FrontendController(mcc) {
 
   def services(name: String): Action[AnyContent] =
     Action.async { implicit request =>
       for {
         deployments         <- whatsRunningWhereService.releasesForService(name).map(_.versions)
         serviceDependencies <- dependenciesService.search(name, deployments)
-      } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.semanticVersion)(Ordering[Option[Version]].reverse)))
+      } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.version)(Ordering[Version].reverse)))
     }
 
   def service(name: String, version: String): Action[AnyContent] =
     Action.async { implicit request =>
-      dependenciesService.getServiceDependencies(name, Version(version)).map( maybeDeps =>
-        Ok(dependenciesPage(name, maybeDeps.toSeq))
-      )
+      dependenciesService.getServiceDependencies(name, Version(version))
+        .map(maybeDeps => Ok(dependenciesPage(name, maybeDeps.toSeq)))
     }
 
   def graphs(name :String, version: String, scope: String): Action[AnyContent] =
@@ -71,10 +70,10 @@ class DependenciesController @Inject() (
         } yield result
     }
 
-  private def dotFileForScope(dependencies: ServiceDependencies, scope: DependencyScope) : Option[String] =
+  private def dotFileForScope(dependencies: ServiceDependencies, scope: DependencyScope): Option[String] =
     scope match {
-      case Compile => dependencies.dependencyDotCompile
-      case Test    => dependencies.dependencyDotTest
-      case Build   => dependencies.dependencyDotBuild
+      case DependencyScope.Compile => dependencies.dependencyDotCompile
+      case DependencyScope.Test    => dependencies.dependencyDotTest
+      case DependencyScope.Build   => dependencies.dependencyDotBuild
     }
 }

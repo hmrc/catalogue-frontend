@@ -66,7 +66,11 @@ object BobbyRuleViolation {
 }
 
 
-case class ImportedBy(name: String, group:String, currentVersion: Version)
+case class ImportedBy(
+  name          : String,
+  group         : String,
+  currentVersion: Version
+)
 
 object ImportedBy {
   val format = {
@@ -147,7 +151,7 @@ case class Dependencies(
 object Dependencies {
   object Implicits {
     @silent("never used") private implicit val dtr = RestFormats.dateTimeFormats
-    private implicit val vf                         = Version.format
+    private implicit val svf                        = Version.format
     private implicit val brvr                       = BobbyRuleViolation.format
     private implicit val ibf                        = ImportedBy.format
     private implicit val sf                         = DependencyScope.format
@@ -191,62 +195,46 @@ object BobbyVersionRange {
     PartialFunction
       .condOpt(trimmedRange) {
         case fixed(v) =>
-          Version
-            .parse(v)
-            .map(BobbyVersion(_, inclusive = true))
-            .map { fixed =>
-              BobbyVersionRange(
-                lowerBound = Some(fixed),
-                upperBound = Some(fixed),
-                qualifier = None,
-                range = trimmedRange
-              )
-            }
+          val fixed = BobbyVersion(Version(v), inclusive = true)
+            BobbyVersionRange(
+              lowerBound = Some(fixed),
+              upperBound = Some(fixed),
+              qualifier = None,
+              range = trimmedRange
+            )
         case fixedUpper(v) =>
-          Version
-            .parse(v)
-            .map(BobbyVersion(_, inclusive = trimmedRange.endsWith("]")))
-            .map { ub =>
-              BobbyVersionRange(
-                lowerBound = None,
-                upperBound = Some(ub),
-                qualifier = None,
-                range = trimmedRange
-              )
-            }
+          val ub = BobbyVersion(Version(v), inclusive = trimmedRange.endsWith("]"))
+          BobbyVersionRange(
+            lowerBound = None,
+            upperBound = Some(ub),
+            qualifier = None,
+            range = trimmedRange
+          )
         case fixedLower(v) =>
-          Version
-            .parse(v)
-            .map(BobbyVersion(_, inclusive = trimmedRange.startsWith("[")))
-            .map { lb =>
-              BobbyVersionRange(
-                lowerBound = Some(lb),
-                upperBound = None,
-                qualifier = None,
-                range = trimmedRange
-              )
-            }
+          val lb = BobbyVersion(Version(v), inclusive = trimmedRange.startsWith("["))
+          BobbyVersionRange(
+            lowerBound = Some(lb),
+            upperBound = None,
+            qualifier = None,
+            range = trimmedRange
+          )
         case rangeRegex(v1, v2) =>
-          for {
-            lb <- Version.parse(v1).map(BobbyVersion(_, inclusive = trimmedRange.startsWith("[")))
-            ub <- Version.parse(v2).map(BobbyVersion(_, inclusive = trimmedRange.endsWith("]")))
-          } yield BobbyVersionRange(
+          val lb = BobbyVersion(Version(v1), inclusive = trimmedRange.startsWith("["))
+          val ub = BobbyVersion(Version(v2), inclusive = trimmedRange.endsWith("]"))
+          BobbyVersionRange(
             lowerBound = Some(lb),
             upperBound = Some(ub),
             qualifier = None,
             range = trimmedRange
           )
-        case qualifier(q) if q.length() > 1 =>
-          Some(
-            BobbyVersionRange(
-              lowerBound = None,
-              upperBound = None,
-              qualifier = Some(q),
-              range = trimmedRange
-            )
+        case qualifier(q) if q.length > 1 =>
+          BobbyVersionRange(
+            lowerBound = None,
+            upperBound = None,
+            qualifier = Some(q),
+            range = trimmedRange
           )
       }
-      .flatten
   }
 
   def apply(range: String): BobbyVersionRange =
@@ -264,7 +252,12 @@ object BobbyVersionRange {
   }
 }
 
-case class Version(major: Int, minor: Int, patch: Int, original: String) extends Ordered[Version] {
+case class Version(
+  major   : Int,
+  minor   : Int,
+  patch   : Int,
+  original: String
+) extends Ordered[Version] {
 
   //!@TODO test
   def diff(other: Version): (Int, Int, Int) =
@@ -298,34 +291,29 @@ object Version {
         => None
     }
 
-  def parse(s: String): Option[Version] = {
+  def apply(s: String): Version = {
     val regex3 = """(\d+)\.(\d+)\.(\d+)(.*)""".r
     val regex2 = """(\d+)\.(\d+)(.*)""".r
     val regex1 = """(\d+)(.*)""".r
     s match {
-      case regex3(maj, min, patch, _) => Some(Version(Integer.parseInt(maj), Integer.parseInt(min), Integer.parseInt(patch), s))
-      case regex2(maj, min, _)        => Some(Version(Integer.parseInt(maj), Integer.parseInt(min), 0, s))
-      case regex1(patch, _)           => Some(Version(0, 0, Integer.parseInt(patch), s))
-      case _                          => None
+      case regex3(maj, min, patch, _) => Version(Integer.parseInt(maj), Integer.parseInt(min), Integer.parseInt(patch), s)
+      case regex2(maj, min, _)        => Version(Integer.parseInt(maj), Integer.parseInt(min), 0                      , s)
+      case regex1(patch, _)           => Version(0                    , 0                    , Integer.parseInt(patch), s)
+      case _                          => Version(0                    , 0                    , 0                      , s)
     }
   }
 
-  def apply(version: String): Version =
-    parse(version).getOrElse(sys.error(s"Could not parse version $version"))
-
   val format: Format[Version] = new Format[Version] {
-    override def reads(json: JsValue) = {
-      def parseStr(s: String) = Version.parse(s).map(v => JsSuccess(v)).getOrElse(JsError("Could not parse version"))
+    override def reads(json: JsValue) =
       json match {
-        case JsString(s) => parseStr(s)
+        case JsString(s) => JsSuccess(Version(s))
         case JsObject(m) =>
           m.get("original") match {
-            case Some(JsString(s)) => parseStr(s)
+            case Some(JsString(s)) => JsSuccess(Version(s))
             case _                 => JsError("Not a string")
           }
         case _ => JsError("Not a string")
       }
-    }
 
     override def writes(v: Version) =
       JsString(v.original)
@@ -334,12 +322,11 @@ object Version {
 
 case class ServiceWithDependency(
   slugName          : String,
-  slugVersion       : String,
+  slugVersion       : Version,
   teams             : List[TeamName],
   depGroup          : String,
   depArtefact       : String,
-  depVersion        : String,
-  depSemanticVersion: Option[Version]
+  depVersion        : Version
 )
 
 object ServiceWithDependency {
@@ -348,18 +335,21 @@ object ServiceWithDependency {
 
   val reads: Reads[ServiceWithDependency] = {
     implicit val tnf = TeamName.format
+    implicit val vf  = Version.format
     ( (__ \ "slugName"   ).read[String]
-    ~ (__ \ "slugVersion").read[String]
+    ~ (__ \ "slugVersion").read[Version]
     ~ (__ \ "teams"      ).read[List[TeamName]]
     ~ (__ \ "depGroup"   ).read[String]
     ~ (__ \ "depArtefact").read[String]
-    ~ (__ \ "depVersion" ).read[String]
-    ~ (__ \ "depVersion" ).read[String].map(Version.parse)
+    ~ (__ \ "depVersion" ).read[Version]
     )(ServiceWithDependency.apply _)
   }
 }
 
-case class GroupArtefacts(group: String, artefacts: List[String])
+case class GroupArtefacts(
+  group    : String,
+  artefacts: List[String]
+)
 
 object GroupArtefacts {
   val apiFormat: OFormat[GroupArtefacts] =

@@ -39,32 +39,32 @@ class SlugInfoServiceSpec
   val v100 =
     ServiceWithDependency(
       slugName           = "service1",
-      slugVersion        = "v1",
+      slugVersion        = Version("v1"),
       teams              = List(TeamName("T1")),
       depGroup           = group,
       depArtefact        = artefact,
-      depVersion         = "1.0.0",
-      depSemanticVersion = Version.parse("1.0.0"))
+      depVersion         = Version("1.0.0")
+    )
 
   val v200 =
     ServiceWithDependency(
       slugName           = "service1",
-      slugVersion        = "v1",
+      slugVersion        = Version("v1"),
       teams              = List(TeamName("T1"), TeamName("T2")),
       depGroup           = group,
       depArtefact        = artefact,
-      depVersion         = "2.0.0",
-      depSemanticVersion = Version.parse("2.0.0"))
+      depVersion         = Version("2.0.0")
+    )
 
   val v205 =
     ServiceWithDependency(
       slugName           = "service1",
-      slugVersion        = "v1",
+      slugVersion        = Version("v1"),
       teams              = List(TeamName("T2")),
       depGroup           = group,
       depArtefact        = artefact,
-      depVersion         = "2.0.5",
-      depSemanticVersion = Version.parse("2.0.5"))
+      depVersion         = Version("2.0.5")
+    )
 
   val scope = DependencyScope.Compile
 
@@ -114,10 +114,14 @@ class SlugInfoServiceSpec
     "return the original dependency list and no transitive dependencies when theres no dot files" in {
       val depFoo = ServiceDependency("org.foo", "foo", "1.0.0")
       val serviceDeps = ServiceDependencies(
-        uri= "",
-        name = "test", version = Some("1.0.0"), runnerVersion = "0.5.4", java = ServiceJDKVersion("1.8.222", "openjdk", "jre"), classpath = "",
-        dependencies = Seq(depFoo),
-        environment = None
+        uri           = "",
+        name          = "test",
+        version       = Version("1.0.0"),
+        runnerVersion = "0.5.4",
+        java          = ServiceJDKVersion("1.8.222", "openjdk", "jre"),
+        classpath     = "",
+        dependencies  = Seq(depFoo),
+        environment   = None
       )
       DependenciesService.sortAndSeparateDependencies(serviceDeps) shouldBe ((Seq(depFoo), Seq.empty))
     }
@@ -126,10 +130,14 @@ class SlugInfoServiceSpec
       val depFoo = ServiceDependency("org.foo", "foo", "1.0.0")
       val depBar = ServiceDependency("org.bar", "bar", "1.0.0")
       val serviceDeps = ServiceDependencies(
-        uri= "",
-        name = "test", version = Some("1.0.0"), runnerVersion = "0.5.4", java = ServiceJDKVersion("1.8.222", "openjdk", "jre"), classpath = "",
-        dependencies = Seq(depFoo, depBar),
-        environment = None,
+        uri                  = "",
+        name                 = "test",
+        version              = Version("1.0.0"),
+        runnerVersion        = "0.5.4",
+        java                 = ServiceJDKVersion("1.8.222", "openjdk", "jre"),
+        classpath            = "",
+        dependencies         = Seq(depFoo, depBar),
+        environment          = None,
         dependencyDotCompile = Some(
           """
             |"org.foo:foo:1.0.0"[label=""]

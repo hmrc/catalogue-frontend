@@ -28,9 +28,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ServiceDependenciesConnector @Inject() (
-  http: HttpClient,
+  http          : HttpClient,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext) {
+)(implicit
+  ec: ExecutionContext
+) {
   import HttpReads.Implicits._
 
   private val servicesDependenciesBaseUrl: String =
@@ -53,16 +55,20 @@ class ServiceDependenciesConnector @Inject() (
 
   def getSlugDependencies(
     serviceName: String,
-    version: Option[Version] = None
-  )(implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] =
+    version    : Option[Version] = None
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[ServiceDependencies]] =
     http.GET[Seq[ServiceDependencies]](
       url"$servicesDependenciesBaseUrl/api/sluginfos?name=$serviceName&version=${version.map(_.toString)}"
     )
 
   def getSlugInfo(
     serviceName: String,
-    version: Option[Version] = None
-  )(implicit hc: HeaderCarrier): Future[Option[ServiceDependencies]] =
+    version    : Option[Version] = None
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Option[ServiceDependencies]] =
     http.GET[Option[ServiceDependencies]](
       url"$servicesDependenciesBaseUrl/api/sluginfo?name=$serviceName&version=${version.map(_.toString)}"
     )

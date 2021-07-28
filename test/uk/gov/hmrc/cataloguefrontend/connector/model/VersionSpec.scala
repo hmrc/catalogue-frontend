@@ -44,17 +44,17 @@ class VersionSpec extends AnyFreeSpec with Matchers {
   }
 
   "Can be parsed from strings" in {
-    Version.parse("1.2.3")            mustBe Some(Version(1, 2,  3, "1.2.3"))
-    Version.parse("2.3.4-play-26")    mustBe Some(Version(2, 3,  4, "2.3.4-play-26"))
-    Version.parse("5.6.7-RC1")        mustBe Some(Version(5, 6,  7, "5.6.7-RC1"))
-    Version.parse("9.2.24.v20180105") mustBe Some(Version(9, 2, 24, "9.2.24.v20180105"))
+    Version("1.2.3")            mustBe Version(1, 2,  3, "1.2.3")
+    Version("2.3.4-play-26")    mustBe Version(2, 3,  4, "2.3.4-play-26")
+    Version("5.6.7-RC1")        mustBe Version(5, 6,  7, "5.6.7-RC1")
+    Version("9.2.24.v20180105") mustBe Version(9, 2, 24, "9.2.24.v20180105")
 
-    Version.parse("2.5")              mustBe Some(Version(2, 5, 0, "2.5"))
-    Version.parse("2.19-SNAPSHOT")    mustBe Some(Version(2, 19, 0, "2.19-SNAPSHOT"))
-    Version.parse("2.2-cj-1.1")       mustBe Some(Version(2, 2, 0, "2.2-cj-1.1"))
+    Version("2.5")              mustBe Version(2, 5, 0, "2.5")
+    Version("2.19-SNAPSHOT")    mustBe Version(2, 19, 0, "2.19-SNAPSHOT")
+    Version("2.2-cj-1.1")       mustBe Version(2, 2, 0, "2.2-cj-1.1")
 
-    Version.parse("2")                mustBe Some(Version(0, 0, 2, "2"))
-    Version.parse("999-SNAPSHOT")     mustBe Some(Version(0, 0, 999, "999-SNAPSHOT"))
+    Version("2")                mustBe Version(0, 0, 2, "2")
+    Version("999-SNAPSHOT")     mustBe Version(0, 0, 999, "999-SNAPSHOT")
   }
 
   "Can be printed to strings" in {
@@ -67,8 +67,8 @@ class VersionSpec extends AnyFreeSpec with Matchers {
     Version("1.2.3-SNAPSHOT") mustBe Version(1, 2, 3, "1.2.3-SNAPSHOT")
   }
 
-  "parse.toString == identity" in {
-    val testcases = List(
+  "apply.toString == identity" in {
+    List(
       "1.2.3",
       // with suffix
       "9.0.0-play-26",
@@ -84,16 +84,16 @@ class VersionSpec extends AnyFreeSpec with Matchers {
       "3.5.5_a2.3",
       // other - unparseable
       "20080701",
-      //"r938",
+      "r938",
       "999-SNAPSHOT",
       "2.5",
       "2.19-SNAPSHOT",
       "0.11-RC1",
       "2.5-20081211",
-      "2.2-cj-1.1"
-      /*"v2-rev137-1.23.0" */)
-    testcases.foreach { s =>
-      Version.parse(s).map(_.toString) mustBe Some(s)
+      "2.2-cj-1.1",
+      "v2-rev137-1.23.0"
+    ).foreach { s =>
+      Version.apply(s).toString mustBe s
     }
   }
 }

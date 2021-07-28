@@ -19,7 +19,13 @@
 
 @this(viewMessages: ViewMessages)
 
-@(dependencies: Seq[Dependency], rootId: String, title: String, serviceName: String, version: Option[Version])(implicit messages: Messages)
+@(
+  dependencies: Seq[Dependency],
+  rootId      : String,
+  title       : String,
+  serviceName : String,
+  version     : Option[Version]
+)(implicit messages: Messages)
 
 
 <div id="@rootId" class="board">

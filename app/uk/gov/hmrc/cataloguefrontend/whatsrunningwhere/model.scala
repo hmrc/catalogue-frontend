@@ -32,11 +32,11 @@ sealed trait Platform {
 
 case class WhatsRunningWhere(
   applicationName: ServiceName,
-  versions: List[WhatsRunningWhereVersion]
+  versions       : List[WhatsRunningWhereVersion]
 )
 
 case class WhatsRunningWhereVersion(
-  environment: Environment,
+  environment  : Environment,
   versionNumber: VersionNumber
 )
 
@@ -75,15 +75,17 @@ object JsonCodecs {
   val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] = {
     implicit val wf  = environmentFormat
     implicit val vnf = versionNumberFormat
-    ((__ \ "environment").read[Environment]
-      ~ (__ \ "versionNumber").read[VersionNumber])(WhatsRunningWhereVersion.apply _)
+    ( (__ \ "environment"  ).read[Environment]
+    ~ (__ \ "versionNumber").read[VersionNumber]
+    )(WhatsRunningWhereVersion.apply _)
   }
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] = {
     implicit val wf    = applicationNameFormat
     implicit val wrwvf = whatsRunningWhereVersionReads
-    ((__ \ "applicationName").read[ServiceName]
-      ~ (__ \ "versions").read[List[WhatsRunningWhereVersion]])(WhatsRunningWhere.apply _)
+    ( (__ \ "applicationName").read[ServiceName]
+    ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
+    )(WhatsRunningWhere.apply _)
   }
 
   val profileTypeFormat: Format[ProfileType] = new Format[ProfileType] {
@@ -101,8 +103,9 @@ object JsonCodecs {
   val profileFormat: OFormat[Profile] = {
     implicit val ptf = profileTypeFormat
     implicit val pnf = profileNameFormat
-    ((__ \ "type").format[ProfileType]
-      ~ (__ \ "name").format[ProfileName])(Profile.apply, unlift(Profile.unapply))
+    ( (__ \ "type").format[ProfileType]
+    ~ (__ \ "name").format[ProfileName]
+    )(Profile.apply, unlift(Profile.unapply))
   }
 
   // Deployment Event
@@ -110,20 +113,22 @@ object JsonCodecs {
     implicit val vnf = versionNumberFormat
     implicit val tsf = timeSeenFormat
     implicit val dsf = deploymentStatusFormat
-    ((__ \ "deploymentId").format[String]
-      ~ (__ \ "status").format[DeploymentStatus]
-      ~ (__ \ "version").format[VersionNumber]
-      ~ (__ \ "time").format[TimeSeen])(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
+    ( (__ \ "deploymentId").format[String]
+    ~ (__ \ "status"      ).format[DeploymentStatus]
+    ~ (__ \ "version"     ).format[VersionNumber]
+    ~ (__ \ "time"        ).format[TimeSeen]
+    )(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
   }
 
   val serviceDeploymentsFormat: Format[ServiceDeployment] = {
     implicit val devf = deploymentEventFormat
     implicit val anf  = applicationNameFormat
     implicit val enf  = environmentFormat
-    ((__ \ "serviceName").format[ServiceName]
-      ~ (__ \ "environment").format[Environment]
-      ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
-      ~ (__ \ "lastCompleted").formatNullable[DeploymentEvent])(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
+    ( (__ \ "serviceName"     ).format[ServiceName]
+    ~ (__ \ "environment"     ).format[Environment]
+    ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
+    ~ (__ \ "lastCompleted"   ).formatNullable[DeploymentEvent]
+    )(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
   }
 
   val deploymentHistoryReads: Reads[DeploymentHistory] = {
@@ -133,12 +138,13 @@ object JsonCodecs {
     implicit val tsf = timeSeenFormat
     implicit val dar = usernameReads
     implicit val tmf = teamNameFormat
-    ((__ \ "serviceName").read[ServiceName]
-      ~ (__ \ "environment").read[Environment]
-      ~ (__ \ "version").read[VersionNumber]
-      ~ (__ \ "teams").read[Seq[TeamName]]
-      ~ (__ \ "time").read[TimeSeen]
-      ~ (__ \ "username").read[Username])(DeploymentHistory.apply _)
+    ( (__ \ "serviceName").read[ServiceName]
+    ~ (__ \ "environment").read[Environment]
+    ~ (__ \ "version"    ).read[VersionNumber]
+    ~ (__ \ "teams"      ).read[Seq[TeamName]]
+    ~ (__ \ "time"       ).read[TimeSeen]
+    ~ (__ \ "username"   ).read[Username]
+    )(DeploymentHistory.apply _)
   }
 }
 
@@ -198,32 +204,39 @@ case class DeploymentStatus(asString: String) extends AnyVal
 
 case class DeploymentEvent(
   deploymentId: String,
-  status: DeploymentStatus,
-  version: VersionNumber,
-  time: TimeSeen
+  status      : DeploymentStatus,
+  version     : VersionNumber,
+  time        : TimeSeen
 )
 
 case class ServiceDeployment(
-  serviceName: ServiceName,
-  environment: Environment,
+  serviceName     : ServiceName,
+  environment     : Environment,
   deploymentEvents: Seq[DeploymentEvent],
-  lastCompleted: Option[DeploymentEvent]
+  lastCompleted   : Option[DeploymentEvent]
 )
 
-case class PaginatedDeploymentHistory(history: Seq[DeploymentHistory], total: Long)
+case class PaginatedDeploymentHistory(
+  history: Seq[DeploymentHistory],
+  total  : Long
+)
 
 case class DeploymentHistory(
-  name: ServiceName,
+  name       : ServiceName,
   environment: Environment,
-  version: VersionNumber,
-  teams: Seq[TeamName],
-  time: TimeSeen,
-  username: Username
+  version    : VersionNumber,
+  teams      : Seq[TeamName],
+  time       : TimeSeen,
+  username   : Username
 )
 
 case class Username(asString: String)
 
-case class Pagination(page: Int, pageSize: Int, total: Long)
+case class Pagination(
+  page    : Int,
+  pageSize: Int,
+  total   : Long
+)
 
 object Pagination {
   def uriForPage(uri: String, page: Int): URI =

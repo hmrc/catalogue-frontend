@@ -15,12 +15,20 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
 @import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 
 @this(viewMessages: ViewMessages)
-@(serviceName: String, serviceDependencies: Seq[ServiceDependencies])(implicit request: Request[_])
+
+@(
+  serviceName: String,
+  serviceDependencies: Seq[ServiceDependencies]
+)(implicit
+  request: Request[_]
+)
+
 @standard_layout(s"Dependencies: $serviceName", "dependencies") {
     <header>
         <h1 id="dependencies-header">Dependencies: @serviceName</h1>
@@ -29,11 +37,10 @@
         @serviceDependencies.zipWithIndex.map { case (serviceDependency, index) =>
             @defining(serviceDependencies.length > 1) { collapsable =>
                 <div @if(collapsable){class="hand-pointer accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@index" aria-expanded="false" aria-controls="collapsible-area"}>
-                    <label @if(collapsable){class="hand-pointer"}>@{
-                        serviceVersion(serviceDependency.version)
-                    } @{
-                        environment(serviceDependency.environment.map(_.displayString))
-                    }</label>
+                    <label @if(collapsable){class="hand-pointer"}>
+                        Version: @serviceDependency.version.toString
+                        @serviceDependency.environment.fold("")(_.displayString)
+                    </label>
                 </div>
                 <div id="collapsible-area-@index" class="@if(collapsable) {collapse}">
                     <span class="jdk-version">@{serviceDependency.java.kind}: @{serviceDependency.java.version} @{serviceDependency.java.vendor}</span>
@@ -63,9 +70,7 @@
                                 <tr>
                                     <th class="col-lg-4">Transitive Dependencies</th>
                                     <th>
-                                        @serviceDependency.version.map { version =>
-                                            <a href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, version)">View Graph</a>
-                                        }
+                                        <a href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, serviceDependency.version.toString)">View Graph</a>
                                     </th>
                                 </tr>
                                 <tr>
@@ -95,16 +100,4 @@
             <p id="dependencies-empty">This search did not return any results.</p>
         }
     </div>
-}
-
-@serviceVersion(version: Option[String]) = {
-    @version.map { v =>
-        Version: @v
-    }
-}
-
-@environment(environment: Option[String]) = {
-    @environment.map { env =>
-        (@env)
-    }
 }
