@@ -41,17 +41,22 @@ class DependenciesService @Inject() (
       )
       .map(_.flatten)
 
-  def getServiceDependencies(serviceName: String, version: Version)(implicit hc: HeaderCarrier): Future[Option[ServiceDependencies]] =
+  def getServiceDependencies(
+    serviceName: String,
+    version    : Version
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Option[ServiceDependencies]] =
     serviceDependenciesConnector
       .getSlugDependencies(serviceName, Some(version)).map(_.headOption)
 
   def getServicesWithDependency(
-    optTeam: Option[TeamName],
-    flag: SlugInfoFlag,
-    group: String,
-    artefact: String,
+    optTeam     : Option[TeamName],
+    flag        : SlugInfoFlag,
+    group       : String,
+    artefact    : String,
     versionRange: BobbyVersionRange,
-    scope: DependencyScope
+    scope       : DependencyScope
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[ServiceWithDependency]] =
@@ -65,7 +70,7 @@ class DependenciesService @Inject() (
       }
       .map(
         _.sortBy(_.slugName)
-          .sorted(Ordering.by((_: ServiceWithDependency).depSemanticVersion).reverse)
+          .sorted(Ordering.by((_: ServiceWithDependency).depVersion).reverse)
       )
 
   def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] =
@@ -108,16 +113,27 @@ object DependenciesService {
       )
 }
 
-case class ServiceJDKVersion(version: String, vendor: String, kind: String)
+case class ServiceJDKVersion(
+  version: String,
+  vendor : String,
+  kind   : String
+)
 
-case class ServiceDependency(group: String, artifact: String, version: String)
+case class ServiceDependency(
+  group   : String,
+  artifact: String,
+  version : String
+)
 
-case class TransitiveServiceDependency(dependency: ServiceDependency, importedBy: ServiceDependency)
+case class TransitiveServiceDependency(
+  dependency: ServiceDependency,
+  importedBy: ServiceDependency
+)
 
 case class ServiceDependencies(
   uri                 : String,
   name                : String,
-  version             : Option[String],
+  version             : Version,
   runnerVersion       : String,
   java                : ServiceJDKVersion,
   classpath           : String,
@@ -130,9 +146,6 @@ case class ServiceDependencies(
   val isEmpty: Boolean = dependencies.isEmpty
 
   val nonEmpty: Boolean = dependencies.nonEmpty
-
-  val semanticVersion: Option[Version] =
-    version.flatMap(Version.parse)
 }
 
 object ServiceDependencies {
@@ -148,19 +161,19 @@ object ServiceDependencies {
   implicit val dependencyReads: Reads[ServiceDependency] = Json.using[Json.WithDefaultValues].reads[ServiceDependency]
 
   implicit val serviceDependenciesReads: Reads[ServiceDependencies] = {
+    implicit val vf   = Version.format
     implicit val envf = JsonCodecs.environmentFormat
-    (
-          (__ \ "uri"                      ).read[String]
-        ~ (__ \ "name"                     ).read[String]
-        ~ (__ \ "version"                  ).readNullable[String]
-        ~ (__ \ "runnerVersion"            ).read[String]
-        ~ (__ \ "java"                     ).read[ServiceJDKVersion]
-        ~ (__ \ "classpath"                ).read[String]
-        ~ (__ \ "dependencies"             ).read[Seq[ServiceDependency]]
-        ~ (__ \ "environment"              ).readNullable[Environment]
-        ~ (__ \ "dependencyDot" \ "compile").readNullable[String].map(_.filter(_.nonEmpty))
-        ~ (__ \ "dependencyDot" \ "test"   ).readNullable[String].map(_.filter(_.nonEmpty))
-        ~ (__ \ "dependencyDot" \ "build"  ).readNullable[String].map(_.filter(_.nonEmpty))
+    ( (__ \ "uri"                      ).read[String]
+    ~ (__ \ "name"                     ).read[String]
+    ~ (__ \ "version"                  ).read[Version]
+    ~ (__ \ "runnerVersion"            ).read[String]
+    ~ (__ \ "java"                     ).read[ServiceJDKVersion]
+    ~ (__ \ "classpath"                ).read[String]
+    ~ (__ \ "dependencies"             ).read[Seq[ServiceDependency]]
+    ~ (__ \ "environment"              ).readNullable[Environment]
+    ~ (__ \ "dependencyDot" \ "compile").readNullable[String].map(_.filter(_.nonEmpty))
+    ~ (__ \ "dependencyDot" \ "test"   ).readNullable[String].map(_.filter(_.nonEmpty))
+    ~ (__ \ "dependencyDot" \ "build"  ).readNullable[String].map(_.filter(_.nonEmpty))
     )(ServiceDependencies.apply _)
   }
 

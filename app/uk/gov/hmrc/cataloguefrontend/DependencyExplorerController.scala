@@ -81,7 +81,7 @@ class DependencyExplorerController @Inject() (
       if (request.queryString.contains("versionOp"))
         (for {
           version <- EitherT.fromOption[Future](
-                       request.queryString.get("version").flatMap(_.headOption).flatMap(Version.parse),
+                       request.queryString.get("version").flatMap(_.headOption).map(Version.apply),
                        Redirect(appRoutes.DependencyExplorerController.landing)
                      )
           versionRange <- EitherT.fromOption[Future](
@@ -219,12 +219,11 @@ object DependencyExplorerController {
     seq.flatMap { serviceWithDependency =>
       val m = Map(
         "slugName"           -> serviceWithDependency.slugName,
-        "slugVersion"        -> serviceWithDependency.slugVersion,
+        "slugVersion"        -> serviceWithDependency.slugVersion.toString,
         "team"               -> "",
         "depGroup"           -> serviceWithDependency.depGroup,
         "depArtefact"        -> serviceWithDependency.depArtefact,
-        "depVersion"         -> serviceWithDependency.depVersion,
-        "depSemanticVersion" -> serviceWithDependency.depSemanticVersion.map(_.toString).getOrElse("")
+        "depVersion"         -> serviceWithDependency.depVersion.toString
       )
       if (serviceWithDependency.teams.isEmpty) Seq(m)
       else serviceWithDependency.teams.map(team => m + ("team" -> team.asString))
