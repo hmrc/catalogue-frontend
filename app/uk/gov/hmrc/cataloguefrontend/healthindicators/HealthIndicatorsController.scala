@@ -21,7 +21,7 @@ import play.api.data.Forms.{mapping, optional, text}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.{HealthIndicatorsHistory, HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
+import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,12 +33,16 @@ class HealthIndicatorsController @Inject() (
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
-  def indicatorsForRepo(name: String): Action[AnyContent] =
+  def breakdownForRepo(name: String): Action[AnyContent] =
     Action.async { implicit request =>
-      healthIndicatorsConnector.getIndicator(name).map {
-        case Some(indicator: Indicator) => Ok(HealthIndicatorsPage(indicator))
-        case None                       => NotFound(error_404_template())
-      }
+      for {
+        indicator <- healthIndicatorsConnector.getIndicator(name)
+        history <- healthIndicatorsConnector.getHistoricIndicators(name)
+        result = indicator match {
+          case Some(indicator: Indicator) => Ok(HealthIndicatorsPage(indicator, history))
+          case None                       =>  NotFound(error_404_template())
+        }
+      } yield result
     }
 
   def indicatorsForRepoType(repoType: String, repoName: String): Action[AnyContent] =
@@ -52,16 +56,6 @@ class HealthIndicatorsController @Inject() (
               indicatorsWithTeams <- healthIndicatorsService.findIndicatorsWithTeams(r)
             } yield Ok(HealthIndicatorsLeaderBoard(indicatorsWithTeams, r, repoName, RepoType.values))
         )
-    }
-
-
-  def historyForRepo(repoName: String): Action[AnyContent] =
-    Action.async { implicit request =>
-      healthIndicatorsConnector.getHistoricIndicators(repoName).map {
-        case Some(historicIndicatorAPI: HistoricIndicatorAPI) => Ok(HealthIndicatorsHistory(historicIndicatorAPI))
-        case None                                             => NotFound(error_404_template())
-      }
-
     }
 }
 

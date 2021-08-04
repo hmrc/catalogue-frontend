@@ -18,9 +18,9 @@
 @import java.time.format.DateTimeFormatter
 @import java.time.ZoneId
 @( history: HistoricIndicatorAPI)(implicit messages: Messages, request: Request[_])
-@standard_layout("Service Health Indicators History") {
+
     <header>
-        <h1>Health Indicator History: @history.repoName</h1>
+        <h2>History:</h2>
     </header>
 
     <div id="chart"></div>
@@ -42,5 +42,3 @@
                         chart.draw(data, null);
                     }
             </script>
-
-}

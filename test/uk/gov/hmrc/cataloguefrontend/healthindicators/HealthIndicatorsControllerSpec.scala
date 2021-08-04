@@ -35,7 +35,7 @@ class HealthIndicatorsControllerSpec
      with ScalaFutures
      with IntegrationPatience {
 
-  "HealthIndicatorsController.indicatorsForRepo()" should {
+  "HealthIndicatorsController.breakdownForRepo()" should {
     "respond with status 200 and contain specified elements" in new Setup {
       serviceEndpoint(
         GET,
