@@ -17,7 +17,11 @@
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.Indicator
 
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController
-@(indicator: Indicator
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.HistoricIndicatorAPI
+@import java.time.format.DateTimeFormatter
+@import java.time.ZoneId
+@import views.html.partials.HealthIndicatorsHistory
+@(indicator: Indicator, optHistory: Option[HistoricIndicatorAPI]
 )(implicit messages: Messages, request: Request[_])
 @standard_layout("Service Health Indicators", "health-indicators"){
 
@@ -65,4 +69,7 @@
         }
     </table>
   </div>
+    <div id="history">
+        @optHistory.map(history => HealthIndicatorsHistory(history))
+    </div>
 }
