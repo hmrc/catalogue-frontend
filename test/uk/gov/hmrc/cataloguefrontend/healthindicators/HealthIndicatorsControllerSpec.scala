@@ -87,7 +87,7 @@ class HealthIndicatorsControllerSpec
         ws.url(s"http://localhost:$port/health-indicators").get.futureValue
 
       response.status shouldBe 200
-      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
+      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
     }
 
     "respond with status 200 and include repo type service when repoType=Service" in new Setup {
@@ -107,7 +107,7 @@ class HealthIndicatorsControllerSpec
         ws.url(s"http://localhost:$port/health-indicators?repoType=Service").get.futureValue
 
       response.status shouldBe 200
-      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
+      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
     }
 
     "respond with status 200 and include all repo types when repoType=AllTypes" in new Setup {
@@ -127,9 +127,9 @@ class HealthIndicatorsControllerSpec
         ws.url(s"http://localhost:$port/health-indicators?repoType=All+Types").get.futureValue
 
       response.status shouldBe 200
-      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend">team-indicator-dashboard-frontend</a>""")
-      response.body should include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
-      response.body should include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
+      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
+      response.body should include("""<a href="/health-indicators/api-platform-scripts"><span class="repoName">api-platform-scripts</span></a>""")
+      response.body should include("""<a href="/health-indicators/the-childcare-service-prototype"><span class="repoName">the-childcare-service-prototype</span></a>""")
     }
 
     "respond with status 200 and include repo type other when repoType=Other" in new Setup {
@@ -149,7 +149,7 @@ class HealthIndicatorsControllerSpec
         ws.url(s"http://localhost:$port/health-indicators?repoType=Other").get.futureValue
 
       response.status shouldBe 200
-      response.body should include("""<a href="/health-indicators/api-platform-scripts">api-platform-scripts</a>""")
+      response.body should include("""<a href="/health-indicators/api-platform-scripts"><span class="repoName">api-platform-scripts</span></a>""")
     }
 
     "respond with status 200 and include repo type prototype when repoType=Prototype" in new Setup {
@@ -169,7 +169,7 @@ class HealthIndicatorsControllerSpec
         ws.url(s"http://localhost:$port/health-indicators?repoType=Prototype").get.futureValue
 
       response.status shouldBe 200
-      response.body should include("""<a href="/health-indicators/the-childcare-service-prototype">the-childcare-service-prototype</a>""")
+      response.body should include("""<a href="/health-indicators/the-childcare-service-prototype"><span class="repoName">the-childcare-service-prototype</span></a>""")
     }
   }
 
