@@ -32,8 +32,7 @@
                     <label for="search">Search by repository:</label>
                 </div>
                 <div class="col col-xs-3">
-                    <input type="search" class="search form-control" id="search" type="text" name="repoName"
-                    value='@repoName' autofocus/>
+                    <input type="search" class="search form-control" id="search" type="text" name="repoName" value='@repoName' autofocus/>
                 </div>
                 <br />
                 <br />
@@ -50,13 +49,13 @@
                 <th>Repository</th>
                 <th>Owning Teams</th>
                 <th>Repository Type</th>
-                <th><button role="button" class="sort no-border" data-sort="OverallScore">Score</button></th>
+                <th><button role="button" class="sort no-border" data-sort="overallScore">Score</button></th>
             </thead>
             <tbody class="list">
                 @indicatorsWithTeams.zipWithIndex.map { case (indicator, i) =>
                     <tr role="row" id="row_@{i}">
-                        <td class="repoName" id="row_@{i}_column_0">
-                            <a href="/health-indicators/@{indicator.repoName}">@indicator.repoName</a>
+                        <td id="row_@{i}_column_0">
+                            <a href="/health-indicators/@{indicator.repoName}"><span class="repoName">@indicator.repoName</span></a>
                         </td>
                         <td id="row_@{i}_column_1">
                             @{if(indicator.owningTeams.size == 1){indicator.owningTeams.map(_.asString)}
