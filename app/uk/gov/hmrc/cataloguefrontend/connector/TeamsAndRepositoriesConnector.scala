@@ -94,7 +94,8 @@ case class RepositoryDetails(
   environments: Option[Seq[TargetEnvironment]],
   repoType    : RepoType,
   isPrivate   : Boolean,
-  isArchived  : Boolean
+  isArchived  : Boolean,
+  defaultBranch: String
 )
 
 object RepositoryDetails {
