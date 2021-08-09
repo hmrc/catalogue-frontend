@@ -82,6 +82,7 @@ class CatalogueController @Inject() (
   prototypeInfoPage            : PrototypeInfoPage,
   repositoryInfoPage           : RepositoryInfoPage,
   repositoriesListPage         : RepositoriesListPage,
+  defaultBranchListPage        : DefaultBranchListPage,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
@@ -488,6 +489,26 @@ class CatalogueController @Inject() (
             query =>
               Ok(
                 repositoriesListPage(
+                  repositories = repositories.filter(query),
+                  RepoListFilter.form.bindFromRequest()
+                )
+              )
+          )
+      }
+    }
+
+  def allDefaultBranches(repoType: Option[String]): Action[AnyContent] =
+    Action.async { implicit request =>
+      import SearchFiltering._
+
+      teamsAndRepositoriesConnector.allRepositories.map { repositories =>
+        RepoListFilter.form
+          .bindFromRequest()
+          .fold(
+            formWithErrors => Ok(defaultBranchListPage(repositories = Seq.empty, formWithErrors)),
+            query =>
+              Ok(
+                defaultBranchListPage(
                   repositories = repositories.filter(query),
                   RepoListFilter.form.bindFromRequest()
                 )

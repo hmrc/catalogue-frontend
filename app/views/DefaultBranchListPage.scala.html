@@ -1,0 +1,108 @@
+@*
+* Copyright 2021 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+
+@import play.api.mvc.Call
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+@import helper._
+
+@this(viewMessages: ViewMessages)
+
+@(repositories: Seq[RepositoryDisplayDetails],
+form: Form[_]
+)(implicit messages: Messages, request: Request[_])
+
+@standard_layout("Repositories", "repositories") {
+<header>
+    <h1>Default Branches</h1>
+</header>
+
+@if(form.hasErrors) {
+<div class="alert alert-danger" role="alert">
+    <ul class="list">
+        @form.errors.map { error =>
+        <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+        }
+    </ul>
+</div>
+}
+
+<div id="service-list">
+    <form action="/repositories" method="get">
+        <div class="form-group row">
+            <div class="col-xs-1 padding-reset-right">
+                <label for="search">Name:</label>
+            </div>
+            <div class="col col-xs-3">
+                <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
+            </div>
+            <div class="col-xs-1 col-xs-offset-2">
+                <label for="type-search">Type:</label>
+            </div>
+
+            <div class="col col-xs-2">
+                @select(
+                field   = form("repoType"),
+                options = Seq(
+                "Library"   -> "Library",
+                "Prototype" -> "Prototype",
+                "Service"   -> "Service",
+                "Other"     -> "Other"
+                ),
+                '_default -> "All",
+                '_label   -> "",
+                'onchange -> "this.form.submit()",
+                'id       -> "type-search"
+                )
+            </div>
+        </div>
+    </form>
+    <table class="table table-striped">
+        <tr>
+            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
+            <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
+            <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
+            <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
+        </tr>
+        <tbody class="list">
+        @repositories.zipWithIndex.map{case (repo, i) =>
+        <tr id="row@i">
+            <td class="service-name" id="row@{i}_name">
+                <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name @if(repo.archived) { (archived) }</a>
+            </td>
+            <td class="repo-type monospaced" id="row@{i}_defaultBranch">
+                @repo
+            </td>
+        </tr>
+        }
+        </tbody>
+    </table>
+</div>
+}
+
+<!-- listjs configuration -->
+<script>
+    var options = { valueNames: [ 'service-name', 'repo-name', 'repo-type', 'created', 'last-active' ],
+                    searchColumns: ['repo-name', 'team', 'version', 'deploy-time', 'deployer'] };
+
+    var serviceList = new List('service-list', options);
+</script>
+
+@repoTypes = @{
+("" ,"All") +: RepoType.values.map(v => (v.asString, v.asString)).toList
+}
