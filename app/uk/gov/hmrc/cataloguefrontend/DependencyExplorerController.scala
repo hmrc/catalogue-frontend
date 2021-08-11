@@ -139,6 +139,7 @@ class DependencyExplorerController @Inject() (
               success = query =>
                 (for {
                   versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
+                  _ <- EitherT.liftF(Future.successful(println(s"versionRange = $versionRange")))
                   team = if (query.team.isEmpty) None else Some(TeamName(query.team))
                   flag  <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
                   scope <- EitherT.fromEither[Future](DependencyScope.parse(query.scope)).leftMap(msg => BadRequest(pageWithError(msg)))

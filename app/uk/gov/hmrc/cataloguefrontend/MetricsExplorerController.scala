@@ -16,18 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
 import cats.data.EitherT
 import cats.instances.all._
 import play.api.data.{Form, Forms}
-import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersion, BobbyVersionRange, DependencyScope, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodeQueryParam
 import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -60,15 +56,13 @@ class MetricsExplorerController @Inject()(
               flag = SlugInfoFlag.Latest.asString,
               scope = DependencyScope.Compile.asString,
               group = "",
-              artefact = "",
-              versionRange = ""
+              artefact = ""
             )
           ),
           teams,
           flags = SlugInfoFlag.values,
           scopes = DependencyScope.values,
           groupArtefacts,
-          versionRange = BobbyVersionRange(None, None, None, ""),
           searchResults = None,
           pieData = None
         )
@@ -123,7 +117,6 @@ class MetricsExplorerController @Inject()(
               flags,
               scopes,
               groupArtefacts,
-              versionRange = BobbyVersionRange(None, None, None, ""),
               searchResults = None,
               pieData = None
             )
@@ -133,18 +126,19 @@ class MetricsExplorerController @Inject()(
               hasErrors = formWithErrors =>
                 Future.successful(
                   BadRequest(
-                    page(formWithErrors, teams, flags, scopes, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)
+                    page(formWithErrors, teams, flags, scopes, groupArtefacts, searchResults = None, pieData = None)
                   )
                 ),
               success = query =>
-                (for {
-                  versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
-                  team = if (query.team.isEmpty) None else Some(TeamName(query.team))
+                (
+                  for {
                   flag  <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
+                  team = if (query.team.isEmpty) None else Some(TeamName(query.team))
                   scope <- EitherT.fromEither[Future](DependencyScope.parse(query.scope)).leftMap(msg => BadRequest(pageWithError(msg)))
+                  hardCodedVersion = BobbyVersionRange.parse("[0.0.0,)").get
                   results <- EitherT.right[Result] {
                                service
-                                 .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
+                                 .getServicesWithDependency(team, flag, query.group, query.artefact, hardCodedVersion, scope)
                              }
                   pieData = if (results.nonEmpty)
                               Some(
@@ -156,27 +150,18 @@ class MetricsExplorerController @Inject()(
                                 )
                               )
                             else None
-                } yield
-                  if (query.asCsv) {
-                    val csv    = CsvUtils.toCsv(toRows(results))
-                    val source = Source.single(ByteString(csv, "UTF-8"))
-                    Result(
-                      header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
-                      body = HttpEntity.Streamed(source, None, Some("text/csv"))
+                } yield Ok(
+                    page(
+                      form.bindFromRequest(),
+                      teams,
+                      flags,
+                      scopes,
+                      groupArtefacts,
+                      Some(results),
+                      pieData
                     )
-                  } else
-                    Ok(
-                      page(
-                        form.bindFromRequest(),
-                        teams,
-                        flags,
-                        scopes,
-                        groupArtefacts,
-                        versionRange,
-                        Some(results),
-                        pieData
-                      )
-                    )).merge
+                  )
+                  ).merge
             )
         }
       } yield res
@@ -188,9 +173,7 @@ class MetricsExplorerController @Inject()(
     flag: String,
     scope: String,
     group: String,
-    artefact: String,
-    versionRange: String,
-    asCsv: Boolean = false
+    artefact: String
   )
 
   def form() = {
@@ -201,9 +184,7 @@ class MetricsExplorerController @Inject()(
         "flag"         -> Forms.text.verifying(notEmpty),
         "scope"        -> Forms.default(Forms.text, DependencyScope.Compile.asString),
         "group"        -> Forms.text.verifying(notEmpty),
-        "artefact"     -> Forms.text.verifying(notEmpty),
-        "versionRange" -> Forms.default(Forms.text, ""),
-        "asCsv"        -> Forms.boolean
+        "artefact"     -> Forms.text.verifying(notEmpty)
       )(SearchForm.apply)(SearchForm.unapply)
     )
   }
