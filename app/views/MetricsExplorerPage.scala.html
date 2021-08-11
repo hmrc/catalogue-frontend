@@ -196,7 +196,7 @@
                     data.addColumn('string', 'Version');
                     data.addColumn('number', 'Count');
                     data.addRows([
-                        @for(r <- List("foo", "bar", "baz", "qux", "quux", "quuz", "corge", "grault", "garply", "waldo", "fred", "plugh", "xyzzy", "thud").map(x => x -> scala.util.Random.nextInt(100))) {
+                        @for(r <- List("foo", "bar", "baz", "qux", "quuuuuuuuuuux", "quuz", "corge", "grault", "garply", "waldo", "fred", "plugh", "xyzzy", "thud").map(x => x -> scala.util.Random.nextInt(100))) {
                         ['@r._1', @(r._2)],
                         }
                     ]);
