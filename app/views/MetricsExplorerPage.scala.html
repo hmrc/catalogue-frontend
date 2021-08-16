@@ -220,18 +220,17 @@
 
                     const arr = ["foo", "bar", "baz", "qux", "quuuuuuuuuuux", "quuz", "corge", "grault", "garply", "waldo", "fred", "plugh", "xyzzy", "thud"].map(x => [x, Math.floor(Math.random() * 100)]);
                     arr.forEach( ([key, value]) => {
-                        console.log(`key: ${key}, value:${value}, unhappy: ${100 - value}`);
+                        let container = chartDiv.appendChild(document.createElement('grid-item'));
+
+                        <!--drawing pie chart-->
                         let data = new google.visualization.DataTable();
                         data.addColumn('string', 'Version');
                         data.addColumn('number', 'Count');
                         data.addRows([["Happy", value], ["Unhappy", 100-value]]);
-
-                        let container = chartDiv.appendChild(document.createElement('grid-item'));
-
                         let chart = new google.visualization.PieChart(container);
                         chart.draw(data, options);
 
-<!--                        manual caption for the charts-->
+                        <!--manual caption for the charts-->
                         let p = document.createElement("p");
                         let h2Element = document.createElement('h3');
                         h2Element.innerText = key;
