@@ -38,6 +38,22 @@
            messagesProvider: MessagesProvider)
 
 @standard_layout("Metrics Explorer", "search") {
+    <html>
+    <head>
+        <style>
+        .grid-container {
+          display: grid;
+          grid-template-columns: auto auto auto auto auto auto;
+          padding: 10px;
+        }
+        .grid-item {
+          padding: 20px;
+          font-size: 30px;
+          text-align: center;
+        }
+        </style>
+    </head>
+
     <header>
         <h1 id="search-service-header">Metrics Explorer</h1>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -121,8 +137,8 @@
                     case Some(searchResults) => {
                         <p>Found @searchResults.size results</p>
 
-                        <div id="chart_div" align="center"></div>
-                    }
+                        <div id="chart_div" align="center" class="grid-container"></div>
+            }
                 }
             </div>
         </div>
@@ -186,6 +202,8 @@
     <script type="text/javascript">
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawChart);
+        const chartDiv = document.getElementById('chart_div');
+
         function drawChart() {
 
             @pieData match {
@@ -193,32 +211,40 @@
                 case Some(pd) => {
                     var options = {
                                     'height'   : 150,
-                                    'width'   : 100,
+                                    'width'   : 150,
                                     'colors': ['green', 'Red'],
                                     'chartArea': { 'width': '100%', 'height': '100%'},
-                                    'legend': 'none',
-                                    is3D: true
+                                    'legend': 'none'
                                   };
-                    var chartDiv = document.getElementById('chart_div');
+
+
                     const arr = ["foo", "bar", "baz", "qux", "quuuuuuuuuuux", "quuz", "corge", "grault", "garply", "waldo", "fred", "plugh", "xyzzy", "thud"].map(x => [x, Math.floor(Math.random() * 100)]);
                     arr.forEach( ([key, value]) => {
                         console.log(`key: ${key}, value:${value}, unhappy: ${100 - value}`);
-                        var data = new google.visualization.DataTable();
+                        let data = new google.visualization.DataTable();
                         data.addColumn('string', 'Version');
                         data.addColumn('number', 'Count');
                         data.addRows([["Happy", value], ["Unhappy", 100-value]]);
 
-                        var container = chartDiv.appendChild(document.createElement('div'));
-                        var chart = new google.visualization.PieChart(container);
-                        const opts = ({...options, ...{'title': key}});
+                        let container = chartDiv.appendChild(document.createElement('grid-item'));
+
+                        let chart = new google.visualization.PieChart(container);
                         chart.draw(data, options);
+
+<!--                        manual caption for the charts-->
+                        let p = document.createElement("p");
+                        let h2Element = document.createElement('h3');
+                        h2Element.innerText = key;
+                        p.appendChild(h2Element);
+                        container.appendChild(p);
                     })
                 }
             }
         }
     </script>
 }
-
+    </html>
+<!--todo: remove this?-->
 @selected(optVersion: Option[BobbyVersion]) = {
     @optVersion.map(v => if (v.inclusive) "selected" else "").getOrElse("selected")
 }
