@@ -152,7 +152,7 @@ messagesProvider: MessagesProvider
             var deps = repo? dependenciesByRepo[repo]: allDependencies;
             if (deps) {
                 var opt = document.createElement('option');
-                opt.text = "@Messages("metricsexplorer.select.repository")";
+                opt.text = "@Messages("metricsexplorer.select.dependency")";
                 opt.value = "";
                 dependenciesSelect.add(opt, null);
                 for (i = 0; i < deps.length; i++)

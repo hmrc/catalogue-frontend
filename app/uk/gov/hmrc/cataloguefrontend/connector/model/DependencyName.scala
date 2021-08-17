@@ -19,5 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 case class DependencyName (value: String) extends AnyVal
 
 object DependencyName {
-  def apply(serviceProgressMetricses: Seq[ServiceProgressMetrics]): Seq[DependencyName] = serviceProgressMetricses.map(_.name).map(DependencyName.apply)
+  def apply(serviceProgressMetricses: Seq[ServiceProgressMetrics]): Seq[DependencyName] = serviceProgressMetricses
+    .map(_.name)
+    .distinct
+    .map(DependencyName.apply)
 }

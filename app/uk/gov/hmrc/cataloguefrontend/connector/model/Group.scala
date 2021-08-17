@@ -23,7 +23,11 @@ object Group{
 
   def apply(metrics: Seq[ServiceProgressMetrics]): Seq[Group] = metrics
     .groupBy(_.group)
-    .mapValues(_.map(_.repository).distinct.map(RepositoryName.apply))
+    .mapValues(
+      _.map(_.repository)
+        .distinct
+        .map(RepositoryName.apply)
+    )
     .map{ case (g, repositoryNames) =>
       Group(GroupName(g), repositoryNames)
     }
