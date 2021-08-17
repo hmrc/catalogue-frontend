@@ -16,5 +16,5 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-case class MetricsResponse(metrics: Seq[ServiceProgressMetrics], count: Int, happyCount: Int, unHappyCount: Int)
+case class MetricsResponse(metrics: Seq[ServiceProgressMetrics])
 

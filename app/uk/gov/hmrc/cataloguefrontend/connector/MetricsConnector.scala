@@ -57,31 +57,40 @@ object MetricsConnector{
   }
 
   class Mocked @Inject()(implicit val ec: ExecutionContext) extends ViaQuery {
+    val allData = Seq(
+      ServiceProgressMetrics(
+        name = "frontend-bootstrap",
+        group = "dwp.gov.uk",
+        repository = "activity-logger",
+        isHappy = true
+      ),
+      ServiceProgressMetrics(
+        name = "frontend-bootstrap",
+        group = "dwp.gov.uk",
+        repository = "adobe-adaptive-forms",
+        isHappy = false
+      ),
+      ServiceProgressMetrics(
+        name = "bootstrap-play-25",
+        group = "hmrc.gov.uk",
+        repository = "adobe-adaptive-forms",
+        isHappy = false
+      ),
+      ServiceProgressMetrics(
+        name = "sbt-plugin",
+        group = "hmrc.gov.uk",
+        repository = "adobe-adaptive-forms",
+        isHappy = true
+      )
+    )
+
     override def query(maybeGroup: Option[GroupName], maybeName: Option[DependencyName], maybeRepository: Option[RepositoryName]): Future[MetricsResponse] = Future.successful(
       MetricsResponse(
-        metrics = Seq(
-          ServiceProgressMetrics(
-            name = "frontend-bootstrap",
-            group = "dwp.gov.uk",
-            repository = "activity-logger",
-            isHappy = true
-          ),
-          ServiceProgressMetrics(
-            name = "bootstrap-play-25",
-            group = "hmrc.gov.uk",
-            repository = "adobe-adaptive-forms",
-            isHappy = false
-          ),
-          ServiceProgressMetrics(
-            name = "sbt-plugin",
-            group = "hmrc.gov.uk",
-            repository = "adobe-adaptive-forms",
-            isHappy = true
-          )
-        ),
-        count = 0,
-        happyCount = 0,
-        unHappyCount = 0
+        metrics = allData.filter( metrics =>
+          maybeGroup.forall(_.value == metrics.group) &&
+            maybeName.forall(_.value == metrics.name) &&
+            maybeRepository.forall(_.value == metrics.repository)
+        )
       )
     )
   }

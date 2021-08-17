@@ -16,7 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-final case class MetricsEntry (dependency: DependencyName, happyCount: Int, unHappyCount: Int)
+final case class MetricsEntry (dependency: DependencyName, happyCount: Int, unHappyCount: Int){
+  def asPercentage: List[Int] = {
+    val totalCount = (happyCount + unHappyCount).toDouble
+    List(
+      (happyCount*100/totalCount).toInt,
+      (unHappyCount*100/totalCount).toInt
+    )
+  }
+
+}
 
 object MetricsEntry {
 

@@ -218,16 +218,23 @@ messagesProvider: MessagesProvider
                                     'legend': 'none'
                                   };
 
+                    const arr = [
+                        @for(e <- entries){
+                            [
+                                '@e.dependency.value',
+                                [@for(a <- e.asPercentage){ @a, }]
+                            ],
+                        }
+                    ];
 
-                    const arr = ["foo", "bar", "baz", "qux", "quuuuuuuuuuux", "quuz", "corge", "grault", "garply", "waldo", "fred", "plugh", "xyzzy", "thud"].map(x => [x, Math.floor(Math.random() * 100)]);
-                    arr.forEach( ([key, value]) => {
+                    arr.forEach( ([key, [happy, unhappy]]) => {
                         let container = chartDiv.appendChild(document.createElement('grid-item'));
 
                         <!--drawing pie chart-->
                         let data = new google.visualization.DataTable();
                         data.addColumn('string', 'Version');
                         data.addColumn('number', 'Count');
-                        data.addRows([["Happy", value], ["Unhappy", 100-value]]);
+                        data.addRows([["Happy", happy], ["Unhappy", unhappy]]);
                         let chart = new google.visualization.PieChart(container);
                         chart.draw(data, options);
 
