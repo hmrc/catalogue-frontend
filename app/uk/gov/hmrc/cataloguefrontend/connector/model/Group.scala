@@ -17,19 +17,23 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 //todo: should it be called DependencyGroup or similar?
-case class Group(name: GroupName, repos: Seq[RepositoryName])
+case class Group(name: GroupName, repos: Seq[RepositoryName], dependencies: Seq[DependencyName])
 
 object Group{
 
   def apply(metrics: Seq[ServiceProgressMetrics]): Seq[Group] = metrics
     .groupBy(_.group)
-    .mapValues(
-      _.map(_.repository)
-        .distinct
-        .map(RepositoryName.apply)
-    )
-    .map{ case (g, repositoryNames) =>
-      Group(GroupName(g), repositoryNames)
+    .mapValues { metrics =>
+        val repoNames = metrics.map(_.repository)
+          .distinct
+          .map(RepositoryName.apply)
+        val depNames = metrics.map(_.name)
+          .distinct
+          .map(DependencyName.apply)
+      (repoNames, depNames)
+    }
+    .map{ case (g, (repositoryNames, depNames)) =>
+      Group(GroupName(g), repositoryNames, depNames)
     }
     .toSeq
 }
