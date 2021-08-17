@@ -124,16 +124,51 @@ messagesProvider: MessagesProvider
 
         function ready() {
             document.getElementById("group").onchange = updateRepositories;
+            document.getElementById("repository").onchange = updateDependencies;
             updateRepositories();
-            updateSortOrder();
+            updateDependencies();
         }
 
         var options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
 
+        function updateDependencies() {
+            var repo = document.getElementById("repository").value;
+
+            var dependenciesByRepo = {
+                @repositories.map { res =>
+                '@{res.name.value}': [@for(a <- res.dependencies){
+                    '@a.value',
+                    }]
+                ,
+                }
+            }
+            var allDependencies = [@for(a <- dependencies){ '@a.value', }];
+
+            var dependenciesSelect = document.getElementById("dependency")
+            while (dependenciesSelect.options.length > 0) {
+                dependenciesSelect.remove(dependenciesSelect.options.length - 1);
+            }
+
+            var deps = repo? dependenciesByRepo[repo]: allDependencies;
+            if (deps) {
+                var opt = document.createElement('option');
+                opt.text = "@Messages("metricsexplorer.select.repository")";
+                opt.value = "";
+                dependenciesSelect.add(opt, null);
+                for (i = 0; i < deps.length; i++)
+                {
+                    var opt = document.createElement('option');
+                    opt.text = deps[i];
+                    opt.value = deps[i];
+                    opt.selected = deps[i] == '@{form("dependencies").value}';
+                    dependenciesSelect.add(opt, null);
+                }
+            }
+        }
+
         function updateRepositories() {
             var group = document.getElementById("group").value;
-
-            var repositories = {
+            var repositoriesByGroup = {
                 @groups.map { res =>
                 '@{res.name.value}': [@for(a <- res.repos){
                     '@a.value',
@@ -141,13 +176,13 @@ messagesProvider: MessagesProvider
                 ,
                 }
             }
+            var allRepos = [@for(a <- repositories){ '@a.name.value', }];
 
             var repositoriesSelect = document.getElementById("repository")
             while (repositoriesSelect.options.length > 0) {
                 repositoriesSelect.remove(repositoriesSelect.options.length - 1);
             }
-
-            var repos = repositories[group];
+            var repos = group? repositoriesByGroup[group] : allRepos;
             if (repos) {
                 var opt = document.createElement('option');
                 opt.text = "@Messages("metricsexplorer.select.repository")";
