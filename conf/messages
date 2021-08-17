@@ -12,6 +12,10 @@ dependencyexplorer.select.group=Select Group
 dependencyexplorer.select.artefact=Select Artefact
 dependencyexplorer.select.teams.all=All teams
 
+metricsexplorer.select.repository=Select Repository
+metricsexplorer.select.group=Select Group
+metricsexplorer.select.dependency=Select Dependency
+
 platformdependencies.info=A curated selection of runtime dependencies built into the versioned distributable
 latestbuild.info=A curated selection of development dependencies determined by parsing build files on the master branch
 

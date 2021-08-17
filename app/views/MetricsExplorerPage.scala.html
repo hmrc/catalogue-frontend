@@ -1,25 +1,23 @@
 @*
- * Copyright 2021 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *@
+* Copyright 2021 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
 
 @import play.api.mvc.Call
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersion, DependencyScope, GroupArtefacts, ServiceWithDependency, TeamName}
-@import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Group, Repository, DependencyName}
 @import uk.gov.hmrc.cataloguefrontend.MetricsExplorerController
-@import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
+@import uk.gov.hmrc.cataloguefrontend.connector.model.MetricsEntry
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
@@ -27,20 +25,19 @@
 
 @this(viewMessages: ViewMessages)
 
-@(form            : Form[_],
-  teams           : Seq[TeamName],
-  flags           : Seq[SlugInfoFlag],
-  scopes          : Seq[DependencyScope],
-  groupArtefacts  : List[GroupArtefacts],
-  searchResults   : Option[Seq[ServiceWithDependency]],
-  pieData         : Option[PieData])(
-  implicit request         : Request[_],
-           messagesProvider: MessagesProvider)
+@(form          : Form[_],
+groups          : Seq[Group],
+repositories    : Seq[Repository],
+dependencies    : Seq[DependencyName],
+metricsEntries  : Seq[MetricsEntry])(implicit
+request         : Request[_],
+messagesProvider: MessagesProvider
+)
 
 @standard_layout("Metrics Explorer", "search") {
-    <html>
-    <head>
-        <style>
+<html>
+<head>
+    <style>
         .grid-container {
           display: grid;
           grid-template-columns: auto auto auto auto auto auto;
@@ -52,99 +49,73 @@
           text-align: center;
         }
         </style>
-    </head>
+</head>
 
-    <header>
-        <h1 id="search-service-header">Metrics Explorer</h1>
-        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    </header>
+<header>
+    <h1 id="search-service-header">Metrics Explorer</h1>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+</header>
 
-    <div id="service-list">
+<div id="service-list">
 
-        @if(form.hasGlobalErrors) {
-            <div class="alert alert-error error">
-                <a class="close" data-dismiss="alert">×</a>
-                <ul>
-                    @form.globalErrors.map { error =>
-                        <li>@error.format</li>
-                    }
-                </ul>
-            </div>
-        }
-
-        <div class="board">
-            <div class="board__body">
-                @helper.form(
-                    action =  appRoutes.MetricsExplorerController.search,
-                    'class -> "form-inline",
-                    'id    -> "search-by-dependency-form") {
-                    <table class="padded-table">
-                        <tr>
-                            <td style="vertical-align: top;">
-                                @helper.select(
-                                    form("group"),
-                                    helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
-                                                   groupArtefacts.map(_.group).map(g => (g, g)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                                @helper.select(
-                                    form("artefact"),
-                                    helper.options(List()),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                @helper.select(
-                                    form("team"),
-                                    helper.options(Seq("" -> Messages("dependencyexplorer.select.teams.all")) ++
-                                                   teams.map(_.asString).map(t => (t, t)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                                @helper.select(
-                                    form("flag"),
-                                    helper.options(flags.map(t => (t.asString, t.displayString)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                                @helper.select(
-                                    form("scope"),
-                                    helper.options(scopes.map(t => (t.asString, t.displayString)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group"
-                                )
-                            </td>
-                            <td valign="bottom">
-                                <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-                            </td>
-                        </tr>
-
-                        </table>
-                     </div>
-                }
-                @searchResults match {
-                    case None                => {
-                        <ul class="list"/>
-                    }
-                    case Some(Nil)           => {
-                        <p id="search-results-empty">This search did not return any results.</p>
-                        <ul class="list"/>
-                    }
-                    case Some(searchResults) => {
-                        <p>Found @searchResults.size results</p>
-
-                        <div id="chart_div" align="center" class="grid-container"></div>
+    @if(form.hasGlobalErrors) {
+    <div class="alert alert-error error">
+        <a class="close" data-dismiss="alert">×</a>
+        <ul>
+            @form.globalErrors.map { error =>
+            <li>@error.format</li>
             }
-                }
-            </div>
+        </ul>
+    </div>
+    }
+
+    <div class="board">
+        <div class="board__body">
+            @helper.form(
+            action =  appRoutes.MetricsExplorerController.search,
+            'class -> "form-inline",
+            'id    -> "search-by-dependency-form"
+            ) {
+            <table class="padded-table">
+                <tr>
+                    <td style="vertical-align: top;">
+                        @helper.select(
+                        form("group"),
+                        helper.options(Seq("" -> Messages("metricsexplorer.select.group")) ++
+                        groups.map(_.name.value).map(g => (g, g)) :_*),
+                        '_label -> "",
+                        '_class -> "form-group"
+                        )
+                        @helper.select(
+                        form("repository"),
+                        helper.options(List()),
+                        '_label -> "",
+                        '_class -> "form-group"
+                        )
+                    </td>
+                    <td>
+                        @helper.select(
+                        form("dependency"),
+                        helper.options(Seq("" -> Messages("metricsexplorer.select.dependency")) ++
+                        dependencies.map(_.value).map(t => (t, t)) :_*),
+                        '_label -> "",
+                        '_class -> "form-group"
+                        )
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="bottom">
+                        <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                    </td>
+                </tr>
+            </table>
+            <div id="chart_div" align="center" class="grid-container"></div>
+            }
         </div>
     </div>
+</div>
 
-    <script>
+<script>
         if (document.readyState != 'loading'){
             ready();
         } else {
@@ -152,63 +123,58 @@
         }
 
         function ready() {
-            document.getElementById("group").onchange = updateArtefacts;
-            updateArtefacts();
+            document.getElementById("group").onchange = updateRepositories;
+            updateRepositories();
             updateSortOrder();
         }
 
         var options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
-        var serviceList = null;
 
-        function updateSortOrder() {
-            serviceList = new List('service-list', options);
-        }
-
-        function updateArtefacts() {
+        function updateRepositories() {
             var group = document.getElementById("group").value;
 
-            var groupArtefacts = {
-                @groupArtefacts.map { res =>
-                '@{res.group}': [@for(a <- res.artefacts){
-                    '@a',
+            var repositories = {
+                @groups.map { res =>
+                '@{res.name.value}': [@for(a <- res.repos){
+                    '@a.value',
                     }]
                 ,
                 }
             }
 
-            var artefactSelect = document.getElementById("artefact")
-            while (artefactSelect.options.length > 0) {
-                artefactSelect.remove(artefactSelect.options.length - 1);
+            var repositoriesSelect = document.getElementById("repository")
+            while (repositoriesSelect.options.length > 0) {
+                repositoriesSelect.remove(repositoriesSelect.options.length - 1);
             }
 
-            var artefacts = groupArtefacts[group];
-            if (artefacts) {
+            var repos = repositories[group];
+            if (repos) {
                 var opt = document.createElement('option');
-                opt.text = "@Messages("dependencyexplorer.select.artefact")";
+                opt.text = "@Messages("metricsexplorer.select.repository")";
                 opt.value = "";
-                artefactSelect.add(opt, null);
-                for (i = 0; i < artefacts.length; i++)
+                repositoriesSelect.add(opt, null);
+                for (i = 0; i < repos.length; i++)
                 {
                     var opt = document.createElement('option');
-                    opt.text = artefacts[i];
-                    opt.value = artefacts[i];
-                    opt.selected = artefacts[i] == '@{form("artefact").value}';
-                    artefactSelect.add(opt, null);
+                    opt.text = repos[i];
+                    opt.value = repos[i];
+                    opt.selected = repos[i] == '@{form("repositories").value}';
+                    repositoriesSelect.add(opt, null);
                 }
             }
         }
     </script>
 
-    <script type="text/javascript">
+<script type="text/javascript">
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawChart);
         const chartDiv = document.getElementById('chart_div');
 
         function drawChart() {
 
-            @pieData match {
-                case None => {}
-                case Some(pd) => {
+            @metricsEntries match {
+                case Nil => {}
+                case entries => {
                     var options = {
                                     'height'   : 150,
                                     'width'   : 150,
@@ -230,7 +196,7 @@
                         let chart = new google.visualization.PieChart(container);
                         chart.draw(data, options);
 
-                        <!--manual caption for the charts-->
+                        <!--manual caption for the chart-->
                         let p = document.createElement("p");
                         let h2Element = document.createElement('h3');
                         h2Element.innerText = key;
@@ -241,9 +207,5 @@
             }
         }
     </script>
-}
-    </html>
-<!--todo: remove this?-->
-@selected(optVersion: Option[BobbyVersion]) = {
-    @optVersion.map(v => if (v.inclusive) "selected" else "").getOrElse("selected")
+</html>
 }
