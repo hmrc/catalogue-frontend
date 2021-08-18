@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.healthindicators.MetricType.{BobbyRule, BuildStability, LeakDetection, ReadMe}
+import uk.gov.hmrc.cataloguefrontend.healthindicators.MetricType.{BobbyRule, BuildStability, GitHub, LeakDetection}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 
@@ -71,7 +71,7 @@ class HealthIndicatorsConnectorSpec
           )
         ),
         WeightedMetric(LeakDetection, 0, Seq()),
-        WeightedMetric(ReadMe, -50, Seq(Breakdown(-50, "No Readme defined", None))),
+        WeightedMetric(GitHub, -50, Seq(Breakdown(-50, "No Readme defined", None))),
         WeightedMetric(BuildStability, 0, Seq(Breakdown(0, "Build Not Found", None)))
       )
 
@@ -140,7 +140,7 @@ class HealthIndicatorsConnectorSpec
             "breakdown": []
           },
           {
-            "metricType": "read-me",
+            "metricType": "github",
             "score": -50,
             "breakdown": [
               {

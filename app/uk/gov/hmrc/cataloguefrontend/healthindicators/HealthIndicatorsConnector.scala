@@ -64,22 +64,20 @@ object MetricType {
   val reads: Reads[MetricType] = new Reads[MetricType] {
     override def reads(json: JsValue): JsResult[MetricType] =
       json.validate[String].flatMap {
-        case "read-me"         => JsSuccess(ReadMe)
+        case "github"          => JsSuccess(GitHub)
         case "leak-detection"  => JsSuccess(LeakDetection)
         case "bobby-rule"      => JsSuccess(BobbyRule)
         case "build-stability" => JsSuccess(BuildStability)
         case "alert-config"    => JsSuccess(AlertConfig)
-        case "open-pr"         => JsSuccess(OpenPR)
         case s                 => JsError(s"Invalid MetricType: $s")
       }
   }
 
-  case object ReadMe extends MetricType
+  case object GitHub extends MetricType
   case object LeakDetection extends MetricType
   case object BobbyRule extends MetricType
   case object BuildStability extends MetricType
   case object AlertConfig extends MetricType
-  case object OpenPR extends MetricType
 }
 
 case class Breakdown(points: Int, description: String, href: Option[String])
