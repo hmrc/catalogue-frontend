@@ -115,125 +115,125 @@ messagesProvider: MessagesProvider
 </div>
 
 <script>
-        if (document.readyState != 'loading'){
-            ready();
-        } else {
-            document.addEventListener('DOMContentLoaded', ready);
-        }
+    if (document.readyState != 'loading'){
+        ready();
+    } else {
+        document.addEventListener('DOMContentLoaded', ready);
+    }
 
-        function ready() {
-            document.getElementById("group").onchange = onGroupChange;
-            document.getElementById("repository").onchange = updateDependenciesByRepo;
-            onGroupChange();
-            updateDependenciesByRepo();
-        }
+    function ready() {
+        document.getElementById("group").onchange = onGroupChange;
+        document.getElementById("repository").onchange = updateDependenciesByRepo;
+        onGroupChange();
+        updateDependenciesByRepo();
+    }
 
-        function onGroupChange(){
-            updateRepositoriesByGroup();
-            updateDependenciesByGroup();
-        }
+    function onGroupChange(){
+        updateRepositoriesByGroup();
+        updateDependenciesByGroup();
+    }
 
-        function updateRepositoriesByGroup() {
-            var group = document.getElementById("group").value;
-            var repositoriesByGroup = {
-                @groups.map { res =>
-                '@{res.name.value}': [@for(a <- res.repos){
-                    '@a.value',
-                    }]
-                ,
-                }
+    function updateRepositoriesByGroup() {
+        var group = document.getElementById("group").value;
+        var repositoriesByGroup = {
+            @groups.map { res =>
+            '@{res.name.value}': [@for(a <- res.repos){
+                '@a.value',
+                }]
+            ,
             }
-            var allRepos = [@for(a <- repositories){ '@a.name.value', }];
+        }
+        var allRepos = [@for(a <- repositories){ '@a.name.value', }];
 
-            var repositoriesSelect = document.getElementById("repository")
-            while (repositoriesSelect.options.length > 0) {
-                repositoriesSelect.remove(repositoriesSelect.options.length - 1);
-            }
-            var repos = group? repositoriesByGroup[group] : allRepos;
-            if (repos) {
+        var repositoriesSelect = document.getElementById("repository")
+        while (repositoriesSelect.options.length > 0) {
+            repositoriesSelect.remove(repositoriesSelect.options.length - 1);
+        }
+        var repos = group? repositoriesByGroup[group] : allRepos;
+        if (repos) {
+            var opt = document.createElement('option');
+            opt.text = "@Messages("metricsexplorer.select.repository")";
+            opt.value = "";
+            repositoriesSelect.add(opt, null);
+            for (i = 0; i < repos.length; i++)
+            {
                 var opt = document.createElement('option');
-                opt.text = "@Messages("metricsexplorer.select.repository")";
-                opt.value = "";
+                opt.text = repos[i];
+                opt.value = repos[i];
+                opt.selected = repos[i] == '@{form("repositories").value}';
                 repositoriesSelect.add(opt, null);
-                for (i = 0; i < repos.length; i++)
-                {
-                    var opt = document.createElement('option');
-                    opt.text = repos[i];
-                    opt.value = repos[i];
-                    opt.selected = repos[i] == '@{form("repositories").value}';
-                    repositoriesSelect.add(opt, null);
-                }
             }
         }
+    }
 
-        function updateDependenciesByGroup() {
-            var group = document.getElementById("group").value;
-            var dependenciesByGroup = {
-                @groups.map { res =>
-                '@{res.name.value}': [@for(a <- res.dependencies){
-                    '@a.value',
-                    }]
-                ,
-                }
+    function updateDependenciesByGroup() {
+        var group = document.getElementById("group").value;
+        var dependenciesByGroup = {
+            @groups.map { res =>
+            '@{res.name.value}': [@for(a <- res.dependencies){
+                '@a.value',
+                }]
+            ,
             }
-            var allDependencies = [@for(a <- dependencies){ '@a.value', }];
+        }
+        var allDependencies = [@for(a <- dependencies){ '@a.value', }];
 
-            var dependenciesSelect = document.getElementById("dependency");
-            while (dependenciesSelect.options.length > 0) {
-                dependenciesSelect.remove(dependenciesSelect.options.length - 1);
-            }
-            var deps = group? dependenciesByGroup[group] : allDependencies;
-            if (deps) {
+        var dependenciesSelect = document.getElementById("dependency");
+        while (dependenciesSelect.options.length > 0) {
+            dependenciesSelect.remove(dependenciesSelect.options.length - 1);
+        }
+        var deps = group? dependenciesByGroup[group] : allDependencies;
+        if (deps) {
+            var opt = document.createElement('option');
+            opt.text = "@Messages("metricsexplorer.select.dependency")";
+            opt.value = "";
+            dependenciesSelect.add(opt, null);
+            for (i = 0; i < deps.length; i++)
+            {
                 var opt = document.createElement('option');
-                opt.text = "@Messages("metricsexplorer.select.dependency")";
-                opt.value = "";
+                opt.text = deps[i];
+                opt.value = deps[i];
+                opt.selected = deps[i] == '@{form("dependencies").value}';
                 dependenciesSelect.add(opt, null);
-                for (i = 0; i < deps.length; i++)
-                {
-                    var opt = document.createElement('option');
-                    opt.text = deps[i];
-                    opt.value = deps[i];
-                    opt.selected = deps[i] == '@{form("dependencies").value}';
-                    dependenciesSelect.add(opt, null);
-                }
             }
         }
+    }
 
-        function updateDependenciesByRepo() {
-            var repo = document.getElementById("repository").value;
+    function updateDependenciesByRepo() {
+        var repo = document.getElementById("repository").value;
 
-            var dependenciesByRepo = {
-                @repositories.map { res =>
-                '@{res.name.value}': [@for(a <- res.dependencies){
-                    '@a.value',
-                    }]
-                ,
-                }
+        var dependenciesByRepo = {
+            @repositories.map { res =>
+            '@{res.name.value}': [@for(a <- res.dependencies){
+                '@a.value',
+                }]
+            ,
             }
-            var allDependencies = [@for(a <- dependencies){ '@a.value', }];
+        }
+        var allDependencies = [@for(a <- dependencies){ '@a.value', }];
 
-            var dependenciesSelect = document.getElementById("dependency")
-            while (dependenciesSelect.options.length > 0) {
-                dependenciesSelect.remove(dependenciesSelect.options.length - 1);
-            }
+        var dependenciesSelect = document.getElementById("dependency")
+        while (dependenciesSelect.options.length > 0) {
+            dependenciesSelect.remove(dependenciesSelect.options.length - 1);
+        }
 
-            var deps = repo? dependenciesByRepo[repo]: allDependencies;
-            if (deps) {
+        var deps = repo? dependenciesByRepo[repo]: allDependencies;
+        if (deps) {
+            var opt = document.createElement('option');
+            opt.text = "@Messages("metricsexplorer.select.dependency")";
+            opt.value = "";
+            dependenciesSelect.add(opt, null);
+            for (i = 0; i < deps.length; i++)
+            {
                 var opt = document.createElement('option');
-                opt.text = "@Messages("metricsexplorer.select.dependency")";
-                opt.value = "";
+                opt.text = deps[i];
+                opt.value = deps[i];
+                opt.selected = deps[i] == '@{form("dependencies").value}';
                 dependenciesSelect.add(opt, null);
-                for (i = 0; i < deps.length; i++)
-                {
-                    var opt = document.createElement('option');
-                    opt.text = deps[i];
-                    opt.value = deps[i];
-                    opt.selected = deps[i] == '@{form("dependencies").value}';
-                    dependenciesSelect.add(opt, null);
-                }
             }
         }
-    </script>
+    }
+</script>
 
 <script type="text/javascript">
         google.charts.load('current', {'packages':['corechart']});

@@ -21,13 +21,13 @@ import play.api.data.{Form, Forms}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.metrics.connector.MetricsConnector
 import uk.gov.hmrc.cataloguefrontend.metrics.model.{DependencyName, GroupName, MetricsEntry, RepositoryName}
+import uk.gov.hmrc.cataloguefrontend.metrics.views.SearchForm
 import uk.gov.hmrc.cataloguefrontend.metrics.views.html.MetricsExplorerPage
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
 class MetricsExplorerController @Inject()(
   mcc: MessagesControllerComponents,
   page: MetricsExplorerPage,
@@ -100,28 +100,6 @@ class MetricsExplorerController @Inject()(
         }
       } yield res
     }
-
-  final case class SearchForm(
-                               group: Option[GroupName],
-                               dependency: Option[DependencyName],
-                               repository: Option[RepositoryName]
-  )
-
-  object SearchForm {
-    def applyRaw(
-               group: Option[String],
-               dependency: Option[String],
-               repository: Option[String]
-             ): SearchForm = SearchForm.apply(
-      group.map(GroupName.apply),
-      dependency.map(DependencyName.apply),
-      repository.map(RepositoryName.apply)
-    )
-
-    def unapplyRaw(searchForm: SearchForm): Option[(Option[String], Option[String], Option[String])] = unapply(searchForm).map{ case(g, d, r) =>
-      (g.map(_.value), d.map(_.value), r.map(_.value))
-    }
-  }
 
   def form(): Form[SearchForm] = {
     Form(
