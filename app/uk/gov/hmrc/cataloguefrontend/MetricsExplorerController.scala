@@ -100,7 +100,6 @@ class MetricsExplorerController @Inject()(
       } yield res
     }
 
-  /** @param versionRange replaces versionOp and version, supporting Maven version range */
   final case class SearchForm(
                                group: Option[GroupName],
                                dependency: Option[DependencyName],
