@@ -210,7 +210,7 @@ class HealthIndicatorsControllerSpec
           |      "breakdown": []
           |    },
           |    {
-          |      "metricType": "read-me",
+          |      "metricType": "github",
           |      "score": -50,
           |      "breakdown": [
           |        {
