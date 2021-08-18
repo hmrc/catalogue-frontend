@@ -45,10 +45,10 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
         Future.successful(Map.empty)
 
       when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
-        Future.successful(Seq(Indicator("foo", RepoType.Service, 10, Seq(WeightedMetric(MetricType.ReadMe, 10, Seq.empty)))))
+        Future.successful(Seq(Indicator("foo", RepoType.Service, 10, Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty)))))
 
       healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service).futureValue shouldBe
-        Seq(IndicatorsWithTeams("foo", Seq.empty, RepoType.Service, 10, Seq(WeightedMetric(MetricType.ReadMe, 10, Seq.empty))))
+        Seq(IndicatorsWithTeams("foo", Seq.empty, RepoType.Service, 10, Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))))
     }
 
     "return correct IndicatorsWithTeams when TARConnector returns teams and HIConnector returns Indicators" in new Setup {
@@ -56,10 +56,10 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
         Future.successful(Map("bar" -> Seq(TeamName("foo"))))
 
       when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
-        Future.successful(Seq(Indicator("bar", RepoType.Service, 10, Seq(WeightedMetric(MetricType.ReadMe, 10, Seq.empty)))))
+        Future.successful(Seq(Indicator("bar", RepoType.Service, 10, Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty)))))
 
       healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service).futureValue shouldBe
-        Seq(IndicatorsWithTeams("bar", Seq(TeamName("foo")), RepoType.Service, 10, Seq(WeightedMetric(MetricType.ReadMe, 10, Seq.empty))))
+        Seq(IndicatorsWithTeams("bar", Seq(TeamName("foo")), RepoType.Service, 10, Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))))
     }
   }
   private[this] trait Setup {
