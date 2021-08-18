@@ -20,12 +20,12 @@ import cats.implicits.none
 import play.api.data.{Form, Forms}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.metrics.connector.MetricsConnector
-import uk.gov.hmrc.cataloguefrontend.metrics.model.{DependencyName, GroupName, MetricsEntry, RepositoryName}
+import uk.gov.hmrc.cataloguefrontend.metrics.model.MetricsEntry
 import uk.gov.hmrc.cataloguefrontend.metrics.views.SearchForm
 import uk.gov.hmrc.cataloguefrontend.metrics.views.html.MetricsExplorerPage
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class MetricsExplorerController @Inject()(

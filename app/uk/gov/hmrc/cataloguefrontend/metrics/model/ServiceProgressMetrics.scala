@@ -16,9 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.metrics.model
 
+import play.api.libs.json.{Json, Reads}
+
 final case class ServiceProgressMetrics(
   name: String,
   group: String,
   repository: String,
   isHappy: Boolean
 )
+
+object ServiceProgressMetrics{
+  implicit val reads: Reads[ServiceProgressMetrics] = Json.reads[ServiceProgressMetrics]
+}

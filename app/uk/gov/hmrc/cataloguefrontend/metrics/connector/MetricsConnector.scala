@@ -16,14 +16,19 @@
 
 package uk.gov.hmrc.cataloguefrontend.metrics.connector
 
+import cats.Monoid
 import cats.implicits.none
 import com.google.inject.ImplementedBy
+import play.api.Logger
+import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.metrics.model._
+import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[MetricsConnector.Mocked])
+@ImplementedBy(classOf[MetricsConnector.Impl])
 trait MetricsConnector {
   def query(
              maybeGroup: Option[GroupName],
@@ -56,7 +61,39 @@ object MetricsConnector{
       .map(DependencyName.apply)
   }
 
-  class Mocked @Inject()(implicit val ec: ExecutionContext) extends ViaQuery {
+  class Impl @Inject() (
+    httpClient: HttpClient,
+    servicesConfig: ServicesConfig
+  )(implicit val ec: ExecutionContext) extends ViaQuery {
+    import uk.gov.hmrc.http._
+
+    private implicit val hc: HeaderCarrier = HeaderCarrier()
+    private val platformProgressMetricsBaseURL: String = servicesConfig.baseUrl("platform-progress-metrics")
+    implicit val rF: Reads[MetricsResponse] = MetricsResponse.reads
+    val logger                           = Logger(this.getClass)
+
+    import cats.syntax.option._
+
+    override def query(maybeGroup: Option[GroupName], maybeName: Option[DependencyName], maybeRepository: Option[RepositoryName]): Future[MetricsResponse] = httpClient
+      .GET[MetricsResponse](
+        url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics" + Monoid.combineAll(
+          List(
+            maybeGroup.map(g => s"group=$g"),
+            maybeName.map(n => s"name=$n"),
+            maybeRepository.map(r => s"repository=$r")
+          )
+        )
+          .map(params => s"?$params")
+          .orEmpty
+      )
+      .recoverWith {
+        case UpstreamErrorResponse.Upstream5xxResponse(x) =>
+          logger.error(s"An error occurred when connecting to serviceDependencies. baseUrl: $platformProgressMetricsBaseURL", x)
+          Future.successful(MetricsResponse(Seq.empty))
+      }
+  }
+
+  class Mocked (implicit val ec: ExecutionContext) extends ViaQuery {
     val allData = Seq(
       ServiceProgressMetrics(
         name = "frontend-bootstrap",
