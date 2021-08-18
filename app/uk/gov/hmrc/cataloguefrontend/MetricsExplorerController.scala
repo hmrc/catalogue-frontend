@@ -15,13 +15,14 @@
  */
 
 package uk.gov.hmrc.cataloguefrontend
+
 import cats.implicits.none
 import play.api.data.{Form, Forms}
 import play.api.mvc._
-import uk.gov.hmrc.cataloguefrontend.connector.MetricsConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyName, GroupName, MetricsEntry, RepositoryName}
+import uk.gov.hmrc.cataloguefrontend.metrics.connector.MetricsConnector
+import uk.gov.hmrc.cataloguefrontend.metrics.model.{DependencyName, GroupName, MetricsEntry, RepositoryName}
+import uk.gov.hmrc.cataloguefrontend.metrics.views.html.MetricsExplorerPage
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.MetricsExplorerPage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}

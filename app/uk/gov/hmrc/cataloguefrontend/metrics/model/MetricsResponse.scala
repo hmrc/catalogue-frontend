@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector.model
+package uk.gov.hmrc.cataloguefrontend.metrics.model
 
-final case class GroupName (value: String)
+case class MetricsResponse(metrics: Seq[ServiceProgressMetrics])

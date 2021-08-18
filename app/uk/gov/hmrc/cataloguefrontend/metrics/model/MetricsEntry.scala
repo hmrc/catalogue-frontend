@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector.model
+package uk.gov.hmrc.cataloguefrontend.metrics.model
 
 final case class MetricsEntry (dependency: DependencyName, happyCount: Int, unHappyCount: Int){
   def asPercentage: List[Int] = {

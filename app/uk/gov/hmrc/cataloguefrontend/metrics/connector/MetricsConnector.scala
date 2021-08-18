@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector
+package uk.gov.hmrc.cataloguefrontend.metrics.connector
 
 import cats.implicits.none
 import com.google.inject.ImplementedBy
-import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyName, Group, GroupName, MetricsResponse, Repository, RepositoryName, ServiceProgressMetrics}
+import uk.gov.hmrc.cataloguefrontend.metrics.model._
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}

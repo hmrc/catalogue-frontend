@@ -14,21 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector.model
+package uk.gov.hmrc.cataloguefrontend.metrics.model
 
-//todo: should it be called DependencyRepository or similar?
-case class Repository(name: RepositoryName, dependencies: Seq[DependencyName])
-
-object Repository{
-  def apply(metrics: Seq[ServiceProgressMetrics]): Seq[Repository] = metrics
-    .groupBy(_.repository)
-    .mapValues(
-      _.map(_.name)
-        .distinct
-        .map(DependencyName.apply)
-    )
-    .map{ case (r, dependencyNames) =>
-      Repository(RepositoryName(r), dependencyNames)
-    }
-    .toSeq
-}
+final case class RepositoryName(value: String) extends AnyVal

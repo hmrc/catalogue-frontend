@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector.model
+package uk.gov.hmrc.cataloguefrontend.metrics.model
 
-final case class ServiceProgressMetrics (
-                                          name: String,
-                                          group: String,
-                                          repository: String,
-                                          isHappy: Boolean
-                                        )
+final case class ServiceProgressMetrics(
+  name: String,
+  group: String,
+  repository: String,
+  isHappy: Boolean
+)

@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector.model
+package uk.gov.hmrc.cataloguefrontend.metrics.model
 
-final case class RepositoryName(value: String) extends AnyVal
+case class DependencyName (value: String) extends AnyVal
+
+object DependencyName {
+  def apply(serviceProgressMetricses: Seq[ServiceProgressMetrics]): Seq[DependencyName] = serviceProgressMetricses
+    .map(_.name)
+    .distinct
+    .map(DependencyName.apply)
+}
