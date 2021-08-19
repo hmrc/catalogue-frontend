@@ -30,9 +30,9 @@ object SearchForm {
                 dependency: Option[String],
                 repository: Option[String]
               ): SearchForm = SearchForm.apply(
-    group.map(GroupName.apply),
-    dependency.map(DependencyName.apply),
-    repository.map(RepositoryName.apply)
+    group.filter(_.nonEmpty).map(GroupName.apply),
+    dependency.filter(_.nonEmpty).map(DependencyName.apply),
+    repository.filter(_.nonEmpty).map(RepositoryName.apply)
   )
 
   def unapplyRaw(searchForm: SearchForm): Option[(Option[String], Option[String], Option[String])] = unapply(searchForm).map{ case(g, d, r) =>

@@ -74,23 +74,29 @@ object MetricsConnector{
 
     import cats.syntax.option._
 
-    override def query(maybeGroup: Option[GroupName], maybeName: Option[DependencyName], maybeRepository: Option[RepositoryName]): Future[MetricsResponse] = httpClient
-      .GET[MetricsResponse](
-        url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics" + Monoid.combineAll(
-          List(
-            maybeGroup.map(g => s"group=$g&"),
-            maybeName.map(n => s"name=$n&"),
-            maybeRepository.map(r => s"repository=$r")
-          )
+    override def query(maybeGroup: Option[GroupName], maybeName: Option[DependencyName], maybeRepository: Option[RepositoryName]): Future[MetricsResponse] = {
+      val url = url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics" + Monoid.combineAll(
+        List(
+          maybeGroup.map(g => s"group=${g.value}&"),
+          maybeName.map(n => s"name=${n.value}&"),
+          maybeRepository.map(r => s"repository=${r.value}")
         )
-          .map(params => s"?$params")
-          .orEmpty
       )
-      .recoverWith {
-        case UpstreamErrorResponse.Upstream5xxResponse(x) =>
-          logger.error(s"An error occurred when connecting to serviceDependencies. baseUrl: $platformProgressMetricsBaseURL", x)
-          Future.successful(MetricsResponse(Seq.empty))
-      }
+        .map(params => s"?$params")
+        .orEmpty
+
+      println(url)
+
+      httpClient
+        .GET[MetricsResponse](
+          url
+        )
+        .recoverWith {
+          case UpstreamErrorResponse.Upstream5xxResponse(x) =>
+            logger.error(s"An error occurred when connecting to serviceDependencies. baseUrl: $platformProgressMetricsBaseURL", x)
+            Future.successful(MetricsResponse(Seq.empty))
+        }
+    }
   }
 
   class Mocked (implicit val ec: ExecutionContext) extends ViaQuery {
