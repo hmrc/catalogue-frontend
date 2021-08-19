@@ -85,7 +85,6 @@ class MetricsExplorerController @Inject()(
                       maybeName = query.dependency,
                       maybeRepository = query.repository
                     )
-                  _ <- Future.successful(println(s"group: ${query.group}, name: ${query.dependency}, repo: ${query.repository} returned ${results.metrics.size} entries "))
                   metricsEntries = MetricsEntry(results.metrics)
                 } yield Ok(
                     page(

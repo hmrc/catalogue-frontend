@@ -26,13 +26,13 @@ final case class SearchForm(
 
 object SearchForm {
   def applyRaw(
-                group: Option[String],
-                dependency: Option[String],
-                repository: Option[String]
+                groupText: Option[String],
+                dependencyText: Option[String],
+                repositoryText: Option[String]
               ): SearchForm = SearchForm.apply(
-    group.filter(_.nonEmpty).map(GroupName.apply),
-    dependency.filter(_.nonEmpty).map(DependencyName.apply),
-    repository.filter(_.nonEmpty).map(RepositoryName.apply)
+    group = groupText.filter(_.nonEmpty).map(GroupName.apply),
+    dependency = dependencyText.filter(_.nonEmpty).map(DependencyName.apply),
+    repository = repositoryText.filter(_.nonEmpty).map(RepositoryName.apply)
   )
 
   def unapplyRaw(searchForm: SearchForm): Option[(Option[String], Option[String], Option[String])] = unapply(searchForm).map{ case(g, d, r) =>
