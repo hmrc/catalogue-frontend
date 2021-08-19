@@ -17,18 +17,21 @@
 package uk.gov.hmrc.cataloguefrontend.metrics.model
 
 //todo: should it be called DependencyRepository or similar?
-case class Repository(name: RepositoryName, dependencies: Seq[DependencyName])
+case class Repository(name: RepositoryName, dependencies: Map[GroupName, Seq[DependencyName]]){
+  val allDependencies: Seq[DependencyName] = dependencies.values.toSeq.flatten
+
+}
 
 object Repository{
   def apply(metrics: Seq[ServiceProgressMetrics]): Seq[Repository] = metrics
-    .groupBy(_.repository)
-    .mapValues(
-      _.map(_.name)
-        .distinct
-        .map(DependencyName.apply)
+    .groupBy(m => RepositoryName(m.repository))
+    .mapValues(values =>
+      values
+        .groupBy(m => GroupName(m.group))
+        .mapValues(_.map(m => DependencyName(m.name)).distinct)
     )
-    .map{ case (r, dependencyNames) =>
-      Repository(RepositoryName(r), dependencyNames)
+    .map{ case (repoName, mapping) =>
+      Repository(repoName, dependencies = mapping)
     }
     .toSeq
 }

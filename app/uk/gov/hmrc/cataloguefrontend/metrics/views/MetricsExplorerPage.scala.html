@@ -142,10 +142,10 @@ messagesProvider: MessagesProvider
                 }]
             ,
             }
-        }
+        };
         var allRepos = [@for(a <- repositories){ '@a.name.value', }];
 
-        var repositoriesSelect = document.getElementById("repository")
+        var repositoriesSelect = document.getElementById("repository");
         while (repositoriesSelect.options.length > 0) {
             repositoriesSelect.remove(repositoriesSelect.options.length - 1);
         }
@@ -170,13 +170,16 @@ messagesProvider: MessagesProvider
         var group = document.getElementById("group").value;
         var dependenciesByGroup = {
             @groups.map { res =>
-            '@{res.name.value}': [@for(a <- res.dependencies){
-                '@a.value',
-                }]
-            ,
+                '@{res.name.value}': [
+                    @for(a <- res.dependencies){
+                        '@a.value',
+                    }
+                ],
             }
         }
-        var allDependencies = [@for(a <- dependencies){ '@a.value', }];
+        var allDependencies = [
+            @for(a <- dependencies){ '@a.value', }
+        ];
 
         var dependenciesSelect = document.getElementById("dependency");
         while (dependenciesSelect.options.length > 0) {
@@ -201,23 +204,38 @@ messagesProvider: MessagesProvider
 
     function updateDependenciesByRepo() {
         var repo = document.getElementById("repository").value;
+        var group = document.getElementById("group").value;
+        var dependenciesByRepoByGroup = {
+            @for(res <- repositories){
+              '@{res.name.value}': {
+                  @for(mapping <- res.dependencies.toSeq){
+                      '@{mapping._1.value}': [
+                        @for(d <- mapping._2){
+                            '@{d.value}',
+                        }
+                      ],
+                  }
+              },
+            }
+        };
 
-        var dependenciesByRepo = {
+        var allDependenciesByRepo = {
             @repositories.map { res =>
-            '@{res.name.value}': [@for(a <- res.dependencies){
+            '@{res.name.value}': [@for(a <- res.allDependencies){
                 '@a.value',
                 }]
             ,
             }
-        }
+        };
+
         var allDependencies = [@for(a <- dependencies){ '@a.value', }];
 
-        var dependenciesSelect = document.getElementById("dependency")
+        var dependenciesSelect = document.getElementById("dependency");
         while (dependenciesSelect.options.length > 0) {
             dependenciesSelect.remove(dependenciesSelect.options.length - 1);
         }
 
-        var deps = repo? dependenciesByRepo[repo]: allDependencies;
+        var deps = repo? (group?dependenciesByRepoByGroup[repo][group]: allDependenciesByRepo[repo]): allDependencies;
         if (deps) {
             var opt = document.createElement('option');
             opt.text = "@Messages("metricsexplorer.select.dependency")";
