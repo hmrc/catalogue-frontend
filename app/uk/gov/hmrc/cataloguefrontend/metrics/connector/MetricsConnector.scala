@@ -78,8 +78,8 @@ object MetricsConnector{
       .GET[MetricsResponse](
         url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics" + Monoid.combineAll(
           List(
-            maybeGroup.map(g => s"group=$g"),
-            maybeName.map(n => s"name=$n"),
+            maybeGroup.map(g => s"group=$g&"),
+            maybeName.map(n => s"name=$n&"),
             maybeRepository.map(r => s"repository=$r")
           )
         )
