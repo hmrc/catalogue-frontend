@@ -85,8 +85,6 @@ object MetricsConnector{
         .map(params => s"?$params")
         .orEmpty
 
-      println(url)
-
       httpClient
         .GET[MetricsResponse](
           url
