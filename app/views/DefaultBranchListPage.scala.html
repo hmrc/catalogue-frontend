@@ -27,7 +27,7 @@
 form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
-@standard_layout("Repositories", "repositories") {
+@standard_layout(s"Default Branches", "defaultbranch") {
 <header>
     <h1>Default Branch Names</h1>
 </header>
@@ -43,7 +43,7 @@ form: Form[_]
 }
 
 <div id="service-list">
-    <form action="/defaultbranch" method="get">
+    <form action="/" method="get">
         <div class="form-group row">
             <div class="col-xs-1 padding-reset-right">
                 <label for="search">Name:</label>
@@ -51,26 +51,37 @@ form: Form[_]
             <div class="col col-xs-3">
                 <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
             </div>
-
+            <div class="col-xs-1 padding-reset-right">
+                <label for="team">Team:</label>
+            </div>
+            <div class="col col-xs-3">
+                <input class="search form-control" id="team" type="text" name="team" value='@form("team-name").value' autofocus>
+            </div>
+            <div class="col-xs-1 padding-reset-right">
+                <label for="branch">Branch:</label>
+            </div>
+            <div class="col col-xs-3">
+                <input class="search form-control" id="branch" type="text" name="branch" value='@form("branch-name").value' autofocus>
+            </div>
         </div>
     </form>
     <table class="table table-striped">
         <tr>
-            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
-            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Team</button></th>
-            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Default Branch Name</button></th>
+            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
+            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="team-name">Team</button></th>
+            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="default-branch">Default Branch Name</button></th>
         </tr>
         <tbody class="list">
         @repositories.zipWithIndex.map{case (repo, i) =>
         <tr id="row@i">
             <td class="service-name" id="row@{i}_name">
-                <a class="repo-name">@repo.name</a>
+                <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name @if(repo.archived) { (archived) }</a>
             </td>
-            <td class="service-name" id="row@{i}_team">
-                <a class="repo-name">Team-name</a>
+            <td class="team-name monospaced" id="row@{i}_team">
+                Team-name
             </td>
-            <td class="service-name" id="row@{i}_defaultBranch">
-                <a class="repo-name">@repo.defaultBranch</a>
+            <td class="default-branch monospaced" id="row@{i}_default-branch">
+                @repo.defaultBranch
             </td>
         </tr>
         }
@@ -81,8 +92,8 @@ form: Form[_]
 
 <!-- listjs configuration -->
 <script>
-    var options = { valueNames: [ 'service-name', 'repo-name', 'repo-type', 'created', 'last-active' ],
-                    searchColumns: ['repo-name', 'team', 'version', 'deploy-time', 'deployer'] };
+    var options = { valueNames: [ 'repo-name', 'team-name', 'default-branch'],
+                    searchColumns: ['repo-name', 'team-name', 'default-branch'] };
 
     var serviceList = new List('service-list', options);
 </script>
