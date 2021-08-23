@@ -34,223 +34,221 @@ messagesProvider: MessagesProvider
 )
 
 @standard_layout("Metrics Explorer", "search") {
-<html>
-<head>
-    <link rel="stylesheet" href="@routes.Assets.versioned("metrics-explorer.css")" />
-</head>
+    <head>
+        <link rel="stylesheet" href="@routes.Assets.versioned("metrics-explorer.css")" />
+    </head>
 
-<header>
-    <h1 id="search-service-header">Metrics Explorer</h1>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-</header>
+    <header>
+        <h1 id="search-service-header">Metrics Explorer</h1>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    </header>
 
-<div id="service-list">
+    <div id="service-list">
+        @if(form.hasGlobalErrors) {
+        <div class="alert alert-error error">
+            <a class="close" data-dismiss="alert">×</a>
+            <ul>
+                @form.globalErrors.map { error =>
+                <li>@error.format</li>
+                }
+            </ul>
+        </div>
+        }
 
-    @if(form.hasGlobalErrors) {
-    <div class="alert alert-error error">
-        <a class="close" data-dismiss="alert">×</a>
-        <ul>
-            @form.globalErrors.map { error =>
-            <li>@error.format</li>
-            }
-        </ul>
-    </div>
-    }
-
-    <div class="board">
-        <div class="board__body">
-            @helper.form(
-            action =  appRoutes.MetricsExplorerController.search,
-            'class -> "form-inline",
-            'id    -> "search-by-dependency-form"
-            ) {
-            <table class="padded-table">
-                <tr>
-                    <td style="vertical-align: top;">
-                        @helper.select(
-                        form("group"),
-                        helper.options(Seq("" -> Messages("metricsexplorer.select.group")) ++
-                        groups.map(_.name.value).map(g => (g, g)) :_*),
-                        '_label -> "",
-                        '_class -> "form-group"
-                        )
-                        @helper.select(
-                        form("repository"),
-                        helper.options(Seq("" -> Messages("metricsexplorer.select.repository")) ++
-                        repositories.map(_.name.value).map(t => (t, t)) :_*),
-                        '_label -> "",
-                        '_class -> "form-group"
-                        )
-                    </td>
-                    <td>
-                        @helper.select(
-                        form("dependency"),
-                        helper.options(Seq("" -> Messages("metricsexplorer.select.dependency")) ++
-                        dependencies.map(_.value).map(t => (t, t)) :_*),
-                        '_label -> "",
-                        '_class -> "form-group"
-                        )
-                    </td>
-                </tr>
-                <tr>
-                    <td valign="bottom">
-                        <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-                    </td>
-                </tr>
-            </table>
-            <div id="chart_div" align="center" class="grid-container"></div>
-            }
+        <div class="board">
+            <div class="board__body">
+                @helper.form(
+                action =  appRoutes.MetricsExplorerController.search,
+                'class -> "form-inline",
+                'id    -> "search-by-dependency-form"
+                ) {
+                <table class="padded-table">
+                    <tr>
+                        <td style="vertical-align: top;">
+                            @helper.select(
+                            form("group"),
+                            helper.options(Seq("" -> Messages("metricsexplorer.select.group")) ++
+                            groups.map(_.name.value).map(g => (g, g)) :_*),
+                            '_label -> "",
+                            '_class -> "form-group"
+                            )
+                            @helper.select(
+                            form("repository"),
+                            helper.options(Seq("" -> Messages("metricsexplorer.select.repository")) ++
+                            repositories.map(_.name.value).map(t => (t, t)) :_*),
+                            '_label -> "",
+                            '_class -> "form-group"
+                            )
+                        </td>
+                        <td>
+                            @helper.select(
+                            form("dependency"),
+                            helper.options(Seq("" -> Messages("metricsexplorer.select.dependency")) ++
+                            dependencies.map(_.value).map(t => (t, t)) :_*),
+                            '_label -> "",
+                            '_class -> "form-group"
+                            )
+                        </td>
+                    </tr>
+                    <tr>
+                        <td valign="bottom">
+                            <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                        </td>
+                    </tr>
+                </table>
+                <div id="chart_div" align="center" class="grid-container"></div>
+                }
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    if (document.readyState != 'loading'){
-        ready();
-    } else {
-        document.addEventListener('DOMContentLoaded', ready);
-    }
-
-    function ready() {
-        document.getElementById("group").onchange = onGroupChange;
-        document.getElementById("repository").onchange = updateDependenciesByRepo;
-    }
-
-    function onGroupChange(){
-        updateDependenciesByGroup();
-        updateRepositoriesByGroup();
-    }
-
-    function updateRepositoriesByGroup() {
-        var group = document.getElementById("group").value;
-        var repositoriesSelect = document.getElementById("repository");
-        var existingRepoValue = repositoriesSelect.value;
-        var repositoriesByGroup = {
-            @groups.map { res =>
-            '@{res.name.value}': [@for(a <- res.repos){
-                '@a.value',
-                }]
-            ,
-            }
-        };
-        var allRepos = [@for(a <- repositories){ '@a.name.value', }];
-
-        while (repositoriesSelect.options.length > 0) {
-            repositoriesSelect.remove(repositoriesSelect.options.length - 1);
+    <script>
+        if (document.readyState != 'loading'){
+            ready();
+        } else {
+            document.addEventListener('DOMContentLoaded', ready);
         }
-        var repos = group? repositoriesByGroup[group] : allRepos;
-        if (repos) {
-            var opt = document.createElement('option');
-            opt.text = "@Messages("metricsexplorer.select.repository")";
-            opt.value = "";
-            repositoriesSelect.add(opt, null);
-            for (i = 0; i < repos.length; i++)
-            {
+
+        function ready() {
+            document.getElementById("group").onchange = onGroupChange;
+            document.getElementById("repository").onchange = updateDependenciesByRepo;
+        }
+
+        function onGroupChange(){
+            updateDependenciesByGroup();
+            updateRepositoriesByGroup();
+        }
+
+        function updateRepositoriesByGroup() {
+            var group = document.getElementById("group").value;
+            var repositoriesSelect = document.getElementById("repository");
+            var existingRepoValue = repositoriesSelect.value;
+            var repositoriesByGroup = {
+                @groups.map { res =>
+                '@{res.name.value}': [@for(a <- res.repos){
+                    '@a.value',
+                    }]
+                ,
+                }
+            };
+            var allRepos = [@for(a <- repositories){ '@a.name.value', }];
+
+            while (repositoriesSelect.options.length > 0) {
+                repositoriesSelect.remove(repositoriesSelect.options.length - 1);
+            }
+            var repos = group? repositoriesByGroup[group] : allRepos;
+            if (repos) {
                 var opt = document.createElement('option');
-                opt.text = repos[i];
-                opt.value = repos[i];
-                opt.selected = repos[i] == '@{form("repositories").value}';
+                opt.text = "@Messages("metricsexplorer.select.repository")";
+                opt.value = "";
                 repositoriesSelect.add(opt, null);
+                for (i = 0; i < repos.length; i++)
+                {
+                    var opt = document.createElement('option');
+                    opt.text = repos[i];
+                    opt.value = repos[i];
+                    opt.selected = repos[i] == '@{form("repositories").value}';
+                    repositoriesSelect.add(opt, null);
+                }
             }
+            if(repos.includes(existingRepoValue))
+                repositoriesSelect.value = existingRepoValue;
         }
-        if(repos.includes(existingRepoValue))
-            repositoriesSelect.value = existingRepoValue;
-    }
 
-    function updateDependenciesByGroup() {
-        var dependenciesSelect = document.getElementById("dependency");
-        var group = document.getElementById("group").value;
-        var existingDepValue = dependenciesSelect.value;
-        var dependenciesByGroup = {
-            @groups.map { res =>
-                '@{res.name.value}': [
-                    @for(a <- res.dependencies){
-                        '@a.value',
-                    }
-                ],
-            }
-        }
-        var allDependencies = [
-            @for(a <- dependencies){ '@a.value', }
-        ];
-
-        while (dependenciesSelect.options.length > 0) {
-            dependenciesSelect.remove(dependenciesSelect.options.length - 1);
-        }
-        var deps = group? dependenciesByGroup[group] : allDependencies;
-        if (deps) {
-            var opt = document.createElement('option');
-            opt.text = "@Messages("metricsexplorer.select.dependency")";
-            opt.value = "";
-            dependenciesSelect.add(opt, null);
-            for (i = 0; i < deps.length; i++)
-            {
-                var opt = document.createElement('option');
-                opt.text = deps[i];
-                opt.value = deps[i];
-                opt.selected = deps[i] == '@{form("dependencies").value}';
-                dependenciesSelect.add(opt, null);
-            }
-        }
-        if(deps.includes(existingDepValue))
-            dependenciesSelect.value = existingDepValue;
-    }
-
-    function updateDependenciesByRepo() {
-        var dependenciesSelect = document.getElementById("dependency");
-        var existingDepValue = dependenciesSelect.value;
-        var repo = document.getElementById("repository").value;
-        var group = document.getElementById("group").value;
-        var dependenciesByRepoByGroup = {
-            @for(res <- repositories){
-              '@{res.name.value}': {
-                  @for(mapping <- res.dependencies.toSeq){
-                      '@{mapping._1.value}': [
-                        @for(d <- mapping._2){
-                            '@{d.value}',
+        function updateDependenciesByGroup() {
+            var dependenciesSelect = document.getElementById("dependency");
+            var group = document.getElementById("group").value;
+            var existingDepValue = dependenciesSelect.value;
+            var dependenciesByGroup = {
+                @groups.map { res =>
+                    '@{res.name.value}': [
+                        @for(a <- res.dependencies){
+                            '@a.value',
                         }
-                      ],
-                  }
-              },
+                    ],
+                }
             }
-        };
+            var allDependencies = [
+                @for(a <- dependencies){ '@a.value', }
+            ];
 
-        var allDependenciesByRepo = {
-            @repositories.map { res =>
-            '@{res.name.value}': [@for(a <- res.allDependencies){
-                '@a.value',
-                }]
-            ,
+            while (dependenciesSelect.options.length > 0) {
+                dependenciesSelect.remove(dependenciesSelect.options.length - 1);
             }
-        };
-
-        var allDependencies = [@for(a <- dependencies){ '@a.value', }];
-
-        while (dependenciesSelect.options.length > 0) {
-            dependenciesSelect.remove(dependenciesSelect.options.length - 1);
-        }
-
-        var deps = repo? (group?dependenciesByRepoByGroup[repo][group]: allDependenciesByRepo[repo]): allDependencies;
-        if (deps) {
-            var opt = document.createElement('option');
-            opt.text = "@Messages("metricsexplorer.select.dependency")";
-            opt.value = "";
-            dependenciesSelect.add(opt, null);
-            for (i = 0; i < deps.length; i++)
-            {
+            var deps = group? dependenciesByGroup[group] : allDependencies;
+            if (deps) {
                 var opt = document.createElement('option');
-                opt.text = deps[i];
-                opt.value = deps[i];
-                opt.selected = deps[i] == '@{form("dependencies").value}';
+                opt.text = "@Messages("metricsexplorer.select.dependency")";
+                opt.value = "";
                 dependenciesSelect.add(opt, null);
+                for (i = 0; i < deps.length; i++)
+                {
+                    var opt = document.createElement('option');
+                    opt.text = deps[i];
+                    opt.value = deps[i];
+                    opt.selected = deps[i] == '@{form("dependencies").value}';
+                    dependenciesSelect.add(opt, null);
+                }
             }
+            if(deps.includes(existingDepValue))
+                dependenciesSelect.value = existingDepValue;
         }
-        if(deps.includes(existingDepValue))
-            dependenciesSelect.value = existingDepValue
-    }
-</script>
 
-<script type="text/javascript">
+        function updateDependenciesByRepo() {
+            var dependenciesSelect = document.getElementById("dependency");
+            var existingDepValue = dependenciesSelect.value;
+            var repo = document.getElementById("repository").value;
+            var group = document.getElementById("group").value;
+            var dependenciesByRepoByGroup = {
+                @for(res <- repositories){
+                  '@{res.name.value}': {
+                      @for(mapping <- res.dependencies.toSeq){
+                          '@{mapping._1.value}': [
+                            @for(d <- mapping._2){
+                                '@{d.value}',
+                            }
+                          ],
+                      }
+                  },
+                }
+            };
+
+            var allDependenciesByRepo = {
+                @repositories.map { res =>
+                '@{res.name.value}': [@for(a <- res.allDependencies){
+                    '@a.value',
+                    }]
+                ,
+                }
+            };
+
+            var allDependencies = [@for(a <- dependencies){ '@a.value', }];
+
+            while (dependenciesSelect.options.length > 0) {
+                dependenciesSelect.remove(dependenciesSelect.options.length - 1);
+            }
+
+            var deps = repo? (group?dependenciesByRepoByGroup[repo][group]: allDependenciesByRepo[repo]): allDependencies;
+            if (deps) {
+                var opt = document.createElement('option');
+                opt.text = "@Messages("metricsexplorer.select.dependency")";
+                opt.value = "";
+                dependenciesSelect.add(opt, null);
+                for (i = 0; i < deps.length; i++)
+                {
+                    var opt = document.createElement('option');
+                    opt.text = deps[i];
+                    opt.value = deps[i];
+                    opt.selected = deps[i] == '@{form("dependencies").value}';
+                    dependenciesSelect.add(opt, null);
+                }
+            }
+            if(deps.includes(existingDepValue))
+                dependenciesSelect.value = existingDepValue
+        }
+    </script>
+
+    <script type="text/javascript">
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawChart);
         const chartDiv = document.getElementById('chart_div');
@@ -299,5 +297,4 @@ messagesProvider: MessagesProvider
             }
         }
     </script>
-</html>
 }
