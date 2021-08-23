@@ -38,7 +38,8 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     environments = None,
     repoType     = RepoType.Other,
     isPrivate    = true,
-    isArchived   = false
+    isArchived   = false,
+    defaultBranch = "main"
   )
 
   val environmentRoute = EnvironmentRoute(

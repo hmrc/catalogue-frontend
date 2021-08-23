@@ -16,20 +16,20 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@(repositories: Seq[RepositoryDisplayDetails],
+@(repositories: Seq[RepositoryDetails],
 form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("Repositories", "repositories") {
 <header>
-    <h1>Default Branches</h1>
+    <h1>Default Branch Names</h1>
 </header>
 
 @if(form.hasErrors) {
@@ -43,7 +43,7 @@ form: Form[_]
 }
 
 <div id="service-list">
-    <form action="/repositories" method="get">
+    <form action="/defaultbranch" method="get">
         <div class="form-group row">
             <div class="col-xs-1 padding-reset-right">
                 <label for="search">Name:</label>
@@ -75,18 +75,20 @@ form: Form[_]
     <table class="table table-striped">
         <tr>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
-            <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
-            <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
-            <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
+            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Team</button></th>
+            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Default Branch Name</button></th>
         </tr>
         <tbody class="list">
         @repositories.zipWithIndex.map{case (repo, i) =>
         <tr id="row@i">
             <td class="service-name" id="row@{i}_name">
-                <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name @if(repo.archived) { (archived) }</a>
+                <a class="repo-name">@repo.name</a>
             </td>
-            <td class="repo-type monospaced" id="row@{i}_defaultBranch">
-                @repo
+            <td class="service-name" id="row@{i}_team">
+                <a class="repo-name">@repo.owningTeams</a>
+            </td>
+            <td class="service-name" id="row@{i}_defaultBranch">
+                <a class="repo-name">@repo.defaultBranch</a>
             </td>
         </tr>
         }
