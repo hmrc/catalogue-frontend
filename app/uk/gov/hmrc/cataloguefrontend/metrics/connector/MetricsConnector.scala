@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.metrics.connector
 
-import cats.Monoid
 import cats.implicits.none
 import com.google.inject.ImplementedBy
 import play.api.Logger
