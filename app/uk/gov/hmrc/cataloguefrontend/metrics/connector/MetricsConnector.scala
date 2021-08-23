@@ -36,10 +36,8 @@ trait MetricsConnector {
              maybeRepository: Option[RepositoryName]
            ): Future[MetricsResponse]
 
-  // will return only the ones that have repos that have at least one dependency
   def getAllGroups: Future[Seq[Group]]
 
-  // will return only the ones that have at least one dependency
   def getAllRepositories: Future[Seq[Repository]]
 
   def getAllDependencies: Future[Seq[DependencyName]]
@@ -96,45 +94,4 @@ object MetricsConnector{
         }
     }
   }
-
-  class Mocked (implicit val ec: ExecutionContext) extends ViaQuery {
-    val allData = Seq(
-      ServiceProgressMetrics(
-        name = "frontend-bootstrap",
-        group = "dwp.gov.uk",
-        repository = "activity-logger",
-        isHappy = true
-      ),
-      ServiceProgressMetrics(
-        name = "frontend-bootstrap",
-        group = "dwp.gov.uk",
-        repository = "adobe-adaptive-forms",
-        isHappy = false
-      ),
-      ServiceProgressMetrics(
-        name = "bootstrap-play-25",
-        group = "hmrc.gov.uk",
-        repository = "adobe-adaptive-forms",
-        isHappy = false
-      ),
-      ServiceProgressMetrics(
-        name = "sbt-plugin",
-        group = "hmrc.gov.uk",
-        repository = "adobe-adaptive-forms",
-        isHappy = true
-      )
-    )
-
-    override def query(maybeGroup: Option[GroupName], maybeName: Option[DependencyName], maybeRepository: Option[RepositoryName]): Future[MetricsResponse] = Future.successful(
-      MetricsResponse(
-        metrics = allData.filter( metrics =>
-          maybeGroup.forall(_.value == metrics.group) &&
-            maybeName.forall(_.value == metrics.name) &&
-            maybeRepository.forall(_.value == metrics.repository)
-        )
-      )
-    )
-  }
-
-
 }

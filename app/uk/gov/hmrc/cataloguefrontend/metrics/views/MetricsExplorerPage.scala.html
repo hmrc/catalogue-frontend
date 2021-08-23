@@ -36,18 +36,7 @@ messagesProvider: MessagesProvider
 @standard_layout("Metrics Explorer", "search") {
 <html>
 <head>
-    <style>
-        .grid-container {
-          display: grid;
-          grid-template-columns: auto auto auto auto auto auto;
-          padding: 10px;
-        }
-        .grid-item {
-          padding: 20px;
-          font-size: 30px;
-          text-align: center;
-        }
-        </style>
+    <link rel="stylesheet" href="@routes.Assets.versioned("metrics-explorer.css")" />
 </head>
 
 <header>
