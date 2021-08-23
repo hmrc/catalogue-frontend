@@ -73,15 +73,12 @@ object MetricsConnector{
     import cats.syntax.option._
 
     override def query(maybeGroup: Option[GroupName], maybeName: Option[DependencyName], maybeRepository: Option[RepositoryName]): Future[MetricsResponse] = {
-      val url = url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics" + Monoid.combineAll(
-        List(
-          maybeGroup.map(g => s"group=${g.value}&"),
-          maybeName.map(n => s"name=${n.value}&"),
-          maybeRepository.map(r => s"repository=${r.value}")
-        )
-      )
-        .map(params => s"?$params")
-        .orEmpty
+      val url = url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics" + List(
+        maybeGroup.map(g => s"group=${g.value}").orEmpty,
+        maybeName.map(n => s"name=${n.value}").orEmpty,
+        maybeRepository.map(r => s"repository=${r.value}").orEmpty
+      ).filter(_.nonEmpty)
+        .mkString("?", "&", "")
 
       httpClient
         .GET[MetricsResponse](

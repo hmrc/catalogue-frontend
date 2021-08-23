@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.metrics.model
 
-//todo: should it be called DependencyGroup or similar?
 case class Group(name: GroupName, repos: Seq[RepositoryName], dependencies: Seq[DependencyName])
 
 object Group{
