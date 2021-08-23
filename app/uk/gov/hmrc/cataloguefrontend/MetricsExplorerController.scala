@@ -38,9 +38,10 @@ class MetricsExplorerController @Inject()(
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        groups <- metricsConnector.getAllGroups
-        dependencies <- metricsConnector.getAllDependencies
-        repositories <- metricsConnector.getAllRepositories
+        allMetricsData <- metricsConnector.allMetricsData
+        groups = allMetricsData.groups
+        dependencies = allMetricsData.dependencies
+        repositories = allMetricsData.repositories
       } yield Ok(
         page(
           form.fill(
@@ -59,9 +60,10 @@ class MetricsExplorerController @Inject()(
   def search =
     Action.async { implicit request =>
       for {
-        groups <- metricsConnector.getAllGroups
-        dependencies <- metricsConnector.getAllDependencies
-        repositories <- metricsConnector.getAllRepositories
+        allMetricsData <- metricsConnector.allMetricsData
+        groups = allMetricsData.groups
+        dependencies = allMetricsData.dependencies
+        repositories = allMetricsData.repositories
         res <- {
           form
             .bindFromRequest()

@@ -35,29 +35,13 @@ trait MetricsConnector {
              maybeRepository: Option[RepositoryName]
            ): Future[MetricsResponse]
 
-  def getAllGroups: Future[Seq[Group]]
-
-  def getAllRepositories: Future[Seq[Repository]]
-
-  def getAllDependencies: Future[Seq[DependencyName]]
+  def allMetricsData: Future[AllMetricsData]
 }
 
 object MetricsConnector{
 
   abstract class ViaQuery(implicit ec: ExecutionContext) extends MetricsConnector {
-    lazy val cachedUnfilteredQuery: Future[MetricsResponse] = query(none, none, none)
-
-    override def getAllGroups: Future[Seq[Group]] = cachedUnfilteredQuery
-      .map(_.metrics)
-      .map(Group.apply)
-
-    override def getAllRepositories: Future[Seq[Repository]] = cachedUnfilteredQuery
-      .map(_.metrics)
-      .map(Repository.apply)
-
-    override def getAllDependencies: Future[Seq[DependencyName]] = cachedUnfilteredQuery
-      .map(_.metrics)
-      .map(DependencyName.apply)
+    override def allMetricsData: Future[AllMetricsData] = query(none, none, none).map(AllMetricsData.apply)
   }
 
   class Impl @Inject() (
