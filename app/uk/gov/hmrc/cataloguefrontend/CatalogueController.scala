@@ -497,11 +497,10 @@ class CatalogueController @Inject() (
       }
     }
 
-  def allDefaultBranches(repoType: Option[String]): Action[AnyContent] =
+  def allDefaultBranches: Action[AnyContent] =
     Action.async { implicit request =>
-      import SearchFiltering._
 
-      teamsAndRepositoriesConnector.allRepositories.map { repositories =>
+      teamsAndRepositoriesConnector.allDefaultBranches.map { repositories =>
         RepoListFilter.form
           .bindFromRequest()
           .fold(
@@ -509,7 +508,7 @@ class CatalogueController @Inject() (
             query =>
               Ok(
                 defaultBranchListPage(
-                  repositories = repositories.filter(query),
+                  repositories = repositories,
                   RepoListFilter.form.bindFromRequest()
                 )
               )

@@ -38,7 +38,8 @@ class CodeAndBuildsSpec extends AnyWordSpec with Matchers with ScalaCheckDrivenP
     environments = None,
     repoType     = RepoType.Service,
     isPrivate    = true,
-    isArchived   = false
+    isArchived   = false,
+    defaultBranch = "main"
   )
 
   val environmentRoute = EnvironmentRoute(

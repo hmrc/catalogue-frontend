@@ -83,19 +83,19 @@ object TargetEnvironment {
 }
 
 case class RepositoryDetails(
-  name        : String,
-  description : String,
-  createdAt   : LocalDateTime,
-  lastActive  : LocalDateTime,
-  owningTeams : Seq[TeamName],
-  teamNames   : Seq[TeamName],
-  githubUrl   : Link,
-  jenkinsURL  : Option[Link],
-  environments: Option[Seq[TargetEnvironment]],
-  repoType    : RepoType,
-  isPrivate   : Boolean,
-  isArchived  : Boolean,
-  defaultBranch: String
+  name          : String,
+  description   : String,
+  createdAt     : LocalDateTime,
+  lastActive    : LocalDateTime,
+  owningTeams   : Seq[TeamName],
+  teamNames     : Seq[TeamName],
+  githubUrl     : Link,
+  jenkinsURL    : Option[Link],
+  environments  : Option[Seq[TargetEnvironment]],
+  repoType      : RepoType,
+  isPrivate     : Boolean,
+  isArchived    : Boolean,
+  defaultBranch : String
 )
 
 object RepositoryDetails {
@@ -197,6 +197,18 @@ object TeamsAndRepositoriesEnvironment {
     }
 }
 
+case class RepositoryDefaultBranches(
+  name          : String,
+  team          : String,
+  defaultBranch : String
+)
+
+object RepositoryDefaultBranches {
+  implicit val format: OFormat[RepositoryDefaultBranches] = {
+    Json.format[RepositoryDefaultBranches]
+  }
+}
+
 @Singleton
 class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConfig)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
@@ -258,6 +270,11 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http.GET[Map[ServiceName, Seq[TeamName]]](
       url"$teamsAndServicesBaseUrl/api/repository_teams"
+    )
+
+  def allDefaultBranches(implicit hc: HeaderCarrier): Future[Seq[RepositoryDetails]] =
+    http.GET[Seq[RepositoryDetails]](
+      url"$teamsAndServicesBaseUrl/api/repositories"
     )
 
   private def repositories(archived: Option[Boolean])(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =

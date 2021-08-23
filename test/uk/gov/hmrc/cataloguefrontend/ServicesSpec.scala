@@ -70,6 +70,7 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
     mock[PrototypeInfoPage],
     mock[RepositoryInfoPage],
     mock[RepositoriesListPage],
+    mock[DefaultBranchListPage],
     mock[OutOfDateTeamDependenciesPage]
   )
 }
