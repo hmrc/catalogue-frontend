@@ -16,14 +16,14 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@(repositories: Seq[RepositoryDetails],
+@(repositories: Seq[RepositoryDisplayDetails],
 form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
@@ -51,25 +51,7 @@ form: Form[_]
             <div class="col col-xs-3">
                 <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
             </div>
-            <div class="col-xs-1 col-xs-offset-2">
-                <label for="type-search">Type:</label>
-            </div>
 
-            <div class="col col-xs-2">
-                @select(
-                field   = form("repoType"),
-                options = Seq(
-                "Library"   -> "Library",
-                "Prototype" -> "Prototype",
-                "Service"   -> "Service",
-                "Other"     -> "Other"
-                ),
-                '_default -> "All",
-                '_label   -> "",
-                'onchange -> "this.form.submit()",
-                'id       -> "type-search"
-                )
-            </div>
         </div>
     </form>
     <table class="table table-striped">
@@ -85,7 +67,7 @@ form: Form[_]
                 <a class="repo-name">@repo.name</a>
             </td>
             <td class="service-name" id="row@{i}_team">
-                <a class="repo-name">@repo.owningTeams</a>
+                <a class="repo-name">Team-name</a>
             </td>
             <td class="service-name" id="row@{i}_defaultBranch">
                 <a class="repo-name">@repo.defaultBranch</a>
