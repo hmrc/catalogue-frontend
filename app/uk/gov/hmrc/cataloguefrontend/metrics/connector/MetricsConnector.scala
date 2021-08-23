@@ -45,15 +45,17 @@ trait MetricsConnector {
 object MetricsConnector{
 
   abstract class ViaQuery(implicit ec: ExecutionContext) extends MetricsConnector {
-    override def getAllGroups: Future[Seq[Group]] = query(none, none, none)
+    lazy val cachedUnfilteredQuery: Future[MetricsResponse] = query(none, none, none)
+
+    override def getAllGroups: Future[Seq[Group]] = cachedUnfilteredQuery
       .map(_.metrics)
       .map(Group.apply)
 
-    override def getAllRepositories: Future[Seq[Repository]] = query(none, none, none)
+    override def getAllRepositories: Future[Seq[Repository]] = cachedUnfilteredQuery
       .map(_.metrics)
       .map(Repository.apply)
 
-    override def getAllDependencies: Future[Seq[DependencyName]] = query(none, none, none)
+    override def getAllDependencies: Future[Seq[DependencyName]] = cachedUnfilteredQuery
       .map(_.metrics)
       .map(DependencyName.apply)
   }
