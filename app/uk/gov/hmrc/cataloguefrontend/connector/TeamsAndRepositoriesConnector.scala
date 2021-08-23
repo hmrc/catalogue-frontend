@@ -94,8 +94,7 @@ case class RepositoryDetails(
   environments  : Option[Seq[TargetEnvironment]],
   repoType      : RepoType,
   isPrivate     : Boolean,
-  isArchived    : Boolean,
-  defaultBranch : String
+  isArchived    : Boolean
 )
 
 object RepositoryDetails {
@@ -113,7 +112,8 @@ case class RepositoryDisplayDetails(
   createdAt    : LocalDateTime,
   lastUpdatedAt: LocalDateTime,
   repoType     : RepoType,
-  archived     : Boolean
+  archived     : Boolean,
+  defaultBranch : String
 )
 
 object RepositoryDisplayDetails {

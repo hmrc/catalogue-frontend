@@ -500,7 +500,7 @@ class CatalogueController @Inject() (
   def allDefaultBranches: Action[AnyContent] =
     Action.async { implicit request =>
 
-      teamsAndRepositoriesConnector.allDefaultBranches.map { repositories =>
+      teamsAndRepositoriesConnector.allRepositories.map { repositories =>
         RepoListFilter.form
           .bindFromRequest()
           .fold(
