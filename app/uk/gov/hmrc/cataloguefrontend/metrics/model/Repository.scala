@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.metrics.model
 
 case class Repository(name: RepositoryName, dependencies: Map[GroupName, Seq[DependencyName]]){
-  val allDependencies: Seq[DependencyName] = dependencies.values.toSeq.flatten
+  val allDependencies: Seq[DependencyName] = dependencies.values.toSeq.flatten.distinct
 
 }
 
