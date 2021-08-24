@@ -71,7 +71,7 @@ object MetricsConnector{
         )
         .recoverWith {
           case UpstreamErrorResponse.Upstream5xxResponse(x) =>
-            logger.error(s"An error occurred when connecting to serviceDependencies. baseUrl: $platformProgressMetricsBaseURL", x)
+            logger.error(s"An error occurred when connecting to platform progress metrics service. baseUrl: $platformProgressMetricsBaseURL", x)
             Future.successful(MetricsResponse(Seq.empty))
         }
     }
