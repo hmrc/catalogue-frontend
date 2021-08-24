@@ -35,27 +35,13 @@ trait MetricsConnector {
              maybeRepository: Option[RepositoryName]
            ): Future[MetricsResponse]
 
-  def getAllGroups: Future[Seq[Group]]
-
-  def getAllRepositories: Future[Seq[Repository]]
-
-  def getAllDependencies: Future[Seq[DependencyName]]
+  def allMetricsData: Future[AllMetricsData]
 }
 
 object MetricsConnector{
 
   abstract class ViaQuery(implicit ec: ExecutionContext) extends MetricsConnector {
-    override def getAllGroups: Future[Seq[Group]] = query(none, none, none)
-      .map(_.metrics)
-      .map(Group.apply)
-
-    override def getAllRepositories: Future[Seq[Repository]] = query(none, none, none)
-      .map(_.metrics)
-      .map(Repository.apply)
-
-    override def getAllDependencies: Future[Seq[DependencyName]] = query(none, none, none)
-      .map(_.metrics)
-      .map(DependencyName.apply)
+    override def allMetricsData: Future[AllMetricsData] = query(none, none, none).map(AllMetricsData.apply)
   }
 
   class Impl @Inject() (
@@ -85,7 +71,7 @@ object MetricsConnector{
         )
         .recoverWith {
           case UpstreamErrorResponse.Upstream5xxResponse(x) =>
-            logger.error(s"An error occurred when connecting to serviceDependencies. baseUrl: $platformProgressMetricsBaseURL", x)
+            logger.error(s"An error occurred when connecting to platform progress metrics service. baseUrl: $platformProgressMetricsBaseURL", x)
             Future.successful(MetricsResponse(Seq.empty))
         }
     }
