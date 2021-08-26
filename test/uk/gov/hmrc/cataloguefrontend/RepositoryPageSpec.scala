@@ -107,6 +107,7 @@ class RepositoryPageSpec
         "description": "some description",
         "createdAt": 1456326530000,
         "lastActive": 1478602555000,
+        "defaultBranch": "master",
         "githubUrl": {
           "name": "github",
           "displayName": "github.com",
