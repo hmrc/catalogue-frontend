@@ -77,9 +77,9 @@ object JsonData {
 
   val repositoriesData =
     s"""[
-          { "name":"teamA-serv"   , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Service", "archived": false },
-          { "name":"teamB-library", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Library", "archived": false },
-          { "name":"teamB-other"  , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Other"  , "archived": false }
+          { "name":"teamA-serv"   , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Service", "archived": false, "teamNames": [], "defaultBranch": "main" },
+          { "name":"teamB-library", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Library", "archived": false, "teamNames": [], "defaultBranch": "main" },
+          { "name":"teamB-other"  , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Other"  , "archived": false, "teamNames": [], "defaultBranch": "main" }
         ]"""
 
   def repositoryData(repoName: String = "service-1") =
@@ -92,6 +92,7 @@ object JsonData {
          "createdAt": "$createdAt",
          "lastActive": "$lastActiveAt",
          "repoType": "Service",
+         "defaultBranch": "main",
          "owningTeams": [
            "The True Owners"
          ],
@@ -189,6 +190,7 @@ object JsonData {
          "createdAt": "$createdAt",
          "lastActive": "$lastActiveAt",
          "repoType": "Prototype",
+         "defaultBranch": "main",
          "owningTeams": [
            "The True Owners"
          ],
@@ -215,6 +217,7 @@ object JsonData {
         "createdAt": "2016-02-24T15:08:50Z",
         "lastActive": "2016-11-08T10:55:55Z",
         "repoType": "Library",
+        "defaultBranch": "main",
         "owningTeams": [
           "The True Owners"
         ],
@@ -587,6 +590,7 @@ object JsonData {
         "description": "some description",
         "createdAt": "2016-02-24T15:08:50Z",
         "lastActive": "2016-11-08T10:55:55Z",
+        "defaultBranch": "main",
         "githubUrl": {
           "name": "github",
           "displayName": "github.com",
@@ -642,6 +646,7 @@ object JsonData {
         "repoType": "Library",
         "owningTeams": [ "The True Owners" ],
         "teamNames": ["teamA", "teamB"],
+        "defaultBranch": "main",
         "githubUrl": {
           "name": "github",
           "displayName": "github.com",
