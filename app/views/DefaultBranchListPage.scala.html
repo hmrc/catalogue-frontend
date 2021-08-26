@@ -18,7 +18,6 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import helper._
 
 @this(viewMessages: ViewMessages)
@@ -29,7 +28,7 @@ form: Form[_]
 
 @standard_layout(s"Default Branches", "defaultbranch") {
 <header>
-    <h1>Default Branch Names</h1>
+    <h1>Default Branch Explorer</h1>
 </header>
 
 @if(form.hasErrors) {
@@ -42,8 +41,8 @@ form: Form[_]
 </div>
 }
 
-<div id="service-list">
-    <form action="/" method="get">
+<div id="default-branches">
+    <form action="/defaultbranch" method="get">
         <div class="form-group row">
             <div class="col-xs-1 padding-reset-right">
                 <label for="search">Name:</label>
@@ -52,36 +51,47 @@ form: Form[_]
                 <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
             </div>
             <div class="col-xs-1 padding-reset-right">
-                <label for="team">Team:</label>
+                <label for="teamNames">Team:</label>
             </div>
             <div class="col col-xs-3">
-                <input class="search form-control" id="team" type="text" name="team" value='@form("team-name").value' autofocus>
+                <input class="search form-control" id="teamNames" type="text" name="teamNames" value='@form("teamNames").value' autofocus>
             </div>
             <div class="col-xs-1 padding-reset-right">
-                <label for="branch">Branch:</label>
+                <label for="defaultBranch">Branch:</label>
             </div>
             <div class="col col-xs-3">
-                <input class="search form-control" id="branch" type="text" name="branch" value='@form("branch-name").value' autofocus>
+                <input class="search form-control" id="defaultBranch" type="text" name="defaultBranch" value='@form("defaultBranch").value' autofocus>
             </div>
         </div>
     </form>
     <table class="table table-striped">
         <tr>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
-            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="team-name">Team</button></th>
-            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="default-branch">Default Branch Name</button></th>
+            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="teamNames">Team/s</button></th>
+            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="defaultBranch">Default Branch</button></th>
+            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="archived">Archived</button></th>
         </tr>
         <tbody class="list">
         @repositories.zipWithIndex.map{case (repo, i) =>
         <tr id="row@i">
             <td class="service-name" id="row@{i}_name">
-                <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name @if(repo.archived) { (archived) }</a>
+                <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
             </td>
-            <td class="team-name monospaced" id="row@{i}_team">
-                Team-name
+            <td class="teamNames monospaced" id="row@{i}_teamNames">
+                @if(repo.teamNames.length > 0 && repo.teamNames.length <= 6) { @for(name <- repo.teamNames) {
+                            @if(name == repo.teamNames.last) { @name } else { @name, }
+                        }
+                    } else if (repo.teamNames.length > 6)  {
+                        <i>Various Teams</i>
+                    } else {
+                            @repo.teamNames
+                    }
             </td>
-            <td class="default-branch monospaced" id="row@{i}_default-branch">
+            <td class="defaultBranch monospaced" id="row@{i}_defaultBranch">
                 @repo.defaultBranch
+            </td>
+            <td class="archived monospaced" id="row@{i}_archived">
+                @repo.archived
             </td>
         </tr>
         }
@@ -92,12 +102,8 @@ form: Form[_]
 
 <!-- listjs configuration -->
 <script>
-    var options = { valueNames: [ 'repo-name', 'team-name', 'default-branch'],
-                    searchColumns: ['repo-name', 'team-name', 'default-branch'] };
+    var options = { valueNames: [ 'service-name', 'repo-name', 'teamNames', 'defaultBranch', 'archived'],
+                    searchColumns: ['repo-name', 'teamNames', 'defaultBranch', 'archived'] };
 
-    var serviceList = new List('service-list', options);
+    var serviceList = new List('default-branches', options);
 </script>
-
-@repoTypes = @{
-("" ,"All") +: RepoType.values.map(v => (v.asString, v.asString)).toList
-}

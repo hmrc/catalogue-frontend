@@ -94,7 +94,8 @@ case class RepositoryDetails(
   environments  : Option[Seq[TargetEnvironment]],
   repoType      : RepoType,
   isPrivate     : Boolean,
-  isArchived    : Boolean
+  isArchived    : Boolean,
+  defaultBranch : String
 )
 
 object RepositoryDetails {
@@ -108,11 +109,12 @@ object RepositoryDetails {
 }
 
 case class RepositoryDisplayDetails(
-  name         : String,
-  createdAt    : LocalDateTime,
-  lastUpdatedAt: LocalDateTime,
-  repoType     : RepoType,
-  archived     : Boolean,
+  name          : String,
+  createdAt     : LocalDateTime,
+  lastUpdatedAt : LocalDateTime,
+  repoType      : RepoType,
+  archived      : Boolean,
+  teamNames     : Seq[String],
   defaultBranch : String
 )
 
@@ -197,18 +199,6 @@ object TeamsAndRepositoriesEnvironment {
     }
 }
 
-case class RepositoryDefaultBranches(
-  name          : String,
-  team          : String,
-  defaultBranch : String
-)
-
-object RepositoryDefaultBranches {
-  implicit val format: OFormat[RepositoryDefaultBranches] = {
-    Json.format[RepositoryDefaultBranches]
-  }
-}
-
 @Singleton
 class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConfig)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
@@ -272,8 +262,8 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
       url"$teamsAndServicesBaseUrl/api/repository_teams"
     )
 
-  def allDefaultBranches(implicit hc: HeaderCarrier): Future[Seq[RepositoryDetails]] =
-    http.GET[Seq[RepositoryDetails]](
+  def allDefaultBranches(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
+    http.GET[Seq[RepositoryDisplayDetails]](
       url"$teamsAndServicesBaseUrl/api/repositories"
     )
 
