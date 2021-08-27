@@ -69,7 +69,7 @@ form: Form[_]
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="teamNames">Team/s</button></th>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="defaultBranch">Default Branch</button></th>
-            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="archived">Archived</button></th>
+            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="isArchived">Archived</button></th>
         </tr>
         <tbody class="list">
         @repositories.zipWithIndex.map{case (repo, i) =>
@@ -90,7 +90,7 @@ form: Form[_]
             <td class="defaultBranch monospaced" id="row@{i}_defaultBranch">
                 @repo.defaultBranch
             </td>
-            <td class="archived monospaced" id="row@{i}_archived">
+            <td class="isArchived monospaced" id="row@{i}_isArchived">
                 @repo.isArchived
             </td>
         </tr>
@@ -102,8 +102,8 @@ form: Form[_]
 
 <!-- listjs configuration -->
 <script>
-    var options = { valueNames: [ 'service-name', 'repo-name', 'teamNames', 'defaultBranch', 'archived'],
-                    searchColumns: ['repo-name', 'teamNames', 'defaultBranch', 'archived'] };
+    var options = { valueNames: [ 'service-name', 'repo-name', 'teamNames', 'defaultBranch', 'isArchived'],
+                    searchColumns: ['repo-name', 'teamNames', 'defaultBranch', 'isArchived'] };
 
     var serviceList = new List('default-branches', options);
 </script>
