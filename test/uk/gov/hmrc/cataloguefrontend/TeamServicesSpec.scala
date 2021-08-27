@@ -112,7 +112,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
             "lastUpdatedAt": "2009-02-13T21:36:40Z",
             "repoType": "Prototype",
             "language": "Scala",
-            "archived": true,
+            "isArchived": true,
             "teamNames": [],
             "defaultBranch": "main"
           }]
