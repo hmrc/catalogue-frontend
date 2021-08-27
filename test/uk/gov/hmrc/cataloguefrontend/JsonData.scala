@@ -77,9 +77,9 @@ object JsonData {
 
   val repositoriesData =
     s"""[
-          { "name":"teamA-serv"   , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Service", "archived": false, "teamNames": [], "defaultBranch": "main" },
-          { "name":"teamB-library", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Library", "archived": false, "teamNames": [], "defaultBranch": "main" },
-          { "name":"teamB-other"  , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Other"  , "archived": false, "teamNames": [], "defaultBranch": "main" }
+          { "name":"teamA-serv"   , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Service", "isArchived": false, "teamNames": [], "defaultBranch": "main" },
+          { "name":"teamB-library", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Library", "isArchived": false, "teamNames": [], "defaultBranch": "main" },
+          { "name":"teamB-other"  , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Other"  , "isArchived": false, "teamNames": [], "defaultBranch": "main" }
         ]"""
 
   def repositoryData(repoName: String = "service-1") =

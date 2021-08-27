@@ -30,20 +30,20 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
 
       repositories.filter(RepoListFilter(name       = Some("serv1"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
     }
@@ -52,22 +52,22 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("FOO", createdAt   = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("FOO", createdAt   = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
 
       repositories.filter(RepoListFilter(name       = Some("eRV"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
     }
@@ -76,18 +76,18 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
 
       repositories.filter(RepoListFilter(repoType   = Some("Other"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
     }
@@ -96,18 +96,18 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
 
       repositories.filter(RepoListFilter(repoType   = Some("service"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
     }
@@ -116,18 +116,18 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
 
       repositories.filter(RepoListFilter(repoType   = Some("Service"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
     }
@@ -136,20 +136,20 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv4", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv4", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
 
       repositories.filter(RepoListFilter(name       = Some("serv1"), repoType = Some("Other"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
     }
@@ -158,13 +158,13 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , archived = false,
+        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, archived = false,
+        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main")
       )
 

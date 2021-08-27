@@ -113,7 +113,7 @@ case class RepositoryDisplayDetails(
   createdAt     : LocalDateTime,
   lastUpdatedAt : LocalDateTime,
   repoType      : RepoType,
-  archived      : Boolean,
+  isArchived    : Boolean,
   teamNames     : Seq[String],
   defaultBranch : String
 )
