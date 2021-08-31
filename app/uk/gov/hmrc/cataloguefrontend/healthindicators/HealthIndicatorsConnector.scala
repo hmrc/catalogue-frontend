@@ -34,6 +34,7 @@ class HealthIndicatorsConnector @Inject() (
 
   private implicit val indicatorReads: Reads[Indicator] = Indicator.reads
   private implicit val historicIndicatorReads: Reads[HistoricIndicatorAPI] = HistoricIndicatorAPI.format
+  private implicit val averageReads: Reads[AveragePlatformScore] = AveragePlatformScore.format
 
   private val healthIndicatorsBaseUrl: String = servicesConfig.baseUrl("health-indicators")
 
@@ -55,6 +56,12 @@ class HealthIndicatorsConnector @Inject() (
     val url = s"$healthIndicatorsBaseUrl/health-indicators/history/$repoName"
     http
       .GET[Option[HistoricIndicatorAPI]](url)
+  }
+
+  def getAveragePlatformScore(implicit hc: HeaderCarrier): Future[Option[AveragePlatformScore]] = {
+    val url = s"$healthIndicatorsBaseUrl/health-indicators/platform-average"
+    http
+      .GET[Option[AveragePlatformScore]](url)
   }
 }
 sealed trait MetricType
@@ -132,6 +139,16 @@ object HistoricIndicatorAPI {
     implicit val dataFormat: Format[DataPoint] = DataPoint.format
     ((__ \ "repoName").format[String]
       ~ (__ \ "dataPoints").format[Seq[DataPoint]])(HistoricIndicatorAPI.apply, unlift(HistoricIndicatorAPI.unapply))
+  }
+}
+
+case class AveragePlatformScore(timestamp: Instant, averageScore: Int)
+
+object AveragePlatformScore {
+  val format: Format[AveragePlatformScore] = {
+    implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
+    ((__ \ "timestamp").format[Instant]
+      ~ (__ \ "averageScore").format[Int])(AveragePlatformScore.apply, unlift(AveragePlatformScore.unapply))
   }
 }
 

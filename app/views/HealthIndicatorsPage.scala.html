@@ -21,7 +21,7 @@
 @import java.time.format.DateTimeFormatter
 @import java.time.ZoneId
 @import views.html.partials.HealthIndicatorsHistory
-@(indicator: Indicator, optHistory: Option[HistoricIndicatorAPI]
+@(indicator: Indicator, optHistory: Option[HistoricIndicatorAPI], optAverage: Option[Int]
 )(implicit messages: Messages, request: Request[_])
 @standard_layout("Service Health Indicators", "health-indicators"){
 
@@ -34,6 +34,11 @@
         <a id="health-indicators-help" href="https://github.com/hmrc/health-indicators" title="What is this?">?</a>
     </h1>
   </header>
+
+    <div id="history">
+    @optHistory.map(history => HealthIndicatorsHistory(history, optAverage))
+    </div>
+
   <div id="health-indicators-display">
     <h2>Score Breakdown:</h2>
       <br />
@@ -69,7 +74,4 @@
         }
     </table>
   </div>
-    <div id="history">
-        @optHistory.map(history => HealthIndicatorsHistory(history))
-    </div>
 }
