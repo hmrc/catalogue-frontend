@@ -58,7 +58,8 @@ class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
     environments = None,
     repoType     = RepoType.Other,
     isPrivate    = false,
-    isArchived   = false
+    isArchived   = false,
+    defaultBranch = "main"
   )
 
 }

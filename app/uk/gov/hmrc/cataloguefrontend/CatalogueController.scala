@@ -82,6 +82,7 @@ class CatalogueController @Inject() (
   prototypeInfoPage            : PrototypeInfoPage,
   repositoryInfoPage           : RepositoryInfoPage,
   repositoriesListPage         : RepositoriesListPage,
+  defaultBranchListPage        : DefaultBranchListPage,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
@@ -496,6 +497,25 @@ class CatalogueController @Inject() (
       }
     }
 
+  def allDefaultBranches: Action[AnyContent] =
+    Action.async { implicit request =>
+
+      teamsAndRepositoriesConnector.allDefaultBranches.map { repositories =>
+        DefaultBranchesFilter.form
+          .bindFromRequest()
+          .fold(
+            formWithErrors => Ok(defaultBranchListPage(repositories = Seq.empty, formWithErrors)),
+            query =>
+              Ok(
+                defaultBranchListPage(
+                  repositories = repositories,
+                  RepoListFilter.form.bindFromRequest()
+                )
+              )
+          )
+      }
+    }
+
   private def convertToDisplayableTeamMembers(
     teamName: TeamName,
     errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]
@@ -553,5 +573,23 @@ object RepoListFilter {
       "name"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
       "repoType" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(RepoListFilter.apply)(RepoListFilter.unapply)
+  )
+}
+
+case class DefaultBranchesFilter(
+   name           : Option[String] = None,
+   teamNames      : Option[String] = None,
+   defaultBranch  : Option[String] = None
+ ) {
+  def isEmpty: Boolean = name.isEmpty && teamNames.isEmpty && defaultBranch.isEmpty
+}
+
+object DefaultBranchesFilter {
+  lazy val form = Form(
+    mapping(
+      "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+      "teamNames"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+      "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+    )(DefaultBranchesFilter.apply)(DefaultBranchesFilter.unapply)
   )
 }

@@ -20,6 +20,8 @@ GET        /library/:name                               uk.gov.hmrc.cataloguefro
 GET        /prototypes                                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allPrototypes
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
 
+GET        /defaultbranch                               uk.gov.hmrc.cataloguefrontend.CatalogueController.allDefaultBranches
+
 GET        /assets/*file                                controllers.Assets.versioned(path="/public", file: Asset)
 GET        /                                            uk.gov.hmrc.cataloguefrontend.CatalogueController.index
 GET        /admin/metrics                               @com.kenshoo.play.metrics.MetricsController.metrics

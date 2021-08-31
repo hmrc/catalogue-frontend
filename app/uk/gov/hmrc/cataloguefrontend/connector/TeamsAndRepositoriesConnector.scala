@@ -83,18 +83,19 @@ object TargetEnvironment {
 }
 
 case class RepositoryDetails(
-  name        : String,
-  description : String,
-  createdAt   : LocalDateTime,
-  lastActive  : LocalDateTime,
-  owningTeams : Seq[TeamName],
-  teamNames   : Seq[TeamName],
-  githubUrl   : Link,
-  jenkinsURL  : Option[Link],
-  environments: Option[Seq[TargetEnvironment]],
-  repoType    : RepoType,
-  isPrivate   : Boolean,
-  isArchived  : Boolean
+  name          : String,
+  description   : String,
+  createdAt     : LocalDateTime,
+  lastActive    : LocalDateTime,
+  owningTeams   : Seq[TeamName],
+  teamNames     : Seq[TeamName],
+  githubUrl     : Link,
+  jenkinsURL    : Option[Link],
+  environments  : Option[Seq[TargetEnvironment]],
+  repoType      : RepoType,
+  isPrivate     : Boolean,
+  isArchived    : Boolean,
+  defaultBranch : String
 )
 
 object RepositoryDetails {
@@ -108,11 +109,13 @@ object RepositoryDetails {
 }
 
 case class RepositoryDisplayDetails(
-  name         : String,
-  createdAt    : LocalDateTime,
-  lastUpdatedAt: LocalDateTime,
-  repoType     : RepoType,
-  archived     : Boolean
+  name          : String,
+  createdAt     : LocalDateTime,
+  lastUpdatedAt : LocalDateTime,
+  repoType      : RepoType,
+  isArchived    : Boolean,
+  teamNames     : Seq[String],
+  defaultBranch : String
 )
 
 object RepositoryDisplayDetails {
@@ -257,6 +260,11 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     http.GET[Map[ServiceName, Seq[TeamName]]](
       url"$teamsAndServicesBaseUrl/api/repository_teams"
+    )
+
+  def allDefaultBranches(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
+    http.GET[Seq[RepositoryDisplayDetails]](
+      url"$teamsAndServicesBaseUrl/api/repositories"
     )
 
   private def repositories(archived: Option[Boolean])(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
