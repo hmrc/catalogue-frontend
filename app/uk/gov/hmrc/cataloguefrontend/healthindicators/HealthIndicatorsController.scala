@@ -33,13 +33,16 @@ class HealthIndicatorsController @Inject() (
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
+
+
   def breakdownForRepo(name: String): Action[AnyContent] =
     Action.async { implicit request =>
       for {
         indicator <- healthIndicatorsConnector.getIndicator(name)
-        history <- healthIndicatorsConnector.getHistoricIndicators(name)
+        history   <- healthIndicatorsConnector.getHistoricIndicators(name)
+        average   <- healthIndicatorsConnector.getAveragePlatformScore
         result = indicator match {
-          case Some(indicator: Indicator) => Ok(HealthIndicatorsPage(indicator, history))
+          case Some(indicator: Indicator) => Ok(HealthIndicatorsPage(indicator, history, average.map(_.averageScore)))
           case None                       =>  NotFound(error_404_template())
         }
       } yield result

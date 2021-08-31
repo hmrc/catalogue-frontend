@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.HistoricIndicatorAPI
 @import java.time.format.DateTimeFormatter
 @import java.time.ZoneId
-@( history: HistoricIndicatorAPI)(implicit messages: Messages, request: Request[_])
+@( history: HistoricIndicatorAPI, optAverage: Option[Int])(implicit messages: Messages, request: Request[_])
 
     <header>
         <h2>History:</h2>
@@ -32,13 +32,29 @@
 
                     function drawChart() {
                         var data = new google.visualization.DataTable();
-                        data.addColumn('string', 'Date');
+                        data.addColumn('date', 'Date');
                         data.addColumn('number', 'Score')
-                        data.addRows([ @history.dataPoints.map { d =>
-                            ["@DateTimeFormatter.ofPattern("yyyy-MM").withZone(ZoneId.of("UTC")).format(d.timestamp)", @d.overallScore],
+                        data.addColumn('number', 'Average')
+                        data.addRows([ @history.dataPoints.reverse.map { d =>
+                            [new Date("@DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.of("UTC")).format(d.timestamp)"), @d.overallScore, @optAverage.getOrElse(0)],
                             }])
 
+                        var options = {
+                            series: {
+                                0: {targetAxisIndex: 0}
+                            },
+                            vAxes : {
+                            0: {title: 'Overall Score'}
+                            },
+                            hAxis: {
+                                title: 'Date',
+                                format: 'MMM, d',
+                                showTextEvery:  @{history.dataPoints.length / 20}
+                            },
+                            focusTarget: 'category'
+                        };
+
                         var chart = new google.visualization.LineChart(document.getElementById('chart'));
-                        chart.draw(data, null);
+                        chart.draw(data, options);
                     }
             </script>
