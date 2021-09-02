@@ -64,6 +64,7 @@ class HealthIndicatorsConnector @Inject() (
       .GET[Option[AveragePlatformScore]](url)
   }
 }
+
 sealed trait MetricType
 
 object MetricType {
