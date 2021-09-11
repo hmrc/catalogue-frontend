@@ -1,0 +1,136 @@
+@*
+* Copyright 2021 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+
+@import play.api.mvc.Call
+@import uk.gov.hmrc.cataloguefrontend.metrics.model.ServiceMetricsEntry
+@import uk.gov.hmrc.cataloguefrontend.MetricsOverviewController
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
+@import play.twirl.api.Html
+
+@this(viewMessages: ViewMessages)
+
+@(form          : Form[_],
+metricsEntries  : Seq[ServiceMetricsEntry])(implicit
+request         : Request[_],
+messagesProvider: MessagesProvider
+)
+
+@standard_layout("Metrics overview", "search") {
+    <head>
+        <link rel="stylesheet" href="@routes.Assets.versioned("metrics-explorer.css")" />
+    </head>
+
+    <header>
+        <h1 id="search-service-header">Metrics Overview</h1>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    </header>
+
+    <div id="service-list">
+        @if(form.hasGlobalErrors) {
+        <div class="alert alert-error error">
+            <a class="close" data-dismiss="alert">×</a>
+            <ul>
+                @form.globalErrors.map { error =>
+                <li>@error.format</li>
+                }
+            </ul>
+        </div>
+        }
+
+        <div class="board">
+            <div class="board__body">
+                @helper.form(
+                action =  appRoutes.MetricsOverviewController.search,
+                'class -> "form-inline",
+                'id    -> "search-by-dependency-form"
+                ) {
+                <table class="padded-table">
+                    <tr>
+                        <td valign="bottom">
+                            <button id="search-button" class="btn btn-primary" type="submit">Refresh</button>
+                        </td>
+                    </tr>
+                </table>
+                <div id="chart_div" align="center" class="grid-container"></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <script>
+        if (document.readyState != 'loading'){
+            ready();
+        } else {
+            document.addEventListener('DOMContentLoaded', ready);
+        }
+
+        function ready() {
+
+        }
+    </script>
+
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+        const chartDiv = document.getElementById('chart_div');
+
+        function drawChart() {
+
+            @metricsEntries match {
+                case Nil => {}
+                case entries => {
+                    var options = {
+                                    'height'   : 150,
+                                    'width'   : 150,
+                                    'colors': ['green', 'Red'],
+                                    'chartArea': { 'width': '100%', 'height': '100%'},
+                                    'legend': 'none'
+                                  };
+
+                    const arr = [
+                        @for(e <- entries){
+                            [
+                                '@e.name',
+                                [@for(a <- e.asPercentage){ @a, }]
+                            ],
+                        }
+                    ];
+
+                    arr.forEach( ([key, [happy, unhappy]]) => {
+                        let container = chartDiv.appendChild(document.createElement('grid-item'));
+
+                        <!--drawing pie chart-->
+                        let data = new google.visualization.DataTable();
+                        data.addColumn('string', 'Version');
+                        data.addColumn('number', 'Count');
+                        data.addRows([["Happy", happy], ["Unhappy", unhappy]]);
+                        let chart = new google.visualization.PieChart(container);
+                        chart.draw(data, options);
+
+                        <!--manual caption for the chart-->
+                        let p = document.createElement("p");
+                        let h2Element = document.createElement('h3');
+                        h2Element.innerText = key;
+                        p.appendChild(h2Element);
+                        container.appendChild(p);
+                    })
+                }
+            }
+        }
+    </script>
+}

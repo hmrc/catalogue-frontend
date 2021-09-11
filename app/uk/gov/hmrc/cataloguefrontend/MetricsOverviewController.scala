@@ -20,39 +20,34 @@ import cats.implicits.none
 import play.api.data.{Form, Forms}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.metrics.connector.MetricsConnector
-import uk.gov.hmrc.cataloguefrontend.metrics.model.MetricsEntry
+import uk.gov.hmrc.cataloguefrontend.metrics.model.ServiceMetricsEntry
 import uk.gov.hmrc.cataloguefrontend.metrics.views.SearchForm
-import uk.gov.hmrc.cataloguefrontend.metrics.views.html.MetricsExplorerPage
+import uk.gov.hmrc.cataloguefrontend.metrics.views.html.MetricsDisplayPage
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class MetricsExplorerController @Inject()(
-  mcc: MessagesControllerComponents,
-  page: MetricsExplorerPage,
-  metricsConnector: MetricsConnector
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+class MetricsOverviewController @Inject()(
+                                           mcc: MessagesControllerComponents,
+                                           page: MetricsDisplayPage,
+                                           metricsConnector: MetricsConnector
+                                         )(implicit val ec: ExecutionContext)
+  extends FrontendController(mcc) {
 
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        allMetricsData <- metricsConnector.allMetricsData
-        groups = allMetricsData.groups
-        dependencies = allMetricsData.dependencies
-        repositories = allMetricsData.repositories
+        response <- metricsConnector.query(none)
+        entries = response.metrics.map(ServiceMetricsEntry.apply)
       } yield Ok(
         page(
           form.fill(
             SearchForm(
-              none, none, none
+              none
             )
           ),
-          groups,
-          repositories,
-          dependencies,
-          metricsEntries = Seq.empty
+          entries
         )
       )
     }
@@ -60,10 +55,6 @@ class MetricsExplorerController @Inject()(
   def search =
     Action.async { implicit request =>
       for {
-        allMetricsData <- metricsConnector.allMetricsData
-        groups = allMetricsData.groups
-        dependencies = allMetricsData.dependencies
-        repositories = allMetricsData.repositories
         res <- {
           form
             .bindFromRequest()
@@ -73,30 +64,22 @@ class MetricsExplorerController @Inject()(
                   BadRequest(
                     page(
                       formWithErrors,
-                      groups,
-                      repositories,
-                      dependencies,
                       metricsEntries = Seq.empty
                     )
                   )
                 ),
               success = query =>
-                  for {
-                  results <- metricsConnector.query(
-                      maybeGroup = query.group,
-                      maybeName = query.dependency,
-                      maybeRepository = query.repository
-                    )
-                  metricsEntries = MetricsEntry(results.metrics)
-                } yield Ok(
-                    page(
-                      form.bindFromRequest(),
-                      groups,
-                      repositories,
-                      dependencies,
-                      metricsEntries
-                    )
+                for {
+                  response <- metricsConnector.query(
+                    maybeTeam = query.team
                   )
+                  entries = response.metrics.map(ServiceMetricsEntry.apply)
+                } yield Ok(
+                  page(
+                    form.bindFromRequest(),
+                    entries
+                  )
+                )
             )
         }
       } yield res
@@ -105,12 +88,8 @@ class MetricsExplorerController @Inject()(
   def form(): Form[SearchForm] = {
     Form(
       Forms.mapping(
-        "group"             -> Forms.optional(Forms.text),
-        "dependency"        -> Forms.optional(Forms.text),
-        "repository"        -> Forms.optional(Forms.text),
+        "team"              -> Forms.optional(Forms.text),
       )(SearchForm.applyRaw)(SearchForm.unapplyRaw)
     )
   }
 }
-
-

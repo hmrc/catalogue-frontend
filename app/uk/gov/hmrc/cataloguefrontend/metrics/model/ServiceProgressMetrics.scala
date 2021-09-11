@@ -20,9 +20,9 @@ import play.api.libs.json.{Json, Reads}
 
 final case class ServiceProgressMetrics(
   name: String,
-  group: String,
-  repository: String,
-  isHappy: Boolean
+  count: Int,
+  happyCount: Int,
+  unHappyCount: Int
 )
 
 object ServiceProgressMetrics{
