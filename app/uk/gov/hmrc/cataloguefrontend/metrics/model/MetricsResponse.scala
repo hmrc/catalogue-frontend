@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.metrics.model
 
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.Reads
 
-case class MetricsResponse(metrics: Seq[ServiceProgressMetrics])
+final case class MetricsResponse(metrics: Seq[ServiceProgressMetrics])
+
 object MetricsResponse {
-  implicit val reads: Reads[MetricsResponse] = Json.reads[MetricsResponse]
+  implicit val reads: Reads[MetricsResponse] = implicitly[Reads[Seq[ServiceProgressMetrics]]].map(MetricsResponse.apply)
 }
-

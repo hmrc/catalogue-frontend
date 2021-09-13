@@ -16,9 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.metrics.model
 
-final case class MetricsEntry (dependency: DependencyName, happyCount: Int, unHappyCount: Int){
+case class ServiceMetricsEntry(
+                           name: String,
+                           count: Int,
+                           happyCount: Int,
+                           unHappyCount: Int
+                         ){
   def asPercentage: List[Int] = {
-    val totalCount = (happyCount + unHappyCount).toDouble
+    val totalCount = count.toDouble
     List(
       (happyCount*100/totalCount).toInt,
       (unHappyCount*100/totalCount).toInt
@@ -27,22 +32,13 @@ final case class MetricsEntry (dependency: DependencyName, happyCount: Int, unHa
 
 }
 
-object MetricsEntry {
+object ServiceMetricsEntry {
 
-  def apply(progressMetricses: Seq[ServiceProgressMetrics]): Seq[MetricsEntry] = progressMetricses
-    .groupBy(_.name)
-    .mapValues { metrics =>
-        val (happy, unhappy) = metrics
-          .partition(_.isHappy)
-      (happy.size, unhappy.size)
-    }
-    .map{ case (dep, (happy, unhappy)) =>
-      MetricsEntry(
-        DependencyName(dep),
-        happy,
-        unhappy
-      )
-    }
-    .toSeq
+  def apply(serviceProgressMetrics: ServiceProgressMetrics): ServiceMetricsEntry = ServiceMetricsEntry(
+    serviceProgressMetrics.name,
+    serviceProgressMetrics.count,
+    serviceProgressMetrics.happyCount,
+    serviceProgressMetrics.unHappyCount,
+  )
 
 }

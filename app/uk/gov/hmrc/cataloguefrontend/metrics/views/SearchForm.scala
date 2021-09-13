@@ -16,26 +16,20 @@
 
 package uk.gov.hmrc.cataloguefrontend.metrics.views
 
-import uk.gov.hmrc.cataloguefrontend.metrics.model.{DependencyName, GroupName, RepositoryName}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 final case class SearchForm(
-                             group: Option[GroupName],
-                             dependency: Option[DependencyName],
-                             repository: Option[RepositoryName]
+                             team: Option[TeamName]
                            )
 
 object SearchForm {
   def applyRaw(
-                groupText: Option[String],
-                dependencyText: Option[String],
-                repositoryText: Option[String]
+                teamText: Option[String],
               ): SearchForm = SearchForm.apply(
-    group = groupText.filter(_.nonEmpty).map(GroupName.apply),
-    dependency = dependencyText.filter(_.nonEmpty).map(DependencyName.apply),
-    repository = repositoryText.filter(_.nonEmpty).map(RepositoryName.apply)
+    team = teamText.filter(_.nonEmpty).map(TeamName.apply)
   )
 
-  def unapplyRaw(searchForm: SearchForm): Option[(Option[String], Option[String], Option[String])] = unapply(searchForm).map{ case(g, d, r) =>
-    (g.map(_.value), d.map(_.value), r.map(_.value))
+  def unapplyRaw(searchForm: SearchForm): Option[(Option[String])] = unapply(searchForm).map{
+    _.map(_.asString)
   }
 }

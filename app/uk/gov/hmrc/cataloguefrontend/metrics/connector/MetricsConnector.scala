@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.metrics.connector
 
-import cats.implicits.none
 import com.google.inject.ImplementedBy
 import play.api.Logger
 import play.api.libs.json.Reads
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.metrics.model._
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -30,24 +30,16 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[MetricsConnector.Impl])
 trait MetricsConnector {
   def query(
-             maybeGroup: Option[GroupName],
-             maybeName: Option[DependencyName],
-             maybeRepository: Option[RepositoryName]
+             maybeTeam: Option[TeamName]
            ): Future[MetricsResponse]
-
-  def allMetricsData: Future[AllMetricsData]
 }
 
 object MetricsConnector{
 
-  abstract class ViaQuery(implicit ec: ExecutionContext) extends MetricsConnector {
-    override def allMetricsData: Future[AllMetricsData] = query(none, none, none).map(AllMetricsData.apply)
-  }
-
   class Impl @Inject() (
     httpClient: HttpClient,
     servicesConfig: ServicesConfig
-  )(implicit val ec: ExecutionContext) extends ViaQuery {
+  )(implicit val ec: ExecutionContext) extends MetricsConnector {
     import uk.gov.hmrc.http._
 
     private implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -57,11 +49,9 @@ object MetricsConnector{
 
     import cats.syntax.option._
 
-    override def query(maybeGroup: Option[GroupName], maybeName: Option[DependencyName], maybeRepository: Option[RepositoryName]): Future[MetricsResponse] = {
+    override def query(maybeTeam: Option[TeamName]): Future[MetricsResponse] = {
       val url = url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics" + List(
-        maybeGroup.map(g => s"group=${g.value}").orEmpty,
-        maybeName.map(n => s"name=${n.value}").orEmpty,
-        maybeRepository.map(r => s"repository=${r.value}").orEmpty
+        maybeTeam.map(r => s"team=${r.asString}").orEmpty
       ).filter(_.nonEmpty)
         .mkString("?", "&", "")
 
