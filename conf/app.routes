@@ -40,8 +40,8 @@ GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefro
 GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.landing
 GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search
 
-GET        /metricsoverview                             uk.gov.hmrc.cataloguefrontend.MetricsOverviewController.landing
-GET        /metricsoverview/results                     uk.gov.hmrc.cataloguefrontend.MetricsOverviewController.search
+GET        /metrics-overview                             uk.gov.hmrc.cataloguefrontend.MetricsOverviewController.landing
+GET        /metrics-overview/results                     uk.gov.hmrc.cataloguefrontend.MetricsOverviewController.search
 
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController.display
 

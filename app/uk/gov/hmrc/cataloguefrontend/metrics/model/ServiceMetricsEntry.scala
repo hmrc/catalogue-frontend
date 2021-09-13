@@ -22,14 +22,9 @@ case class ServiceMetricsEntry(
                            happyCount: Int,
                            unHappyCount: Int
                          ){
-  def asPercentage: List[Int] = {
-    val totalCount = count.toDouble
-    List(
-      (happyCount*100/totalCount).toInt,
-      (unHappyCount*100/totalCount).toInt
-    )
-  }
-
+  private val totalCount = count.toDouble
+  def happyPercentage: Int = Math.round(happyCount*100/totalCount).toInt
+  def unhappyPercentage: Int = Math.round(unHappyCount*100/totalCount).toInt
 }
 
 object ServiceMetricsEntry {
