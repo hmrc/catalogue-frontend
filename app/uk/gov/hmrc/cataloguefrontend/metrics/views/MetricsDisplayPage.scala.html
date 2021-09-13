@@ -106,7 +106,7 @@ messagesProvider: MessagesProvider
                         @for(e <- entries){
                             [
                                 '@e.name',
-                                [@for(a <- e.asPercentage){ @a, }]
+                                [@(e.happyPercentage), @(e.unhappyPercentage)]
                             ],
                         }
                     ];

@@ -47,13 +47,8 @@ object MetricsConnector{
     implicit val rF: Reads[MetricsResponse] = MetricsResponse.reads
     val logger                           = Logger(this.getClass)
 
-    import cats.syntax.option._
-
     override def query(maybeTeam: Option[TeamName]): Future[MetricsResponse] = {
-      val url = url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics" + List(
-        maybeTeam.map(r => s"team=${r.asString}").orEmpty
-      ).filter(_.nonEmpty)
-        .mkString("?", "&", "")
+      val url = url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics?team=$maybeTeam"
 
       httpClient
         .GET[MetricsResponse](
