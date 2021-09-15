@@ -57,13 +57,10 @@ object MetricsConnector{
           )
         )
         .onError {
-          case UpstreamErrorResponse.Upstream5xxResponse(x) =>
+          case e =>
             Future.successful(
-              logger.error(s"An error occurred when connecting to platform progress metrics service. baseUrl: $platformProgressMetricsBaseURL", x)
+              logger.error(s"An error occurred when connecting to platform progress metrics service. baseUrl: $platformProgressMetricsBaseURL", e)
             )
-        }
-        .recover { case _ =>
-          MetricsResponse(Seq.empty)
         }
     }
   }
