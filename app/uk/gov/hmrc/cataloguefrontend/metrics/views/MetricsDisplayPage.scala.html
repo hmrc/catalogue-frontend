@@ -21,11 +21,14 @@
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
 @import play.twirl.api.Html
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 @this(viewMessages: ViewMessages)
 
 @(form          : Form[_],
-metricsEntries  : Seq[ServiceMetricsEntry])(implicit
+metricsEntries  : Seq[ServiceMetricsEntry],
+allTeamNames: Seq[TeamName]
+)(implicit
 request         : Request[_],
 messagesProvider: MessagesProvider
 )
@@ -60,6 +63,16 @@ messagesProvider: MessagesProvider
                 'id    -> "search-by-dependency-form"
                 ) {
                 <table class="padded-table">
+                    <td style="vertical-align: top;">
+                        @helper.select(
+                        form("team"),
+                        helper.options(
+                        Seq(
+                            "" -> Messages("metricoverview.select.team")) ++ allTeamNames.map(_.asString).map(t => (t, t)) :_*),
+                            '_label -> "",
+                            '_class -> "form-team"
+                        )
+                    </td>
                     <tr>
                         <td valign="bottom">
                             <button id="search-button" class="btn btn-primary" type="submit">Refresh</button>

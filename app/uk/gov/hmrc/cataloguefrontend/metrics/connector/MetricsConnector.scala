@@ -29,9 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[MetricsConnector.Impl])
 trait MetricsConnector {
-  def query(
-             maybeTeam: Option[TeamName]
-           ): Future[MetricsResponse]
+  def query(maybeTeam: Option[TeamName]): Future[MetricsResponse]
 }
 
 object MetricsConnector{
@@ -41,6 +39,8 @@ object MetricsConnector{
     servicesConfig: ServicesConfig
   )(implicit val ec: ExecutionContext) extends MetricsConnector {
     import uk.gov.hmrc.http._
+    import cats.syntax.flatMap._
+    import cats.syntax.applicativeError._
 
     private implicit val hc: HeaderCarrier = HeaderCarrier()
     private val platformProgressMetricsBaseURL: String = servicesConfig.baseUrl("platform-progress-metrics")
@@ -48,16 +48,22 @@ object MetricsConnector{
     val logger                           = Logger(this.getClass)
 
     override def query(maybeTeam: Option[TeamName]): Future[MetricsResponse] = {
-      val url = url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics?team=$maybeTeam"
-
+      val url = url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics?team=${maybeTeam.map(_.asString)}"
       httpClient
-        .GET[MetricsResponse](
-          url
+        .GET[MetricsResponse](url)
+        .flatTap( response =>
+          Future.successful(
+            logger.info(s"received the following response: $response from query to: $url")
+          )
         )
-        .recoverWith {
+        .onError {
           case UpstreamErrorResponse.Upstream5xxResponse(x) =>
-            logger.error(s"An error occurred when connecting to platform progress metrics service. baseUrl: $platformProgressMetricsBaseURL", x)
-            Future.successful(MetricsResponse(Seq.empty))
+            Future.successful(
+              logger.error(s"An error occurred when connecting to platform progress metrics service. baseUrl: $platformProgressMetricsBaseURL", x)
+            )
+        }
+        .recover { case _ =>
+          MetricsResponse(Seq.empty)
         }
     }
   }

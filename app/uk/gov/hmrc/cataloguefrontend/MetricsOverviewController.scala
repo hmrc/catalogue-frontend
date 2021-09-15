@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import cats.implicits.none
 import play.api.data.{Form, Forms}
 import play.api.mvc._
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.metrics.connector.MetricsConnector
 import uk.gov.hmrc.cataloguefrontend.metrics.model.ServiceMetricsEntry
 import uk.gov.hmrc.cataloguefrontend.metrics.views.SearchForm
@@ -31,7 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class MetricsOverviewController @Inject()(
                                            mcc: MessagesControllerComponents,
                                            page: MetricsDisplayPage,
-                                           metricsConnector: MetricsConnector
+                                           metricsConnector: MetricsConnector,
+                                           teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
                                          )(implicit val ec: ExecutionContext)
   extends FrontendController(mcc) {
 
@@ -40,6 +42,8 @@ class MetricsOverviewController @Inject()(
       for {
         response <- metricsConnector.query(none)
         entries = response.metrics.map(ServiceMetricsEntry.apply)
+        allTeams <- teamsAndRepositoriesConnector.allTeams
+        allTeamNames = allTeams.map(_.name)
       } yield Ok(
         page(
           form.fill(
@@ -47,7 +51,8 @@ class MetricsOverviewController @Inject()(
               none
             )
           ),
-          entries
+          entries,
+          allTeamNames
         )
       )
     }
@@ -55,6 +60,8 @@ class MetricsOverviewController @Inject()(
   def search =
     Action.async { implicit request =>
       for {
+        allTeams <- teamsAndRepositoriesConnector.allTeams
+        teamNames = allTeams.map(_.name)
         res <- {
           form
             .bindFromRequest()
@@ -64,7 +71,8 @@ class MetricsOverviewController @Inject()(
                   BadRequest(
                     page(
                       formWithErrors,
-                      metricsEntries = Seq.empty
+                      metricsEntries = Seq.empty,
+                      allTeamNames = teamNames
                     )
                   )
                 ),
@@ -77,7 +85,8 @@ class MetricsOverviewController @Inject()(
                 } yield Ok(
                   page(
                     form.bindFromRequest(),
-                    entries
+                    metricsEntries = entries,
+                    allTeamNames = teamNames
                   )
                 )
             )
