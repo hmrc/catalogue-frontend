@@ -259,7 +259,7 @@ class ShutterWizardController @Inject() (
                     //Skip straight to outage-page screen if there are no route warnings
                     cacheRepo
                       .putSession(step2aKey, Step2aOut(confirmed = false, skipped = true))
-                      .map(_ => Redirect(appRoutes.ShutterWizardController.step2bGet()))
+                      .map(_ => Redirect(appRoutes.ShutterWizardController.step2bGet))
                 )
       } yield html).merge
     }

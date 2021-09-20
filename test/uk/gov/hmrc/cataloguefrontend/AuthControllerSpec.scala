@@ -62,7 +62,7 @@ class AuthControllerSpec
 
       val result: Future[Result] = controller.submit(request)
 
-      redirectLocation(result).get                     shouldBe routes.CatalogueController.index().url
+      redirectLocation(result).get                     shouldBe routes.CatalogueController.index.url
       Helpers.session(result).apply("ump.token")       shouldBe expectedToken.value
       Helpers.session(result).apply("ump.displayName") shouldBe expectedDisplayName.value
     }
@@ -78,7 +78,7 @@ class AuthControllerSpec
 
       val result: Future[Result] = controller.submit(request)
 
-      redirectLocation(result).get                     shouldBe routes.CatalogueController.index().url
+      redirectLocation(result).get                     shouldBe routes.CatalogueController.index.url
       Helpers.session(result).apply("ump.token")       shouldBe expectedToken.value
       Helpers.session(result).apply("ump.displayName") shouldBe expectedDisplayName.value
     }
