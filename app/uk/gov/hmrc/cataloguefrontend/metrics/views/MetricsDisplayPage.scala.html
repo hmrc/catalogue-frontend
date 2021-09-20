@@ -16,18 +16,19 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.metrics.model.ServiceMetricsEntry
-@import uk.gov.hmrc.cataloguefrontend.MetricsOverviewController
+@import uk.gov.hmrc.cataloguefrontend.metrics.MetricsOverviewController
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.metrics.{routes => metricRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
 @import play.twirl.api.Html
 
 @this(viewMessages: ViewMessages)
 
-@(form          : Form[_],
-metricsEntries  : Seq[ServiceMetricsEntry])(implicit
-request         : Request[_],
-messagesProvider: MessagesProvider
+@(form            : Form[_],
+  metricsEntries  : Seq[ServiceMetricsEntry]
+)(implicit
+  request         : Request[_],
+  messagesProvider: MessagesProvider
 )
 
 @standard_layout("Metrics overview", "search") {
@@ -55,7 +56,7 @@ messagesProvider: MessagesProvider
         <div class="board">
             <div class="board__body">
                 @helper.form(
-                action =  appRoutes.MetricsOverviewController.search,
+                action =  metricRoutes.MetricsOverviewController.search,
                 'class -> "form-inline",
                 'id    -> "search-by-dependency-form"
                 ) {
