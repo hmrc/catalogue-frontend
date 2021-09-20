@@ -17,23 +17,23 @@
 package uk.gov.hmrc.cataloguefrontend.metrics.model
 
 case class ServiceMetricsEntry(
-                           name: String,
-                           count: Int,
-                           happyCount: Int,
-                           unHappyCount: Int
-                         ){
+  name        : String,
+  count       : Int,
+  happyCount  : Int,
+  unHappyCount: Int
+){
   private val totalCount = count.toDouble
-  def happyPercentage: Int = Math.round(happyCount*100/totalCount).toInt
-  def unhappyPercentage: Int = Math.round(unHappyCount*100/totalCount).toInt
+
+  def happyPercentage  : Int = Math.round(happyCount   * 100 / totalCount).toInt
+  def unhappyPercentage: Int = Math.round(unHappyCount * 100 / totalCount).toInt
 }
 
 object ServiceMetricsEntry {
-
-  def apply(serviceProgressMetrics: ServiceProgressMetrics): ServiceMetricsEntry = ServiceMetricsEntry(
-    serviceProgressMetrics.name,
-    serviceProgressMetrics.count,
-    serviceProgressMetrics.happyCount,
-    serviceProgressMetrics.unHappyCount,
-  )
-
+  def apply(serviceProgressMetrics: ServiceProgressMetrics): ServiceMetricsEntry =
+    ServiceMetricsEntry(
+      serviceProgressMetrics.name,
+      serviceProgressMetrics.count,
+      serviceProgressMetrics.happyCount,
+      serviceProgressMetrics.unHappyCount,
+    )
 }

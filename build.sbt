@@ -33,8 +33,8 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "5.7.0"
-val hmrcMongoVersion     = "0.51.0"
+val bootstrapPlayVersion = "5.14.0"
+val hmrcMongoVersion     = "0.54.0"
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-28" % bootstrapPlayVersion,
@@ -53,7 +53,6 @@ val test = Seq(
   "uk.gov.hmrc"            %% "bootstrap-test-play-28"   % bootstrapPlayVersion % Test,
   "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28"  % hmrcMongoVersion     % Test,
   "org.scalatestplus"      %% "scalatestplus-scalacheck" % "3.1.0.0-RC2"        % Test,
-  "com.vladsch.flexmark"   %  "flexmark-all"             % "0.35.10"            % Test,
   "org.jsoup"              %  "jsoup"                    % "1.13.1"             % Test,
   "org.mockito"            %% "mockito-scala"            % "1.10.6"             % Test,
   ws

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.metrics.connector
 
-import com.google.inject.ImplementedBy
 import play.api.Logger
 import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
@@ -24,41 +23,30 @@ import uk.gov.hmrc.cataloguefrontend.metrics.model._
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[MetricsConnector.Impl])
-trait MetricsConnector {
-  def query(
-             maybeTeam: Option[TeamName]
-           ): Future[MetricsResponse]
-}
+@Singleton
+class MetricsConnector @Inject() (
+  httpClient: HttpClient,
+  servicesConfig: ServicesConfig
+)(implicit val ec: ExecutionContext) {
+  import uk.gov.hmrc.http._
+  import HttpReads.Implicits._
 
-object MetricsConnector{
+  private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private val platformProgressMetricsBaseURL: String = servicesConfig.baseUrl("platform-progress-metrics")
+  private implicit val rF: Reads[MetricsResponse] = MetricsResponse.reads
+  private val logger                              = Logger(this.getClass)
 
-  class Impl @Inject() (
-    httpClient: HttpClient,
-    servicesConfig: ServicesConfig
-  )(implicit val ec: ExecutionContext) extends MetricsConnector {
-    import uk.gov.hmrc.http._
-
-    private implicit val hc: HeaderCarrier = HeaderCarrier()
-    private val platformProgressMetricsBaseURL: String = servicesConfig.baseUrl("platform-progress-metrics")
-    implicit val rF: Reads[MetricsResponse] = MetricsResponse.reads
-    val logger                           = Logger(this.getClass)
-
-    override def query(maybeTeam: Option[TeamName]): Future[MetricsResponse] = {
-      val url = url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics?team=$maybeTeam"
-
-      httpClient
-        .GET[MetricsResponse](
-          url
-        )
-        .recoverWith {
-          case UpstreamErrorResponse.Upstream5xxResponse(x) =>
-            logger.error(s"An error occurred when connecting to platform progress metrics service. baseUrl: $platformProgressMetricsBaseURL", x)
-            Future.successful(MetricsResponse(Seq.empty))
-        }
-    }
-  }
+  def query(maybeTeam: Option[TeamName]): Future[MetricsResponse] =
+    httpClient
+      .GET[MetricsResponse](
+        url"$platformProgressMetricsBaseURL/platform-progress-metrics/metrics?team=$maybeTeam"
+      )
+      .recover {
+        case UpstreamErrorResponse.Upstream5xxResponse(x) =>
+          logger.error(s"An error occurred when connecting to platform progress metrics service. baseUrl: $platformProgressMetricsBaseURL", x)
+          MetricsResponse(Seq.empty)
+      }
 }

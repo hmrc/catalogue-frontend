@@ -2,6 +2,8 @@
 
 | Date                  |      Post                                                                                                             |
 |-----------------------|:---------------------------------------------------------------------------------------------------------------------:|
+| 20th September 2021   |  [Transactional mongo for development](https://confluence.tools.tax.service.gov.uk/x/5ABDEg)
+| 28th July 2021        |  [It's time to upgrade your Play (and Scala)](https://confluence.tools.tax.service.gov.uk/x/P5RyE)
 | 23rd July 2021        |  [Update to dependency info in catalogue](https://confluence.tools.tax.service.gov.uk/x/S4ZyE)
 | 8th July 2021         |  [Http verbs test update](https://confluence.tools.tax.service.gov.uk/x/noFLE)
 | 13th May 2021         |  [Changes to how http-verbs handles headers](https://confluence.tools.tax.service.gov.uk/x/PAGpDw)

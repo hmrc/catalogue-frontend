@@ -230,6 +230,6 @@ object DependencyExplorerController {
     }
 
   def search(team: String = "", flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange): String =
-    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search() +
+    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search +
       s"?team=$team&flag=${flag.asString}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
 }

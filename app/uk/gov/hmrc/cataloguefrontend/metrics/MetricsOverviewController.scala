@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.metrics
 
 import cats.implicits.none
 import play.api.data.{Form, Forms}
@@ -29,67 +29,58 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class MetricsOverviewController @Inject()(
-                                           mcc: MessagesControllerComponents,
-                                           page: MetricsDisplayPage,
-                                           metricsConnector: MetricsConnector
-                                         )(implicit val ec: ExecutionContext)
+  mcc             : MessagesControllerComponents,
+  page            : MetricsDisplayPage,
+  metricsConnector: MetricsConnector
+)(implicit val ec: ExecutionContext)
   extends FrontendController(mcc) {
 
   def landing: Action[AnyContent] =
     Action.async { implicit request =>
       for {
         response <- metricsConnector.query(none)
-        entries = response.metrics.map(ServiceMetricsEntry.apply)
-      } yield Ok(
-        page(
-          form.fill(
-            SearchForm(
-              none
-            )
-          ),
-          entries
+        entries  =  response.metrics.map(ServiceMetricsEntry.apply)
+      } yield
+        Ok(
+          page(
+            form.fill(SearchForm(none)),
+            entries
+          )
         )
-      )
     }
 
   def search =
     Action.async { implicit request =>
-      for {
-        res <- {
-          form
-            .bindFromRequest()
-            .fold(
-              hasErrors = formWithErrors =>
-                Future.successful(
-                  BadRequest(
-                    page(
-                      formWithErrors,
-                      metricsEntries = Seq.empty
-                    )
-                  )
-                ),
-              success = query =>
-                for {
-                  response <- metricsConnector.query(
-                    maybeTeam = query.team
-                  )
-                  entries = response.metrics.map(ServiceMetricsEntry.apply)
-                } yield Ok(
-                  page(
-                    form.bindFromRequest(),
-                    entries
-                  )
-                )
-            )
-        }
-      } yield res
+      form
+        .bindFromRequest()
+        .fold(
+          hasErrors = formWithErrors =>
+                        Future.successful(
+                          BadRequest(
+                            page(
+                              formWithErrors,
+                              metricsEntries = Seq.empty
+                            )
+                          )
+                        ),
+          success = query =>
+                       for {
+                         response <- metricsConnector.query(maybeTeam = query.team)
+                         entries  =  response.metrics.map(ServiceMetricsEntry.apply)
+                       } yield
+                         Ok(
+                           page(
+                             form.bindFromRequest(),
+                             entries
+                           )
+                         )
+        )
     }
 
-  def form(): Form[SearchForm] = {
+  def form(): Form[SearchForm] =
     Form(
       Forms.mapping(
-        "team"              -> Forms.optional(Forms.text),
+        "team" -> Forms.optional(Forms.text),
       )(SearchForm.applyRaw)(SearchForm.unapplyRaw)
     )
-  }
 }
