@@ -28,11 +28,11 @@ import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, Version, TeamName}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
@@ -66,6 +66,7 @@ class CatalogueController @Inject() (
   eventService                 : EventService,
   readModelService             : ReadModelService,
   shutterService               : ShutterService,
+  defaultBranchesService       : DefaultBranchesService,
   verifySignInStatus           : VerifySignInStatus,
   umpAuthActionBuilder         : UmpAuthActionBuilder,
   userManagementPortalConfig   : UserManagementPortalConfig,
@@ -497,24 +498,28 @@ class CatalogueController @Inject() (
       }
     }
 
-  def allDefaultBranches: Action[AnyContent] =
+  def allDefaultBranches(singleOwnership: Option[Boolean], archived: Option[Boolean]): Action[AnyContent] = {
     Action.async { implicit request =>
-
       teamsAndRepositoriesConnector.allDefaultBranches.map { repositories =>
         DefaultBranchesFilter.form
           .bindFromRequest()
           .fold(
-            formWithErrors => Ok(defaultBranchListPage(repositories = Seq.empty, formWithErrors)),
+            formWithErrors => Ok(defaultBranchListPage(repositories = Seq(), calculate = 0, teams = Seq(""), Option(false), Option(false), formWithErrors)),
             query =>
               Ok(
                 defaultBranchListPage(
-                  repositories = repositories,
-                  RepoListFilter.form.bindFromRequest()
+                  repositories = defaultBranchesService.filterRepositories(repositories, query.name, query.defaultBranch, query.teamNames, singleOwnership, archived),
+                  calculate = defaultBranchesService.updatedDefaultBranchCount(repositories, query.name, query.defaultBranch, query.teamNames, singleOwnership, archived),
+                  teams = defaultBranchesService.allTeams(repositories),
+                  singleOwnership = singleOwnership,
+                  archived = archived,
+                  DefaultBranchesFilter.form.bindFromRequest()
                 )
               )
           )
       }
     }
+  }
 
   private def convertToDisplayableTeamMembers(
     teamName: TeamName,
@@ -585,7 +590,7 @@ case class DefaultBranchesFilter(
 }
 
 object DefaultBranchesFilter {
-  lazy val form = Form(
+  lazy val form: Form[DefaultBranchesFilter] = Form(
     mapping(
       "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
       "teamNames"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
