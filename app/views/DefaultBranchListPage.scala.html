@@ -25,10 +25,9 @@
 @this(viewMessages: ViewMessages)
 
 @(repositories: Seq[RepositoryDisplayDetails],
-    calculate: Int,
     teams: Seq[String],
-    singleOwnership: Option[Boolean],
-    archived: Option[Boolean],
+    singleOwnership: Boolean,
+    archived: Boolean,
     form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
@@ -85,8 +84,8 @@
     </form>
     <table class="table table-striped">
         <div>
-        <td colspan="4"><progress class="progress" style="width: 100%;" id="nomenclature" max="@repositories.length" value = @calculate> @calculate </progress> </td>
-            Updated default branch names: @calculate/@repositories.length
+        <td colspan="4"><progress class="progress" style="width: 100%;" id="nomenclature" max="@repositories.length" value='@repositories.filter(_.defaultBranch != "master").length'> @repositories.filter(_.defaultBranch != "master").length </progress> </td>
+            Updated default branch names: @repositories.filter(_.defaultBranch != "master").length/@repositories.length
         </div>
         <tr>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
@@ -107,7 +106,7 @@
                     @if(name == repo.teamNames.last) { @name } else { @name, }
                         }
                     } else if (repo.teamNames.length > 6)  {
-                        <i title="@for(name <- repo.teamNames) { @if(name == repo.teamNames.last) { @name } else { @name,}} ">Various Teams</i>
+                        <i title="@repo.teamNames.mkString(", ")">Various Teams</i>
                     } else {
                             @repo.teamNames
                     }

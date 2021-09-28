@@ -13,36 +13,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with ScalaFutures {
-  "updatedDefaultBranchCount" should {
-    "return an integer representing how many repositories have updated their default branch name" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allDefaultBranches) thenReturn
-        Future.successful(mockRepositories)
-
-      defaultBranchesService.updatedDefaultBranchCount(
-        repos = mockRepositories,
-        name = Option(null),
-        defaultBranch = Option(null),
-        teamNames = Option(null),
-        singleOwnership = Some(false),
-        archived = Some(false)
-      ) shouldBe 1
-    }
-  }
-
-  "updatedDefaultBranchCountTwo" should {
-    "return an integer representing how many repositories have updated their default branch name" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allDefaultBranches) thenReturn
-        Future.successful(mockRepositoriesTwo)
-      defaultBranchesService.updatedDefaultBranchCount(
-        repos = mockRepositoriesTwo,
-        name = Option(null),
-        defaultBranch = Option(null),
-        teamNames = Option(null),
-        singleOwnership = Some(false),
-        archived = Some(false)
-      ) shouldBe 3
-    }
-  }
 
   "filterRepositories" should {
     "return an integer representing how many repositories should be returned in a default search" in new Setup {
@@ -53,8 +23,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
         name = Option(null),
         defaultBranch = Option(null),
         teamNames = Option(null),
-        singleOwnership = Some(false),
-        archived = Some(false)
+        singleOwnership = false,
+        archived = false
       ).length shouldBe 3
     }
   }
@@ -68,8 +38,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
         name = Some("test-3"),
         defaultBranch = Option(null),
         teamNames = Some("Team-1"),
-        singleOwnership = Option(false),
-        archived = Option(false)
+        singleOwnership = false,
+        archived = false
       ).length shouldBe 1
     }
   }
@@ -83,8 +53,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
         name = Option(null),
         defaultBranch = Option(null),
         teamNames = Option(null),
-        singleOwnership = Some(false),
-        archived = Some(false)
+        singleOwnership = false,
+        archived = true
       )
       defaultBranchesService.allTeams(result).length shouldBe 3
     }

@@ -17,13 +17,10 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
-import uk.gov.hmrc.http.HeaderCarrier
 
-import javax.inject._
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
-import scala.language.postfixOps
 
-@Singleton
 class DefaultBranchesService @Inject()()(implicit val ec: ExecutionContext){
 
   def allTeams(repos: Seq[RepositoryDisplayDetails]): Seq[String] = {
@@ -31,41 +28,22 @@ class DefaultBranchesService @Inject()()(implicit val ec: ExecutionContext){
     repositories.flatten.distinct.sorted
   }
 
-  def updatedDefaultBranchCount(
-      repos:            Seq[RepositoryDisplayDetails],
+  def filterRepositories(
+      repositories:     Seq[RepositoryDisplayDetails],
       name:             Option[String],
       defaultBranch:    Option[String],
       teamNames:        Option[String],
-      singleOwnership:  Option[Boolean],
-      archived:         Option[Boolean]): Int = {
+      singleOwnership:  Boolean,
+      archived:         Boolean): Seq[RepositoryDisplayDetails] = {
 
-    var results: Seq[RepositoryDisplayDetails] = repos
-
-    if(name.isDefined)              { results = results.filter(_.name contains name.get) }
-    if(defaultBranch.isDefined)     { results = results.filter(_.defaultBranch contains defaultBranch.get) }
-    if(teamNames.isDefined)         { results = results.filter(_.teamNames contains teamNames.get) }
-    if(singleOwnership.isDefined)   { results = results.filter(_.teamNames.length == 1) }
-    if(archived.isEmpty)            { results = results.filter(_.isArchived == false) }
-
-    results.map(r => r.defaultBranch).count(_ != "master")
-  }
-
-  def filterRepositories(
-            repositories:     Seq[RepositoryDisplayDetails],
-            name:             Option[String],
-            defaultBranch:    Option[String],
-            teamNames:        Option[String],
-            singleOwnership:  Option[Boolean],
-            archived:         Option[Boolean]): Seq[RepositoryDisplayDetails] = {
-
-    var results: Seq[RepositoryDisplayDetails] = repositories
-
-    if(name.isDefined)              { results = results.filter(_.name contains name.get) }
-    if(defaultBranch.isDefined)     { results = results.filter(_.defaultBranch contains defaultBranch.get) }
-    if(teamNames.isDefined)         { results = results.filter(_.teamNames contains teamNames.get) }
-    if(singleOwnership.isDefined)   { results = results.filter(_.teamNames.length == 1) }
-    if(archived.isEmpty)            { results = results.filter(_.isArchived == false) }
-
+    val results: Seq[RepositoryDisplayDetails] = {
+      repositories
+        .filter(repo => name.fold(true)(repo.name contains _))
+        .filter(repo => defaultBranch.fold(true)(repo.defaultBranch contains _))
+        .filter(repo => teamNames.fold(true)(repo.teamNames contains _))
+        .filter(repo => !singleOwnership || repo.teamNames.length == 1)
+        .filter(repo => archived || !repo.isArchived)
+    }
     results
   }
 }

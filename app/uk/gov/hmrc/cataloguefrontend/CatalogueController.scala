@@ -498,18 +498,22 @@ class CatalogueController @Inject() (
       }
     }
 
-  def allDefaultBranches(singleOwnership: Option[Boolean], archived: Option[Boolean]): Action[AnyContent] = {
+  def allDefaultBranches(singleOwnership: Boolean, archived: Boolean): Action[AnyContent] = {
     Action.async { implicit request =>
       teamsAndRepositoriesConnector.allDefaultBranches.map { repositories =>
         DefaultBranchesFilter.form
           .bindFromRequest()
           .fold(
-            formWithErrors => Ok(defaultBranchListPage(repositories = Seq(), calculate = 0, teams = Seq(""), Option(false), Option(false), formWithErrors)),
+            formWithErrors => Ok(defaultBranchListPage(
+              repositories      = Seq(),
+              teams             = Seq(""),
+              singleOwnership   = false,
+              archived          = false,
+              formWithErrors)),
             query =>
               Ok(
                 defaultBranchListPage(
                   repositories = defaultBranchesService.filterRepositories(repositories, query.name, query.defaultBranch, query.teamNames, singleOwnership, archived),
-                  calculate = defaultBranchesService.updatedDefaultBranchCount(repositories, query.name, query.defaultBranch, query.teamNames, singleOwnership, archived),
                   teams = defaultBranchesService.allTeams(repositories),
                   singleOwnership = singleOwnership,
                   archived = archived,
