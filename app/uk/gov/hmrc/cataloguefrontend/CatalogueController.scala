@@ -508,7 +508,7 @@ class CatalogueController @Inject() (
               repositories      = Seq(),
               teams             = Seq(""),
               singleOwnership   = false,
-              archived   = false,
+              includeArchived   = false,
               formWithErrors)),
             query =>
               Ok(
@@ -516,7 +516,7 @@ class CatalogueController @Inject() (
                   repositories = defaultBranchesService.filterRepositories(repositories, query.name, query.defaultBranch, query.teamNames, singleOwnership, includeArchived),
                   teams = defaultBranchesService.allTeams(repositories),
                   singleOwnership = singleOwnership,
-                  archived = includeArchived,
+                  includeArchived = includeArchived,
                   DefaultBranchesFilter.form.bindFromRequest()
                 )
               )

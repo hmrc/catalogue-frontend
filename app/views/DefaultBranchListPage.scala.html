@@ -24,11 +24,11 @@
 
 @this(viewMessages: ViewMessages)
 
-@(repositories: Seq[RepositoryDisplayDetails],
-    teams: Seq[String],
-    singleOwnership: Boolean,
-    archived: Boolean,
-    form: Form[_]
+@(  repositories:       Seq[RepositoryDisplayDetails],
+    teams:              Seq[String],
+    singleOwnership:    Boolean,
+    includeArchived:    Boolean,
+    form:               Form[_]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Default Branches", "defaultbranch") {
@@ -74,7 +74,7 @@
                 <label for="defaultBranch">Branch:</label>
             <div>
                 <input class="form-control" id="defaultBranch" type="text" name="defaultBranch" value='@form("defaultBranch").value'><br>
-                    Include Archived Repositories <input class="checkbox" id="archived"  name="archived"  type="checkbox" data-toggle="tooltip" title="Include archived repositories in the search." value="true" @if(archived){checked}>
+                    Include Archived Repositories <input class="checkbox" id="includeArchived"  name="includeArchived"  type="checkbox" data-toggle="tooltip" title="Include archived repositories in the search." value="true" @if(includeArchived){checked}>
             </div>
             </div>
             <div style="float: right; ">
@@ -93,7 +93,7 @@
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="teamNames">Team/s</button></th>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="defaultBranch">Default Branch</button></th>
-            @if(archived) {
+            @if(includeArchived) {
                 <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="isArchived">Archived</button></th>
             }
         </tr>
@@ -113,7 +113,7 @@
             <td class="defaultBranch monospaced" id="row@{i}_defaultBranch">
                 @repo.defaultBranch
             </td>
-            @if(archived) {
+            @if(includeArchived) {
             <td class="isArchived monospaced" id="row@{i}_isArchived">
                 @repo.isArchived
             </td>
