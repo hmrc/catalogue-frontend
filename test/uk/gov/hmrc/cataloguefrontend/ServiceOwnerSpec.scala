@@ -177,6 +177,7 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       mockedEventService,
       mockedModelService,
       mock[ShutterService],
+      mock[DefaultBranchesService],
       new VerifySignInStatusPassThrough(umac, controllerComponents),
       new UmpAuthenticatedPassThrough(umac, controllerComponents, catalogueErrorHandler),
       userManagementPortalConfig,

@@ -349,6 +349,7 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       eventService                  = mock[EventService],
       readModelService              = mockedModelService,
       shutterService                = mock[ShutterService],
+      defaultBranchesService        = mock[DefaultBranchesService],
       verifySignInStatus            = verifySignInStatusPassThrough,
       umpAuthActionBuilder          = umpAuthenticatedPassThrough,
       userManagementPortalConfig    = userManagementPortalConfig,

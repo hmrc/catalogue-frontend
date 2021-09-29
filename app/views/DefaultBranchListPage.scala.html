@@ -17,18 +17,23 @@
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
+@import uk.gov.hmrc.cataloguefrontend.service.DefaultBranchesService
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import helper._
+@import scala.concurrent.Future
 
 @this(viewMessages: ViewMessages)
 
-@(repositories: Seq[RepositoryDisplayDetails],
-form: Form[_]
+@(  repositories:       Seq[RepositoryDisplayDetails],
+    teams:              Seq[String],
+    singleOwnership:    Boolean,
+    includeArchived:    Boolean,
+    form:               Form[_]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Default Branches", "defaultbranch") {
 <header>
-    <h1>Default Branch</h1>
+    <h1>Default Branch Naming Progress</h1>
 </header>
 
 @if(form.hasErrors) {
@@ -44,32 +49,52 @@ form: Form[_]
 <div id="default-branches">
     <form action="/defaultbranch" method="get">
         <div class="form-group row">
-            <div class="col-xs-1 padding-reset-right">
+            <div class="col col-xs-3">
                 <label for="search">Name:</label>
+                <div>
+                    <input class="form-control" id="search" type="text" name="name" value='@form("name").value'>
+                </div>
             </div>
-            <div class="col col-xs-3">
-                <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
+            <div class="col col-xs-3" style="padding-left: 15px; padding-right: 15px;">
+                @select(
+                field = form("teamNames"),
+                options = teams.map(t => t -> t),
+                '_default -> "All",
+                '_label -> "Teams: ",
+                'name -> "teamNames",
+                'value -> "form('teamNames').value",
+                'id -> "teamNames"
+                )
+                <div>
+                    Single ownership
+                    <input class="checkbox" id="singleOwnership" name="singleOwnership" type="checkbox" data-toggle="tooltip" title="Return repositories that are owned solely by the selected team." value="true" @if(singleOwnership){checked}>
+                </div>
             </div>
-            <div class="col-xs-1 padding-reset-right">
-                <label for="teamNames">Team:</label>
-            </div>
-            <div class="col col-xs-3">
-                <input class="search form-control" id="teamNames" type="text" name="teamNames" value='@form("teamNames").value' autofocus>
-            </div>
-            <div class="col-xs-1 padding-reset-right">
+            <div class="col-xs-3">
                 <label for="defaultBranch">Branch:</label>
+            <div>
+                <input class="form-control" id="defaultBranch" type="text" name="defaultBranch" value='@form("defaultBranch").value'>
             </div>
-            <div class="col col-xs-3">
-                <input class="search form-control" id="defaultBranch" type="text" name="defaultBranch" value='@form("defaultBranch").value' autofocus>
+            </div>
+            <div style="float: right; ">
+                <button class="btn btn-primary" type="submit" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.allDefaultBranches()">Search</button>
             </div>
         </div>
     </form>
     <table class="table table-striped">
+        <div>
+        @defining(repositories.filter(_.defaultBranch != "master").length) { nonMasterCount =>
+        <td colspan="4"><progress class="progress" style="width: 100%;" id="nomenclature" max="@repositories.length" value='@nonMasterCount'> @@nonMasterCount </progress> </td>
+            Updated default branch names: @nonMasterCount/@repositories.length
+        }
+        </div>
         <tr>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="teamNames">Team/s</button></th>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="defaultBranch">Default Branch</button></th>
-            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="isArchived">Archived</button></th>
+            @if(includeArchived) {
+                <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="isArchived">Archived</button></th>
+            }
         </tr>
         <tbody class="list">
         @repositories.zipWithIndex.map{case (repo, i) =>
@@ -78,21 +103,20 @@ form: Form[_]
                 <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
             </td>
             <td class="teamNames monospaced" id="row@{i}_teamNames">
-                @if(repo.teamNames.length > 0 && repo.teamNames.length <= 6) { @for(name <- repo.teamNames) {
-                            @if(name == repo.teamNames.last) { @name } else { @name, }
-                        }
-                    } else if (repo.teamNames.length > 6)  {
-                        <i>Various Teams</i>
-                    } else {
-                            @repo.teamNames
+                @if(repo.teamNames.length > 0 && repo.teamNames.length <= 10) {
+                        @repo.teamNames.mkString(", ")
+                    } else  {
+                        <i title="@repo.teamNames.mkString(", ")">Various Teams</i>
                     }
             </td>
             <td class="defaultBranch monospaced" id="row@{i}_defaultBranch">
                 @repo.defaultBranch
             </td>
+            @if(includeArchived) {
             <td class="isArchived monospaced" id="row@{i}_isArchived">
                 @repo.isArchived
             </td>
+            }
         </tr>
         }
         </tbody>
@@ -100,7 +124,6 @@ form: Form[_]
 </div>
 }
 
-<!-- listjs configuration -->
 <script>
     var options = { valueNames: [ 'service-name', 'repo-name', 'teamNames', 'defaultBranch', 'isArchived'],
                     searchColumns: ['repo-name', 'teamNames', 'defaultBranch', 'isArchived'] };
