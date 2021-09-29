@@ -84,8 +84,10 @@
     </form>
     <table class="table table-striped">
         <div>
-        <td colspan="4"><progress class="progress" style="width: 100%;" id="nomenclature" max="@repositories.length" value='@repositories.filter(_.defaultBranch != "master").length'> @repositories.filter(_.defaultBranch != "master").length </progress> </td>
-            Updated default branch names: @repositories.filter(_.defaultBranch != "master").length/@repositories.length
+        @defining(repositories.filter(_.defaultBranch != "master").length) { nonMasterCount =>
+        <td colspan="4"><progress class="progress" style="width: 100%;" id="nomenclature" max="@repositories.length" value='@nonMasterCount'> @@nonMasterCount </progress> </td>
+            Updated default branch names: @nonMasterCount/@repositories.length
+        }
         </div>
         <tr>
             <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
@@ -102,13 +104,10 @@
                 <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
             </td>
             <td class="teamNames monospaced" id="row@{i}_teamNames">
-                @if(repo.teamNames.length > 0 && repo.teamNames.length <= 6) { @for(name <- repo.teamNames) {
-                    @if(name == repo.teamNames.last) { @name } else { @name, }
-                        }
-                    } else if (repo.teamNames.length > 6)  {
+                @if(repo.teamNames.length > 0 && repo.teamNames.length <= 6) {
+                        @repo.teamNames.mkString(", ")
+                    } else  {
                         <i title="@repo.teamNames.mkString(", ")">Various Teams</i>
-                    } else {
-                            @repo.teamNames
                     }
             </td>
             <td class="defaultBranch monospaced" id="row@{i}_defaultBranch">

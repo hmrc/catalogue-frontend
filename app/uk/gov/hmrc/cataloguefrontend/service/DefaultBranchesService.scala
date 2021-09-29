@@ -34,7 +34,7 @@ class DefaultBranchesService @Inject()()(implicit val ec: ExecutionContext){
       defaultBranch:    Option[String],
       teamNames:        Option[String],
       singleOwnership:  Boolean,
-      archived:         Boolean): Seq[RepositoryDisplayDetails] = {
+      includeArchived:  Boolean): Seq[RepositoryDisplayDetails] = {
 
     val results: Seq[RepositoryDisplayDetails] = {
       repositories
@@ -42,7 +42,7 @@ class DefaultBranchesService @Inject()()(implicit val ec: ExecutionContext){
         .filter(repo => defaultBranch.fold(true)(repo.defaultBranch contains _))
         .filter(repo => teamNames.fold(true)(repo.teamNames contains _))
         .filter(repo => !singleOwnership || repo.teamNames.length == 1)
-        .filter(repo => archived || !repo.isArchived)
+        .filter(repo => includeArchived || !repo.isArchived)
     }
     results
   }

@@ -24,7 +24,7 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
         defaultBranch = Option(null),
         teamNames = Option(null),
         singleOwnership = false,
-        archived = false
+        includeArchived = false
       ).length shouldBe 3
     }
   }
@@ -39,7 +39,7 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
         defaultBranch = Option(null),
         teamNames = Some("Team-1"),
         singleOwnership = false,
-        archived = false
+        includeArchived = false
       ).length shouldBe 1
     }
   }
@@ -54,7 +54,7 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
         defaultBranch = Option(null),
         teamNames = Option(null),
         singleOwnership = false,
-        archived = true
+        includeArchived = true
       )
       defaultBranchesService.allTeams(result).length shouldBe 3
     }

@@ -498,7 +498,7 @@ class CatalogueController @Inject() (
       }
     }
 
-  def allDefaultBranches(singleOwnership: Boolean, archived: Boolean): Action[AnyContent] = {
+  def allDefaultBranches(singleOwnership: Boolean, includeArchived: Boolean): Action[AnyContent] = {
     Action.async { implicit request =>
       teamsAndRepositoriesConnector.allDefaultBranches.map { repositories =>
         DefaultBranchesFilter.form
@@ -508,15 +508,15 @@ class CatalogueController @Inject() (
               repositories      = Seq(),
               teams             = Seq(""),
               singleOwnership   = false,
-              archived          = false,
+              archived   = false,
               formWithErrors)),
             query =>
               Ok(
                 defaultBranchListPage(
-                  repositories = defaultBranchesService.filterRepositories(repositories, query.name, query.defaultBranch, query.teamNames, singleOwnership, archived),
+                  repositories = defaultBranchesService.filterRepositories(repositories, query.name, query.defaultBranch, query.teamNames, singleOwnership, includeArchived),
                   teams = defaultBranchesService.allTeams(repositories),
                   singleOwnership = singleOwnership,
-                  archived = archived,
+                  archived = includeArchived,
                   DefaultBranchesFilter.form.bindFromRequest()
                 )
               )
