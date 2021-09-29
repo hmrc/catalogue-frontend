@@ -104,7 +104,7 @@
                 <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
             </td>
             <td class="teamNames monospaced" id="row@{i}_teamNames">
-                @if(repo.teamNames.length > 0 && repo.teamNames.length <= 6) {
+                @if(repo.teamNames.length > 0 && repo.teamNames.length <= 10) {
                         @repo.teamNames.mkString(", ")
                     } else  {
                         <i title="@repo.teamNames.mkString(", ")">Various Teams</i>
