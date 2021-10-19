@@ -37,7 +37,7 @@
         <section>
             <div class="grid-container explorer-grid">
                 <div class="grid-header">
-                    <div id="header-0" class="grid-item sticky-column truncate-content" style="width:300px;">Key</div>
+                    <div id="header-0" class="grid-item sticky-column truncate-content" style="width:300px; text-indent: 1.2em">Key</div>
                     <div class="gutter gutter-horizontal"></div>
                     @for((env, index) <- ConfigEnvironment.values.zipWithIndex) {
                         <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString" style="width:500px;">@env.asString</div>
@@ -47,7 +47,9 @@
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1)) {
                     @defining(envSources.forall(_._2.map(_.source) == List("referenceConf"))) { isRefconfOnly =>
                         <div id="config-row-@key" class="grid-row @if(isRefconfOnly) {refconf-only} else {}">
-                            <div id="config-key-@key" class="grid-item sticky-column truncate-content" style="width:310px;">@key</div>
+                            <div id="config-key-@key" class="grid-item sticky-column truncate-content" style="width:310px;">
+                                <a id="config-url-@key" href="#@key" class="glyphicon glyphicon-link" onclick='copyHref("config-url-@key")'></a>@key
+                            </div>
                             @for(env <- ConfigEnvironment.values) {
                                 <div class="grid-item column-@env.asString" style="width:510px;">
                                     <ul>
@@ -111,6 +113,17 @@
         </aside>
         <script type="text/javascript">
             ready(function() {
+                (window.onhashchange = function () {
+                    const el = document.getElementById(location.hash.replace("#", "config-row-"));
+                    const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
+                    highlighted.forEach(e => e.classList.remove("highlight-amber"));
+
+                    if (el) {
+                        el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
+                        el.classList.add("highlight-amber");
+                    }
+                })();
+
                 Split(["#header-0", "#header-1", "#header-2", "#header-3", "#header-4", "#header-5", "#header-6", "#header-7"], {
                     sizes: [300, 500, 500, 500, 500, 500, 500, 500]
                 });
@@ -146,6 +159,10 @@
                     document.querySelector("body").classList.toggle("word-wrap");
                 });
             });
+            function copyHref(id) {
+                const copyText = document.getElementById(id);
+                navigator.clipboard.writeText(copyText.href);
+            }
         </script>
     </body>
 </html>

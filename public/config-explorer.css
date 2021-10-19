@@ -995,8 +995,26 @@ aside {
       .grid-row > .grid-item > ul > li > a:hover {
         color: inherit; }
 
+.grid-row > .grid-item > a {
+  color: grey;
+  text-decoration: inherit;
+  flex-shrink: 0;
+  width: 1.2em;
+  visibility: hidden;
+}
+
+.grid-row > .grid-item:hover > a {
+  visibility: visible;
+}
+
 .highlight {
   border: 2px solid red;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  font-weight: bold; }
+
+.highlight-amber {
+  border: 2px solid #ffbf00;
   padding-top: 0.5em;
   padding-bottom: 0.5em;
   font-weight: bold; }
