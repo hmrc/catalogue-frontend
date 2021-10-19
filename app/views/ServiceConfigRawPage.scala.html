@@ -95,13 +95,13 @@
             ready(function() {
                 (window.onhashchange = function () {
                     const el = document.getElementById(location.hash.replace("#", "key-"));
-                    const highlighted = Array.from(document.getElementsByClassName("highlight"));
-                    highlighted.forEach(e => e.classList.remove("highlight"));
+                    const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
+                    highlighted.forEach(e => e.classList.remove("highlight-amber"));
 
                     if (el) {
                         el.closest(".grid-container").classList.remove("collapsed");
                         el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
-                        el.classList.add("highlight");
+                        el.classList.add("highlight-amber");
                     }
                 })();
 
