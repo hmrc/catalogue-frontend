@@ -44,8 +44,6 @@ class ViewMessages @Inject() (configuration: Configuration) {
 
   val otherTeamsAre = "Other teams that also have a stake in this service are:"
 
-  val appConfigBaseUrl: String = configuration.get[String](s"urlTemplates.app-config-base")
-
   val informationalText: String = configuration.get[String](s"info-panel-text")
 
   def noJobExecutionTimeDataHtml =
