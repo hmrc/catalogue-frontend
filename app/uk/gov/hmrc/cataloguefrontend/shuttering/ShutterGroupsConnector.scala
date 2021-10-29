@@ -37,7 +37,7 @@ class ShutterGroupsConnector @Inject() (
   val logger = Logger(this.getClass)
 
   def shutterGroups: Future[List[ShutterGroup]] = {
-    val url = url"${githubConf.rawUrl}/hmrc/outage-pages/master/conf/shutter-groups.json"
+    val url = url"${githubConf.rawUrl}/hmrc/outage-pages/HEAD/conf/shutter-groups.json"
     implicit val hc: HeaderCarrier = HeaderCarrier()
     implicit val gr = ShutterGroup.reads
     http.GET[Option[List[ShutterGroup]]](

@@ -1,6 +1,6 @@
 # catalogue-frontend
 
-[![Build Status](https://travis-ci.org/hmrc/catalogue-frontend.svg?branch=master)](https://travis-ci.org/hmrc/catalogue-frontend) [ ![Download](https://api.bintray.com/packages/hmrc/releases/catalogue-frontend/images/download.svg) ](https://bintray.com/hmrc/releases/catalogue-frontend/_latestVersion)
+![](https://img.shields.io/github/v/release/hmrc/catalogue-frontend)
 
 * [Setup](#setup)
 * [Tests](#tests)
@@ -28,7 +28,7 @@ whats-new.display.lines = 30 #How many lines of the VERSION_HISTORY.md to render
 blog-posts.display.lines = 80 #How many lines of the BLOG_POSTS.md to render on the front page
 ```
 
-> Note that these control how many lines are rendered in total (which includes the table header), in the expanded view. 
+> Note that these control how many lines are rendered in total (which includes the table header), in the expanded view.
 > This has no bearing on how many are shown when the box is collapsed, which is controlled by the height of the div via css.
 
 ### Tests
