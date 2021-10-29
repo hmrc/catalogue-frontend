@@ -32,7 +32,7 @@ class ViewMessages @Inject() (configuration: Configuration) {
                             <p>You should also monitor the <a href="https://hmrcdigital.slack.com/messages/C04RY81QK" target="_blank">#announcements<span class="glyphicon glyphicon-new-window"/></a> channel for details of any upgrades that may be more involved than simply bumping a version number</p>"""
 
   val curatedLibsText =
-    """<p>Click <a href="https://github.com/hmrc/service-dependencies/blob/master/conf/dependency-versions-config.json" target="_blank">here<span class="glyphicon glyphicon-new-window"/></a> to see the platform libraries that are included in the dependency analysis</p>"""
+    """<p>Click <a href="https://github.com/hmrc/service-dependencies/blob/main/conf/dependency-versions-config.json" target="_blank">here<span class="glyphicon glyphicon-new-window"/></a> to see the platform libraries that are included in the dependency analysis</p>"""
 
   def noRepoOfTypeForTeam(item: String) =
     s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +

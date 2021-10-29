@@ -52,7 +52,7 @@ class ShutterGroupsConnectorSpec
   "shutterGroups" should {
     "return all shutter groups if the file is valid" in {
       stubFor(
-        get(urlEqualTo("/hmrc/outage-pages/master/conf/shutter-groups.json"))
+        get(urlEqualTo("/hmrc/outage-pages/HEAD/conf/shutter-groups.json"))
           .willReturn(
             aResponse()
             .withBody(
@@ -77,14 +77,14 @@ class ShutterGroupsConnectorSpec
       )
 
       verify(
-        getRequestedFor(urlEqualTo("/hmrc/outage-pages/master/conf/shutter-groups.json"))
+        getRequestedFor(urlEqualTo("/hmrc/outage-pages/HEAD/conf/shutter-groups.json"))
           .withHeader("Authorization", equalTo("token t"))
       )
     }
 
     "return an empty list of shutter groups if there is a problem parsing the file (invalid json)" in {
       stubFor(
-        get(urlEqualTo("/hmrc/outage-pages/master/conf/shutter-groups.json"))
+        get(urlEqualTo("/hmrc/outage-pages/HEAD/conf/shutter-groups.json"))
           .willReturn(
             aResponse()
             .withBody(
@@ -105,7 +105,7 @@ class ShutterGroupsConnectorSpec
 
     "return an empty list of shutter groups if the file is not found" in {
       stubFor(
-        get(urlEqualTo("/hmrc/outage-pages/master/conf/shutter-groups.json"))
+        get(urlEqualTo("/hmrc/outage-pages/HEAD/conf/shutter-groups.json"))
           .willReturn(aResponse().withStatus(404))
       )
 

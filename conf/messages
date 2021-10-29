@@ -17,7 +17,7 @@ metricsexplorer.select.group=Select Group
 metricsexplorer.select.dependency=Select Dependency
 
 platformdependencies.info=A curated selection of runtime dependencies built into the versioned distributable
-latestbuild.info=A curated selection of development dependencies determined by parsing build files on the master branch
+latestbuild.info=A curated selection of development dependencies determined by parsing build files on the main branch
 
 shuttered.badge=Shuttered
 bobbyrules.active.badge=Bobby rule violated

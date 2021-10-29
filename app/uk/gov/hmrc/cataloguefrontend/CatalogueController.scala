@@ -91,7 +91,7 @@ class CatalogueController @Inject() (
   import UserManagementConnector._
   import userManagementPortalConfig._
 
-  // this value must match the configured name property for jenkins services defined under url-templates.environments at https://github.com/hmrc/app-config-base/blob/master/teams-and-repositories.conf
+  // this value must match the configured name property for jenkins services defined under url-templates.environments at https://github.com/hmrc/app-config-base/blob/main/teams-and-repositories.conf
   private lazy val jenkinsLinkName =
     configuration.getOptional[String]("teams-and-repositories.link-name.jenkins").getOrElse("jenkins")
 

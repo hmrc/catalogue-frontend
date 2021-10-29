@@ -20,7 +20,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency}
 
 object ServiceInfoView {
   /*
-   * Capture any curated library dependencies from master / Github that are not referenced by the 'latest' slug,
+   * Capture any curated library dependencies from main / Github that are not referenced by the 'latest' slug,
    * and assume that they represent 'test-only' library dependencies.
    */
   def buildToolsFrom(

@@ -16,7 +16,7 @@
 | 17th January 2020     | The service overview page has been improved to show the version number deployed on each environment tab
 | 16th January 2020     | You can now filter [What's Running Where](./whats-running-where) by team or service-manager profile
 | 27th December 2019    | Catalogue has been updated to use SBT 1.x. If you want to do the same for your service, see the blog post [here](https://confluence.tools.tax.service.gov.uk/pages/viewpage.action?pageId=176632503).
-| 16th December 2019    | The 'latest' tab now shows dependencies from the slug, not the github master branch
+| 16th December 2019    | The 'latest' tab now shows dependencies from the slug, not the github main branch
 | 13th November 2019    | We've added a page to show all of the [shutter events](./shutter-events)
 | 21th October 2019     | You can now [shutter services](./shuttering-overview/frontend) dirctly from the Catalogue!
 | 9th October 2019      | We've added data from the Integration environment, you might have noticed it was missing before!
