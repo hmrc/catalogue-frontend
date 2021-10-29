@@ -407,7 +407,7 @@ object JsonData {
             {
               "frontendPath": "/test/qa/ccc",
               "backendPath": "https://test.co/ccc",
-              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
+              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
               "isRegex": false
             }
           ]
@@ -418,7 +418,7 @@ object JsonData {
             {
               "frontendPath": "/test/prod/ccc",
               "backendPath": "https://test.co/prod/ccc",
-              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
+              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
               "isRegex": false
             }
           ]
@@ -429,7 +429,7 @@ object JsonData {
             {
               "frontendPath": "/test/dev/ccc",
               "backendPath": "https://test.co/ccc",
-              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/master/production/frontend-proxy-application-rules.conf#L29",
+              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
               "isRegex": false
             }
           ]
