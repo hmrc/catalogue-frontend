@@ -23,7 +23,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, PlatformInitiativesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
@@ -50,6 +50,7 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
     mock[ConfigService],
     mock[RouteRulesService],
     mock[ServiceDependenciesConnector],
+    mock[PlatformInitiativesConnector],
     mock[LeakDetectionService],
     mock[EventService],
     mock[ReadModelService],
@@ -72,6 +73,8 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
     mock[RepositoryInfoPage],
     mock[RepositoriesListPage],
     mock[DefaultBranchListPage],
+    mock[PlatformInitiativesListPage],
+    mock[PlatformInitiativesService],
     mock[OutOfDateTeamDependenciesPage]
   )
 }
