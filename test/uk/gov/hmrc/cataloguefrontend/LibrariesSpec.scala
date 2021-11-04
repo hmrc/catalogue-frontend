@@ -23,7 +23,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, PlatformInitiativesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
@@ -50,11 +50,13 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
     configService                 = mock[ConfigService],
     routeRulesService             = mock[RouteRulesService],
     serviceDependencyConnector    = mock[ServiceDependenciesConnector],
+    platformInitiativesConnector  = mock[PlatformInitiativesConnector],
     leakDetectionService          = mock[LeakDetectionService],
     eventService                  = mock[EventService],
     readModelService              = mock[ReadModelService],
     shutterService                = mock[ShutterService],
     defaultBranchesService        = mock[DefaultBranchesService],
+    platformInitiativesService    = mock[PlatformInitiativesService],
     verifySignInStatus            = mock[VerifySignInStatus],
     umpAuthActionBuilder          = mock[UmpAuthActionBuilder],
     userManagementPortalConfig    = mock[UserManagementPortalConfig],
@@ -72,6 +74,7 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
     repositoryInfoPage            = mock[RepositoryInfoPage],
     repositoriesListPage          = mock[RepositoriesListPage],
     outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
-    defaultBranchListPage         = mock[DefaultBranchListPage]
+    defaultBranchListPage         = mock[DefaultBranchListPage],
+    platformInitiativesListPage   = mock[PlatformInitiativesListPage]
   )
 }

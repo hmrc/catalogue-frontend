@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScop
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, PlatformInitiativesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
@@ -62,6 +62,7 @@ class CatalogueController @Inject() (
   configService                : ConfigService,
   routeRulesService            : RouteRulesService,
   serviceDependencyConnector   : ServiceDependenciesConnector,
+  platformInitiativesConnector : PlatformInitiativesConnector,
   leakDetectionService         : LeakDetectionService,
   eventService                 : EventService,
   readModelService             : ReadModelService,
@@ -84,6 +85,8 @@ class CatalogueController @Inject() (
   repositoryInfoPage           : RepositoryInfoPage,
   repositoriesListPage         : RepositoriesListPage,
   defaultBranchListPage        : DefaultBranchListPage,
+  platformInitiativesListPage  : PlatformInitiativesListPage,
+  platformInitiativesService   : PlatformInitiativesService,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
@@ -525,6 +528,30 @@ class CatalogueController @Inject() (
     }
   }
 
+  def platformInitiatives(displayChart: Boolean, displayProgress: Boolean): Action[AnyContent] = {
+    Action.async { implicit request =>
+      platformInitiativesConnector.allInitiatives.map { initiative =>
+        PlatformInitiativesFilter.form
+          .bindFromRequest()
+          .fold(
+            formWithErrors => Ok(platformInitiativesListPage(
+                initiatives       = Seq(),
+                displayChart      = false,
+                displayProgress   = false,
+                formWithErrors
+              )),
+          _ =>
+          Ok(platformInitiativesListPage(
+            initiatives           = initiative,
+            displayChart          = displayChart,
+            displayProgress       = displayProgress,
+            PlatformInitiativesFilter.form.bindFromRequest()
+        ))
+        )
+      }
+    }
+  }
+
   private def convertToDisplayableTeamMembers(
     teamName: TeamName,
     errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]
@@ -600,5 +627,19 @@ object DefaultBranchesFilter {
       "teamNames"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
       "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(DefaultBranchesFilter.apply)(DefaultBranchesFilter.unapply)
+  )
+}
+
+case class PlatformInitiativesFilter(
+  initiativeName           : Option[String] = None,
+) {
+  def isEmpty: Boolean = initiativeName.isEmpty
+}
+
+object PlatformInitiativesFilter {
+  lazy val form: Form[PlatformInitiativesFilter] = Form(
+    mapping(
+      "initiativeName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+    )(PlatformInitiativesFilter.apply)(PlatformInitiativesFilter.unapply)
   )
 }
