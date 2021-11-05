@@ -41,9 +41,9 @@ object DependencyGraphParser {
     }
   }
 
-  private val eviction     = """\s*"(.+)" -> "(.+)" \[(.+)\]""".r
-  private val arrow        = """\s*"(.+)" -> "(.+)"\s*;?""".r
-  private val node         = """\s*"(.+)"\[(.+)\]""".r
+  private val eviction     = """\s*"(.+)" -> "(.+)" \[(.+)\]\s*""".r
+  private val arrow        = """\s*"(.+)" -> "(.+)"\s*;?\s*""".r
+  private val node         = """\s*"(.+)"\[(.+)\]\s*""".r
   private val styleEvicted = "stroke-dasharray"
 
   private def lexer(lines: Seq[String]): Seq[Token] =

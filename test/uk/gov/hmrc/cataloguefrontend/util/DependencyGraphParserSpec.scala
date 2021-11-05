@@ -195,5 +195,18 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
           (javaSupport, Seq(javaSupport, opensamlCore, reauthdecrypt, reauthenticationClientApp, emcs))
         )
     }
+
+    "Should work with trailing spaces" in {
+      // note the trailing spaces and tabs
+      val input = "digraph \"uk.gov.hmrc.jdc:platops-example-classic-service:war:0.53.0\" { \n" +
+        "\t\"uk.gov.hmrc.jdc:platops-example-classic-service:war:0.53.0\" -> \"uk.gov.hmrc.jdc:platops-example-classic-service-business:jar:0.53.0:compile\" ; \n" +
+        " } "
+      val graph = DependencyGraphParser.parse(input)
+      graph.dependencies should contain allOf(
+        ServiceDependency("uk.gov.hmrc.jdc", "platops-example-classic-service", "0.53.0"),
+        ServiceDependency("uk.gov.hmrc.jdc", "platops-example-classic-service-business", "0.53.0"),
+      )
+    }
+
   }
 }
