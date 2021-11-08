@@ -16,16 +16,15 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.PlatformInitiative
-@import uk.gov.hmrc.cataloguefrontend.connector.PlatformInitiativesConnector
-@import uk.gov.hmrc.cataloguefrontend.service.PlatformInitiativesService
+@import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
+@import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import helper._
 @import scala.concurrent.Future
 @import java.net.URL
 @import scala.util.Try
 
-@this(viewMessages: ViewMessages, platformInitiativesService: PlatformInitiativesService)
+@this(viewMessages: ViewMessages)
 
 @(initiatives          : Seq[PlatformInitiative],
 displayChart           : Boolean,
@@ -76,7 +75,14 @@ form                   : Form[_]
                             <div id="chart_div_@initiative.initiativeName"></div>
                         <br>
                         <div style="max-width:500px; height:100px; word-wrap:break-word;">
-                            @Html(platformInitiativesService.markdown(initiative.initiativeDescription))
+                            @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match{
+                                case Right(s) => {
+                                    @Html(s)
+                                }
+                                case Left(error) => {
+                                    @error
+                                }
+                            }
                         </div>
                         }else if(!displayChart && displayProgress){
                             <div class="initiativeName" style="width:500px;">
@@ -93,7 +99,7 @@ form                   : Form[_]
                         <div id="chart_div_@initiative.initiativeName"></div>
                         <br>
                         <div style="max-width:500px; height:100px; word-wrap:break-word;">
-                            @Html(platformInitiativesService.markdown(initiative.initiativeDescription))
+
                         </div>
                         <progress class="progress" value="@initiative.currentProgress"
                                   max="@initiative.targetProgress"></progress>

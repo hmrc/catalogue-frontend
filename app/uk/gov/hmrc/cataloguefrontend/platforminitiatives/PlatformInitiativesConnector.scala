@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector
+package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{OFormat, Writes, __}
@@ -64,15 +64,5 @@ class PlatformInitiativesConnector @Inject()(
 
   def allInitiatives(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
     http.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/initiatives")
-  }
-}
-
-object PlatformInitiativesConnector {
-  sealed trait PlatformInitiativesError
-
-  case class HTTPError(code: Int) extends PlatformInitiativesError
-
-  case class ConnectionError(exception: Throwable) extends PlatformInitiativesError {
-    override def toString: String = exception.getMessage
   }
 }

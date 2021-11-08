@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import java.time.LocalDateTime
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -33,6 +32,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMemb
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Username}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
+import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
+import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesConnector
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -351,7 +352,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       readModelService              = mockedModelService,
       shutterService                = mock[ShutterService],
       defaultBranchesService        = mock[DefaultBranchesService],
-      platformInitiativesService    = mock[PlatformInitiativesService],
       verifySignInStatus            = verifySignInStatusPassThrough,
       umpAuthActionBuilder          = umpAuthenticatedPassThrough,
       userManagementPortalConfig    = userManagementPortalConfig,

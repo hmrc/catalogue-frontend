@@ -26,6 +26,8 @@ import play.test.Helpers
 import uk.gov.hmrc.cataloguefrontend.actions.ActionsSupport
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
+import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService, ServiceOwnerSaveEventData, ServiceOwnerUpdatedEventData}
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
@@ -197,7 +199,6 @@ class ServiceOwnerSpec extends UnitSpec with MockitoSugar with ActionsSupport {
       mock[RepositoriesListPage],
       mock[DefaultBranchListPage],
       mock[PlatformInitiativesListPage],
-      mock[PlatformInitiativesService],
       mock[OutOfDateTeamDependenciesPage]
     )
   }

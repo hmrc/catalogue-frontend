@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.util
 import laika.api.Transformer
 import laika.format.Markdown
 import laika.markdown.github.GitHubFlavor
+import laika.parse.markup.DocumentParser
 
 object MarkdownLoader {
   val transformer = Transformer
@@ -33,5 +34,15 @@ object MarkdownLoader {
       try source.getLines.toList.filterNot(_.isEmpty)
       finally source.close()
     transformer.transform(lines.take(maxLines).mkString("\n")).getOrElse("<Unable to render at this time>")
+  }
+
+  def markdownFromString(s: String): Either[DocumentParser.ParserError, String] = {
+    val transformer = Transformer
+      .from(Markdown)
+      .to(laika.format.HTML)
+      .using(GitHubFlavor)
+      .build
+
+    transformer.transform(s)
   }
 }
