@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector
+package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
+import com.github.tomakehurst.wiremock.client.WireMock._
 import org.mockito.MockitoSugar
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import com.github.tomakehurst.wiremock.client.WireMock._
-import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
-import play.api.mvc.Results
-import uk.gov.hmrc.http.HeaderCarrier
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.http.test.{HttpClientSupport, WireMockSupport}
+import play.api.mvc.Results
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.WireMockSupport
 
 import scala.language.postfixOps
 
@@ -36,10 +36,8 @@ class PlatformInitiativesConnectorSpec
     with Results
     with MockitoSugar
     with GuiceOneAppPerSuite
-    with HttpClientSupport
     with WireMockSupport {
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  override lazy val resetWireMockMappings = false
   override lazy val wireMockRootDirectory = "test/resources"
 
   override def fakeApplication(): Application =
@@ -61,7 +59,21 @@ class PlatformInitiativesConnectorSpec
           .willReturn(aResponse().withBodyFile("/platform-initiatives.json"))
       )
       val initiatives = connector.allInitiatives.futureValue
-      initiatives.head.initiativeName mustBe "Initiative-1"
+      initiatives mustBe Seq(
+        PlatformInitiative(
+          initiativeName        = "Initiative-1",
+          initiativeDescription = "Test description",
+          currentProgress       = 10,
+          targetProgress        = 100,
+          completedLegend       = "Updated",
+          inProgressLegend      = "Not Updated"),
+        PlatformInitiative(
+          initiativeName        = "Initiative-2",
+          initiativeDescription = "Test description",
+          currentProgress       = 33,
+          targetProgress        = 40,
+          completedLegend       = "Completed",
+          inProgressLegend      = "Not Completed"))
     }
   }
 }

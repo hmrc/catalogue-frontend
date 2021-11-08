@@ -14,21 +14,5 @@
     "targetProgress"          : 40,
     "completedLegend"         : "Completed",
     "inProgressLegend"        : "Not Completed"
-  },
-  {
-    "initiativeName"          : "Initiative-3",
-    "initiativeDescription"   : "Test description",
-    "currentProgress"         : 100,
-    "targetProgress"          : 100,
-    "completedLegend"         : "Completed",
-    "inProgressLegend"        : "Not Completed"
-  },
-  {
-    "initiativeName"          : "Initiative-4",
-    "initiativeDescription"   : "Test description",
-    "currentProgress"         : 99,
-    "targetProgress"          : 1,
-    "completedLegend"         : "Completed",
-    "inProgressLegend"        : "Not Completed"
   }
 ]
