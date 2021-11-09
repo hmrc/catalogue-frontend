@@ -97,7 +97,7 @@
                 }
             }
         }
-        <td>@rule.reason</td>
+        <td>@convertWikiLinks(rule.reason)</td>
         <td>@rule.from</td>
         @if(inclViewSlugsLink) {
             <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest                                )</td>
@@ -112,6 +112,21 @@
         }
 
     </tr>
+}
+
+@convertWikiLinks(reason: String) = {
+    @defining("""(.*)\[(.*?)\]\((.*?)\)(.*)""".r) { pattern =>
+        @pattern.findFirstMatchIn(reason) match {
+            case Some(value) => {
+                @value.group(1)
+                <a href="@value.group(3)">@value.group(2)</a>
+                @value.group(4)
+            }
+            case None => {
+                @reason
+            }
+        }
+    }
 }
 
 <script type="text/javascript">
