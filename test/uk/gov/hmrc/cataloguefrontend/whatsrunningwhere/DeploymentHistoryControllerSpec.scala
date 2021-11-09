@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
-import org.mockito.MockitoSugar
+import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import play.api.Configuration
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -31,7 +30,11 @@ import views.html.DeploymentHistoryPage
 import java.time.{Instant, LocalDate}
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with FakeApplicationBuilder {
+class DeploymentHistoryControllerSpec
+  extends UnitSpec
+     with MockitoSugar
+     with ArgumentMatchersSugar
+     with FakeApplicationBuilder {
   import ExecutionContext.Implicits.global
 
   private trait Fixture {
@@ -57,9 +60,9 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
     }
 
     "return 200 when given no filters" in new Fixture {
-      when(mockedReleasesConnector.deploymentHistory(environment = any(), from = any(), to = any(), team = any(), service = any(), skip = any(), limit = any())(any()))
+      when(mockedReleasesConnector.deploymentHistory(environment = any, from = any, to = any, team = any, service = any, skip = any, limit = any)(any))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(history = Seq.empty, 0)))
-      when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
+      when(mockedTeamsAndRepositoriesConnector.allTeams(any))
         .thenReturn(Future.successful(Seq.empty))
       val response = controller.history()(FakeRequest(GET, "/deployments/production"))
       status(response) shouldBe 200
@@ -81,9 +84,9 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
         )
       )
 
-      when(mockedReleasesConnector.deploymentHistory(environment = any(), from = any(), to = any(), team = any(), service = any(), skip = any(), limit = any())(any()))
+      when(mockedReleasesConnector.deploymentHistory(environment = any, from = any, to = any, team = any, service = any, skip = any, limit = any)(any))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(deps, deps.length)))
-      when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
+      when(mockedTeamsAndRepositoriesConnector.allTeams(any))
         .thenReturn(Future.successful(Seq.empty))
 
       val response = controller.history()(FakeRequest(GET, "/deployments/production?from=2020-01-01&to=2020-02-01"))
@@ -111,11 +114,11 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
 
       when(
         mockedReleasesConnector
-          .deploymentHistory(environment = eqTo(Environment.Production), from = any(), to = any(), team = eqTo(None), service = eqTo(Some("s1")), skip = eqTo(None), limit = any())(
-            any()))
+          .deploymentHistory(environment = eqTo(Environment.Production), from = any, to = any, team = eqTo(None), service = eqTo(Some("s1")), skip = eqTo(None), limit = any)(
+            any))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(deps, deps.length)))
 
-      when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
+      when(mockedTeamsAndRepositoriesConnector.allTeams(any))
         .thenReturn(Future.successful(Seq.empty))
 
       val response = controller.history()(FakeRequest(GET, "/deployments/production?service=s1"))
@@ -130,16 +133,16 @@ class DeploymentHistoryControllerSpec extends UnitSpec with MockitoSugar with Fa
         mockedReleasesConnector
           .deploymentHistory(
             eqTo(Environment.Production),
-            from    = any(),
-            to      = any(),
+            from    = any,
+            to      = any,
             team    = eqTo(None),
             service = eqTo(None),
             skip    = eqTo(Some(2 * DeploymentHistoryController.pageSize)),
             limit   = eqTo(Some(DeploymentHistoryController.pageSize))
-          )(any()))
+          )(any))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(Seq.empty, 0)))
 
-      when(mockedTeamsAndRepositoriesConnector.allTeams(any()))
+      when(mockedTeamsAndRepositoriesConnector.allTeams(any))
         .thenReturn(Future.successful(Seq.empty))
 
       val response = controller.history()(FakeRequest(GET, "/deployments/production?page=2"))

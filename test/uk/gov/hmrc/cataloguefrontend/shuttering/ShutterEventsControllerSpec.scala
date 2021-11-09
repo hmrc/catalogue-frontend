@@ -20,8 +20,7 @@ import java.time.Instant
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
-import org.mockito.MockitoSugar
+import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -41,6 +40,7 @@ import scala.concurrent.Future
 class ShutterEventsControllerSpec
   extends AnyWordSpec
   with MockitoSugar
+  with ArgumentMatchersSugar
   with Matchers
   with GuiceOneAppPerSuite
   with DefaultAwaitTimeout

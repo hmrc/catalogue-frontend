@@ -17,8 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.jsoup.Jsoup
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
-import org.mockito.MockitoSugar
+import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -41,6 +40,7 @@ class AuthControllerSpec
     with Matchers
     with GuiceOneAppPerSuite
     with MockitoSugar
+    with ArgumentMatchersSugar
     with OptionValues
     with ScalaFutures {
 
@@ -57,7 +57,7 @@ class AuthControllerSpec
       val expectedToken       = UmpToken("ump-token")
       val expectedDisplayName = DisplayName("John Smith")
 
-      when(authService.authenticate(eqTo(username), eqTo(password))(any()))
+      when(authService.authenticate(eqTo(username), eqTo(password))(any))
         .thenReturn(Future(Right(TokenAndDisplayName(expectedToken, expectedDisplayName))))
 
       val result: Future[Result] = controller.submit(request)
@@ -73,7 +73,7 @@ class AuthControllerSpec
       val expectedToken       = UmpToken("ump-token")
       val expectedDisplayName = DisplayName("John Smith")
 
-      when(authService.authenticate(eqTo("john.smith"), eqTo(password))(any()))
+      when(authService.authenticate(eqTo("john.smith"), eqTo(password))(any))
         .thenReturn(Future(Right(TokenAndDisplayName(expectedToken, expectedDisplayName))))
 
       val result: Future[Result] = controller.submit(request)
@@ -88,7 +88,7 @@ class AuthControllerSpec
       val password = "n/a"
       val request  = FakeRequest().withFormUrlEncodedBody("username" -> username, "password" -> password)
 
-      when(authService.authenticate(eqTo(username), eqTo(password))(any()))
+      when(authService.authenticate(eqTo(username), eqTo(password))(any))
         .thenReturn(Future(Left(UmpUnauthorized)))
 
       val result = controller.submit(request)
