@@ -21,10 +21,8 @@ import cats.implicits._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.Messages
-import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import play.api.{Configuration, Logger}
-import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, TeamName, Version}
@@ -34,6 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesServ
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
@@ -63,8 +62,7 @@ class CatalogueController @Inject() (
   leakDetectionService         : LeakDetectionService,
   shutterService               : ShutterService,
   defaultBranchesService       : DefaultBranchesService,
-  verifySignInStatus           : VerifySignInStatus,
-  umpAuthActionBuilder         : UmpAuthActionBuilder,
+  auth                         : FrontendAuthComponents,
   userManagementPortalConfig   : UserManagementPortalConfig,
   configuration                : Configuration,
   mcc                          : MessagesControllerComponents,
@@ -132,7 +130,7 @@ class CatalogueController @Inject() (
     }
 
   def digitalService(digitalServiceName: String): Action[AnyContent] =
-    verifySignInStatus.async { implicit request =>
+    Action.async { implicit request =>
       teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName).flatMap {
         case Some(digitalService) =>
           val teamNames: Set[TeamName] = digitalService.repositories.flatMap(_.teamNames).toSet
