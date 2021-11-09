@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
+@import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 
 @this(viewMessages: ViewMessages)
 
@@ -97,7 +98,14 @@
                 }
             }
         }
-        <td>@convertWikiLinks(rule.reason)</td>
+        <td>@MarkdownLoader.transformer.transform(rule.reason) match {
+            case Right(s) => {
+                @Html(s)
+            }
+            case Left(_) => {
+                @rule.reason
+            }
+        }</td>
         <td>@rule.from</td>
         @if(inclViewSlugsLink) {
             <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest                                )</td>
@@ -112,21 +120,6 @@
         }
 
     </tr>
-}
-
-@convertWikiLinks(reason: String) = {
-    @defining("""(.*)\[(.*?)\]\((.*?)\)(.*)""".r) { pattern =>
-        @pattern.findFirstMatchIn(reason) match {
-            case Some(value) => {
-                @value.group(1)
-                <a href="@value.group(3)">@value.group(2)</a>
-                @value.group(4)
-            }
-            case None => {
-                @reason
-            }
-        }
-    }
 }
 
 <script type="text/javascript">
