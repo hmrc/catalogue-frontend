@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
 @import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
@@ -107,6 +108,7 @@
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEvents">Shutter Events</a></li>
                             <li role="separator" class="divider"></li>
                             <li><a href="@HealthIndicatorsController.indicatorsForRepoType("", "")">Health-Indicators</a></li>
+                            <li><a href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives(DisplayType.Chart)">Platform Initiatives</a></li>
                         </ul>
                     </li>
                 </ul>

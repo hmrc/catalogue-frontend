@@ -21,17 +21,24 @@ import laika.format.Markdown
 import laika.markdown.github.GitHubFlavor
 
 object MarkdownLoader {
-  val transformer = Transformer
+  private val transformer = Transformer
     .from(Markdown)
     .to(laika.format.HTML)
     .using(GitHubFlavor)
     .build
 
-  def loadAndRenderMarkdownFile(filename: String, maxLines: Int): String = {
+  def markdownFromFile(filename: String, maxLines: Int): String = {
     val source = scala.io.Source.fromResource(filename)
     val lines =
       try source.getLines.toList.filterNot(_.isEmpty)
       finally source.close()
     transformer.transform(lines.take(maxLines).mkString("\n")).getOrElse("<Unable to render at this time>")
+  }
+
+  def markdownFromString(s: String): Either[String, String] = {
+    transformer.transform(s) match {
+      case Left(_)  => Left("<Unable to render at this time>")
+      case Right(s) => Right(s)
+    }
   }
 }

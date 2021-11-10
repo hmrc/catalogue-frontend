@@ -40,9 +40,6 @@ GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefro
 GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.landing
 GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search
 
-GET        /metrics-overview                             uk.gov.hmrc.cataloguefrontend.metrics.MetricsOverviewController.landing
-GET        /metrics-overview/results                     uk.gov.hmrc.cataloguefrontend.metrics.MetricsOverviewController.search
-
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController.display
 
 GET        /jdkexplorer/:env                            uk.gov.hmrc.cataloguefrontend.JDKVersionController.findLatestVersions(env: String)
@@ -73,3 +70,5 @@ GET        /deployments/:env                            uk.gov.hmrc.cataloguefro
 
 GET        /health-indicators                           uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepoType(repoType: String ?= "", repositoryName: String ?= "")
 GET        /health-indicators/:name                     uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.breakdownForRepo(name: String)
+
+GET        /platform-initiatives                        uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesController.platformInitiatives(display: DisplayType ?= DisplayType.Chart)
