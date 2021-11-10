@@ -98,7 +98,7 @@
                 }
             }
         }
-        <td>@MarkdownLoader.transformer.transform(rule.reason) match {
+        <td>@MarkdownLoader.markdownFromString(rule.reason) match {
             case Right(s) => {
                 @Html(s)
             }
