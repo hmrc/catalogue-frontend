@@ -14,21 +14,15 @@
  * limitations under the License.
  *@
 
-@import play.api.mvc.Call
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import helper._
-@import scala.concurrent.Future
-@import java.net.URL
-@import scala.util.Try
+@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{ routes => appRoutes }
 
 @this(viewMessages: ViewMessages)
 
 @(initiatives          : Seq[PlatformInitiative],
-displayChart           : Boolean,
-displayProgress        : Boolean,
+display                : DisplayType,
 form                   : Form[_]
 )(implicit messages    : Messages, request: Request[_])
 
@@ -58,8 +52,8 @@ form                   : Form[_]
                    value='@form("initiativeName").value'>
         </div>
         <div class="right" style="line-height:2.2em;">
-            <a href="?chart=true&progress=false">Pie chart</a> |
-            <a href="?chart=false&progress=true">Progress bar</a>
+            <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(DisplayType.Chart)">Pie chart</a> |
+            <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(DisplayType.Progress)">Progress bar</a>
         </div>
         <br><br><br>
         <table class="table table-striped">
@@ -68,41 +62,30 @@ form                   : Form[_]
                 @if(initiative.targetProgress != 0){
                 <tr class="col-sm-6">
                     <td>
-                        @if(displayChart && !displayProgress){
-                        <div class="initiativeName" style="width:500px;">
-                            <h3> @initiative.initiativeName </h3><br \>
-                        </div>
-                            <div id="chart_div_@initiative.initiativeName"></div>
-                        <br>
-                        <div style="max-width:500px; height:100px; word-wrap:break-word;">
-                            @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match{
-                                case Right(s) => {
-                                    @Html(s)
-                                }
-                                case Left(error) => {
-                                    @error
-                                }
+                        @display match{
+                            case DisplayType.Chart => {
+                                <div class="initiativeName" style="width:500px;">
+                                    <h3> @initiative.initiativeName </h3><br \>
+                                </div>
+                                <div id="chart_div_@initiative.initiativeName"></div>
+                                <br>
+                                <div style="max-width:500px; height:100px; word-wrap:break-word;">
+                                    @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match{
+                                        case Right(s) => {
+                                            @Html(s)
+                                        }
+                                    }
+                                </div>
                             }
-                        </div>
-                        }else if(!displayChart && displayProgress){
-                            <div class="initiativeName" style="width:500px;">
-                                <h3> @initiative.initiativeName </h3>
-                                <progress class="progress" value="@initiative.currentProgress"
-                                          max="@initiative.targetProgress">
-                                    @initiative.currentProgress/@initiative.targetProgress
-                                </progress>
-                            </div>
-                        }else{
-                        <div class="initiativeName" style="width:500px;">
-                            <h3> @initiative.initiativeName </h3><br \>
-                        </div>
-                        <div id="chart_div_@initiative.initiativeName"></div>
-                        <br>
-                        <div style="max-width:500px; height:100px; word-wrap:break-word;">
-
-                        </div>
-                        <progress class="progress" value="@initiative.currentProgress"
-                                  max="@initiative.targetProgress"></progress>
+                            case DisplayType.Progress => {
+                                <div class="initiativeName" style="width:500px;">
+                                    <h3> @initiative.initiativeName </h3>
+                                    <progress class="progress" value="@initiative.currentProgress"
+                                              max="@initiative.targetProgress">
+                                        @initiative.currentProgress/@initiative.targetProgress
+                                    </progress>
+                                </div>
+                            }
                         }
                     </td>
                 </tr>

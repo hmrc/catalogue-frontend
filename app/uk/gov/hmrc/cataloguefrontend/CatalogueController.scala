@@ -31,8 +31,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
-import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
-import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesConnector
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
@@ -64,7 +62,6 @@ class CatalogueController @Inject() (
   configService                : ConfigService,
   routeRulesService            : RouteRulesService,
   serviceDependencyConnector   : ServiceDependenciesConnector,
-  platformInitiativesConnector : PlatformInitiativesConnector,
   leakDetectionService         : LeakDetectionService,
   eventService                 : EventService,
   readModelService             : ReadModelService,
@@ -87,7 +84,6 @@ class CatalogueController @Inject() (
   repositoryInfoPage           : RepositoryInfoPage,
   repositoriesListPage         : RepositoriesListPage,
   defaultBranchListPage        : DefaultBranchListPage,
-  platformInitiativesListPage  : PlatformInitiativesListPage,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
@@ -111,8 +107,8 @@ class CatalogueController @Inject() (
 
   def index(): Action[AnyContent] =
     Action { implicit request =>
-      val whatsNew  = MarkdownLoader.loadAndRenderMarkdownFile("VERSION_HISTORY.md", whatsNewDisplayLines)
-      val blogPosts = MarkdownLoader.loadAndRenderMarkdownFile("BLOG_POSTS.md", blogPostsDisplayLines)
+      val whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines)
+      val blogPosts = MarkdownLoader.markdownFromFile("BLOG_POSTS.md", blogPostsDisplayLines)
 
       Ok(indexPage(whatsNew, blogPosts))
     }
