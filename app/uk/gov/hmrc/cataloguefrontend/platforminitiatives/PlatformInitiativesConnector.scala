@@ -16,46 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
-import play.api.libs.json.{OFormat, Writes, __}
+import play.api.libs.json.OFormat
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PlatformInitiative(
-   initiativeName: String,
-   initiativeDescription: String,
-   currentProgress: Int,
-   targetProgress: Int,
-   completedLegend: String,
-   inProgressLegend: String
- )
-
-object PlatformInitiative {
-  implicit val format: OFormat[PlatformInitiative] = {
-    ((__ \ "initiativeName").format[String]
-      ~ (__ \ "initiativeDescription").format[String]
-      ~ (__ \ "currentProgress").format[Int]
-      ~ (__ \ "targetProgress").format[Int]
-      ~ (__ \ "completedLegend").format[String]
-      ~ (__ \ "inProgressLegend").format[String]
-      ) (apply, unlift(unapply))
-  }
-  implicit val writes: Writes[PlatformInitiative] = {
-    ((__ \ "initiativeName").write[String]
-      ~ (__ \ "initiativeDescription").write[String]
-      ~ (__ \ "currentProgress").write[Int]
-      ~ (__ \ "targetProgress").write[Int]
-      ~ (__ \ "completedLegend").format[String]
-      ~ (__ \ "inProgressLegend").format[String]
-      ) (unlift(unapply))
-  }
-}
-
 class PlatformInitiativesConnector @Inject()(
-  http: HttpClient,
+  httpClient: HttpClient,
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
 
@@ -63,6 +31,7 @@ class PlatformInitiativesConnector @Inject()(
     servicesConfig.baseUrl("platform-initiatives")
 
   def allInitiatives(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
-    http.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/initiatives")
+    implicit val formatPI: OFormat[PlatformInitiative] = PlatformInitiative.format
+    httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/initiatives")
   }
 }

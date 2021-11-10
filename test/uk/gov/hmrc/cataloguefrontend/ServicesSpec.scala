@@ -52,7 +52,6 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
     mock[ConfigService],
     mock[RouteRulesService],
     mock[ServiceDependenciesConnector],
-    mock[PlatformInitiativesConnector],
     mock[LeakDetectionService],
     mock[EventService],
     mock[ReadModelService],
@@ -75,7 +74,6 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
     mock[RepositoryInfoPage],
     mock[RepositoriesListPage],
     mock[DefaultBranchListPage],
-    mock[PlatformInitiativesListPage],
     mock[OutOfDateTeamDependenciesPage]
   )
 }

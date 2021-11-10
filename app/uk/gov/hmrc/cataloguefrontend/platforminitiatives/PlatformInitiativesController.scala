@@ -35,7 +35,7 @@ class PlatformInitiativesController @Inject() (
   extends FrontendController(mcc) {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def platformInitiatives(displayChart: Boolean, displayProgress: Boolean): Action[AnyContent] = {
+  def platformInitiatives(display: DisplayType): Action[AnyContent] =
     Action.async { implicit request =>
       platformInitiativesConnector.allInitiatives.map { initiative =>
         PlatformInitiativesFilter.form
@@ -43,22 +43,19 @@ class PlatformInitiativesController @Inject() (
           .fold(
             formWithErrors => Ok(platformInitiativesListPage(
               initiatives       = Seq(),
-              displayChart      = false,
-              displayProgress   = false,
+              display           = display,
               formWithErrors
             )),
             _ =>
-              Ok(platformInitiativesListPage(
-                initiatives           = initiative,
-                displayChart          = displayChart,
-                displayProgress       = displayProgress,
+              Ok(platformInitiativesListPage
+              ( initiatives     = initiative,
+                display         = display,
                 PlatformInitiativesFilter.form.bindFromRequest()
               ))
           )
       }
     }
   }
-}
 
 case class PlatformInitiativesFilter(initiativeName: Option[String] = None) {
   def isEmpty: Boolean = initiativeName.isEmpty

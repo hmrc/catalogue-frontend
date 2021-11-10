@@ -49,7 +49,6 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
   private lazy val catalogueController = new CatalogueController(
     userManagementConnector       = mock[UserManagementConnector],
     teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
-    platformInitiativesConnector  = mock[PlatformInitiativesConnector],
     configService                 = mock[ConfigService],
     routeRulesService             = mock[RouteRulesService],
     serviceDependencyConnector    = mock[ServiceDependenciesConnector],
@@ -75,7 +74,6 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     repositoryInfoPage            = mock[RepositoryInfoPage],
     repositoriesListPage          = mock[RepositoriesListPage],
     outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
-    defaultBranchListPage         = mock[DefaultBranchListPage],
-    platformInitiativesListPage   = mock[PlatformInitiativesListPage]
+    defaultBranchListPage         = mock[DefaultBranchListPage]
   )
 }

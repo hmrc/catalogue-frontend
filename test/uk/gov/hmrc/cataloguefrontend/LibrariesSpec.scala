@@ -52,7 +52,6 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
     configService                 = mock[ConfigService],
     routeRulesService             = mock[RouteRulesService],
     serviceDependencyConnector    = mock[ServiceDependenciesConnector],
-    platformInitiativesConnector  = mock[PlatformInitiativesConnector],
     leakDetectionService          = mock[LeakDetectionService],
     eventService                  = mock[EventService],
     readModelService              = mock[ReadModelService],
@@ -75,7 +74,6 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
     repositoryInfoPage            = mock[RepositoryInfoPage],
     repositoriesListPage          = mock[RepositoriesListPage],
     outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
-    defaultBranchListPage         = mock[DefaultBranchListPage],
-    platformInitiativesListPage   = mock[PlatformInitiativesListPage]
+    defaultBranchListPage         = mock[DefaultBranchListPage]
   )
 }

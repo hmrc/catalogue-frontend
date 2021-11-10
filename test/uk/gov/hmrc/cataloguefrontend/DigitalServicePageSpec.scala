@@ -346,7 +346,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       configService                 = mock[ConfigService],
       routeRulesService             = mock[RouteRulesService],
       serviceDependencyConnector    = mock[ServiceDependenciesConnector],
-      platformInitiativesConnector  = mock[PlatformInitiativesConnector],
       leakDetectionService          = mock[LeakDetectionService],
       eventService                  = mock[EventService],
       readModelService              = mockedModelService,
@@ -369,8 +368,7 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       repositoryInfoPage            = mock[RepositoryInfoPage],
       repositoriesListPage          = mock[RepositoriesListPage],
       outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
-      defaultBranchListPage         = mock[DefaultBranchListPage],
-      platformInitiativesListPage   = mock[PlatformInitiativesListPage]
+      defaultBranchListPage         = mock[DefaultBranchListPage]
     )
   }
 

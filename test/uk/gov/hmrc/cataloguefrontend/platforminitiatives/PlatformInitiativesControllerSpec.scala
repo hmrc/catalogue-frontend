@@ -10,6 +10,7 @@ import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
+import uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType.Chart
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
@@ -60,7 +61,7 @@ class PlatformInitiativesControllerSpec
       }
 
       val result: Future[Result] = controller
-        .platformInitiatives(displayChart = true, displayProgress = false)
+        .platformInitiatives(display = Chart)
         .apply(FakeRequest())
 
       status(result) shouldBe 200
