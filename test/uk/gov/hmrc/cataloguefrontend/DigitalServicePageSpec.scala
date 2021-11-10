@@ -32,8 +32,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMemb
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Username}
 import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
-import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
-import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesConnector
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
