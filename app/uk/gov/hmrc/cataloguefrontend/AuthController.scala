@@ -18,21 +18,36 @@ package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.MessagesControllerComponents
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 @Singleton
 class AuthController @Inject() (
-  mcc: MessagesControllerComponents
+  auth: FrontendAuthComponents,
+  mcc : MessagesControllerComponents
 ) extends FrontendController(mcc) {
 
   def signIn(targetUrl: Option[String]) =
     // TODO provide this from internal-auth-client?
     Action(
       Redirect(
-        s"/internal-auth-frontend/sign-in",
-        Map("continue_url" -> Seq(targetUrl.getOrElse(routes.CatalogueController.index.url)))
+        "/internal-auth-frontend/sign-in",
+        Map("continue_url" -> Seq(routes.AuthController.postSignIn(targetUrl).url))
       )
     )
+
+  // TODO consider updating internal-auth to add username to the session
+  def postSignIn(targetUrl: Option[String]) =
+    auth.authenticatedAction(
+      continueUrl = routes.AuthController.signIn(targetUrl),
+      retrieval   = Retrieval.username
+    ){ request =>
+      Redirect(targetUrl.getOrElse(routes.CatalogueController.index.url))
+      .withSession(
+        DisplayName.SESSION_KEY_NAME -> request.retrieval.value
+      )
+    }
 
   val signOut =
     Action(
