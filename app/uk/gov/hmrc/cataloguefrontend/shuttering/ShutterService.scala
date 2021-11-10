@@ -18,8 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.internalauth.client.AuthenticatedRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -51,15 +51,15 @@ class ShutterService @Inject() (
     shutterConnector.shutterStates(st, env)
 
   def updateShutterStatus(
-    umpToken   : UmpToken,
     serviceName: String,
     st         : ShutterType,
     env        : Environment,
     status     : ShutterStatus
   )(implicit
-    hc: HeaderCarrier
+    hc : HeaderCarrier,
+    req: AuthenticatedRequest[_, _]
   ): Future[Unit] =
-    shutterConnector.updateShutterStatus(umpToken, serviceName, st, env, status)
+    shutterConnector.updateShutterStatus(req.authorizationToken, serviceName, st, env, status)
 
   def outagePage(
     env        : Environment,

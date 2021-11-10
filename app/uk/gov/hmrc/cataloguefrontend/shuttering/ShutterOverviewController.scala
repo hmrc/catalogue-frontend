@@ -19,37 +19,41 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.actions.VerifySignInStatus
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
 class ShutterOverviewController @Inject() (
-  mcc: MessagesControllerComponents,
-  verifySignInStatus: VerifySignInStatus,
-  shutterOverviewPage: ShutterOverviewPage,
+  mcc                      : MessagesControllerComponents,
+  auth                     : FrontendAuthComponents,
+  shutterOverviewPage      : ShutterOverviewPage,
   frontendRoutesWarningPage: FrontendRouteWarningsPage,
-  shutterService: ShutterService,
-  catalogueConfig: CatalogueConfig
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  shutterService           : ShutterService,
+  catalogueConfig          : CatalogueConfig
+)(implicit val ec          : ExecutionContext
+) extends FrontendController(mcc) {
 
   private val logger = Logger(getClass)
 
   def allStates(shutterType: ShutterType): Action[AnyContent] =
     allStatesForEnv(
       shutterType = shutterType,
-      env = Environment.Production
+      env         = Environment.Production
     )
 
+  // TODO not supported in internal-auth yet...
+  def isLoggedIn(request: Request[_]): Future[Option[UserManagementAuthConnector.User]] = ???
+
   def allStatesForEnv(shutterType: ShutterType, env: Environment): Action[AnyContent] =
-    verifySignInStatus.async { implicit request =>
+    Action.async { implicit request =>
       for {
         envAndCurrentStates <- Environment.values.traverse { env =>
                                  shutterService
@@ -61,9 +65,10 @@ class ShutterOverviewController @Inject() (
                                    }
                                    .map(ws => (env, ws))
                                }
-        hasGlobalPerm  = request.optUser.exists(_.groups.contains(catalogueConfig.shutterPlatformGroup))
-        killSwitchLink = if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
-        page           = shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, killSwitchLink)
+        optUser        <- isLoggedIn(request)
+        hasGlobalPerm  =  optUser.exists(_.groups.contains(catalogueConfig.shutterPlatformGroup))
+        killSwitchLink =  if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
+        page           =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, killSwitchLink)
       } yield Ok(page)
     }
 

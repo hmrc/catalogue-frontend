@@ -23,8 +23,7 @@ GET        /assets/*file                                controllers.Assets.versi
 GET        /                                            uk.gov.hmrc.cataloguefrontend.CatalogueController.index
 GET        /admin/metrics                               @com.kenshoo.play.metrics.MetricsController.metrics
 
-GET        /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.showSignInPage(targetUrl: Option[String] ?= None)
-POST       /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.submit
+GET        /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.signIn(targetUrl: Option[String] ?= None)
 GET        /sign-out                                    @uk.gov.hmrc.cataloguefrontend.AuthController.signOut
 
 GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchLanding

@@ -120,11 +120,11 @@
                                 @displayName <span class="caret"></span>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a href="@appRoutes.AuthController.signOut.url">Sign out</a></li>
+                                <li><a href="@appRoutes.AuthController.signOut">Sign out</a></li>
                             </ul>
 
                         }{
-                            <a id="sign-in" href="@appRoutes.AuthController.showSignInPage(targetUrl = Some(request.target.uriString)).url" class="@if(active=="sign-in") {active}">Sign in</a>
+                            <a id="sign-in" href="@appRoutes.AuthController.signIn(targetUrl = Some(request.target.uriString))" class="@if(active=="sign-in") {active}">Sign in</a>
                         }
                     </li>
                     <li >
