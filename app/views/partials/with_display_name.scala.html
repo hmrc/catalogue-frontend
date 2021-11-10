@@ -15,12 +15,14 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
+@import uk.gov.hmrc.http.SessionKeys
 
 @(ifLoggedIn: DisplayName => Html)(ifNotLoggedIn: => Html)(implicit request: Request[_])
 
+@* TODO we no longer add DisplayName into the session. How do we identify who's logged in? *@
 @{
-    request
-        .session
-        .get(DisplayName.SESSION_KEY_NAME)
-        .fold(ifNotLoggedIn)(rawDisplayName => ifLoggedIn(DisplayName(rawDisplayName)))
+  request
+    .session
+    .get(SessionKeys.authToken)
+    .fold(ifNotLoggedIn)(_ => ifLoggedIn(DisplayName("UNKNOWN")))
 }

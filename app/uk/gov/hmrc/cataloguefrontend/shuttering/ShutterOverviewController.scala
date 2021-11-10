@@ -21,7 +21,6 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -49,8 +48,9 @@ class ShutterOverviewController @Inject() (
       env         = Environment.Production
     )
 
-  // TODO not supported in internal-auth yet...
-  def isLoggedIn(request: Request[_]): Future[Option[UserManagementAuthConnector.User]] = ???
+  // TODO requires a permission to shutter platform?
+  // optionally logged in not supported in internal-auth yet...
+  def isLoggedInAndCanShutterPlatform(request: Request[_]): Future[Boolean] = ???
 
   def allStatesForEnv(shutterType: ShutterType, env: Environment): Action[AnyContent] =
     Action.async { implicit request =>
@@ -65,8 +65,7 @@ class ShutterOverviewController @Inject() (
                                    }
                                    .map(ws => (env, ws))
                                }
-        optUser        <- isLoggedIn(request)
-        hasGlobalPerm  =  optUser.exists(_.groups.contains(catalogueConfig.shutterPlatformGroup))
+        hasGlobalPerm  <- isLoggedInAndCanShutterPlatform(request)
         killSwitchLink =  if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
         page           =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, killSwitchLink)
       } yield Ok(page)

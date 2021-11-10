@@ -21,7 +21,6 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import uk.gov.hmrc.http.StringContextOps
 
@@ -119,20 +118,6 @@ case class UserManagementConnector @Inject() (
         case ex =>
           logger.error(s"An error occurred when connecting to $url", ex)
           Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
-      }
-  }
-
-  def getDisplayName(userId: UmpUserId)(implicit hc: HeaderCarrier): Future[Option[DisplayName]] = {
-    val url              = url"$userManagementBaseUrl/v2/organisations/users/${userId.value}"
-    val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    httpClient
-      .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
-      .map { response =>
-        response.status match {
-          case 200   => (response.json \ "displayName").asOpt[String].map(DisplayName.apply)
-          case 404   => None
-          case other => throw new BadGatewayException(s"Received status: $other from GET to $url")
-        }
       }
   }
 }
