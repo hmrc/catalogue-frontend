@@ -20,6 +20,8 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsFilter.form
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
@@ -28,13 +30,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class HealthIndicatorsController @Inject() (
   healthIndicatorsConnector: HealthIndicatorsConnector,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   mcc: MessagesControllerComponents,
   healthIndicatorsService: HealthIndicatorsService
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
-
-
-
+  
   def breakdownForRepo(name: String): Action[AnyContent] =
     Action.async { implicit request =>
       for {
@@ -48,18 +49,26 @@ class HealthIndicatorsController @Inject() (
       } yield result
     }
 
-  def indicatorsForRepoType(repoType: String, repoName: String): Action[AnyContent] =
+  def indicatorsForRepoType(): Action[AnyContent] =
     Action.async { implicit request =>
-      RepoType
-        .parse(repoType)
+      form
+        .bindFromRequest()
         .fold(
-          _ => Future.successful(Redirect(routes.HealthIndicatorsController.indicatorsForRepoType(RepoType.Service.asString, repoName))),
-          r =>
+          formWithErrors => Future.successful(BadRequest(HealthIndicatorsLeaderBoard(Seq.empty, Seq.empty, Seq.empty, formWithErrors))),
+          validForm =>
             for {
-              indicatorsWithTeams <- healthIndicatorsService.findIndicatorsWithTeams(r)
-            } yield Ok(HealthIndicatorsLeaderBoard(indicatorsWithTeams, r, repoName, RepoType.values))
+              indicatorsWithTeams <- healthIndicatorsService.findIndicatorsWithTeams(validForm.repoType.getOrElse(RepoType.Service))
+              teams <- teamsAndRepositoriesConnector.allTeams
+              indicators = indicatorsFilteredByTeam(indicatorsWithTeams, validForm.team)
+            } yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.values, teams, form.fill(validForm)))
         )
     }
+
+  private def indicatorsFilteredByTeam(indicatorsWithTeams: Seq[IndicatorsWithTeams], team: Option[String]): Seq[IndicatorsWithTeams] = team match {
+    case Some(t) => indicatorsWithTeams.filter(i => i.owningTeams.map(v => v.asString).contains(t))
+    case None => indicatorsWithTeams
+  }
+
 }
 
 object HealthIndicatorsController {
@@ -72,12 +81,16 @@ object HealthIndicatorsController {
 }
 
 case class HealthIndicatorsFilter(
+  repoName: Option[String],
+  team: Option[String] = None,
   repoType: Option[RepoType] = None
 )
 
 object HealthIndicatorsFilter {
   lazy val form: Form[HealthIndicatorsFilter] = Form(
     mapping(
+      "repoName" -> optional(text),
+      "team" -> optional(text),
       "repoType" -> optional(text)
         .transform[Option[RepoType]](
           _.flatMap(s => RepoType.parse(s).toOption),
