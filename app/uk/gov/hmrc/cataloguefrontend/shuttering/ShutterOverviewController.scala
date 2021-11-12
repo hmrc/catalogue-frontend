@@ -19,10 +19,10 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering._
 
@@ -37,7 +37,7 @@ class ShutterOverviewController @Inject() (
   frontendRoutesWarningPage: FrontendRouteWarningsPage,
   shutterService           : ShutterService,
   catalogueConfig          : CatalogueConfig
-)(implicit val ec          : ExecutionContext
+)(implicit ec              : ExecutionContext
 ) extends FrontendController(mcc) {
 
   private val logger = Logger(getClass)
@@ -47,10 +47,6 @@ class ShutterOverviewController @Inject() (
       shutterType = shutterType,
       env         = Environment.Production
     )
-
-  // TODO requires a permission to shutter platform?
-  // optionally logged in not supported in internal-auth yet...
-  def isLoggedInAndCanShutterPlatform(request: Request[_]): Future[Boolean] = ???
 
   def allStatesForEnv(shutterType: ShutterType, env: Environment): Action[AnyContent] =
     Action.async { implicit request =>
@@ -65,7 +61,11 @@ class ShutterOverviewController @Inject() (
                                    }
                                    .map(ws => (env, ws))
                                }
-        hasGlobalPerm  <- isLoggedInAndCanShutterPlatform(request)
+        hasGlobalPerm  <-  Future.successful(false) // TODO update internal-auth-client
+                           /*auth
+                            .ifAuthenticated(
+                              Retrieval.hasPermission(Predicate.Permission(Resource.from("shutter-api", "mdtp"), IAAction("SHUTTER")))
+                            ).map(_.exists(_ == true))*/
         killSwitchLink =  if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
         page           =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, killSwitchLink)
       } yield Ok(page)
