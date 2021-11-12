@@ -22,7 +22,6 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -45,33 +44,31 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
   }
 
   private val catalogueController = new CatalogueController(
-    mock[UserManagementConnector],
-    mock[TeamsAndRepositoriesConnector],
-    mock[ConfigService],
-    mock[RouteRulesService],
-    mock[ServiceDependenciesConnector],
-    mock[LeakDetectionService],
-    mock[EventService],
-    mock[ReadModelService],
-    mock[ShutterService],
-    mock[DefaultBranchesService],
-    mock[VerifySignInStatus],
-    mock[UmpAuthActionBuilder],
-    mock[UserManagementPortalConfig],
-    Configuration.empty,
-    stubMessagesControllerComponents(),
-    mock[DigitalServiceInfoPage],
-    mock[WhatsRunningWhereService],
-    mock[IndexPage],
-    mock[TeamInfoPage],
-    mock[ServiceInfoPage],
-    mock[ServiceConfigPage],
-    mock[ServiceConfigRawPage],
-    mock[LibraryInfoPage],
-    mock[PrototypeInfoPage],
-    mock[RepositoryInfoPage],
-    mock[RepositoriesListPage],
-    mock[DefaultBranchListPage],
-    mock[OutOfDateTeamDependenciesPage]
+    userManagementConnector       = mock[UserManagementConnector],
+    teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
+    configService                 = mock[ConfigService],
+    routeRulesService             = mock[RouteRulesService],
+    serviceDependencyConnector    = mock[ServiceDependenciesConnector],
+    leakDetectionService          = mock[LeakDetectionService],
+    shutterService                = mock[ShutterService],
+    defaultBranchesService        = mock[DefaultBranchesService],
+    verifySignInStatus            = mock[VerifySignInStatus],
+    umpAuthActionBuilder          = mock[UmpAuthActionBuilder],
+    userManagementPortalConfig    = mock[UserManagementPortalConfig],
+    configuration                 = Configuration.empty,
+    mcc                           = stubMessagesControllerComponents(),
+    digitalServiceInfoPage        = mock[DigitalServiceInfoPage],
+    whatsRunningWhereService      = mock[WhatsRunningWhereService],
+    indexPage                     = mock[IndexPage],
+    teamInfoPage                  = mock[TeamInfoPage],
+    serviceInfoPage               = mock[ServiceInfoPage],
+    serviceConfigPage             = mock[ServiceConfigPage],
+    serviceConfigRawPage          = mock[ServiceConfigRawPage],
+    libraryInfoPage               = mock[LibraryInfoPage],
+    prototypeInfoPage             = mock[PrototypeInfoPage],
+    repositoryInfoPage            = mock[RepositoryInfoPage],
+    repositoriesListPage          = mock[RepositoriesListPage],
+    defaultBranchListPage         = mock[DefaultBranchListPage],
+    outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage]
   )
 }

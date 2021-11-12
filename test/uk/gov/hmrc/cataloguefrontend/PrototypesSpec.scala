@@ -22,7 +22,6 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -51,8 +50,6 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     routeRulesService             = mock[RouteRulesService],
     serviceDependencyConnector    = mock[ServiceDependenciesConnector],
     leakDetectionService          = mock[LeakDetectionService],
-    eventService                  = mock[EventService],
-    readModelService              = mock[ReadModelService],
     shutterService                = mock[ShutterService],
     defaultBranchesService        = mock[DefaultBranchesService],
     verifySignInStatus            = mock[VerifySignInStatus],
@@ -71,7 +68,7 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     prototypeInfoPage             = mock[PrototypeInfoPage],
     repositoryInfoPage            = mock[RepositoryInfoPage],
     repositoriesListPage          = mock[RepositoriesListPage],
-    outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
-    defaultBranchListPage         = mock[DefaultBranchListPage]
+    defaultBranchListPage         = mock[DefaultBranchListPage],
+    outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage]
   )
 }

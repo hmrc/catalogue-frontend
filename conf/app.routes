@@ -5,9 +5,6 @@ GET        /teams/:teamName                             uk.gov.hmrc.cataloguefro
 GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.CatalogueController.outOfDateTeamDependencies(teamName: TeamName)
 GET        /digital-services                            uk.gov.hmrc.cataloguefrontend.CatalogueController.allDigitalServices
 GET        /digital-service/:digitalServiceName         uk.gov.hmrc.cataloguefrontend.CatalogueController.digitalService(digitalServiceName)
-GET        /digital-service/owner/:digitalServiceName   uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceOwner(digitalServiceName)
-POST       /digital-service/owner                       uk.gov.hmrc.cataloguefrontend.CatalogueController.saveServiceOwner()
-GET        /users                                       uk.gov.hmrc.cataloguefrontend.CatalogueController.allUsers
 
 GET        /repositories                                uk.gov.hmrc.cataloguefrontend.CatalogueController.allRepositories(repoType: Option[String] ?= None)
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)

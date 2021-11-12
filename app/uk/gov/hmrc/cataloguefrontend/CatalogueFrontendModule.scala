@@ -19,12 +19,10 @@ package uk.gov.hmrc.cataloguefrontend
 import java.time.Clock
 
 import com.google.inject.AbstractModule
-import uk.gov.hmrc.cataloguefrontend.service.EventsReloadScheduler
 
 class CatalogueFrontendModule extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    bind(classOf[EventsReloadScheduler]).asEagerSingleton()
   }
 }

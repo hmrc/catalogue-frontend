@@ -24,12 +24,10 @@ import play.api.i18n.Messages
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import play.api.{Configuration, Logger}
-import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember._
 import uk.gov.hmrc.cataloguefrontend.actions.{UmpAuthActionBuilder, VerifySignInStatus}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.events._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
@@ -63,8 +61,6 @@ class CatalogueController @Inject() (
   routeRulesService            : RouteRulesService,
   serviceDependencyConnector   : ServiceDependenciesConnector,
   leakDetectionService         : LeakDetectionService,
-  eventService                 : EventService,
-  readModelService             : ReadModelService,
   shutterService               : ShutterService,
   defaultBranchesService       : DefaultBranchesService,
   verifySignInStatus           : VerifySignInStatus,
@@ -113,36 +109,6 @@ class CatalogueController @Inject() (
       Ok(indexPage(whatsNew, blogPosts))
     }
 
-  def serviceOwner(digitalService: String): Action[AnyContent] =
-    Action {
-      readModelService
-        .getDigitalServiceOwner(digitalService)
-        .fold(NotFound(toJson(s"owner for $digitalService not found")))(ds => Ok(toJson(ds)))
-    }
-
-  def saveServiceOwner(): Action[AnyContent] =
-    umpAuthActionBuilder.whenAuthenticated.async { implicit request =>
-      request.body.asJson
-        .map { payload =>
-          val serviceOwnerSaveEventData: ServiceOwnerSaveEventData = payload.as[ServiceOwnerSaveEventData]
-          val serviceOwnerDisplayName: String                      = serviceOwnerSaveEventData.displayName
-          val optTeamMember: Option[TeamMember] =
-            readModelService.getAllUsers.find(_.displayName.getOrElse("") == serviceOwnerDisplayName)
-
-          optTeamMember.fold {
-            Future.successful(NotAcceptable(toJson(s"Invalid user: $serviceOwnerDisplayName")))
-          } { member =>
-            member.username.fold(Future.successful(ExpectationFailed(toJson(s"Username was not set (by UMP) for $member!")))) { serviceOwnerUsername =>
-              eventService
-                .saveServiceOwnerUpdatedEvent(ServiceOwnerUpdatedEventData(serviceOwnerSaveEventData.service, serviceOwnerUsername))
-                .map(_ => Ok(toJson(DisplayableTeamMember(member, userManagementProfileBaseUrl))))
-            }
-          }
-        }
-        .getOrElse(Future.successful(BadRequest(toJson(s"""Unable to parse json: "${request.body.asText
-          .getOrElse("No text in request body!")}""""))))
-    }
-
   def allTeams(): Action[AnyContent] =
     Action.async { implicit request =>
       import SearchFiltering._
@@ -180,24 +146,12 @@ class CatalogueController @Inject() (
                   digitalServiceName  = digitalService.name,
                   teamMembersLookUp   = teamMembers,
                   repos               = repos,
-                  digitalServiceOwner = readModelService
-                                          .getDigitalServiceOwner(digitalServiceName)
-                                          .map(DisplayableTeamMember(_, userManagementProfileBaseUrl))
+                  digitalServiceOwner = None // this used to come from mongo, maintained via catalogue. If this is required, consider storing in configuration.
                 )
               )
             )
         case None => Future.successful(notFound)
       }
-    }
-
-  def allUsers: Action[AnyContent] =
-    Action { implicit request =>
-      val filterTerm = request.getQueryString("term").getOrElse("")
-      val filteredUsers: Seq[Option[String]] = readModelService.getAllUsers
-        .map(_.displayName)
-        .filter(displayName => displayName.getOrElse("").toLowerCase.contains(filterTerm.toLowerCase))
-
-      Ok(toJson(filteredUsers))
     }
 
   def allDigitalServices: Action[AnyContent] =
