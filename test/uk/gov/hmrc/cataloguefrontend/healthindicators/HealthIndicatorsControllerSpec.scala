@@ -70,7 +70,7 @@ class HealthIndicatorsControllerSpec
   }
 
   "HealthIndicatorsController.indicatorsForRepoType" should {
-    "respond with status 200 and redirect to Services when no query params set" in new Setup {
+    "respond with status 200 and default to repoType=Service when no query params set" in new Setup {
       serviceEndpoint(
         GET,
         "/health-indicators/indicators?sort=desc&repoType=Service",
@@ -80,6 +80,12 @@ class HealthIndicatorsControllerSpec
       serviceEndpoint(
         GET,
         "/api/repository_teams",
+        willRespondWith = (200, Some(teamsByServiceJSON))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/teams?includeRepos=true",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -100,6 +106,12 @@ class HealthIndicatorsControllerSpec
       serviceEndpoint(
         GET,
         "/api/repository_teams",
+        willRespondWith = (200, Some(teamsByServiceJSON))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/teams?includeRepos=true",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -120,6 +132,12 @@ class HealthIndicatorsControllerSpec
       serviceEndpoint(
         GET,
         "/api/repository_teams",
+        willRespondWith = (200, Some(teamsByServiceJSON))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/teams?includeRepos=true",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -142,6 +160,12 @@ class HealthIndicatorsControllerSpec
       serviceEndpoint(
         GET,
         "/api/repository_teams",
+        willRespondWith = (200, Some(teamsByServiceJSON))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/teams?includeRepos=true",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -162,6 +186,12 @@ class HealthIndicatorsControllerSpec
       serviceEndpoint(
         GET,
         "/api/repository_teams",
+        willRespondWith = (200, Some(teamsByServiceJSON))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/teams?includeRepos=true",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -170,6 +200,34 @@ class HealthIndicatorsControllerSpec
 
       response.status shouldBe 200
       response.body should include("""<a href="/health-indicators/the-childcare-service-prototype"><span class="repoName">the-childcare-service-prototype</span></a>""")
+    }
+
+    "filter by team" in new Setup {
+      serviceEndpoint(
+        GET,
+        "/health-indicators/indicators?sort=desc",
+        willRespondWith = (200, Some(testJson3RepoTypes))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/repository_teams",
+        willRespondWith = (200, Some(teamsByServiceJSON))
+      )
+
+      serviceEndpoint(
+        GET,
+        "/api/teams?includeRepos=true",
+        willRespondWith = (200, Some(teamsJSON))
+      )
+
+      private val response: WSResponse =
+        ws.url(s"http://localhost:$port/health-indicators?team=Classic+Services+Manchester&repoType=All+Types").get.futureValue
+
+      response.status shouldBe 200
+      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
+      response.body shouldNot include("""<a href="/health-indicators/api-platform-scripts"><span class="repoName">api-platform-scripts</span></a>""")
+      response.body shouldNot include("""<a href="/health-indicators/the-childcare-service-prototype"><span class="repoName">the-childcare-service-prototype</span></a>""")
     }
   }
 
@@ -270,9 +328,15 @@ class HealthIndicatorsControllerSpec
         |}]""".stripMargin
 
 
-    val teamsJSON: String = """{"team-indicator-dashboard-frontend": [
+    val teamsByServiceJSON: String = """{"team-indicator-dashboard-frontend": [
                               |"Classic Services Manchester",
                               |"Classic Services Telford"
                               |]}""".stripMargin
+
+    val teamsJSON: String = """[{
+                              |  "name": "Classic Services Manchester"
+                              |},{
+                              |  "name": "Classic Services Telford"
+                              |}]""".stripMargin
   }
 }

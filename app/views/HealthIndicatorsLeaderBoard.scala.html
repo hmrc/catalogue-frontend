@@ -15,10 +15,13 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.{IndicatorsWithTeams, RepoType}
+@import views.html.helper.select
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+
 @(  indicatorsWithTeams :   Seq[IndicatorsWithTeams]
-,   repoType : RepoType
-,   repoName : String
-,   repoTypes:   Seq[RepoType]
+,   repoTypes  : Seq[RepoType]
+,   teams      : Seq[Team]
+,   form       : Form[_]
 )(implicit messages: Messages, request: Request[_])
 @standard_layout("Service Health Indicators", "health-indicators") {
     <header>
@@ -28,19 +31,29 @@
     <div id="leaderboard-display">
         <form id="form" method="get">
             <div class="form-group row">
-                <div class="col-xs-2 padding-reset-right">
-                    <label for="search">Search by repository:</label>
+                <div class="col-xs-5">
+                    <label for="repo-name-search">Repository</label>
+                    <input class="search form-control" id="repo-name-search" type="text" name="repoName" value='@form("repoName").value' autofocus/>
                 </div>
-                <div class="col col-xs-3">
-                    <input type="search" class="search form-control" id="search" type="text" name="repoName" value='@repoName' autofocus/>
+                <div class="col-xs-3">
+                    @select(
+                        field = form("team"),
+                        options = teams.map(t => t.name.asString -> t.name.asString),
+                        '_default -> "All",
+                        '_label -> "Owning Team",
+                        'onchange -> "this.form.submit()",
+                        'id -> "team-search"
+                    )
                 </div>
-                <br />
-                <br />
-                <select id="profile_name" name="repoType" onchange="this.form.submit();" style="margin: 20px">
-                @defining(repoTypes.map(_.asString).map(p => (p, p))){ options =>
-                    @options.map(selectOption(repoType.asString))
-                }
-                </select>
+                <div class="col-xs-3">
+                    @select(
+                        field = form("repoType"),
+                        options = repoTypes.map(r => r.asString -> r.asString),
+                        '_label -> "Repository Type",
+                        'onchange -> "this.form.submit()",
+                        'id -> "repo-type-search"
+                    )
+                </div>
             </div>
         </form>
         <table class="table table-striped" id="health-indicators-leaderboard">
@@ -58,9 +71,16 @@
                             <a href="/health-indicators/@{indicator.repoName}"><span class="repoName">@indicator.repoName</span></a>
                         </td>
                         <td id="row_@{i}_column_1">
-                            @{if(indicator.owningTeams.size == 1){indicator.owningTeams.map(_.asString)}
-                            else if(indicator.owningTeams.size <=3){indicator.owningTeams.map(_.asString).mkString(", ")}
-                            else("Multiple")}
+                            <ul class="list-group">
+                                @if(indicator.owningTeams.size > 10) {
+                                    <li title="@{indicator.owningTeams.map(_.asString).mkString(", ")}"
+                                    data-toggle="tooltip" data-placement="bottom">Multiple</li>
+                                } else {
+                                    @for(team <- indicator.owningTeams) {
+                                        <li><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team)">@{team.asString}</a></li>
+                                    }
+                                }
+                            </ul>
                         </td>
                         <td id="row_@{i}_column_2">@indicator.repoType</td>
                         <td class="overallScore" id="row_@{i}_column_3">@indicator.overallScore</td>
@@ -71,20 +91,15 @@
     </div>
 
     <script>
-            var options = {valueNames: ['overallScore', 'repoName' ] };
+            var options = {valueNames: ['repoName']};
             var indicatorsList = new List('leaderboard-display', options);
 
-            var searchBox = document.getElementById("search");
+            var searchBox = document.getElementById("repo-name-search");
             indicatorsList.search(searchBox.value);
 
             var length = searchBox.value.length;
             searchBox.focus();
             searchBox.setSelectionRange(length, length);
-
-            function searchByRepo() {
-                document.getElementById('repoType').value = '';
-                document.getElementById("form").submit();
-            }
     </script>
     }
 
