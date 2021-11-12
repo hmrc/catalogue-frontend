@@ -28,8 +28,6 @@ import play.api.mvc.Results
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 
-import scala.language.postfixOps
-
 class PlatformInitiativesConnectorSpec
   extends AnyWordSpec
     with Matchers

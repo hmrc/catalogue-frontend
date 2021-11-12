@@ -31,7 +31,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.User
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Username}
-import uk.gov.hmrc.cataloguefrontend.events.{EventService, ReadModelService}
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -53,7 +52,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
   private[this] val digitalServiceName = "digital-service-a"
 
   "DigitalService page" should {
-
     "show a list of libraries, services, prototypes and repositories" in new MockedCatalogueFrontendSetup {
       serviceEndpoint(
         GET,
@@ -108,7 +106,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
     }
 
     "show a message if no services are found" in {
-
       serviceEndpoint(
         GET,
         s"/api/digital-services/$digitalServiceName",
@@ -132,84 +129,7 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       response.body   should include(viewMessages.noRepoOfTypeForDigitalService("other"))
     }
 
-    "show 'Not specified' if service owner is not set" in {
-
-      val digitalServiceName = "digital-service-123"
-
-      serviceEndpoint(
-        GET,
-        s"/api/digital-services/$digitalServiceName",
-        willRespondWith = (
-          200,
-          Some(
-            s"""{
-              "name":"$digitalServiceName",
-              "lastUpdatedAt": "2017-05-08T10:53:58Z",
-              "repositories":[]
-            }""".stripMargin
-          ))
-      )
-      val response = WS.url(s"http://localhost:$port/digital-service/$digitalServiceName").get.futureValue
-
-      val document = asDocument(response.body)
-
-      val serviceOwnerO = document.select("#service_owner_edit_input").iterator.asScala.toList.headOption
-
-      serviceOwnerO.isDefined         shouldBe true
-      serviceOwnerO.get.attr("value") shouldBe "Not specified"
-    }
-
-    "show service owner" in new MockedCatalogueFrontendSetup {
-
-      when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
-        .thenReturn(Future(Some(DigitalService(digitalServiceName, LocalDateTime.now(), Seq.empty))))
-
-      when(userManagementConnectorMock.getTeamMembersForTeams(any())(any()))
-        .thenReturn(Future(Map.empty[TeamName, Either[UMPError, Seq[TeamMember]]]))
-
-      val response = catalogueController.digitalService(digitalServiceName)(FakeRequest())
-
-      val document = asDocument(contentAsString(response))
-
-      val serviceOwnerO = document.select("#service_owner_edit_input").iterator.asScala.toList.headOption
-
-      serviceOwnerO.isDefined         shouldBe true
-      serviceOwnerO.get.attr("value") shouldBe serviceOwner.getDisplayName
-    }
-
-    "show edit button if user is signed-in" in {
-      val user = User(username = Username("username"), groups = List.empty)
-      val request  = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), optUser = Some(user))
-      val document =
-        Jsoup.parse(
-          new DigitalServiceInfoPage(mock[ViewMessages])(
-            digitalServiceName  = "",
-            teamMembersLookUp   = Map.empty,
-            repos               = Map.empty,
-            digitalServiceOwner = None
-          )(request).toString
-        )
-
-      document.select("#edit-button").isEmpty shouldBe false
-    }
-
-    "don't show edit button if user is NOT singed-in" in {
-      val request  = UmpVerifiedRequest(FakeRequest(), stubMessagesApi(), optUser = None)
-      val document =
-        Jsoup.parse(
-          new DigitalServiceInfoPage(mock[ViewMessages])(
-            digitalServiceName  = "",
-            teamMembersLookUp   = Map.empty,
-            repos               = Map.empty,
-            digitalServiceOwner = None
-          )(request).toString
-        )
-
-      document.select("#edit-button").isEmpty shouldBe true
-    }
-
     "show team members for teams correctly" in {
-
       val digitalServiceName = "digital-service-123"
       val team1              = "Team1"
       val team2              = "Team2"
@@ -253,7 +173,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
     }
 
     "show the right error message when unable to connect to ump" in new MockedCatalogueFrontendSetup {
-
       val teamName = TeamName("Team1")
 
       when(teamsAndRepositoriesConnectorMock.digitalServiceInfo(any())(any()))
@@ -324,7 +243,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
     val teamsAndRepositoriesConnectorMock   = mock[TeamsAndRepositoriesConnector]
     val userManagementConnectorMock         = mock[UserManagementConnector]
     private val userManagementPortalConfig  = mock[UserManagementPortalConfig]
-    private val mockedModelService          = mock[ReadModelService]
     private val userManagementAuthConnector = mock[UserManagementAuthConnector]
     private val controllerComponents        = stubMessagesControllerComponents()
     private val catalogueErrorHandler       = mock[CatalogueErrorHandler]
@@ -333,8 +251,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
     private val umpAuthenticatedPassThrough =
       new UmpAuthenticatedPassThrough(userManagementAuthConnector, controllerComponents, catalogueErrorHandler)
 
-    when(mockedModelService.getDigitalServiceOwner(any()))
-      .thenReturn(Some(serviceOwner))
     when(userManagementPortalConfig.userManagementProfileBaseUrl)
       .thenReturn("http://things.things.com")
 
@@ -345,8 +261,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       routeRulesService             = mock[RouteRulesService],
       serviceDependencyConnector    = mock[ServiceDependenciesConnector],
       leakDetectionService          = mock[LeakDetectionService],
-      eventService                  = mock[EventService],
-      readModelService              = mockedModelService,
       shutterService                = mock[ShutterService],
       defaultBranchesService        = mock[DefaultBranchesService],
       verifySignInStatus            = verifySignInStatusPassThrough,
@@ -365,8 +279,8 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       prototypeInfoPage             = mock[PrototypeInfoPage],
       repositoryInfoPage            = mock[RepositoryInfoPage],
       repositoriesListPage          = mock[RepositoriesListPage],
-      outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
-      defaultBranchListPage         = mock[DefaultBranchListPage]
+      defaultBranchListPage         = mock[DefaultBranchListPage],
+      outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage]
     )
   }
 

@@ -41,44 +41,19 @@
             <div class="board">
                 <h3 class="board__heading">Details</h3>
                 <div class="board__body">
-                    <div class="col-lg-6 editable-label">
+                    <div class="col-lg-6">
                         <label >Service Owner: </label>
                         <span id="service_owner_view_component" class="service-owner-view" >
-                            <div class="input-group">
-                                <span class="form-control editable-label__field">
-                                    @digitalServiceOwner.map { so =>
-                                        <a href="@{so.umpLink}" target="_blank" id="service_owner_view_field">@{so.displayName}<span class="glyphicon glyphicon-new-window"/></a>
-                                    }.getOrElse {
-                                        <span id="service_owner_view_field">
-                                            @{viewMessages.notSpecifiedText}
-                                        </span>
-                                    }
+                            @digitalServiceOwner.map { so =>
+                                <a href="@{so.umpLink}" target="_blank" id="service_owner_view_field">@{so.displayName}<span class="glyphicon glyphicon-new-window"/></a>
+                            }.getOrElse {
+                                <span id="service_owner_view_field">
+                                    @{viewMessages.notSpecifiedText}
                                 </span>
-                                <div class="input-group-btn">
-                                    @if(request.isSignedIn) {
-                                        <button id="edit-button" type="button" class="btn btn-primary" onclick="enterServiceOwnerEditMode()">
-                                            <span aria-hidden="true"></span> Edit
-                                        </button>
-                                    }
-                                </div>
-                            </div>
+                            }
                         </span>
-                        <span id="service_owner_edit_component" style="display: None">
-                            <div class="input-group">
-                                <input type="text" id="service_owner_edit_input" class="form-control" value="@{digitalServiceOwner.map(_.displayName).getOrElse("Not specified")}">
-                                <div class="input-group-btn">
-                                    <button type="button" class="btn btn-primary" onclick="saveServiceOwner()">
-                                        <span aria-hidden="true"></span> Save
-                                    </button>
-                                    <button type="button" class="btn" onclick="endServiceOwnerEditMode()">
-                                        <span aria-hidden="true"></span> Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        </span>
-
                     </div>
-                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -136,102 +111,6 @@
 
         </div>
     </section>
-
-
-    <div id="snackbar" class="snackbar"></div>
-    <script>
-
-        function enterServiceOwnerEditMode() {
-            var currentServiceOwnerValue = $('#service_owner_view_field').text().trim();
-            if(currentServiceOwnerValue === '@{viewMessages.notSpecifiedText}') {
-                currentServiceOwnerValue = '';
-            }
-            $('#service_owner_edit_input').val(currentServiceOwnerValue);
-
-            $('#service_owner_edit_component').show();
-            $('#service_owner_view_component').hide();
-        }
-
-        function endServiceOwnerEditMode() {
-            $('#service_owner_view_component').show();
-            $('#service_owner_edit_component').hide();
-        }
-
-        var serviceOwnerInput = $("#service_owner_edit_input");
-
-        serviceOwnerInput.keyup(function(e) {
-            if (e.keyCode == 27) { // escape key maps to keycode `27`
-                endServiceOwnerEditMode();
-            }
-        });
-
-        serviceOwnerInput.keyup(function(e) {
-            if (e.keyCode == 13) { // enter key maps to keycode `13`
-                saveServiceOwner();
-            }
-        });
-
-        $(function() {
-            $( '#service_owner_edit_input').autocomplete({
-                source: "/users",
-                autoFocus: true,
-                minLength: 3
-            });
-        });
-
-        function saveServiceOwner() {
-            var digitalServiceOwnerName = $('#service_owner_edit_input').val();
-            var data = {
-                service: "@{digitalServiceName}",
-                displayName: digitalServiceOwnerName
-            };
-
-            $.ajax({
-                url: '@{ play.filters.csrf.CSRF.getToken(request).map { token => "owner?csrfToken=" + token.value } }',
-                type: 'post',
-                dataType: 'json',
-                headers: { 'Content-Type': 'application/json' },
-                data: JSON.stringify(data),
-                success: function(result, status, xhr){
-                    endServiceOwnerEditMode();
-                    var displayName = result.displayName;
-                    var umpLink = result.umpLink;
-
-                    debugger;
-                    $("#service_owner_view_field").text("").append("<a href='"+ umpLink +"' target='_blank'>"+ displayName +"</a>");
-                    showSnackBar("Service Owner saved: '" + displayName + "'");
-                },
-                error: function(xhr, status, error){
-                    showSnackBar(xhr.responseJSON, true);
-                }
-            });
-
-
-        }
-
-        function showSnackBar(message, error) {
-            // Get the snackbar DIV
-            var x = document.getElementById("snackbar");
-
-            if(error) {
-                x.style.backgroundColor = "#FF3044";
-                x.style.color = "#000000";
-            } else {
-                x.style.backgroundColor = "";
-                x.style.color = "";
-            }
-
-            x.innerHTML = message;
-            // Add the "show" class to DIV
-            x.className = "show";
-//            debugger;
-
-            // After 3 seconds, remove the show class from DIV
-            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
-        }
-
-    </script>
-
 }
 
 @showRepositories(repos: Seq[String], headerName: String, typeName: String) = {
