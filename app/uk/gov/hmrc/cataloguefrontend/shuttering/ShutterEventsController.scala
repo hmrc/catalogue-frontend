@@ -31,10 +31,11 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ShutterEventsController @Inject() (
-  mcc: MessagesControllerComponents,
+  mcc      : MessagesControllerComponents,
   connector: ShutterConnector
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+)(implicit
+  ec: ExecutionContext
+)extends FrontendController(mcc) {
 
   private val logger = Logger(getClass)
 

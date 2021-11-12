@@ -55,7 +55,7 @@ val test = Seq(
   "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28"  % hmrcMongoVersion     % Test,
   "org.scalatestplus"      %% "scalatestplus-scalacheck" % "3.1.0.0-RC2"        % Test,
   "org.jsoup"              %  "jsoup"                    % "1.13.1"             % Test,
-  "org.mockito"            %% "mockito-scala"            % "1.10.6"             % Test,
+  "org.mockito"            %% "mockito-scala-scalatest"  % "1.16.46"            % Test,
   ws
 )
 

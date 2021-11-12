@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.actions
 
-import org.mockito.ArgumentMatchers.{eq => eqTo, _}
-import org.mockito.MockitoSugar
+import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -35,6 +34,7 @@ class VerifySignInStatusSpec
   extends AnyWordSpec
   with Matchers
   with MockitoSugar
+  with ArgumentMatchersSugar
   with ScalaFutures
   with GuiceOneAppPerSuite {
 
@@ -46,7 +46,7 @@ class VerifySignInStatusSpec
       val umpToken = UmpToken("token")
       val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
 
-      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any()))
+      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any))
         .thenReturn(Future(Some(User(Username("username"), groups = List.empty))))
 
       action
@@ -58,7 +58,7 @@ class VerifySignInStatusSpec
       val umpToken = UmpToken("token")
       val request  = FakeRequest().withSession("ump.token" -> umpToken.value)
 
-      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any()))
+      when(userManagementAuthConnector.getUser(eqTo(umpToken))(any))
         .thenReturn(Future(None))
 
       action
