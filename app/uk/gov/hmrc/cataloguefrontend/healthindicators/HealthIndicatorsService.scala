@@ -42,7 +42,7 @@ class HealthIndicatorsService @Inject() (
     } yield indicators.map { i =>
       IndicatorsWithTeams(
         i.repoName,
-        owningTeams = repoToTeams.getOrElse(i.repoName, Seq.empty).sortBy(_.asString),
+        owningTeams = repoToTeams.getOrElse(i.repoName, Seq.empty).sorted,
         i.repoType,
         i.overallScore,
         i.weightedMetrics

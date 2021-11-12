@@ -74,7 +74,7 @@
                             <ul class="list-group">
                                 @if(indicator.owningTeams.size > 10) {
                                     <li title="@{indicator.owningTeams.map(_.asString).mkString(", ")}"
-                                    data-toggle="tooltip" data-placement="bottom">Multiple Teams</li>
+                                    data-toggle="tooltip" data-placement="bottom">Multiple</li>
                                 } else {
                                     @for(team <- indicator.owningTeams) {
                                         <li><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team)">@{team.asString}</a></li>
