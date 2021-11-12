@@ -71,9 +71,16 @@
                             <a href="/health-indicators/@{indicator.repoName}"><span class="repoName">@indicator.repoName</span></a>
                         </td>
                         <td id="row_@{i}_column_1">
-                            @{if(indicator.owningTeams.size == 1){indicator.owningTeams.map(_.asString)}
-                            else if(indicator.owningTeams.size <=3){indicator.owningTeams.map(_.asString).mkString(", ")}
-                            else("Multiple")}
+                            <ul class="list-group">
+                                @if(indicator.owningTeams.size > 10) {
+                                    <li title="@{indicator.owningTeams.map(_.asString).mkString(", ")}"
+                                    data-toggle="tooltip" data-placement="bottom">Multiple Teams</li>
+                                } else {
+                                    @for(team <- indicator.owningTeams) {
+                                        <li><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team)">@{team.asString}</a></li>
+                                    }
+                                }
+                            </ul>
                         </td>
                         <td id="row_@{i}_column_2">@indicator.repoType</td>
                         <td class="overallScore" id="row_@{i}_column_3">@indicator.overallScore</td>
