@@ -75,8 +75,8 @@ class ShutterWizardController @Inject() (
   implicit val s2af = step2aOutFormats
   implicit val s2bf = step2bOutFormats
 
-  def shutterPermission(serviceName: String): Predicate =
-    Predicate.Permission(Resource.from("shutter-api", serviceName), IAAction("SHUTTER"))
+  def shutterPermission(shutterType: ShutterType)(serviceName: String): Predicate =
+    Predicate.Permission(Resource.from("shutter-api", s"${shutterType.asString}/$serviceName"), IAAction("SHUTTER"))
 
   def withGroup(continueUrl: => Call) =
     auth.authenticatedAction(
@@ -206,22 +206,20 @@ class ShutterWizardController @Inject() (
                                   ).map(BadRequest(_))
                                 )
                               )
-          _             <- if (step0Out.shutterType != ShutterType.Frontend) // TODO shutter-config location: /service/serviceName or /api/apiName ?
-                              EitherT.pure[Future, Result](())
-                            else
-                              EitherT
-                                .liftF[Future, Result, Boolean] {
-                                  import PredicateQuery.implicits._
-                                  auth.verify(Predicate.and(serviceNames.map(shutterPermission).toList: _*))
-                                }.flatMap[Result, Unit] {
-                                  case true  => EitherT.pure(())
-                                  case false => //AuthService.ServiceForbidden(s) =>
-                                    // TODO can we identify which services we can't shutter?
-                                    // e.g. auth.verify(shutterPerm(s1), shutterPerm(s2)): Future[(Boolean, Boolean)]
-                                    //val errorMessage = s"You do not have permission to shutter service(s): ${s.toList.mkString(", ")}"
-                                    val errorMessage = s"You do not have permission to shutter all the selected services"
-                                    EitherT.left[Unit](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_)))
-                                }
+          _             <- EitherT
+                             .liftF[Future, Result, Boolean] {
+                               import PredicateQuery.implicits._
+                               auth.verify(Predicate.and(serviceNames.map(shutterPermission(step0Out.shutterType)).toList: _*))
+                             }.flatMap[Result, Unit] {
+                               case true  => EitherT.pure(())
+                               case false => //AuthService.ServiceForbidden(s) =>
+                                 // TODO can we identify which services we can't shutter?
+                                 // e.g. auth.verify(shutterPerm(s1), shutterPerm(s2)): Future[(Boolean, Boolean)]
+                                 //val errorMessage = s"You do not have permission to shutter service(s): ${s.toList.mkString(", ")}"
+                                 // TODO we discussed retriving just the locations that can be shuttered and only displaying this?
+                                 val errorMessage = s"You do not have permission to shutter all the selected services"
+                                 EitherT.left[Unit](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_)))
+                             }
           step1Out      =  Step1Out(sf.serviceNames, status)
           _             <- EitherT.liftF[Future, Result, (String, String)] {
                               status match {
