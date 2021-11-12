@@ -41,7 +41,7 @@ class AuthController @Inject() (
   def postSignIn(targetUrl: Option[String]) =
     auth.authenticatedAction(
       continueUrl = routes.AuthController.signIn(targetUrl),
-      retrieval   = Retrieval.username
+      retrieval   = Retrieval.username /// TODO previously this was "Display Name" rather than "user.name"
     ){ request =>
       Redirect(targetUrl.getOrElse(routes.CatalogueController.index.url))
       .withSession(
