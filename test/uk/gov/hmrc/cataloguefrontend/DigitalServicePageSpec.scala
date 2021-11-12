@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import java.time.LocalDateTime
-
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
