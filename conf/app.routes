@@ -25,7 +25,6 @@ GET        /admin/metrics                               @com.kenshoo.play.metric
 
 GET        /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.signIn(targetUrl: Option[String] ?= None)
 GET        /post-sign-in                                @uk.gov.hmrc.cataloguefrontend.AuthController.postSignIn(targetUrl: Option[String] ?= None)
-GET        /debug                                       @uk.gov.hmrc.cataloguefrontend.AuthController.debug
 GET        /sign-out                                    @uk.gov.hmrc.cataloguefrontend.AuthController.signOut
 
 GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchLanding

@@ -42,18 +42,11 @@ class AuthController @Inject() (
     auth.authenticatedAction(
       continueUrl = routes.AuthController.signIn(targetUrl),
       retrieval   = Retrieval.username /// TODO previously this was "Display Name" rather than "user.name"
-    ){ request =>
+    ){ implicit request =>
       Redirect(targetUrl.getOrElse(routes.CatalogueController.index.url))
-      .withSession(
+      .addingToSession(
         DisplayName.SESSION_KEY_NAME -> request.retrieval.value
       )
-    }
-
-  val debug =
-    Action { request =>
-      val hc = uk.gov.hmrc.play.http.HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-      play.api.Logger(getClass).info(s"hc.authorization.isDefined=${hc.authorization.isDefined}")
-      Ok("OK")
     }
 
   val signOut =
