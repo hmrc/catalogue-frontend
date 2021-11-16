@@ -103,9 +103,14 @@ class CatalogueController @Inject() (
 
   def index(): Action[AnyContent] =
     Action { implicit request =>
-      val whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines)
-      val blogPosts = MarkdownLoader.markdownFromFile("BLOG_POSTS.md", blogPostsDisplayLines)
-
+      val whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines) match {
+        case Left(err) => err
+        case Right(s) => s
+      }
+      val blogPosts = MarkdownLoader.markdownFromFile("BLOG_POSTS.md", blogPostsDisplayLines) match {
+        case Left(err) => err
+        case Right(s) => s
+      }
       Ok(indexPage(whatsNew, blogPosts))
     }
 

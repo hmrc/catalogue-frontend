@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import play.api.libs.json.OFormat
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,6 +26,7 @@ class PlatformInitiativesConnector @Inject()(
   httpClient: HttpClient,
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
+  import HttpReads.Implicits._
 
   private val platformInitiativesBaseUrl: String =
     servicesConfig.baseUrl("platform-initiatives")
