@@ -49,6 +49,13 @@ class AuthController @Inject() (
       )
     }
 
+  val debug =
+    Action { request =>
+      val hc = uk.gov.hmrc.play.http.HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+      play.api.Logger(getClass).info(s"hc.authorization.isDefined=${hc.authorization.isDefined}")
+      Ok("OK")
+    }
+
   val signOut =
     Action(
       Redirect(routes.CatalogueController.index).withNewSession
