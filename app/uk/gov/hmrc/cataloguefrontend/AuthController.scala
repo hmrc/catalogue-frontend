@@ -29,19 +29,16 @@ class AuthController @Inject() (
 ) extends FrontendController(mcc) {
 
   def signIn(targetUrl: Option[String]) =
-    // TODO provide this from internal-auth-client?
-    Action(
-      Redirect(
-        "/internal-auth-frontend/sign-in",
-        Map("continue_url" -> Seq(routes.AuthController.postSignIn(targetUrl).url))
-      )
-    )
+    auth.authenticatedAction(
+      continueUrl = routes.AuthController.postSignIn(targetUrl)
+    )(Redirect(targetUrl.getOrElse(routes.CatalogueController.index.url)))
 
-  // TODO consider updating internal-auth to add username to the session
+  // endpoint exists to run retrievals and store the results in the session after logging in
+  // (opposed to running retrievals on every page and make results available to standard_layout)
   def postSignIn(targetUrl: Option[String]) =
     auth.authenticatedAction(
       continueUrl = routes.AuthController.signIn(targetUrl),
-      retrieval   = Retrieval.username /// TODO previously this was "Display Name" rather than "user.name"
+      retrieval   = Retrieval.username
     ){ implicit request =>
       Redirect(targetUrl.getOrElse(routes.CatalogueController.index.url))
       .addingToSession(

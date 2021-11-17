@@ -22,7 +22,7 @@ import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource}
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering._
 
@@ -61,10 +61,10 @@ class ShutterOverviewController @Inject() (
                                    }
                                    .map(ws => (env, ws))
                                }
-        hasGlobalPerm  <-  Future.successful(false) // TODO update internal-auth-client
+        hasGlobalPerm  <-  Future.successful(false) // TODO update internal-auth-client - disabled banner for now
                            /*auth
-                            .ifAuthenticated(
-                              Retrieval.hasPermission(Predicate.Permission(Resource.from("shutter-api", "mdtp"), IAAction("SHUTTER")))
+                            .verify(
+                              Retrieval.hasPredicate(Predicate.Permission(Resource.from("shutter-api", "mdtp"), IAAction("SHUTTER")))
                             ).map(_.exists(_ == true))*/
         killSwitchLink =  if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
         page           =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, killSwitchLink)
