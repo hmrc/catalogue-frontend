@@ -29,7 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, PredicateQuery, Resource}
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, PredicateQuery, Resource, ResourceLocation, ResourceType}
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -208,13 +208,19 @@ class ShutterWizardController @Inject() (
                               auth.verify(Predicate.and(serviceNames.map(shutterPermission(step0Out.shutterType)).toList: _*))
                             }.flatMap[Result, Unit] {
                               case true  => EitherT.pure(())
-                              case false => //AuthService.ServiceForbidden(s) =>
-                                // TODO can we identify which services we can't shutter?
-                                // e.g. auth.verify(shutterPerm(s1), shutterPerm(s2)): Future[(Boolean, Boolean)]
-                                //val errorMessage = s"You do not have permission to shutter service(s): ${s.toList.mkString(", ")}"
-                                // TODO we discussed retriving just the locations that can be shuttered and only displaying this?
-                                val errorMessage = s"You do not have permission to shutter all the selected services"
-                                EitherT.left[Unit](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_)))
+                              case false => // TODO can we retrive just the locations that can be shuttered and only display these?
+                                            EitherT.left[Unit](
+                                              for {
+                                                locationPrefix <- Future.successful(step0Out.shutterType.asString + "/")
+                                                resources      <- auth.listResources(Some(ResourceType("shutter-api")))
+                                                permsFor       =  resources.collect {
+                                                                    case Resource(_, ResourceLocation(l)) if l.startsWith(locationPrefix) => l.stripPrefix(locationPrefix)
+                                                                  }
+                                                denied         =  serviceNames.toList.diff(permsFor.toList)
+                                                errorMessage   =  s"You do not have permission to shutter service(s): ${denied.mkString(", ")}"
+                                                page           <- showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage)))
+                                              } yield Forbidden(page)
+                                            )
                             }
          step1Out      =  Step1Out(sf.serviceNames, status)
          _             <- EitherT.liftF[Future, Result, (String, String)] {
