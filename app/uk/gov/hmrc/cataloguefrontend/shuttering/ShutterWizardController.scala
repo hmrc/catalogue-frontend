@@ -29,7 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, PredicateQuery, Resource, ResourceLocation, ResourceType}
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType}
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -190,7 +190,7 @@ class ShutterWizardController @Inject() (
                                                      .map(BadRequest(_))
                                                  )
                           }
-         // check has `shutter-platform` group or is authorized for selected services
+         // check has permission to shutter selected services (TODO only display locations that can be shuttered)
          serviceNames  <- EitherT
                             .fromOption[Future](NonEmptyList.fromList(sf.serviceNames.toList), ())
                             .leftFlatMap(_ =>
@@ -202,25 +202,20 @@ class ShutterWizardController @Inject() (
                                 ).map(BadRequest(_))
                               )
                             )
-         _             <- EitherT
-                            .liftF[Future, Result, Boolean] {
-                              import PredicateQuery.implicits._
-                              auth.verify(Predicate.and(serviceNames.map(shutterPermission(step0Out.shutterType)).toList: _*))
-                            }.flatMap[Result, Unit] {
-                              case true  => EitherT.pure(())
-                              case false => // TODO can we retrive just the locations that can be shuttered and only display these?
-                                            EitherT.left[Unit](
-                                              for {
-                                                locationPrefix <- Future.successful(step0Out.shutterType.asString + "/")
-                                                resources      <- auth.listResources(Some(ResourceType("shutter-api")))
-                                                permsFor       =  resources.collect {
-                                                                    case Resource(_, ResourceLocation(l)) if l.startsWith(locationPrefix) => l.stripPrefix(locationPrefix)
-                                                                  }
-                                                denied         =  serviceNames.toList.diff(permsFor.toList)
-                                                errorMessage   =  s"You do not have permission to shutter service(s): ${denied.mkString(", ")}"
-                                                page           <- showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage)))
-                                              } yield Forbidden(page)
-                                            )
+         resources     <- EitherT.liftF(auth.listResources(Some(ResourceType("shutter-api"))))
+         permsFor      =  {
+                            val locationPrefix = step0Out.shutterType.asString + "/"
+                            resources.collect {
+                              case Resource(_, ResourceLocation(l)) if l.startsWith(locationPrefix) => l.stripPrefix(locationPrefix)
+                            }
+                           }
+         denied        =  serviceNames.toList.diff(permsFor.toList)
+         _             <- if (denied.isEmpty)
+                            EitherT.pure[Future, Result](())
+                          else
+                            EitherT.left[Unit] {
+                              val errorMessage = s"You do not have permission to shutter service(s): ${denied.mkString(", ")}"
+                              showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_))
                             }
          step1Out      =  Step1Out(sf.serviceNames, status)
          _             <- EitherT.liftF[Future, Result, (String, String)] {
