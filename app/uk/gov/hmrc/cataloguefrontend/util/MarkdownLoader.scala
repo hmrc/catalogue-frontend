@@ -27,12 +27,15 @@ object MarkdownLoader {
     .using(GitHubFlavor)
     .build
 
-  def markdownFromFile(filename: String, maxLines: Int): String = {
+  def markdownFromFile(filename: String, maxLines: Int): Either[String, String] = {
     val source = scala.io.Source.fromResource(filename)
     val lines =
       try source.getLines.toList.filterNot(_.isEmpty)
       finally source.close()
-    transformer.transform(lines.take(maxLines).mkString("\n")).getOrElse("<Unable to render at this time>")
+    transformer.transform(lines.take(maxLines).mkString("\n")) match {
+      case Left(_)  => Left("<Unable to render at this time>")
+      case Right(s) => Right(s)
+    }
   }
 
   def markdownFromString(s: String): Either[String, String] = {

@@ -29,7 +29,6 @@ object Environment {
   case object Production extends Environment { val asString = "production"; override def displayString = "Production" }
 
   val values: List[Environment] =
-    // this list is sorted
     List(Development, Integration, QA, Staging, ExternalTest, Production)
 
   implicit val ordering = new Ordering[Environment] {
