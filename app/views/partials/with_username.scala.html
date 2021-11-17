@@ -14,13 +14,13 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
+@import uk.gov.hmrc.cataloguefrontend.AuthController
 
-@(ifLoggedIn: DisplayName => Html)(ifNotLoggedIn: => Html)(implicit request: Request[_])
+@(ifLoggedIn: String => Html)(ifNotLoggedIn: => Html)(implicit request: Request[_])
 
 @{
   request
     .session
-    .get(DisplayName.SESSION_KEY_NAME)
-    .fold(ifNotLoggedIn)(rawDisplayName => ifLoggedIn(DisplayName(rawDisplayName)))
+    .get(AuthController.SESSION_USERNAME)
+    .fold(ifNotLoggedIn)(ifLoggedIn)
 }

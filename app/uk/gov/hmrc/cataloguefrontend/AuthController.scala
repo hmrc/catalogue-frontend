@@ -42,7 +42,7 @@ class AuthController @Inject() (
     ){ implicit request =>
       Redirect(targetUrl.getOrElse(routes.CatalogueController.index.url))
       .addingToSession(
-        DisplayName.SESSION_KEY_NAME -> request.retrieval.value
+        AuthController.SESSION_USERNAME -> request.retrieval.value
       )
     }
 
@@ -50,4 +50,8 @@ class AuthController @Inject() (
     Action(
       Redirect(routes.CatalogueController.index).withNewSession
     )
+}
+
+object AuthController {
+  val SESSION_USERNAME = "username"
 }

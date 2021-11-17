@@ -164,8 +164,4 @@ object UserManagementConnector {
 
     override def toString: String = value
   }
-
-  object DisplayName {
-    val SESSION_KEY_NAME = "ump.displayName"
-  }
 }

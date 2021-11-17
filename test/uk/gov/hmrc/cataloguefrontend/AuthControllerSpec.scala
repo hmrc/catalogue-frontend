@@ -61,6 +61,21 @@ class AuthControllerSpec
 
       redirectLocation(result) shouldBe Some("/internal-auth-frontend/sign-in?continue_url=%2Fpost-sign-in%3FtargetUrl%3D%252Fmy-url")
     }
+
+    "redirect to requested page if already logged in" in new Setup {
+      val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
+
+      when(
+        authStubBehaviour.stubAuth(
+          None,
+          Retrieval.EmptyRetrieval
+        )
+      ).thenReturn(Future.unit)
+
+      val result = controller.signIn(targetUrl = Some("/my-url"))(request)
+
+      redirectLocation(result) shouldBe Some("/my-url")
+    }
   }
 
   "Returning from signing-in" should {
@@ -76,8 +91,9 @@ class AuthControllerSpec
 
       val result = controller.postSignIn(targetUrl = None)(request)
 
-      redirectLocation(result)                         shouldBe Some(routes.CatalogueController.index.url)
-      Helpers.session(result).apply("ump.displayName") shouldBe "user.name"
+      redirectLocation(result) shouldBe Some(routes.CatalogueController.index.url)
+
+      Helpers.session(result).apply(AuthController.SESSION_USERNAME) shouldBe "user.name"
     }
 
     "redirect to requested page" in new Setup {
@@ -92,8 +108,9 @@ class AuthControllerSpec
 
       val result = controller.postSignIn(targetUrl = Some("/my-url"))(request)
 
-      redirectLocation(result)                         shouldBe Some("/my-url")
-      Helpers.session(result).apply("ump.displayName") shouldBe "user.name"
+      redirectLocation(result) shouldBe Some("/my-url")
+
+      Helpers.session(result).apply(AuthController.SESSION_USERNAME) shouldBe "user.name"
     }
   }
 

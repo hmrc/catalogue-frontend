@@ -114,15 +114,13 @@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li class="dropdown">
-                        @partials.with_display_name { displayName =>
-
+                        @partials.with_username { username =>
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                @displayName <span class="caret"></span>
+                                @username <span class="caret"></span>
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a href="@appRoutes.AuthController.signOut">Sign out</a></li>
                             </ul>
-
                         }{
                             <a id="sign-in" href="@appRoutes.AuthController.signIn(targetUrl = Some(request.target.uriString))" class="@if(active=="sign-in") {active}">Sign in</a>
                         }
