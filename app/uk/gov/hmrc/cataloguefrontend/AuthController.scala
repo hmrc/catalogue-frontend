@@ -20,6 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
+import uk.gov.hmrc.play.bootstrap.binders.{OnlyRelative, RedirectUrl}
 
 @Singleton
 class AuthController @Inject() (
@@ -27,19 +29,22 @@ class AuthController @Inject() (
   mcc : MessagesControllerComponents
 ) extends FrontendController(mcc) {
 
-  def signIn(targetUrl: Option[String]) =
+  def signIn(targetUrl: Option[RedirectUrl]) =
     auth.authenticatedAction(
       continueUrl = routes.AuthController.postSignIn(targetUrl)
     )(Redirect(routes.AuthController.postSignIn(targetUrl)))
 
   // endpoint exists to run retrievals and store the results in the session after logging in
   // (opposed to running retrievals on every page and make results available to standard_layout)
-  def postSignIn(targetUrl: Option[String]) =
+  def postSignIn(targetUrl: Option[RedirectUrl]) =
     auth.authenticatedAction(
       continueUrl = routes.AuthController.signIn(targetUrl),
       retrieval   = Retrieval.username
     ){ implicit request =>
-      Redirect(targetUrl.getOrElse(routes.CatalogueController.index.url))
+      Redirect(
+        targetUrl.flatMap(_.getEither(OnlyRelative).toOption)
+          .fold(routes.CatalogueController.index.url)(_.url)
+      )
       .addingToSession(
         AuthController.SESSION_USERNAME -> request.retrieval.value
       )
