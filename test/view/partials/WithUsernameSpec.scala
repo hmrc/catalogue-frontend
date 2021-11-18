@@ -21,18 +21,18 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import play.twirl.api.Html
-import views.html.partials.with_display_name
+import uk.gov.hmrc.cataloguefrontend.AuthController
+import views.html.partials.with_username
 
 class WithDisplayNameSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
 
-  "Working with user's display name" should {
-
+  "Working with logged in user's username" should {
     "be possible if user is logged in" in {
-      implicit val request = FakeRequest().withSession("ump.displayName" -> "John Smith")
+      implicit val request = FakeRequest().withSession(AuthController.SESSION_USERNAME -> "John Smith")
       val expectedOutput   = "<p> Something rendered when user logged-in </p>"
 
       val output =
-        with_display_name(ifLoggedIn = _ => Html(expectedOutput))(ifNotLoggedIn = Html("not expecting to see this"))
+        with_username(ifLoggedIn = _ => Html(expectedOutput))(ifNotLoggedIn = Html("not expecting to see this"))
 
       output.toString().trim shouldBe expectedOutput
     }
@@ -42,10 +42,9 @@ class WithDisplayNameSpec extends AnyWordSpec with Matchers with GuiceOneAppPerS
       val expectedOutput                     = "<p> Something rendered when user NOT logged-in </p>"
 
       val output =
-        with_display_name(ifLoggedIn = _ => Html("not expecting to see this"))(ifNotLoggedIn = Html(expectedOutput))
+        with_username(ifLoggedIn = _ => Html("not expecting to see this"))(ifNotLoggedIn = Html(expectedOutput))
 
       output.toString.trim shouldBe expectedOutput
     }
-
   }
 }

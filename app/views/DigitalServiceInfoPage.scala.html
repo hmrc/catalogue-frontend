@@ -19,7 +19,6 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
-@import uk.gov.hmrc.cataloguefrontend.actions.UmpVerifiedRequest
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(viewMessages: ViewMessages)
@@ -28,7 +27,7 @@
   teamMembersLookUp  : Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]],
   repos              : Map[RepoType, Seq[String]],
   digitalServiceOwner: Option[DisplayableTeamMember]
-)(implicit request: UmpVerifiedRequest[_])
+)(implicit request: Request[_])
 
 @standard_layout(digitalServiceName, "digital-services") {
     <header>

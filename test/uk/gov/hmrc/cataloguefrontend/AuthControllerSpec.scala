@@ -16,106 +16,101 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.jsoup.Jsoup
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Configuration
 import play.api.i18n.{Lang, MessagesApi}
 import play.api.mvc._
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.{UmpToken, UmpUnauthorized}
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
-import uk.gov.hmrc.cataloguefrontend.service.AuthService
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
+import uk.gov.hmrc.http.SessionKeys
+import uk.gov.hmrc.internalauth.client.Retrieval
+import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AuthControllerSpec
-    extends AnyWordSpec
-    with Matchers
-    with GuiceOneAppPerSuite
-    with MockitoSugar
-    with ArgumentMatchersSugar
-    with OptionValues
-    with ScalaFutures {
+  extends AnyWordSpec
+     with Matchers
+     with GuiceOneAppPerSuite
+     with MockitoSugar
+     with ArgumentMatchersSugar
+     with OptionValues
+     with ScalaFutures {
 
   implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
 
   import Helpers._
 
-  "Authenticating" should {
+  "Signing in" should {
+    "redirect to internal-auth" in new Setup {
+      val request = FakeRequest()
 
-    "redirect to landing page with ump token in session on successful login" in new Setup {
-      val username            = "john.smith"
-      val password            = "password"
-      val request             = FakeRequest().withFormUrlEncodedBody("username" -> username, "password" -> password)
-      val expectedToken       = UmpToken("ump-token")
-      val expectedDisplayName = DisplayName("John Smith")
+      val result = controller.signIn(targetUrl = None)(request)
 
-      when(authService.authenticate(eqTo(username), eqTo(password))(any))
-        .thenReturn(Future(Right(TokenAndDisplayName(expectedToken, expectedDisplayName))))
-
-      val result: Future[Result] = controller.submit(request)
-
-      redirectLocation(result).get                     shouldBe routes.CatalogueController.index.url
-      Helpers.session(result).apply("ump.token")       shouldBe expectedToken.value
-      Helpers.session(result).apply("ump.displayName") shouldBe expectedDisplayName.value
+      redirectLocation(result) shouldBe Some("/internal-auth-frontend/sign-in?continue_url=%2Fpost-sign-in")
     }
 
-    "lower case username sent to ump and redirect to landing page on successful login" in new Setup {
-      val password            = "password"
-      val request             = FakeRequest().withFormUrlEncodedBody("username" -> "John.Smith", "password" -> password)
-      val expectedToken       = UmpToken("ump-token")
-      val expectedDisplayName = DisplayName("John Smith")
+    "forward target Url" in new Setup {
+      val request = FakeRequest()
 
-      when(authService.authenticate(eqTo("john.smith"), eqTo(password))(any))
-        .thenReturn(Future(Right(TokenAndDisplayName(expectedToken, expectedDisplayName))))
+      val result = controller.signIn(targetUrl = Some("/my-url"))(request)
 
-      val result: Future[Result] = controller.submit(request)
-
-      redirectLocation(result).get                     shouldBe routes.CatalogueController.index.url
-      Helpers.session(result).apply("ump.token")       shouldBe expectedToken.value
-      Helpers.session(result).apply("ump.displayName") shouldBe expectedDisplayName.value
+      redirectLocation(result) shouldBe Some("/internal-auth-frontend/sign-in?continue_url=%2Fpost-sign-in%3FtargetUrl%3D%252Fmy-url")
     }
 
-    "show 400 BAD_REQUEST and error message when auth service does not recognize user credentials" in new Setup {
-      val username = "n/a"
-      val password = "n/a"
-      val request  = FakeRequest().withFormUrlEncodedBody("username" -> username, "password" -> password)
+    "redirect to requested page if already logged in" in new Setup {
+      val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
 
-      when(authService.authenticate(eqTo(username), eqTo(password))(any))
-        .thenReturn(Future(Left(UmpUnauthorized)))
+      when(
+        authStubBehaviour.stubAuth(
+          None,
+          Retrieval.EmptyRetrieval
+        )
+      ).thenReturn(Future.unit)
 
-      val result = controller.submit(request)
+      val result = controller.signIn(targetUrl = Some("/my-url"))(request)
 
-      status(result) shouldBe 400
-
-      contentAsString(result) should include(messagesApi("sign-in.wrong-credentials"))
-    }
-
-    "show 400 BAD_REQUEST and error message when no username or password are provided" in new Setup {
-      val request = FakeRequest().withFormUrlEncodedBody("username" -> "", "password" -> "")
-
-      val result = controller.submit(request)
-
-      status(result)          shouldBe 400
-      contentAsString(result) should include(messagesApi("sign-in.wrong-credentials"))
+      redirectLocation(result) shouldBe Some("/my-url")
     }
   }
 
-  "Showing sign-in page" should {
-    "provide a link to help people who forgotten their password" in new Setup {
-      val result                = controller.showSignInPage(targetUrl = None)(FakeRequest())
-      val signInPage            = Jsoup.parse(contentAsString(result))
-      val forgottenPasswordLink = signInPage.select("#forgotten-password")
+  "Returning from signing-in" should {
+    "put username into session" in new Setup {
+      val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
 
-      forgottenPasswordLink.attr("href") shouldBe selfServiceUrl
-      forgottenPasswordLink.text         shouldBe selfServiceUrl
+      when(
+        authStubBehaviour.stubAuth(
+          None,
+          Retrieval.username
+        )
+      ).thenReturn(Future.successful(Retrieval.Username("user.name")))
+
+      val result = controller.postSignIn(targetUrl = None)(request)
+
+      redirectLocation(result) shouldBe Some(routes.CatalogueController.index.url)
+
+      Helpers.session(result).apply(AuthController.SESSION_USERNAME) shouldBe "user.name"
+    }
+
+    "redirect to requested page" in new Setup {
+      val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
+
+      when(
+        authStubBehaviour.stubAuth(
+          None,
+          Retrieval.username
+        )
+      ).thenReturn(Future.successful(Retrieval.Username("user.name")))
+
+      val result = controller.postSignIn(targetUrl = Some("/my-url"))(request)
+
+      redirectLocation(result) shouldBe Some("/my-url")
+
+      Helpers.session(result).apply(AuthController.SESSION_USERNAME) shouldBe "user.name"
     }
   }
 
@@ -125,17 +120,18 @@ class AuthControllerSpec
 
       val result = controller.signOut(request)
 
-      redirectLocation(result)      shouldBe Some(routes.AuthController.showSignInPage().url)
+      redirectLocation(result)      shouldBe Some(routes.CatalogueController.index.url)
       result.futureValue.newSession shouldBe Some(Session())
     }
   }
 
   private[this] trait Setup {
-    val messagesApi    = app.injector.instanceOf[MessagesApi]
-    val mcc            = app.injector.instanceOf[MessagesControllerComponents]
-    val authService    = mock[AuthService]
-    val selfServiceUrl = "self-service-url"
-    val config         = Configuration("self-service-url" -> selfServiceUrl)
-    val controller     = new AuthController(authService, config, mcc)
+    val messagesApi       = app.injector.instanceOf[MessagesApi]
+    val mcc               = app.injector.instanceOf[MessagesControllerComponents]
+    val authStubBehaviour = mock[StubBehaviour]
+    val authComponent     = { implicit val cc: ControllerComponents = Helpers.stubControllerComponents()
+                              FrontendAuthComponentsStub(authStubBehaviour)
+                            }
+    val controller        = new AuthController(authComponent, mcc)
   }
 }

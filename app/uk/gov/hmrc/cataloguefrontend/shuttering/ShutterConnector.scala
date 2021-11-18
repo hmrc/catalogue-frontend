@@ -18,11 +18,11 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Writes
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpClient, HttpReads, UpstreamErrorResponse}
 import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.internalauth.client.AuthorizationToken
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -67,13 +67,13 @@ class ShutterConnector @Inject() (
     * Shutters/un-shutters the service in the given environment
     */
   def updateShutterStatus(
-    umpToken   : UmpToken,
+    token      : AuthorizationToken,
     serviceName: String,
     st         : ShutterType,
     env        : Environment,
     status     : ShutterStatus
   )(implicit hc: HeaderCarrier): Future[Unit] = {
-    implicit val isf = ShutterStatus.format
+    implicit val ssf = ShutterStatus.format
     httpClient
       .PUT[ShutterStatus, Unit](
         url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states/$serviceName",
@@ -81,7 +81,7 @@ class ShutterConnector @Inject() (
       )(
         implicitly[Writes[ShutterStatus]],
         HttpReads.Implicits.throwOnFailure(implicitly[HttpReads[Either[UpstreamErrorResponse, Unit]]]),
-        hc.copy(authorization = Some(Authorization(umpToken.value))),
+        hc.copy(authorization = Some(Authorization(token.value))),
         implicitly[ExecutionContext]
       )
   }

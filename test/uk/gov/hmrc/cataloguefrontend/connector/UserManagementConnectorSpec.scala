@@ -26,11 +26,10 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpUserId
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.UserManagementPortalConfig
-import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.http.test.WireMockSupport
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -357,45 +356,6 @@ class UserManagementConnectorSpec
           "aleks.malkes@gov.uk",
           "anand.manand@gov.uk")
       }
-    }
-  }
-
-  "getDisplayName" should {
-    val userId = UmpUserId("ricky.micky")
-
-    "should return user's displayName if exists in UMP" in {
-      stubFor(
-        get(urlEqualTo(s"/v2/organisations/users/$userId"))
-          .willReturn(aResponse().withBodyFile("/single-user.json"))
-      )
-
-      val displayName = userManagementConnector.getDisplayName(userId).futureValue
-
-      displayName shouldBe Some(DisplayName("Ricky Micky"))
-    }
-
-    "should return None if UMP doesn't know about a given user" in {
-      stubFor(
-        get(urlEqualTo(s"/v2/organisations/users/$userId"))
-          .willReturn(aResponse().withStatus(404))
-      )
-
-      val displayName = userManagementConnector.getDisplayName(userId).futureValue
-
-      displayName shouldBe None
-    }
-
-    "should throw BadGatewayException if UMP returns sth different than 200 or 404" in {
-      val unexpectedStatusCode = 500
-      val relativeUrl          = s"/v2/organisations/users/$userId"
-      stubFor(
-        get(urlEqualTo(relativeUrl))
-          .willReturn(aResponse().withStatus(unexpectedStatusCode))
-      )
-
-      val e = userManagementConnector.getDisplayName(userId).failed.futureValue
-      e shouldBe an[BadGatewayException]
-      e.getMessage shouldBe s"Received status: $unexpectedStatusCode from GET to $wireMockUrl$relativeUrl"
     }
   }
 

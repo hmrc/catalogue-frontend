@@ -17,81 +17,41 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import play.api.data.{Form, Forms}
-import play.api.i18n.Messages
-import play.api.mvc._
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.UmpToken
+import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
-import uk.gov.hmrc.cataloguefrontend.service.AuthService
-import uk.gov.hmrc.cataloguefrontend.service.AuthService.TokenAndDisplayName
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.sign_in
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AuthController @Inject() (authService: AuthService, configuration: Configuration, mcc: MessagesControllerComponents)(implicit ec: ExecutionContext)
-    extends FrontendController(mcc) {
+class AuthController @Inject() (
+  auth: FrontendAuthComponents,
+  mcc : MessagesControllerComponents
+) extends FrontendController(mcc) {
 
-  import AuthController._
+  def signIn(targetUrl: Option[String]) =
+    auth.authenticatedAction(
+      continueUrl = routes.AuthController.postSignIn(targetUrl)
+    )(Redirect(targetUrl.getOrElse(routes.CatalogueController.index.url)))
 
-  private[this] val selfServiceUrl = configuration.get[String]("self-service-url")
-
-  def showSignInPage(targetUrl: Option[String]): Action[AnyContent] =
-    Action { implicit request =>
-      Ok(sign_in(signinForm.fill(SignInData(username = "", password = "", targetUrl = targetUrl)), selfServiceUrl))
+  // endpoint exists to run retrievals and store the results in the session after logging in
+  // (opposed to running retrievals on every page and make results available to standard_layout)
+  def postSignIn(targetUrl: Option[String]) =
+    auth.authenticatedAction(
+      continueUrl = routes.AuthController.signIn(targetUrl),
+      retrieval   = Retrieval.username
+    ){ implicit request =>
+      Redirect(targetUrl.getOrElse(routes.CatalogueController.index.url))
+      .addingToSession(
+        AuthController.SESSION_USERNAME -> request.retrieval.value
+      )
     }
 
-  val submit: Action[AnyContent] = Action.async { implicit request =>
-    val boundForm = signinForm.bindFromRequest
-    boundForm
-      .fold(
-        formWithErrors => Future.successful(BadRequest(sign_in(formWithErrors, selfServiceUrl))),
-        signInData =>
-          //Bug fix: User management accepts capitalised names for login. These capitalised names are then returned in the uid field
-          //of token lookups. User names returned in other parts of the user management api are always lower case.
-          authService
-            .authenticate(signInData.username.toLowerCase, signInData.password)
-            .map {
-              case Right(TokenAndDisplayName(UmpToken(token), DisplayName(displayName))) =>
-                val targetUrl = signInData.targetUrl.getOrElse(routes.CatalogueController.index.url)
-                Redirect(targetUrl)
-                  .withSession(
-                    UmpToken.SESSION_KEY_NAME    -> token,
-                    DisplayName.SESSION_KEY_NAME -> displayName
-                  )
-              case Left(_) =>
-                BadRequest(sign_in(boundForm.withGlobalError(Messages("sign-in.wrong-credentials")), selfServiceUrl))
-            }
-      )
-  }
-
-  val signOut = Action {
-    Redirect(
-      routes.AuthController.showSignInPage()
-    ).withNewSession
-  }
+  val signOut =
+    Action(
+      Redirect(routes.CatalogueController.index).withNewSession
+    )
 }
 
 object AuthController {
-
-  final case class SignInData(
-    username: String,
-    password: String,
-    targetUrl: Option[String]
-  )
-
-  private val signinForm =
-    Form(
-      Forms
-        .mapping(
-          "username"  -> Forms.text,
-          "password"  -> Forms.text,
-          "targetUrl" -> Forms.optional(Forms.text)
-        )(SignInData.apply)(SignInData.unapply)
-        .verifying(
-          "sign-in.wrong-credentials",
-          signInData => signInData.username.nonEmpty && signInData.password.nonEmpty
-        )
-    )
+  val SESSION_USERNAME = "username"
 }

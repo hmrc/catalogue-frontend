@@ -38,16 +38,17 @@ val bootstrapPlayVersion = "5.14.0"
 val hmrcMongoVersion     = "0.54.0"
 
 val compile = Seq(
-  "uk.gov.hmrc"               %% "bootstrap-frontend-play-28" % bootstrapPlayVersion,
-  "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-28"         % hmrcMongoVersion,
-  "org.typelevel"             %% "cats-core"                  % "2.6.1",
-  "org.apache.httpcomponents" %  "httpcore"                   % "4.3.3",
-  "org.yaml"                  %  "snakeyaml"                  % "1.27",
-  "org.apache.httpcomponents" %  "httpclient"                 % "4.3.6",
-  "com.github.tototoshi"      %% "scala-csv"                  % "1.3.6",
-  "com.github.melrief"        %% "purecsv"                    % "0.1.1",
-  "com.opencsv"               %  "opencsv"                    % "4.0",
-  "org.planet42"              %% "laika-core"                 % "0.15.0"
+  "uk.gov.hmrc"               %% "bootstrap-frontend-play-28"   % bootstrapPlayVersion,
+  "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-28"           % hmrcMongoVersion,
+  "uk.gov.hmrc"               %% "internal-auth-client-play-28" % "0.14.0",
+  "org.typelevel"             %% "cats-core"                    % "2.6.1",
+  "org.apache.httpcomponents" %  "httpcore"                     % "4.3.3",
+  "org.yaml"                  %  "snakeyaml"                    % "1.27",
+  "org.apache.httpcomponents" %  "httpclient"                   % "4.3.6",
+  "com.github.tototoshi"      %% "scala-csv"                    % "1.3.6",
+  "com.github.melrief"        %% "purecsv"                      % "0.1.1",
+  "com.opencsv"               %  "opencsv"                      % "4.0",
+  "org.planet42"              %% "laika-core"                   % "0.15.0"
 )
 
 val test = Seq(

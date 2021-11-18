@@ -25,12 +25,11 @@ import play.api.i18n.Messages
 import play.api.libs.json.Json
 import play.api.mvc.{MessagesControllerComponents, Request, Result}
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.actions.UmpAuthActionBuilder
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.AuthService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType}
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -48,15 +47,14 @@ class ShutterWizardController @Inject() (
   page2b              : Page2b,
   page3               : Page3,
   page4               : Page4,
-  umpAuthActionBuilder: UmpAuthActionBuilder,
-  authService         : AuthService,
+  auth                : FrontendAuthComponents,
   catalogueConfig     : CatalogueConfig,
   routeRulesConnector : RouteRulesConnector,
   mongoComponent      : MongoComponent,
   servicesConfig      : ServicesConfig,
   timestampSupport    : TimestampSupport
 )(implicit
-  val ec: ExecutionContext
+  ec: ExecutionContext
 ) extends FrontendController(mcc)
      with play.api.i18n.I18nSupport {
 
@@ -77,7 +75,8 @@ class ShutterWizardController @Inject() (
   implicit val s2af = step2aOutFormats
   implicit val s2bf = step2bOutFormats
 
-  val withGroup = umpAuthActionBuilder.withGroup(catalogueConfig.shutterGroup)
+  def shutterPermission(shutterType: ShutterType)(serviceName: String): Predicate =
+    Predicate.Permission(Resource.from("shutter-api", s"${shutterType.asString}/$serviceName"), IAAction("SHUTTER"))
 
   // --------------------------------------------------------------------------
   // Start
@@ -85,7 +84,9 @@ class ShutterWizardController @Inject() (
   // --------------------------------------------------------------------------
 
   def start(shutterType: ShutterType, env: Environment, serviceName: Option[String]) =
-    withGroup.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = appRoutes.ShutterWizardController.start(shutterType, env, serviceName)
+    ).async { implicit request =>
       for {
         updatedFlowState <- cacheRepo.putSession(
                               step0Key,
@@ -121,7 +122,9 @@ class ShutterWizardController @Inject() (
     } yield page1(form, shutterType, env, shutterStates, statusValues, shutterGroups, back)
 
   def step1Get(serviceName: Option[String]) =
-    withGroup.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = appRoutes.ShutterWizardController.step1Get(serviceName)
+    ).async { implicit request =>
       (for {
          step0Out      <- getStep0Out
          shutterStates <- EitherT.liftF(shutterService.getShutterStates(step0Out.shutterType, step0Out.env))
@@ -166,7 +169,9 @@ class ShutterWizardController @Inject() (
       }
 
   def step1Post =
-    withGroup.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = appRoutes.ShutterWizardController.step1Get(None)
+    ).async { implicit request =>
       (for {
          step0Out      <- getStep0Out
          boundForm     =  step1Form.bindFromRequest
@@ -185,7 +190,7 @@ class ShutterWizardController @Inject() (
                                                      .map(BadRequest(_))
                                                  )
                           }
-         // check has `shutter-platform` group or is authorized for selected services
+         // check has permission to shutter selected services (TODO only display locations that can be shuttered)
          serviceNames  <- EitherT
                             .fromOption[Future](NonEmptyList.fromList(sf.serviceNames.toList), ())
                             .leftFlatMap(_ =>
@@ -197,16 +202,21 @@ class ShutterWizardController @Inject() (
                                 ).map(BadRequest(_))
                               )
                             )
-         hasGlobalPerm =  request.user.groups.contains(catalogueConfig.shutterPlatformGroup)
-         _             <- if (step0Out.shutterType != ShutterType.Frontend || hasGlobalPerm)
+         resources     <- EitherT.liftF(auth.listResources(Some(ResourceType("shutter-api"))))
+         permsFor      =  {
+                            val locationPrefix = step0Out.shutterType.asString + "/"
+                            resources.collect {
+                              case Resource(_, ResourceLocation(l)) if l.startsWith(locationPrefix) => l.stripPrefix(locationPrefix)
+                            }
+                           }
+         denied        =  serviceNames.toList.diff(permsFor.toList)
+         _             <- if (denied.isEmpty)
                             EitherT.pure[Future, Result](())
                           else
-                            EitherT(authService.authorizeServices(serviceNames))
-                              .leftFlatMap {
-                                case AuthService.ServiceForbidden(s) =>
-                                  val errorMessage = s"You do not have permission to shutter service(s): ${s.toList.mkString(", ")}"
-                                  EitherT.left[Unit](showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_)))
-                              }
+                            EitherT.left[Unit] {
+                              val errorMessage = s"You do not have permission to shutter service(s): ${denied.mkString(", ")}"
+                              showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_))
+                            }
          step1Out      =  Step1Out(sf.serviceNames, status)
          _             <- EitherT.liftF[Future, Result, (String, String)] {
                             status match {
@@ -267,7 +277,9 @@ class ShutterWizardController @Inject() (
       .map(w => page2a(form2a, env, step1Out, w, appRoutes.ShutterWizardController.step1Get(None)))
 
   def step2aGet =
-    withGroup.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = appRoutes.ShutterWizardController.step2aGet
+    ).async { implicit request =>
       (for {
          step0Out <- getStep0Out
          step1Out <- getStep1Out
@@ -293,7 +305,9 @@ class ShutterWizardController @Inject() (
     }
 
   def step2aPost =
-    withGroup.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = appRoutes.ShutterWizardController.step2aGet
+    ).async { implicit request =>
       (for {
          step0Out <- getStep0Out
          step1Out <- getStep1Out
@@ -367,7 +381,9 @@ class ShutterWizardController @Inject() (
       )
 
   def step2bGet =
-    withGroup.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = appRoutes.ShutterWizardController.step2bGet
+    ).async { implicit request =>
       (for {
          step1Out  <- getStep1Out
          step2aOut <- EitherT.liftF(cacheRepo.getFromSession(step2aKey))
@@ -397,7 +413,9 @@ class ShutterWizardController @Inject() (
     }
 
   def step2bPost =
-    withGroup.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = appRoutes.ShutterWizardController.step2bGet
+    ).async { implicit request =>
       (for {
          step1Out  <- getStep1Out
          step2aOut <- EitherT.liftF(cacheRepo.getFromSession(step2aKey))
@@ -441,7 +459,9 @@ class ShutterWizardController @Inject() (
   }
 
   def step3Get =
-    withGroup.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = appRoutes.ShutterWizardController.step3Get
+    ).async { implicit request =>
       (for {
          step0Out  <- OptionT(cacheRepo.getFromSession(step0Key))
          step1Out  <- OptionT(cacheRepo.getFromSession(step1Key))
@@ -458,7 +478,9 @@ class ShutterWizardController @Inject() (
     }
 
   def step3Post =
-    withGroup.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = appRoutes.ShutterWizardController.step3Get
+    ).async { implicit request =>
       (for {
          step0Out  <- getStep0Out
          step1Out  <- getStep1Out
@@ -493,7 +515,7 @@ class ShutterWizardController @Inject() (
          _         <- step1Out.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
                         EitherT.right[Result] {
                           shutterService
-                            .updateShutterStatus(request.token, serviceName, step0Out.shutterType, step0Out.env, status)
+                            .updateShutterStatus(serviceName, step0Out.shutterType, step0Out.env, status)
                         }
                       }
        } yield Redirect(appRoutes.ShutterWizardController.step4Get)
@@ -508,7 +530,9 @@ class ShutterWizardController @Inject() (
   // --------------------------------------------------------------------------
 
   def step4Get =
-    withGroup.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = appRoutes.ShutterWizardController.step4Get
+    ).async { implicit request =>
       (for {
          step0Out     <- getStep0Out
          step1Out     <- getStep1Out
