@@ -28,6 +28,7 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -57,7 +58,7 @@ class AuthControllerSpec
     "forward target Url" in new Setup {
       val request = FakeRequest()
 
-      val result = controller.signIn(targetUrl = Some("/my-url"))(request)
+      val result = controller.signIn(targetUrl = Some(RedirectUrl("/my-url")))(request)
 
       redirectLocation(result) shouldBe Some("/internal-auth-frontend/sign-in?continue_url=%2Fpost-sign-in%3FtargetUrl%3D%252Fmy-url")
     }
@@ -72,9 +73,9 @@ class AuthControllerSpec
         )
       ).thenReturn(Future.unit)
 
-      val result = controller.signIn(targetUrl = Some("/my-url"))(request)
+      val result = controller.signIn(targetUrl = Some(RedirectUrl("/my-url")))(request)
 
-      redirectLocation(result) shouldBe Some("/my-url")
+      redirectLocation(result) shouldBe Some("/post-sign-in?targetUrl=%2Fmy-url")
     }
   }
 
@@ -106,11 +107,26 @@ class AuthControllerSpec
         )
       ).thenReturn(Future.successful(Retrieval.Username("user.name")))
 
-      val result = controller.postSignIn(targetUrl = Some("/my-url"))(request)
+      val result = controller.postSignIn(targetUrl = Some(RedirectUrl("/my-url")))(request)
 
       redirectLocation(result) shouldBe Some("/my-url")
 
       Helpers.session(result).apply(AuthController.SESSION_USERNAME) shouldBe "user.name"
+    }
+
+    "reject non-relative urls" in new Setup {
+      val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
+
+      when(
+        authStubBehaviour.stubAuth(
+          None,
+          Retrieval.username
+        )
+      ).thenReturn(Future.successful(Retrieval.Username("user.name")))
+
+      val result = controller.postSignIn(targetUrl = Some(RedirectUrl("http://other-site/my-url")))(request)
+
+      redirectLocation(result) shouldBe Some(routes.CatalogueController.index.url)
     }
   }
 

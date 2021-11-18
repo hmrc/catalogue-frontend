@@ -21,7 +21,8 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.cataloguefrontend.connector.model.TeamName",
       "uk.gov.hmrc.cataloguefrontend.model.Environment",
       "uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType",
-      "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType"
+      "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType",
+      "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
     ),
     // ***************
     // Use the silencer plugin to suppress warnings from unused imports in compiled twirl templates
