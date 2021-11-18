@@ -29,16 +29,25 @@ class AuthController @Inject() (
   mcc : MessagesControllerComponents
 ) extends FrontendController(mcc) {
 
+  // to avoid cyclical urls
+  private[cataloguefrontend] def santize(targetUrl: Option[RedirectUrl]): Option[RedirectUrl] = {
+    val avoid = List(
+      routes.AuthController.signIn(None),
+      routes.AuthController.postSignIn(None)
+    )
+    targetUrl.filter(ru => !avoid.exists(a => ru.unsafeValue.startsWith(a.url)))
+  }
+
   def signIn(targetUrl: Option[RedirectUrl]) =
     auth.authenticatedAction(
-      continueUrl = routes.AuthController.postSignIn(targetUrl)
-    )(Redirect(routes.AuthController.postSignIn(targetUrl)))
+      continueUrl = routes.AuthController.postSignIn(santize(targetUrl))
+    )(Redirect(routes.AuthController.postSignIn(santize(targetUrl))))
 
   // endpoint exists to run retrievals and store the results in the session after logging in
   // (opposed to running retrievals on every page and make results available to standard_layout)
   def postSignIn(targetUrl: Option[RedirectUrl]) =
     auth.authenticatedAction(
-      continueUrl = routes.AuthController.signIn(targetUrl),
+      continueUrl = routes.AuthController.signIn(santize(targetUrl)),
       retrieval   = Retrieval.username
     ){ implicit request =>
       Redirect(
