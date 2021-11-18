@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.MessagesControllerComponents
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -31,7 +30,7 @@ class AuthController @Inject() (
   def signIn(targetUrl: Option[String]) =
     auth.authenticatedAction(
       continueUrl = routes.AuthController.postSignIn(targetUrl)
-    )(Redirect(targetUrl.getOrElse(routes.CatalogueController.index.url)))
+    )(Redirect(routes.AuthController.postSignIn(targetUrl)))
 
   // endpoint exists to run retrievals and store the results in the session after logging in
   // (opposed to running retrievals on every page and make results available to standard_layout)
