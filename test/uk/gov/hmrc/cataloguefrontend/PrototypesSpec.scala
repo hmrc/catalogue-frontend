@@ -20,7 +20,6 @@ import org.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
@@ -52,7 +51,6 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     leakDetectionService          = mock[LeakDetectionService],
     shutterService                = mock[ShutterService],
     defaultBranchesService        = mock[DefaultBranchesService],
-    auth                          = mock[FrontendAuthComponents],
     userManagementPortalConfig    = mock[UserManagementPortalConfig],
     configuration                 = Configuration.empty,
     mcc                           = stubMessagesControllerComponents(),
