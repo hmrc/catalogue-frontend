@@ -26,7 +26,6 @@ import play.api.Configuration
 import play.api.libs.ws._
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET => _, _}
-import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
@@ -255,7 +254,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       leakDetectionService          = mock[LeakDetectionService],
       shutterService                = mock[ShutterService],
       defaultBranchesService        = mock[DefaultBranchesService],
-      auth                          = mock[FrontendAuthComponents],
       userManagementPortalConfig    = userManagementPortalConfig,
       configuration                 = Configuration.empty,
       mcc                           = stubMessagesControllerComponents(),

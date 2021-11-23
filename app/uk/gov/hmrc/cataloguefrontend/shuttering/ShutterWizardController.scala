@@ -37,6 +37,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering.shutterService._
 
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.cataloguefrontend.AuthController
 
 @Singleton
 class ShutterWizardController @Inject() (
@@ -85,7 +86,7 @@ class ShutterWizardController @Inject() (
 
   def start(shutterType: ShutterType, env: Environment, serviceName: Option[String]) =
     auth.authenticatedAction(
-      continueUrl = appRoutes.ShutterWizardController.start(shutterType, env, serviceName)
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.start(shutterType, env, serviceName))
     ).async { implicit request =>
       for {
         updatedFlowState <- cacheRepo.putSession(
@@ -123,7 +124,7 @@ class ShutterWizardController @Inject() (
 
   def step1Get(serviceName: Option[String]) =
     auth.authenticatedAction(
-      continueUrl = appRoutes.ShutterWizardController.step1Get(serviceName)
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step1Get(serviceName))
     ).async { implicit request =>
       (for {
          step0Out      <- getStep0Out
@@ -170,7 +171,7 @@ class ShutterWizardController @Inject() (
 
   def step1Post =
     auth.authenticatedAction(
-      continueUrl = appRoutes.ShutterWizardController.step1Get(None)
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step1Get(None))
     ).async { implicit request =>
       (for {
          step0Out      <- getStep0Out
@@ -278,7 +279,7 @@ class ShutterWizardController @Inject() (
 
   def step2aGet =
     auth.authenticatedAction(
-      continueUrl = appRoutes.ShutterWizardController.step2aGet
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step2aGet)
     ).async { implicit request =>
       (for {
          step0Out <- getStep0Out
@@ -306,7 +307,7 @@ class ShutterWizardController @Inject() (
 
   def step2aPost =
     auth.authenticatedAction(
-      continueUrl = appRoutes.ShutterWizardController.step2aGet
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step2aGet)
     ).async { implicit request =>
       (for {
          step0Out <- getStep0Out
@@ -382,7 +383,7 @@ class ShutterWizardController @Inject() (
 
   def step2bGet =
     auth.authenticatedAction(
-      continueUrl = appRoutes.ShutterWizardController.step2bGet
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step2bGet)
     ).async { implicit request =>
       (for {
          step1Out  <- getStep1Out
@@ -414,7 +415,7 @@ class ShutterWizardController @Inject() (
 
   def step2bPost =
     auth.authenticatedAction(
-      continueUrl = appRoutes.ShutterWizardController.step2bGet
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step2bGet)
     ).async { implicit request =>
       (for {
          step1Out  <- getStep1Out
@@ -460,7 +461,7 @@ class ShutterWizardController @Inject() (
 
   def step3Get =
     auth.authenticatedAction(
-      continueUrl = appRoutes.ShutterWizardController.step3Get
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step3Get)
     ).async { implicit request =>
       (for {
          step0Out  <- OptionT(cacheRepo.getFromSession(step0Key))
@@ -479,7 +480,7 @@ class ShutterWizardController @Inject() (
 
   def step3Post =
     auth.authenticatedAction(
-      continueUrl = appRoutes.ShutterWizardController.step3Get
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step3Get)
     ).async { implicit request =>
       (for {
          step0Out  <- getStep0Out
@@ -531,7 +532,7 @@ class ShutterWizardController @Inject() (
 
   def step4Get =
     auth.authenticatedAction(
-      continueUrl = appRoutes.ShutterWizardController.step4Get
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step4Get)
     ).async { implicit request =>
       (for {
          step0Out     <- getStep0Out
