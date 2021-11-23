@@ -46,6 +46,15 @@ class AuthControllerSpec
 
   import Helpers._
 
+  "Santize" should {
+    "filter out redirecting urls" in new Setup {
+      controller.santize(None) shouldBe None
+      controller.santize(Some(RedirectUrl(routes.AuthController.signIn(Some(RedirectUrl("/my-url"))).url))) shouldBe None
+      controller.santize(Some(RedirectUrl(routes.AuthController.postSignIn(Some(RedirectUrl("/my-url"))).url))) shouldBe None
+      controller.santize(Some(RedirectUrl("/my-url"))) shouldBe Some(RedirectUrl("/my-url"))
+    }
+  }
+
   "Signing in" should {
     "redirect to internal-auth" in new Setup {
       val request = FakeRequest()
