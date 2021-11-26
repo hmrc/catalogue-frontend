@@ -41,7 +41,7 @@ val hmrcMongoVersion     = "0.54.0"
 val compile = Seq(
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-28"   % bootstrapPlayVersion,
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-28"           % hmrcMongoVersion,
-  "uk.gov.hmrc"               %% "internal-auth-client-play-28" % "0.14.0",
+  "uk.gov.hmrc"               %% "internal-auth-client-play-28" % "0.14.0-SNAPSHOT",
   "org.typelevel"             %% "cats-core"                    % "2.6.1",
   "org.apache.httpcomponents" %  "httpcore"                     % "4.3.3",
   "org.yaml"                  %  "snakeyaml"                    % "1.27",
