@@ -204,9 +204,8 @@ class ShutterWizardController @Inject() (
                               )
                             )
          resources     <- EitherT.liftF(auth.listResources(Some(ResourceType("shutter-api"))))
-         _ = play.api.Logger(getClass).info(s"resources=$resources")
-         _ = play.api.Logger(getClass).info(s"resources.exists(_.resourceLocation.value == '${step0Out.shutterType}/*')=${resources.exists(_.resourceLocation.value == s"${step0Out.shutterType}/*")}")
-         permsFor      =  if (resources.exists(_.resourceLocation.value == s"${step0Out.shutterType}/*"))
+         _ = play.api.Logger(getClass).info(s"resources.exists(_.resourceLocation.value == '${step0Out.shutterType.asString}/*')=${resources.exists(_.resourceLocation.value == s"${step0Out.shutterType}/*")}")
+         permsFor      =  if (resources.exists(_.resourceLocation.value == s"${step0Out.shutterType.asString}/*"))
                             serviceNames.toList
                           else {
                             val locationPrefix = step0Out.shutterType.asString + "/"
