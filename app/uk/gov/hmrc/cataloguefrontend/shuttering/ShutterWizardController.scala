@@ -204,13 +204,15 @@ class ShutterWizardController @Inject() (
                               )
                             )
          resources     <- EitherT.liftF(auth.listResources(Some(ResourceType("shutter-api"))))
-         permsFor      =  {
+         permsFor      =  if (resources.exists(_.resourceLocation.value == s"${step0Out.shutterType}/*"))
+                            serviceNames.toList
+                          else {
                             val locationPrefix = step0Out.shutterType.asString + "/"
                             resources.collect {
                               case Resource(_, ResourceLocation(l)) if l.startsWith(locationPrefix) => l.stripPrefix(locationPrefix)
-                            }
-                           }
-         denied        =  serviceNames.toList.diff(permsFor.toList)
+                            }.toList
+                          }
+         denied        =  serviceNames.toList.diff(permsFor)
          _             <- if (denied.isEmpty)
                             EitherT.pure[Future, Result](())
                           else
