@@ -53,8 +53,8 @@ class PlatformInitiativesConnectorSpec
   "PlatformInitiativesConnector.allInitiatives" should {
     "return correct JSON for Platform Initiatives" in {
       stubFor(
-        get(urlEqualTo(s"/platform-initiatives/initiatives"))
-          .willReturn(aResponse().withBodyFile("/platform-initiatives.json"))
+        get(urlEqualTo("/platform-initiatives/initiatives"))
+          .willReturn(aResponse().withBodyFile("platform-initiatives.json"))
       )
       val initiatives = connector.allInitiatives.futureValue
       initiatives mustBe Seq(
