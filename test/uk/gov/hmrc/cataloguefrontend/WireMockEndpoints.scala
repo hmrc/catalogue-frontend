@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import com.github.tomakehurst.wiremock.client.{WireMock, ResponseDefinitionBuilder}
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.client.{MappingBuilder, ResponseDefinitionBuilder}
 import com.github.tomakehurst.wiremock.http.RequestMethod
 import org.scalatest.Suite
 import uk.gov.hmrc.http.test.WireMockSupport
@@ -38,7 +38,7 @@ trait WireMockEndpoints extends WireMockSupport {
       case params => params.map { case (k, v) => s"$k=$v" }.mkString("?", "&", "")
     }
 
-    val builder = new MappingBuilder(method, urlEqualTo(s"$url$queryParamsAsString"))
+    val builder = WireMock.request(method.getName, urlEqualTo(s"$url$queryParamsAsString"))
 
     requestHeaders.foreach { case (k, v) => builder.withHeader(k, equalTo(v)) }
     givenJsonBody.foreach(b => builder.withRequestBody(equalToJson(b)))

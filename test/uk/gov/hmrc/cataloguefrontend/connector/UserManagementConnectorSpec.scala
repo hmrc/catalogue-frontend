@@ -26,7 +26,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{DisplayName, TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.UserManagementPortalConfig
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
@@ -69,7 +69,7 @@ class UserManagementConnectorSpec
   "User management connector" should {
     "should get the team members from the user-management service" in {
       val teamMembers: Seq[TeamMember] =
-        callExternalMockedService(TeamName("team-chicken"), Some("/user-management-response.json")).futureValue.right.value
+        callExternalMockedService(TeamName("team-chicken"), Some("user-management-response.json")).futureValue.right.value
 
       teamMembers should have length 2
 
@@ -97,7 +97,7 @@ class UserManagementConnectorSpec
 
       stubFor(
         get(urlEqualTo(s"/v2/organisations/teams/${teamName.asString}/members"))
-          .willReturn(aResponse().withBodyFile("/user-management-empty-members.json"))
+          .willReturn(aResponse().withBodyFile("user-management-empty-members.json"))
       )
 
       val res = userManagementConnector.getTeamMembersFromUMP(teamName).futureValue
@@ -106,7 +106,7 @@ class UserManagementConnectorSpec
 
     "have no members field in json" in {
       val res =
-        callExternalMockedService(TeamName("team-chicken"), Some("/user-management-no-members.json")).futureValue
+        callExternalMockedService(TeamName("team-chicken"), Some("user-management-no-members.json")).futureValue
       res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
@@ -143,8 +143,8 @@ class UserManagementConnectorSpec
 
     "should get the team details from the user-management service" in {
       stubFor(
-          get(urlEqualTo(s"/v2/organisations/teams/TEAM-A"))
-            .willReturn(aResponse().withBodyFile("/user-management-team-details-response.json"))
+          get(urlEqualTo("/v2/organisations/teams/TEAM-A"))
+            .willReturn(aResponse().withBodyFile("user-management-team-details-response.json"))
         )
 
       val teamDetails = userManagementConnector
@@ -163,8 +163,8 @@ class UserManagementConnectorSpec
 
     "no organization/data field in json for team details" in {
       stubFor(
-          get(urlEqualTo(s"/v2/organisations/teams/TEAM-A"))
-            .willReturn(aResponse().withBodyFile("/user-management-team-details-nodata-response.json"))
+          get(urlEqualTo("/v2/organisations/teams/TEAM-A"))
+            .willReturn(aResponse().withBodyFile("user-management-team-details-nodata-response.json"))
         )
 
       val res = userManagementConnector
@@ -175,7 +175,7 @@ class UserManagementConnectorSpec
 
     "api returns an error code for team details" in {
       stubFor(
-          get(urlEqualTo(s"/v2/organisations/teams/TEAM-A"))
+          get(urlEqualTo("/v2/organisations/teams/TEAM-A"))
             .willReturn(aResponse().withStatus(500))
         )
 
@@ -213,12 +213,12 @@ class UserManagementConnectorSpec
 
         stubFor(
           get(urlEqualTo("/v2/organisations/teams/Team1/members"))
-            .willReturn(aResponse().withBodyFile("/user-management-response-team1.json"))
+            .willReturn(aResponse().withBodyFile("user-management-response-team1.json"))
         )
 
         stubFor(
           get(urlEqualTo("/v2/organisations/teams/Team2/members"))
-            .willReturn(aResponse().withBodyFile("/user-management-response-team2.json"))
+            .willReturn(aResponse().withBodyFile("user-management-response-team2.json"))
         )
 
         val teamsAndMembers = userManagementConnector
@@ -245,7 +245,7 @@ class UserManagementConnectorSpec
 
         stubFor(
           get(urlEqualTo("/v2/organisations/teams/Team1/members"))
-            .willReturn(aResponse().withBodyFile("/user-management-response-team1.json"))
+            .willReturn(aResponse().withBodyFile("user-management-response-team1.json"))
         )
 
         stubFor(
@@ -305,12 +305,12 @@ class UserManagementConnectorSpec
 
         stubFor(
           get(urlEqualTo("/v2/organisations/teams/Team1/members"))
-            .willReturn(aResponse().withBodyFile("/user-management-response-team1.json"))
+            .willReturn(aResponse().withBodyFile("user-management-response-team1.json"))
         )
 
         stubFor(
           get(urlEqualTo("/v2/organisations/teams/Team2/members"))
-            .willReturn(aResponse().withBodyFile("/user-management-team-details-nodata-response.json"))
+            .willReturn(aResponse().withBodyFile("user-management-team-details-nodata-response.json"))
         )
 
         val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
@@ -339,7 +339,7 @@ class UserManagementConnectorSpec
       "should get the users" in {
         stubFor(
           get(urlEqualTo("/v2/organisations/users"))
-            .willReturn(aResponse().withBodyFile("/all-users.json"))
+            .willReturn(aResponse().withBodyFile("all-users.json"))
         )
 
         val allUsers = userManagementConnector.getAllUsersFromUMP.futureValue
