@@ -61,10 +61,10 @@ object CostEstimationService {
 
   final case class CostEstimation(totalSlots: Int) {
 
-    val yearlyCost: Double =
+    lazy val yearlyCost: Double =
       totalSlots * 650.0
 
-    val yearlyCostFormatted: String = {
+    lazy val yearlyCostFormatted: String = {
       val formattter = java.text.NumberFormat.getCurrencyInstance(Locale.UK)
       formattter.format(yearlyCost)
     }
