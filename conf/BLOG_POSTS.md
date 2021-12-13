@@ -2,6 +2,9 @@
 
 | Date                  |      Post                                                                                                             |
 |-----------------------|:---------------------------------------------------------------------------------------------------------------------:|
+
+| 13th December 2021    |  [Log4j vulnerability - Impact on MDTP Services](https://confluence.tools.tax.service.gov.uk/x/XIP1FQ)
+| 13th December 2021    |  [Simplified log configuration for services](https://confluence.tools.tax.service.gov.uk/x/9oH1FQ)
 | 20th September 2021   |  [Transactional mongo for development](https://confluence.tools.tax.service.gov.uk/x/5ABDEg)
 | 28th July 2021        |  [It's time to upgrade your Play (and Scala)](https://confluence.tools.tax.service.gov.uk/x/P5RyE)
 | 23rd July 2021        |  [Update to dependency info in catalogue](https://confluence.tools.tax.service.gov.uk/x/S4ZyE)
