@@ -27,7 +27,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-final class CostEstimationService @Inject() (configConnector: ConfigConnector) {
+class CostEstimationService @Inject() (configConnector: ConfigConnector) {
 
   def estimateServiceCost(
     service: String,
