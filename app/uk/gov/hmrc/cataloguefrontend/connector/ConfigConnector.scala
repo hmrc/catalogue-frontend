@@ -55,8 +55,6 @@ class ConfigConnector @Inject() (
   )(implicit hc: HeaderCarrier): Future[Option[DeploymentConfig]] = {
     implicit val dcr = DeploymentConfig.reads
     http
-      .GET[DeploymentConfig](s"$serviceConfigsBaseUrl/deployment-config/${environment.asString}/$service")
-      .map(Some(_))
-      .recover { case _ => None }
+      .GET[Option[DeploymentConfig]](s"$serviceConfigsBaseUrl/deployment-config/${environment.asString}/$service")
   }
 }
