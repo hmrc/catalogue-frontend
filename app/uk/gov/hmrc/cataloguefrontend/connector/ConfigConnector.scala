@@ -18,7 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -45,5 +47,16 @@ class ConfigConnector @Inject() (
   def bobbyRules()(implicit hc: HeaderCarrier): Future[BobbyRuleSet] = {
     implicit val brsr = BobbyRuleSet.reads
     http.GET[BobbyRuleSet](s"$serviceConfigsBaseUrl/bobby/rules")
+  }
+
+  def deploymentConfig(
+    service: String,
+    environment: Environment
+  )(implicit hc: HeaderCarrier): Future[Option[DeploymentConfig]] = {
+    implicit val dcr = DeploymentConfig.reads
+    http
+      .GET[DeploymentConfig](s"$serviceConfigsBaseUrl/deployment-config/${environment.asString}/$service")
+      .map(Some(_))
+      .recover { case _ => None }
   }
 }

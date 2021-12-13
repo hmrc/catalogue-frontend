@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimationService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
@@ -56,6 +56,7 @@ class CatalogueController @Inject() (
   userManagementConnector      : UserManagementConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   configService                : ConfigService,
+  costEstimationService        : CostEstimationService,
   routeRulesService            : RouteRulesService,
   serviceDependencyConnector   : ServiceDependenciesConnector,
   leakDetectionService         : LeakDetectionService,
@@ -303,6 +304,9 @@ class CatalogueController @Inject() (
                }
       } yield res.collect { case Some(v) => v }.toMap
 
+    val costEstimationEnvironments =
+      repositoryDetails.environments.getOrElse(Seq.empty).map(_.environment)
+
     (
       teamsAndRepositoriesConnector.lookupLink(repositoryName),
       futEnvDatas,
@@ -311,7 +315,8 @@ class CatalogueController @Inject() (
       leakDetectionService.urlIfLeaksFound(repositoryName),
       routeRulesService.serviceUrl(serviceName),
       routeRulesService.serviceRoutes(serviceName),
-      serviceDependencyConnector.getSlugInfo(repositoryName)
+      serviceDependencyConnector.getSlugInfo(repositoryName),
+      costEstimationService.estimateServiceCost(repositoryName, costEstimationEnvironments)
     ).mapN { (jenkinsLink,
               envDatas,
               optDependenciesFromGithub,
@@ -319,7 +324,8 @@ class CatalogueController @Inject() (
               urlIfLeaksFound,
               serviceUrl,
               serviceRoutes,
-              optLatestServiceInfo
+              optLatestServiceInfo,
+              costEstimation
              ) =>
       val optLatestData: Option[(SlugInfoFlag, EnvData)] =
         optLatestServiceInfo.map { latestServiceInfo =>
@@ -342,6 +348,7 @@ class CatalogueController @Inject() (
         serviceInfoPage(
           serviceName                 = serviceName,
           repositoryDetails           = repositoryDetails.copy(jenkinsURL = jenkinsLink),
+          costEstimation              = costEstimation,
           optLegacyLatestDependencies = optLegacyLatestDependencies,
           repositoryCreationDate      = repositoryDetails.createdAt,
           envDatas                    = optLatestData.fold(envDatas)(envDatas + _),
