@@ -37,7 +37,7 @@ class CostEstimationService @Inject() (configConnector: ConfigConnector) {
       .traverse(environments)(environment =>
         configConnector
           .deploymentConfig(service, environment)
-          .map(deploymentConfig => (environment, deploymentConfig.getOrElse(DeploymentConfig(0, 0))))
+          .map(deploymentConfig => (environment, deploymentConfig.getOrElse(DeploymentConfig.empty)))
       )
       .map(deploymentConfigByEnvironment =>
         CostEstimation
@@ -52,7 +52,11 @@ object CostEstimationService {
   final case class DeploymentConfig(slots: Int, instances: Int)
 
   object DeploymentConfig {
-    val reads: Reads[DeploymentConfig] = Json.reads[DeploymentConfig]
+    val empty: DeploymentConfig =
+      DeploymentConfig(slots = 0, instances = 0)
+
+    val reads: Reads[DeploymentConfig] =
+      Json.reads[DeploymentConfig]
   }
 
   final case class CostEstimation(totalSlots: Int) {
