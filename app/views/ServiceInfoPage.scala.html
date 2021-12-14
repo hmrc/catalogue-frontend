@@ -22,6 +22,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
+@import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.CostEstimation
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ServiceInfoView, ViewMessages}
 @import views.partials.githubBadgeType
 
@@ -30,6 +31,7 @@
 @(
   serviceName                  : String,
   repositoryDetails            : RepositoryDetails,
+  costEstimation               : CostEstimation,
   optLegacyLatestDependencies  : Option[Dependencies],
   repositoryCreationDate       : LocalDateTime,
   envDatas                     : Map[SlugInfoFlag, EnvData],
@@ -59,11 +61,13 @@
     <section class="section-wrapper">
 
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-7">
                 @partials.details(repositoryDetails)
             </div>
+            <div class="col-md-5">
+                @partials.costEstimation(costEstimation)
+            </div>
         </div>
-
         @productionEnvironmentRoute.map { envRoute =>
             <div class="row">
                 <div class="col-md-12">
