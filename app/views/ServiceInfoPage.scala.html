@@ -25,7 +25,11 @@
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ServiceInfoView, ViewMessages}
 @import views.partials.githubBadgeType
 
-@this(dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial, buildToolsPartial: BuildToolsPartial, viewMessages: ViewMessages)
+@this(
+  dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial,
+  buildToolsPartial               : BuildToolsPartial,
+  viewMessages                    : ViewMessages
+)
 
 @(
   serviceName                  : String,

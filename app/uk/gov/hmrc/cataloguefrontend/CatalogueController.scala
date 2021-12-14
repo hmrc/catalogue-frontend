@@ -279,10 +279,11 @@ class CatalogueController @Inject() (
                    case Some(version) =>
                      val telemetryLinks =
                        (for {
-                         targetEnvironments <- repositoryDetails.environments.toSeq
-                         targetEnvironment  <- targetEnvironments
-                         if targetEnvironment.environment == env
-                       } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)).flatten
+                          targetEnvironments <- repositoryDetails.environments.toSeq
+                          targetEnvironment  <- targetEnvironments
+                          if targetEnvironment.environment == env
+                        } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)
+                       ).flatten
 
                      (
                        serviceDependencyConnector.getCuratedSlugDependencies(repositoryName, slugInfoFlag),
@@ -291,9 +292,9 @@ class CatalogueController @Inject() (
                        Some(
                          slugInfoFlag ->
                            EnvData(
-                             version = version,
-                             dependencies = dependencies,
-                             optShutterState = optShutterState,
+                             version           = version,
+                             dependencies      = dependencies,
+                             optShutterState   = optShutterState,
                              optTelemetryLinks = Some(telemetryLinks)
                            )
                        )
