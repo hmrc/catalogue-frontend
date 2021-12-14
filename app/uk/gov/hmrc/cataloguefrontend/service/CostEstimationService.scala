@@ -22,7 +22,6 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{CostEstimation, DeploymentConfig}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.util.Locale
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -63,11 +62,6 @@ object CostEstimationService {
 
     lazy val yearlyCostUsd: Double =
       totalInstances * 120
-
-    lazy val yearlyCostFormatted: String = {
-      val formattter = java.text.NumberFormat.getCurrencyInstance(Locale.US)
-      formattter.format(yearlyCostUsd)
-    }
   }
 
   object CostEstimation {

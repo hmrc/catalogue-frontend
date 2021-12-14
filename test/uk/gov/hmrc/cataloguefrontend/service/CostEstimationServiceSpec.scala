@@ -121,11 +121,11 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
         )
 
       val actualEstimatedCost =
-        CostEstimation.fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment).yearlyCostFormatted
+        CostEstimation.fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment).yearlyCostUsd
 
       // Yearly cost is estimated as a service's total instances across all environments multiplied by $120
       // 2 + 1 + 3 * 120.0
-      val expectedEstimatedCost = "$720.00"
+      val expectedEstimatedCost = 720.0
 
       actualEstimatedCost shouldBe expectedEstimatedCost
     }
