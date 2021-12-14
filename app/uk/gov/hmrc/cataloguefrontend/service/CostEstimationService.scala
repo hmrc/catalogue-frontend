@@ -59,26 +59,26 @@ object CostEstimationService {
       Json.reads[DeploymentConfig]
   }
 
-  final case class CostEstimation(totalSlots: Int) {
+  final case class CostEstimation(totalInstances: Int) {
 
-    lazy val yearlyCost: Double =
-      totalSlots * 650.0
+    lazy val yearlyCostUsd: Double =
+      totalInstances * 120
 
     lazy val yearlyCostFormatted: String = {
-      val formattter = java.text.NumberFormat.getCurrencyInstance(Locale.UK)
-      formattter.format(yearlyCost)
+      val formattter = java.text.NumberFormat.getCurrencyInstance(Locale.US)
+      formattter.format(yearlyCostUsd)
     }
   }
 
   object CostEstimation {
 
     def fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment: DeploymentConfigByEnvironment): CostEstimation = {
-      val totalSlots =
+      val totalInstances =
         deploymentConfigByEnvironment.values
-          .map(deploymentConfig => deploymentConfig.slots * deploymentConfig.instances)
+          .map(_.instances)
           .sum
 
-      CostEstimation(totalSlots)
+      CostEstimation(totalInstances)
     }
   }
 }
