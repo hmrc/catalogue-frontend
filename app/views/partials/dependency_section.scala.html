@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, VersionState}
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.model.ImportedBy
+
 @(dependencies: Seq[Dependency])
 
 @defining(dependencies.filter(_.importBy.isDefined)) { transitiveDependencies =>
@@ -29,9 +30,9 @@
         <div class="">
             <ul>
             @for(transitiveDependency <- transitiveDependencies.filter(_.importBy.contains(ImportedBy(dependency.name, dependency.group, dependency.currentVersion)))) {
-                <li>
+              <li>
                 @dependencyRow(transitiveDependency)
-                </li>
+              </li>
             }
             </ul>
         </div>

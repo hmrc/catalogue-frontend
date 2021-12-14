@@ -21,9 +21,15 @@
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
 
-@this(dependenciesPartial: ServiceDependenciesPartial, viewMessages: ViewMessages)
+@this(
+  dependenciesPartial: ServiceDependenciesPartial,
+  viewMessages       : ViewMessages
+)
 
-@(serviceName: String, envDatas: Map[SlugInfoFlag, EnvData])(implicit messages: Messages)
+@(
+  serviceName: String,
+  envDatas   : Map[SlugInfoFlag, EnvData]
+)(implicit messages: Messages)
 
 <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
   @for(slugInfoFlag <- SlugInfoFlag.values) {
@@ -84,12 +90,12 @@
         <div class="row">
             <div class="col-md-12">
                 @dependenciesPartial(
-                    optEnvData.toSeq.flatMap(_.dependencies.filter(_.scope.contains(DependencyScope.Compile)))
-                  , s"platform-dependencies-${slugInfoFlag.asString}"
-                  , "Platform Dependencies"
-                  , serviceName
-                  , optEnvData.map(_.version)
-                  )
+                  optEnvData.toSeq.flatMap(_.dependencies.filter(_.scope.contains(DependencyScope.Compile)))
+                , s"platform-dependencies-${slugInfoFlag.asString}"
+                , "Platform Dependencies"
+                , serviceName
+                , optEnvData.map(_.version)
+                )
             </div>
         </div>
 
@@ -98,11 +104,11 @@
               <div class="row">
                   <div class="col-md-12">
                   @dependenciesPartial(
-                        testDependencies
-                      , s"test-dependencies-${slugInfoFlag.asString}"
-                      , "Test Dependencies"
-                      , serviceName
-                      , optEnvData.map(_.version)
+                    testDependencies
+                  , s"test-dependencies-${slugInfoFlag.asString}"
+                  , "Test Dependencies"
+                  , serviceName
+                  , optEnvData.map(_.version)
                   )
                   </div>
               </div>
@@ -115,18 +121,16 @@
                   <div class="row">
                       <div class="col-md-12">
                       @dependenciesPartial(
-                          buildDependencies
-                          , s"build-dependencies-${slugInfoFlag.asString}"
-                          , "Sbt Plugins"
-                          , serviceName
-                          , optEnvData.map(_.version)
+                        buildDependencies
+                      , s"build-dependencies-${slugInfoFlag.asString}"
+                      , "Sbt Plugins"
+                      , serviceName
+                      , optEnvData.map(_.version)
                       )
                       </div>
                   </div>
               }
           }
-
-
       </div>
     }
   }
