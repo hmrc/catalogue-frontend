@@ -21,7 +21,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,14 +39,14 @@ class ConfigConnector @Inject() (
   implicit val cbkr = ConfigByKey.reads
 
   def configByEnv(service: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
-    http.GET[ConfigByEnvironment](s"$serviceConfigsBaseUrl/config-by-env/$service")
+    http.GET[ConfigByEnvironment](url"$serviceConfigsBaseUrl/config-by-env/$service")
 
   def configByKey(service: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
-    http.GET[ConfigByKey](s"$serviceConfigsBaseUrl/config-by-key/$service")
+    http.GET[ConfigByKey](url"$serviceConfigsBaseUrl/config-by-key/$service")
 
   def bobbyRules()(implicit hc: HeaderCarrier): Future[BobbyRuleSet] = {
     implicit val brsr = BobbyRuleSet.reads
-    http.GET[BobbyRuleSet](s"$serviceConfigsBaseUrl/bobby/rules")
+    http.GET[BobbyRuleSet](url"$serviceConfigsBaseUrl/bobby/rules")
   }
 
   def deploymentConfig(
@@ -54,7 +54,8 @@ class ConfigConnector @Inject() (
     environment: Environment
   )(implicit hc: HeaderCarrier): Future[Option[DeploymentConfig]] = {
     implicit val dcr = DeploymentConfig.reads
-    http
-      .GET[Option[DeploymentConfig]](s"$serviceConfigsBaseUrl/deployment-config/${environment.asString}/$service")
+    http.GET[Option[DeploymentConfig]](
+      url"$serviceConfigsBaseUrl/deployment-config/${environment.asString}/$service"
+    )
   }
 }
