@@ -144,4 +144,7 @@ class ServiceDependenciesConnector @Inject() (
     implicit val brvr = HistoricBobbyRulesSummary.reads
     http.GET[HistoricBobbyRulesSummary](url"$servicesDependenciesBaseUrl/api/historicBobbyViolations")
   }
+
+  def getRepoFor(group: String, artefact: String, version: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
+    http.GET[Option[String]](url"$servicesDependenciesBaseUrl/api/dependency-repository?group=$group&artefact=$artefact&version=$version")
 }

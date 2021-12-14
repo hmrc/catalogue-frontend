@@ -455,6 +455,14 @@ class CatalogueController @Inject() (
       }
     }
 
+  def dependencyRepository(group: String, artefact: String, version: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      serviceDependencyConnector.getRepoFor(group, artefact, version)
+        .map { repoName =>
+          Redirect(routes.CatalogueController.repository(repoName.getOrElse(artefact)))
+        }
+    }
+
   def allDefaultBranches(singleOwnership: Boolean, includeArchived: Boolean): Action[AnyContent] = {
     Action.async { implicit request =>
       teamsAndRepositoriesConnector.allDefaultBranches.map { repositories =>
