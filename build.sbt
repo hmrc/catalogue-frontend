@@ -26,7 +26,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     ),
     // ***************
     // Use the silencer plugin to suppress warnings from unused imports in compiled twirl templates
-    scalacOptions += "-P:silencer:pathFilters=views;routes",
+    scalacOptions += "-P:silencer:pathFilters=html;routes",
     libraryDependencies ++= Seq(
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
       "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full

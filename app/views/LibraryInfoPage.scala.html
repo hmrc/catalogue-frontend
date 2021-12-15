@@ -14,17 +14,18 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
-@import views.partials.githubBadgeType
 @import partials.DependenciesPartial
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, RepositoryModules}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import views.partials.githubBadgeType
 
 @this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
 
-@(library: RepositoryDetails,
-  optDependencies: Option[Dependencies],
+@(library            : RepositoryDetails,
+  optDependencies    : Option[Dependencies],
+  repositoryModules  : Option[RepositoryModules],
   linkToLeakDetection: Option[String]
 )(implicit request: Request[_])
 
