@@ -146,5 +146,10 @@ class ServiceDependenciesConnector @Inject() (
   }
 
   def getRepoFor(group: String, artefact: String, version: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
-    http.GET[Option[String]](url"$servicesDependenciesBaseUrl/api/dependency-repository?group=$group&artefact=$artefact&version=$version")
+    http.GET[Option[String]](url"$servicesDependenciesBaseUrl/api/module-repository?group=$group&artefact=$artefact&version=$version")
+
+  def getRepositoryModules(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryModules]] = {
+    implicit val dr = RepositoryModules.reads
+    http.GET[Option[RepositoryModules]](url"$servicesDependenciesBaseUrl/api/repository-modules/$repositoryName")
+  }
 }

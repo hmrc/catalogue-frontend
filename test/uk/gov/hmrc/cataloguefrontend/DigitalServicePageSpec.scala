@@ -251,7 +251,7 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       configService                 = mock[ConfigService],
       costEstimationService         = mock[CostEstimationService],
       routeRulesService             = mock[RouteRulesService],
-      serviceDependencyConnector    = mock[ServiceDependenciesConnector],
+      serviceDependenciesConnector  = mock[ServiceDependenciesConnector],
       leakDetectionService          = mock[LeakDetectionService],
       shutterService                = mock[ShutterService],
       defaultBranchesService        = mock[DefaultBranchesService],
