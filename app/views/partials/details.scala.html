@@ -14,8 +14,8 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
 @(repositoryDetails: RepositoryDetails)
@@ -27,7 +27,7 @@
                 <li id="description" class="col-xs-6">
                     <label>Description: </label>
                     @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
-                    </li>
+                </li>
                 <li id="created-at" class="col-xs-6">
                     <label>Created: </label>
                     @repositoryDetails.createdAt.displayFormat

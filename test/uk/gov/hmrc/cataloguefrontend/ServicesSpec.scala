@@ -47,7 +47,7 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
     teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
     configService                 = mock[ConfigService],
     routeRulesService             = mock[RouteRulesService],
-    serviceDependencyConnector    = mock[ServiceDependenciesConnector],
+    serviceDependenciesConnector  = mock[ServiceDependenciesConnector],
     leakDetectionService          = mock[LeakDetectionService],
     shutterService                = mock[ShutterService],
     defaultBranchesService        = mock[DefaultBranchesService],
