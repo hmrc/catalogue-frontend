@@ -25,7 +25,7 @@ import play.api.mvc._
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
