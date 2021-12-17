@@ -186,7 +186,13 @@ class CatalogueController @Inject() (
               teamsAndRepositoriesConnector.archivedRepositories.map(_.map(_.name))
             else
               Future.successful(Nil)
-          ).mapN { (teamMembers, teamDetails, reposWithLeaks, masterTeamDependencies, prodDependencies, reposToHide) =>
+          ).mapN { ( teamMembers,
+                     teamDetails,
+                     reposWithLeaks,
+                     masterTeamDependencies,
+                     prodDependencies,
+                     reposToHide
+                   ) =>
             Ok(
               teamInfoPage(
                 teamName               = teamInfo.name,
@@ -311,7 +317,6 @@ class CatalogueController @Inject() (
     (
       teamsAndRepositoriesConnector.lookupLink(repositoryName),
       futEnvDatas,
-      serviceDependenciesConnector.getDependencies(repositoryName),
       serviceDependenciesConnector.getCuratedSlugDependencies(repositoryName, SlugInfoFlag.Latest),
       leakDetectionService.urlIfLeaksFound(repositoryName),
       routeRulesService.serviceUrl(serviceName),
@@ -320,7 +325,6 @@ class CatalogueController @Inject() (
       costEstimationService.estimateServiceCost(repositoryName, costEstimationEnvironments)
     ).mapN { (jenkinsLink,
               envDatas,
-              optDependenciesFromGithub,
               librariesOfLatestSlug,
               urlIfLeaksFound,
               serviceUrl,
@@ -339,18 +343,11 @@ class CatalogueController @Inject() (
             )
         }
 
-      // slugs build before the inclusion of the dependency graph data won't have build deps, so we fallback to getting them from github
-      // this will be deprecated once dependency graphs data covers the majority of slugs
-      val optLegacyLatestDependencies =
-        if (librariesOfLatestSlug.exists(_.scope.contains(DependencyScope.Build))) None
-        else optDependenciesFromGithub
-
       Ok(
         serviceInfoPage(
           serviceName                 = serviceName,
           repositoryDetails           = repositoryDetails.copy(jenkinsURL = jenkinsLink),
           costEstimation              = costEstimation,
-          optLegacyLatestDependencies = optLegacyLatestDependencies,
           repositoryCreationDate      = repositoryDetails.createdAt,
           envDatas                    = optLatestData.fold(envDatas)(envDatas + _),
           linkToLeakDetection         = urlIfLeaksFound,
@@ -371,32 +368,29 @@ class CatalogueController @Inject() (
     Action.async { implicit request =>
       OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
         .foldF(Future.successful(notFound))(repoDetails =>
-          /*repoDetails.repoType match {
+          repoDetails.repoType match {
             case RepoType.Service   => renderServicePage(
                                          serviceName       = repoDetails.name,
                                          repositoryDetails = repoDetails
                                        )
-            case RepoType.Library   =>*/ renderLibrary(repoDetails)
-            /*case RepoType.Prototype => renderPrototype(repoDetails)
+            case RepoType.Library   => renderLibrary(repoDetails)
+            case RepoType.Prototype => renderPrototype(repoDetails)
             case RepoType.Other     => renderOther(repoDetails)
-          }*/
+          }
         )
     }
 
   def renderLibrary(repoDetails: RepositoryDetails)(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
-      serviceDependenciesConnector.getDependencies(repoDetails.name), // TODO can we deprecate this endpoint? getRepositryModules could return the data from this if no meta-data available
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name)
     ).mapN { ( jenkinsLink,
-               optDependencies,
                repoModules,
                urlIfLeaksFound
              ) =>
       Ok(
         libraryInfoPage(
           repoDetails.copy(jenkinsURL = jenkinsLink),
-          optDependencies,
           repoModules,
           urlIfLeaksFound
         )
@@ -413,21 +407,26 @@ class CatalogueController @Inject() (
       ))
 
   private def renderOther(repoDetails: RepositoryDetails)(implicit messages: Messages, request: Request[_]): Future[Result] =
-    for {
-      jenkinsLinks      <- teamsAndRepositoriesConnector.lookupLink(repoDetails.name)
-      optDependencies   <- serviceDependenciesConnector.getDependencies(repoDetails.name)
-      //serviceDependenciesConnector.getRepositoryModules(repoDetails.name), // just in case?
-      urlIfLeaksFound   <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
-      (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains)
-    } yield
-      Ok(repositoryInfoPage(
-        repoDetails.copy(
-          jenkinsURL = jenkinsLinks,
-          teamNames  = owners.sorted ++ writers.sorted
-        ),
-        optDependencies,
-        urlIfLeaksFound
-      ))
+    ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
+      serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
+      leakDetectionService.urlIfLeaksFound(repoDetails.name)
+    ).mapN { ( jenkinsLinks,
+               repoModules,
+               urlIfLeaksFound
+             ) =>
+      Ok(
+        repositoryInfoPage(
+          repoDetails.copy(
+            jenkinsURL = jenkinsLinks,
+            teamNames  = { val (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
+                           owners.sorted ++ writers.sorted
+                         }
+          ),
+          repoModules,
+          urlIfLeaksFound
+        )
+      )
+    }
 
   def allServices: Action[AnyContent] =
     Action {
@@ -466,9 +465,9 @@ class CatalogueController @Inject() (
 
   def dependencyRepository(group: String, artefact: String, version: String): Action[AnyContent] =
     Action.async { implicit request =>
-      serviceDependenciesConnector.getRepoFor(group, artefact, version)
+      serviceDependenciesConnector.getRepositoryName(group, artefact, version)
         .map { repoName =>
-          Redirect(routes.CatalogueController.repository(repoName.getOrElse(artefact)))
+          Redirect(routes.CatalogueController.repository(repoName.getOrElse(artefact)).copy(fragment = artefact))
         }
     }
 

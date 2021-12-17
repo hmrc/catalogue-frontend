@@ -68,7 +68,12 @@ case class RepositoryModules(
   version          : Version,
   dependenciesBuild: Seq[Dependency],
   modules          : Seq[RepositoryModule]
-)
+) {
+  def allDependencies: Seq[Dependency] =
+    modules.foldLeft(dependenciesBuild)((acc, module) =>
+      acc ++ module.dependenciesCompile ++ module.dependenciesTest
+    )
+}
 
 object RepositoryModules {
   val reads: Reads[RepositoryModules] = {
