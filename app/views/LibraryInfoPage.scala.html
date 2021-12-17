@@ -55,7 +55,10 @@
   <section class="section-wrapper">
     <div class="row">
       <div class="col-md-12">
-        @partials.details(library)
+        @partials.details(
+          repositoryDetails = library,
+          version           = repositoryModules.map(_.version)
+        )
       </div>
     </div>
 
@@ -76,12 +79,6 @@
             <div class="board">
               <h3 class="board__heading">Modules</h3>
               <div class="board__body">
-                <ul class="list list--minimal list-group row">
-                <li id="version" class="col-xs-6">
-                  <label>Latest Version: </label>
-                  @repositoryModules.version.toString
-                </li>
-                </ul>
                 <ul class="list list--minimal">
                   @repositoryModules.modules.map { m =>
                     <li><a id="link-to-@{m.name}" href="#@{m.name}">@m.name</a></li>
