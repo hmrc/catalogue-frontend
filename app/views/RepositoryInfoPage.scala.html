@@ -14,8 +14,8 @@
  * limitations under the License.
  *@
 
- @import partials.DependenciesPartial
- @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import partials.DependenciesPartial
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, RepositoryModules}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
@@ -35,125 +35,132 @@
 )
 
 @standard_layout(repository.name, "repositories") {
-    <header class="header-with-github-badge">
-        <div>
-            <h1>
-              Repository: @repository.name
-              <span>@githubBadgeType(repository)</span>
-              @if(repository.isArchived) { <span>Archived</span> }
-            </h1>
+  <header class="header-with-github-badge">
+    <div>
+      <h1>
+        Repository: @repository.name
+        <span>@githubBadgeType(repository)</span>
+        @if(repository.isArchived) { <span>Archived</span> }
+      </h1>
+    </div>
+  </header>
+
+  @partials.leak_detection_banner(linkToLeakDetection)
+  @defining(repositoryModules.fold(Seq.empty[Dependency])(_.allDependencies)){ dependencies =>
+      @partials.bobby_violations_banner(environment = None, dependencies, pending = false)
+      @partials.bobby_violations_banner(environment = None, dependencies, pending = true )
+  }
+
+  <section class="section-wrapper">
+    <div class="row">
+      <div class="col-md-12">
+        @partials.details(
+          repositoryDetails = repository,
+          version           = repositoryModules.map(_.version)
+        )
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        @partials.repo_owning_teams(repository)
+      </div>
+
+      <div class="col-md-6">
+        @partials.code(repository)
+      </div>
+    </div>
+
+    @repositoryModules.map { repositoryModules =>
+      <div class="row">
+        <div class="col-md-12">
+          <div id="modules">
+            <div class="board">
+              <h3 class="board__heading">Modules</h3>
+              <div class="board__body">
+                <ul class="list list--minimal">
+                  @repositoryModules.modules.map { m =>
+                    <li><a id="link-to-@{m.name}" href="#@{m.name}">@m.name</a></li>
+                  }
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <script type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
-    </header>
-
-    @partials.leak_detection_banner(linkToLeakDetection)
-    @defining(repositoryModules.fold(Seq.empty[Dependency])(_.allDependencies)){ dependencies =>
-        @partials.bobby_violations_banner(environment = None, dependencies, pending = false)
-        @partials.bobby_violations_banner(environment = None, dependencies, pending = true )
+      </div>
     }
 
-    <section class="section-wrapper">
-        <div class="row">
-            <div class="col-md-12">
-                @partials.details(
-                  repositoryDetails = repository,
-                  version           = repositoryModules.map(_.version)
-                )
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                @partials.repo_owning_teams(repository)
-            </div>
-
-            <div class="col-md-6">
-                @partials.code(repository)
-            </div>
-        </div>
-
+    <div class="row">
+      <div class="col-md-12">
         @repositoryModules.map { repositoryModules =>
+          @if(repositoryModules.dependenciesBuild.nonEmpty) {
             <div class="row">
               <div class="col-md-12">
-                <div id="modules">
-                  <div class="board">
-                    <h3 class="board__heading">Modules</h3>
-                    <div class="board__body">
-                      <ul class="list list--minimal">
-                        @repositoryModules.modules.map { m =>
-                          <li><a id="link-to-@{m.name}" href="#@{m.name}">@m.name</a></li>
-                        }
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+                @dependenciesPartial(
+                  repositoryModules.dependenciesBuild
+                , "build-dependencies"
+                , "Sbt Plugins"
+                , "-"
+                , None // Version - if set, will add graph links (using service-name)
+                )
               </div>
             </div>
           }
 
-          <div class="row">
-            <div class="col-md-12">
-              @repositoryModules.map { repositoryModules =>
-                @if(repositoryModules.dependenciesBuild.nonEmpty) {
+          @for((module, i) <- repositoryModules.modules.zipWithIndex) {
+            <div class="board">
+              <div class="board__heading">
+                 <h4 class="environment-name" id="@module.name">@module.name</h4>
+              </div>
+              <div class="board__body">
+                @if((module.dependenciesCompile ++ module.dependenciesTest).isEmpty) {
                   <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-md-12" style="padding-left:25px;padding-right:25px">
+                      <ul class="list list--minimal list-group row">
+                        <li>No dependencies available</li>
+                      </ul>
+                    </div>
+                  </div>
+                } else {
+                  <div class="row">
+                    <div class="col-md-12" style="padding-left:25px;padding-right:25px">
                       @dependenciesPartial(
-                        repositoryModules.dependenciesBuild
-                      , "build-dependencies"
-                      , "Sbt Plugins"
+                        module.dependenciesCompile
+                      , s"platform-dependencies-${module.name}"
+                      , "Compile Dependencies"
                       , "-"
                       , None // Version - if set, will add graph links (using service-name)
                       )
                     </div>
                   </div>
-                }
 
-                @for((module, i) <- repositoryModules.modules.zipWithIndex) {
-                  <div class="board">
-                   <div class="board__heading">
-                      <h4 class="environment-name" id="@module.name">@module.name</h4>
-                   </div>
-                    <div class="board__body">
-                      <div class="row">
+                  @if(module.dependenciesTest.nonEmpty){
+                    <div class="row">
                         <div class="col-md-12" style="padding-left:25px;padding-right:25px">
-                          @dependenciesPartial(
-                            module.dependenciesCompile
-                          , s"platform-dependencies-${module.name}"
-                          , "Compile Dependencies"
-                          , "-"
-                          , None // Version - if set, will add graph links (using service-name)
-                          )
-                        </div>
+                        @dependenciesPartial(
+                          module.dependenciesTest
+                        , s"test-dependencies-${module.name}"
+                        , "Test Dependencies"
+                        , "-"
+                        , None // Version - if set, will add graph links (using service-name)
+                        )
                       </div>
-
-                      @if(module.dependenciesTest.nonEmpty){
-                        <div class="row">
-                            <div class="col-md-12" style="padding-left:25px;padding-right:25px">
-                            @dependenciesPartial(
-                              module.dependenciesTest
-                            , s"test-dependencies-${module.name}"
-                            , "Test Dependencies"
-                            , "-"
-                            , None // Version - if set, will add graph links (using service-name)
-                            )
-                          </div>
-                        </div>
-                      }
-
                     </div>
-                  </div>
+                  }
                 }
-              }
+              </div>
             </div>
-        </div>
-    </section>
-
-    <div class="alert alert-success" role="alert" id="@repository.name">
-        <p>
-        @Html(viewMessages.informationalText)
-        </p>
+          }
+        }
+      </div>
     </div>
+  </section>
+
+  <div class="alert alert-success" role="alert" id="@repository.name">
+    <p>
+      @Html(viewMessages.informationalText)
+    </p>
+  </div>
 }
 
 
