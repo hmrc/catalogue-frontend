@@ -18,26 +18,23 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.scalatest.BeforeAndAfter
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-class LibraryPageSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
+class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
 
   private[this] lazy val WS = app.injector.instanceOf[WSClient]
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
-  }
-
   "A library page" should {
     "show the teams owning the service with github and ci links and info box" in {
-      serviceEndpoint(GET, "/api/repositories/lib", willRespondWith = (200, Some(libraryData)))
-      serviceEndpoint(GET, "/api/jenkins-url/lib", willRespondWith = (200, Some(jenkinsData)))
+      val libName = "lib"
 
-      val response = WS.url(s"http://localhost:$port/repositories/lib").get.futureValue
+      serviceEndpoint(GET, s"/api/repositories/$libName"       , willRespondWith = (200, Some(libraryData)))
+      serviceEndpoint(GET, s"/api/jenkins-url/$libName"        , willRespondWith = (200, Some(jenkinsData)))
+      serviceEndpoint(GET, s"/api/module-dependencies/$libName", willRespondWith = (404, None))
+
+      val response = WS.url(s"http://localhost:$port/repositories/$libName").get.futureValue
       response.status shouldBe 200
       response.body   should include(s"links on this page are automatically generated")
       response.body   should include(s"teamA")
@@ -51,16 +48,22 @@ class LibraryPageSpec extends UnitSpec with BeforeAndAfter with FakeApplicationB
       response.body   should not include "http://ser2/serv"
     }
 
-    "render dependencies with red, green, amber and grey colours" in {
-      serviceEndpoint(GET, "/api/repositories/service-name", willRespondWith                      = (200, Some(libraryData)))
-      serviceEndpoint(GET, "/api/service-dependencies/dependencies/service-name", willRespondWith = (200, None))
+    "render dependencies" in {
+      val libName = "lib"
 
-      val response = WS.url(s"http://localhost:$port/repositories/service-name").get.futureValue
+      serviceEndpoint(GET, s"/api/repositories/$libName"       , willRespondWith = (200, Some(libraryData)))
+      serviceEndpoint(GET, s"/api/module-dependencies/$libName", willRespondWith = (200, Some(repositoryModules(
+                                                                                                libName,
+                                                                                                dependenciesCompile = dependencies
+                                                                                              ))))
+      serviceEndpoint(GET, s"/api/jenkins-url/$libName"        , willRespondWith = (404, None))
+
+      val response = WS.url(s"http://localhost:$port/repositories/$libName").get.futureValue
       response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)
 
-      document.select("#platform-dependencies").size() shouldBe 1
+      document.select("#platform-dependencies-m1").size() shouldBe 1
     }
   }
 }
