@@ -14,7 +14,6 @@
  * limitations under the License.
  *@
 
-@import partials.DependenciesPartial
 @import partials.ServiceDependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
@@ -24,13 +23,11 @@
 @import views.partials.githubBadgeType
 
 @this(
-  dependenciesPartial : DependenciesPartial,
-  dependenciesPartial2: ServiceDependenciesPartial,
-  viewMessages        : ViewMessages
+  dependenciesPartial: ServiceDependenciesPartial,
+  viewMessages       : ViewMessages
 )
 
 @(library            : RepositoryDetails,
-  optDependencies    : Option[Dependencies],
   repositoryModules  : Option[RepositoryModules],
   linkToLeakDetection: Option[String]
 )(implicit
@@ -39,178 +36,155 @@
 )
 
 @standard_layout(library.name,"libraries") {
-    <header class="header-with-github-badge">
-        <div>
-            <h1>
-              Library: @library.name
-              <span>@githubBadgeType(library)</span>
-              @if(library.isArchived) { <span>Archived</span> }
-            </h1>
-        </div>
-    </header>
+  <header class="header-with-github-badge">
+    <div>
+      <h1>
+        Library: @library.name
+        <span>@githubBadgeType(library)</span>
+        @if(library.isArchived) { <span>Archived</span> }
+      </h1>
+    </div>
+  </header>
 
-    @partials.leak_detection_banner(linkToLeakDetection)
-    @defining(
-      repositoryModules.fold(optDependencies.toSeq.flatMap(_.toDependencySeq)) { modules =>
-        modules.modules.foldLeft(modules.dependenciesBuild)((acc, module) => acc ++ module.dependenciesCompile ++ module.dependenciesTest)
-      }
-    ){ dependencies =>
-      @partials.bobby_violations_banner(environment = None, dependencies, pending = false)
-      @partials.bobby_violations_banner(environment = None, dependencies, pending = true )
+  @partials.leak_detection_banner(linkToLeakDetection)
+  @defining(repositoryModules.fold(Seq.empty[Dependency])(_.allDependencies)){ dependencies =>
+    @partials.bobby_violations_banner(environment = None, dependencies, pending = false)
+    @partials.bobby_violations_banner(environment = None, dependencies, pending = true )
+  }
+
+  <section class="section-wrapper">
+    <div class="row">
+      <div class="col-md-12">
+        @partials.details(library)
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        @partials.repo_owning_teams(library)
+      </div>
+
+      <div class="col-md-6">
+        @partials.code_and_builds(library.name, library)
+      </div>
+    </div>
+
+    @repositoryModules.map { repositoryModules =>
+      <div class="row">
+        <div class="col-md-12">
+          <div id="modules">
+            <div class="board">
+              <h3 class="board__heading">Modules</h3>
+              <div class="board__body">
+                <ul class="list list--minimal list-group row">
+                <li id="version" class="col-xs-6">
+                  <label>Latest Version: </label>
+                  @repositoryModules.version.toString
+                </li>
+                </ul>
+                <ul class="list list--minimal">
+                  @repositoryModules.modules.map { m =>
+                    <li><a id="link-to-@{m.name}" href="#@{m.name}">@m.name</a></li>
+                  }
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     }
 
-    <section class="section-wrapper">
-        <div class="row">
-            <div class="col-md-12">
-                <div id="details" >
-                    <div class="board">
-                        <h3 class="board__heading">Details</h3>
-                        <div class="board__body">
-                            <ul class="list list--minimal list-group row">
-                                <li id="description" class="col-xs-6">
-                                    <label>Description: </label>
-                                    @if(library.description.isEmpty) {None} else {@library.description}
-                                </li>
-                                <li id="created-at" class="col-xs-6">
-                                    <label>Created: </label>
-                                    @library.createdAt.displayFormat
-                                </li>
-                                <li id="last-active" class="col-xs-6">
-                                    <label>Last Active: </label>
-                                    @library.lastActive.displayFormat
-                                </li>
-                                @repositoryModules.map { repositoryModules =>
-                                    <li id="version" class="col-xs-6">
-                                        <label>Latest Version: </label>
-                                        @repositoryModules.version.toString
-                                    </li>
-                                    <li id="modules" class="col-xs-6">
-                                        <label>Modules: </label>
-                                        <ul>
-                                        @repositoryModules.modules.map { m =>
-                                          <li><a href="#@{m.name}">@m.name</a></li>
-                                        }
-                                        </ul>
-                                    </li>
-                                }
-                            </ul>
-                        </div>
-                    </div>
+    <div class="row">
+      <div class="col-md-12">
+        @repositoryModules.map { repositoryModules =>
+          @if(repositoryModules.dependenciesBuild.nonEmpty) {
+            <div class="row">
+              <div class="col-md-12">
+                @dependenciesPartial(
+                  repositoryModules.dependenciesBuild
+                , "build-dependencies"
+                , "Sbt Plugins"
+                , "-"
+                , None // Version - if set, will add graph links (using service-name)
+                )
+              </div>
+            </div>
+          }
+
+          @for((module, i) <- repositoryModules.modules.zipWithIndex) {
+            <div class="board">
+             <div class="board__heading">
+                <h4 class="environment-name" id="@module.name">@module.name</h4>
+             </div>
+              <div class="board__body">
+                <div class="row">
+                  <div class="col-md-12" style="padding-left:25px;padding-right:25px">
+                    @dependenciesPartial(
+                      module.dependenciesCompile
+                    , s"platform-dependencies-${module.name}"
+                    , "Compile Dependencies"
+                    , "-"
+                    , None // Version - if set, will add graph links (using service-name)
+                    )
+                  </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="row">
-            <div class="col-md-6">
-                @partials.repo_owning_teams(library)
-            </div>
-
-            <div class="col-md-6">
-                @partials.code_and_builds(library.name, library)
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                @repositoryModules match {
-                  case Some(repositoryModules) => {
-                    <ul>Modules for version @repositoryModules.version.toString</ul>
-
-                    <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
-                      @for((module, i) <- repositoryModules.modules.zipWithIndex) {
-                          <li class="nav-item @if(i == 0) { active }">
-                            <a id="@{module.name}-tab" class="nav-link" data-toggle="tab" href="#@{module.name}-pane" role="tab" aria-controls="@module.name" aria-selected="false">
-                                <div class="board">
-                                    <div class="board__heading">
-                                        <h4 class="environment-name">@module.name</h4>
-                                    </div>
-                                    <div class="board__body">
-                                        @renderActiveBobbyRuleViolationBadge(module.name, module.dependenciesCompile ++ module.dependenciesTest /*++ modules.dependenciesBuild*/)
-                                        @renderPendingBobbyRuleViolationBadge(module.name, module.dependenciesCompile ++ module.dependenciesTest /*++ modules.dependenciesBuild*/)
-                                    </div>
-                                </div>
-                            </a>
-                          </li>
-                      }
-                    </ul>
-
-                    <div id="environmentPanes" class="tab-content environment-panes">
-                        @for((module, i) <- repositoryModules.modules.zipWithIndex) {
-                            <div id="@{module.name}-pane" class="tab-pane @if(i == 0) { active }" role="tabpanel" aria-labelledby="@{module.name}-tab">
-
-                              <div class="row">
-                                  <div class="col-md-12">
-                                      @dependenciesPartial2(
-                                        module.dependenciesCompile
-                                      , s"platform-dependencies-${module.name}"
-                                      , "Platform Dependencies"
-                                      , s"TODO-${module.name}"
-                                      , None // Version - if set, will add graph links (using service-name)
-                                      )
-                                  </div>
-                              </div>
-
-                              @if(module.dependenciesTest.nonEmpty){
-                                  <div class="row">
-                                      <div class="col-md-12">
-                                      @dependenciesPartial2(
-                                        module.dependenciesTest
-                                      , s"test-dependencies-${module.name}"
-                                      , "Test Dependencies"
-                                      , s"TODO-${module.name}"
-                                      , None // Version - if set, will add graph links (using service-name)
-                                      )
-                                      </div>
-                                  </div>
-                              }
-
-                              @*
-                              @if(module.buildDependencies.nonEmpty) {
-                                  <div class="row">
-                                      <div class="col-md-12">
-                                      @dependenciesPartial2(
-                                        module.buildDependencies
-                                      , s"build-dependencies-${module.name}"
-                                      , "Sbt Plugins"
-                                      , s"TODO-${module.name}"
-                                      , None // Version - if set, will add graph links (using service-name)
-                                      )
-                                      </div>
-                                  </div>
-                              }
-                              *@
-                            </div>
-                        }
-                      </div>
+                @if(module.dependenciesTest.nonEmpty){
+                  <div class="row">
+                      <div class="col-md-12" style="padding-left:25px;padding-right:25px">
+                      @dependenciesPartial(
+                        module.dependenciesTest
+                      , s"test-dependencies-${module.name}"
+                      , "Test Dependencies"
+                      , "-"
+                      , None // Version - if set, will add graph links (using service-name)
+                      )
+                    </div>
+                  </div>
                 }
-                case None => { @dependenciesPartial(optDependencies) }
-            }
-            </div>
-        </div>
-    </section>
 
-    <div class="alert alert-success" role="alert" id="@library.name">
-        <p>
-        @Html(viewMessages.informationalText)
-        </p>
+              </div>
+            </div>
+          }
+        }
+      </div>
     </div>
+  </section>
+
+  <div class="alert alert-success" role="alert" id="@library.name">
+    <p>
+      @Html(viewMessages.informationalText)
+    </p>
+  </div>
 }
 
 
 @renderActiveBobbyRuleViolationBadge(moduleName: String, dependencies: Seq[Dependency]) = {
-    @if(dependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
-      <div id="bobby-violation-active-badge-@{moduleName}" class="environment-badge bobby-violation-active-badge"
-           data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.active.badge")"></div>
-    } else {
-      <div id="bobby-violation-active-badge-@{moduleName}" class="environment-badge no-badge"></div>
-    }
+  @if(dependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
+    <div id="bobby-violation-active-badge-@{moduleName}"
+         class="environment-badge bobby-violation-active-badge"
+         data-toggle="tooltip"
+         data-placement="top"
+         title="@messages("bobbyrules.active.badge")">
+    </div>
+  } else {
+    <div id="bobby-violation-active-badge-@{moduleName}"
+         class="environment-badge no-badge">
+    </div>
   }
+}
 
-  @renderPendingBobbyRuleViolationBadge(moduleName: String, dependencies: Seq[Dependency]) = {
-    @if(dependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
-      <div id="bobby-violation-pending-badge-@{moduleName}" class="environment-badge bobby-violation-pending-badge"
-           data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.pending.badge")"></div>
-    } else {
-      <div id="bobby-violation-pending-badge-@{moduleName}" class="environment-badge no-badge"></div>
-    }
+@renderPendingBobbyRuleViolationBadge(moduleName: String, dependencies: Seq[Dependency]) = {
+  @if(dependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
+    <div id="bobby-violation-pending-badge-@{moduleName}"
+         class="environment-badge bobby-violation-pending-badge"
+         data-toggle="tooltip"
+         data-placement="top"
+         title="@messages("bobbyrules.pending.badge")">
+    </div>
+  } else {
+    <div id="bobby-violation-pending-badge-@{moduleName}"
+         class="environment-badge no-badge">
+    </div>
   }
+}

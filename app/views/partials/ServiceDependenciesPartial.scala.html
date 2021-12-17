@@ -33,6 +33,7 @@
         @title
     </h3>
     <div class="board__body">
+        @* TODO Rename file to DependenciesPartial *@
         <div class="col-xs-9">
                 <ul class="list list--minimal list-group row">
                     @if(dependencies.nonEmpty) {
@@ -65,9 +66,7 @@
             }
         </div>
       </div>
-
     </div>
-
 </div>
 
 @graphLink(v: Version, scope: Option[DependencyScope]) = {
@@ -75,5 +74,5 @@
 }
 
 @dependenciesLink(v: Version) = {
-    <a href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.service(serviceName, v.toString)">View All Dependencies</a>
+  <a href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.service(serviceName, v.toString)">View All Dependencies</a>
 }

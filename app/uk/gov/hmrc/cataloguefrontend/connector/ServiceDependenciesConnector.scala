@@ -38,16 +38,6 @@ class ServiceDependenciesConnector @Inject() (
   private val servicesDependenciesBaseUrl: String =
     servicesConfig.baseUrl("service-dependencies")
 
-  def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
-    implicit val dr = Dependencies.reads
-    http.GET[Option[Dependencies]](url"$servicesDependenciesBaseUrl/api/dependencies/$repositoryName")
-  }
-
-  def getAllDependencies()(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
-    implicit val dr = Dependencies.reads
-    http.GET[Seq[Dependencies]](url"$servicesDependenciesBaseUrl/api/dependencies")
-  }
-
   def dependenciesForTeam(team: TeamName)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
     implicit val dr = Dependencies.reads
     http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/api/teams/${team.asString}/dependencies")
@@ -145,11 +135,11 @@ class ServiceDependenciesConnector @Inject() (
     http.GET[HistoricBobbyRulesSummary](url"$servicesDependenciesBaseUrl/api/historicBobbyViolations")
   }
 
-  def getRepoFor(group: String, artefact: String, version: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
-    http.GET[Option[String]](url"$servicesDependenciesBaseUrl/api/module-repository?group=$group&artefact=$artefact&version=$version")
+  def getRepositoryName(group: String, artefact: String, version: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
+    http.GET[Option[String]](url"$servicesDependenciesBaseUrl/api/repository-name?group=$group&artefact=$artefact&version=$version")
 
   def getRepositoryModules(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryModules]] = {
     implicit val dr = RepositoryModules.reads
-    http.GET[Option[RepositoryModules]](url"$servicesDependenciesBaseUrl/api/repository-modules/$repositoryName")
+    http.GET[Option[RepositoryModules]](url"$servicesDependenciesBaseUrl/api/module-dependencies/$repositoryName")
   }
 }
