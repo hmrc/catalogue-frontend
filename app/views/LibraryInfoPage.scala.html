@@ -114,32 +114,41 @@
                 <h4 class="environment-name" id="@module.name">@module.name</h4>
              </div>
               <div class="board__body">
-                <div class="row">
-                  <div class="col-md-12" style="padding-left:25px;padding-right:25px">
-                    @dependenciesPartial(
-                      module.dependenciesCompile
-                    , s"platform-dependencies-${module.name}"
-                    , "Compile Dependencies"
-                    , "-"
-                    , None // Version - if set, will add graph links (using service-name)
-                    )
-                  </div>
-                </div>
-
-                @if(module.dependenciesTest.nonEmpty){
+                @if((module.dependenciesCompile ++ module.dependenciesTest).isEmpty) {
                   <div class="row">
-                      <div class="col-md-12" style="padding-left:25px;padding-right:25px">
+                    <div class="col-md-12" style="padding-left:25px;padding-right:25px">
+                      <ul class="list list--minimal list-group row">
+                        <li>No dependencies available</li>
+                      </ul>
+                    </div>
+                  </div>
+                } else {
+                  <div class="row">
+                    <div class="col-md-12" style="padding-left:25px;padding-right:25px">
                       @dependenciesPartial(
-                        module.dependenciesTest
-                      , s"test-dependencies-${module.name}"
-                      , "Test Dependencies"
+                        module.dependenciesCompile
+                      , s"platform-dependencies-${module.name}"
+                      , "Compile Dependencies"
                       , "-"
                       , None // Version - if set, will add graph links (using service-name)
                       )
                     </div>
                   </div>
-                }
 
+                  @if(module.dependenciesTest.nonEmpty){
+                    <div class="row">
+                        <div class="col-md-12" style="padding-left:25px;padding-right:25px">
+                        @dependenciesPartial(
+                          module.dependenciesTest
+                        , s"test-dependencies-${module.name}"
+                        , "Test Dependencies"
+                        , "-"
+                        , None // Version - if set, will add graph links (using service-name)
+                        )
+                      </div>
+                    </div>
+                  }
+                }
               </div>
             </div>
           }
