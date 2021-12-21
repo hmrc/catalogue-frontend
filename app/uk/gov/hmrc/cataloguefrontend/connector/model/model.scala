@@ -65,7 +65,7 @@ object TeamName {
 // TODO can we return scala versions too?
 case class RepositoryModules(
   name             : String,
-  version          : Version,
+  version          : Option[Version],
   dependenciesBuild: Seq[Dependency],
   modules          : Seq[RepositoryModule]
 ) {
@@ -80,7 +80,7 @@ object RepositoryModules {
     implicit val dw  = Dependency.reads
     implicit val rmw = RepositoryModule.reads
     ( (__ \ "name"             ).read[String]
-    ~ (__ \ "version"          ).read[Version](Version.format)
+    ~ (__ \ "version"          ).readNullable[Version](Version.format)
     ~ (__ \ "dependenciesBuild").read[Seq[Dependency]]
     ~ (__ \ "modules"          ).read[Seq[RepositoryModule]]
     )(RepositoryModules.apply _)
