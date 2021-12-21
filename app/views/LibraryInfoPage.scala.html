@@ -57,7 +57,7 @@
       <div class="col-md-12">
         @partials.details(
           repositoryDetails = library,
-          version           = repositoryModules.map(_.version)
+          version           = repositoryModules.flatMap(_.version)
         )
       </div>
     </div>
