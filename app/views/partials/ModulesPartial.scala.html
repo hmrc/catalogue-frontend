@@ -43,14 +43,14 @@
         <div class="board__body">
           @if((module.dependenciesCompile ++ module.dependenciesTest).isEmpty) {
             <div class="row">
-              <div class="col-md-12" style="padding-left:25px;padding-right:25px">
+              <div class="col-md-12 sub_row">
                 <ul class="list list--minimal list-group row">
                   <li>No dependencies available</li>
                 </ul>
               </div>
             </div>
           } else {
-            @moduleDependencies(module)
+            @moduleDependencies(module, isSub = true)
           }
         </div>
       </div>
@@ -93,28 +93,30 @@
   }
 }
 
-@moduleDependencies(module: RepositoryModule) = {
+@moduleDependencies(module: RepositoryModule, isSub: Boolean = false) = {
   <div class="row">
-    <div class="col-md-12" style="padding-left:25px;padding-right:25px">
+    <div class="col-md-12 @if(isSub){sub_row}">
       @dependenciesPartial(
         module.dependenciesCompile
       , s"platform-dependencies-${module.name}"
       , "Compile Dependencies"
       , "-"
       , None // Version - if set, will add graph links (using service-name)
+      , isSub = isSub
       )
     </div>
   </div>
 
   @if(module.dependenciesTest.nonEmpty){
     <div class="row">
-        <div class="col-md-12" style="padding-left:25px;padding-right:25px">
+        <div class="col-md-12 @if(isSub){sub_row}">
         @dependenciesPartial(
           module.dependenciesTest
         , s"test-dependencies-${module.name}"
         , "Test Dependencies"
         , "-"
         , None // Version - if set, will add graph links (using service-name)
+        , isSub = isSub
         )
       </div>
     </div>

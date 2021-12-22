@@ -92,7 +92,7 @@
                 @dependenciesPartial(
                   optEnvData.toSeq.flatMap(_.dependencies.filter(_.scope.contains(DependencyScope.Compile)))
                 , s"platform-dependencies-${slugInfoFlag.asString}"
-                , "Platform Dependencies"
+                , "Compile Dependencies"
                 , serviceName
                 , optEnvData.map(_.version)
                 )

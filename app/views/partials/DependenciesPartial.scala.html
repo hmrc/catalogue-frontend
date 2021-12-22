@@ -24,12 +24,12 @@
   rootId      : String,
   title       : String,
   serviceName : String,
-  version     : Option[Version]
+  version     : Option[Version],
+  isSub       : Boolean         = false
 )(implicit messages: Messages)
 
-
 <div id="@rootId" class="board">
-    <h3 class="board__heading">
+    <h3 class="board__heading @if(isSub){sub_board}">
         @title
     </h3>
     <div class="board__body">
