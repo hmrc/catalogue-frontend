@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, VersionState}
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.model.ImportedBy
+
 @(dependencies: Seq[Dependency])
 
 @defining(dependencies.filter(_.importBy.isDefined)) { transitiveDependencies =>
@@ -29,9 +30,9 @@
         <div class="">
             <ul>
             @for(transitiveDependency <- transitiveDependencies.filter(_.importBy.contains(ImportedBy(dependency.name, dependency.group, dependency.currentVersion)))) {
-                <li>
+              <li>
                 @dependencyRow(transitiveDependency)
-                </li>
+              </li>
             }
             </ul>
         </div>
@@ -45,9 +46,12 @@
             <span class="@if(dependency.importBy.isDefined){transitive}">&nbsp;</span>
             @icon(dependency)
             @if(dependency.latestVersion.isDefined && !dependency.isExternal) {
-                <a id="link-to-@{dependency.name}" href="/repositories/@{dependency.name}"> <span class="dep-group">@dependency.group:</span><span class="dep-name">@dependency.name</span></a>
+              <a id="link-to-@{dependency.name}" href="@appRoutes.CatalogueController.dependencyRepository(group = dependency.group, artefact = dependency.name, version = dependency.currentVersion.toString)">
+                <span class="dep-group">@dependency.group:</span>
+                <span class="dep-name">@dependency.name</span>
+              </a>
             } else {
-                <span class="dep-group">@dependency.group:</span><span class="dep-name">@dependency.name</span>
+              <span class="dep-group">@dependency.group:</span><span class="dep-name">@dependency.name</span>
             }
         </span>
         <span id="@{dependency.name}-current-version" class="col-xs-3">@dependency.currentVersion.toString</span>

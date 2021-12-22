@@ -2,6 +2,7 @@
 
 | Date                  |     Change                                                                                                |
 |-----------------------|-----------------------------------------------------------------------------------------------------------|
+| 22nd December 2021    | Improved display for multi-module libraries (and fix library links)
 | 23rd July 2021        | Update to dependency info - showing transitive dependencies and graph views [See blog post](https://confluence.tools.tax.service.gov.uk/x/S4ZyE)
 | 18 December 2020      | The Future Platform progress page has been retired.
 | 6th August 2020       | We've redesigned this front page! Let us know what you think or if you notice anything in [#team-platops](https://hmrcdigital.slack.com/messages/team-platops/) |

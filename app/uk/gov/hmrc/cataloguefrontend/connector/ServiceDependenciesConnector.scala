@@ -38,18 +38,8 @@ class ServiceDependenciesConnector @Inject() (
   private val servicesDependenciesBaseUrl: String =
     servicesConfig.baseUrl("service-dependencies")
 
-  def getDependencies(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[Dependencies]] = {
-    import Dependencies.Implicits.reads
-    http.GET[Option[Dependencies]](url"$servicesDependenciesBaseUrl/api/dependencies/$repositoryName")
-  }
-
-  def getAllDependencies()(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
-    import Dependencies.Implicits.reads
-    http.GET[Seq[Dependencies]](url"$servicesDependenciesBaseUrl/api/dependencies")
-  }
-
   def dependenciesForTeam(team: TeamName)(implicit hc: HeaderCarrier): Future[Seq[Dependencies]] = {
-    import Dependencies.Implicits.reads
+    implicit val dr = Dependencies.reads
     http.GET[Seq[Dependencies]](s"$servicesDependenciesBaseUrl/api/teams/${team.asString}/dependencies")
   }
 
@@ -75,9 +65,11 @@ class ServiceDependenciesConnector @Inject() (
 
   def getCuratedSlugDependencies(
     serviceName: String,
-    flag: SlugInfoFlag
-  )(implicit hc: HeaderCarrier): Future[Seq[Dependency]] = {
-    import Dependencies.Implicits.readsDependency
+    flag       : SlugInfoFlag
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[Dependency]] = {
+    implicit val dr = Dependency.reads
     http
       .GET[Option[Seq[Dependency]]](
         url"$servicesDependenciesBaseUrl/api/slug-dependencies/$serviceName?flag=${flag.asString}"
@@ -87,21 +79,25 @@ class ServiceDependenciesConnector @Inject() (
 
   def getCuratedSlugDependenciesForTeam(
     teamName: TeamName,
-    flag: SlugInfoFlag
-  )(implicit hc: HeaderCarrier): Future[Map[String, Seq[Dependency]]] = {
-    import Dependencies.Implicits.readsDependency
+    flag    : SlugInfoFlag
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Map[String, Seq[Dependency]]] = {
+    implicit val dr = Dependency.reads
     http.GET[Map[String, Seq[Dependency]]](
       url"$servicesDependenciesBaseUrl/api/teams/${teamName.asString}/slug-dependencies?flag=${flag.asString}"
     )
   }
 
   def getServicesWithDependency(
-    flag: SlugInfoFlag,
-    group: String,
-    artefact: String,
+    flag        : SlugInfoFlag,
+    group       : String,
+    artefact    : String,
     versionRange: BobbyVersionRange,
-    scope: DependencyScope
-  )(implicit hc: HeaderCarrier): Future[Seq[ServiceWithDependency]] = {
+    scope       : DependencyScope
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[ServiceWithDependency]] = {
     implicit val r = ServiceWithDependency.reads
     val queryParams = Seq(
       "flag"         -> flag.asString,
@@ -137,5 +133,13 @@ class ServiceDependenciesConnector @Inject() (
   def getHistoricBobbyRuleViolations(implicit hc: HeaderCarrier): Future[HistoricBobbyRulesSummary] = {
     implicit val brvr = HistoricBobbyRulesSummary.reads
     http.GET[HistoricBobbyRulesSummary](url"$servicesDependenciesBaseUrl/api/historicBobbyViolations")
+  }
+
+  def getRepositoryName(group: String, artefact: String, version: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
+    http.GET[Option[String]](url"$servicesDependenciesBaseUrl/api/repository-name?group=$group&artefact=$artefact&version=$version")
+
+  def getRepositoryModules(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryModules]] = {
+    implicit val dr = RepositoryModules.reads
+    http.GET[Option[RepositoryModules]](url"$servicesDependenciesBaseUrl/api/module-dependencies/$repositoryName")
   }
 }

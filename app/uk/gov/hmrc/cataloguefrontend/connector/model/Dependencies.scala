@@ -18,10 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import java.time.{Instant, LocalDate}
 
-import com.github.ghik.silencer.silent
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.http.controllers.RestFormats
 
 sealed trait VersionState
 object VersionState {
@@ -121,13 +119,29 @@ case class Dependency(
 
 
   // rename reportable or something
-  def isOutOfDate: Boolean = {
+  def isOutOfDate: Boolean =
     versionState match {
       case Some(VersionState.NewVersionAvailable)  => true
       case Some(_: VersionState.BobbyRuleViolated) => true
       case Some(_: VersionState.BobbyRulePending)  => true
       case _                                       => false
     }
+}
+
+object Dependency {
+  val reads: Reads[Dependency] = {
+    implicit val svf  = Version.format
+    implicit val brvr = BobbyRuleViolation.format
+    implicit val ibf  = ImportedBy.format
+    implicit val sf   = DependencyScope.format
+    ( (__ \ "name"               ).read[String]
+    ~ (__ \ "group"              ).read[String]
+    ~ (__ \ "currentVersion"     ).read[Version]
+    ~ (__ \ "latestVersion"      ).readNullable[Version]
+    ~ (__ \ "bobbyRuleViolations").read[Seq[BobbyRuleViolation]]
+    ~ (__ \ "importBy"           ).readNullable[ImportedBy]
+    ~ (__ \ "scope"              ).readNullable[DependencyScope]
+    )(Dependency.apply _)
   }
 }
 
@@ -149,14 +163,14 @@ case class Dependencies(
 }
 
 object Dependencies {
-  object Implicits {
-    @silent("never used") private implicit val dtr = RestFormats.dateTimeFormats
-    private implicit val svf                        = Version.format
-    private implicit val brvr                       = BobbyRuleViolation.format
-    private implicit val ibf                        = ImportedBy.format
-    private implicit val sf                         = DependencyScope.format
-    implicit val readsDependency: Reads[Dependency] = Json.reads[Dependency]
-    implicit val reads: Reads[Dependencies]         = Json.reads[Dependencies]
+  val reads: Reads[Dependencies] = {
+    implicit val dr = Dependency.reads
+    ( (__ \ "repositoryName"        ).read[String]
+    ~ (__ \ "libraryDependencies"   ).read[Seq[Dependency]]
+    ~ (__ \ "sbtPluginsDependencies").read[Seq[Dependency]]
+    ~ (__ \ "otherDependencies"     ).read[Seq[Dependency]]
+    ~ (__ \ "lastUpdated"           ).read[Instant]
+    )(Dependencies.apply _)
   }
 }
 

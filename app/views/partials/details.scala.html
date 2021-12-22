@@ -14,11 +14,16 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 
-@(repositoryDetails: RepositoryDetails)
+@(
+  repositoryDetails: RepositoryDetails,
+  version          : Option[Version]   = None
+)
+
 <div id="details" >
     <div class="board">
         <h3 class="board__heading">Details</h3>
@@ -27,7 +32,7 @@
                 <li id="description" class="col-xs-6">
                     <label>Description: </label>
                     @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
-                    </li>
+                </li>
                 <li id="created-at" class="col-xs-6">
                     <label>Created: </label>
                     @repositoryDetails.createdAt.displayFormat
@@ -36,6 +41,12 @@
                     <label>Last Active: </label>
                     @repositoryDetails.lastActive.displayFormat
                 </li>
+                @version.map { version =>
+                    <li id="version" class="col-xs-6">
+                        <label>Latest Version: </label>
+                        @version.toString
+                    </li>
+                }
             </ul>
         </div>
     </div>

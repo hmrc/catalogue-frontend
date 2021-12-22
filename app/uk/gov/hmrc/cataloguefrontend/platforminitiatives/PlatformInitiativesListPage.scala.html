@@ -14,17 +14,19 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
-@import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{DisplayType, PlatformInitiative, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 
 @this(viewMessages: ViewMessages)
 
-@(initiatives          : Seq[PlatformInitiative],
-display                : DisplayType,
-form                   : Form[_]
-)(implicit messages    : Messages, request: Request[_])
+@(initiatives : Seq[PlatformInitiative],
+  display     : DisplayType,
+  form        : Form[_]
+)(implicit
+  messages    : Messages,
+  request     : Request[_]
+)
 
 @standard_layout(s"Platform Initiatives", "platforminitiatives") {
 <header>
@@ -70,9 +72,12 @@ form                   : Form[_]
                                 <div id="chart_div_@initiative.initiativeName"></div>
                                 <br>
                                 <div style="max-width:500px; height:100px; word-wrap:break-word;">
-                                    @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match{
+                                    @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
                                         case Right(s) => {
                                             @Html(s)
+                                        }
+                                        case Left(_) => {
+                                            @initiative.initiativeDescription
                                         }
                                     }
                                 </div>

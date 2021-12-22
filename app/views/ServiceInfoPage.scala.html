@@ -23,16 +23,19 @@
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.CostEstimation
-@import uk.gov.hmrc.cataloguefrontend.{EnvData, ServiceInfoView, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import views.partials.githubBadgeType
 
-@this(dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial, buildToolsPartial: BuildToolsPartial, viewMessages: ViewMessages)
+@this(
+  dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial,
+  buildToolsPartial               : BuildToolsPartial,
+  viewMessages                    : ViewMessages
+)
 
 @(
   serviceName                  : String,
   repositoryDetails            : RepositoryDetails,
   costEstimation               : CostEstimation,
-  optLegacyLatestDependencies  : Option[Dependencies],
   repositoryCreationDate       : LocalDateTime,
   envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
@@ -95,19 +98,6 @@
         </div>
 
         @dependenciesByEnvironmentPartial(serviceName, envDatas)
-
-        @if(optLegacyLatestDependencies.isDefined) {
-            <div class="row">
-                <div class="col-md-12">
-                @buildToolsPartial(
-                    ServiceInfoView.buildToolsFrom(
-                          optLegacyLatestDependencies = optLegacyLatestDependencies
-                        , librariesOfLatestSlug       = envDatas.get(SlugInfoFlag.Latest).toSeq.flatMap(_.dependencies)
-                    )
-                )
-                </div>
-            </div>
-        }
     </section>
 
     <div class="alert alert-success" role="alert" id="@repositoryDetails.name">
