@@ -16,17 +16,18 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.utils.UriEncoding
 import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, Version}
-import uk.gov.hmrc.cataloguefrontend.service.{DependenciesService, ServiceDependencies}
+import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependenciesPage
 import views.html.dependencies.DependencyGraphs
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DependenciesController @Inject() (
@@ -53,27 +54,21 @@ class DependenciesController @Inject() (
         .map(maybeDeps => Ok(dependenciesPage(name, maybeDeps.toSeq)))
     }
 
-  def graphs(name :String, version: String, scope: String): Action[AnyContent] =
+  def graphs(name: String, version: String, scope: String): Action[AnyContent] =
     Action.async { implicit  request =>
-        for {
-          dependencies <- dependenciesService.getServiceDependencies(name, Version(version))
-          result = dependencies
-            .fold(
-              NotFound(s"No dependency data available for $name:$version:$scope")
-            )(deps => {
-              DependencyScope
-                .parse(scope)
-                .fold(
-                  _     => NotFound(s"No dependency graph for scope $scope in service $name"),
-                  scope => Ok(graphsPage(name, dotFileForScope(deps, scope).map(d => UriEncoding.encodePathSegment(d,"UTF-8")), scope)))
-            })
-        } yield result
-    }
-
-  private def dotFileForScope(dependencies: ServiceDependencies, scope: DependencyScope): Option[String] =
-    scope match {
-      case DependencyScope.Compile => dependencies.dependencyDotCompile
-      case DependencyScope.Test    => dependencies.dependencyDotTest
-      case DependencyScope.Build   => dependencies.dependencyDotBuild
+      (for {
+         scope        <- EitherT.fromEither[Future](DependencyScope.parse(scope))
+                           .leftMap(_ => BadRequest(s"Invalid scope $scope"))
+         dependencies <- EitherT.fromOptionF(
+                           dependenciesService.getServiceDependencies(name, Version(version)),
+                           NotFound(s"No dependency data available for $name:$version:$scope")
+                         )
+      } yield
+        Ok(graphsPage(
+          name,
+          dependencies.dotFileForScope(scope).map(d => UriEncoding.encodePathSegment(d, "UTF-8")),
+          scope
+        ))
+      ).merge
     }
 }

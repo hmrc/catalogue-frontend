@@ -29,44 +29,43 @@
 )(implicit messages: Messages)
 
 <div id="@rootId" class="board">
-    <h3 class="board__heading @if(isSub){sub_board}">
-        @title
-    </h3>
-    <div class="board__body">
-        @* TODO Rename file to DependenciesPartial *@
-        <div class="col-xs-9">
-                <ul class="list list--minimal list-group row">
-                    @if(dependencies.nonEmpty) {
-                        <li>
-                            <span class="col-xs-4"><label>Libraries</label></span>
-                            <span class="col-xs-3"><label>Current Version</label></span>
-                            <span class="col-xs-3"><label>Latest Version</label></span>
-                            <span class="col-xs-2"><label>Violation</label></span>
-                        </li>
-                        @partials.dependency_section(dependencies)
-                    } else {
-                        <li>No dependencies available</li>
-                    }
-                </ul>
-        </div>
+  <h3 class="board__heading @if(isSub){sub_board}">
+    @title
+  </h3>
+  <div class="board__body">
+    <div class="col-xs-9">
+      <ul class="list list--minimal list-group row">
         @if(dependencies.nonEmpty) {
-            <div class="col-xs-3">
-            @partials.dependency_legend(showNewVersionAvailable = true)
-            </div>
+          <li>
+            <span class="col-xs-4"><label>Libraries</label></span>
+            <span class="col-xs-3"><label>Current Version</label></span>
+            <span class="col-xs-3"><label>Latest Version</label></span>
+            <span class="col-xs-2"><label>Violation</label></span>
+          </li>
+          @partials.dependency_section(dependencies)
+        } else {
+          <li>No dependencies available</li>
         }
+      </ul>
+    </div>
+    @if(dependencies.nonEmpty) {
+      <div class="col-xs-3">
+        @partials.dependency_legend(showNewVersionAvailable = true)
+      </div>
+    }
 
-      <div class="row">
-        <div class="col-xs-3 col-xs-offset-9">
-            @if(dependencies.headOption.exists(_.scope.isDefined)) {
-                @version.map(ver => graphLink(ver, dependencies.head.scope))
-            }
-            @* Only show the dependencies link for compile scope for now (we'd need to extend the page to support other scopes *@
-            @if(dependencies.headOption.exists(_.scope.contains(DependencyScope.Compile))){
-                <br/>@version.map(ver => dependenciesLink(ver))
-            }
-        </div>
+    <div class="row">
+      <div class="col-xs-3 col-xs-offset-9">
+        @if(dependencies.headOption.exists(_.scope.isDefined)) {
+          @version.map(ver => graphLink(ver, dependencies.head.scope))
+        }
+        @* Only show the dependencies link for compile scope for now (we'd need to extend the page to support other scopes *@
+        @if(dependencies.headOption.exists(_.scope.contains(DependencyScope.Compile))){
+          <br/>@version.map(ver => dependenciesLink(ver))
+        }
       </div>
     </div>
+  </div>
 </div>
 
 @graphLink(v: Version, scope: Option[DependencyScope]) = {
@@ -74,5 +73,5 @@
 }
 
 @dependenciesLink(v: Version) = {
-  <a href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.service(serviceName, v.toString)">View All Dependencies</a>
+  <a href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.service(serviceName, v.toString)">View Dependency List</a>
 }

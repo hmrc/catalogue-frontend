@@ -136,7 +136,7 @@ class ServiceDependenciesConnectorSpec
 
   "JSON Reader" should {
     "read json with java section" in {
-      import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies.serviceDependenciesReads
+      implicit val sdr = ServiceDependencies.reads
       val json = """{
         "uri" : "https://artefactory/slugs/mobile-stub/mobile-stub_0.12.0_0.5.2.tgz",
         "name" : "mobile-auth-stub",

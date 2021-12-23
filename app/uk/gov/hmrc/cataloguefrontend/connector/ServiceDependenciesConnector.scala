@@ -48,20 +48,24 @@ class ServiceDependenciesConnector @Inject() (
     version    : Option[Version] = None
   )(implicit
     hc: HeaderCarrier
-  ): Future[Seq[ServiceDependencies]] =
+  ): Future[Seq[ServiceDependencies]] = {
+    implicit val sdr = ServiceDependencies.reads
     http.GET[Seq[ServiceDependencies]](
       url"$servicesDependenciesBaseUrl/api/sluginfos?name=$serviceName&version=${version.map(_.toString)}"
     )
+  }
 
   def getSlugInfo(
     serviceName: String,
     version    : Option[Version] = None
   )(implicit
     hc: HeaderCarrier
-  ): Future[Option[ServiceDependencies]] =
+  ): Future[Option[ServiceDependencies]] = {
+    implicit val sdr = ServiceDependencies.reads
     http.GET[Option[ServiceDependencies]](
       url"$servicesDependenciesBaseUrl/api/sluginfo?name=$serviceName&version=${version.map(_.toString)}"
     )
+  }
 
   def getCuratedSlugDependencies(
     serviceName: String,
