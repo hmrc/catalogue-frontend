@@ -79,22 +79,22 @@ class PlatformInitiativesConnectorSpec
     "return correct JSON for Platform Initiatives for a specified team" in {
       stubFor(
         get(urlEqualTo(s"/platform-initiatives/initiatives/team"))
-          .willReturn(aResponse().withBodyFile("/team-initiatives.json"))
+          .willReturn(aResponse().withBodyFile("/platform-initiatives.json"))
       )
       val initiatives = connector.teamInitiatives("team").futureValue
       initiatives mustBe Seq(
         PlatformInitiative(
           initiativeName        = "Initiative-1",
           initiativeDescription = "Test description",
-          currentProgress       = 1,
-          targetProgress        = 10,
+          currentProgress       = 10,
+          targetProgress        = 100,
           completedLegend       = "Updated",
           inProgressLegend      = "Not Updated"),
         PlatformInitiative(
           initiativeName        = "Initiative-2",
           initiativeDescription = "Test description",
-          currentProgress       = 9,
-          targetProgress        = 9,
+          currentProgress       = 33,
+          targetProgress        = 40,
           completedLegend       = "Completed",
           inProgressLegend      = "Not Completed"))
     }
