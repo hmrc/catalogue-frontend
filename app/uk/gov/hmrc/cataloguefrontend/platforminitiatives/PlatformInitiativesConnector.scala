@@ -35,4 +35,9 @@ class PlatformInitiativesConnector @Inject()(
     implicit val formatPI: OFormat[PlatformInitiative] = PlatformInitiative.format
     httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/initiatives")
   }
+
+  def teamInitiatives(team: String)(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
+    implicit val formatPI: OFormat[PlatformInitiative] = PlatformInitiative.format
+    httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/initiatives/$team")
+  }
 }

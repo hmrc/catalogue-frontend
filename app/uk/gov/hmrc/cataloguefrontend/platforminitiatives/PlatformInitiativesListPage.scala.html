@@ -15,20 +15,27 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
-@import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{DisplayType, PlatformInitiative, routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
+@import play.api.mvc._
+@import helper._
 
 @this(viewMessages: ViewMessages)
 
-@(initiatives          : Seq[PlatformInitiative],
-display                : DisplayType,
-form                   : Form[_]
-)(implicit messages    : Messages, request: Request[_])
+@(initiatives   : Seq[PlatformInitiative]   ,
+    display     : DisplayType               ,
+    team        : String                    ,
+    teams       : Seq[String]               ,
+    form        : Form[_]
+)(implicit
+    messages    : Messages                  ,
+    request     : Request[_]
+)
 
 @standard_layout(s"Platform Initiatives", "platforminitiatives") {
 <header>
-    <h1>Platform Initiatives</h1>
+    <h1>Platform Initiatives@if(team!=""){: @team}</h1>
     <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 </header>
 
@@ -47,13 +54,23 @@ form                   : Form[_]
         <div class="col-xs-1 padding-reset-right">
             <label for="search">Search:</label>
         </div>
-        <div class="col-xs-5">
-            <input class="search form-control" id="search" type="text" name="initiativeName"
-                   value='@form("initiativeName").value'>
+        <div class="col-xs-3">
+            <input class="search form-control" id="search" type="text">
         </div>
-        <div class="right" style="line-height:2.2em;">
-            <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(DisplayType.Chart)">Pie chart</a> |
-            <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(DisplayType.Progress)">Progress bar</a>
+        <div class="right padding-reset-right" style="line-height:2.2em;">
+                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(team, DisplayType.Chart)">Pie chart</a> |
+                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(team, DisplayType.Progress)">Progress bar</a>
+
+            <div style="float:right; margin-top:-1em;">
+            @select(field      = form("team")           ,
+                    options    = teams.map(t => t -> t) ,
+                    '_default -> "All"                  ,
+                    '_label   -> None                   ,
+                    '_value   -> form("team").value     ,
+                    '_id      -> "teamName"             ,
+                    'onchange -> "this.form.submit();"
+                    )
+            </div>
         </div>
         <br><br><br>
         <table class="table table-striped">
@@ -70,9 +87,12 @@ form                   : Form[_]
                                 <div id="chart_div_@initiative.initiativeName"></div>
                                 <br>
                                 <div style="max-width:500px; height:100px; word-wrap:break-word;">
-                                    @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match{
+                                    @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
                                         case Right(s) => {
                                             @Html(s)
+                                        }
+                                        case Left(_) => {
+                                            @initiative.initiativeDescription
                                         }
                                     }
                                 </div>
@@ -102,25 +122,26 @@ form                   : Form[_]
         google.charts.setOnLoadCallback(drawChart);
         function drawChart() {
         @initiatives.zipWithIndex.map{case (initiative, i) =>
-                    var data = new google.visualization.DataTable();
-                    data.addColumn('string', 'InitiativeName');
-                    data.addColumn('number', 'Count');
-                    data.addRows([
-                        ['@initiative.completedLegend', @initiative.currentProgress],
-                        ['@initiative.inProgressLegend', @initiative.targetProgress-@initiative.currentProgress]
-                    ]);
-                    var options = { 'title'    : '',
-                                    'width'    : "100%",
-                                    'height'   : 200,
-                                    'chartArea': { 'width': '80%',
-                                                    'height': '80%'}};
-                    var chart = new google.visualization.PieChart(document.getElementById('chart_div_@initiative.initiativeName'));
-                    chart.draw(data, options);
-                }
-            }
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'InitiativeName');
+            data.addColumn('number', 'Count');
+            data.addRows([
+                ['@initiative.completedLegend', @initiative.currentProgress],
+                ['@initiative.inProgressLegend', @initiative.targetProgress-@initiative.currentProgress]
+            ]);
+            var options =   { 'title'       : ''        ,
+                              'width'       : "100%"    ,
+                              'height'      : 200       ,
+                              'chartArea'   : {'width' : '80%',
+                                               'height': '80%'}
+                            };
+            var chart = new google.visualization.PieChart(document.getElementById('chart_div_@initiative.initiativeName'));
+            chart.draw(data, options);
+        }
+    }
     </script>
 <script>
-    var options = { valueNames: [ 'initiativeName'],
-                    searchColumns: ['initiativeName'] };
+    var options = { valueNames:     ['initiativeName'],
+                    searchColumns:  ['initiativeName'] };
     var serviceList = new List('platform-initiatives', options);
 </script>

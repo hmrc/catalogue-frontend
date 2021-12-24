@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import org.mockito.MockitoSugar
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.scalatest.OptionValues
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
@@ -26,11 +26,14 @@ import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.connector.{Team, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType.Chart
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientSupport
 
+import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -47,7 +50,7 @@ class PlatformInitiativesControllerSpec
 
   "Platform Initiatives controller" should {
     "have the correct url set up for the initiatives list" in {
-      uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()
+      uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives("")
         .url shouldBe  "/platform-initiatives"
     }
   }
@@ -72,6 +75,9 @@ class PlatformInitiativesControllerSpec
           inProgressLegend      = "Not completed"
         )
       )
+      when(mockTRConnector.allTeams(any[HeaderCarrier])) thenReturn {
+        Future.successful(Seq())
+      }
       when(mockPIConnector.allInitiatives(any[HeaderCarrier])) thenReturn {
         Future.successful(mockInitiatives)
       }
@@ -81,7 +87,6 @@ class PlatformInitiativesControllerSpec
         .apply(FakeRequest())
 
       status(result) shouldBe 200
-      println(contentAsString(result))
       contentAsString(result) should include("""<h3> Test initiative </h3>""")
       contentAsString(result) should include("""<div id="chart_div_Test initiative"></div>""")
       contentAsString(result) should include("""<p>Test initiative description</p>""")
@@ -94,7 +99,8 @@ class PlatformInitiativesControllerSpec
     implicit val hc     : HeaderCarrier                 = HeaderCarrier()
     val mcc             : MessagesControllerComponents  = app.injector.instanceOf[MessagesControllerComponents]
     val mockPIView      : PlatformInitiativesListPage   = app.injector.instanceOf[PlatformInitiativesListPage]
+    val mockTRConnector : TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     val mockPIConnector : PlatformInitiativesConnector  = mock[PlatformInitiativesConnector]
-    val controller = new PlatformInitiativesController(mcc, mockPIConnector, mockPIView)
+    val controller = new PlatformInitiativesController(mcc, mockPIConnector, mockPIView, mockTRConnector)
   }
 }
