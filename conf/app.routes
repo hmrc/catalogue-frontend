@@ -16,6 +16,7 @@ GET        /libraries                                   uk.gov.hmrc.cataloguefro
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /prototypes                                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allPrototypes
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
+GET        /dependency-repository                       uk.gov.hmrc.cataloguefrontend.CatalogueController.dependencyRepository(group, artefact, version)
 
 GET        /defaultbranch                               uk.gov.hmrc.cataloguefrontend.CatalogueController.allDefaultBranches(singleOwnership: Boolean ?= false, includeArchived: Boolean ?= false)
 
@@ -23,8 +24,8 @@ GET        /assets/*file                                controllers.Assets.versi
 GET        /                                            uk.gov.hmrc.cataloguefrontend.CatalogueController.index
 GET        /admin/metrics                               @com.kenshoo.play.metrics.MetricsController.metrics
 
-GET        /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.showSignInPage(targetUrl: Option[String] ?= None)
-POST       /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.submit
+GET        /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.signIn(targetUrl: Option[RedirectUrl] ?= None)
+GET        /post-sign-in                                @uk.gov.hmrc.cataloguefrontend.AuthController.postSignIn(targetUrl: Option[RedirectUrl] ?= None)
 GET        /sign-out                                    @uk.gov.hmrc.cataloguefrontend.AuthController.signOut
 
 GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchLanding

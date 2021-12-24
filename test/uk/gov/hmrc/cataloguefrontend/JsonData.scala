@@ -637,23 +637,44 @@ object JsonData {
 
   val libraryData: String =
     """{
-        "name": "lib",
-        "isPrivate": false,
-        "isArchived": false,
-        "description": "some description",
-        "createdAt": "2016-02-24T15:08:50Z",
-        "lastActive": "2016-11-08T10:55:55Z",
-        "repoType": "Library",
-        "owningTeams": [ "The True Owners" ],
-        "teamNames": ["teamA", "teamB"],
+        "name"         : "lib",
+        "isPrivate"    : false,
+        "isArchived"   : false,
+        "description"  : "some description",
+        "createdAt"    : "2016-02-24T15:08:50Z",
+        "lastActive"   : "2016-11-08T10:55:55Z",
+        "repoType"     : "Library",
+        "owningTeams"  : [ "The True Owners" ],
+        "teamNames"    : ["teamA", "teamB"],
         "defaultBranch": "main",
-        "githubUrl": {
-          "name": "github",
+        "githubUrl"    : {
+          "name"       : "github",
           "displayName": "github.com",
-          "url": "https://github.com/hmrc/lib"
+          "url"        : "https://github.com/hmrc/lib"
         }
       }
     """
+
+  def repositoryModules(name: String, dependenciesCompile: String) =
+    s"""{
+      "name"             : "$name",
+      "version"          : "v1",
+      "dependenciesBuild": [],
+      "modules"          : [{
+        "name"               : "m1",
+        "group"              : "g1",
+        "dependenciesCompile": $dependenciesCompile,
+        "dependenciesTest"   : []
+      }]
+    }"""
+
+  def dependencies =
+    """[{
+      "name"               : "dn",
+      "group"              : "dg",
+      "currentVersion"     : "dv",
+      "bobbyRuleViolations": []
+    }]"""
 
   val indicatorData: String =
     """[

@@ -14,68 +14,102 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
-@import views.partials.githubBadgeType
+@import partials.ModulesPartial
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import partials.DependenciesPartial
+@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependencies, Dependency, RepositoryModules}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+@import views.partials.githubBadgeType
 
-@this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
+@this(
+  viewMessages       : ViewMessages,
+  modulesPartial     : ModulesPartial
+)
 
 @(repository         : RepositoryDetails,
-  optDependencies    : Option[Dependencies],
+  repositoryModules  : Option[RepositoryModules],
   linkToLeakDetection: Option[String]
 )(implicit
-  messages: Messages,
-  request: Request[_]
+  messages           : Messages,
+  request            : Request[_]
 )
 
 @standard_layout(repository.name, "repositories") {
-    <header class="header-with-github-badge">
-        <div>
-            <h1>
-              Repository: @repository.name
-              <span>@githubBadgeType(repository)</span>
-              @if(repository.isArchived) { <span>Archived</span> }
-            </h1>
-        </div>
-
-        <script type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
-    </header>
-
-    @partials.leak_detection_banner(linkToLeakDetection)
-    @partials.bobby_violations_banner(environment = None, optDependencies.toSeq.flatMap(_.toDependencySeq), pending = false)
-    @partials.bobby_violations_banner(environment = None, optDependencies.toSeq.flatMap(_.toDependencySeq), pending = true )
-
-    <section class="section-wrapper">
-        <div class="row">
-            <div class="col-md-12">
-                @partials.details(repository)
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                @partials.repo_owning_teams(repository)
-            </div>
-
-            <div class="col-md-6">
-                @partials.code(repository)
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                @dependenciesPartial(optDependencies)
-            </div>
-        </div>
-    </section>
-
-
-    <div class="alert alert-success" role="alert" id="@repository.name">
-        <p>
-        @Html(viewMessages.informationalText)
-        </p>
+  <header class="header-with-github-badge">
+    <div>
+      <h1>
+        Repository: @repository.name
+        <span>@githubBadgeType(repository)</span>
+        @if(repository.isArchived) { <span>Archived</span> }
+      </h1>
     </div>
+  </header>
+
+  @partials.leak_detection_banner(linkToLeakDetection)
+  @defining(repositoryModules.fold(Seq.empty[Dependency])(_.allDependencies)){ dependencies =>
+      @partials.bobby_violations_banner(environment = None, dependencies, pending = false)
+      @partials.bobby_violations_banner(environment = None, dependencies, pending = true )
+  }
+
+  <section class="section-wrapper">
+    <div class="row">
+      <div class="col-md-12">
+        @partials.details(
+          repositoryDetails = repository,
+          version           = repositoryModules.flatMap(_.version)
+        )
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        @partials.repo_owning_teams(repository)
+      </div>
+
+      <div class="col-md-6">
+        @partials.code(repository)
+      </div>
+    </div>
+
+    @repositoryModules.map { repositoryModules =>
+      @modulesPartial(repositoryModules)
+    }
+  </section>
+
+  <div class="alert alert-success" role="alert" id="@repository.name">
+    <p>
+      @Html(viewMessages.informationalText)
+    </p>
+  </div>
+}
+
+
+@renderActiveBobbyRuleViolationBadge(moduleName: String, dependencies: Seq[Dependency]) = {
+  @if(dependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
+    <div id="bobby-violation-active-badge-@{moduleName}"
+         class="environment-badge bobby-violation-active-badge"
+         data-toggle="tooltip"
+         data-placement="top"
+         title="@messages("bobbyrules.active.badge")">
+    </div>
+  } else {
+    <div id="bobby-violation-active-badge-@{moduleName}"
+         class="environment-badge no-badge">
+    </div>
+  }
+}
+
+@renderPendingBobbyRuleViolationBadge(moduleName: String, dependencies: Seq[Dependency]) = {
+  @if(dependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
+    <div id="bobby-violation-pending-badge-@{moduleName}"
+         class="environment-badge bobby-violation-pending-badge"
+         data-toggle="tooltip"
+         data-placement="top"
+         title="@messages("bobbyrules.pending.badge")">
+    </div>
+  } else {
+    <div id="bobby-violation-pending-badge-@{moduleName}"
+         class="environment-badge no-badge">
+    </div>
+  }
 }
