@@ -14,22 +14,21 @@
  * limitations under the License.
  *@
 
-@import play.api.mvc.Call
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
-@import uk.gov.hmrc.cataloguefrontend.service.DefaultBranchesService
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import helper._
-@import scala.concurrent.Future
 
 @this(viewMessages: ViewMessages)
 
-@(  repositories:       Seq[RepositoryDisplayDetails],
-    teams:              Seq[String],
-    singleOwnership:    Boolean,
-    includeArchived:    Boolean,
-    form:               Form[_]
-)(implicit messages: Messages, request: Request[_])
+@(repositories   : Seq[RepositoryDisplayDetails],
+  teams          : Seq[String],
+  singleOwnership: Boolean,
+  includeArchived: Boolean,
+  form           : Form[_]
+)(implicit
+  messages       : Messages,
+  request        : Request[_]
+)
 
 @standard_layout(s"Default Branches", "defaultbranch") {
 <header>

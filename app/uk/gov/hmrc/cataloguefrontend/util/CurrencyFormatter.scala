@@ -1,4 +1,4 @@
-@*
+/*
  * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *@
+ */
 
-@import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.DisplayName
+package uk.gov.hmrc.cataloguefrontend.util
 
-@(ifLoggedIn: DisplayName => Html)(ifNotLoggedIn: => Html)(implicit request: Request[_])
+import java.util.Locale
 
-@{
-    request
-        .session
-        .get(DisplayName.SESSION_KEY_NAME)
-        .fold(ifNotLoggedIn)(rawDisplayName => ifLoggedIn(DisplayName(rawDisplayName)))
+object CurrencyFormatter {
+
+  private val currencyFormatterUsd =
+    java.text.NumberFormat.getCurrencyInstance(Locale.US)
+
+  def formatUsd(value: Double): String =
+    currencyFormatterUsd.format(value)
 }

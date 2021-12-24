@@ -21,9 +21,6 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
 class CatalogueConfig @Inject() (servicesConfig: ServicesConfig) {
-  val shutterGroup         = servicesConfig.getString("perms.shutter.group")
-  val shutterPlatformGroup = servicesConfig.getString("perms.shutter-platform.group")
-
   private def killswitchJenkinsUrl(env: String) =
     servicesConfig.getString(s"killswitch.jenkins-url.$env")
 

@@ -38,12 +38,13 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DependencyExplorerController @Inject() (
-  mcc: MessagesControllerComponents,
-  trConnector: TeamsAndRepositoriesConnector,
-  service: DependenciesService,
-  page: DependencyExplorerPage
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  mcc                : MessagesControllerComponents,
+  trConnector        : TeamsAndRepositoriesConnector,
+  dependenciesService: DependenciesService,
+  page               : DependencyExplorerPage
+)(implicit
+  val ec: ExecutionContext
+) extends FrontendController(mcc) {
 
   import DependencyExplorerController._
 
@@ -51,26 +52,26 @@ class DependencyExplorerController @Inject() (
     Action.async { implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
-        groupArtefacts <- service.getGroupArtefacts
+        groupArtefacts <- dependenciesService.getGroupArtefacts
       } yield Ok(
         page(
-          form.fill(
-            SearchForm(
-              team = "",
-              flag = SlugInfoFlag.Latest.asString,
-              scope = DependencyScope.Compile.asString,
-              group = "",
-              artefact = "",
-              versionRange = ""
-            )
-          ),
-          teams,
-          flags = SlugInfoFlag.values,
-          scopes = DependencyScope.values,
-          groupArtefacts,
-          versionRange = BobbyVersionRange(None, None, None, ""),
-          searchResults = None,
-          pieData = None
+          form           = form.fill(
+                             SearchForm(
+                               team         = "",
+                               flag         = SlugInfoFlag.Latest.asString,
+                               scope        = DependencyScope.Compile.asString,
+                               group        = "",
+                               artefact     = "",
+                               versionRange = ""
+                             )
+                           ),
+          teams          = teams,
+          flags          = SlugInfoFlag.values,
+          scopes         = DependencyScope.values,
+          groupArtefacts = groupArtefacts,
+          versionRange   = BobbyVersionRange(None, None, None, ""),
+          searchResults  = None,
+          pieData        = None
         )
       )
     }
@@ -80,10 +81,10 @@ class DependencyExplorerController @Inject() (
       // first preserve old API
       if (request.queryString.contains("versionOp"))
         (for {
-          version <- EitherT.fromOption[Future](
-                       request.queryString.get("version").flatMap(_.headOption).map(Version.apply),
-                       Redirect(appRoutes.DependencyExplorerController.landing)
-                     )
+          version      <- EitherT.fromOption[Future](
+                            request.queryString.get("version").flatMap(_.headOption).map(Version.apply),
+                            Redirect(appRoutes.DependencyExplorerController.landing)
+                          )
           versionRange <- EitherT.fromOption[Future](
                             request.queryString.get("versionOp").flatMap(_.headOption).flatMap { versionOp =>
                               PartialFunction.condOpt(versionOp) {
@@ -94,15 +95,15 @@ class DependencyExplorerController @Inject() (
                             },
                             Redirect(appRoutes.DependencyExplorerController.landing)
                           )
-          queryString = request.queryString - "version" - "versionOp" + ("versionRange" -> Seq(versionRange))
+          queryString  =  request.queryString - "version" - "versionOp" + ("versionRange" -> Seq(versionRange))
 
           // updating request with new querystring does not update uri!? - build uri manually...
-          queryStr = queryString
-                       .flatMap {
-                         case (k, vs) =>
-                           vs.map(v => encodeQueryParam(k) + "=" + encodeQueryParam(v))
-                       }
-                       .mkString("?", "&", "")
+          queryStr     =  queryString
+                            .flatMap {
+                              case (k, vs) =>
+                                vs.map(v => encodeQueryParam(k) + "=" + encodeQueryParam(v))
+                            }
+                            .mkString("?", "&", "")
         } yield Redirect(request.path + queryStr)).merge
       // else continue to new API
       else search2(request)
@@ -111,10 +112,10 @@ class DependencyExplorerController @Inject() (
   def search2 =
     Action.async { implicit request =>
       for {
-        teams <- trConnector.allTeams.map(_.map(_.name).sorted)
-        flags  = SlugInfoFlag.values
-        scopes = DependencyScope.values
-        groupArtefacts <- service.getGroupArtefacts
+        teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
+        flags          =  SlugInfoFlag.values
+        scopes         =  DependencyScope.values
+        groupArtefacts <- dependenciesService.getGroupArtefacts
         res <- {
           def pageWithError(msg: String) =
             page(
@@ -123,9 +124,9 @@ class DependencyExplorerController @Inject() (
               flags,
               scopes,
               groupArtefacts,
-              versionRange = BobbyVersionRange(None, None, None, ""),
+              versionRange  = BobbyVersionRange(None, None, None, ""),
               searchResults = None,
-              pieData = None
+              pieData       = None
             )
           form
             .bindFromRequest()
@@ -143,7 +144,7 @@ class DependencyExplorerController @Inject() (
                   flag  <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
                   scope <- EitherT.fromEither[Future](DependencyScope.parse(query.scope)).leftMap(msg => BadRequest(pageWithError(msg)))
                   results <- EitherT.right[Result] {
-                               service
+                               dependenciesService
                                  .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
                              }
                   pieData = if (results.nonEmpty)
@@ -162,7 +163,7 @@ class DependencyExplorerController @Inject() (
                     val source = Source.single(ByteString(csv, "UTF-8"))
                     Result(
                       header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
-                      body = HttpEntity.Streamed(source, None, Some("text/csv"))
+                      body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                     )
                   } else
                     Ok(
@@ -184,13 +185,13 @@ class DependencyExplorerController @Inject() (
 
   /** @param versionRange replaces versionOp and version, supporting Maven version range */
   case class SearchForm(
-    team: String,
-    flag: String,
-    scope: String,
-    group: String,
-    artefact: String,
+    team        : String,
+    flag        : String,
+    scope       : String,
+    group       : String,
+    artefact    : String,
     versionRange: String,
-    asCsv: Boolean = false
+    asCsv       : Boolean = false
   )
 
   def form() = {
@@ -211,19 +212,19 @@ class DependencyExplorerController @Inject() (
 
 object DependencyExplorerController {
   case class PieData(
-    title: String,
+    title  : String,
     results: Map[String, Int]
   )
 
   def toRows(seq: Seq[ServiceWithDependency]): Seq[Map[String, String]] =
     seq.flatMap { serviceWithDependency =>
       val m = Map(
-        "slugName"           -> serviceWithDependency.slugName,
-        "slugVersion"        -> serviceWithDependency.slugVersion.toString,
-        "team"               -> "",
-        "depGroup"           -> serviceWithDependency.depGroup,
-        "depArtefact"        -> serviceWithDependency.depArtefact,
-        "depVersion"         -> serviceWithDependency.depVersion.toString
+        "slugName"    -> serviceWithDependency.slugName,
+        "slugVersion" -> serviceWithDependency.slugVersion.toString,
+        "team"        -> "",
+        "depGroup"    -> serviceWithDependency.depGroup,
+        "depArtefact" -> serviceWithDependency.depArtefact,
+        "depVersion"  -> serviceWithDependency.depVersion.toString
       )
       if (serviceWithDependency.teams.isEmpty) Seq(m)
       else serviceWithDependency.teams.map(team => m + ("team" -> team.asString))

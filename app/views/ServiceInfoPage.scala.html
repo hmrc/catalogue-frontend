@@ -22,15 +22,20 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
-@import uk.gov.hmrc.cataloguefrontend.{EnvData, ServiceInfoView, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.CostEstimation
+@import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import views.partials.githubBadgeType
 
-@this(dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial, buildToolsPartial: BuildToolsPartial, viewMessages: ViewMessages)
+@this(
+  dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial,
+  buildToolsPartial               : BuildToolsPartial,
+  viewMessages                    : ViewMessages
+)
 
 @(
   serviceName                  : String,
   repositoryDetails            : RepositoryDetails,
-  optLegacyLatestDependencies  : Option[Dependencies],
+  costEstimation               : CostEstimation,
   repositoryCreationDate       : LocalDateTime,
   envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
@@ -59,11 +64,13 @@
     <section class="section-wrapper">
 
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-7">
                 @partials.details(repositoryDetails)
             </div>
+            <div class="col-md-5">
+                @partials.costEstimation(costEstimation)
+            </div>
         </div>
-
         @productionEnvironmentRoute.map { envRoute =>
             <div class="row">
                 <div class="col-md-12">
@@ -91,19 +98,6 @@
         </div>
 
         @dependenciesByEnvironmentPartial(serviceName, envDatas)
-
-        @if(optLegacyLatestDependencies.isDefined) {
-            <div class="row">
-                <div class="col-md-12">
-                @buildToolsPartial(
-                    ServiceInfoView.buildToolsFrom(
-                          optLegacyLatestDependencies = optLegacyLatestDependencies
-                        , librariesOfLatestSlug       = envDatas.get(SlugInfoFlag.Latest).toSeq.flatMap(_.dependencies)
-                    )
-                )
-                </div>
-            </div>
-        }
     </section>
 
     <div class="alert alert-success" role="alert" id="@repositoryDetails.name">

@@ -26,11 +26,9 @@ import play.api.Configuration
 import play.api.libs.ws._
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET => _, _}
-import uk.gov.hmrc.cataloguefrontend.actions.{ActionsSupport, UmpVerifiedRequest}
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementAuthConnector.User
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Username}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.service._
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -43,7 +41,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.Source
 
-class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with MockitoSugar with ActionsSupport {
+class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with MockitoSugar {
 
   private[this] lazy val WS                     = app.injector.instanceOf[WSClient]
   private[this] lazy val viewMessages           = app.injector.instanceOf[ViewMessages]
@@ -243,13 +241,6 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
     val teamsAndRepositoriesConnectorMock   = mock[TeamsAndRepositoriesConnector]
     val userManagementConnectorMock         = mock[UserManagementConnector]
     private val userManagementPortalConfig  = mock[UserManagementPortalConfig]
-    private val userManagementAuthConnector = mock[UserManagementAuthConnector]
-    private val controllerComponents        = stubMessagesControllerComponents()
-    private val catalogueErrorHandler       = mock[CatalogueErrorHandler]
-    private val verifySignInStatusPassThrough =
-      new VerifySignInStatusPassThrough(userManagementAuthConnector, controllerComponents)
-    private val umpAuthenticatedPassThrough =
-      new UmpAuthenticatedPassThrough(userManagementAuthConnector, controllerComponents, catalogueErrorHandler)
 
     when(userManagementPortalConfig.userManagementProfileBaseUrl)
       .thenReturn("http://things.things.com")
@@ -258,13 +249,12 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       userManagementConnector       = userManagementConnectorMock,
       teamsAndRepositoriesConnector = teamsAndRepositoriesConnectorMock,
       configService                 = mock[ConfigService],
+      costEstimationService         = mock[CostEstimationService],
       routeRulesService             = mock[RouteRulesService],
-      serviceDependencyConnector    = mock[ServiceDependenciesConnector],
+      serviceDependenciesConnector  = mock[ServiceDependenciesConnector],
       leakDetectionService          = mock[LeakDetectionService],
       shutterService                = mock[ShutterService],
       defaultBranchesService        = mock[DefaultBranchesService],
-      verifySignInStatus            = verifySignInStatusPassThrough,
-      umpAuthActionBuilder          = umpAuthenticatedPassThrough,
       userManagementPortalConfig    = userManagementPortalConfig,
       configuration                 = Configuration.empty,
       mcc                           = stubMessagesControllerComponents(),

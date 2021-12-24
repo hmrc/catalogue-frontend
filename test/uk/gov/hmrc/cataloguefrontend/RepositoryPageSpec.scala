@@ -18,80 +18,66 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import play.api.libs.ws._
+import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-class RepositoryPageSpec
-    extends UnitSpec
-    with BeforeAndAfter
-    with FakeApplicationBuilder
-    with BeforeAndAfterEach {
+class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
 
   case class RepositoryDetails(
     repositoryName: String,
     repositoryType: RepoType
   )
 
-  val repositoryDetails = Seq(
-    RepositoryDetails("Service", RepoType.Service),
-    RepositoryDetails("Library", RepoType.Library),
-    RepositoryDetails("Other", RepoType.Other)
-  )
-
   private[this] lazy val WS = app.injector.instanceOf[WSClient]
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
-  }
 
   "A repository page" should {
     "return a 404 when the teams-and-repositories microservice returns a 404" in {
-      serviceEndpoint(GET, "/api/repositories/serv", willRespondWith = (404, None))
+      val repoName = "other"
+      serviceEndpoint(GET, s"/api/repositories/$repoName"       , willRespondWith = (404, None))
+      serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
+      serviceEndpoint(GET, s"/api/module-dependencies/$repoName", willRespondWith = (404, None))
 
-      val response = WS.url(s"http://localhost:$port/repositories/serv").get.futureValue
+      val response = WS.url(s"http://localhost:$port/repositories/$repoName").get.futureValue
       response.status shouldBe 404
     }
 
-    "show the teams owning the repository with github links for a Service, Library and Other" in {
-      repositoryDetails.foreach { repositoryDetails =>
-        serviceEndpoint(
-          GET,
-          s"/api/repositories/${repositoryDetails.repositoryName}",
-          willRespondWith = (200, Some(repositoryData(repositoryDetails)))
-        )
+    "show the teams owning the repository with github links" in {
+      val repoName = "other"
+      val repositoryDetails = RepositoryDetails(repoName, RepoType.Other)
 
-        val response = WS.url(s"http://localhost:$port/repositories/${repositoryDetails.repositoryName}").get.futureValue
+      serviceEndpoint(GET, s"/api/repositories/$repoName"       , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
+      serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
+      serviceEndpoint(GET, s"/api/module-dependencies/$repoName", willRespondWith = (404, None))
 
-        response.status shouldBe 200
-        response.body   should include(s"links on this page are automatically generated")
-        response.body   should include(s"teamA")
-        response.body   should include(s"teamB")
-        response.body   should include(s"github.com")
-      }
+      val response = WS.url(s"http://localhost:$port/repositories/$repoName").get.futureValue
+
+      response.status shouldBe 200
+      response.body   should include(s"links on this page are automatically generated")
+      response.body   should include(s"teamA")
+      response.body   should include(s"teamB")
+      response.body   should include(s"github.com")
     }
 
-    "render dependencies with red, green, amber and grey colours" in {
-      serviceEndpoint(
-        GET,
-        "/api/repositories/service-name",
-        willRespondWith = (200, Some(repositoryData(RepositoryDetails("Other", RepoType.Other))))
-      )
+    "render dependencies" in {
+      val repoName = "other"
+      val repositoryDetails = RepositoryDetails(repoName, RepoType.Other)
 
-      serviceEndpoint(
-        GET,
-        "/api/service-dependencies/dependencies/service-name",
-        willRespondWith = (200, None)
-      )
+      serviceEndpoint(GET, s"/api/repositories/$repoName"       , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
+      serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
+      serviceEndpoint(GET, s"/api/module-dependencies/$repoName", willRespondWith = (200, Some(repositoryModules(
+                                                                                                repoName,
+                                                                                                dependenciesCompile = dependencies
+                                                                                              ))))
 
-      val response = WS.url(s"http://localhost:$port/repositories/service-name").get.futureValue
+      val response = WS.url(s"http://localhost:$port/repositories/$repoName").get.futureValue
+
       response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)
 
-      document.select("#platform-dependencies").size() should be > 0
+      document.select("#platform-dependencies-m1").size() shouldBe 1
     }
   }
 

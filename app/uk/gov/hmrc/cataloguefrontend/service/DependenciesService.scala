@@ -105,10 +105,10 @@ object DependenciesService {
           .parse(graph)
           .dependenciesWithImportPath
           .partition(_._2.length == 2) match {
-          case (direct, transitive) => (
-            direct.map(_._1).sortBy(d => (d.group, d.artifact)),
-            transitive.map(t => TransitiveServiceDependency(t._1, t._2.takeRight(2).head)).sortBy(d => (d.dependency.group, d.dependency.artifact))
-          )
+            case (direct, transitive) =>
+              ( direct.map(_._1).sortBy(d => (d.group, d.artifact)),
+                transitive.map(t => TransitiveServiceDependency(t._1, t._2.takeRight(2).head)).sortBy(d => (d.dependency.group, d.dependency.artifact))
+              )
         }
       )
 }
@@ -146,22 +146,32 @@ case class ServiceDependencies(
   val isEmpty: Boolean = dependencies.isEmpty
 
   val nonEmpty: Boolean = dependencies.nonEmpty
+
+  def dotFileForScope(scope: DependencyScope): Option[String] =
+    scope match {
+      case DependencyScope.Compile => dependencyDotCompile
+      case DependencyScope.Test    => dependencyDotTest
+      case DependencyScope.Build   => dependencyDotBuild
+    }
 }
 
 object ServiceDependencies {
   import play.api.libs.functional.syntax._
   import play.api.libs.json.__
 
-  implicit val jdkr = (
-        (__ \ "version").read[String]
-      ~ (__ \ "vendor" ).read[String]
-      ~ (__ \ "kind"   ).read[String]
-  )(ServiceJDKVersion)
+  private val serviceJDKVersionReads =
+    ( (__ \ "version").read[String]
+    ~ (__ \ "vendor" ).read[String]
+    ~ (__ \ "kind"   ).read[String]
+    )(ServiceJDKVersion)
 
-  implicit val dependencyReads: Reads[ServiceDependency] = Json.using[Json.WithDefaultValues].reads[ServiceDependency]
+  private val serviceDependencyReads: Reads[ServiceDependency] =
+    Json.using[Json.WithDefaultValues].reads[ServiceDependency]
 
-  implicit val serviceDependenciesReads: Reads[ServiceDependencies] = {
+  val reads: Reads[ServiceDependencies] = {
     implicit val vf   = Version.format
+    implicit val jdkr = serviceJDKVersionReads
+    implicit val sdr  = serviceDependencyReads
     implicit val envf = JsonCodecs.environmentFormat
     ( (__ \ "uri"                      ).read[String]
     ~ (__ \ "name"                     ).read[String]
@@ -176,5 +186,4 @@ object ServiceDependencies {
     ~ (__ \ "dependencyDot" \ "build"  ).readNullable[String].map(_.filter(_.nonEmpty))
     )(ServiceDependencies.apply _)
   }
-
 }

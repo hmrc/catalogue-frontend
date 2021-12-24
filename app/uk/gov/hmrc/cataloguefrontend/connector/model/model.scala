@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import play.api.libs.json.Format
 import play.api.libs.functional.syntax._
+import play.api.libs.json.{__, Format, Reads}
+
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
 case class Username(value: String) extends AnyVal
@@ -58,4 +59,48 @@ object TeamName {
       override def unbind(key: String, value: TeamName): String =
         s"$Name=${value.asString}"
     }
+}
+
+
+// TODO can we return scala versions too?
+case class RepositoryModules(
+  name             : String,
+  version          : Option[Version],
+  dependenciesBuild: Seq[Dependency],
+  modules          : Seq[RepositoryModule]
+) {
+  def allDependencies: Seq[Dependency] =
+    modules.foldLeft(dependenciesBuild)((acc, module) =>
+      acc ++ module.dependenciesCompile ++ module.dependenciesTest
+    )
+}
+
+object RepositoryModules {
+  val reads: Reads[RepositoryModules] = {
+    implicit val dw  = Dependency.reads
+    implicit val rmw = RepositoryModule.reads
+    ( (__ \ "name"             ).read[String]
+    ~ (__ \ "version"          ).readNullable[Version](Version.format)
+    ~ (__ \ "dependenciesBuild").read[Seq[Dependency]]
+    ~ (__ \ "modules"          ).read[Seq[RepositoryModule]]
+    )(RepositoryModules.apply _)
+  }
+}
+
+case class RepositoryModule(
+  name               : String,
+  group              : String,
+  dependenciesCompile: Seq[Dependency],
+  dependenciesTest   : Seq[Dependency]
+)
+
+object RepositoryModule {
+  val reads: Reads[RepositoryModule] = {
+    implicit val dw = Dependency.reads
+    ( (__ \ "name"               ).read[String]
+    ~ (__ \ "group"              ).read[String]
+    ~ (__ \ "dependenciesCompile").read[Seq[Dependency]]
+    ~ (__ \ "dependenciesTest"   ).read[Seq[Dependency]]
+    )(RepositoryModule.apply _)
+  }
 }

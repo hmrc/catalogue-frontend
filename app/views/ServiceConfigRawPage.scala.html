@@ -14,14 +14,21 @@
  * limitations under the License.
  *@
 
-@import partials.DependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{ConfigByEnvironment, ConfigEnvironment}
 @import scala.collection.immutable.ListMap
 
-@this(dependenciesPartial: DependenciesPartial, viewMessages: ViewMessages)
-@(serviceName: String, configByEnvironment: ConfigByEnvironment)(implicit messages: Messages, request: Request[_])
+@this(viewMessages: ViewMessages)
+
+@(
+  serviceName: String,
+  configByEnvironment: ConfigByEnvironment
+)(implicit
+  messages: Messages,
+  request: Request[_]
+)
+
 <html>
     <head>
         <title>Config - @serviceName</title>

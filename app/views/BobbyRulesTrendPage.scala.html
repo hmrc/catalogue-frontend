@@ -14,15 +14,10 @@
  * limitations under the License.
  *@
 
-@import java.time.LocalDate
 @import play.twirl.api.Html
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyVersion, BobbyVersionRange, GroupArtefacts, ServiceWithDependency}
+@import uk.gov.hmrc.cataloguefrontend.{BobbyRulesTrendController, ViewMessages, routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRule
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
-@import uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController
 @import helper._
 
 @this(viewMessages: ViewMessages)
@@ -123,8 +118,4 @@
             </script>
         }
     }
-}
-
-@selected(optVersion: Option[BobbyVersion]) = {
-    @optVersion.map(v => if (v.inclusive) "selected" else "").getOrElse("selected")
 }

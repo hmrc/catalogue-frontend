@@ -16,32 +16,36 @@
 
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.Indicator
 
-@import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController
-@import uk.gov.hmrc.cataloguefrontend.healthindicators.HistoricIndicatorAPI
-@import java.time.format.DateTimeFormatter
-@import java.time.ZoneId
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.{HistoricIndicatorAPI, HealthIndicatorsController}
 @import views.html.partials.HealthIndicatorsHistory
-@(indicator: Indicator, optHistory: Option[HistoricIndicatorAPI], optAverage: Option[Int]
-)(implicit messages: Messages, request: Request[_])
+
+@(
+  indicator : Indicator,
+  optHistory: Option[HistoricIndicatorAPI],
+  optAverage: Option[Int]
+)(implicit
+  messages  : Messages,
+  request   : Request[_]
+)
+
 @standard_layout("Service Health Indicators", "health-indicators"){
 
   <header>
-      <p id="repo-score-number"
-      class=@HealthIndicatorsController.getScoreColour(indicator.overallScore)>
+    <p id="repo-score-number" class=@HealthIndicatorsController.getScoreColour(indicator.overallScore)>
       @indicator.overallScore
-      </p>
+    </p>
     <h1>Service Health Indicators:  @indicator.repoName
         <a id="health-indicators-help" href="https://github.com/hmrc/health-indicators" title="What is this?">?</a>
     </h1>
   </header>
 
     <div id="history">
-    @optHistory.map(history => HealthIndicatorsHistory(history, optAverage))
+      @optHistory.map(history => HealthIndicatorsHistory(history, optAverage))
     </div>
 
   <div id="health-indicators-display">
     <h2>Score Breakdown:</h2>
-      <br />
+    <br />
     <table class="table table-striped" id="service-list">
         <thead>
             <th>Indicator</th>

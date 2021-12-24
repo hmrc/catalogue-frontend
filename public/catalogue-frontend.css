@@ -12109,11 +12109,11 @@ section span.other-teams-message {
 }
 
 .board__heading {
-    position: relative;
+  position: relative;
 }
 
-.board__heading h3 {
-    color: black;
+h3.board__heading.sub_board {
+  font-size: 1.0em;
 }
 
 .board__heading.environment {
@@ -12122,6 +12122,11 @@ section span.other-teams-message {
 
 .environment_board {
     height: 190px;
+}
+
+.sub_row {
+  padding-left: 25px;
+  padding-right: 25px;
 }
 
 .shuttered_board {
