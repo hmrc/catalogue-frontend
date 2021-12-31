@@ -47,7 +47,7 @@ class LeakDetectionConnectorSpec
   "repositoriesWithLeaks" should {
     "return repositories with leaks" in {
       stubFor(
-        get(urlEqualTo("/reports/repositories"))
+        get(urlEqualTo("/api/repository"))
           .willReturn(aResponse().withBody("""["repo1","repo2"]"""))
       )
 
@@ -57,20 +57,20 @@ class LeakDetectionConnectorSpec
       )
 
       verify(
-        getRequestedFor(urlEqualTo("/reports/repositories"))
+        getRequestedFor(urlEqualTo("/api/repository"))
           .withHeader("Accept", equalTo("application/json"))
       )
     }
 
     "return empty if leak detection service returns status different than 2xx" in {
       stubFor(
-        get(urlEqualTo("/reports/repositories"))
+        get(urlEqualTo("/api/repository"))
           .willReturn(aResponse().withStatus(502))
       )
 
       leakDetectionConnector.repositoriesWithLeaks.futureValue shouldBe Seq.empty
 
-      verify(getRequestedFor(urlEqualTo("/reports/repositories")))
+      verify(getRequestedFor(urlEqualTo("/api/repository")))
     }
   }
 }
