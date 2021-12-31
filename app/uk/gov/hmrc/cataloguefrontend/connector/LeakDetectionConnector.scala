@@ -40,7 +40,7 @@ class LeakDetectionConnector @Inject() (
     implicit val rwlr = RepositoryWithLeaks.reads
     http
       .GET[Seq[RepositoryWithLeaks]](
-          url"$url/reports/repositories",
+          url"$url/api/repository",
           headers = Seq("Accept" -> "application/json")
         )
       .recover {
