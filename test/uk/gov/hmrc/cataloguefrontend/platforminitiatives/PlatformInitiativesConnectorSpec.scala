@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ class PlatformInitiativesConnectorSpec
     "return correct JSON for Platform Initiatives for a specified team" in {
       stubFor(
         get(urlEqualTo(s"/platform-initiatives/initiatives/team"))
-          .willReturn(aResponse().withBodyFile("/platform-initiatives.json"))
+          .willReturn(aResponse().withBodyFile("platform-initiatives.json"))
       )
       val initiatives = connector.teamInitiatives("team").futureValue
       initiatives mustBe Seq(
