@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,21 +58,21 @@ object CostEstimationService {
       Json.reads[DeploymentConfig]
   }
 
-  final case class CostEstimation(totalInstances: Int) {
+  final case class CostEstimation(totalSlots: Int) {
 
-    lazy val yearlyCostUsd: Double =
-      totalInstances * 120
+    lazy val yearlyCostGbp: Double =
+      totalSlots * 650
   }
 
   object CostEstimation {
 
     def fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment: DeploymentConfigByEnvironment): CostEstimation = {
-      val totalInstances =
+      val totalSlots =
         deploymentConfigByEnvironment.values
-          .map(_.instances)
+          .map(c => c.slots * c.instances)
           .sum
 
-      CostEstimation(totalInstances)
+      CostEstimation(totalSlots)
     }
   }
 }

@@ -1,5 +1,5 @@
 @*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,16 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.CostEstimation
-@import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter.formatUsd
+@import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter.formatGbp
 
 @(costEstimation: CostEstimation)
 <div id="cost-estimation">
     <div class="board">
         <h3 class="board__heading">Estimated Cost</h3>
         <div class="board__body">
-            <p><b>@formatUsd(costEstimation.yearlyCostUsd)</b> per year.</p>
-            <p>This estimate is based on a usage of @costEstimation.totalInstances instances across all environments.</p>
+            <p><b>@formatGbp(costEstimation.yearlyCostGbp)</b> per year.</p>
+            <p>This is based on a usage of @costEstimation.totalSlots slots across all environments, where a slot year
+               is estimated to cost £650.00.</p>
             <p>If your team is responsible for this service, and its cost exceeds your expectations, then you should aim
                to scale it down.</p>
         </div>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import java.util.Locale
 
 object CurrencyFormatter {
 
-  private val currencyFormatterUsd =
-    java.text.NumberFormat.getCurrencyInstance(Locale.US)
-
   def formatUsd(value: Double): String =
-    currencyFormatterUsd.format(value)
+    java.text.NumberFormat.getCurrencyInstance(Locale.US).format(value)
+
+  def formatGbp(value: Double): String =
+    java.text.NumberFormat.getCurrencyInstance(Locale.UK).format(value)
 }

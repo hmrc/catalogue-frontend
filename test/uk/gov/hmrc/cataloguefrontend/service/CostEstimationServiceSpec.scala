@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,11 +121,11 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
         )
 
       val actualEstimatedCost =
-        CostEstimation.fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment).yearlyCostUsd
+        CostEstimation.fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment).yearlyCostGbp
 
-      // Yearly cost is estimated as a service's total instances across all environments multiplied by $120
-      // 2 + 1 + 3 * 120.0
-      val expectedEstimatedCost = 720.0
+      // Yearly cost is estimated as a service's total slots across all environments multiplied by £650
+      // (5 * 2 + 3 * 1 + 10 * 3) * 650
+      val expectedEstimatedCost = 27950.0
 
       actualEstimatedCost shouldBe expectedEstimatedCost
     }
