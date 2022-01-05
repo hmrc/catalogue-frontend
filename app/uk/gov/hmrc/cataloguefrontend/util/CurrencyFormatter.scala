@@ -21,8 +21,14 @@ import java.util.Locale
 object CurrencyFormatter {
 
   def formatUsd(value: Double): String =
-    java.text.NumberFormat.getCurrencyInstance(Locale.US).format(value)
+    currencyFormatterUsd.format(value)
 
   def formatGbp(value: Double): String =
-    java.text.NumberFormat.getCurrencyInstance(Locale.UK).format(value)
+    currencyFormatterGbp.format(value)
+
+  private lazy val currencyFormatterUsd =
+    java.text.NumberFormat.getCurrencyInstance(Locale.US)
+
+  private lazy val currencyFormatterGbp =
+    java.text.NumberFormat.getCurrencyInstance(Locale.UK)
 }
