@@ -24,6 +24,7 @@
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.CostEstimation
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import views.partials.githubBadgeType
 
 @this(
@@ -64,12 +65,18 @@
     <section class="section-wrapper">
 
         <div class="row">
-            <div class="col-md-6">
-                @partials.details(repositoryDetails)
-            </div>
-            <div class="col-md-6">
-                @partials.costEstimation(costEstimation)
-            </div>
+            @if(CatalogueFrontendSwitches.costEstimates.isEnabled) {
+              <div class="col-md-6">
+                  @partials.details(repositoryDetails)
+              </div>
+              <div class="col-md-6">
+                  @partials.costEstimation(costEstimation)
+              </div>
+            } else {
+              <div class="col-md-12">
+                  @partials.details(repositoryDetails)
+              </div>
+            }
         </div>
         @productionEnvironmentRoute.map { envRoute =>
             <div class="row">
