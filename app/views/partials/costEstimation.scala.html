@@ -23,8 +23,12 @@
         <h3 class="board__heading">Estimated Cost</h3>
         <div class="board__body">
             <p><b>@formatGbp(costEstimation.yearlyCostGbp)</b> per year.</p>
-            <p>This is based on a usage of @costEstimation.totalSlots slots across all environments, where each slot is
-               estimated to cost £650.00 per year.</p>
+            <p>This is based on a usage of @costEstimation.totalSlots slots across all environments, where
+               <em data-toggle="tooltip"
+                     title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of £5.4M by the
+                            total number of slots used by all services across all environments">
+                   each slot is estimated to cost £650.00 per year
+               </em>.</p>
         </div>
     </div>
 </div>
