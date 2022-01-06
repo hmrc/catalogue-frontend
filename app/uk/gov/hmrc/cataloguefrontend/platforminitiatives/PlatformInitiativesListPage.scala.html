@@ -1,5 +1,5 @@
 @*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{DisplayType, PlatformInitiative, routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import play.api.mvc._
 @import helper._
@@ -26,7 +27,7 @@
 @(initiatives   : Seq[PlatformInitiative]   ,
     display     : DisplayType               ,
     team        : String                    ,
-    teams       : Seq[String]               ,
+    teams       : Seq[Team]                 ,
     form        : Form[_]
 )(implicit
     messages    : Messages                  ,
@@ -58,16 +59,20 @@
             <input class="search form-control" id="search" type="text">
         </div>
         <div class="right padding-reset-right" style="line-height:2.2em;">
-                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(team, DisplayType.Chart)">Pie chart</a> |
-                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(team, DisplayType.Progress)">Progress bar</a>
+                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(DisplayType.Chart)">Pie chart</a> |
+                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(DisplayType.Progress)">Progress bar</a>
 
             <div style="float:right; margin-top:-1em;">
-            @select(field      = form("team")           ,
-                    options    = teams.map(t => t -> t) ,
-                    '_default -> "All"                  ,
-                    '_label   -> None                   ,
-                    '_value   -> form("team").value     ,
-                    '_id      -> "teamName"             ,
+            @select(field      = form("team")                                                   ,
+                    options    = teams
+                                    .map(_.name.asString)
+                                    .map(t => t -> t)
+                                    .distinct
+                                    .sorted                                                     ,
+                    '_default -> "All"                                                          ,
+                    '_label   -> None                                                           ,
+                    '_value   -> form("team").value                                             ,
+                    '_id      -> "teamName"                                                     ,
                     'onchange -> "this.form.submit();"
                     )
             </div>

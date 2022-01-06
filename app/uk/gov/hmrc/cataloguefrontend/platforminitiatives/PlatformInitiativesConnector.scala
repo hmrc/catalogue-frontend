@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,13 +31,15 @@ class PlatformInitiativesConnector @Inject()(
   private val platformInitiativesBaseUrl: String =
     servicesConfig.baseUrl("platform-initiatives")
 
-  def allInitiatives(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
+  def getInitiatives(team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
     implicit val formatPI: OFormat[PlatformInitiative] = PlatformInitiative.format
-    httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/initiatives")
-  }
-
-  def teamInitiatives(team: String)(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
-    implicit val formatPI: OFormat[PlatformInitiative] = PlatformInitiative.format
-    httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/initiatives/$team")
+    team match {
+      case None => {
+        httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/initiatives")
+      }
+      case _ => {
+        httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/teams/$team/initiatives")
+      }
+    }
   }
 }

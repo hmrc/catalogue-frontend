@@ -50,13 +50,13 @@ class PlatformInitiativesConnectorSpec
 
   private val connector = app.injector.instanceOf[PlatformInitiativesConnector]
 
-  "PlatformInitiativesConnector.allInitiatives" should {
-    "return correct JSON for Platform Initiatives" in {
+  "PlatformInitiativesConnector.getInitiatives" should {
+    "return correct JSON for all Platform Initiatives when no team name is passed in" in {
       stubFor(
         get(urlEqualTo("/platform-initiatives/initiatives"))
           .willReturn(aResponse().withBodyFile("platform-initiatives.json"))
       )
-      val initiatives = connector.allInitiatives.futureValue
+      val initiatives = connector.getInitiatives(None).futureValue
       initiatives mustBe Seq(
         PlatformInitiative(
           initiativeName        = "Initiative-1",
@@ -75,13 +75,13 @@ class PlatformInitiativesConnectorSpec
     }
   }
 
-  "PlatformInitiativesConnector.teamInitiatives" should {
+  "PlatformInitiativesConnector.getInitiatives" should {
     "return correct JSON for Platform Initiatives for a specified team" in {
       stubFor(
-        get(urlEqualTo(s"/platform-initiatives/initiatives/team"))
+        get(urlEqualTo(s"/platform-initiatives/teams/team/initiatives"))
           .willReturn(aResponse().withBodyFile("platform-initiatives.json"))
       )
-      val initiatives = connector.teamInitiatives("team").futureValue
+      val initiatives = connector.getInitiatives(Some("team")).futureValue
       initiatives mustBe Seq(
         PlatformInitiative(
           initiativeName        = "Initiative-1",

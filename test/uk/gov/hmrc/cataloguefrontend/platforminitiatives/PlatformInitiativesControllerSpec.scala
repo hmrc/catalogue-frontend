@@ -50,7 +50,7 @@ class PlatformInitiativesControllerSpec
 
   "Platform Initiatives controller" should {
     "have the correct url set up for the initiatives list" in {
-      uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives("")
+      uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()
         .url shouldBe  "/platform-initiatives"
     }
   }
@@ -78,7 +78,7 @@ class PlatformInitiativesControllerSpec
       when(mockTRConnector.allTeams(any[HeaderCarrier])) thenReturn {
         Future.successful(Seq())
       }
-      when(mockPIConnector.allInitiatives(any[HeaderCarrier])) thenReturn {
+      when(mockPIConnector.getInitiatives(any[Option[String]])(any[HeaderCarrier])) thenReturn {
         Future.successful(mockInitiatives)
       }
 
