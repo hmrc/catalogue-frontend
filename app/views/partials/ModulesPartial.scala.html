@@ -38,7 +38,13 @@
     @for((module, i) <- repositoryModules.modules.zipWithIndex) {
       <div class="board">
        <div class="board__heading">
-          <h4 class="environment-name" id="@module.name">@module.name</h4>
+          <h4 class="environment-name" id="@module.name" style="display: inline">@module.name</h4>
+          @if(module.crossScalaVersions.nonEmpty) {
+            <span style="display:flex; float: right; color: #6f777b;">
+              <span style="font-weight:700">Scala Versions</span>: @module.crossScalaVersions.map(_.toString).mkString(", ")
+            </span>
+          }
+
        </div>
         <div class="board__body">
           @if((module.dependenciesCompile ++ module.dependenciesTest).isEmpty) {

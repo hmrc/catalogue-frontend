@@ -664,7 +664,8 @@ object JsonData {
         "name"               : "m1",
         "group"              : "g1",
         "dependenciesCompile": $dependenciesCompile,
-        "dependenciesTest"   : []
+        "dependenciesTest"   : [],
+        "crossScalaVersions" : []
       }]
     }"""
 
