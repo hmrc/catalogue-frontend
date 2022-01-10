@@ -55,10 +55,10 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
         new CostEstimationService(configConnector)
 
       val costEstimate =
-        costEstimationService.estimateServiceCost("some-service", stubs.keySet.toSeq)
+        costEstimationService.estimateServiceCost("some-service", stubs.keySet.toSeq, costEstimateConfig)
 
       val expectedCostEstimation =
-        ServiceCostEstimate.fromDeploymentConfigByEnvironment(stubs)
+        ServiceCostEstimate.fromDeploymentConfigByEnvironment(stubs, costEstimateConfig)
 
       costEstimate.futureValue shouldBe expectedCostEstimation
     }
@@ -81,10 +81,11 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
         new CostEstimationService(configConnector)
 
       val costEstimate =
-        costEstimationService.estimateServiceCost("some-service", (stubs.keySet ++ missingEnvironments).toSeq)
+        costEstimationService
+          .estimateServiceCost("some-service", (stubs.keySet ++ missingEnvironments).toSeq, costEstimateConfig)
 
       val expectedCostEstimate =
-        ServiceCostEstimate.fromDeploymentConfigByEnvironment(stubs)
+        ServiceCostEstimate.fromDeploymentConfigByEnvironment(stubs, costEstimateConfig)
 
       costEstimate.futureValue shouldBe expectedCostEstimate
     }
@@ -105,7 +106,7 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
 
       val costEstimateSummary =
         costEstimationService
-          .estimateServiceCost("some-service", missingEnvironments.toSeq)
+          .estimateServiceCost("some-service", missingEnvironments.toSeq, costEstimateConfig)
           .map(_.summary)
 
       val expectedCostEstimateSummary =
@@ -124,7 +125,7 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
 
       val actualEstimatedCost =
         ServiceCostEstimate
-          .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment)
+          .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment, costEstimateConfig)
           .summary
           .totalYearlyCostGbp
 
@@ -157,4 +158,7 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
 
     configConnector
   }
+
+  private lazy val costEstimateConfig =
+    ServiceCostEstimate.Config(650.00, "£5.4M")
 }
