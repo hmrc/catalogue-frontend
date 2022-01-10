@@ -50,35 +50,39 @@ class PlatformInitiativesConnectorSpec
 
   private val connector = app.injector.instanceOf[PlatformInitiativesConnector]
 
+  val result = Seq(PlatformInitiative(
+    initiativeName        = "Initiative-1",
+    initiativeDescription = "Test description",
+    currentProgress       = 10,
+    targetProgress        = 100,
+    completedLegend       = "Updated",
+    inProgressLegend      = "Not Updated"),
+  PlatformInitiative(
+    initiativeName        = "Initiative-2",
+    initiativeDescription = "Test description",
+    currentProgress       = 33,
+    targetProgress        = 40,
+    completedLegend       = "Completed",
+    inProgressLegend      = "Not Completed"))
+
+
   "PlatformInitiativesConnector.getInitiatives" should {
-    "return correct JSON for all Platform Initiatives" in {
+    "return correct JSON for all Platform Initiatives when no team name is passed in" in {
       stubFor(
         get(urlEqualTo("/platform-initiatives/initiatives"))
           .willReturn(aResponse().withBodyFile("platform-initiatives.json"))
       )
+      val initiatives = connector.getInitiatives(None).futureValue
+      initiatives mustBe result
+    }
+
+   "return correct JSON for Platform Initiatives for a specified team" in {
       stubFor(
-        get(urlEqualTo("/platform-initiatives/teams/team/initiatives"))
+        get(urlEqualTo(s"/platform-initiatives/teams/team/initiatives"))
           .willReturn(aResponse().withBodyFile("platform-initiatives.json"))
       )
-      val initiatives     = connector.getInitiatives(None).futureValue
-      val teamInitiatives = connector.getInitiatives(Some("team")).futureValue
-      val result = Seq(
-        PlatformInitiative(
-          initiativeName        = "Initiative-1",
-          initiativeDescription = "Test description",
-          currentProgress       = 10,
-          targetProgress        = 100,
-          completedLegend       = "Updated",
-          inProgressLegend      = "Not Updated"),
-        PlatformInitiative(
-          initiativeName        = "Initiative-2",
-          initiativeDescription = "Test description",
-          currentProgress       = 33,
-          targetProgress        = 40,
-          completedLegend       = "Completed",
-          inProgressLegend      = "Not Completed"))
+      val initiatives = connector.getInitiatives(Some("team")).futureValue
       initiatives mustBe result
-      teamInitiatives mustBe result
     }
   }
 }
