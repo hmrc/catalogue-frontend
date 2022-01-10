@@ -22,7 +22,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
-@import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.CostEstimation
+@import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import views.partials.githubBadgeType
@@ -36,7 +36,7 @@
 @(
   serviceName                  : String,
   repositoryDetails            : RepositoryDetails,
-  costEstimation               : CostEstimation,
+  costEstimation               : ServiceCostEstimate,
   repositoryCreationDate       : LocalDateTime,
   envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
