@@ -29,6 +29,27 @@
                             total number of slots used by all services across all environments">
                    each slot is estimated to cost £650.00 per year
                </em>.</p>
+            <div id="chart" />
         </div>
     </div>
 </div>
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+      google.charts.load("current", {packages:["corechart"]});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Environment',   'Estimated Cost'],
+          @for(e <- serviceCostEstimate.forEnvironments) {
+            ['@e.environment.asString', { v: @e.yearlyCostGbp, f: "@formatGbp(e.yearlyCostGbp) (slots = @e.slots)" } ],
+          }
+        ]);
+
+        var options = {};
+
+        var chart = new google.visualization.PieChart(document.getElementById('chart'));
+        chart.draw(data, options);
+      }
+</script>
