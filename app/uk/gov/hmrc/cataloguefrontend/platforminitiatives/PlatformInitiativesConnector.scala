@@ -31,15 +31,14 @@ class PlatformInitiativesConnector @Inject()(
   private val platformInitiativesBaseUrl: String =
     servicesConfig.baseUrl("platform-initiatives")
 
-  def getInitiatives(team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
-    implicit val formatPI: OFormat[PlatformInitiative] = PlatformInitiative.format
+  def getInitiatives(team: Option[String])(
+    implicit hc: HeaderCarrier,
+    formatPI: OFormat[PlatformInitiative] = PlatformInitiative.format
+  ): Future[Seq[PlatformInitiative]] =
     team match {
-      case None => {
+      case None =>
         httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/initiatives")
-      }
-      case _ => {
+      case Some(team) =>
         httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/teams/$team/initiatives")
-      }
     }
-  }
 }

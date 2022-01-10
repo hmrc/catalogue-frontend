@@ -22,6 +22,7 @@ import org.scalatest.OptionValues
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.OFormat
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
@@ -78,7 +79,7 @@ class PlatformInitiativesControllerSpec
       when(mockTRConnector.allTeams(any[HeaderCarrier])) thenReturn {
         Future.successful(Seq())
       }
-      when(mockPIConnector.getInitiatives(any[Option[String]])(any[HeaderCarrier])) thenReturn {
+      when(mockPIConnector.getInitiatives(any[Option[String]])(any[HeaderCarrier], any[OFormat[PlatformInitiative]])) thenReturn {
         Future.successful(mockInitiatives)
       }
 
