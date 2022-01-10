@@ -25,13 +25,15 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class CostEstimationService @Inject() (configConnector: ConfigConnector) {
 
   def estimateServiceCost(
     service: String,
-    environments: Seq[Environment]
+    environments: Seq[Environment],
+    serviceCostEstimateConfig: ServiceCostEstimate.Config
   )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[ServiceCostEstimate] =
     Future
       .traverse(environments)(environment =>
@@ -41,7 +43,7 @@ class CostEstimationService @Inject() (configConnector: ConfigConnector) {
       )
       .map(deploymentConfigByEnvironment =>
         ServiceCostEstimate
-          .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment.toMap)
+          .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment.toMap, serviceCostEstimateConfig)
       )
 }
 
@@ -68,14 +70,14 @@ object CostEstimationService {
 
   object ServiceCostEstimate {
 
-    val slotCostPerYear: Double = 650
-
-    def fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment: DeploymentConfigByEnvironment): ServiceCostEstimate =
+    def fromDeploymentConfigByEnvironment(
+      deploymentConfigByEnvironment: DeploymentConfigByEnvironment,
+      serviceCostEstimateConfig: ServiceCostEstimate.Config): ServiceCostEstimate =
       ServiceCostEstimate {
         deploymentConfigByEnvironment
           .collect { case (env, config) if config.slots > 0 && config.instances > 0 =>
             val yearlyCostGbp =
-              config.slots * config.instances * slotCostPerYear
+              config.slots * config.instances * serviceCostEstimateConfig.slotCostPerYear
             ForEnvironment(env, config.slots, yearlyCostGbp)
           }
           .toList
@@ -97,6 +99,27 @@ object CostEstimationService {
 
       val zero: Summary =
         Summary(totalSlots = 0, totalYearlyCostGbp = 0)
+    }
+
+    final case class Config(slotCostPerYear: Double, totalAwsCostPerYear: String)
+
+    object Config {
+
+      val defaultSlotCostPerYear: Double = 650
+      val defaultTotalAwsCostPerYear: String = "£5.4M"
+
+      def get(): Config = {
+        val slotCostPerYear =
+          sys.props.get("cost-estimates.slot-cost-per-year")
+            .flatMap(scpy => Try(scpy.toDouble).toOption)
+            .getOrElse(defaultSlotCostPerYear)
+
+        val totalAwsCostPerYear: String =
+          sys.props.get("cost-estimates.total-aws-cost-per-year")
+            .getOrElse(defaultTotalAwsCostPerYear)
+
+        Config(slotCostPerYear, totalAwsCostPerYear)
+      }
     }
   }
 }

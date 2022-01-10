@@ -28,6 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimationService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
@@ -314,6 +315,9 @@ class CatalogueController @Inject() (
     val costEstimationEnvironments =
       repositoryDetails.environments.getOrElse(Seq.empty).map(_.environment)
 
+    val serviceCostEstimateConfig =
+      ServiceCostEstimate.Config.get()
+
     (
       teamsAndRepositoriesConnector.lookupLink(repositoryName),
       futEnvDatas,
@@ -322,7 +326,7 @@ class CatalogueController @Inject() (
       routeRulesService.serviceUrl(serviceName),
       routeRulesService.serviceRoutes(serviceName),
       serviceDependenciesConnector.getSlugInfo(repositoryName),
-      costEstimationService.estimateServiceCost(repositoryName, costEstimationEnvironments)
+      costEstimationService.estimateServiceCost(repositoryName, costEstimationEnvironments, serviceCostEstimateConfig)
     ).mapN { (jenkinsLink,
               envDatas,
               librariesOfLatestSlug,
@@ -330,7 +334,7 @@ class CatalogueController @Inject() (
               serviceUrl,
               serviceRoutes,
               optLatestServiceInfo,
-              costEstimation
+              costEstimate
              ) =>
       val optLatestData: Option[(SlugInfoFlag, EnvData)] =
         optLatestServiceInfo.map { latestServiceInfo =>
@@ -347,7 +351,8 @@ class CatalogueController @Inject() (
         serviceInfoPage(
           serviceName                 = serviceName,
           repositoryDetails           = repositoryDetails.copy(jenkinsURL = jenkinsLink),
-          costEstimation              = costEstimation,
+          costEstimate                = costEstimate,
+          costEstimateConfig          = serviceCostEstimateConfig,
           repositoryCreationDate      = repositoryDetails.createdAt,
           envDatas                    = optLatestData.fold(envDatas)(envDatas + _),
           linkToLeakDetection         = urlIfLeaksFound,

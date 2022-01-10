@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
 @import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter.formatGbp
 
-@(serviceCostEstimate: ServiceCostEstimate)
+@(serviceCostEstimate: ServiceCostEstimate, serviceCostEstimateConfig: ServiceCostEstimate.Config)
 <div id="cost-estimation">
     <div class="board">
         <h3 class="board__heading">Estimated Cost</h3>
@@ -25,9 +25,10 @@
             <p><b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year.</p>
             <p>This is based on a usage of @serviceCostEstimate.summary.totalSlots slots across all environments, where
                <em data-toggle="tooltip"
-                     title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of £5.4M by the
-                            total number of slots used by all services across all environments">
-                   each slot is estimated to cost £650.00 per year
+                     title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
+                            @serviceCostEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
+                            services across all environments">
+                   each slot is estimated to cost @formatGbp(serviceCostEstimateConfig.slotCostPerYear) per year
                </em>.</p>
             <div id="chart" />
         </div>

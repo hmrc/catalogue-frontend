@@ -36,7 +36,8 @@
 @(
   serviceName                  : String,
   repositoryDetails            : RepositoryDetails,
-  costEstimation               : ServiceCostEstimate,
+  costEstimate                 : ServiceCostEstimate,
+  costEstimateConfig           : ServiceCostEstimate.Config,
   repositoryCreationDate       : LocalDateTime,
   envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
@@ -70,7 +71,7 @@
                   @partials.details(repositoryDetails)
               </div>
               <div class="col-md-6">
-                  @partials.costEstimation(costEstimation)
+                  @partials.costEstimation(costEstimate, costEstimateConfig)
               </div>
             } else {
               <div class="col-md-12">
