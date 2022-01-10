@@ -19,51 +19,59 @@ package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PlatformInitiativesController @Inject() (
-  mcc                           : MessagesControllerComponents,
-  platformInitiativesConnector  : PlatformInitiativesConnector,
-  platformInitiativesListPage   : PlatformInitiativesListPage
+class PlatformInitiativesController @Inject()
+( mcc                           : MessagesControllerComponents
+, platformInitiativesConnector  : PlatformInitiativesConnector
+, platformInitiativesListPage   : PlatformInitiativesListPage
+, teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
 )(implicit val ec: ExecutionContext)
   extends FrontendController(mcc) {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def platformInitiatives(display: DisplayType): Action[AnyContent] =
-    Action.async { implicit request =>
-      platformInitiativesConnector.allInitiatives.map { initiative =>
-        PlatformInitiativesFilter.form
-          .bindFromRequest()
-          .fold(
-            formWithErrors => Ok(platformInitiativesListPage(
-              initiatives       = Seq(),
-              display           = display,
-              formWithErrors
-            )),
-            _ =>
-              Ok(platformInitiativesListPage
-              ( initiatives     = initiative,
-                display         = display,
+  def platformInitiatives(display: DisplayType): Action[AnyContent] = Action.async { implicit request =>
+    PlatformInitiativesFilter.form
+      .bindFromRequest()
+      .fold(
+        formWithErrors => Future.successful(Ok(platformInitiativesListPage
+        (initiatives  = Seq()
+        , display     = display
+        ,  team       = ""
+        ,  teams      = Seq()
+        ,  formWithErrors
+        ))),
+        query =>
+            for {
+                teams <- teamsAndRepositoriesConnector.allTeams
+                initiatives <- platformInitiativesConnector.getInitiatives(query.team)
+              } yield Ok(platformInitiativesListPage(
+                initiatives   = initiatives,
+                display       = display,
+                team          = query.team.getOrElse(""),
+                teams         = teams,
                 PlatformInitiativesFilter.form.bindFromRequest()
-              ))
-          )
-      }
-    }
+              )))
+            }
   }
 
-case class PlatformInitiativesFilter(initiativeName: Option[String] = None) {
-  def isEmpty: Boolean = initiativeName.isEmpty
-}
+  case class PlatformInitiativesFilter(initiativeName: Option[String] = None, team: Option[String]) {
+    def isEmpty: Boolean = initiativeName.isEmpty && team.isEmpty
+  }
 
-object PlatformInitiativesFilter {
-  lazy val form: Form[PlatformInitiativesFilter] = Form(
-    mapping("initiativeName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity))
-    (PlatformInitiativesFilter.apply)(PlatformInitiativesFilter.unapply)
-  )
-}
+  object PlatformInitiativesFilter {
+    lazy val form: Form[PlatformInitiativesFilter] = Form(
+      mapping(
+        "initiativeName"  -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "team"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+        )
+      (PlatformInitiativesFilter.apply)(PlatformInitiativesFilter.unapply)
+    )
+  }
