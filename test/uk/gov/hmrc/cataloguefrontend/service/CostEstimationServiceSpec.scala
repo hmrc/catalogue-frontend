@@ -23,6 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate.Summary
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentConfigByEnvironment, ServiceCostEstimate}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -124,17 +125,19 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
           (Environment.Production, DeploymentConfig(10, 3))
         )
 
-      val actualEstimatedCost =
+      val actualSummary =
         ServiceCostEstimate
           .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment, costEstimateConfig)
           .summary
-          .totalYearlyCostGbp
 
       // Yearly cost is estimated as a service's total slots across all environments multiplied by £650
       // (5 * 2 + 3 * 1 + 10 * 3) * 650
       val expectedEstimatedCost = 27950.0
 
-      actualEstimatedCost shouldBe expectedEstimatedCost
+      val expectedTotalSlots =
+        5 * 2 + 3 * 1 + 10 * 3
+
+      actualSummary shouldBe Summary(expectedTotalSlots, expectedEstimatedCost)
     }
   }
 
