@@ -64,8 +64,7 @@ object CostEstimationService {
   final case class ServiceCostEstimate(forEnvironments: List[ServiceCostEstimate.ForEnvironment]) {
 
     lazy val summary: ServiceCostEstimate.Summary =
-      forEnvironments
-        .foldLeft(Summary.zero)((summary, forEnv) => summary + Summary(forEnv.slots, forEnv.yearlyCostGbp))
+      forEnvironments.map(_.summary).fold(Summary.zero)(_ + _)
   }
 
   object ServiceCostEstimate {
@@ -88,7 +87,11 @@ object CostEstimationService {
       environment: Environment,
       slots: Int,
       yearlyCostGbp: Double
-    )
+    ) {
+
+      def summary: Summary =
+        Summary(slots, yearlyCostGbp)
+    }
 
     final case class Summary(totalSlots: Int, totalYearlyCostGbp: Double) {
       def +(other: Summary): Summary =
