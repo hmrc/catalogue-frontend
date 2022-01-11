@@ -20,9 +20,10 @@ import org.mockito.scalatest.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{CostEstimation, DeploymentConfig, DeploymentConfigByEnvironment}
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentConfigByEnvironment, ServiceCostEstimate}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -54,13 +55,13 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
       val costEstimationService =
         new CostEstimationService(configConnector)
 
-      val costEstimation =
-        costEstimationService.estimateServiceCost("some-service", stubs.keySet.toSeq)
+      val costEstimate =
+        costEstimationService.estimateServiceCost("some-service", stubs.keySet.toSeq, costEstimateConfig)
 
       val expectedCostEstimation =
-        CostEstimation.fromDeploymentConfigByEnvironment(stubs)
+        ServiceCostEstimate.fromDeploymentConfigByEnvironment(stubs, costEstimateConfig)
 
-      costEstimation.futureValue shouldBe expectedCostEstimation
+      costEstimate.futureValue shouldBe expectedCostEstimation
     }
 
     "disregard services which are not deployed in requested environments" in {
@@ -80,13 +81,14 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
       val costEstimationService =
         new CostEstimationService(configConnector)
 
-      val costEstimation =
-        costEstimationService.estimateServiceCost("some-service", (stubs.keySet ++ missingEnvironments).toSeq)
+      val costEstimate =
+        costEstimationService
+          .estimateServiceCost("some-service", (stubs.keySet ++ missingEnvironments).toSeq, costEstimateConfig)
 
-      val expectedCostEstimation =
-        CostEstimation.fromDeploymentConfigByEnvironment(stubs)
+      val expectedCostEstimate =
+        ServiceCostEstimate.fromDeploymentConfigByEnvironment(stubs, costEstimateConfig)
 
-      costEstimation.futureValue shouldBe expectedCostEstimation
+      costEstimate.futureValue shouldBe expectedCostEstimate
     }
 
     "produce a cost estimate of zero for a service which is not deployed in a requested environment" in {
@@ -103,13 +105,15 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
       val costEstimationService =
         new CostEstimationService(configConnector)
 
-      val costEstimation =
-        costEstimationService.estimateServiceCost("some-service", missingEnvironments.toSeq)
+      val costEstimateSummary =
+        costEstimationService
+          .estimateServiceCost("some-service", missingEnvironments.toSeq, costEstimateConfig)
+          .map(_.summary)
 
-      val expectedCostEstimation =
-        CostEstimation(0)
+      val expectedCostEstimateSummary =
+        ServiceCostEstimate.Summary(totalSlots = 0, totalYearlyCostGbp = 0)
 
-      costEstimation.futureValue shouldBe expectedCostEstimation
+      costEstimateSummary.futureValue shouldBe expectedCostEstimateSummary
     }
 
     "estimate cost as a function of a service's total slots across all environments" in {
@@ -121,7 +125,10 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
         )
 
       val actualEstimatedCost =
-        CostEstimation.fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment).yearlyCostGbp
+        ServiceCostEstimate
+          .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment, costEstimateConfig)
+          .summary
+          .totalYearlyCostGbp
 
       // Yearly cost is estimated as a service's total slots across all environments multiplied by £650
       // (5 * 2 + 3 * 1 + 10 * 3) * 650
@@ -152,4 +159,7 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
 
     configConnector
   }
+
+  private lazy val costEstimateConfig =
+    new CostEstimateConfig(Configuration.empty)
 }
