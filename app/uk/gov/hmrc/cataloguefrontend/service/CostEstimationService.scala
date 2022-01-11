@@ -74,10 +74,15 @@ object CostEstimationService {
       serviceCostEstimateConfig: CostEstimateConfig): ServiceCostEstimate =
       ServiceCostEstimate {
         deploymentConfigByEnvironment
-          .collect { case (env, config) if config.slots > 0 && config.instances > 0 =>
+          .collect { case (env, config) if config.slots > 0 && config.instances > 0 => {
+            val totalSlots =
+              config.slots * config.instances
+
             val yearlyCostGbp =
-              config.slots * config.instances * serviceCostEstimateConfig.slotCostPerYear
-            ForEnvironment(env, config.slots, yearlyCostGbp)
+              totalSlots * serviceCostEstimateConfig.slotCostPerYear
+
+            ForEnvironment(env, totalSlots, yearlyCostGbp)
+            }
           }
           .toList
           .sortBy(_.environment)
