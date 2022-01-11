@@ -21,7 +21,7 @@ import play.api.Configuration
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimationService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
@@ -47,6 +47,7 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
     configService                 = mock[ConfigService],
     costEstimationService         = mock[CostEstimationService],
+    serviceCostEstimateConfig     = mock[CostEstimateConfig],
     routeRulesService             = mock[RouteRulesService],
     serviceDependenciesConnector  = mock[ServiceDependenciesConnector],
     leakDetectionService          = mock[LeakDetectionService],

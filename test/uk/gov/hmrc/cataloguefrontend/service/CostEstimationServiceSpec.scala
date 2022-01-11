@@ -20,9 +20,10 @@ import org.mockito.scalatest.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{ServiceCostEstimate, DeploymentConfig, DeploymentConfigByEnvironment}
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentConfigByEnvironment, ServiceCostEstimate}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -160,5 +161,5 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
   }
 
   private lazy val costEstimateConfig =
-    ServiceCostEstimate.Config(650.00, "£5.4M")
+    new CostEstimateConfig(Configuration.empty)
 }

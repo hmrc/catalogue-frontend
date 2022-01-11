@@ -28,8 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimationService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
@@ -58,6 +57,7 @@ class CatalogueController @Inject() (
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   configService                : ConfigService,
   costEstimationService        : CostEstimationService,
+  serviceCostEstimateConfig    : CostEstimateConfig,
   routeRulesService            : RouteRulesService,
   serviceDependenciesConnector : ServiceDependenciesConnector,
   leakDetectionService         : LeakDetectionService,
@@ -314,9 +314,6 @@ class CatalogueController @Inject() (
 
     val costEstimationEnvironments =
       repositoryDetails.environments.getOrElse(Seq.empty).map(_.environment)
-
-    val serviceCostEstimateConfig =
-      ServiceCostEstimate.Config.get()
 
     (
       teamsAndRepositoriesConnector.lookupLink(repositoryName),
