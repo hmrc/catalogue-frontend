@@ -77,8 +77,8 @@ case class RepositoryModules(
 
 object RepositoryModules {
   val reads: Reads[RepositoryModules] = {
-    implicit val dw  = Dependency.reads
-    implicit val rmw = RepositoryModule.reads
+    implicit val dr  = Dependency.reads
+    implicit val rmr = RepositoryModule.reads
     ( (__ \ "name"             ).read[String]
     ~ (__ \ "version"          ).readNullable[Version](Version.format)
     ~ (__ \ "dependenciesBuild").read[Seq[Dependency]]
@@ -91,16 +91,19 @@ case class RepositoryModule(
   name               : String,
   group              : String,
   dependenciesCompile: Seq[Dependency],
-  dependenciesTest   : Seq[Dependency]
+  dependenciesTest   : Seq[Dependency],
+  crossScalaVersions : Seq[Version]
 )
 
 object RepositoryModule {
   val reads: Reads[RepositoryModule] = {
-    implicit val dw = Dependency.reads
+    implicit val dr = Dependency.reads
+    implicit val vf  = Version.format
     ( (__ \ "name"               ).read[String]
     ~ (__ \ "group"              ).read[String]
     ~ (__ \ "dependenciesCompile").read[Seq[Dependency]]
     ~ (__ \ "dependenciesTest"   ).read[Seq[Dependency]]
+    ~ (__ \ "crossScalaVersions" ).read[Seq[Version]]
     )(RepositoryModule.apply _)
   }
 }
