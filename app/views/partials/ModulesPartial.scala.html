@@ -30,6 +30,7 @@
 @repositoryModules.modules match {
   case Seq(module) => {
     @buildDependencies()
+    @moduleData(module)
     @moduleDependencies(module)
   }
   case modules => {
@@ -37,16 +38,19 @@
     @buildDependencies()
     @for((module, i) <- repositoryModules.modules.zipWithIndex) {
       <div class="board">
-       <div class="board__heading">
-          <h4 class="environment-name" id="@module.name" style="display: inline">@module.name</h4>
+        <div class="board__heading">
+          <h4 class="environment-name" id="@module.name">@module.name</h4>
+        </div>
+        <div class="board__body">
+
           @if(module.crossScalaVersions.nonEmpty) {
-            <span style="display:flex; float: right; color: #6f777b;">
-              <span style="font-weight:700">Scala Versions</span>: @module.crossScalaVersions.map(_.toString).mkString(", ")
-            </span>
+            <div class="row">
+              <div class="col-md-12 sub_row">
+                @moduleData(module)
+              </div>
+            </div>
           }
 
-       </div>
-        <div class="board__body">
           @if((module.dependenciesCompile ++ module.dependenciesTest).isEmpty) {
             <div class="row">
               <div class="col-md-12 sub_row">
@@ -124,6 +128,21 @@
         , None // Version - if set, will add graph links (using service-name)
         , isSub = isSub
         )
+      </div>
+    </div>
+  }
+}
+
+@moduleData(module: RepositoryModule) = {
+  @if(module.crossScalaVersions.nonEmpty) {
+    <div class="board">
+      <div class="board__body">
+        <ul class="list list--minimal list-group row">
+          <li id="description" class="col-xs-6">
+            <label>Scala Versions: </label>
+            @module.crossScalaVersions.map(_.toString).mkString(", ")
+          </li>
+        </ul>
       </div>
     </div>
   }
