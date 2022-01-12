@@ -112,16 +112,11 @@ object CostEstimationService {
 
 class CostEstimateConfig @Inject()(configuration: Configuration) {
 
-  private val defaultSlotCostPerYear: Double = 650
-  private val defaultTotalAwsCostPerYear: String = "£5.4M"
-
   def slotCostPerYear: Double =
     configuration
-      .getOptional[Double]("cost-estimates.slot-cost-per-year")
-      .getOrElse(defaultSlotCostPerYear)
+      .get[Double]("cost-estimates.slot-cost-per-year")
 
   def totalAwsCostPerYear: String =
     configuration
-      .getOptional[String]("cost-estimates.total-aws-cost-per-year")
-      .getOrElse(defaultTotalAwsCostPerYear)
+      .get[String]("cost-estimates.total-aws-cost-per-year")
 }
