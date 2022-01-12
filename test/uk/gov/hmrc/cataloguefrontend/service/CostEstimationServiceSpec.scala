@@ -164,5 +164,12 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
   }
 
   private lazy val costEstimateConfig =
-    new CostEstimateConfig(Configuration.empty)
+    new CostEstimateConfig(
+      Configuration.from(
+        Map(
+          "cost-estimates.slot-cost-per-year" -> 650.0,
+          "cost-estimates.total-aws-cost-per-year" -> "£5.4M"
+        )
+      )
+    )
 }
