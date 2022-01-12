@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
+import com.typesafe.config.ConfigFactory
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -130,12 +131,14 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
           .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment, costEstimateConfig)
           .summary
 
-      // Yearly cost is estimated as a service's total slots across all environments multiplied by £650
-      // (5 * 2 + 3 * 1 + 10 * 3) * 650
-      val expectedEstimatedCost = 27950.0
-
+      // Total slot usage is given as the sum of the per environment multiplication of slots by instances
       val expectedTotalSlots =
         5 * 2 + 3 * 1 + 10 * 3
+
+      // Yearly cost is estimated as a service's total slots across all environments multiplied by the cost of a slot
+      // per year
+      val expectedEstimatedCost =
+        expectedTotalSlots * costEstimateConfig.slotCostPerYear
 
       actualSummary shouldBe Summary(expectedTotalSlots, expectedEstimatedCost)
     }
@@ -164,12 +167,5 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
   }
 
   private lazy val costEstimateConfig =
-    new CostEstimateConfig(
-      Configuration.from(
-        Map(
-          "cost-estimates.slot-cost-per-year" -> 650.0,
-          "cost-estimates.total-aws-cost-per-year" -> "£5.4M"
-        )
-      )
-    )
+    new CostEstimateConfig(Configuration(ConfigFactory.load()))
 }
