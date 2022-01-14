@@ -77,7 +77,21 @@
                     )
             </div>
         </div>
-        <br><br><br>
+        <br>
+        <div class="board">
+            <h3 id="info-box-header" class="board__heading"><img class="info-icon" src="assets/infoicon.svg"/> What are these?</h3>
+            <div class="board__body">
+                <p id="info-box-copy">The charts shown here are platform-wide initiatives. They take two points:</p>
+                <ul>
+                    <li> How many repositories are affected by an initiative</li>
+                    <li> How many repositories have met the initiatives requirements </li>
+                </ul>
+                <p>You can filter down to a teams compliance by choosing a team in the drop-down box to the top-right of this panel.</p>
+                <div class="row col-xs-12 ">
+                    <p>If you would like to suggest new initiatives, please provide an API we can consume and make some quantifiable calculations on.
+                        For more details, please see the <a href="https://github.com/hmrc/platform-initiatives">Platform Initiatives GitHub page.</a></p>
+                </div>
+            </div>
         <table class="table table-striped">
             <tbody class="list">
             @initiatives.zipWithIndex.map{case (initiative, i) =>
