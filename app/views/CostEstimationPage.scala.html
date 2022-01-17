@@ -71,12 +71,12 @@
 
         function drawChart() {
           var data = google.visualization.arrayToDataTable([
-            ['Date', 'development', 'staging'],
-            [2004  ,  1000,         400],
-            [2005  ,  1170,         460],
-            [2006  ,  660,          1120],
-            [2007  ,  1030,         null],
-            [2007  ,  null,         540],
+            [ 'Date'                  , 'development' , 'staging' ],
+            [ new Date(1602428425430) ,  1000         , 400       ],
+            [ new Date(1612429425430) ,  1170         , 460       ],
+            [ new Date(1622431425430) ,  660          , 1120      ],
+            [ new Date(1632432425430) ,  1030         , null      ],
+            [ new Date(1632432425430) ,  null         , 540       ],
           ]);
 
           var options = {
