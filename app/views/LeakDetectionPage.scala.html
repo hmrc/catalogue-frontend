@@ -1,0 +1,62 @@
+@*
+* Copyright 2022 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.service.RuleSummary
+
+@this(viewMessages: ViewMessages)
+
+@(ruleSummaries: Seq[RuleSummary])(implicit request: Request[_])
+
+@standard_layout(s"Leak detection rules") {
+    <header>
+        <h1>Leak Detection Rules</h1>
+    </header>
+
+    @if(ruleSummaries.nonEmpty) {
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="col-xs-2">Rule id</th>
+                    <th class="col-xs-4">Description</th>
+                    <th class="col-xs-2">Earliest violation</th>
+                    <th class="col-xs-2">Latest violation</th>
+                    <th class="col-xs-1">Violating repositories</th>
+                    <th class="col-xs-1">Total violations</th>
+                </tr>
+            </thead>
+            <tbody>
+            @ruleSummaries.map(leakDetectionRuleSummaryRow())
+            </tbody>
+        </table>
+    }
+}
+
+@leakDetectionRuleSummaryRow()(ruleSummary: RuleSummary) = {
+    <tr id="@ruleSummary.rule.id">
+        <td>@ruleSummary.rule.id</td>
+        <td>@ruleSummary.rule.description</td>
+        <td>@if(ruleSummary.earliestScannedAt.nonEmpty) {
+            @ruleSummary.earliestScannedAt.get.displayFormat
+        } </td>
+        <td>@if(ruleSummary.latestScannedAt.nonEmpty) {
+            @ruleSummary.latestScannedAt.get.displayFormat
+        } </td>
+        <td>@ruleSummary.repoCount</td>
+        <td>@ruleSummary.totalCount</td>
+    </tr>
+}

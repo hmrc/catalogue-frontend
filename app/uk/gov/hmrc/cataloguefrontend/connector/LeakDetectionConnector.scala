@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.Reads
+import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.Instant
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -49,6 +50,20 @@ class LeakDetectionConnector @Inject() (
           Seq.empty
       }
   }
+
+  def ruleViolations(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRuleViolations]] = {
+    implicit val ldrs = LeakDetectionRuleViolations.reads
+    http
+      .GET[Seq[LeakDetectionRuleViolations]](
+        url"$url/api/rules",
+        headers = Seq("Accept" -> "application/json")
+      )
+      .recover {
+        case NonFatal(ex) =>
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          Seq.empty
+      }
+  }
 }
 
 final case class RepositoryWithLeaks(name: String) extends AnyVal
@@ -56,4 +71,36 @@ final case class RepositoryWithLeaks(name: String) extends AnyVal
 object RepositoryWithLeaks {
   val reads: Reads[RepositoryWithLeaks] =
     implicitly[Reads[String]].map(RepositoryWithLeaks.apply)
+}
+
+final case class LeakDetectionRuleViolations(rule: Rule, violations: Seq[Violation])
+
+object LeakDetectionRuleViolations {
+  implicit val rr = Rule.reads
+  implicit val vsr = Violation.reads
+  val reads: Reads[LeakDetectionRuleViolations] = Json.reads[LeakDetectionRuleViolations]
+}
+
+final case class Rule(
+                       id: String,
+                       scope: String,
+                       regex: String,
+                       description: String,
+                       ignoredFiles: List[String],
+                       ignoredExtensions: List[String],
+                       priority: String
+                     )
+
+object Rule {
+  implicit val reads = Json.reads[Rule]
+}
+
+case class Violation(
+                              repository: String,
+                              scannedAt: Instant,
+                              unresolvedCount: Int
+                            )
+
+object Violation {
+  implicit val reads = Json.reads[Violation]
 }

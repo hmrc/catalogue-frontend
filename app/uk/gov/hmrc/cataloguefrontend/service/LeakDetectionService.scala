@@ -15,11 +15,12 @@
  */
 
 package uk.gov.hmrc.cataloguefrontend.service
-import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.connector.{LeakDetectionConnector, RepositoryWithLeaks, Team}
+import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{LocalDateTime, ZoneId}
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -56,4 +57,20 @@ class LeakDetectionService @Inject() (
       .filterNot(repositoriesToIgnore.contains)
     teamRepos.intersect(reposWithLeaks.map(_.name)).nonEmpty
   }
+
+  def ruleSummaries()(implicit hc: HeaderCarrier):Future[Seq[RuleSummary]] = {
+    val orderByScannedAt = Ordering.by((_: Violation).scannedAt)
+    def scannedLocalDateTime(v: Violation) = LocalDateTime.ofInstant(v.scannedAt, ZoneId.systemDefault())
+
+    leakDetectionConnector.ruleViolations.map(_.map(r => RuleSummary(
+      r.rule,
+      r.violations.reduceOption(orderByScannedAt.min).map(scannedLocalDateTime),
+      r.violations.reduceOption(orderByScannedAt.max).map(scannedLocalDateTime),
+      r.violations.length,
+      r.violations.map(_.unresolvedCount).sum
+    )))
+  }
 }
+
+final case class RuleSummary(rule: Rule, earliestScannedAt: Option[LocalDateTime], latestScannedAt: Option[LocalDateTime], repoCount: Int, totalCount: Int)
+
