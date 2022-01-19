@@ -73,7 +73,7 @@ object RepositoryWithLeaks {
     implicitly[Reads[String]].map(RepositoryWithLeaks.apply)
 }
 
-final case class LeakDetectionRuleSummary(rule: LeakDetectionRule, leaks: Seq[LeakDetectionRepositorySummary])
+final case class LeakDetectionRuleSummary(rule: LeakDetectionRule, repositorySummary: Seq[LeakDetectionRepositorySummary])
 
 object LeakDetectionRuleSummary {
   implicit val ldrr = LeakDetectionRule.reads
