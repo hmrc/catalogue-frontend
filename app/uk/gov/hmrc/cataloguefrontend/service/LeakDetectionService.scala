@@ -63,10 +63,10 @@ class LeakDetectionService @Inject() (
 
     leakDetectionConnector.leakDetectionRuleSummaries.map(_.map(r => LeakDetectionRulesWithCounts(
       r.rule,
-      r.violations.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => scannedLocalDateTime(i.firstScannedAt)),
-      r.violations.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => scannedLocalDateTime(i.lastScannedAt)),
-      r.violations.length,
-      r.violations.map(_.unresolvedCount).sum
+      r.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => scannedLocalDateTime(i.firstScannedAt)),
+      r.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => scannedLocalDateTime(i.lastScannedAt)),
+      r.leaks.length,
+      r.leaks.map(_.unresolvedCount).sum
     )))
   }
 }
