@@ -51,10 +51,10 @@ class LeakDetectionConnector @Inject() (
       }
   }
 
-  def ruleViolations(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRuleViolations]] = {
-    implicit val ldrs = LeakDetectionRuleViolations.reads
+  def leakDetectionRuleSummaries(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRuleSummary]] = {
+    implicit val ldrs = LeakDetectionRuleSummary.reads
     http
-      .GET[Seq[LeakDetectionRuleViolations]](
+      .GET[Seq[LeakDetectionRuleSummary]](
         url"$url/api/rules",
         headers = Seq("Accept" -> "application/json")
       )
@@ -73,15 +73,15 @@ object RepositoryWithLeaks {
     implicitly[Reads[String]].map(RepositoryWithLeaks.apply)
 }
 
-final case class LeakDetectionRuleViolations(rule: Rule, violations: Seq[Violation])
+final case class LeakDetectionRuleSummary(rule: LeakDetectionRule, violations: Seq[LeakDetectionRepositorySummary])
 
-object LeakDetectionRuleViolations {
-  implicit val rr = Rule.reads
-  implicit val vsr = Violation.reads
-  val reads: Reads[LeakDetectionRuleViolations] = Json.reads[LeakDetectionRuleViolations]
+object LeakDetectionRuleSummary {
+  implicit val ldrr = LeakDetectionRule.reads
+  implicit val ldrsr = LeakDetectionRepositorySummary.reads
+  val reads: Reads[LeakDetectionRuleSummary] = Json.reads[LeakDetectionRuleSummary]
 }
 
-final case class Rule(
+final case class LeakDetectionRule(
                        id: String,
                        scope: String,
                        regex: String,
@@ -91,16 +91,17 @@ final case class Rule(
                        priority: String
                      )
 
-object Rule {
-  implicit val reads = Json.reads[Rule]
+object LeakDetectionRule {
+  implicit val reads = Json.reads[LeakDetectionRule]
 }
 
-case class Violation(
+case class LeakDetectionRepositorySummary(
                               repository: String,
-                              scannedAt: Instant,
+                              firstScannedAt: Instant,
+                              lastScannedAt: Instant,
                               unresolvedCount: Int
                             )
 
-object Violation {
-  implicit val reads = Json.reads[Violation]
+object LeakDetectionRepositorySummary {
+  implicit val reads = Json.reads[LeakDetectionRepositorySummary]
 }

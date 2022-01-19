@@ -16,12 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.Rule
-@import uk.gov.hmrc.cataloguefrontend.service.RuleSummary
+@import uk.gov.hmrc.cataloguefrontend.connector.LeakDetectionRule
+@import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionRulesWithCounts
 
 @this(viewMessages: ViewMessages)
 
-@(ruleSummaries: Seq[RuleSummary])(implicit request: Request[_])
+@(ruleSummaries: Seq[LeakDetectionRulesWithCounts])(implicit request: Request[_])
 
 @standard_layout(s"Leak detection rules") {
     <header>
@@ -29,15 +29,16 @@
     </header>
 
     @if(ruleSummaries.nonEmpty) {
-        <table id="rule-list" class="rule-list table table-striped">
+        <table class="table table-striped">
             <thead>
                 <tr>
-                    <th class="col-xs-2">Rule id</th>
-                    <th class="col-xs-4">Description</th>
-                    <th class="col-xs-2">Earliest violation</th>
-                    <th class="col-xs-2">Latest violation</th>
-                    <th class="col-xs-1">Violating repositories</th>
-                    <th class="col-xs-1">Total violations</th>
+                    <th></th>
+                    <th class="col-xs-1">Rule id</th>
+                    <th class="col-xs-3">Description</th>
+                    <th class="col-xs-3">Earliest violation</th>
+                    <th class="col-xs-3">Latest violation</th>
+                    <th class="col-xs-1" style="text-align: center">Violating repositories</th>
+                    <th class="col-xs-1" style="text-align: center">Total violations</th>
                 </tr>
             </thead>
             <tbody>
@@ -47,69 +48,68 @@
     }
 }
 
-@leakDetectionRuleSummary(ruleSummary: RuleSummary) = {
+@leakDetectionRuleSummary(ruleSummary: LeakDetectionRulesWithCounts) = {
     <tr id="@ruleSummary.rule.id" >
-        <td class="rule-id hand-pointer collapsed" data-toggle="collapse" data-target="#collapsible-area-@ruleSummary.rule.id" aria-expanded="false" aria-controls="collapsible-area">@ruleSummary.rule.id</td>
-        <td class="description hand-pointer collapsed" data-toggle="collapse" data-target="#collapsible-area-@ruleSummary.rule.id" aria-expanded="false" aria-controls="collapsible-area">@ruleSummary.rule.description</td>
-        <td class="earliest-scanned">@if(ruleSummary.earliestScannedAt.nonEmpty) {
-            @ruleSummary.earliestScannedAt.get.displayFormat
+        <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@ruleSummary.rule.id" />
+        <td class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@ruleSummary.rule.id">@ruleSummary.rule.id</td>
+        <td class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@ruleSummary.rule.id">@ruleSummary.rule.description</td>
+        <td>@if(ruleSummary.firstScannedAt.nonEmpty) {
+            @ruleSummary.firstScannedAt.get.displayFormat
         } </td>
-        <td class="latest-scanned">@if(ruleSummary.latestScannedAt.nonEmpty) {
-            @ruleSummary.latestScannedAt.get.displayFormat
+        <td>@if(ruleSummary.lastScannedAt.nonEmpty) {
+            @ruleSummary.lastScannedAt.get.displayFormat
         } </td>
-        <td class="repo-count">@ruleSummary.repoCount</td>
-        <td class="total-count"><a href="/leak-detection/rules/@ruleSummary.rule.id">@ruleSummary.totalCount</a></td>
+        <td style="text-align: center">@ruleSummary.repoCount</td>
+        <td style="text-align: center"><a href="/leak-detection/rules/@ruleSummary.rule.id">@ruleSummary.totalCount</a></td>
     </tr>
-    <tr id="blank-row-@ruleSummary.rule.id" class="hide" colspan="6"></tr>
+    <tr class="hide" />
     <tr id="collapsible-area-@ruleSummary.rule.id" class="collapse">
-        <td colspan="6">
-            <div class="board__body">
+        <td colspan="7">
             @ruleDetails(ruleSummary.rule)
-            </div>
         </td>
     </tr>
 }
 
-@ruleDetails(rule: Rule) = {
+@ruleDetails(rule: LeakDetectionRule) = {
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-xs-12">
             <ul class="list list--minimal list-group row">
-                <li id="rule-id" class="col-xs-6">
+                <li class="col-xs-6">
                     <label>Rule id: </label>
                     @rule.id
                 </li>
-                <li id="description" class="col-xs-6">
+                <li class="col-xs-6">
                     <label>Description: </label>
                     @rule.description
                 </li>
-                <li id="scope" class="col-xs-6">
+                <li class="col-xs-6">
                     <label>Scope: </label>
                     @rule.scope
                 </li>
-                <li id="priority" class="col-xs-6">
+                <li class="col-xs-6">
                     <label>Priority: </label>
                     @rule.priority
                 </li>
-                <li id="regex" class="col-xs-12">
+                <li class="col-xs-12">
                     <label>Regex: </label>
                     @rule.regex
                 </li>
                 @if(rule.ignoredFiles.nonEmpty) {
-                    <li id="ignore-files" class="col-xs-6">
+                    <li class="col-xs-6">
                         <label>Ignored files: </label>
                         <ul class="list list--minimal list-group row">
                         @rule.ignoredFiles.map { fileName =>
-                            <li id="ignore-file-@fileName">@fileName</li>
+                            <li>@fileName</li>
                         }
                         </ul>
                     </li>
                 }
                 @if(rule.ignoredExtensions.nonEmpty) {
-                    <li id="ignore-extensions" class="col-xs-6">
+                    <li class="col-xs-6">
                         <label>Ignored extensions: </label>
                         <ul class="list list--minimal list-group row">
                         @rule.ignoredExtensions.map { fileExt =>
-                            <li id="ignore-file-ext-@fileExt" class="col-xs-3">@fileExt</li>
+                            <li class="col-xs-3">@fileExt</li>
                         }
                         </ul>
                     </li>

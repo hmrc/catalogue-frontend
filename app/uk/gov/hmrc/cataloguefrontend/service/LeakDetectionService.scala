@@ -19,7 +19,7 @@ import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{LocalDateTime, ZoneId}
+import java.time.{Instant, LocalDateTime, ZoneId}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -58,19 +58,22 @@ class LeakDetectionService @Inject() (
     teamRepos.intersect(reposWithLeaks.map(_.name)).nonEmpty
   }
 
-  def ruleSummaries()(implicit hc: HeaderCarrier):Future[Seq[RuleSummary]] = {
-    val orderByScannedAt = Ordering.by((_: Violation).scannedAt)
-    def scannedLocalDateTime(v: Violation) = LocalDateTime.ofInstant(v.scannedAt, ZoneId.systemDefault())
+  def ruleSummaries()(implicit hc: HeaderCarrier):Future[Seq[LeakDetectionRulesWithCounts]] = {
+    def scannedLocalDateTime(i: Instant) = LocalDateTime.ofInstant(i, ZoneId.systemDefault())
 
-    leakDetectionConnector.ruleViolations.map(_.map(r => RuleSummary(
+    leakDetectionConnector.leakDetectionRuleSummaries.map(_.map(r => LeakDetectionRulesWithCounts(
       r.rule,
-      r.violations.reduceOption(orderByScannedAt.min).map(scannedLocalDateTime),
-      r.violations.reduceOption(orderByScannedAt.max).map(scannedLocalDateTime),
+      r.violations.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => scannedLocalDateTime(i.firstScannedAt)),
+      r.violations.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => scannedLocalDateTime(i.lastScannedAt)),
       r.violations.length,
       r.violations.map(_.unresolvedCount).sum
     )))
   }
 }
 
-final case class RuleSummary(rule: Rule, earliestScannedAt: Option[LocalDateTime], latestScannedAt: Option[LocalDateTime], repoCount: Int, totalCount: Int)
+final case class LeakDetectionRulesWithCounts(rule: LeakDetectionRule,
+                                              firstScannedAt: Option[LocalDateTime],
+                                              lastScannedAt: Option[LocalDateTime],
+                                              repoCount: Int,
+                                              totalCount: Int)
 
