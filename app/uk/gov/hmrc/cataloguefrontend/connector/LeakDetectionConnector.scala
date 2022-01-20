@@ -52,17 +52,11 @@ class LeakDetectionConnector @Inject() (
   }
 
   def leakDetectionRuleSummaries(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRuleSummary]] = {
-    implicit val ldrs = LeakDetectionRuleSummary.reads
-    http
-      .GET[Seq[LeakDetectionRuleSummary]](
+    implicit val ldrs: Reads[LeakDetectionRuleSummary] = LeakDetectionRuleSummary.reads
+    http.GET[Seq[LeakDetectionRuleSummary]](
         url"$url/api/rule-summaries",
         headers = Seq("Accept" -> "application/json")
       )
-      .recover {
-        case NonFatal(ex) =>
-          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          Seq.empty
-      }
   }
 }
 
