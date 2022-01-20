@@ -58,15 +58,15 @@ class LeakDetectionService @Inject() (
     teamRepos.intersect(reposWithLeaks.map(_.name)).nonEmpty
   }
 
-  def ruleSummaries()(implicit hc: HeaderCarrier):Future[Seq[LeakDetectionRulesWithCounts]] = {
+  def ruleSummaries()(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRulesWithCounts]] = {
     def scannedLocalDateTime(i: Instant) = LocalDateTime.ofInstant(i, ZoneId.systemDefault())
 
     leakDetectionConnector.leakDetectionRuleSummaries.map(_.map(r => LeakDetectionRulesWithCounts(
       r.rule,
-      r.repositorySummary.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => scannedLocalDateTime(i.firstScannedAt)),
-      r.repositorySummary.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => scannedLocalDateTime(i.lastScannedAt)),
-      r.repositorySummary.length,
-      r.repositorySummary.map(_.unresolvedCount).sum
+      r.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => scannedLocalDateTime(i.firstScannedAt)),
+      r.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => scannedLocalDateTime(i.lastScannedAt)),
+      r.leaks.length,
+      r.leaks.map(_.unresolvedCount).sum
     )))
   }
 }

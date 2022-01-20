@@ -55,7 +55,7 @@ class LeakDetectionConnector @Inject() (
     implicit val ldrs = LeakDetectionRuleSummary.reads
     http
       .GET[Seq[LeakDetectionRuleSummary]](
-        url"$url/api/rules",
+        url"$url/api/rule-summaries",
         headers = Seq("Accept" -> "application/json")
       )
       .recover {
@@ -73,7 +73,7 @@ object RepositoryWithLeaks {
     implicitly[Reads[String]].map(RepositoryWithLeaks.apply)
 }
 
-final case class LeakDetectionRuleSummary(rule: LeakDetectionRule, repositorySummary: Seq[LeakDetectionRepositorySummary])
+final case class LeakDetectionRuleSummary(rule: LeakDetectionRule, leaks: Seq[LeakDetectionRepositorySummary])
 
 object LeakDetectionRuleSummary {
   implicit val ldrr = LeakDetectionRule.reads
