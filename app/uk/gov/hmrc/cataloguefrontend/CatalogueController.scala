@@ -508,12 +508,15 @@ class CatalogueController @Inject() (
         if repositoryDetails.repoType == RepoType.Service
         costEstimationEnvironments = repositoryDetails.environments.getOrElse(Seq.empty).map(_.environment)
         costEstimation <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName, costEstimationEnvironments, serviceCostEstimateConfig))
+        historicResourceUsageChart <- OptionT.liftF(costEstimationService.historicResourceUsageChartForService(serviceName, serviceCostEstimateConfig))
       } yield
         Ok(costEstimationPage(
           serviceName,
           repositoryDetails,
           costEstimation,
-          serviceCostEstimateConfig))
+          serviceCostEstimateConfig,
+          historicResourceUsageChart
+        ))
         ).getOrElse(notFound)
     }
 

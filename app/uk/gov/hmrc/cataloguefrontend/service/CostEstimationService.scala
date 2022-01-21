@@ -17,18 +17,24 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import play.api.Configuration
-import play.api.libs.json.{Json, Reads}
-import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
+import play.api.libs.json.{Json, Reads, __}
+import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
+import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ResourceUsageConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate.Summary
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, ServiceCostEstimate}
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{CostedResourceUsage, DeploymentConfig, ServiceCostEstimate}
+import uk.gov.hmrc.cataloguefrontend.util.ChartDataTable
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CostEstimationService @Inject() (configConnector: ConfigConnector) {
+class CostEstimationService @Inject() (
+  configConnector: ConfigConnector,
+  resourceUsageConnector: ResourceUsageConnector
+) {
 
   def estimateServiceCost(
     service: String,
@@ -45,6 +51,21 @@ class CostEstimationService @Inject() (configConnector: ConfigConnector) {
         ServiceCostEstimate
           .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment.toMap, serviceCostEstimateConfig)
       )
+
+  def historicResourceUsageForService(
+    serviceName: String,
+    serviceCostEstimateConfig: CostEstimateConfig
+  )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[List[CostedResourceUsage]] =
+    resourceUsageConnector
+      .historicResourceUsageForService(serviceName)
+      .map(_.map(CostedResourceUsage.fromResourceUsage(_, serviceCostEstimateConfig.slotCostPerYear)))
+
+  def historicResourceUsageChartForService(
+    serviceName: String,
+    serviceCostEstimateConfig: CostEstimateConfig
+  )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[ChartDataTable] =
+    historicResourceUsageForService(serviceName, serviceCostEstimateConfig)
+      .map(CostedResourceUsage.toChartDataTable)
 }
 
 object CostEstimationService {
@@ -59,6 +80,59 @@ object CostEstimationService {
 
     val reads: Reads[DeploymentConfig] =
       Json.reads[DeploymentConfig]
+  }
+
+  final case class CostedResourceUsage(
+    date: Instant,
+    serviceName: String,
+    environment: Environment,
+    totalSlots: Int,
+    yearlyCostGbp: Double
+  )
+
+  object CostedResourceUsage {
+
+    def fromResourceUsage(resourceUsage: ResourceUsage, slotCostPerYear: Double): CostedResourceUsage = {
+      val totalSlots =
+        resourceUsage.slots * resourceUsage.instances
+
+      val yearlyCostGbp =
+        totalSlots * slotCostPerYear
+
+      CostedResourceUsage(
+        resourceUsage.date,
+        resourceUsage.serviceName,
+        resourceUsage.environment,
+        totalSlots,
+        yearlyCostGbp
+      )
+    }
+
+    def toChartDataTable(costedResourceUsages: List[CostedResourceUsage]): ChartDataTable = {
+        val environments =
+          costedResourceUsages
+            .map(_.environment)
+            .distinct
+            .sorted
+
+        val resourceUsageByDateAndEnvironment =
+          costedResourceUsages
+            .groupBy(_.date)
+            .mapValues(rus => rus.map(ru => ru.environment -> ru).toMap)
+
+        val headerRow =
+          "'Date'" +: environments.map(e => s"'${e.displayString}'")
+
+        val dataRows =
+          resourceUsageByDateAndEnvironment
+            .map { case (date, byEnv) =>
+              s"new Date(${date.toEpochMilli})" +:
+                environments.map(e => s"${byEnv.get(e).map(_.yearlyCostGbp).getOrElse("null")}")
+            }
+            .toList
+
+        ChartDataTable(headerRow +: dataRows)
+    }
   }
 
   final case class ServiceCostEstimate(forEnvironments: List[ServiceCostEstimate.ForEnvironment]) {
