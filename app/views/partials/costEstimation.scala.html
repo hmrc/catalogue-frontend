@@ -52,7 +52,7 @@
         var data = google.visualization.arrayToDataTable([
           ['Environment',   'Estimated Cost'],
           @for(e <- serviceCostEstimate.forEnvironments) {
-            ['@e.environment.asString', { v: @e.yearlyCostGbp, f: "@formatGbp(e.yearlyCostGbp) (slots = @e.slots)" } ],
+            ['@e.environment.displayString', { v: @e.yearlyCostGbp, f: "@formatGbp(e.yearlyCostGbp) (slots = @e.slots)" } ],
           }
         ]);
 
