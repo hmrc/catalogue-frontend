@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.Reads
+import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.Instant
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -49,6 +50,14 @@ class LeakDetectionConnector @Inject() (
           Seq.empty
       }
   }
+
+  def leakDetectionRuleSummaries(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRuleSummary]] = {
+    implicit val ldrs: Reads[LeakDetectionRuleSummary] = LeakDetectionRuleSummary.reads
+    http.GET[Seq[LeakDetectionRuleSummary]](
+        url"$url/api/rule-summaries",
+        headers = Seq("Accept" -> "application/json")
+      )
+  }
 }
 
 final case class RepositoryWithLeaks(name: String) extends AnyVal
@@ -56,4 +65,37 @@ final case class RepositoryWithLeaks(name: String) extends AnyVal
 object RepositoryWithLeaks {
   val reads: Reads[RepositoryWithLeaks] =
     implicitly[Reads[String]].map(RepositoryWithLeaks.apply)
+}
+
+final case class LeakDetectionRuleSummary(rule: LeakDetectionRule, leaks: Seq[LeakDetectionRepositorySummary])
+
+object LeakDetectionRuleSummary {
+  implicit val ldrr = LeakDetectionRule.reads
+  implicit val ldrsr = LeakDetectionRepositorySummary.reads
+  val reads: Reads[LeakDetectionRuleSummary] = Json.reads[LeakDetectionRuleSummary]
+}
+
+final case class LeakDetectionRule(
+                       id: String,
+                       scope: String,
+                       regex: String,
+                       description: String,
+                       ignoredFiles: List[String],
+                       ignoredExtensions: List[String],
+                       priority: String
+                     )
+
+object LeakDetectionRule {
+  implicit val reads = Json.reads[LeakDetectionRule]
+}
+
+case class LeakDetectionRepositorySummary(
+                              repository: String,
+                              firstScannedAt: Instant,
+                              lastScannedAt: Instant,
+                              unresolvedCount: Int
+                            )
+
+object LeakDetectionRepositorySummary {
+  implicit val reads = Json.reads[LeakDetectionRepositorySummary]
 }
