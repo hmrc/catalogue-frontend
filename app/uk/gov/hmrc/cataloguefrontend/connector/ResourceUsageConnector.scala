@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import play.api.libs.json.Format
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ResourceUsage
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Format, __}
+import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.http.StringContextOps
 
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,4 +41,25 @@ class ResourceUsageConnector @Inject() (
 
   def historicResourceUsageForService(serviceName: String)(implicit hc: HeaderCarrier): Future[List[ResourceUsage]] =
     http.GET[List[ResourceUsage]](url = url"$baseUrl/services/$serviceName/snapshots")
+}
+
+object ResourceUsageConnector {
+
+  final case class ResourceUsage(
+    date: Instant,
+    serviceName: String,
+    environment: Environment,
+    slots: Int,
+    instances: Int
+  )
+
+  object ResourceUsage {
+    val format: Format[ResourceUsage] =
+      (   (__ \ "date"        ).format[Instant]
+        ~ (__ \ "serviceName" ).format[String]
+        ~ (__ \ "environment" ).format[Environment](Environment.format)
+        ~ (__ \ "slots"       ).format[Int]
+        ~ (__ \ "instances"   ).format[Int]
+        ) (ResourceUsage.apply, unlift(ResourceUsage.unapply))
+  }
 }
