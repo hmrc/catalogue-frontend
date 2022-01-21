@@ -17,28 +17,24 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
+@import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.EstimatedCostCharts
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
 @import views.partials.githubBadgeType
-@import uk.gov.hmrc.cataloguefrontend.util.ChartDataTable
 
 @this(viewMessages: ViewMessages)
 
 @(
-  serviceName                : String,
-  repositoryDetails          : RepositoryDetails,
-  costEstimate               : ServiceCostEstimate,
-  costEstimateConfig         : CostEstimateConfig,
-  historicResourceUsageChart : ChartDataTable
+  serviceName                      : String,
+  repositoryDetails                : RepositoryDetails,
+  costEstimate                     : ServiceCostEstimate,
+  costEstimateConfig               : CostEstimateConfig,
+  estimatedCostCharts              : EstimatedCostCharts
 )(implicit request: Request[_])
 
 @standard_layout(serviceName, "services") {
     <header class="header-with-github-badge">
         <div>
-            <h1 id="service-header">
-                Service: @serviceName
-                <span>@githubBadgeType(repositoryDetails)</span>
-                @if(repositoryDetails.isArchived) { <span>Archived</span> }
-            </h1>
+            <h1 id="service-header">Cost Estimation: @serviceName</h1>
         </div>
         <script type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
@@ -56,7 +52,7 @@
             <div class="col-md-12">
                 <div id="cost-estimation-over-time">
                     <div class="board">
-                        <h3 class="board__heading">Estimated Cost Over Time</h3>
+                        <h3 class="board__heading">Estimated cost over time</h3>
                         <div class="board__body">
                             <div id="estimated-cost-over-time-chart" />
                         </div>
@@ -66,24 +62,52 @@
         </div>
     </section>
 
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <section class="section-wrapper">
+        <div class="row">
+            <div class="col-md-12">
+                <div id="cost-estimation-over-time-by-env">
+                    <div class="board">
+                        <h3 class="board__heading">Estimated cost over time, by environment</h3>
+                        <div class="board__body">
+                            <div id="estimated-cost-over-time-per-env-chart" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
         google.charts.load('current', {'packages':['corechart']});
-        google.charts.setOnLoadCallback(drawChart);
+        google.charts.setOnLoadCallback(drawCharts);
 
-        function drawChart() {
-          var data = google.visualization.arrayToDataTable(
-            @Html(historicResourceUsageChart.render)
-          );
+        function drawCharts() {
+          var byEnvChartData =
+            google.visualization.arrayToDataTable(@Html(estimatedCostCharts.historicByEnvChart.render));
 
-          var options = {
+          var byEnvChart =
+            new google.visualization.AreaChart(document.getElementById('estimated-cost-over-time-per-env-chart'));
+
+          var byEnvChartOpts = {
             legend: { position: 'bottom' },
             interpolateNulls: true
           };
 
-          var chart = new google.visualization.AreaChart(document.getElementById('estimated-cost-over-time-chart'));
+          var totalsChartData =
+            google.visualization.arrayToDataTable(@Html(estimatedCostCharts.historicTotalsChart.render));
 
-          chart.draw(data, options);
+          var totalsChart =
+            new google.visualization.AreaChart(document.getElementById('estimated-cost-over-time-chart'));
+
+          var totalsChartOpts = {
+            legend: { position: 'bottom' },
+            interpolateNulls: true
+          };
+
+          byEnvChart.draw(byEnvChartData, byEnvChartOpts);
+          totalsChart.draw(totalsChartData, totalsChartOpts);
         }
     </script>
 }
