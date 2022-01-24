@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.service
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{Instant, LocalDateTime, ZoneId}
@@ -26,6 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class LeakDetectionService @Inject() (
   leakDetectionConnector: LeakDetectionConnector,
+  teamsAndReposConnector: TeamsAndRepositoriesConnector,
   configuration: Configuration
 )(implicit val ec: ExecutionContext) {
 
@@ -58,22 +60,40 @@ class LeakDetectionService @Inject() (
     teamRepos.intersect(reposWithLeaks.map(_.name)).nonEmpty
   }
 
-  def ruleSummaries()(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRulesWithCounts]] = {
-    def scannedLocalDateTime(i: Instant) = LocalDateTime.ofInstant(i, ZoneId.systemDefault())
+  def getRules(rule: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionReposWithCounts])] =
+    leakDetectionConnector.leakDetectionRuleSummaries(rule, team).map(ruleSummaries =>
+      (ruleSummaries.map(_.rule.id),
+        ruleSummaries
+          .flatMap(rulesSummary => rulesSummary.leaks)
+          .groupBy(l => l.repository)
+          .map {
+            case (repoName, repositorySummary) =>
+              LeakDetectionReposWithCounts(
+                repoName,
+                repositorySummary.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => scannedLocalDateTime(i.firstScannedAt)),
+                repositorySummary.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => scannedLocalDateTime(i.lastScannedAt)),
+                repositorySummary.map(_.unresolvedCount).sum
+              )
+          }
+          .toSeq
+      )
+    )
 
-    leakDetectionConnector.leakDetectionRuleSummaries.map(_.map(r => LeakDetectionRulesWithCounts(
-      r.rule,
-      r.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => scannedLocalDateTime(i.firstScannedAt)),
-      r.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => scannedLocalDateTime(i.lastScannedAt)),
-      r.leaks.length,
-      r.leaks.map(_.unresolvedCount).sum
-    )))
-  }
+  def scannedLocalDateTime(i: Instant) = LocalDateTime.ofInstant(i, ZoneId.systemDefault())
+  def ruleSummaries()(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRulesWithCounts]] =
+    leakDetectionConnector.leakDetectionRuleSummaries(None, None).map(
+      _.map(r =>
+        LeakDetectionRulesWithCounts(
+          r.rule,
+          r.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => scannedLocalDateTime(i.firstScannedAt)),
+          r.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => scannedLocalDateTime(i.lastScannedAt)),
+          r.leaks.length,
+          r.leaks.map(_.unresolvedCount).sum
+        )
+      )
+    )
 }
 
-final case class LeakDetectionRulesWithCounts(rule: LeakDetectionRule,
-                                              firstScannedAt: Option[LocalDateTime],
-                                              lastScannedAt: Option[LocalDateTime],
-                                              repoCount: Int,
-                                              totalCount: Int)
+final case class LeakDetectionReposWithCounts(repoName: String, firstScannedAt: Option[LocalDateTime], lastScannedAt: Option[LocalDateTime], totalCount: Int)
 
+final case class LeakDetectionRulesWithCounts(rule: LeakDetectionRule, firstScannedAt: Option[LocalDateTime], lastScannedAt: Option[LocalDateTime], repoCount: Int, totalCount: Int)
