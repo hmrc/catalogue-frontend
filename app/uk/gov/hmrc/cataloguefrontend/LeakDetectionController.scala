@@ -19,11 +19,11 @@ package uk.gov.hmrc.cataloguefrontend
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.LeakDetectionExplorerFilter.form
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionService
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{LeakDetectionPage, LeakDetectionRuleExplorerPage}
-import uk.gov.hmrc.cataloguefrontend.LeakDetectionRuleExplorerFilter.form
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -60,16 +60,16 @@ class LeakDetectionController @Inject() (
     }
 }
 
-case class LeakDetectionRuleExplorerFilter(
-                                   rule: Option[String] = None,
-                                   team: Option[String] = None
-                                 )
+case class LeakDetectionExplorerFilter(
+  rule: Option[String] = None,
+  team: Option[String] = None
+)
 
-object LeakDetectionRuleExplorerFilter {
-  lazy val form: Form[LeakDetectionRuleExplorerFilter] = Form(
+object LeakDetectionExplorerFilter {
+  lazy val form: Form[LeakDetectionExplorerFilter] = Form(
     mapping(
       "rule" -> optional(text),
       "team" -> optional(text)
-    )(LeakDetectionRuleExplorerFilter.apply)(LeakDetectionRuleExplorerFilter.unapply)
+    )(LeakDetectionExplorerFilter.apply)(LeakDetectionExplorerFilter.unapply)
   )
 }
