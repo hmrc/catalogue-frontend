@@ -51,11 +51,12 @@ class LeakDetectionConnector @Inject() (
       }
   }
 
-  def leakDetectionRuleSummaries(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRuleSummary]] = {
+  def leakDetectionRuleSummaries(rule: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRuleSummary]] = {
     implicit val ldrs: Reads[LeakDetectionRuleSummary] = LeakDetectionRuleSummary.reads
-    http.GET[Seq[LeakDetectionRuleSummary]](
-        url"$url/api/rule-summaries",
-        headers = Seq("Accept" -> "application/json")
+    http
+      .GET[Seq[LeakDetectionRuleSummary]](
+        url"$url/api/rule-summaries?rule=$rule&team=$team",
+        Seq("Accept" -> "application/json")
       )
   }
 }

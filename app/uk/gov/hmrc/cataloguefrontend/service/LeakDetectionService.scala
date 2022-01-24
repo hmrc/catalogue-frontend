@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.service
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{Instant, LocalDateTime, ZoneId}
@@ -27,7 +26,6 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class LeakDetectionService @Inject() (
   leakDetectionConnector: LeakDetectionConnector,
-  teamsAndReposConnector: TeamsAndRepositoriesConnector,
   configuration: Configuration
 )(implicit val ec: ExecutionContext) {
 
@@ -60,7 +58,7 @@ class LeakDetectionService @Inject() (
     teamRepos.intersect(reposWithLeaks.map(_.name)).nonEmpty
   }
 
-  def getRules(rule: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionReposWithCounts])] =
+  def repoSummaries(rule: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionReposWithCounts])] =
     leakDetectionConnector.leakDetectionRuleSummaries(rule, team).map(ruleSummaries =>
       (ruleSummaries.map(_.rule.id),
         ruleSummaries
