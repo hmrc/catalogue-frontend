@@ -54,17 +54,19 @@ class CostEstimationService @Inject() (
 
   def historicResourceUsageForService(
     serviceName: String,
-    serviceCostEstimateConfig: CostEstimateConfig
+    serviceCostEstimateConfig: CostEstimateConfig,
+    generateFakeData: Boolean
   )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[List[CostedResourceUsage]] =
     resourceUsageConnector
-      .historicResourceUsageForService(serviceName)
+      .historicResourceUsageForService(serviceName, generateFakeData)
       .map(_.map(CostedResourceUsage.fromResourceUsage(_, serviceCostEstimateConfig.slotCostPerYear)))
 
   def historicResourceUsageChartsForService(
     serviceName: String,
-    serviceCostEstimateConfig: CostEstimateConfig
+    serviceCostEstimateConfig: CostEstimateConfig,
+    generateFakeData: Boolean
   )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[EstimatedCostCharts] =
-    historicResourceUsageForService(serviceName, serviceCostEstimateConfig)
+    historicResourceUsageForService(serviceName, serviceCostEstimateConfig, generateFakeData)
       .map(crus => {
         val totalsChart =
           CostedResourceUsageTotal
@@ -134,11 +136,12 @@ object CostEstimationService {
 
         val dataRows =
           resourceUsageByDateAndEnvironment
+            .toList
+            .sortBy(_._1)
             .map { case (date, byEnv) =>
               s"new Date(${date.toEpochMilli})" +:
                 environments.map(e => s"${byEnv.get(e).map(_.yearlyCostGbp).getOrElse("null")}")
             }
-            .toList
 
         ChartDataTable(headerRow +: dataRows)
     }
@@ -182,6 +185,7 @@ object CostEstimationService {
 
       val dataRows =
         costedResourceUsageTotals
+          .sortBy(_.date)
           .map(crut => List(s"new Date(${crut.date.toEpochMilli})", s"${crut.yearlyCostGbp}"))
 
       ChartDataTable(headerRow +: dataRows)

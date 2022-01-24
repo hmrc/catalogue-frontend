@@ -501,14 +501,14 @@ class CatalogueController @Inject() (
     }
   }
 
-  def costEstimation(serviceName: String): Action[AnyContent] =
+  def costEstimation(serviceName: String, generateFakeData: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
       (for {
         repositoryDetails <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
         if repositoryDetails.repoType == RepoType.Service
         costEstimationEnvironments = repositoryDetails.environments.getOrElse(Seq.empty).map(_.environment)
         costEstimation <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName, costEstimationEnvironments, serviceCostEstimateConfig))
-        estimatedCostCharts <- OptionT.liftF(costEstimationService.historicResourceUsageChartsForService(serviceName, serviceCostEstimateConfig))
+        estimatedCostCharts <- OptionT.liftF(costEstimationService.historicResourceUsageChartsForService(serviceName, serviceCostEstimateConfig, generateFakeData))
       } yield
         Ok(costEstimationPage(
           serviceName,
