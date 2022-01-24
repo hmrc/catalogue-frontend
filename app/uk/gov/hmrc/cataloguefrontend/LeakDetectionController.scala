@@ -16,20 +16,40 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import play.api.data.Form
+import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.LeakDetectionExplorerFilter.form
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionService
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.LeakDetectionPage
+import views.html.{LeakDetectionPage, LeakDetectionRuleExplorerPage}
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-class LeakDetectionController @Inject()(
-                                         mcc: MessagesControllerComponents,
-                                         page: LeakDetectionPage,
-                                         leakDetectionService: LeakDetectionService
-                                       )(implicit val ec: ExecutionContext)
-  extends FrontendController(mcc) {
+class LeakDetectionController @Inject() (
+  mcc: MessagesControllerComponents,
+  page: LeakDetectionPage,
+  ruleExplorerPage: LeakDetectionRuleExplorerPage,
+  leakDetectionService: LeakDetectionService,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
+)(implicit val ec: ExecutionContext)
+    extends FrontendController(mcc) {
+
+  def repoSummaries(): Action[AnyContent] =
+    Action.async { implicit request =>
+      form
+        .bindFromRequest()
+        .fold(
+          formWithErrors => Future.successful(BadRequest(ruleExplorerPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors))),
+          validForm =>
+            for {
+              rules <- leakDetectionService.repoSummaries(validForm.rule, validForm.team)
+              teams <- teamsAndRepositoriesConnector.allTeams
+            } yield Ok(ruleExplorerPage(rules._1, rules._2, teams.sortBy(_.name), form.fill(validForm)))
+        )
+    }
 
   def ruleSummaries(): Action[AnyContent] =
     Action.async { implicit request =>
@@ -38,4 +58,18 @@ class LeakDetectionController @Inject()(
         response = Ok(page(rules))
       } yield response
     }
+}
+
+case class LeakDetectionExplorerFilter(
+  rule: Option[String] = None,
+  team: Option[String] = None
+)
+
+object LeakDetectionExplorerFilter {
+  lazy val form: Form[LeakDetectionExplorerFilter] = Form(
+    mapping(
+      "rule" -> optional(text),
+      "team" -> optional(text)
+    )(LeakDetectionExplorerFilter.apply)(LeakDetectionExplorerFilter.unapply)
+  )
 }

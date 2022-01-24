@@ -77,7 +77,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       def aRule = LeakDetectionRule("", "", "", "",List(), List(), "")
       def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 1)
 
-      when(connector.leakDetectionRuleSummaries).thenReturn(
+      when(connector.leakDetectionRuleSummaries(None, None)).thenReturn(
         Future.successful(Seq(
           LeakDetectionRuleSummary(aRule.copy(id = "rule-1"), Seq(aRepositorySummary.copy(repository = "repo1", unresolvedCount = 3))),
           LeakDetectionRuleSummary(aRule.copy(id = "rule-2"), Seq(
@@ -99,6 +99,36 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
          2, 5),
        LeakDetectionRulesWithCounts(aRule.copy(id = "rule-3"), None, None, 0, 0)
      )
+    }
+
+    "return repository summaries with counts" in new Setup {
+      val timestamp = Instant.now.minus(2, HOURS)
+      def aRule = LeakDetectionRule("", "", "", "",List(), List(), "")
+      def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 1)
+
+      when(connector.leakDetectionRuleSummaries(None, None)).thenReturn(
+        Future.successful(Seq(
+          LeakDetectionRuleSummary(aRule.copy(id = "rule-1"), Seq(aRepositorySummary.copy(repository = "repo1", unresolvedCount = 3))),
+          LeakDetectionRuleSummary(aRule.copy(id = "rule-2"), Seq(
+            aRepositorySummary.copy(repository = "repo1", firstScannedAt = timestamp.minus(3, HOURS), unresolvedCount = 4),
+            aRepositorySummary.copy(repository = "repo2", lastScannedAt = timestamp.plus(1, HOURS)))),
+          LeakDetectionRuleSummary(aRule.copy(id = "rule-3"), Seq()),
+        )))
+
+      val results = service.repoSummaries(None, None).futureValue
+
+      results._1 shouldBe Seq("rule-1", "rule-2", "rule-3")
+
+      results._2 shouldBe Seq(
+        LeakDetectionReposWithCounts("repo1",
+          Some(LocalDateTime.ofInstant(timestamp.minus(3, HOURS), ZoneId.systemDefault())),
+          Some(LocalDateTime.ofInstant(timestamp, ZoneId.systemDefault())),
+          7),
+        LeakDetectionReposWithCounts("repo2",
+          Some(LocalDateTime.ofInstant(timestamp, ZoneId.systemDefault())),
+          Some(LocalDateTime.ofInstant(timestamp.plus(1, HOURS), ZoneId.systemDefault())),
+          1)
+      )
     }
   }
 
