@@ -149,10 +149,7 @@ object CostEstimationService {
     date: Instant,
     totalSlots: Int,
     yearlyCostGbp: Double
-  ) {
-    def +(other: CostedResourceUsageTotal): CostedResourceUsageTotal =
-      CostedResourceUsageTotal(date, totalSlots + other.totalSlots, yearlyCostGbp + other.yearlyCostGbp)
-  }
+  )
 
   object CostedResourceUsageTotal {
 
@@ -165,7 +162,13 @@ object CostEstimationService {
         .map { case (date, resourceUsages) =>
           resourceUsages
             .map(fromCostedResourceUsage)
-            .fold(CostedResourceUsageTotal(date, 0, 0))(_ + _)
+            .fold(CostedResourceUsageTotal(date, totalSlots = 0, yearlyCostGbp = 0))((x, y) =>
+              CostedResourceUsageTotal(
+                date = date,
+                totalSlots = x.totalSlots + y.totalSlots,
+                yearlyCostGbp = x.yearlyCostGbp + y.yearlyCostGbp
+              )
+            )
         }
         .toList
     }
