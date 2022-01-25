@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.model
 
+import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue}
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
 sealed trait Environment { def asString: String; def displayString: String }
@@ -38,6 +39,12 @@ object Environment {
 
   def parse(s: String): Option[Environment] =
     values.find(_.asString == s)
+
+  val format: Format[Environment] = new Format[Environment] {
+    override def writes(o: Environment): JsValue = JsString(o.asString)
+    override def reads(json: JsValue): JsResult[Environment] =
+      json.validate[String].flatMap(s => Environment.parse(s).map(e => JsSuccess(e)).getOrElse(JsError("invalid environment")))
+  }
 
   implicit val pathBindable: PathBindable[Environment] =
     new PathBindable[Environment] {

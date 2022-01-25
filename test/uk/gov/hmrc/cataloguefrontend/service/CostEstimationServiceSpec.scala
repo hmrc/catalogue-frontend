@@ -22,7 +22,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ResourceUsageConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate.Summary
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentConfigByEnvironment, ServiceCostEstimate}
@@ -34,6 +34,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with ScalaFutures with MockitoSugar {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  private val mockResourceUsageConnector =
+    mock[ResourceUsageConnector]
 
   "Service" should {
     "produce a cost estimate for a service in all requested environments in which it's deployed" in {
@@ -55,7 +58,7 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
         )
 
       val costEstimationService =
-        new CostEstimationService(configConnector)
+        new CostEstimationService(configConnector, mockResourceUsageConnector)
 
       val costEstimate =
         costEstimationService.estimateServiceCost("some-service", stubs.keySet.toSeq, costEstimateConfig)
@@ -81,7 +84,7 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
         )
 
       val costEstimationService =
-        new CostEstimationService(configConnector)
+        new CostEstimationService(configConnector, mockResourceUsageConnector)
 
       val costEstimate =
         costEstimationService
@@ -105,7 +108,7 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
         )
 
       val costEstimationService =
-        new CostEstimationService(configConnector)
+        new CostEstimationService(configConnector, mockResourceUsageConnector)
 
       val costEstimateSummary =
         costEstimationService

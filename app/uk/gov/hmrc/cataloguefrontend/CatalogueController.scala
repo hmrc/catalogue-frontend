@@ -78,7 +78,8 @@ class CatalogueController @Inject() (
   repositoryInfoPage           : RepositoryInfoPage,
   repositoriesListPage         : RepositoriesListPage,
   defaultBranchListPage        : DefaultBranchListPage,
-  outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage
+  outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
+  costEstimationPage           : CostEstimationPage
 )(implicit val ec: ExecutionContext)
     extends FrontendController(mcc) {
 
@@ -499,6 +500,25 @@ class CatalogueController @Inject() (
       }
     }
   }
+
+  def costEstimation(serviceName: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      (for {
+        repositoryDetails <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
+        if repositoryDetails.repoType == RepoType.Service
+        costEstimationEnvironments = repositoryDetails.environments.getOrElse(Seq.empty).map(_.environment)
+        costEstimation <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName, costEstimationEnvironments, serviceCostEstimateConfig))
+        estimatedCostCharts <- OptionT.liftF(costEstimationService.historicResourceUsageChartsForService(serviceName, serviceCostEstimateConfig))
+      } yield
+        Ok(costEstimationPage(
+          serviceName,
+          repositoryDetails,
+          costEstimation,
+          serviceCostEstimateConfig,
+          estimatedCostCharts
+        ))
+        ).getOrElse(notFound)
+    }
 
   private def convertToDisplayableTeamMembers(
     teamName: TeamName,

@@ -271,7 +271,8 @@ class DigitalServicePageSpec extends UnitSpec with FakeApplicationBuilder with M
       repositoryInfoPage            = mock[RepositoryInfoPage],
       repositoriesListPage          = mock[RepositoriesListPage],
       defaultBranchListPage         = mock[DefaultBranchListPage],
-      outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage]
+      outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
+      costEstimationPage            = mock[CostEstimationPage]
     )
   }
 

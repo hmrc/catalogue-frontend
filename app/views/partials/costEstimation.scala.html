@@ -17,13 +17,20 @@
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
 @import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter.formatGbp
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
-@(serviceCostEstimate: ServiceCostEstimate, serviceCostEstimateConfig: CostEstimateConfig)
+@(
+  serviceCostEstimate: ServiceCostEstimate,
+  serviceCostEstimateConfig: CostEstimateConfig,
+  serviceName: String
+)
 <div id="cost-estimation">
     <div class="board">
         <h3 class="board__heading">Estimated Cost</h3>
         <div class="board__body">
-            <p><b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year.</p>
+            <p><a id="link-to-service-costs" href="@appRoutes.CatalogueController.costEstimation(serviceName)" target="_blank">
+                <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year. <span class="glyphicon glyphicon-new-window"/>
+            </a></p>
             <p>This is based on a usage of @serviceCostEstimate.summary.totalSlots slots across all environments, where
                <em data-toggle="tooltip"
                      title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
@@ -38,14 +45,14 @@
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
-      google.charts.load("current", {packages:["corechart"]});
+      google.charts.load("current", {packages:["corechart"], 'language': 'en-GB'});
       google.charts.setOnLoadCallback(drawChart);
 
       function drawChart() {
         var data = google.visualization.arrayToDataTable([
           ['Environment',   'Estimated Cost'],
           @for(e <- serviceCostEstimate.forEnvironments) {
-            ['@e.environment.asString', { v: @e.yearlyCostGbp, f: "@formatGbp(e.yearlyCostGbp) (slots = @e.slots)" } ],
+            ['@e.environment.displayString', { v: @e.yearlyCostGbp, f: "@formatGbp(e.yearlyCostGbp) (slots = @e.slots)" } ],
           }
         ]);
 
