@@ -87,24 +87,31 @@
           var totalsChartData =
             google.visualization.arrayToDataTable(@Html(estimatedCostCharts.historicTotalsChart.render));
 
+          var totalsChartOptions = {
+            legend: { position: 'none' },
+            interpolateNulls: true,
+            vAxis: { title: 'Yearly Cost', format: 'currency' },
+            explorer: {}
+          };
+
           var totalsChart =
             new google.visualization.SteppedAreaChart(document.getElementById('estimated-cost-over-time-chart'));
 
           var byEnvChartData =
             google.visualization.arrayToDataTable(@Html(estimatedCostCharts.historicByEnvChart.render));
 
-          var byEnvChart =
-            new google.visualization.LineChart(document.getElementById('estimated-cost-over-time-per-env-chart'));
-
-          var options = {
+          var byEnvChartOptions = {
             legend: { position: 'bottom' },
             interpolateNulls: true,
             vAxis: { title: 'Yearly Cost', format: 'currency' },
             explorer: {}
           };
 
-          byEnvChart.draw(byEnvChartData, options);
-          totalsChart.draw(totalsChartData, options);
+          var byEnvChart =
+            new google.visualization.LineChart(document.getElementById('estimated-cost-over-time-per-env-chart'));
+
+          byEnvChart.draw(byEnvChartData, byEnvChartOptions);
+          totalsChart.draw(totalsChartData, totalsChartOptions);
         }
     </script>
 }
