@@ -54,19 +54,17 @@ class CostEstimationService @Inject() (
 
   def historicResourceUsageForService(
     serviceName: String,
-    serviceCostEstimateConfig: CostEstimateConfig,
-    generateFakeData: Boolean
+    serviceCostEstimateConfig: CostEstimateConfig
   )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[List[CostedResourceUsage]] =
     resourceUsageConnector
-      .historicResourceUsageForService(serviceName, generateFakeData)
+      .historicResourceUsageForService(serviceName)
       .map(_.map(CostedResourceUsage.fromResourceUsage(_, serviceCostEstimateConfig.slotCostPerYear)))
 
   def historicResourceUsageChartsForService(
     serviceName: String,
-    serviceCostEstimateConfig: CostEstimateConfig,
-    generateFakeData: Boolean
+    serviceCostEstimateConfig: CostEstimateConfig
   )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[EstimatedCostCharts] =
-    historicResourceUsageForService(serviceName, serviceCostEstimateConfig, generateFakeData)
+    historicResourceUsageForService(serviceName, serviceCostEstimateConfig)
       .map(crus => {
         val totalsChart =
           CostedResourceUsageTotal

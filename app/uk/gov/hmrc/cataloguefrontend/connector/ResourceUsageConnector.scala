@@ -39,43 +39,8 @@ class ResourceUsageConnector @Inject() (
   implicit val resourceUsageFormat: Format[ResourceUsage] =
     ResourceUsage.format
 
-  def historicResourceUsageForService(
-    serviceName: String,
-    generateFakeData: Boolean = false)(implicit hc: HeaderCarrier): Future[List[ResourceUsage]] = {
-    if (generateFakeData)
-      Future.successful(fakeData())
-    else
-      http.GET[List[ResourceUsage]](url = url"$baseUrl/services/$serviceName/snapshots")
-  }
-
-  def fakeData(): List[ResourceUsage] = {
-
-    def fakeFor(date: Instant, environment: Environment): ResourceUsage = {
-      val r = scala.util.Random
-      val slots =
-        environment match {
-          case Environment.Development  =>  5 + r.nextInt(2)
-          case Environment.Integration  =>  0
-          case Environment.QA           =>  5 + r.nextInt(2)
-          case Environment.Staging      => 10 + r.nextInt(5)
-          case Environment.ExternalTest => 20 + r.nextInt(10)
-          case Environment.Production   => 25 + r.nextInt(15)
-        }
-
-      ResourceUsage(date, "", environment, slots, 1)
-    }
-
-    val dates =
-      Stream
-        .iterate(Instant.now(), 50)(_.minusSeconds(432000))
-        .toList
-        .sorted
-
-    for {
-      date <- dates
-      env  <- Environment.values.toList
-    } yield fakeFor(date, env)
-  }
+  def historicResourceUsageForService(serviceName: String)(implicit hc: HeaderCarrier): Future[List[ResourceUsage]] =
+    http.GET[List[ResourceUsage]](url = url"$baseUrl/services/$serviceName/snapshots")
 }
 
 object ResourceUsageConnector {
