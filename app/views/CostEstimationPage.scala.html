@@ -80,34 +80,31 @@
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart']});
+        google.charts.load('current', {'packages':['corechart'], 'language': 'en-GB'});
         google.charts.setOnLoadCallback(drawCharts);
 
         function drawCharts() {
-          var byEnvChartData =
-            google.visualization.arrayToDataTable(@Html(estimatedCostCharts.historicByEnvChart.render));
-
-          var byEnvChart =
-            new google.visualization.AreaChart(document.getElementById('estimated-cost-over-time-per-env-chart'));
-
-          var byEnvChartOpts = {
-            legend: { position: 'bottom' },
-            interpolateNulls: true
-          };
-
           var totalsChartData =
             google.visualization.arrayToDataTable(@Html(estimatedCostCharts.historicTotalsChart.render));
 
           var totalsChart =
-            new google.visualization.AreaChart(document.getElementById('estimated-cost-over-time-chart'));
+            new google.visualization.SteppedAreaChart(document.getElementById('estimated-cost-over-time-chart'));
 
-          var totalsChartOpts = {
+          var byEnvChartData =
+            google.visualization.arrayToDataTable(@Html(estimatedCostCharts.historicByEnvChart.render));
+
+          var byEnvChart =
+            new google.visualization.LineChart(document.getElementById('estimated-cost-over-time-per-env-chart'));
+
+          var options = {
             legend: { position: 'bottom' },
-            interpolateNulls: true
+            interpolateNulls: true,
+            vAxis: { title: 'Yearly Cost', format: 'currency' },
+            explorer: {}
           };
 
-          byEnvChart.draw(byEnvChartData, byEnvChartOpts);
-          totalsChart.draw(totalsChartData, totalsChartOpts);
+          byEnvChart.draw(byEnvChartData, options);
+          totalsChart.draw(totalsChartData, options);
         }
     </script>
 }
