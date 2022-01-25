@@ -21,7 +21,6 @@ import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ResourceUsageConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate.Summary
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{CostedResourceUsage, CostedResourceUsageTotal, DeploymentConfig, EstimatedCostCharts, ServiceCostEstimate}
 import uk.gov.hmrc.cataloguefrontend.util.ChartDataTable
 import uk.gov.hmrc.http.HeaderCarrier
@@ -95,11 +94,24 @@ object CostEstimationService {
     date: Instant,
     serviceName: String,
     environment: Environment,
-    totalSlots: Int,
-    yearlyCostGbp: Double
+    summary: CostedResourceUsage.Summary
   )
 
   object CostedResourceUsage {
+
+    final case class Summary(totalSlots: Int, yearlyCostGbp: Double) {
+      def +(other: Summary): Summary =
+        copy(
+          totalSlots = totalSlots + other.totalSlots,
+          yearlyCostGbp = yearlyCostGbp + other.yearlyCostGbp
+        )
+    }
+
+    object Summary {
+
+      val empty: Summary =
+        Summary(0, 0)
+    }
 
     def fromResourceUsage(resourceUsage: ResourceUsage, slotCostPerYear: Double): CostedResourceUsage = {
       val totalSlots =
@@ -112,8 +124,7 @@ object CostEstimationService {
         resourceUsage.date,
         resourceUsage.serviceName,
         resourceUsage.environment,
-        totalSlots,
-        yearlyCostGbp
+        Summary(totalSlots, yearlyCostGbp)
       )
     }
 
@@ -138,7 +149,7 @@ object CostEstimationService {
             .sortBy(_._1)
             .map { case (date, byEnv) =>
               s"new Date(${date.toEpochMilli})" +:
-                environments.map(e => s"${byEnv.get(e).map(_.yearlyCostGbp).getOrElse("null")}")
+                environments.map(e => s"${byEnv.get(e).map(_.summary.yearlyCostGbp).getOrElse("null")}")
             }
 
         ChartDataTable(headerRow +: dataRows)
@@ -147,8 +158,7 @@ object CostEstimationService {
 
   final case class CostedResourceUsageTotal(
     date: Instant,
-    totalSlots: Int,
-    yearlyCostGbp: Double
+    summary: CostedResourceUsage.Summary
   )
 
   object CostedResourceUsageTotal {
@@ -160,25 +170,15 @@ object CostEstimationService {
 
       resourceUsageByDate
         .map { case (date, resourceUsages) =>
-          resourceUsages
-            .map(fromCostedResourceUsage)
-            .fold(CostedResourceUsageTotal(date, totalSlots = 0, yearlyCostGbp = 0))((x, y) =>
-              CostedResourceUsageTotal(
-                date = date,
-                totalSlots = x.totalSlots + y.totalSlots,
-                yearlyCostGbp = x.yearlyCostGbp + y.yearlyCostGbp
-              )
-            )
+          val summary =
+            resourceUsages
+              .map(_.summary)
+              .fold(CostedResourceUsage.Summary.empty)(_ + _)
+
+          CostedResourceUsageTotal(date, summary)
         }
         .toList
     }
-
-    def fromCostedResourceUsage(costedResourceUsage: CostedResourceUsage): CostedResourceUsageTotal =
-      CostedResourceUsageTotal(
-        costedResourceUsage.date,
-        costedResourceUsage.totalSlots,
-        costedResourceUsage.yearlyCostGbp
-      )
 
     def toChartDataTable(costedResourceUsageTotals: List[CostedResourceUsageTotal]): ChartDataTable = {
       val headerRow =
@@ -187,7 +187,7 @@ object CostEstimationService {
       val dataRows =
         costedResourceUsageTotals
           .sortBy(_.date)
-          .map(crut => List(s"new Date(${crut.date.toEpochMilli})", s"${crut.yearlyCostGbp}"))
+          .map(crut => List(s"new Date(${crut.date.toEpochMilli})", s"${crut.summary.yearlyCostGbp}"))
 
       ChartDataTable(headerRow +: dataRows)
     }
@@ -201,7 +201,7 @@ object CostEstimationService {
   final case class ServiceCostEstimate(forEnvironments: List[ServiceCostEstimate.ForEnvironment]) {
 
     lazy val summary: ServiceCostEstimate.Summary =
-      forEnvironments.map(_.summary).fold(Summary.zero)(_ + _)
+      forEnvironments.map(_.summary).fold(ServiceCostEstimate.Summary.zero)(_ + _)
   }
 
   object ServiceCostEstimate {
