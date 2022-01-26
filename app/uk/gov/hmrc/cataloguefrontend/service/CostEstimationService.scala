@@ -22,7 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUs
 import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ResourceUsageConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{CostedResourceUsage, CostedResourceUsageTotal, DeploymentConfig, EstimatedCostCharts, ServiceCostEstimate}
-import uk.gov.hmrc.cataloguefrontend.util.ChartDataTable
+import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
@@ -105,6 +105,9 @@ object CostEstimationService {
           totalSlots = totalSlots + other.totalSlots,
           yearlyCostGbp = yearlyCostGbp + other.yearlyCostGbp
         )
+
+      def formatForChart: String =
+        s"""{ v: $yearlyCostGbp, f: "${CurrencyFormatter.formatGbp(yearlyCostGbp)} (slots = $totalSlots)" }"""
     }
 
     object Summary {
@@ -149,7 +152,7 @@ object CostEstimationService {
             .sortBy(_._1)
             .map { case (date, byEnv) =>
               s"new Date(${date.toEpochMilli})" +:
-                environments.map(e => s"${byEnv.get(e).map(_.summary.yearlyCostGbp).getOrElse("null")}")
+                environments.map(e => s"${byEnv.get(e).map(_.summary.formatForChart).getOrElse("null")}")
             }
 
         ChartDataTable(headerRow +: dataRows)
@@ -182,12 +185,12 @@ object CostEstimationService {
 
     def toChartDataTable(costedResourceUsageTotals: List[CostedResourceUsageTotal]): ChartDataTable = {
       val headerRow =
-        List("'Date'", "'Yearly Cost (GBP)'")
+        List("'Date'", "'Yearly Cost'")
 
       val dataRows =
         costedResourceUsageTotals
           .sortBy(_.date)
-          .map(crut => List(s"new Date(${crut.date.toEpochMilli})", s"${crut.summary.yearlyCostGbp}"))
+          .map(crut => List(s"new Date(${crut.date.toEpochMilli})", s"${crut.summary.formatForChart}"))
 
       ChartDataTable(headerRow +: dataRows)
     }
