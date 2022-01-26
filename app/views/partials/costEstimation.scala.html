@@ -32,11 +32,12 @@
                 <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year. <span class="glyphicon glyphicon-new-window"/>
             </a></p>
             <p>This is based on a usage of @serviceCostEstimate.summary.totalSlots slots across all environments, where
+               each slot is estimated to cost
                <em data-toggle="tooltip"
                      title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
                             @serviceCostEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
-                            services across all environments">
-                   each slot is estimated to cost @formatGbp(serviceCostEstimateConfig.slotCostPerYear) per year
+                            services across all environments" style="border-bottom: dotted 1px">
+                   @formatGbp(serviceCostEstimateConfig.slotCostPerYear) per year
                </em>.</p>
             <div id="chart" />
         </div>
