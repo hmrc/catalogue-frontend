@@ -42,7 +42,7 @@
     <section class="section-wrapper">
         <div class="row">
             <div class="col-md-12">
-                @partials.costEstimation(costEstimate, costEstimateConfig, serviceName)
+                @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = false)
             </div>
         </div>
     </section>
@@ -90,8 +90,7 @@
           var totalsChartOptions = {
             legend: { position: 'none' },
             interpolateNulls: true,
-            vAxis: { title: 'Yearly Cost', format: 'currency' },
-            explorer: {}
+            vAxis: { title: 'Yearly Cost', format: 'currency' }
           };
 
           var totalsChart =
@@ -103,8 +102,7 @@
           var byEnvChartOptions = {
             legend: { position: 'bottom' },
             interpolateNulls: true,
-            vAxis: { title: 'Yearly Cost', format: 'currency' },
-            explorer: {}
+            vAxis: { title: 'Yearly Cost', format: 'currency' }
           };
 
           var byEnvChart =
