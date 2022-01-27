@@ -22,15 +22,23 @@
 @(
   serviceCostEstimate: ServiceCostEstimate,
   serviceCostEstimateConfig: CostEstimateConfig,
-  serviceName: String
+  serviceName: String,
+  linkToCostsPage: Boolean
 )
 <div id="cost-estimation">
     <div class="board">
         <h3 class="board__heading">Estimated Cost</h3>
         <div class="board__body">
-            <p><a id="link-to-service-costs" href="@appRoutes.CatalogueController.costEstimation(serviceName)" target="_blank">
-                <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year. <span class="glyphicon glyphicon-new-window"/>
-            </a></p>
+            <p>
+              @if(linkToCostsPage) {
+                <a id="link-to-service-costs" href="@appRoutes.CatalogueController.costEstimation(serviceName)" target="_blank">
+                  <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year. <span class="glyphicon glyphicon-new-window"/>
+                </a>
+              } else {
+                <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year.
+              }
+            </p>
+
             <p>This is based on a usage of @serviceCostEstimate.summary.totalSlots slots across all environments, where
                each slot is estimated to cost
                <em data-toggle="tooltip"
