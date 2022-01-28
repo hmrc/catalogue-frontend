@@ -1,0 +1,105 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionReportWithLeaks
+@import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionLeaksByRule
+@import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionLeakDetails
+@import views.partials.LeakDetectionHighlighter
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+
+@this(viewMessages: ViewMessages)
+
+@(report: LeakDetectionReportWithLeaks)(implicit messages: Messages, request: Request[_])
+
+@standard_layout(s"repository leaks") {
+    <header>
+        <h1>Leak Detection Report</h1>
+    </header>
+
+    <div class="row">
+        <ul class="list list--minimal list-group row">
+            <li class="col-xs-12">
+                <label>Repository:</label>
+                @report.repoName
+            </li>
+            <li class="col-xs-12">
+                <label>Branch: </label>
+                @report.branch
+            </li>
+            <li class="col-xs-12">
+                <label>Scanned at: </label>
+                @report.scannedAt.displayFormat
+            </li>
+            <li class="col-xs-12">
+                <label>Commit id: </label>
+                @report.commitId
+            </li>
+            <li class="col-xs-12">
+                <label>Author: </label>
+                @report.author
+            </li>
+        </ul>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th/>
+                <th class="col-xs-7">Rule</th>
+                <th class="col-xs-2">Scope</th>
+                <th class="col-xs-2">Priority</th>
+                <th class="col-xs-1" style="text-align: center">Total violations</th>
+            </tr>
+        </thead>
+        <tbody>
+        @report.leaks.map(leakDetectionRuleViolations)
+        </tbody>
+    </table>
+}
+
+@leakDetectionRuleViolations(leaksByRule: LeakDetectionLeaksByRule) = {
+    <tr class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId">
+        <td class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId"/>
+        <td>@leaksByRule.description (ruleId: @leaksByRule.ruleId)</td>
+        <td>@leaksByRule.scope</td>
+        <td class="@leaksByRule.priority">@leaksByRule.priority</td>
+        <td style="text-align: center">@leaksByRule.leaks.length</td>
+    </tr>
+    <tr class="hide" />
+    <tr id="collapsible-area-@leaksByRule.ruleId" class="collapse">
+        <td colspan="5">
+        @leaksByRule.leaks.map(l => leakDetectionLeaks(leaksByRule.scope, l))
+        </td>
+    </tr>
+}
+
+@leakDetectionLeaks(scope: String, leak: LeakDetectionLeakDetails) = {
+    <div class="col-xs-12">
+        <ul class="list list--minimal list-group row">
+            <li>
+                <span class="col-xs-12">
+                    <a href="@leak.urlToSource" target="_blank">@leak.filePath @if(scope == "fileContent") { #@leak.lineNumber}</a>
+                </span>
+            </li>
+            <li>
+                <span class="col-xs-12">
+                    <p class="monospace" style="word-break: break-all">@LeakDetectionHighlighter(leak)</p>
+                </span>
+            </li>
+        </ul>
+    </div>
+}
