@@ -75,7 +75,7 @@
 
 @leakDetectionRuleSummary(summary: LeakDetectionReposWithCounts) = {
     <tr>
-        <td><a href="@appRoutes.CatalogueController.service(summary.repoName)">@summary.repoName</a></td>
+        <td><a href="@appRoutes.LeakDetectionController.branchSummaries(summary.repoName)">@summary.repoName</a></td>
         <td>@if(summary.firstScannedAt.nonEmpty) {
             @summary.firstScannedAt.get.displayFormat
         } </td>
