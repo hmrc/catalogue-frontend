@@ -31,8 +31,8 @@
         <div class="board__body">
             <p>
               @if(linkToCostsPage) {
-                <a id="link-to-service-costs" href="@appRoutes.CatalogueController.costEstimation(serviceName)" target="_blank">
-                  <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year. <span class="glyphicon glyphicon-new-window"/>
+                <a id="link-to-service-costs" href="@appRoutes.CatalogueController.costEstimation(serviceName)">
+                  <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year.
                 </a>
               } else {
                 <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year.
