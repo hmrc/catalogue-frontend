@@ -32,7 +32,7 @@
             <p>
               @if(linkToCostsPage) {
                 <a id="link-to-service-costs" href="@appRoutes.CatalogueController.costEstimation(serviceName)">
-                  <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year. <span class="glyphicon glyphicon-new-window"/>
+                  <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year.
                 </a>
               } else {
                 <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year.
