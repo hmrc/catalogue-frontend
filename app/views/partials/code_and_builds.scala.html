@@ -34,10 +34,10 @@
                 <li class="list-item"><a id="link-to-@{ciLink.id}" href="@{ciLink.url}" target="_blank">@{ciLink.displayName}<span class="glyphicon glyphicon-new-window"/></a></li>
             }
             @if(repo.repoType == RepoType.Service) {
-                <li class="list-item"><a id="link-to-dependency-list" href="@appRoutes.DependenciesController.services(repo.name)"></a></li>
-                <li class="list-item"><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, serviceName)}"></a></li>
+                <li class="list-item"><a id="link-to-dependency-list" href="@appRoutes.DependenciesController.services(repo.name)">Service Dependencies</a></li>
+                <li class="list-item"><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, serviceName)}">Frontend Route Warnings</a></li>
             }
-                <li class="list-item"><a id="link-to-@{repo.name}-health" href="@{HealthIndicatorsController.breakdownForRepo(repo.name)}"></a></li>
+                <li class="list-item"><a id="link-to-@{repo.name}-health" href="@{HealthIndicatorsController.breakdownForRepo(repo.name)}">Health-Indicator</a></li>
             </ul>
         </div>
     </div>
