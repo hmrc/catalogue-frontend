@@ -57,54 +57,6 @@ class ServiceDependenciesConnectorSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-
-  "GET curated slug dependencies" should {
-    "returns a list of curated dependencies for slugInfoFlag" in {
-      val slugName = "slug-name"
-      val flag     = SlugInfoFlag.Latest
-      stubFor(
-        get(urlEqualTo(s"/api/slug-dependencies/$slugName?flag=${flag.asString}"))
-          .willReturn(
-            aResponse()
-            .withBody(
-              """[
-                  {
-                   "name": "dep1",
-                   "group": "uk.gov.hmrc",
-                   "currentVersion": {"major": 1, "minor": 0, "patch": 0, "original": "1.0.0"},
-                   "bobbyRuleViolations": []
-                  },
-                  {"name": "dep2",
-                   "group": "uk.gov.hmrc",
-                   "currentVersion": {"major": 2, "minor": 0, "patch": 0, "original": "2.0.0"},
-                   "latestVersion": {"major": 2, "minor": 1, "patch": 0, "original": "2.1.0"},
-                   "bobbyRuleViolations": []
-                  }
-                 ]"""
-             )
-          )
-      )
-
-      val response = serviceDependenciesConnector.getCuratedSlugDependencies(slugName, flag).futureValue
-
-      response should contain theSameElementsAs Seq(
-        Dependency(name = "dep1", group = "uk.gov.hmrc", currentVersion = Version("1.0.0"), latestVersion = None),
-        Dependency(name = "dep2", group = "uk.gov.hmrc", currentVersion = Version("2.0.0"), latestVersion = Some(Version("2.1.0")))
-      )
-    }
-
-    "returns an empty list of dependencies for an unknown slug" in {
-      val slugName = "slug-name"
-      val flag     = SlugInfoFlag.ForEnvironment(Environment.ExternalTest)
-      stubFor(
-        get(urlEqualTo(s"/api/slug-dependencies/$slugName?flag=${flag.asString}"))
-          .willReturn(aResponse().withStatus(404))
-      )
-
-      serviceDependenciesConnector.getCuratedSlugDependencies(slugName, flag).futureValue shouldBe empty
-    }
-  }
-
   "getJDKVersions" should {
     "returns JDK versions with vendor" in {
       stubFor(

@@ -25,7 +25,7 @@ import play.api.mvc._
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
@@ -46,7 +46,7 @@ case class TeamActivityDates(
 
 case class EnvData(
   version          : Version,
-  dependencies     : Seq[Dependency],
+  repoModules      : Option[RepositoryModules],
   optShutterState  : Option[ShutterState],
   optTelemetryLinks: Option[Seq[Link]]
 )
@@ -295,14 +295,14 @@ class CatalogueController @Inject() (
                        ).flatten
 
                      (
-                       serviceDependenciesConnector.getCuratedSlugDependencies(repositoryName, slugInfoFlag),
+                       serviceDependenciesConnector.getRepositoryModules(repositoryName, version),
                        shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
-                     ).mapN { (dependencies, optShutterState) =>
+                     ).mapN { (repoModules, optShutterState) =>
                        Some(
                          slugInfoFlag ->
                            EnvData(
                              version           = version,
-                             dependencies      = dependencies,
+                             repoModules       = repoModules,
                              optShutterState   = optShutterState,
                              optTelemetryLinks = Some(telemetryLinks)
                            )
@@ -319,7 +319,7 @@ class CatalogueController @Inject() (
     (
       teamsAndRepositoriesConnector.lookupLink(repositoryName),
       futEnvDatas,
-      serviceDependenciesConnector.getCuratedSlugDependencies(repositoryName, SlugInfoFlag.Latest),
+      serviceDependenciesConnector.getRepositoryModules(repositoryName),
       leakDetectionService.urlIfLeaksFound(repositoryName),
       routeRulesService.serviceUrl(serviceName),
       routeRulesService.serviceRoutes(serviceName),
@@ -327,7 +327,7 @@ class CatalogueController @Inject() (
       costEstimationService.estimateServiceCost(repositoryName, costEstimationEnvironments, serviceCostEstimateConfig)
     ).mapN { (jenkinsLink,
               envDatas,
-              librariesOfLatestSlug,
+              latestRepoModules,
               urlIfLeaksFound,
               serviceUrl,
               serviceRoutes,
@@ -339,7 +339,7 @@ class CatalogueController @Inject() (
           SlugInfoFlag.Latest ->
             EnvData(
               version           = latestServiceInfo.version,
-              dependencies      = librariesOfLatestSlug,
+              repoModules       = latestRepoModules,
               optShutterState   = None,
               optTelemetryLinks = None
             )
@@ -468,7 +468,7 @@ class CatalogueController @Inject() (
 
   def dependencyRepository(group: String, artefact: String, version: String): Action[AnyContent] =
     Action.async { implicit request =>
-      serviceDependenciesConnector.getRepositoryName(group, artefact, version)
+      serviceDependenciesConnector.getRepositoryName(group, artefact, Version(version))
         .map { repoName =>
           Redirect(routes.CatalogueController.repository(repoName.getOrElse(artefact)).copy(fragment = artefact))
         }
