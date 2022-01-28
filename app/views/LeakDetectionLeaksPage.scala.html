@@ -14,12 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionReportWithLeaks
-@import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionLeaksByRule
-@import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionLeakDetails
-@import views.partials.LeakDetectionHighlighter
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.service.{LeakDetectionLeakDetails, LeakDetectionLeaksByRule, LeakDetectionReportWithLeaks}
+@import views.partials.LeakDetectionHighlighter
 
 @this(viewMessages: ViewMessages)
 
@@ -30,58 +28,67 @@
         <h1>Leak Detection Report</h1>
     </header>
 
-    <div class="row">
-        <ul class="list list--minimal list-group row">
-            <li class="col-xs-12">
-                <label>Repository:</label>
-                @report.repoName
-            </li>
-            <li class="col-xs-12">
-                <label>Branch: </label>
-                @report.branch
-            </li>
-            <li class="col-xs-12">
-                <label>Scanned at: </label>
-                @report.scannedAt.displayFormat
-            </li>
-            <li class="col-xs-12">
-                <label>Commit id: </label>
-                @report.commitId
-            </li>
-            <li class="col-xs-12">
-                <label>Author: </label>
-                @report.author
-            </li>
-        </ul>
+    <ul class="list list--minimal list-group row">
+        <li class="col-xs-12">
+            <label>Repository:</label>
+            @report.repoName
+        </li>
+        <li class="col-xs-12">
+            <label>Branch: </label>
+            @report.branch
+        </li>
+        <li class="col-xs-12">
+            <label>Scanned at: </label>
+            @report.scannedAt.displayFormat
+        </li>
+        <li class="col-xs-12">
+            <label>Commit id: </label>
+            @report.commitId
+        </li>
+        <li class="col-xs-12">
+            <label>Author: </label>
+            @report.author
+        </li>
+    </ul>
+
+
+    <div id="leaks-list">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th/>
+                    <th class="col-xs-7"><button class="sort no-border" data-sort="rule">Rule</button></th>
+                    <th class="col-xs-2"><button class="sort no-border" data-sort="scope">Scope</button></th>
+                    <th class="col-xs-2"><button class="sort no-border" data-sort="priority">Priority</button></th>
+                    <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
+                </tr>
+            </thead>
+            <tbody class="list">
+            @report.leaks.map(leakDetectionRuleViolations)
+            </tbody>
+        </table>
     </div>
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th/>
-                <th class="col-xs-7">Rule</th>
-                <th class="col-xs-2">Scope</th>
-                <th class="col-xs-2">Priority</th>
-                <th class="col-xs-1" style="text-align: center">Total violations</th>
-            </tr>
-        </thead>
-        <tbody>
-        @report.leaks.map(leakDetectionRuleViolations)
-        </tbody>
-    </table>
+    <script>
+            var options = {valueNames: ['rule', 'scope', 'priority', 'total']};
+            leaksList = new List('leaks-list', options);
+    </script>
 }
 
 @leakDetectionRuleViolations(leaksByRule: LeakDetectionLeaksByRule) = {
     <tr class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId">
         <td class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId"/>
-        <td>@leaksByRule.description (ruleId: @leaksByRule.ruleId)</td>
-        <td>@leaksByRule.scope</td>
-        <td class="@leaksByRule.priority">@leaksByRule.priority</td>
-        <td style="text-align: center">@leaksByRule.leaks.length</td>
+        <td class="rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
+        <td class="scope">@leaksByRule.scope</td>
+        <td class="priority @leaksByRule.priority">@leaksByRule.priority</td>
+        <td class="total text-center">@leaksByRule.leaks.length</td>
     </tr>
-    <tr class="hide" />
     <tr id="collapsible-area-@leaksByRule.ruleId" class="collapse">
-        <td colspan="5">
+        <td class="hide rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
+        <td class="hide scope">@leaksByRule.scope</td>
+        <td class="hide priority">@leaksByRule.priority</td>
+        <td class="hide total">@leaksByRule.leaks.length</td>
+        <td colspan="6">
         @leaksByRule.leaks.map(l => leakDetectionLeaks(leaksByRule.scope, l))
         </td>
     </tr>

@@ -29,46 +29,62 @@
         </header>
 
         @if(summaries.nonEmpty) {
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th class="col-xs-1">Rule id</th>
-                        <th class="col-xs-3">Description</th>
-                        <th class="col-xs-3">Earliest violation</th>
-                        <th class="col-xs-3">Latest violation</th>
-                        <th class="col-xs-1" style="text-align: center">Violating repositories</th>
-                        <th class="col-xs-1" style="text-align: center">Total violations</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @summaries.map(leakDetectionRuleSummary)
-                </tbody>
-            </table>
+            <div id="rules-list">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="col-xs-1"><button class="sort no-border" data-sort="rule-id">Rule id</button></th>
+                            <th class="col-xs-3"><button class="sort no-border" data-sort="description">Description</button></th>
+                            <th class="col-xs-3"><button class="sort no-border" data-sort="first-scanned">Earliest violation</button></th>
+                            <th class="col-xs-3"><button class="sort no-border" data-sort="last-scanned">Latest violation</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="repo-count">Violating repositories</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
+                        </tr>
+                    </thead>
+                    <tbody class="list">
+                    @summaries.map(leakDetectionRuleSummary)
+                    </tbody>
+                </table>
+            </div>
+
+            <script>
+                    var options = {valueNames: ['rule-id', 'description', 'first-scanned', 'last-scanned', 'repo-count', 'total']};
+                    rulesList = new List('rules-list', options);
+            </script>
         }
     }
 
     @leakDetectionRuleSummary(summary: LeakDetectionRulesWithCounts) = {
         <tr>
             <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" />
-            <td class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id">@summary.rule.id</td>
-            <td class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id">@summary.rule.description</td>
-            <td>@if(summary.firstScannedAt.nonEmpty) {
+            <td class="rule-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id">@summary.rule.id</td>
+            <td class="description hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id">@summary.rule.description</td>
+            <td class="first-scanned">@if(summary.firstScannedAt.nonEmpty) {
                 @summary.firstScannedAt.get.displayFormat
             } </td>
-            <td>@if(summary.lastScannedAt.nonEmpty) {
+            <td class="last-scanned">@if(summary.lastScannedAt.nonEmpty) {
                 @summary.lastScannedAt.get.displayFormat
             } </td>
-            <td style="text-align: center">@summary.repoCount</td>
-            <td style="text-align: center">
-            @if(summary.totalCount > 0) {
-                <a href="@appRoutes.LeakDetectionController.repoSummaries?rule=@summary.rule.id">@summary.totalCount</a>
-            } else {
-                <span>0</span>
-            }</td>
+            <td class="repo-count text-center">@summary.repoCount</td>
+            <td class="total text-center"><div class="hide">@summary.totalCount</div>
+                @if(summary.totalCount > 0) {
+                    <a href="@appRoutes.LeakDetectionController.repoSummaries?rule=@summary.rule.id">@summary.totalCount</a>
+                } else {
+                    <span>0</span>
+                }</td>
         </tr>
-        <tr class="hide" />
         <tr id="collapsible-area-@summary.rule.id" class="collapse">
+            <td class="hide rule-id">@summary.rule.id</td>
+            <td class="hide description">@summary.rule.description</td>
+            <td class="hide first-scanned">@if(summary.firstScannedAt.nonEmpty) {
+                @summary.firstScannedAt.get.displayFormat
+            } </td>
+            <td class="hide last-scanned">@if(summary.lastScannedAt.nonEmpty) {
+                @summary.lastScannedAt.get.displayFormat
+            } </td>
+            <td class="hide repo-count">@summary.repoCount</td>
+            <td class="hide total"><div class="hide">@summary.totalCount</div></td>
             <td colspan="7">
             @ruleDetails(summary.rule)
             </td>

@@ -30,25 +30,32 @@
     @if(summaries.isEmpty) {
         <div>No leaks</div>
     } else {
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th class="col-xs-8">Branch</th>
-                    <th class="col-xs-3">Scanned at</th>
-                    <th class="col-xs-1" style="text-align: center">Total violations</th>
-                </tr>
-            </thead>
-            <tbody>
-            @summaries.map(leakDetectionBranchSummary(repoName, _))
-            </tbody>
-        </table>
+        <div id="branch-list">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th class="col-xs-8"><button class="sort no-border" data-sort="branch">Branch</button></th>
+                        <th class="col-xs-3"><button class="sort no-border" data-sort="scanned">Scanned at</button></th>
+                        <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
+                    </tr>
+                </thead>
+                <tbody class="list">
+                @summaries.map(leakDetectionBranchSummary(repoName, _))
+                </tbody>
+            </table>
+        </div>
+
+        <script>
+                var options = {valueNames: ['branch', 'scanned', 'total']};
+                branchList = new List('branch-list', options);
+        </script>
     }
 }
 
-@leakDetectionBranchSummary(repoName: String, branchSummary: LeakDetectionBranchesWithCounts) = {
+@leakDetectionBranchSummary(repoName: String, summary: LeakDetectionBranchesWithCounts) = {
     <tr>
-        <td><a href="@appRoutes.LeakDetectionController.report(repoName, branchSummary.branch)">@branchSummary.branch</a></td>
-        <td>@branchSummary.scannedAt.displayFormat</td>
-        <td style="text-align: center"><a href="@appRoutes.LeakDetectionController.report(repoName, branchSummary.branch)">@branchSummary.totalCount</a></td>
+        <td class="branch"><a href="@appRoutes.LeakDetectionController.report(repoName, summary.branch)">@summary.branch</a></td>
+        <td class="scanned">@summary.scannedAt.displayFormat</td>
+        <td class="total text-center"><div class="hidden">@summary.totalCount</div><a href="@appRoutes.LeakDetectionController.report(repoName, summary.branch)">@summary.totalCount</a></td>
     </tr>
 }
