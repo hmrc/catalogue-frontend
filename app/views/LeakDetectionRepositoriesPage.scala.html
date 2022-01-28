@@ -23,7 +23,7 @@
 @this(viewMessages: ViewMessages)
 
 @(rules: Seq[String],
-        repoSummaries: Seq[LeakDetectionReposWithCounts],
+        summaries: Seq[LeakDetectionReposWithCounts],
         teams: Seq[Team],
         form: Form[_]
 )(implicit messages: Messages, request: Request[_])
@@ -68,20 +68,20 @@
             </tr>
         </thead>
         <tbody>
-        @repoSummaries.map(leakDetectionRuleSummary)
+        @summaries.map(leakDetectionRuleSummary)
         </tbody>
     </table>
 }
 
-@leakDetectionRuleSummary(repoSummary: LeakDetectionReposWithCounts) = {
-    <tr id="@repoSummary.repoName" >
-        <td><a href="@appRoutes.CatalogueController.service(repoSummary.repoName)">@repoSummary.repoName</a></td>
-        <td>@if(repoSummary.firstScannedAt.nonEmpty) {
-            @repoSummary.firstScannedAt.get.displayFormat
+@leakDetectionRuleSummary(summary: LeakDetectionReposWithCounts) = {
+    <tr>
+        <td><a href="@appRoutes.CatalogueController.service(summary.repoName)">@summary.repoName</a></td>
+        <td>@if(summary.firstScannedAt.nonEmpty) {
+            @summary.firstScannedAt.get.displayFormat
         } </td>
-        <td>@if(repoSummary.lastScannedAt.nonEmpty) {
-            @repoSummary.lastScannedAt.get.displayFormat
+        <td>@if(summary.lastScannedAt.nonEmpty) {
+            @summary.lastScannedAt.get.displayFormat
         } </td>
-        <td style="text-align: center">@repoSummary.totalCount</td>
+        <td style="text-align: center"><a href="@appRoutes.LeakDetectionController.branchSummaries(summary.repoName)">@summary.totalCount</a></td>
     </tr>
 }

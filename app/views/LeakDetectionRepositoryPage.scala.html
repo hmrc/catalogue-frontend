@@ -1,0 +1,54 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionBranchesWithCounts
+@import uk.gov.hmrc.cataloguefrontend.{ViewMessages, routes => appRoutes}
+
+@this(viewMessages: ViewMessages)
+
+@(repoName: String, summaries: Seq[LeakDetectionBranchesWithCounts])(implicit messages: Messages, request: Request[_])
+
+@standard_layout(s"repository leaks") {
+    <header>
+        <h1>Leak Detection: @repoName</h1>
+    </header>
+
+    @if(summaries.isEmpty) {
+        <div>No leaks</div>
+    } else {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="col-xs-8">Branch</th>
+                    <th class="col-xs-3">Scanned at</th>
+                    <th class="col-xs-1" style="text-align: center">Total violations</th>
+                </tr>
+            </thead>
+            <tbody>
+            @summaries.map(leakDetectionBranchSummary(repoName, _))
+            </tbody>
+        </table>
+    }
+}
+
+@leakDetectionBranchSummary(repoName: String, branchSummary: LeakDetectionBranchesWithCounts) = {
+    <tr>
+        <td><a href="@appRoutes.LeakDetectionController.report(repoName, branchSummary.branch)">@branchSummary.branch</a></td>
+        <td>@branchSummary.scannedAt.displayFormat</td>
+        <td style="text-align: center"><a href="@appRoutes.LeakDetectionController.report(repoName, branchSummary.branch)">@branchSummary.totalCount</a></td>
+    </tr>
+}

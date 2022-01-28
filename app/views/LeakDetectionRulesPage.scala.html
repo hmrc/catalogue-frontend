@@ -15,20 +15,20 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.LeakDetectionRule
 @import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionRulesWithCounts
+@import uk.gov.hmrc.cataloguefrontend.{ViewMessages, routes => appRoutes}
 
 @this(viewMessages: ViewMessages)
 
-@(ruleSummaries: Seq[LeakDetectionRulesWithCounts])(implicit request: Request[_])
+@(summaries: Seq[LeakDetectionRulesWithCounts])(implicit request: Request[_])
 
     @standard_layout(s"Leak detection rules") {
         <header>
             <h1>Leak Detection Rules</h1>
         </header>
 
-        @if(ruleSummaries.nonEmpty) {
+        @if(summaries.nonEmpty) {
             <table class="table table-striped">
                 <thead>
                     <tr>
@@ -42,35 +42,35 @@
                     </tr>
                 </thead>
                 <tbody>
-                @ruleSummaries.map(leakDetectionRuleSummary)
+                @summaries.map(leakDetectionRuleSummary)
                 </tbody>
             </table>
         }
     }
 
-    @leakDetectionRuleSummary(ruleSummary: LeakDetectionRulesWithCounts) = {
-        <tr id="@ruleSummary.rule.id" >
-            <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@ruleSummary.rule.id" />
-            <td class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@ruleSummary.rule.id">@ruleSummary.rule.id</td>
-            <td class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@ruleSummary.rule.id">@ruleSummary.rule.description</td>
-            <td>@if(ruleSummary.firstScannedAt.nonEmpty) {
-                @ruleSummary.firstScannedAt.get.displayFormat
+    @leakDetectionRuleSummary(summary: LeakDetectionRulesWithCounts) = {
+        <tr id="@summary.rule.id" >
+            <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" />
+            <td class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id">@summary.rule.id</td>
+            <td class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id">@summary.rule.description</td>
+            <td>@if(summary.firstScannedAt.nonEmpty) {
+                @summary.firstScannedAt.get.displayFormat
             } </td>
-            <td>@if(ruleSummary.lastScannedAt.nonEmpty) {
-                @ruleSummary.lastScannedAt.get.displayFormat
+            <td>@if(summary.lastScannedAt.nonEmpty) {
+                @summary.lastScannedAt.get.displayFormat
             } </td>
-            <td style="text-align: center">@ruleSummary.repoCount</td>
+            <td style="text-align: center">@summary.repoCount</td>
             <td style="text-align: center">
-            @if(ruleSummary.totalCount > 0) {
-                <a href="/leak-detection/repositories?rule=@ruleSummary.rule.id">@ruleSummary.totalCount</a>
+            @if(summary.totalCount > 0) {
+                <a href="@appRoutes.LeakDetectionController.repoSummaries?rule=@summary.rule.id">@summary.totalCount</a>
             } else {
                 <span>0</span>
             }</td>
         </tr>
         <tr class="hide" />
-        <tr id="collapsible-area-@ruleSummary.rule.id" class="collapse">
+        <tr id="collapsible-area-@summary.rule.id" class="collapse">
             <td colspan="7">
-            @ruleDetails(ruleSummary.rule)
+            @ruleDetails(summary.rule)
             </td>
         </tr>
     }
