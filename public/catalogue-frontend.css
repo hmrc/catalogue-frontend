@@ -90,6 +90,8 @@ img {
 svg:not(:root) {
   overflow: hidden; }
 
+svg > g:last-child > g.google-visualization-tooltip { pointer-events: none }
+
 figure {
   margin: 1em 40px; }
 
