@@ -31,6 +31,10 @@ class LeakDetectionService @Inject() (
 
   def scannedLocalDateTime(i: Instant) = LocalDateTime.ofInstant(i, ZoneId.systemDefault())
 
+  def resolutionUrl: String =
+    configuration
+      .get[String]("leakDetection.resolution.url")
+
   def urlIfLeaksFound(repoName: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
     repositoriesWithLeaks.map { reposWithLeaks =>
       if (hasLeaks(reposWithLeaks)(repoName))

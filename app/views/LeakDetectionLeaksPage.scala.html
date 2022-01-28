@@ -21,7 +21,7 @@
 
 @this(viewMessages: ViewMessages)
 
-@(report: LeakDetectionReportWithLeaks)(implicit messages: Messages, request: Request[_])
+@(report: LeakDetectionReportWithLeaks, leakResolutionUrl: String)(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"repository leaks") {
     <header>
@@ -51,24 +51,33 @@
         </li>
     </ul>
 
+    @if(report.leaks.isEmpty) {
+        <div class="alert alert-success">
+            There are no unresolved leaks associated to this branch
+        </div>
+    } else {
 
-    <div id="leaks-list">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th/>
-                    <th class="col-xs-7"><button class="sort no-border" data-sort="rule">Rule</button></th>
-                    <th class="col-xs-2"><button class="sort no-border" data-sort="scope">Scope</button></th>
-                    <th class="col-xs-2"><button class="sort no-border" data-sort="priority">Priority</button></th>
-                    <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
-                </tr>
-            </thead>
-            <tbody class="list">
-            @report.leaks.map(leakDetectionRuleViolations)
-            </tbody>
-        </table>
-    </div>
-
+        <div class="alert alert-warning">
+            Please click <a href="@leakResolutionUrl">here</a> to find out how to resolve the leaks
+        </div>
+        <h2>Unresolved leaks</h2>
+        <div id="leaks-list">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th/>
+                        <th class="col-xs-7"><button class="sort no-border" data-sort="rule">Rule</button></th>
+                        <th class="col-xs-2"><button class="sort no-border" data-sort="scope">Scope</button></th>
+                        <th class="col-xs-2"><button class="sort no-border" data-sort="priority">Priority</button></th>
+                        <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
+                    </tr>
+                </thead>
+                <tbody class="list">
+                @report.leaks.map(leakDetectionRuleViolations)
+                </tbody>
+            </table>
+        </div>
+    }
     <script>
             var options = {valueNames: ['rule', 'scope', 'priority', 'total']};
             leaksList = new List('leaks-list', options);

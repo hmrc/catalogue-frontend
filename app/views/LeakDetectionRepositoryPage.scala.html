@@ -28,7 +28,9 @@
     </header>
 
     @if(summaries.isEmpty) {
-        <div>No leaks</div>
+        <div class="alert alert-success">
+            There are no unresolved leaks associated to this repository
+        </div>
     } else {
         <div id="branch-list">
             <table class="table table-striped">

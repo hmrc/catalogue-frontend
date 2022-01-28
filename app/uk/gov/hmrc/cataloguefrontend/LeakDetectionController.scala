@@ -73,7 +73,8 @@ class LeakDetectionController @Inject() (
     Action.async { implicit request =>
       for {
         report <- leakDetectionService.report(repository, branch)
-        response = Ok(leaksPage(report))
+        resolutionUrl = leakDetectionService.resolutionUrl
+        response = Ok(leaksPage(report, resolutionUrl))
       } yield response
     }
 }
