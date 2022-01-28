@@ -23,15 +23,17 @@ import uk.gov.hmrc.cataloguefrontend.LeakDetectionExplorerFilter.form
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionService
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.{LeakDetectionPage, LeakDetectionRuleExplorerPage}
+import views.html.{LeakDetectionLeaksPage, LeakDetectionRepositoriesPage, LeakDetectionRepositoryPage, LeakDetectionRulesPage}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class LeakDetectionController @Inject() (
   mcc: MessagesControllerComponents,
-  page: LeakDetectionPage,
-  ruleExplorerPage: LeakDetectionRuleExplorerPage,
+  rulesPage: LeakDetectionRulesPage,
+  ruleExplorerPage: LeakDetectionRepositoriesPage,
+  repositoryPage: LeakDetectionRepositoryPage,
+  leaksPage: LeakDetectionLeaksPage,
   leakDetectionService: LeakDetectionService,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
 )(implicit val ec: ExecutionContext)
@@ -45,17 +47,33 @@ class LeakDetectionController @Inject() (
           formWithErrors => Future.successful(BadRequest(ruleExplorerPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors))),
           validForm =>
             for {
-              rules <- leakDetectionService.repoSummaries(validForm.rule, validForm.team)
-              teams <- teamsAndRepositoriesConnector.allTeams
-            } yield Ok(ruleExplorerPage(rules._1, rules._2, teams.sortBy(_.name), form.fill(validForm)))
+              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team)
+              teams     <- teamsAndRepositoriesConnector.allTeams
+            } yield Ok(ruleExplorerPage(summaries._1, summaries._2, teams.sortBy(_.name), form.fill(validForm)))
         )
     }
 
   def ruleSummaries(): Action[AnyContent] =
     Action.async { implicit request =>
       for {
-        rules <- leakDetectionService.ruleSummaries
-        response = Ok(page(rules))
+        summaries <- leakDetectionService.ruleSummaries
+        response = Ok(rulesPage(summaries))
+      } yield response
+    }
+
+  def branchSummaries(repository: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      for {
+        summaries <- leakDetectionService.branchSummaries(repository)
+        response = Ok(repositoryPage(repository, summaries))
+      } yield response
+    }
+
+  def report(repository: String, branch: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      for {
+        report <- leakDetectionService.report(repository, branch)
+        response = Ok(leaksPage(report))
       } yield response
     }
 }
