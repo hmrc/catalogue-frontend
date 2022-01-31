@@ -16,10 +16,9 @@
 
 @import java.time.LocalDateTime
 
-@import partials.{BuildToolsPartial, DependenciesByEnvironmentPartial}
+@import partials.DependenciesByEnvironmentPartial
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
@@ -30,7 +29,6 @@
 
 @this(
   dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial,
-  buildToolsPartial               : BuildToolsPartial,
   viewMessages                    : ViewMessages
 )
 

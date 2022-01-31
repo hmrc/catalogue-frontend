@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import java.time.{Instant, LocalDate}
+import java.time.LocalDate
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -127,8 +127,7 @@ class DependencySpec extends AnyWordSpec with Matchers {
           repositoryName         = "repo",
           libraryDependencies    = Seq(badDep, goodDep, pendingDep),
           sbtPluginsDependencies = Seq(),
-          otherDependencies      = Seq(),
-          lastUpdated            = Instant.now
+          otherDependencies      = Seq()
         )
 
       deps.toDependencySeq.filter(_.activeBobbyRuleViolations.nonEmpty) shouldBe Seq(badDep)
@@ -162,8 +161,7 @@ class DependencySpec extends AnyWordSpec with Matchers {
           repositoryName         = "repo",
           libraryDependencies    = Seq(badDep, goodDep, pendingDep),
           sbtPluginsDependencies = Seq(),
-          otherDependencies      = Seq(),
-          lastUpdated            = Instant.now
+          otherDependencies      = Seq()
         )
 
       deps.toDependencySeq.filter(_.pendingBobbyRuleViolations.nonEmpty) shouldBe Seq(pendingDep)

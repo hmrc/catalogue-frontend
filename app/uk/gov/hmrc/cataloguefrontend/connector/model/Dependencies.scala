@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import java.time.{Instant, LocalDate}
+import java.time.LocalDate
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -149,8 +149,7 @@ case class Dependencies(
   repositoryName        : String,
   libraryDependencies   : Seq[Dependency],
   sbtPluginsDependencies: Seq[Dependency],
-  otherDependencies     : Seq[Dependency],
-  lastUpdated           : Instant
+  otherDependencies     : Seq[Dependency]
 ) {
   def toDependencySeq: Seq[Dependency] =
     libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies
@@ -169,7 +168,6 @@ object Dependencies {
     ~ (__ \ "libraryDependencies"   ).read[Seq[Dependency]]
     ~ (__ \ "sbtPluginsDependencies").read[Seq[Dependency]]
     ~ (__ \ "otherDependencies"     ).read[Seq[Dependency]]
-    ~ (__ \ "lastUpdated"           ).read[Instant]
     )(Dependencies.apply _)
   }
 }
