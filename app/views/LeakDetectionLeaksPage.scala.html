@@ -23,7 +23,7 @@
 
 @(report: LeakDetectionReportWithLeaks, leakResolutionUrl: String)(implicit messages: Messages, request: Request[_])
 
-@standard_layout(s"repository leaks") {
+@standard_layout(s"Leak detection report") {
     <header>
         <h1>Leak Detection Report</h1>
     </header>
@@ -62,6 +62,12 @@
         </div>
         <h2>Unresolved leaks</h2>
         <div id="leaks-list">
+
+            <div class="text-right">
+                <a id="expandLink" class="hand-pointer" onclick="expandAll()">expand all</a>
+                <a id="collapseLink" class="hand-pointer hidden" onclick="collapseAll()">collapse all</a>
+            </div>
+
             <table class="table table-striped">
                 <thead>
                     <tr>
@@ -81,18 +87,30 @@
     <script>
             var options = {valueNames: ['rule', 'scope', 'priority', 'total']};
             leaksList = new List('leaks-list', options);
+
+            function expandAll() {
+                $("#expandLink").addClass('hidden')
+                $("#collapseLink").removeClass('hidden')
+                $(".multi-collapse").collapse('show')
+            }
+
+            function collapseAll() {
+                $("#expandLink").removeClass('hidden')
+                $("#collapseLink").addClass('hidden')
+                $(".multi-collapse").collapse('hide')
+            }
     </script>
 }
 
 @leakDetectionRuleViolations(leaksByRule: LeakDetectionLeaksByRule) = {
-    <tr class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId">
-        <td class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId"/>
+    <tr class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId" aria-expanded="false" aria-controls="collapsible-area-@leaksByRule.ruleId">
+        <td class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId" aria-expanded="false" aria-controls="collapsible-area-@leaksByRule.ruleId"/>
         <td class="rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
         <td class="scope">@leaksByRule.scope</td>
         <td class="priority @leaksByRule.priority">@leaksByRule.priority</td>
         <td class="total text-center">@leaksByRule.leaks.length</td>
     </tr>
-    <tr id="collapsible-area-@leaksByRule.ruleId" class="collapse">
+    <tr id="collapsible-area-@leaksByRule.ruleId" class="collapse multi-collapse">
         <td class="hide rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
         <td class="hide scope">@leaksByRule.scope</td>
         <td class="hide priority">@leaksByRule.priority</td>

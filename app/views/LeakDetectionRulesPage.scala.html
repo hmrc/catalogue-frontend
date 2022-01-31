@@ -57,9 +57,9 @@
 
     @leakDetectionRuleSummary(summary: LeakDetectionRulesWithCounts) = {
         <tr>
-            <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" />
-            <td class="rule-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id">@summary.rule.id</td>
-            <td class="description hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id">@summary.rule.description</td>
+            <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id"/>
+            <td class="rule-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id">@summary.rule.id</td>
+            <td class="description hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id">@summary.rule.description</td>
             <td class="first-scanned">@if(summary.firstScannedAt.nonEmpty) {
                 @summary.firstScannedAt.get.displayFormat
             } </td>
