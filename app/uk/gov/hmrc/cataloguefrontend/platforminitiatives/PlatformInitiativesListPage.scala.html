@@ -39,9 +39,6 @@
     <h1>Platform Initiatives@if(team!=""){: @team}</h1>
     <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 </header>
-<style>
-    svg > g:last-child > g:last-child { pointer-events: none }
-</style>
 
 @if(form.hasErrors) {
 <div class="alert alert-danger" role="alert">
