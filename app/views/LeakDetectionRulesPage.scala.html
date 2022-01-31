@@ -1,0 +1,141 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.connector.LeakDetectionRule
+@import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionRulesWithCounts
+@import uk.gov.hmrc.cataloguefrontend.{ViewMessages, routes => appRoutes}
+
+@this(viewMessages: ViewMessages)
+
+@(summaries: Seq[LeakDetectionRulesWithCounts])(implicit request: Request[_])
+
+    @standard_layout(s"Leak detection rules") {
+        <header>
+            <h1>Leak Detection Rules</h1>
+        </header>
+
+        @if(summaries.nonEmpty) {
+            <div id="rules-list">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="col-xs-1"><button class="sort no-border" data-sort="rule-id">Rule id</button></th>
+                            <th class="col-xs-3"><button class="sort no-border" data-sort="description">Description</button></th>
+                            <th class="col-xs-3"><button class="sort no-border" data-sort="first-scanned">Earliest violation</button></th>
+                            <th class="col-xs-3"><button class="sort no-border" data-sort="last-scanned">Latest violation</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="repo-count">Violating repositories</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
+                        </tr>
+                    </thead>
+                    <tbody class="list">
+                    @summaries.map(leakDetectionRuleSummary)
+                    </tbody>
+                </table>
+            </div>
+
+            <script>
+                    var options = {valueNames: ['rule-id', 'description', 'first-scanned', 'last-scanned', 'repo-count', 'total']};
+                    rulesList = new List('rules-list', options);
+            </script>
+        }
+    }
+
+    @leakDetectionRuleSummary(summary: LeakDetectionRulesWithCounts) = {
+        <tr>
+            <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id"/>
+            <td class="rule-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id">@summary.rule.id</td>
+            <td class="description hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id">@summary.rule.description</td>
+            <td class="first-scanned">@if(summary.firstScannedAt.nonEmpty) {
+                @summary.firstScannedAt.get.displayFormat
+            } </td>
+            <td class="last-scanned">@if(summary.lastScannedAt.nonEmpty) {
+                @summary.lastScannedAt.get.displayFormat
+            } </td>
+            <td class="repo-count text-center">@summary.repoCount</td>
+            <td class="total text-center"><div class="hide">@summary.totalCount</div>
+                @if(summary.totalCount > 0) {
+                    <a href="@appRoutes.LeakDetectionController.repoSummaries?rule=@summary.rule.id">@summary.totalCount</a>
+                } else {
+                    <span>0</span>
+                }</td>
+        </tr>
+        <tr id="collapsible-area-@summary.rule.id" class="collapse">
+            <td class="hide rule-id">@summary.rule.id</td>
+            <td class="hide description">@summary.rule.description</td>
+            <td class="hide first-scanned">@if(summary.firstScannedAt.nonEmpty) {
+                @summary.firstScannedAt.get.displayFormat
+            } </td>
+            <td class="hide last-scanned">@if(summary.lastScannedAt.nonEmpty) {
+                @summary.lastScannedAt.get.displayFormat
+            } </td>
+            <td class="hide repo-count">@summary.repoCount</td>
+            <td class="hide total"><div class="hide">@summary.totalCount</div></td>
+            <td colspan="7">
+            @ruleDetails(summary.rule)
+            </td>
+        </tr>
+    }
+
+    @ruleDetails(rule: LeakDetectionRule) = {
+        <div class="row">
+            <div class="col-xs-12">
+                <ul class="list list--minimal list-group row">
+                    <li class="col-xs-6">
+                        <label>Rule id: </label>
+                        @rule.id
+                    </li>
+                    <li class="col-xs-6">
+                        <label>Description: </label>
+                        @rule.description
+                    </li>
+                    <li class="col-xs-6">
+                        <label>Scope: </label>
+                        @rule.scope
+                    </li>
+                    <li class="col-xs-6">
+                        <label>Priority: </label>
+                        @rule.priority
+                    </li>
+                    <li class="col-xs-12">
+                        <label>Regex: </label>
+                        @rule.regex
+                    </li>
+                    @if(rule.ignoredFiles.nonEmpty) {
+                        <li class="col-xs-6">
+                            <label>Ignored files: </label>
+                            <ul class="list list--minimal list-group row">
+                            @rule.ignoredFiles.map { fileName =>
+                                <li>@fileName</li>
+                            }
+                            </ul>
+                        </li>
+                    }
+                    @if(rule.ignoredExtensions.nonEmpty) {
+                        <li class="col-xs-6">
+                            <label>Ignored extensions: </label>
+                            <ul class="list list--minimal list-group row">
+                            @rule.ignoredExtensions.map { fileExt =>
+                                <li class="col-xs-3">@fileExt</li>
+                            }
+                            </ul>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }

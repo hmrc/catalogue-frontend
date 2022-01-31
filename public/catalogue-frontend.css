@@ -12449,3 +12449,24 @@ table.shutter-events {
 .transitive::before {
   content: "\2514";
 }
+
+.monospace {
+  font-family: monospace;
+}
+
+.highlighted {
+  background-color: #BCFF33;
+  font-size: large;
+}
+
+.high {
+  color: red;
+}
+
+.medium {
+  color: orange;
+}
+
+.low {
+  color: green;
+}
