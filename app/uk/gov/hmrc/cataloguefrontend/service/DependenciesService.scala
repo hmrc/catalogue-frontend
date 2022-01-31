@@ -36,7 +36,7 @@ class DependenciesService @Inject() (
     Future
       .traverse(deployments)(wrwv =>
         serviceDependenciesConnector
-          .getSlugDependencies(serviceName, Some(wrwv.versionNumber.asVersion))
+          .getSlugInfo(serviceName, Some(wrwv.versionNumber.asVersion))
           .map(_.map(_.copy(environment = Some(wrwv.environment))))
       )
       .map(_.flatten)
@@ -48,7 +48,7 @@ class DependenciesService @Inject() (
     hc: HeaderCarrier
   ): Future[Option[ServiceDependencies]] =
     serviceDependenciesConnector
-      .getSlugDependencies(serviceName, Some(version)).map(_.headOption)
+      .getSlugInfo(serviceName, Some(version)).map(_.headOption)
 
   def getServicesWithDependency(
     optTeam     : Option[TeamName],
