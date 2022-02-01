@@ -84,7 +84,12 @@
                 @summary.lastScannedAt.get.displayFormat
             } </td>
             <td class="hide repo-count">@summary.repoCount</td>
-            <td class="hide total"><div class="hide">@summary.totalCount</div></td>
+            <td class="hide total"><div class="hide">@summary.totalCount</div>
+                @if(summary.totalCount > 0) {
+                    <a href="@appRoutes.LeakDetectionController.repoSummaries?rule=@summary.rule.id">@summary.totalCount</a>
+                } else {
+                    <span>0</span>
+                }</td>
             <td colspan="7">
             @ruleDetails(summary.rule)
             </td>

@@ -76,7 +76,7 @@ class LeakDetectionService @Inject() (
             r.leaks.length,
             r.leaks.map(_.unresolvedCount).sum
           )
-        )
+        ).sortBy(_.totalCount).reverse
       )
 
   def repoSummaries(rule: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionReposWithCounts])] =
