@@ -93,18 +93,17 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
       results shouldBe Seq(
         LeakDetectionRulesWithCounts(
-          aRule.copy(id = "rule-1"),
-          Some(LocalDateTime.ofInstant(timestamp, ZoneId.systemDefault())),
-          Some(LocalDateTime.ofInstant(timestamp, ZoneId.systemDefault())),
-          1,
-          3
-        ),
-        LeakDetectionRulesWithCounts(
           aRule.copy(id = "rule-2"),
           Some(LocalDateTime.ofInstant(timestamp.minus(3, HOURS), ZoneId.systemDefault())),
           Some(LocalDateTime.ofInstant(timestamp.plus(1, HOURS), ZoneId.systemDefault())),
           2,
           5
+        ),LeakDetectionRulesWithCounts(
+          aRule.copy(id = "rule-1"),
+          Some(LocalDateTime.ofInstant(timestamp, ZoneId.systemDefault())),
+          Some(LocalDateTime.ofInstant(timestamp, ZoneId.systemDefault())),
+          1,
+          3
         ),
         LeakDetectionRulesWithCounts(aRule.copy(id = "rule-3"), None, None, 0, 0)
       )
