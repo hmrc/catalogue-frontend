@@ -20,12 +20,13 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.LeakDetectionExplorerFilter.form
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionService
+import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{LeakDetectionLeaksPage, LeakDetectionRepositoriesPage, LeakDetectionRepositoryPage, LeakDetectionRulesPage}
-import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,8 +40,10 @@ class LeakDetectionController @Inject() (
   leakDetectionService: LeakDetectionService,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   auth: FrontendAuthComponents,
+  userManagementConnector: UserManagementConnector
 )(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) with play.api.i18n.I18nSupport {
+    extends FrontendController(mcc)
+    with play.api.i18n.I18nSupport {
 
   def repoSummaries(): Action[AnyContent] =
     Action.async { implicit request =>
@@ -72,16 +75,30 @@ class LeakDetectionController @Inject() (
       } yield response
     }
 
-  def report(repository: String, branch: String): Action[AnyContent] =
-    auth.authenticatedAction(
-      continueUrl = AuthController.continueUrl(appRoutes.LeakDetectionController.report(repository, branch))
-    ).async {  implicit request =>
-      for {
-        report <- leakDetectionService.report(repository, branch)
-        resolutionUrl = leakDetectionService.resolutionUrl
-        response = Ok(leaksPage(report, resolutionUrl))
-      } yield response
+  private def isUserAuthorisedForRepository(username: String, repository: String)(implicit headerCarrier: HeaderCarrier): Future[Boolean] =
+    for {
+      repoDetails <- teamsAndRepositoriesConnector.repositoryDetails(repository)
+      userDetails <- userManagementConnector.getTeamsByUser(username)
+    } yield {
+      val repoTeams = repoDetails.map(_.teamNames.map(_.asString)).getOrElse(Seq.empty)
+      val userTeams = userDetails.fold(_ => Seq.empty, _.map(_.team))
+
+      repoTeams.intersect(userTeams).nonEmpty
     }
+
+  def report(repository: String, branch: String): Action[AnyContent] =
+    auth
+      .authenticatedAction(
+        continueUrl = AuthController.continueUrl(appRoutes.LeakDetectionController.report(repository, branch))
+      )
+      .async { implicit request =>
+        for {
+          isAuthorised <- isUserAuthorisedForRepository("test.user", repository)
+          report          <- leakDetectionService.report(repository, branch)
+          resolutionUrl = leakDetectionService.resolutionUrl
+          response      = Ok(leaksPage(report, resolutionUrl, isAuthorised))
+        } yield response
+      }
 }
 
 case class LeakDetectionExplorerFilter(

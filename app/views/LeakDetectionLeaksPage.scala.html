@@ -21,7 +21,7 @@
 
 @this(viewMessages: ViewMessages)
 
-@(report: LeakDetectionReportWithLeaks, leakResolutionUrl: String)(implicit messages: Messages, request: Request[_])
+@(report: LeakDetectionReportWithLeaks, leakResolutionUrl: String, isAuthorised: Boolean)(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Leak detection report") {
     <header>
@@ -56,33 +56,38 @@
             There are no unresolved leaks associated to this branch
         </div>
     } else {
-
-        <div class="alert alert-warning">
-            Please click <a href="@leakResolutionUrl">here</a> to find out how to resolve the leaks
-        </div>
         <h2>Unresolved leaks</h2>
-        <div id="leaks-list">
-
-            <div class="text-right">
-                <a id="expandLink" class="hand-pointer" onclick="expandAll()">expand all</a>
-                <a id="collapseLink" class="hand-pointer hidden" onclick="collapseAll()">collapse all</a>
+        @if(isAuthorised) {
+            <div class="alert alert-warning">
+                Please click <a href="@leakResolutionUrl">here</a> to find out how to resolve the leaks
             </div>
+            <div id="leaks-list">
 
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th/>
-                        <th class="col-xs-7"><button class="sort no-border" data-sort="rule">Rule</button></th>
-                        <th class="col-xs-2"><button class="sort no-border" data-sort="scope">Scope</button></th>
-                        <th class="col-xs-2"><button class="sort no-border" data-sort="priority">Priority</button></th>
-                        <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
-                    </tr>
-                </thead>
-                <tbody class="list">
-                @report.leaks.map(leakDetectionRuleViolations)
-                </tbody>
-            </table>
-        </div>
+                <div class="text-right">
+                    <a id="expandLink" class="hand-pointer" onclick="expandAll()">expand all</a>
+                    <a id="collapseLink" class="hand-pointer hidden" onclick="collapseAll()">collapse all</a>
+                </div>
+
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th/>
+                            <th class="col-xs-7"><button class="sort no-border" data-sort="rule">Rule</button></th>
+                            <th class="col-xs-2"><button class="sort no-border" data-sort="scope">Scope</button></th>
+                            <th class="col-xs-2"><button class="sort no-border" data-sort="priority">Priority</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
+                        </tr>
+                    </thead>
+                    <tbody class="list">
+                    @report.leaks.map(leakDetectionRuleViolations)
+                    </tbody>
+                </table>
+            </div>
+        } else {
+            <div class="alert alert-danger">
+                You don't have permission to view the leaks as they may contain sensitive data
+            </div>
+        }
     }
     <script>
             var options = {valueNames: ['rule', 'scope', 'priority', 'total']};
