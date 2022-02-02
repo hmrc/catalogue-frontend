@@ -120,6 +120,27 @@ case class UserManagementConnector @Inject() (
           Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
       }
   }
+
+  def getTeamsByUser(username: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamDetails]]] = {
+    val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
+    val url              = url"$userManagementBaseUrl/v2/organisations/users/$username/teams"
+    httpClient
+      .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
+      .map { response =>
+        response.status match {
+          case 200 =>
+            (response.json \\ "teams").headOption
+              .map(_.as[Seq[TeamDetails]])
+              .fold[Either[UMPError, Seq[TeamDetails]]](ifEmpty = Left(UMPError.ConnectionError(s"Could not parse response from $url")))(Right.apply)
+          case httpCode => Left(UMPError.HTTPError(httpCode))
+        }
+      }
+      .recover {
+        case ex =>
+          logger.error(s"An error occurred when connecting to $url", ex)
+          Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
+      }
+  }
 }
 
 object UserManagementConnector {
