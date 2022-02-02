@@ -22,8 +22,10 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.LeakDetectionExplorerFilter.form
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionService
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{LeakDetectionLeaksPage, LeakDetectionRepositoriesPage, LeakDetectionRepositoryPage, LeakDetectionRulesPage}
+import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,9 +37,10 @@ class LeakDetectionController @Inject() (
   repositoryPage: LeakDetectionRepositoryPage,
   leaksPage: LeakDetectionLeaksPage,
   leakDetectionService: LeakDetectionService,
-  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  auth: FrontendAuthComponents,
 )(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+    extends FrontendController(mcc) with play.api.i18n.I18nSupport {
 
   def repoSummaries(): Action[AnyContent] =
     Action.async { implicit request =>
@@ -70,7 +73,9 @@ class LeakDetectionController @Inject() (
     }
 
   def report(repository: String, branch: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    auth.authenticatedAction(
+      continueUrl = AuthController.continueUrl(appRoutes.LeakDetectionController.report(repository, branch))
+    ).async {  implicit request =>
       for {
         report <- leakDetectionService.report(repository, branch)
         resolutionUrl = leakDetectionService.resolutionUrl
