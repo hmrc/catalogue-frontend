@@ -45,8 +45,8 @@ sealed trait DisplayType {
   def asString: String
 }
 object DisplayType {
-  case object Progress  extends DisplayType { override val asString = "progress" }
-  case object Chart     extends DisplayType { override val asString = "chart"    }
+  case object Progress  extends DisplayType { override val asString = "Progress" }
+  case object Chart     extends DisplayType { override val asString = "Chart"    }
 
   val values: List[DisplayType] = List(Chart, Progress)
 
