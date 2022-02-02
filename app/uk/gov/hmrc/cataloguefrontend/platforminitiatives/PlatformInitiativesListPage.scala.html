@@ -22,7 +22,7 @@
 @import play.api.mvc._
 @import helper._
 
-@this(viewMessages: ViewMessages)
+@this(viewMessages: ViewMessages, platformInitiativesUtils: PlatformInitiativesUtils)
 
 @(initiatives   : Seq[PlatformInitiative]   ,
     display     : DisplayType               ,
@@ -59,10 +59,12 @@
             <input class="search form-control" id="search" type="text">
         </div>
         <div class="right padding-reset-right" style="line-height:2.2em;">
-                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(DisplayType.Chart)">
-                    @if(display == DisplayType.Chart){<strong>Pie chart</strong>}else{Pie chart}</a> |
-                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(DisplayType.Progress)">
-                    @if(display == DisplayType.Progress){<strong>Progress bar</strong>}else{Progress bar}</a>
+            @Seq(DisplayType.Chart, DisplayType.Progress).zipWithIndex.map { case (dt, i) =>
+                @if(i != 0){ | }
+                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt)">
+                    @if(display == dt){ <strong>@dt.asString </strong> } else { @dt.asString }
+                </a>
+            }
             <div style="float:right; margin-top:-1em;">
             @select(field      = form("team")                                                   ,
                     options    = teams
