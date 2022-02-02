@@ -75,16 +75,20 @@ class LeakDetectionController @Inject() (
       } yield response
     }
 
-  private def isUserAuthorisedForRepository(username: String, repository: String)(implicit headerCarrier: HeaderCarrier): Future[Boolean] =
-    for {
-      repoDetails <- teamsAndRepositoriesConnector.repositoryDetails(repository)
-      userDetails <- userManagementConnector.getTeamsByUser(username)
-    } yield {
-      val repoTeams = repoDetails.map(_.teamNames.map(_.asString)).getOrElse(Seq.empty)
-      val userTeams = userDetails.fold(_ => Seq.empty, _.map(_.team))
+  private def isUserAuthorisedForRepository(username: Option[String], repository: String)(implicit headerCarrier: HeaderCarrier): Future[Boolean] =
+    username
+      .map(user =>
+        for {
+          repoDetails <- teamsAndRepositoriesConnector.repositoryDetails(repository)
+          userDetails <- userManagementConnector.getTeamsByUser(user)
+        } yield {
+          val repoTeams = repoDetails.map(_.teamNames.map(_.asString)).getOrElse(Seq.empty)
+          val userTeams = userDetails.fold(_ => Seq.empty, _.map(_.team))
 
-      repoTeams.intersect(userTeams).nonEmpty
-    }
+          repoTeams.intersect(userTeams).nonEmpty
+        }
+      )
+      .getOrElse(Future.successful(false))
 
   def report(repository: String, branch: String): Action[AnyContent] =
     auth
@@ -93,8 +97,8 @@ class LeakDetectionController @Inject() (
       )
       .async { implicit request =>
         for {
-          isAuthorised <- isUserAuthorisedForRepository("test.user", repository)
-          report          <- leakDetectionService.report(repository, branch)
+          isAuthorised <- isUserAuthorisedForRepository(request.session.get(AuthController.SESSION_USERNAME), repository)
+          report       <- leakDetectionService.report(repository, branch)
           resolutionUrl = leakDetectionService.resolutionUrl
           response      = Ok(leaksPage(report, resolutionUrl, isAuthorised))
         } yield response
