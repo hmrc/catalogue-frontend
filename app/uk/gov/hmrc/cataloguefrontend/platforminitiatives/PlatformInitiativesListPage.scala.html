@@ -38,6 +38,18 @@
 <header>
     <h1>Platform Initiatives@if(team!=""){: @team}</h1>
     <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+    <style>
+        progress[value]::-webkit-progress-value {
+          background-color: #0064b4;
+        }
+        progress[value]::-webkit-progress-bar {
+          background-color: #eee;
+          border-radius: 2px;
+          border-style: solid;
+          border-width: 1px;
+          border-color: #6f777b;
+        }
+    </style>
 </header>
 
 @if(form.hasErrors) {
@@ -61,7 +73,10 @@
         <div class="right padding-reset-right" style="line-height:2.2em;">
             @Seq(DisplayType.Chart, DisplayType.Progress).zipWithIndex.map { case (dt, i) =>
                 @if(i != 0){ | }
-                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt)">
+                @team match {
+                    case ""      => { <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt)"> }
+                    case _       => { <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt)&team=@team"> }
+                }
                     @if(display == dt){ <strong>@dt.asString </strong> } else { @dt.asString }
                 </a>
             }
@@ -84,7 +99,7 @@
         <div class="board">
             <h3 id="info-box-header" class="board__heading"><img class="info-icon" src="assets/infoicon.svg"/> What are these?</h3>
             <div class="board__body">
-                <p id="info-box-copy">The charts shown here are platform-wide initiatives. They take two points:</p>
+                <p id="info-box-copy">The charts and progress bars shown here are platform-wide initiatives. They take two points:</p>
                 <ul style="list-style-type: disc;">
                     <li> How many repositories are affected by an initiative</li>
                     <li> How many repositories have met the initiatives requirements </li>
@@ -120,12 +135,23 @@
                                 </div>
                             }
                             case DisplayType.Progress => {
-                                <div class="initiativeName" style="width:500px;">
+                                <div class=" initiativeName" style="width:500px;">
                                     <h3> @initiative.initiativeName </h3>
-                                    <progress class="progress" value="@initiative.currentProgress"
-                                              max="@initiative.targetProgress">
+                                    @defining(initiative.currentProgress.toFloat/initiative.targetProgress.toFloat * 100) { percent =>
+                                    <progress style="width: 75%;" class="progress" value="@initiative.currentProgress"
+                                              max="@initiative.targetProgress" data-toggle="tooltip" title="@initiative.currentProgress/@initiative.targetProgress @initiative.completedLegend">
                                         @initiative.currentProgress/@initiative.targetProgress
                                     </progress>
+                                    <span style="float: right;">@percent.toInt% @initiative.completedLegend</span>
+                                    }
+                                    @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
+                                        case Right(s) => {
+                                            @Html(s)
+                                        }
+                                        case Left(_) => {
+                                            @initiative.initiativeDescription
+                                        }
+                                    }
                                 </div>
                             }
                         }
@@ -135,6 +161,7 @@
                 }
             </tbody>
         </table>
+        </div>
     </form>
 </div>
 }
