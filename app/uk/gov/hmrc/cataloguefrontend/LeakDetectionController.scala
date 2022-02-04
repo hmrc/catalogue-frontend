@@ -68,7 +68,7 @@ class LeakDetectionController @Inject() (
     }
 
   def leaksPermission(repository: String): Predicate =
-    Predicate.Permission(Resource.from("repository-leaks", s"$repository"), IAAction("READ"))
+    Predicate.Permission(Resource.from("repository-leaks", repository), IAAction("READ"))
 
   def report(repository: String, branch: String): Action[AnyContent] =
     auth
