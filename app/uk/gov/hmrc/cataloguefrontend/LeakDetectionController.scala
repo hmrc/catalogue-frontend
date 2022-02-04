@@ -43,6 +43,11 @@ class LeakDetectionController @Inject() (
     extends FrontendController(mcc)
     with play.api.i18n.I18nSupport {
 
+  def ruleSummaries(): Action[AnyContent] =
+    Action.async { implicit request =>
+      leakDetectionService.ruleSummaries.map(s => Ok(rulesPage(s)))
+    }
+
   def repoSummaries(): Action[AnyContent] =
     Action.async { implicit request =>
       form
@@ -57,20 +62,9 @@ class LeakDetectionController @Inject() (
         )
     }
 
-  def ruleSummaries(): Action[AnyContent] =
-    Action.async { implicit request =>
-      for {
-        summaries <- leakDetectionService.ruleSummaries
-        response = Ok(rulesPage(summaries))
-      } yield response
-    }
-
   def branchSummaries(repository: String): Action[AnyContent] =
     Action.async { implicit request =>
-      for {
-        summaries <- leakDetectionService.branchSummaries(repository)
-        response = Ok(repositoryPage(repository, summaries))
-      } yield response
+      leakDetectionService.branchSummaries(repository).map(s => Ok(repositoryPage(repository, s)))
     }
 
   def leaksPermission(repository: String): Predicate =
@@ -86,8 +80,7 @@ class LeakDetectionController @Inject() (
           isAuthorised <- auth.authorised(None, Retrieval.hasPredicate(leaksPermission(repository)))
           report       <- leakDetectionService.report(repository, branch)
           resolutionUrl = leakDetectionService.resolutionUrl
-          response      = Ok(leaksPage(report, resolutionUrl, isAuthorised))
-        } yield response
+        } yield Ok(leaksPage(report, resolutionUrl, isAuthorised))
       }
 }
 
