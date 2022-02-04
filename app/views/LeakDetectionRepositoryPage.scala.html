@@ -22,7 +22,7 @@
 
 @(repoName: String, summaries: Seq[LeakDetectionBranchesWithCounts])(implicit messages: Messages, request: Request[_])
 
-@standard_layout(s"Repository leaks") {
+@standard_layout(s"Leak detection: $repoName") {
     <header>
         <h1>Leak Detection: @repoName</h1>
     </header>
