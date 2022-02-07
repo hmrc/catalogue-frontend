@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.http.HeaderCarrier
-
+import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 import java.time.{Instant, LocalDateTime, ZoneId}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,12 +38,11 @@ class LeakDetectionService @Inject() (
   def urlIfLeaksFound(repoName: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
     repositoriesWithLeaks.map { reposWithLeaks =>
       if (hasLeaks(reposWithLeaks)(repoName))
-        Some(s"$leakDetectionPublicUrl/reports/repositories/$repoName")
+        Some(appRoutes.LeakDetectionController.branchSummaries(repoName).url)
       else
         None
     }
 
-  private val leakDetectionPublicUrl: String    = configuration.get[String]("lds.publicUrl")
   private val ldsIntegrationEnabled: Boolean    = configuration.get[Boolean]("lds.integrationEnabled")
   private val repositoriesToIgnore: Seq[String] = configuration.get[Seq[String]]("lds.noWarningsOn")
 
