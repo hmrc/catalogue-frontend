@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector
+package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.Configuration

@@ -16,10 +16,13 @@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.service.{LeakDetectionLeakDetails, LeakDetectionLeaksByRule, LeakDetectionReportWithLeaks}
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionReportWithLeaks
 @import views.partials.LeakDetectionHighlighter
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeaksByRule
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeakDetails
 
 @this(viewMessages: ViewMessages)
+
 
 @(report: LeakDetectionReportWithLeaks, leakResolutionUrl: String, isAuthorised: Boolean)(implicit messages: Messages, request: Request[_])
 

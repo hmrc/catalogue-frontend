@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.service
+package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import org.mockito.MockitoSugar
 import play.api.Configuration

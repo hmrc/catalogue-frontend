@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.LeakDetectionExplorerFilter.form
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionService
-import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionExplorerFilter.form
+import uk.gov.hmrc.cataloguefrontend.AuthController
+
+import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.{LeakDetectionLeaksPage, LeakDetectionRepositoriesPage, LeakDetectionRepositoryPage, LeakDetectionRulesPage}
+import views.html.leakdetection.{LeakDetectionLeaksPage, LeakDetectionRepositoriesPage, LeakDetectionRepositoryPage, LeakDetectionRulesPage}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -73,7 +74,7 @@ class LeakDetectionController @Inject() (
   def report(repository: String, branch: String): Action[AnyContent] =
     auth
       .authenticatedAction(
-        continueUrl = AuthController.continueUrl(appRoutes.LeakDetectionController.report(repository, branch))
+        continueUrl = AuthController.continueUrl(routes.LeakDetectionController.report(repository, branch))
       )
       .async { implicit request =>
         for {

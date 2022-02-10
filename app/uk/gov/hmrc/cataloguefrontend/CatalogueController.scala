@@ -24,11 +24,11 @@ import play.api.i18n.Messages
 import play.api.mvc._
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, LeakDetectionService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
