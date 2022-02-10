@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.service
+package uk.gov.hmrc.cataloguefrontend.leakdetection
+
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+
 import java.time.{Instant, LocalDateTime, ZoneId}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}

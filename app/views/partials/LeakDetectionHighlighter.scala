@@ -17,7 +17,7 @@
 package views.partials
 
 import play.twirl.api.{Html, HtmlFormat}
-import uk.gov.hmrc.cataloguefrontend.service.LeakDetectionLeakDetails
+import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeakDetails
 
 object LeakDetectionHighlighter extends (LeakDetectionLeakDetails => Html) {
 

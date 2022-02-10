@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector
+package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.Logger
 import play.api.libs.json.{Json, Reads}
