@@ -67,18 +67,12 @@
     <section class="section-wrapper">
 
         <div class="row">
-            @if(CatalogueFrontendSwitches.costEstimates.isEnabled) {
-              <div class="col-md-6">
-                  @partials.details(repositoryDetails)
-              </div>
-              <div class="col-md-6">
-                  @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
-              </div>
-            } else {
-              <div class="col-md-12">
-                  @partials.details(repositoryDetails)
-              </div>
-            }
+            <div class="col-md-6">
+                @partials.details(repositoryDetails)
+            </div>
+            <div class="col-md-6">
+                @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
+            </div>
         </div>
         @productionEnvironmentRoute.map { envRoute =>
             <div class="row">
