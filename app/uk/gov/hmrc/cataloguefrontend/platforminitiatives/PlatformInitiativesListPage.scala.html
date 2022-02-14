@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{DisplayType, PlatformInitiative, routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import play.api.mvc._
@@ -26,8 +27,8 @@
 
 @(initiatives   : Seq[PlatformInitiative]   ,
     display     : DisplayType               ,
-    team        : String                    ,
-    teams       : Seq[Team]                 ,
+    team        : Option[TeamName]          ,
+    allTeams    : Seq[Team]                 ,
     form        : Form[_]
 )(implicit
     messages    : Messages                  ,
@@ -36,20 +37,11 @@
 
 @standard_layout(s"Platform Initiatives", "platforminitiatives") {
 <header>
-    <h1>Platform Initiatives@if(team!=""){: @team}</h1>
+    <h1>@team match {
+        case None       => {Platform Initiatives}
+        case Some(team) => {Platform Initiatives: @team.asString}
+    }</h1>
     <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
-    <style>
-        progress[value]::-webkit-progress-value {
-          background-color: #0064b4;
-        }
-        progress[value]::-webkit-progress-bar {
-          background-color: #eee;
-          border-radius: 2px;
-          border-style: solid;
-          border-width: 1px;
-          border-color: #6f777b;
-        }
-    </style>
 </header>
 
 @if(form.hasErrors) {
@@ -73,16 +65,13 @@
         <div class="right padding-reset-right" style="line-height:2.2em;">
             @Seq(DisplayType.Chart, DisplayType.Progress).zipWithIndex.map { case (dt, i) =>
                 @if(i != 0){ | }
-                @team match {
-                    case ""      => { <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt)"> }
-                    case _       => { <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt)&team=@team"> }
-                }
+                    <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt,team)">
                     @if(display == dt){ <strong>@dt.asString </strong> } else { @dt.asString }
                 </a>
             }
             <div style="float:right; margin-top:-1em;">
             @select(field      = form("team")                                                   ,
-                    options    = teams
+                    options    = allTeams
                                     .map(_.name.asString)
                                     .map(t => t -> t)
                                     .distinct
@@ -137,13 +126,11 @@
                             case DisplayType.Progress => {
                                 <div class=" initiativeName" style="width:500px;">
                                     <h3> @initiative.initiativeName </h3>
-                                    @defining(initiative.currentProgress.toFloat/initiative.targetProgress.toFloat * 100) { percent =>
                                     <progress style="width: 75%;" class="progress" value="@initiative.currentProgress"
                                               max="@initiative.targetProgress" data-toggle="tooltip" title="@initiative.currentProgress/@initiative.targetProgress @initiative.completedLegend">
                                         @initiative.currentProgress/@initiative.targetProgress
                                     </progress>
-                                    <span style="float: right;">@percent.toInt% @initiative.completedLegend</span>
-                                    }
+                                    <span style="float: right;">@initiative.percent% @initiative.completedLegend</span>
                                     @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
                                         case Right(s) => {
                                             @Html(s)

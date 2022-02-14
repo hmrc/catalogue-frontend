@@ -84,7 +84,7 @@ class PlatformInitiativesControllerSpec
       }
 
       val result: Future[Result] = controller
-        .platformInitiatives(display = Chart)
+        .platformInitiatives(display = Chart, team = None)
         .apply(FakeRequest())
 
       status(result) shouldBe 200

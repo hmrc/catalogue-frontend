@@ -27,7 +27,12 @@ case class PlatformInitiative(
    targetProgress: Int,
    completedLegend: String,
    inProgressLegend: String
-)
+) {
+  def percent: Int = {
+    val percent = currentProgress.toFloat / targetProgress.toFloat * 100
+    percent.toInt
+  }
+}
 
 object PlatformInitiative {
   val format: OFormat[PlatformInitiative] = {
