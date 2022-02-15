@@ -70,7 +70,7 @@ GET        /deployments/:env                            uk.gov.hmrc.cataloguefro
 GET        /health-indicators                           uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepoType()
 GET        /health-indicators/:name                     uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.breakdownForRepo(name: String)
 
-GET        /platform-initiatives                        uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesController.platformInitiatives(display: DisplayType ?= DisplayType.Chart)
+GET        /platform-initiatives                        uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesController.platformInitiatives(display: DisplayType ?= DisplayType.Chart, team: Option[TeamName] ?= None)
 
 GET        /leak-detection                                      uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.ruleSummaries
 GET        /leak-detection/repositories                         uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.repoSummaries

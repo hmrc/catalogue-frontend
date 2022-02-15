@@ -20,6 +20,7 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -37,30 +38,32 @@ class PlatformInitiativesController @Inject()
   extends FrontendController(mcc) {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def platformInitiatives(display: DisplayType): Action[AnyContent] = Action.async { implicit request =>
-    PlatformInitiativesFilter.form
-      .bindFromRequest()
-      .fold(
-        formWithErrors => Future.successful(Ok(platformInitiativesListPage
-        (initiatives  = Seq()
-        , display     = display
-        ,  team       = ""
-        ,  teams      = Seq()
-        ,  formWithErrors
-        ))),
-        query =>
-            for {
-                teams <- teamsAndRepositoriesConnector.allTeams
-                initiatives <- platformInitiativesConnector.getInitiatives(query.team)
-              } yield Ok(platformInitiativesListPage(
-                initiatives   = initiatives,
-                display       = display,
-                team          = query.team.getOrElse(""),
-                teams         = teams,
-                PlatformInitiativesFilter.form.bindFromRequest()
-              )))
-            }
-  }
+  def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] = Action.async { implicit request =>
+    val boundForm = PlatformInitiativesFilter.form.bindFromRequest()
+      boundForm.fold(
+        formWithErrors =>
+          for {
+            allTeams <- teamsAndRepositoriesConnector.allTeams
+          } yield BadRequest(platformInitiativesListPage
+            (initiatives  = Seq()
+            , display     = display
+            ,  team       = None
+            ,  allTeams   = allTeams
+            ,  formWithErrors
+            )),
+          query =>
+              for {
+                  allTeams <- teamsAndRepositoriesConnector.allTeams
+                  initiatives <- platformInitiativesConnector.getInitiatives(query.team)
+                } yield Ok(platformInitiativesListPage(
+                  initiatives   = initiatives,
+                  display       = display,
+                  team          = team,
+                  allTeams      = allTeams,
+                boundForm
+                )))
+              }
+    }
 
   case class PlatformInitiativesFilter(initiativeName: Option[String] = None, team: Option[String]) {
     def isEmpty: Boolean = initiativeName.isEmpty && team.isEmpty
