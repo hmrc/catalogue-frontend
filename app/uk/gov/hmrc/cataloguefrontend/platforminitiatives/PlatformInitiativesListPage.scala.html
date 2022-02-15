@@ -88,7 +88,7 @@
         <div class="board">
             <h3 id="info-box-header" class="board__heading"><img class="info-icon" src="assets/infoicon.svg"/> What are these?</h3>
             <div class="board__body">
-                <p id="info-box-copy">The charts and progress bars shown here are platform-wide initiatives. They take two points:</p>
+                <p id="info-box-copy">The following shown here are platform-wide initiatives. They take two points:</p>
                 <ul style="list-style-type: disc;">
                     <li> How many repositories are affected by an initiative</li>
                     <li> How many repositories have met the initiatives requirements </li>
@@ -124,7 +124,7 @@
                                 </div>
                             }
                             case DisplayType.Progress => {
-                                <div class=" initiativeName" style="width:500px;">
+                                <div class="initiativeName" style="width:500px;">
                                     <h3> @initiative.initiativeName </h3>
                                     <progress style="width: 75%;" class="progress" value="@initiative.currentProgress"
                                               max="@initiative.targetProgress" data-toggle="tooltip" title="@initiative.currentProgress/@initiative.targetProgress @initiative.completedLegend">

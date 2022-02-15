@@ -28,10 +28,7 @@ case class PlatformInitiative(
    completedLegend: String,
    inProgressLegend: String
 ) {
-  def percent: Int = {
-    val percent = currentProgress.toFloat / targetProgress.toFloat * 100
-    percent.toInt
-  }
+  def percent: Int = (currentProgress.toFloat / targetProgress.toFloat * 100).toInt
 }
 
 object PlatformInitiative {
