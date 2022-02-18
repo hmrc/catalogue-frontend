@@ -53,15 +53,19 @@ class PlatformInitiativesConnectorSpec
   val result = Seq(PlatformInitiative(
     initiativeName        = "Initiative-1",
     initiativeDescription = "Test description",
-    currentProgress       = 10,
-    targetProgress        = 100,
+    progress              = Progress(
+      currentProgress       = 10,
+      targetProgress        = 100
+    ),
     completedLegend       = "Updated",
     inProgressLegend      = "Not Updated"),
   PlatformInitiative(
     initiativeName        = "Initiative-2",
     initiativeDescription = "Test description",
-    currentProgress       = 33,
-    targetProgress        = 40,
+    progress              = Progress(
+      currentProgress       = 33,
+      targetProgress        = 40
+    ),
     completedLegend       = "Completed",
     inProgressLegend      = "Not Completed"))
 

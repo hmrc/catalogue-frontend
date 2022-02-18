@@ -2,16 +2,20 @@
   {
     "initiativeName"          : "Initiative-1",
     "initiativeDescription"   : "Test description",
-    "currentProgress"         : 1,
-    "targetProgress"          : 10,
+    "progress"                : {
+      "currentProgress"         : 1,
+      "targetProgress"          : 10
+    },
     "completedLegend"         : "Updated",
     "inProgressLegend"        : "Not Updated"
   },
   {
     "initiativeName"          : "Initiative-2",
     "initiativeDescription"   : "Test description",
-    "currentProgress"         : 9,
-    "targetProgress"          : 9,
+    "progress"                : {
+      "currentProgress"         : 9,
+      "targetProgress"          : 9
+    },
     "completedLegend"         : "Completed",
     "inProgressLegend"        : "Not Completed"
   }
