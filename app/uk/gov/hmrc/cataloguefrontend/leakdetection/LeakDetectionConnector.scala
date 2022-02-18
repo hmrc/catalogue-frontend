@@ -21,7 +21,7 @@ import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.Instant
+import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -41,9 +41,9 @@ class LeakDetectionConnector @Inject() (
     implicit val rwlr = RepositoryWithLeaks.reads
     http
       .GET[Seq[RepositoryWithLeaks]](
-          url"$url/api/repository",
-          headers = Seq("Accept" -> "application/json")
-        )
+        url"$url/api/repository",
+        headers = Seq("Accept" -> "application/json")
+      )
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
@@ -54,7 +54,15 @@ class LeakDetectionConnector @Inject() (
   def leakDetectionSummaries(rule: Option[String], repo: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionSummary]] = {
     implicit val ldrs: Reads[LeakDetectionSummary] = LeakDetectionSummary.reads
     http.GET[Seq[LeakDetectionSummary]](
-      url"$url/api/leaks/summary?rule=$rule&repository=$repo&team=$team",
+      url"$url/api/rules/summary?rule=$rule&repository=$repo&team=$team",
+      headers = Seq("Accept" -> "application/json")
+    )
+  }
+
+  def leakDetectionRepoSummaries(rule: Option[String], repo: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRepositorySummary]] = {
+    implicit val ldrs: Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
+    http.GET[Seq[LeakDetectionRepositorySummary]](
+      url"$url/api/repositories/summary?rule=$rule&repository=$repo&team=$team",
       headers = Seq("Accept" -> "application/json")
     )
   }
@@ -74,6 +82,23 @@ class LeakDetectionConnector @Inject() (
       headers = Seq("Accept" -> "application/json")
     )
   }
+
+  def leakDetectionWarnings(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionWarning]] = {
+    implicit val ldrl: Reads[LeakDetectionWarning] = LeakDetectionWarning.reads
+    http.GET[Seq[LeakDetectionWarning]](
+      url"$url/api/report/$reportId/warnings",
+      headers = Seq("Accept" -> "application/json")
+    )
+  }
+
+  def leakDetectionRules()(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRule]] = {
+    implicit val ldrl: Reads[LeakDetectionRule] = LeakDetectionRule.reads
+    http.GET[Seq[LeakDetectionRule]](
+      url"$url/api/rules",
+      headers = Seq("Accept" -> "application/json")
+    )
+  }
+
 }
 
 final case class RepositoryWithLeaks(name: String) extends AnyVal
@@ -107,8 +132,9 @@ object LeakDetectionRule {
 
 final case class LeakDetectionRepositorySummary(
   repository: String,
-  firstScannedAt: Instant,
-  lastScannedAt: Instant,
+  firstScannedAt: LocalDateTime,
+  lastScannedAt: LocalDateTime,
+  warningCount: Int,
   unresolvedCount: Int,
   branchSummary: Seq[LeakDetectionBranchSummary]
 )
@@ -121,7 +147,8 @@ object LeakDetectionRepositorySummary {
 final case class LeakDetectionBranchSummary(
   branch: String,
   reportId: String,
-  scannedAt: Instant,
+  scannedAt: LocalDateTime,
+  warningCount: Int,
   unresolvedCount: Int
 )
 
@@ -130,13 +157,13 @@ object LeakDetectionBranchSummary {
 }
 
 final case class LeakDetectionReport(
-                                      repoName: String,
-                                      branch: String,
-                                      _id: String,
-                                      timestamp: Instant,
-                                      author: String,
-                                      commitId: String
-                                    )
+  repoName: String,
+  branch: String,
+  _id: String,
+  timestamp: LocalDateTime,
+  author: String,
+  commitId: String
+)
 
 object LeakDetectionReport {
   implicit val reads = Json.reads[LeakDetectionReport]
@@ -166,4 +193,10 @@ final case class Match(
 
 object Match {
   implicit val reads = Json.reads[Match]
+}
+
+final case class LeakDetectionWarning(message: String)
+
+object LeakDetectionWarning {
+  implicit val reads = Json.reads[LeakDetectionWarning]
 }

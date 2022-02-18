@@ -21,7 +21,7 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{Instant, LocalDateTime, ZoneId}
+import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -30,8 +30,6 @@ class LeakDetectionService @Inject() (
   leakDetectionConnector: LeakDetectionConnector,
   configuration: Configuration
 )(implicit val ec: ExecutionContext) {
-
-  def scannedLocalDateTime(i: Instant) = LocalDateTime.ofInstant(i, ZoneId.systemDefault())
 
   def resolutionUrl: String =
     configuration
@@ -65,108 +63,61 @@ class LeakDetectionService @Inject() (
     teamRepos.intersect(reposWithLeaks.map(_.name)).nonEmpty
   }
 
+  implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toInstant(ZoneOffset.UTC))
   def ruleSummaries()(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRulesWithCounts]] =
     leakDetectionConnector
       .leakDetectionSummaries(None, None, None)
       .map(
-        _.map(r =>
+        _.map(summary =>
           LeakDetectionRulesWithCounts(
-            r.rule,
-            r.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => scannedLocalDateTime(i.firstScannedAt)),
-            r.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => scannedLocalDateTime(i.lastScannedAt)),
-            r.leaks.length,
-            r.leaks.map(_.unresolvedCount).sum
+            summary.rule,
+            summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => i.lastScannedAt),
+            summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => i.lastScannedAt),
+            summary.leaks.length,
+            summary.leaks.map(_.unresolvedCount).sum
           )
         ).sortBy(_.totalCount).reverse
       )
 
-  def repoSummaries(rule: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionReposWithCounts])] =
-    leakDetectionConnector
-      .leakDetectionSummaries(rule, None, team)
-      .map(summaries =>
-        (
-          summaries.map(_.rule.id),
-          summaries
-            .flatMap(_.leaks)
-            .groupBy(_.repository)
-            .map {
-              case (repoName, summaries) =>
-                LeakDetectionReposWithCounts(
-                  repoName,
-                  summaries.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => scannedLocalDateTime(i.firstScannedAt)),
-                  summaries.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => scannedLocalDateTime(i.lastScannedAt)),
-                  summaries.map(_.unresolvedCount).sum
-                )
-            }
-            .toSeq
-            .sortBy(r => r.repoName)
-        )
-      )
-
-  def branchSummaries(repo: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchesWithCounts]] =
-    leakDetectionConnector
-      .leakDetectionSummaries(None, Some(repo), None)
-      .map(
-        _.flatMap(_.leaks)
-          .groupBy(_.repository)
-          .flatMap(_._2)
-          .flatMap(_.branchSummary)
-          .groupBy(_.branch)
-          .map {
-            case (branch, summaries) =>
-              LeakDetectionBranchesWithCounts(
-                branch,
-                summaries.head.reportId,
-                scannedLocalDateTime(summaries.head.scannedAt),
-                summaries.map(_.unresolvedCount).sum
-              )
-          }
-          .toSeq
-          .sortBy(_.branch)
-      )
-
-  def report(repository: String, branch: String)(implicit hc: HeaderCarrier): Future[LeakDetectionReportWithLeaks] =
+  def repoSummaries(rule: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionRepositorySummary])] =
     for {
-      report <- leakDetectionConnector.leakDetectionReport(repository, branch)
-      leaks  <- leakDetectionConnector.leakDetectionLeaks(report._id)
-    } yield LeakDetectionReportWithLeaks(
-      report.repoName,
-      report.branch,
-      report._id,
-      scannedLocalDateTime(report.timestamp),
-      report.author,
-      report.commitId,
-      leaks
-        .groupBy(l => l.ruleId)
-        .map {
-          case (ruleId, leaks) =>
-            LeakDetectionLeaksByRule(
-              ruleId,
-              leaks.head.description,
-              leaks.head.scope,
-              leaks.head.priority,
-              leaks
-                .map(l => LeakDetectionLeakDetails(l.filePath, l.lineNumber, l.urlToSource, l.lineText, l.matches))
-                .sortBy(_.lineNumber)
-                .sortBy(_.filePath)
+      rules <- leakDetectionConnector.leakDetectionRules
+      summaries <- leakDetectionConnector.leakDetectionRepoSummaries(rule, None, team)
+    } yield (rules.map(_.id), summaries.sortBy(_.repository))
 
-            )
-        }
-        .toSeq
-        .sortBy(_.leaks.length)
-        .reverse
-        .sortBy(_.priority)
+  def branchSummaries(repo: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
+    leakDetectionConnector
+      .leakDetectionRepoSummaries(None, Some(repo), None)
+      .map(_.flatMap(_.branchSummary).sortBy(_.branch))
+
+  def report(repository: String, branch: String)(implicit hc: HeaderCarrier): Future[LeakDetectionReport] =
+    leakDetectionConnector.leakDetectionReport(repository, branch)
+
+  def reportLeaks(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] =
+    leakDetectionConnector.leakDetectionLeaks(reportId).map(_.groupBy(l => l.ruleId)
+      .map {
+        case (ruleId, leaks) =>
+          LeakDetectionLeaksByRule(
+            ruleId,
+            leaks.head.description,
+            leaks.head.scope,
+            leaks.head.priority,
+            leaks
+              .map(l => LeakDetectionLeakDetails(l.filePath, l.lineNumber, l.urlToSource, l.lineText, l.matches))
+              .sortBy(_.lineNumber)
+              .sortBy(_.filePath)
+          )
+      }
+      .toSeq
+      .sortBy(_.leaks.length)
+      .reverse
+      .sortBy(_.priority)
     )
+
+  def reportWarnings(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionWarning]] =
+    leakDetectionConnector.leakDetectionWarnings(reportId)
 }
 
-final case class LeakDetectionBranchesWithCounts(branch: String, reportId: String, scannedAt: LocalDateTime, totalCount: Int)
-
-final case class LeakDetectionReposWithCounts(repoName: String, firstScannedAt: Option[LocalDateTime], lastScannedAt: Option[LocalDateTime], totalCount: Int)
-
 final case class LeakDetectionRulesWithCounts(rule: LeakDetectionRule, firstScannedAt: Option[LocalDateTime], lastScannedAt: Option[LocalDateTime], repoCount: Int, totalCount: Int)
-
-final case class LeakDetectionReportWithLeaks(repoName: String, branch: String, reportId: String, scannedAt: LocalDateTime, author: String, commitId: String, leaks: Seq[LeakDetectionLeaksByRule])
-
 final case class LeakDetectionLeaksByRule(ruleId: String, description: String, scope: String, priority: String, leaks: Seq[LeakDetectionLeakDetails])
-
 final case class LeakDetectionLeakDetails(filePath: String, lineNumber: Int, urlToSource: String, lineText: String, matches: List[Match])

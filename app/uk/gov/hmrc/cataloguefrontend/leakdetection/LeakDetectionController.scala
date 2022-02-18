@@ -80,8 +80,10 @@ class LeakDetectionController @Inject() (
         for {
           isAuthorised <- auth.authorised(None, Retrieval.hasPredicate(leaksPermission(repository)))
           report       <- leakDetectionService.report(repository, branch)
+          leaks        <- leakDetectionService.reportLeaks(report._id)
+          warnings     <- leakDetectionService.reportWarnings(report._id)
           resolutionUrl = leakDetectionService.resolutionUrl
-        } yield Ok(leaksPage(report, resolutionUrl, isAuthorised))
+        } yield Ok(leaksPage(report, leaks, warnings, resolutionUrl, isAuthorised))
       }
 }
 
