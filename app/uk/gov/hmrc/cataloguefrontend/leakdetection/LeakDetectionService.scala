@@ -71,8 +71,8 @@ class LeakDetectionService @Inject() (
         _.map(summary =>
           LeakDetectionRulesWithCounts(
             summary.rule,
-            summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(i => i.lastScannedAt),
-            summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(i => i.lastScannedAt),
+            summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(s => s.firstScannedAt),
+            summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(s => s.lastScannedAt),
             summary.leaks.length,
             summary.leaks.map(_.unresolvedCount).sum
           )
