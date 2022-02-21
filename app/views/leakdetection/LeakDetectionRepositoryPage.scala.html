@@ -15,13 +15,13 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionBranchesWithCounts
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionBranchSummary
 
 @this(viewMessages: ViewMessages)
 
-@(repoName: String, summaries: Seq[LeakDetectionBranchesWithCounts])(implicit messages: Messages, request: Request[_])
+@(repoName: String, summaries: Seq[LeakDetectionBranchSummary])(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Leak detection: $repoName") {
     <header>
@@ -39,7 +39,8 @@
                     <tr>
                         <th class="col-xs-8"><button class="sort no-border" data-sort="branch">Branch</button></th>
                         <th class="col-xs-3"><button class="sort no-border" data-sort="scanned">Scanned at</button></th>
-                        <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
+                        <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="warnings">Warnings</button></th>
+                        <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="violations">Violations</button></th>
                     </tr>
                 </thead>
                 <tbody class="list">
@@ -49,16 +50,27 @@
         </div>
 
         <script>
-                var options = {valueNames: ['branch', 'scanned', 'total']};
+                var options = {valueNames: ['branch', 'scanned', 'warnings', 'violations']};
                 branchList = new List('branch-list', options);
         </script>
     }
 }
 
-@leakDetectionBranchSummary(repoName: String, summary: LeakDetectionBranchesWithCounts) = {
+@leakDetectionBranchSummary(repoName: String, summary: LeakDetectionBranchSummary) = {
     <tr>
         <td class="branch"><a href="@appRoutes.LeakDetectionController.report(repoName, summary.branch)">@summary.branch</a></td>
         <td class="scanned">@summary.scannedAt.displayFormat</td>
-        <td class="total text-center"><div class="hidden">@summary.totalCount</div><a href="@appRoutes.LeakDetectionController.report(repoName, summary.branch)">@summary.totalCount</a></td>
+        <td class="warnings text-center"><div class="hide">@summary.warningCount</div>
+            @if(summary.warningCount > 0) {
+                <a href="@appRoutes.LeakDetectionController.report(repoName, summary.branch)">@summary.warningCount</a>
+            } else {
+                <span>0</span>
+            }</td>
+        <td class="violations text-center"><div class="hide">@summary.unresolvedCount</div>
+            @if(summary.unresolvedCount > 0) {
+                <a href="@appRoutes.LeakDetectionController.report(repoName, summary.branch)">@summary.unresolvedCount</a>
+            } else {
+                <span>0</span>
+            }</td>
     </tr>
 }
