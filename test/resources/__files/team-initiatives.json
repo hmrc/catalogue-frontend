@@ -3,8 +3,8 @@
     "initiativeName"          : "Initiative-1",
     "initiativeDescription"   : "Test description",
     "progress"                : {
-      "currentProgress"         : 1,
-      "targetProgress"          : 10
+      "current"         : 1,
+      "target"          : 10
     },
     "completedLegend"         : "Updated",
     "inProgressLegend"        : "Not Updated"
@@ -13,8 +13,8 @@
     "initiativeName"          : "Initiative-2",
     "initiativeDescription"   : "Test description",
     "progress"                : {
-      "currentProgress"         : 9,
-      "targetProgress"          : 9
+      "current"         : 9,
+      "target"          : 9
     },
     "completedLegend"         : "Completed",
     "inProgressLegend"        : "Not Completed"

@@ -102,7 +102,7 @@
         <table class="table table-striped">
             <tbody class="list">
             @initiatives.zipWithIndex.map{case (initiative, i) =>
-                @if(initiative.progress.targetProgress != 0){
+                @if(initiative.progress.target != 0){
                 <tr class="col-sm-6">
                     <td>
                         @display match{
@@ -126,9 +126,9 @@
                             case DisplayType.Progress => {
                                 <div class="initiativeName" style="width:500px;">
                                     <h3> @initiative.initiativeName </h3>
-                                    <progress style="width: 75%;" class="progress" value="@initiative.progress.currentProgress"
-                                              max="@initiative.progress.targetProgress" data-toggle="tooltip" title="@initiative.progress.currentProgress/@initiative.progress.targetProgress @initiative.completedLegend">
-                                        @initiative.progress.currentProgress/@initiative.progress.targetProgress
+                                    <progress style="width: 75%;" class="progress" value="@initiative.progress.current"
+                                              max="@initiative.progress.target" data-toggle="tooltip" title="@initiative.progress.current/@initiative.progress.target @initiative.completedLegend">
+                                        @initiative.progress.current/@initiative.progress.target
                                     </progress>
                                     <span style="float: right;">@initiative.progress.percent% @initiative.completedLegend</span>
                                     @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
@@ -162,8 +162,8 @@
             data.addColumn('string', 'InitiativeName');
             data.addColumn('number', 'Count');
             data.addRows([
-                ['@initiative.completedLegend', @initiative.progress.currentProgress],
-                ['@initiative.inProgressLegend', @initiative.progress.targetProgress-@initiative.progress.currentProgress]
+                ['@initiative.completedLegend', @initiative.progress.current],
+                ['@initiative.inProgressLegend', @initiative.progress.target-@initiative.progress.current]
             ]);
             var options =   { 'title'       : ''        ,
                               'width'       : "100%"    ,

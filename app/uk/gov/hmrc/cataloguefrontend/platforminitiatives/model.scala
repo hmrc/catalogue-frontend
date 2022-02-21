@@ -21,16 +21,16 @@ import play.api.libs.json.{OFormat, __}
 import play.api.mvc.QueryStringBindable
 
 case class Progress(
-  currentProgress : Int,
-  targetProgress  : Int,
+  current : Int,
+  target  : Int,
 ) {
-  def percent: Int = (currentProgress.toFloat / targetProgress.toFloat * 100).toInt
+  def percent: Int = (current.toFloat / target.toFloat * 100).toInt
 }
 
 object Progress {
   implicit val format: OFormat[Progress] = {
-    ((__ \ "currentProgress").format[Int]
-      ~ (__ \ "targetProgress").format[Int]
+    ((__ \ "current").format[Int]
+      ~ (__ \ "target").format[Int]
       )(Progress.apply,unlift(Progress.unapply))
   }
 }

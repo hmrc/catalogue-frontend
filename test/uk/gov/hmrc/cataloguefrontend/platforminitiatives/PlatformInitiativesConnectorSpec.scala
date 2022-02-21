@@ -54,8 +54,8 @@ class PlatformInitiativesConnectorSpec
     initiativeName        = "Initiative-1",
     initiativeDescription = "Test description",
     progress              = Progress(
-      currentProgress       = 10,
-      targetProgress        = 100
+      current       = 10,
+      target        = 100
     ),
     completedLegend       = "Updated",
     inProgressLegend      = "Not Updated"),
@@ -63,8 +63,8 @@ class PlatformInitiativesConnectorSpec
     initiativeName        = "Initiative-2",
     initiativeDescription = "Test description",
     progress              = Progress(
-      currentProgress       = 33,
-      targetProgress        = 40
+      current       = 33,
+      target        = 40
     ),
     completedLegend       = "Completed",
     inProgressLegend      = "Not Completed"))
