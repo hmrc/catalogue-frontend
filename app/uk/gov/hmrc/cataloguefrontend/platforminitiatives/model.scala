@@ -20,23 +20,34 @@ import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{OFormat, __}
 import play.api.mvc.QueryStringBindable
 
-case class PlatformInitiative(
-   initiativeName: String,
-   initiativeDescription: String,
-   currentProgress: Int,
-   targetProgress: Int,
-   completedLegend: String,
-   inProgressLegend: String
+case class Progress(
+  current : Int,
+  target  : Int,
 ) {
-  def percent: Int = (currentProgress.toFloat / targetProgress.toFloat * 100).toInt
+  def percent: Int = if (target == 0) 0 else (current.toFloat / target.toFloat * 100).toInt
 }
+
+object Progress {
+  implicit val format: OFormat[Progress] = {
+    ((__ \ "current").format[Int]
+      ~ (__ \ "target").format[Int]
+      )(Progress.apply,unlift(Progress.unapply))
+  }
+}
+
+case class PlatformInitiative(
+   initiativeName       : String  ,
+   initiativeDescription: String  ,
+   progress             : Progress,
+   completedLegend      : String  ,
+   inProgressLegend     : String
+)
 
 object PlatformInitiative {
   val format: OFormat[PlatformInitiative] = {
     ((__ \ "initiativeName").format[String]
       ~ (__ \ "initiativeDescription").format[String]
-      ~ (__ \ "currentProgress").format[Int]
-      ~ (__ \ "targetProgress").format[Int]
+      ~ (__ \ "progress"    ).format[Progress]
       ~ (__ \ "completedLegend").format[String]
       ~ (__ \ "inProgressLegend").format[String]
       ) (apply, unlift(unapply))

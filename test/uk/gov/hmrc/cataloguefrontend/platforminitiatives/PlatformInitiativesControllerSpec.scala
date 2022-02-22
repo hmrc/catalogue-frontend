@@ -62,16 +62,20 @@ class PlatformInitiativesControllerSpec
         PlatformInitiative(
           initiativeName        = "Test initiative",
           initiativeDescription = "Test initiative description",
-          currentProgress       = 10,
-          targetProgress        = 100,
+          progress              = Progress(
+            current       = 10,
+            target        = 100
+          ),
           completedLegend       = "Completed",
           inProgressLegend      = "Not completed"
         ),
         PlatformInitiative(
           initiativeName        = "Update Dependency",
           initiativeDescription = "Update Dependency description",
-          currentProgress       = 50,
-          targetProgress        = 70,
+          progress              = Progress(
+            current       = 50,
+            target        = 70
+          ),
           completedLegend       = "Completed",
           inProgressLegend      = "Not completed"
         )
