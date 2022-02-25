@@ -131,6 +131,7 @@ object ConfigService {
 
   def friendlySourceName(source: String, environment: ConfigEnvironment): String =
     source match {
+      case "loggerConf"                 => "Microservice application-json-logger.xml file"
       case "referenceConf"              => "Microservice reference.conf files"
       case "applicationConf"            => "Microservice application.conf file"
       case "baseConfig"                 => "App-config-base"
