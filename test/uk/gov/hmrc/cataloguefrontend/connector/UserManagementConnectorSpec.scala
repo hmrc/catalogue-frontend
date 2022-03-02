@@ -26,7 +26,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, SlackInfo, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.UserManagementPortalConfig
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
@@ -156,9 +156,21 @@ class UserManagementConnectorSpec
       teamDetails.description.value       shouldBe "TEAM-A is a great team"
       teamDetails.location.value          shouldBe "STLPD"
       teamDetails.organisation.value      shouldBe "ORGA"
-      teamDetails.slack.value             shouldBe "https://slack.host/messages/team-A"
-      teamDetails.slackNotification.value shouldBe "https://slack.host/messages/team-A-NOTIFICATION"
+      teamDetails.slack.value             shouldBe SlackInfo("https://slack.host/messages/team-A")
+      teamDetails.slackNotification.value shouldBe SlackInfo("https://slack.host/messages/team-A-NOTIFICATION")
       teamDetails.documentation.value     shouldBe "https://some.documentation.url"
+    }
+
+    "determine if SlackInfo hasValidURL is correct" in {
+      SlackInfo("https://slack.host/messages/team-A").hasValidUrl shouldBe true
+      SlackInfo("team-A").hasValidUrl shouldBe false
+    }
+
+    "determine if SlackInfo hasValidName is correct" in {
+      SlackInfo("https://slack.host/messages/team-A").hasValidName shouldBe true
+      SlackInfo("https://slack.host/messages/AAAAA").hasValidName shouldBe false
+      SlackInfo("https://slack.host/messages/11111").hasValidName shouldBe false
+      SlackInfo("https://slack.host/messages/ABC12345").hasValidName shouldBe false
     }
 
     "no organization/data field in json for team details" in {

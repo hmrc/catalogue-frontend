@@ -17,7 +17,7 @@
 @import _root_.views.html.partials.DependenciesTeamPartial
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.{DisplayableTeamMember, TeamActivityDates, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, TeamDetails}
+@import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{UMPError, TeamDetails, SlackInfo}
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependencies, Dependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -86,15 +86,11 @@
                                 </li>
                                 <li id="team-slack-channels">
                                   <label>Slack: </label>
-
                                   <ul id="slack-channels" class="list list--minimal">
-                                    @teamDetails.slack.map { d =>
-                                      <li class="list-item"><a href="@d" target="_blank">Go to team channel<span class="glyphicon glyphicon-new-window"/></a></li>
-                                    }
-                                    @teamDetails.slackNotification.map { d =>
-                                      <li class="list-item"><a href="@d" target="_blank">Go to notification channel<span class="glyphicon glyphicon-new-window"/></a></li>
-                                    }
+                                    @teamDetails.slack.map(addSlackInfo("Team", _))
+                                    @teamDetails.slackNotification.map(addSlackInfo("Notification", _))
                                   </ul>
+
                                 </li>
                                 <li id="team-location">
                                   <label>Location: </label>
@@ -169,6 +165,25 @@
     </section>
 
     @dependenciesTeamPartial(teamName, masterTeamDependencies, prodDependencies, showLink = true)
+}
+
+@addSlackInfo(label: String, slackInfo: SlackInfo) = {
+  @if(!slackInfo.hasValidUrl) {
+    <li class="list-item">
+      <strong>@label: </strong>
+      <span>@slackInfo.url <span class="glyphicon glyphicon-warning-sign" /></span>
+      <div>Please change to a URL via <a href="@umpMyTeamsUrl" target="_blank">UMP<span class="glyphicon glyphicon-new-window"/></a></div>
+    </li>
+  } else if (!slackInfo.hasValidName) {
+    <li class="list-item">
+      <a href="@slackInfo.url" target="_blank">Go to @label.toLowerCase channel<span class="glyphicon glyphicon-new-window"/></a>
+    </li>
+  } else {
+    <li class="list-item">
+      <strong>@label: </strong>
+      <a href="@slackInfo.url" target="_blank">#@slackInfo.name<span class="glyphicon glyphicon-new-window"/></a>
+    </li>
+  }
 }
 
 @umpUpdateLink(isMemberBox: Boolean) = {
