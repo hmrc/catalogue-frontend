@@ -132,12 +132,12 @@ object UserManagementConnector {
   }
 
   case class TeamMember(
-    displayName: Option[String],
-    familyName: Option[String],
-    givenName: Option[String],
-    primaryEmail: Option[String],
+    displayName    : Option[String],
+    familyName     : Option[String],
+    givenName      : Option[String],
+    primaryEmail   : Option[String],
     serviceOwnerFor: Option[Seq[String]],
-    username: Option[String]
+    username       : Option[String]
   ) {
 
     def getUmpLink(umpProfileBaseUrl: String): String =
@@ -146,17 +146,24 @@ object UserManagementConnector {
     def getDisplayName: String = this.displayName.getOrElse("DISPLAY NAME NOT PROVIDED")
   }
 
+  case class SlackInfo(url : String) {
+    val name = url.split("/").lastOption.getOrElse(url)
+    val hasValidUrl = url.startsWith("http://") || url.startsWith("https://")
+    val hasValidName = "^[A-Z0-9]+$".r.findFirstIn(name).isEmpty
+  }
+
   case class TeamDetails(
-    description: Option[String],
-    location: Option[String],
-    organisation: Option[String],
-    documentation: Option[String],
-    slack: Option[String],
-    slackNotification: Option[String],
-    team: String
+    description      : Option[String],
+    location         : Option[String],
+    organisation     : Option[String],
+    documentation    : Option[String],
+    slack            : Option[SlackInfo],
+    slackNotification: Option[SlackInfo],
+    team             : String
   )
 
   implicit val teamMemberFormat: OFormat[TeamMember] = Json.format[TeamMember]
+  implicit val slackInfoReads: Reads[SlackInfo]      = implicitly[Reads[String]].map(SlackInfo(_))
   implicit val teamDetailsReads: Reads[TeamDetails]  = Json.reads[TeamDetails]
 
   final case class DisplayName(value: String) {
