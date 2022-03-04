@@ -81,7 +81,7 @@
                 </header>
                 <ul class="nav navbar-nav">
                     <li>
-                        <a id="link-to-teams" href="@appRoutes.CatalogueController.allTeams" class="@if(active=="teams") {active}">Teams</a>
+                        <a id="link-to-teams" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams" class="@if(active=="teams") {active}">Teams</a>
                     </li>
                     <li>
                         <a id="link-to-repositories" href="@appRoutes.CatalogueController.allRepositories(repoType = None)" class="@if(active=="repositories") {active}">Repositories</a>

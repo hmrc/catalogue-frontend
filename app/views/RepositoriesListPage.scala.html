@@ -16,14 +16,14 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@(repositories: Seq[RepositoryDisplayDetails],
+@(repositories: Seq[GitRepository],
   form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
@@ -83,16 +83,16 @@
             @repositories.zipWithIndex.map{case (repo, i) =>
             <tr id="row@i">
                 <td class="service-name" id="row@{i}_name">
-                    <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name @if(repo.isArchived) { (isArchived) }</a>
+                    <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name @if(repo.isDeprecated) { <span class="badge">deprecated</span> } @if(repo.isArchived) { <span class="badge">archived</span> }</a>
                 </td>
                 <td class="repo-type monospaced" id="row@{i}_repotype">
                     @repo.repoType.asString
                 </td>
                 <td class="created monospaced" id="row@{i}_created">
-                    @repo.createdAt.asPattern("yyyy-MM-dd")
+                    @repo.createdDate.asPattern("yyyy-MM-dd")
                 </td>
                 <td class="last-active monospaced" id="row@{i}_lastActive">
-                    @repo.lastUpdatedAt.asPattern("yyyy-MM-dd")
+                    @repo.lastActiveDate.asPattern("yyyy-MM-dd")
                 </td>
             </tr>
             }

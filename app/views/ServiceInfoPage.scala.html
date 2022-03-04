@@ -18,7 +18,6 @@
 
 @import partials.DependenciesByEnvironmentPartial
 @import play.twirl.api.Html
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
@@ -26,15 +25,17 @@
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import views.partials.githubBadgeType
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 
 @this(
   dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial,
   viewMessages                    : ViewMessages
 )
 
+
 @(
   serviceName                  : String,
-  repositoryDetails            : RepositoryDetails,
+  repositoryDetails            : GitRepository,
   costEstimate                 : ServiceCostEstimate,
   costEstimateConfig           : CostEstimateConfig,
   repositoryCreationDate       : LocalDateTime,

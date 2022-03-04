@@ -27,7 +27,6 @@
 
 @(teamName              : TeamName,
   repos                 : Map[RepoType, Seq[String]],
-  activityDates         : TeamActivityDates,
   errorOrTeamMembers    : Either[UMPError, Seq[DisplayableTeamMember]],
   errorOrTeamDetails    : Either[UMPError, TeamDetails],
   umpMyTeamsUrl         : String,
@@ -61,12 +60,8 @@
 
                         <ul class="list list--minimal" id="team_details">
                             <li id="team-created">
-                                <label>Created: </label>
-                                @activityDates.created.map(_.displayFormat).getOrElse("None")
                             </li>
                             <li id="team-last-active">
-                                <label>Last Active: </label>
-                                @activityDates.lastActive.map(_.displayFormat).getOrElse("None")
                             </li>
                             @errorOrTeamDetails match {
                               case Right(teamDetails) => {

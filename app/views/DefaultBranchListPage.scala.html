@@ -14,13 +14,13 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@(repositories   : Seq[RepositoryDisplayDetails],
+@(repositories   : Seq[GitRepository],
   teams          : Seq[String],
   singleOwnership: Boolean,
   includeArchived: Boolean,
@@ -66,7 +66,7 @@
                 )
                 <div>
                     Single ownership
-                    <input class="checkbox" id="singleOwnership" name="singleOwnership" type="checkbox" data-toggle="tooltip" title="Return repositories that are owned solely by the selected team." value="true" @if(singleOwnership){checked}>
+                    <input class="checkbox" id="singleOwnership" name="singleOwnership" type="checkbox" data-toggle="tooltip" title="Return repositories that are owned solely by the selected team." value="true" @if(singleOwnership){checked}/>
                 </div>
             </div>
             <div class="col-xs-3">

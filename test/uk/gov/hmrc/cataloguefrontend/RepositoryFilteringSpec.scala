@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.SearchFiltering._
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, RepositoryDisplayDetails}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, GitRepository}
 
 class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
 
@@ -30,21 +30,21 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv2", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv3", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
 
       repositories.filter(RepoListFilter(name       = Some("serv1"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
     }
 
@@ -52,23 +52,23 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("FOO", createdAt   = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv2", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("FOO", createdDate   = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "",  language = None, description = "")
       )
 
       repositories.filter(RepoListFilter(name       = Some("eRV"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv2", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
     }
 
@@ -76,19 +76,19 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv2", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv3", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
 
       repositories.filter(RepoListFilter(repoType   = Some("Other"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
     }
 
@@ -96,19 +96,19 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv2", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv3", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
 
       repositories.filter(RepoListFilter(repoType   = Some("service"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
     }
 
@@ -116,19 +116,19 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv2", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv3", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
 
       repositories.filter(RepoListFilter(repoType   = Some("Service"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
     }
 
@@ -136,21 +136,21 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv4", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv2", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv4", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv3", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
 
       repositories.filter(RepoListFilter(name       = Some("serv1"), repoType = Some("Other"))) shouldBe Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
     }
 
@@ -158,14 +158,14 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       val now = LocalDateTime.now()
 
       val repositories = Seq(
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv2", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv1", createdAt = now, lastUpdatedAt = now, RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main"),
-        RepositoryDisplayDetails("serv3", createdAt = now, lastUpdatedAt = now, RepoType.Service, isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main")
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv2", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv3", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
 
       repositories.filter(RepoListFilter()) shouldBe repositories

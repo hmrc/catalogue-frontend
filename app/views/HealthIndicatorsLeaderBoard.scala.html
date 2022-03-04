@@ -77,7 +77,7 @@
                                     data-toggle="tooltip" data-placement="bottom">Multiple</li>
                                 } else {
                                     @for(team <- indicator.owningTeams) {
-                                        <li><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.team(team)">@{team.asString}</a></li>
+                                        <li><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(team)">@{team.asString}</a></li>
                                     }
                                 }
                             </ul>

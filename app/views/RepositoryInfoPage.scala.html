@@ -16,7 +16,7 @@
 
 @import partials.ModulesPartial
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 @import views.partials.githubBadgeType
@@ -26,7 +26,7 @@
   modulesPartial     : ModulesPartial
 )
 
-@(repository         : RepositoryDetails,
+@(repository         : GitRepository,
   repositoryModules  : Option[RepositoryModules],
   linkToLeakDetection: Option[String]
 )(implicit
@@ -40,6 +40,7 @@
       <h1>
         Repository: @repository.name
         <span>@githubBadgeType(repository)</span>
+        @if(repository.isDeprecated) { <span>Deprecated</span> }
         @if(repository.isArchived) { <span>Archived</span> }
       </h1>
     </div>

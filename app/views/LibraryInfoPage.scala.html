@@ -17,7 +17,7 @@
 @import partials.ModulesPartial
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 @import views.partials.githubBadgeType
@@ -27,7 +27,7 @@
   modulesPartial     : ModulesPartial
 )
 
-@(library            : RepositoryDetails,
+@(library            : GitRepository,
   repositoryModules  : Option[RepositoryModules],
   linkToLeakDetection: Option[String]
 )(implicit

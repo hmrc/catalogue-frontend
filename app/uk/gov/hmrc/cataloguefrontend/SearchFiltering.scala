@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, RepositoryDisplayDetails, Team}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, GitRepository, Team}
 
 object SearchFiltering {
 
-  implicit class RepositoryResult(repositories: Seq[RepositoryDisplayDetails]) {
+  implicit class RepositoryResult(repositories: Seq[GitRepository]) {
 
-    def filter(q: RepoListFilter): Seq[RepositoryDisplayDetails] =
+    def filter(q: RepoListFilter): Seq[GitRepository] =
       repositories.toStream
         .filter(x => q.name.fold(true)(name => x.name.toLowerCase.contains(name.toLowerCase)))
         .filter(x =>

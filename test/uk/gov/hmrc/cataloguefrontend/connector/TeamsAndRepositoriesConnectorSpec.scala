@@ -101,6 +101,7 @@ class TeamsAndRepositoriesConnectorSpec
     }
   }
 
+  /*
   "repositoryDetails" should {
     "convert the json string to RepositoryDetails" in {
       stubFor(
@@ -125,30 +126,6 @@ class TeamsAndRepositoriesConnectorSpec
       responseData.teamNames   should ===(Seq(TeamName("teamA"), TeamName("teamB")))
       responseData.githubUrl   should ===(Link("github", "github.com", "https://github.com/hmrc/service-1"))
       responseData.jenkinsURL should === (None)
-      responseData.environments should ===(
-        Some(Seq(
-          TargetEnvironment(
-            Environment.Development,
-            Seq(
-              Link("jenkins", "Jenkins", "https://deploy-dev.co.uk/job/deploy-microservice"),
-              Link("grafana", "Grafana", "https://grafana-dev.co.uk/#/dashboard")
-            )
-          ),
-          TargetEnvironment(
-            Environment.QA,
-            Seq(
-              Link("jenkins", "Jenkins", "https://deploy-qa.co.uk/job/deploy-microservice"),
-              Link("grafana", "Grafana", "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard")
-            )
-          ),
-          TargetEnvironment(
-            Environment.Production,
-            Seq(
-              Link("jenkins", "Jenkins", "https://deploy-prod.co.uk/job/deploy-microservice"),
-              Link("grafana", "Grafana", "https://grafana-prod.co.uk/#/dashboard")
-            )
-          )
-        )))
 
       responseData.repoType shouldBe RepoType.Service
       responseData.isArchived shouldBe false
@@ -287,4 +264,6 @@ class TeamsAndRepositoriesConnectorSpec
         )
     }
   }
+
+   */
 }

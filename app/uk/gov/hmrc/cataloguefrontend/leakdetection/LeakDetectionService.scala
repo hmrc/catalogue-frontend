@@ -17,11 +17,10 @@
 package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
+import java.time.{LocalDateTime, ZoneOffset}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -54,14 +53,6 @@ class LeakDetectionService @Inject() (
 
   def hasLeaks(reposWithLeaks: Seq[RepositoryWithLeaks])(repoName: String): Boolean =
     reposWithLeaks.exists(_.name == repoName)
-
-  def teamHasLeaks(team: Team, reposWithLeaks: Seq[RepositoryWithLeaks]): Boolean = {
-    val teamRepos: Seq[String] = team.repos
-      .map(_.values.toList.flatten)
-      .getOrElse(Nil)
-      .filterNot(repositoriesToIgnore.contains)
-    teamRepos.intersect(reposWithLeaks.map(_.name)).nonEmpty
-  }
 
   implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toInstant(ZoneOffset.UTC))
   def ruleSummaries()(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRulesWithCounts]] =

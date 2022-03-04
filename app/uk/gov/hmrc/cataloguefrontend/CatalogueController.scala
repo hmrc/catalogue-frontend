@@ -53,7 +53,6 @@ case class EnvData(
 
 @Singleton
 class CatalogueController @Inject() (
-  userManagementConnector      : UserManagementConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   configService                : ConfigService,
   costEstimationService        : CostEstimationService,
@@ -66,10 +65,8 @@ class CatalogueController @Inject() (
   userManagementPortalConfig   : UserManagementPortalConfig,
   configuration                : Configuration,
   mcc                          : MessagesControllerComponents,
-  digitalServiceInfoPage       : DigitalServiceInfoPage,
   whatsRunningWhereService     : WhatsRunningWhereService,
   indexPage                    : IndexPage,
-  teamInfoPage                 : TeamInfoPage,
   serviceInfoPage              : ServiceInfoPage,
   serviceConfigPage            : ServiceConfigPage,
   serviceConfigRawPage         : ServiceConfigRawPage,
@@ -86,13 +83,6 @@ class CatalogueController @Inject() (
   import UserManagementConnector._
   import userManagementPortalConfig._
 
-  // this value must match the configured name property for jenkins services defined under url-templates.environments at https://github.com/hmrc/app-config-base/blob/main/teams-and-repositories.conf
-  private lazy val jenkinsLinkName =
-    configuration.getOptional[String]("teams-and-repositories.link-name.jenkins").getOrElse("jenkins")
-
-  private lazy val hideArchivedRepositoriesFromTeam: Boolean =
-    configuration.get[Boolean]("team.hideArchivedRepositories")
-
   private lazy val whatsNewDisplayLines  = configuration.get[Int]("whats-new.display.lines")
   private lazy val blogPostsDisplayLines = configuration.get[Int]("blog-posts.display.lines")
 
@@ -105,119 +95,6 @@ class CatalogueController @Inject() (
       val whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines).merge
       val blogPosts = MarkdownLoader.markdownFromFile("BLOG_POSTS.md", blogPostsDisplayLines).merge
       Ok(indexPage(whatsNew, blogPosts))
-    }
-
-  def allTeams(): Action[AnyContent] =
-    Action.async { implicit request =>
-      import SearchFiltering._
-
-      teamsAndRepositoriesConnector.allTeams.map { response =>
-        val form: Form[TeamFilter] = TeamFilter.form.bindFromRequest()
-
-        form.fold(
-          _ => Ok(teams_list(teams = Seq.empty, form)),
-          query =>
-            Ok(
-              teams_list(
-                teams = response
-                  .filter(query)
-                  .sortBy(_.name.asString.toUpperCase),
-                form = form
-              )
-            )
-        )
-      }
-    }
-
-  def digitalService(digitalServiceName: String): Action[AnyContent] =
-    Action.async { implicit request =>
-      teamsAndRepositoriesConnector.digitalServiceInfo(digitalServiceName).flatMap {
-        case Some(digitalService) =>
-          val teamNames: Set[TeamName] = digitalService.repositories.flatMap(_.teamNames).toSet
-          val repos                    = digitalService.repositories.groupBy(_.repoType).mapValues(_.map(_.name))
-          userManagementConnector
-            .getTeamMembersForTeams(teamNames.toSeq)
-            .map(convertToDisplayableTeamMembers)
-            .map(teamMembers =>
-              Ok(
-                digitalServiceInfoPage(
-                  digitalServiceName  = digitalService.name,
-                  teamMembersLookUp   = teamMembers,
-                  repos               = repos,
-                  digitalServiceOwner = None // this used to come from mongo, maintained via catalogue. If this is required, consider storing in configuration.
-                )
-              )
-            )
-        case None => Future.successful(notFound)
-      }
-    }
-
-  def allDigitalServices: Action[AnyContent] =
-    Action.async { implicit request =>
-      import SearchFiltering._
-
-      teamsAndRepositoriesConnector.allDigitalServices.map { response =>
-        val form: Form[DigitalServiceNameFilter] = DigitalServiceNameFilter.form.bindFromRequest()
-
-        form.fold(
-          _ => Ok(digital_service_list(digitalServices = Seq.empty, form)),
-          query =>
-            Ok(
-              digital_service_list(
-                digitalServices = response
-                  .filter(query)
-                  .sortBy(_.toUpperCase),
-                form = form
-              )
-            )
-        )
-      }
-    }
-
-  def team(teamName: TeamName): Action[AnyContent] =
-    Action.async { implicit request =>
-      teamsAndRepositoriesConnector.teamInfo(teamName).flatMap {
-        case Some(teamInfo) =>
-          (
-            userManagementConnector.getTeamMembersFromUMP(teamName),
-            userManagementConnector.getTeamDetails(teamName),
-            leakDetectionService.repositoriesWithLeaks,
-            serviceDependenciesConnector.dependenciesForTeam(teamName),
-            serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),
-            if (hideArchivedRepositoriesFromTeam)
-              teamsAndRepositoriesConnector.archivedRepositories.map(_.map(_.name))
-            else
-              Future.successful(Nil)
-          ).mapN { ( teamMembers,
-                     teamDetails,
-                     reposWithLeaks,
-                     masterTeamDependencies,
-                     prodDependencies,
-                     reposToHide
-                   ) =>
-            Ok(
-              teamInfoPage(
-                teamName               = teamInfo.name,
-                repos                  = teamInfo.repos.getOrElse(Map.empty).map {
-                                           case (repoType, repos) =>
-                                             repoType -> repos.filterNot(reposToHide.contains)
-                                         },
-                activityDates          = TeamActivityDates(
-                                           created    = teamInfo.createdDate,
-                                           lastActive = teamInfo.lastActiveDate
-                                         ),
-                errorOrTeamMembers     = convertToDisplayableTeamMembers(teamInfo.name, teamMembers),
-                errorOrTeamDetails     = teamDetails,
-                umpMyTeamsUrl          = umpMyTeamsPageUrl(teamInfo.name),
-                leaksFoundForTeam      = leakDetectionService.teamHasLeaks(teamInfo, reposWithLeaks),
-                hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
-                masterTeamDependencies = masterTeamDependencies.filterNot(repo => reposToHide.contains(repo.repositoryName)),
-                prodDependencies       = prodDependencies
-              )
-            )
-          }
-        case _ => Future.successful(notFound)
-      }
     }
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
@@ -270,7 +147,7 @@ class CatalogueController @Inject() (
 
   private def renderServicePage(
     serviceName      : String,
-    repositoryDetails: RepositoryDetails
+    repositoryDetails: GitRepository
   )(implicit
     messages: Messages,
     request : Request[_]
@@ -286,14 +163,6 @@ class CatalogueController @Inject() (
                  // return the lowest
                  deployedVersions.sorted.headOption match {
                    case Some(version) =>
-                     val telemetryLinks =
-                       (for {
-                          targetEnvironments <- repositoryDetails.environments.toSeq
-                          targetEnvironment  <- targetEnvironments
-                          if targetEnvironment.environment == env
-                        } yield targetEnvironment.services.filterNot(_.name == jenkinsLinkName)
-                       ).flatten
-
                      (
                        serviceDependenciesConnector.getRepositoryModules(repositoryName, version),
                        shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
@@ -304,7 +173,7 @@ class CatalogueController @Inject() (
                              version           = version,
                              repoModules       = repoModules,
                              optShutterState   = optShutterState,
-                             optTelemetryLinks = Some(telemetryLinks)
+                             optTelemetryLinks = None
                            )
                        )
                      }
@@ -313,9 +182,7 @@ class CatalogueController @Inject() (
                }
       } yield res.collect { case Some(v) => v }.toMap
 
-    val costEstimationEnvironments =
-      repositoryDetails.environments.getOrElse(Seq.empty).map(_.environment)
-
+    val costEstimationEnvironments = Environment.values
     (
       teamsAndRepositoriesConnector.lookupLink(repositoryName),
       futEnvDatas,
@@ -348,10 +215,10 @@ class CatalogueController @Inject() (
       Ok(
         serviceInfoPage(
           serviceName                 = serviceName,
-          repositoryDetails           = repositoryDetails.copy(jenkinsURL = jenkinsLink),
+          repositoryDetails           = repositoryDetails,
           costEstimate                = costEstimate,
           costEstimateConfig          = serviceCostEstimateConfig,
-          repositoryCreationDate      = repositoryDetails.createdAt,
+          repositoryCreationDate      = repositoryDetails.createdDate,
           envDatas                    = optLatestData.fold(envDatas)(envDatas + _),
           linkToLeakDetection         = urlIfLeaksFound,
           productionEnvironmentRoute  = serviceUrl,
@@ -383,7 +250,7 @@ class CatalogueController @Inject() (
         )
     }
 
-  def renderLibrary(repoDetails: RepositoryDetails)(implicit messages: Messages, request: Request[_]): Future[Result] =
+  def renderLibrary(repoDetails: GitRepository)(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name)
@@ -393,23 +260,23 @@ class CatalogueController @Inject() (
              ) =>
       Ok(
         libraryInfoPage(
-          repoDetails.copy(jenkinsURL = jenkinsLink),
+          repoDetails,
           repoModules,
           urlIfLeaksFound
         )
       )
     }
 
-  private def renderPrototype(repoDetails: RepositoryDetails)(implicit messages: Messages, request: Request[_]): Future[Result] =
+  private def renderPrototype(repoDetails: GitRepository)(implicit messages: Messages, request: Request[_]): Future[Result] =
     for {
       urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
     } yield
       Ok(prototypeInfoPage(
-        repoDetails.copy(environments = None),
+        repoDetails,
         urlIfLeaksFound
       ))
 
-  private def renderOther(repoDetails: RepositoryDetails)(implicit messages: Messages, request: Request[_]): Future[Result] =
+  private def renderOther(repoDetails: GitRepository)(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name)
@@ -420,7 +287,6 @@ class CatalogueController @Inject() (
       Ok(
         repositoryInfoPage(
           repoDetails.copy(
-            jenkinsURL = jenkinsLinks,
             teamNames  = { val (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
                            owners.sorted ++ writers.sorted
                          }
@@ -476,7 +342,7 @@ class CatalogueController @Inject() (
 
   def allDefaultBranches(singleOwnership: Boolean, includeArchived: Boolean): Action[AnyContent] = {
     Action.async { implicit request =>
-      teamsAndRepositoriesConnector.allDefaultBranches.map { repositories =>
+      teamsAndRepositoriesConnector.allRepositories.map { repositories =>
         DefaultBranchesFilter.form
           .bindFromRequest()
           .fold(
@@ -506,7 +372,7 @@ class CatalogueController @Inject() (
       (for {
         repositoryDetails <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
         if repositoryDetails.repoType == RepoType.Service
-        costEstimationEnvironments = repositoryDetails.environments.getOrElse(Seq.empty).map(_.environment)
+        costEstimationEnvironments = Environment.values
         costEstimation <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName, costEstimationEnvironments, serviceCostEstimateConfig))
         estimatedCostCharts <- OptionT.liftF(costEstimationService.historicResourceUsageChartsForService(serviceName, serviceCostEstimateConfig))
       } yield
@@ -528,13 +394,6 @@ class CatalogueController @Inject() (
       case Left(err) => Left(err)
       case Right(tms) =>
         Right(DisplayableTeamMembers(teamName, userManagementProfileBaseUrl, tms))
-    }
-
-  private def convertToDisplayableTeamMembers(
-    teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]]
-  ): Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]] =
-    teamsAndMembers.map {
-      case (teamName, errorOrMembers) => (teamName, convertToDisplayableTeamMembers(teamName, errorOrMembers))
     }
 }
 

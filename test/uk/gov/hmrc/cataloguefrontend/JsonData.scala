@@ -88,6 +88,7 @@ object JsonData {
          "name": "$repoName",
          "isPrivate": false,
          "isArchived": false,
+         "isDeprecated": false,
          "description": "some description",
          "createdAt": "$createdAt",
          "lastActive": "$lastActiveAt",
