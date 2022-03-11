@@ -45,7 +45,7 @@
                @defining(prodDependencies.getOrElse(dependency.dependencies.repositoryName, Seq.empty)){ prodDependencies =>
                  <ul class="list list--minimal list-group row" id="ood-@dependency.dependencies.repositoryName">
 
-                     <h4>@dependency.dependencies.repositoryName @if(dependency.repo.isArchived){ <em>(archived)</em>} @if(dependency.repo.isDeprecated && !dependency.repo.isArchived){<em>(deprecated)</em>} </h4>
+                     <h4>@dependency.dependencies.repositoryName @if(dependency.repo.isArchived){ <span class="archived">archived</span>} @if(dependency.repo.isDeprecated && !dependency.repo.isArchived){<span class="badge">deprecated</span>} </h4>
 
                      @bobby_alerts(prodDependencies, pending = false)
                      @bobby_alerts(prodDependencies, pending = true )
