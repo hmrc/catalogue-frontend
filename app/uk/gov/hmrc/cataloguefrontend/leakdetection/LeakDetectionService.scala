@@ -74,9 +74,10 @@ class LeakDetectionService @Inject() (
             summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(s => s.firstScannedAt),
             summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(s => s.lastScannedAt),
             summary.leaks.length,
+            summary.leaks.map(_.excludedCount).sum,
             summary.leaks.map(_.unresolvedCount).sum
           )
-        ).sortBy(_.totalCount).reverse
+        ).sortBy(_.unresolvedCount).reverse
       )
 
   def repoSummaries(rule: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionRepositorySummary])] =
@@ -118,6 +119,6 @@ class LeakDetectionService @Inject() (
     leakDetectionConnector.leakDetectionWarnings(reportId)
 }
 
-final case class LeakDetectionRulesWithCounts(rule: LeakDetectionRule, firstScannedAt: Option[LocalDateTime], lastScannedAt: Option[LocalDateTime], repoCount: Int, totalCount: Int)
+final case class LeakDetectionRulesWithCounts(rule: LeakDetectionRule, firstScannedAt: Option[LocalDateTime], lastScannedAt: Option[LocalDateTime], repoCount: Int, excludedCount: Int, unresolvedCount: Int)
 final case class LeakDetectionLeaksByRule(ruleId: String, description: String, scope: String, priority: String, leaks: Seq[LeakDetectionLeakDetails])
 final case class LeakDetectionLeakDetails(filePath: String, lineNumber: Int, urlToSource: String, lineText: String, matches: List[Match])

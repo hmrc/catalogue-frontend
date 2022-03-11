@@ -136,6 +136,7 @@ final case class LeakDetectionRepositorySummary(
   lastScannedAt: LocalDateTime,
   warningCount: Int,
   unresolvedCount: Int,
+  excludedCount: Int,
   branchSummary: Seq[LeakDetectionBranchSummary]
 )
 
@@ -149,7 +150,8 @@ final case class LeakDetectionBranchSummary(
   reportId: String,
   scannedAt: LocalDateTime,
   warningCount: Int,
-  unresolvedCount: Int
+  unresolvedCount: Int,
+  excludedCount: Int
 )
 
 object LeakDetectionBranchSummary {
@@ -178,7 +180,8 @@ final case class LeakDetectionLeak(
   urlToSource: String,
   lineText: String,
   matches: List[Match],
-  priority: String
+  priority: String,
+  excluded: Boolean
 )
 
 object LeakDetectionLeak {
