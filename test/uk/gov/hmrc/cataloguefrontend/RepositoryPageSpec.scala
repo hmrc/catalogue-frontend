@@ -47,7 +47,7 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       val repoName = "other"
       val repositoryDetails = RepositoryDetails(repoName, RepoType.Other)
 
-      serviceEndpoint(GET, s"/api/repositories/$repoName"       , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
+      serviceEndpoint(GET, s"/api/v2/repositories/$repoName"    , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
       serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/module-dependencies/$repoName", willRespondWith = (404, None))
 
@@ -57,14 +57,14 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       response.body   should include(s"links on this page are automatically generated")
       response.body   should include(s"teamA")
       response.body   should include(s"teamB")
-      response.body   should include(s"github.com")
+      response.body   should include(s"Github.com")
     }
 
     "render dependencies" in {
       val repoName = "other"
       val repositoryDetails = RepositoryDetails(repoName, RepoType.Other)
 
-      serviceEndpoint(GET, s"/api/repositories/$repoName"       , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
+      serviceEndpoint(GET, s"/api/v2/repositories/$repoName"       , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
       serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/module-dependencies/$repoName", willRespondWith = (200, Some(repositoryModules(
                                                                                                 repoName,
@@ -83,63 +83,17 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
 
   def repositoryData(repositoryDetails: RepositoryDetails): String =
     s"""
-      {
-        "name": "${repositoryDetails.repositoryName}",
-        "isPrivate": false,
-        "isArchived": false,
-        "repoType": "${repositoryDetails.repositoryType}",
-        "owningTeams": [ "The True Owners" ],
-        "teamNames": ["teamA", "teamB"],
-        "description": "some description",
-        "createdAt": 1456326530000,
-        "lastActive": 1478602555000,
-        "defaultBranch": "master",
-        "githubUrl": {
-          "name": "github",
-          "displayName": "github.com",
-          "url": "https://github.com/hmrc/${repositoryDetails.repositoryName}"
-        },
-        "ci": [
-          {
-            "name": "open1",
-            "displayName": "open 1",
-            "url": "http://open1/${repositoryDetails.repositoryName}"
-          },
-          {
-            "name": "open2",
-            "displayName": "open 2",
-            "url": "http://open2/${repositoryDetails.repositoryName}"
-          }
-        ],
-        "environments" : [
-          {
-            "name" : "Production",
-            "services" : [
-              {
-                "name": "ser1",
-                "displayName": "service1",
-                "url": "http://ser1/${repositoryDetails.repositoryName}"
-              }, {
-                "name": "ser2",
-                "displayName": "service2",
-                "url": "http://ser2/${repositoryDetails.repositoryName}"
-              }
-            ]
-          }, {
-            "name" : "Staging",
-            "services" : [
-               {
-                 "name": "ser1",
-                 "displayName": "service1",
-                 "url": "http://ser1/${repositoryDetails.repositoryName}"
-               }, {
-                 "name": "ser2",
-                 "displayName": "service2",
-                 "url": "http://ser2/${repositoryDetails.repositoryName}"
-              }
-            ]
-          }
-        ]
+     {"name":"${repositoryDetails.repositoryName}",
+      "description": "",
+      "teamNames":["teamA", "teamB"],
+      "createdDate":"$createdAt",
+      "lastActiveDate":"$lastActiveAt",
+      "repoType":"${repositoryDetails.repositoryType.asString}",
+      "language":"Scala",
+      "isArchived":false,
+      "defaultBranch":"main",
+      "isDeprecated":false,
+      "url": "http://github.com/repoa"
       }
     """
 }

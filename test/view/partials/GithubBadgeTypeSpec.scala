@@ -17,10 +17,9 @@
 package view.partials
 
 import java.time.LocalDateTime
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.{Link, RepoType, RepositoryDetails}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Link, RepoType}
 import views.partials.githubBadgeType
 
 class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
@@ -29,7 +28,7 @@ class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
     "be Open if repository is not private" in {
       val repo = aRepo.copy(
         isPrivate = false,
-        githubUrl = aLink.copy(url = "https://github.com/hmrc/name")
+        githubUrl = "https://github.com/hmrc/name"
       )
 
       githubBadgeType(repo) shouldBe "Public"
@@ -37,7 +36,7 @@ class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
     "be Private if repository is private" in {
       val repo = aRepo.copy(
         isPrivate = true,
-        githubUrl = aLink.copy(url = "https://github.com/hmrc/name")
+        githubUrl = "https://github.com/hmrc/name"
       )
 
       githubBadgeType(repo) shouldBe "Private"
@@ -46,20 +45,20 @@ class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
 
   val aLink = Link("name", "display-name", "url")
 
-  val aRepo = RepositoryDetails(
-    name         = "name",
-    description  = "description",
-    createdAt    = LocalDateTime.now,
-    lastActive   = LocalDateTime.now,
-    owningTeams  = Nil,
-    teamNames    = Nil,
-    githubUrl    = Link("github-com", "GitHub.com", "https://github.com/hmrc/name"),
-    jenkinsURL   = None,
-    environments = None,
-    repoType     = RepoType.Other,
-    isPrivate    = false,
-    isArchived   = false,
-    defaultBranch = "main"
+  val aRepo = GitRepository(
+    name          = "name",
+    description   = "description",
+    createdDate    = LocalDateTime.now,
+    lastActiveDate = LocalDateTime.now,
+    owningTeams   = Nil,
+    teamNames     = Nil,
+    githubUrl     = "https://github.com/hmrc/name",
+    jenkinsURL    = None,
+    repoType      = RepoType.Other,
+    isPrivate     = false,
+    isArchived    = false,
+    defaultBranch = "main",
+    language      = None
   )
 
 }

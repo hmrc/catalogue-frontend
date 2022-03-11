@@ -25,49 +25,15 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType
   * Created by armin.
   */
 object JsonData {
-  val digitalServiceNamesData =
-    """
-      |[
-      |   "digital-service-1",
-      |   "digital-service-2",
-      |   "digital-service-3"
-      |]
-    """.stripMargin
 
   val teams =
     """
       |[
       |  {
-      |    "name": "team1",
-      |    "repos": {
-      |      "Service": [
-      |        "service1",
-      |        "service2"
-      |      ],
-      |      "Library": ["lib1", "lib2"],
-      |      "Prototype": [],
-      |      "Other": [
-      |        "other1",
-      |        "other2"
-      |      ]
-      |    },
-      |    "ownedRepos" : []
+      |    "name": "team1"
       |  },
       |  {
-      |    "name": "team2",
-      |    "repos": {
-      |      "Service": [
-      |        "service3",
-      |        "service4"
-      |      ],
-      |      "Library": ["lib3", "lib4"],
-      |      "Prototype": ["prototype1"],
-      |      "Other": [
-      |        "other3",
-      |        "other4"
-      |      ]
-      |    },
-      |    "ownedRepos" : []
+      |    "name": "team2"
       |  }
       |]
     """.stripMargin
@@ -75,12 +41,25 @@ object JsonData {
   val createdAt    = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
   val lastActiveAt = LocalDateTime.of(2016, 10, 12, 10, 30, 12)
 
-  val repositoriesData =
+  val repositoriesData = {
     s"""[
-          { "name":"teamA-serv"   , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Service", "isArchived": false, "teamNames": [], "defaultBranch": "main" },
-          { "name":"teamB-library", "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Library", "isArchived": false, "teamNames": [], "defaultBranch": "main" },
-          { "name":"teamB-other"  , "createdAt": "$createdAt", "lastUpdatedAt": "$lastActiveAt", "repoType":"Other"  , "isArchived": false, "teamNames": [], "defaultBranch": "main" }
-        ]"""
+       {"name":"teamA-serv"   ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
+       {"name":"teamB-library","description": "", "teamNames":["teamB"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
+       {"name":"teamB-other"  ,"description": "", "teamNames":["teamB"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
+       ]
+     """"
+  }
+
+  val repositoriesTeamAData = {
+    s"""[
+       {"name":"teamA-serv"   ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
+       {"name":"teamA-library","description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
+       {"name":"teamA-other"  ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"},
+       {"name":"teamA-proto"  ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Prototype", "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"},
+       {"name":"teamA-proto2"  ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Prototype", "language":"Scala", "isArchived":true, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
+       ]
+     """"
+  }
 
   def repositoryData(repoName: String = "service-1") =
     s"""
@@ -90,61 +69,13 @@ object JsonData {
          "isArchived": false,
          "isDeprecated": false,
          "description": "some description",
-         "createdAt": "$createdAt",
-         "lastActive": "$lastActiveAt",
+         "createdDate": "$createdAt",
+         "lastActiveDate": "$lastActiveAt",
          "repoType": "Service",
          "defaultBranch": "main",
-         "owningTeams": [
-           "The True Owners"
-         ],
          "teamNames": ["teamA", "teamB"],
-         "githubUrl": {
-           "name": "github",
-           "displayName": "github.com",
-           "url": "https://github.com/hmrc/$repoName"
-         },
-         "environments" : [
-           {
-             "name" : "Development",
-             "services" : [
-               {
-                 "name": "jenkins",
-                 "displayName": "Jenkins",
-                 "url": "https://deploy-dev.co.uk/job/deploy-microservice"
-               }, {
-                 "name": "grafana",
-                 "displayName": "Grafana",
-                 "url": "https://grafana-dev.co.uk/#/dashboard"
-               }
-             ]
-           }, {
-             "name" : "QA",
-             "services" : [
-               {
-                 "name": "jenkins",
-                 "displayName": "Jenkins",
-                 "url": "https://deploy-qa.co.uk/job/deploy-microservice"
-               }, {
-                 "name": "grafana",
-                 "displayName": "Grafana",
-                 "url": "https://grafana-datacentred-sal01-qa.co.uk/#/dashboard"
-               }
-             ]
-           }, {
-             "name" : "Production",
-             "services" : [
-               {
-                 "name": "jenkins",
-                 "displayName": "Jenkins",
-                 "url": "https://deploy-prod.co.uk/job/deploy-microservice"
-               }, {
-                 "name": "grafana",
-                 "displayName": "Grafana",
-                 "url": "https://grafana-prod.co.uk/#/dashboard"
-               }
-             ]
-           }
-         ]
+         "language":"Scala",
+         "url": "https://github.com/hmrc/$repoName"
        }
     """
 
@@ -183,51 +114,43 @@ object JsonData {
 
   val prototypeDetailsData =
     s"""
-       {
-         "name": "2fa-prototype",
-         "isPrivate": false,
-         "isArchived": false,
-         "description": "some description",
-         "createdAt": "$createdAt",
-         "lastActive": "$lastActiveAt",
-         "repoType": "Prototype",
-         "defaultBranch": "main",
-         "owningTeams": [
-           "The True Owners"
-         ],
-         "teamNames": [
-           "CATO",
-           "Designers"
-         ],
-         "githubUrl": {
-           "name": "github",
-           "displayName": "Github.com",
-           "url": "https://github.com/HMRC/2fa-prototype"
-         },
-         "environments": [ ]
-       }
+  {
+    "name": "2fa-prototype",
+    "description": "some description",
+    "url": "https://github.com/HMRC/2fa-prototype",
+    "createdDate": "$createdAt",
+    "lastActiveDate": "$lastActiveAt",
+    "isPrivate": true,
+    "repoType": "Prototype",
+    "owningTeams": [],
+    "language": "HTML",
+    "isArchived": false,
+    "defaultBranch": "main",
+    "isDeprecated": false,
+    "teamNames": [
+      "CATO",
+      "Designers"
+    ]
+  }
     """
 
   val libraryDetailsData =
     """
       {
         "name": "serv",
+        "description": "",
         "isPrivate": false,
         "isArchived": false,
         "description": "some description",
-        "createdAt": "2016-02-24T15:08:50Z",
-        "lastActive": "2016-11-08T10:55:55Z",
+        "createdDate": "2016-02-24T15:08:50Z",
+        "lastActiveDate": "2016-11-08T10:55:55Z",
         "repoType": "Library",
         "defaultBranch": "main",
         "owningTeams": [
           "The True Owners"
         ],
         "teamNames": ["teamA", "teamB"],
-        "githubUrl": {
-          "name": "github",
-          "displayName": "github.com",
-          "url": "https://github.com/hmrc/serv"
-        }
+        "url": "https://github.com/hmrc/serv"
       }
     """
 
@@ -366,36 +289,6 @@ object JsonData {
         }
       ]"""
 
-  val digitalServiceData =
-    """
-      {
-        "name": "service-1",
-        "lastUpdatedAt": "2017-05-08T10:54:29Z",
-        "repositories": [
-          {
-            "name": "catalogue-frontend",
-            "createdAt": "2016-02-24T15:08:50",
-            "lastUpdatedAt": "2017-05-08T10:53:29",
-            "repoType": "Service",
-            "teamNames": ["Team1", "Team2"]
-          },
-          {
-            "name": "repository-jobs",
-            "createdAt": "2017-04-11T13:14:29",
-            "lastUpdatedAt": "2017-05-08T10:54:29",
-            "repoType": "Service",
-            "teamNames": ["Team1"]
-          },
-          {
-            "name": "teams-and-repositories",
-            "createdAt": "2016-02-05T10:55:16",
-            "lastUpdatedAt": "2017-05-08T10:53:58",
-            "repoType": "Service",
-            "teamNames": ["Team2"]
-          }
-        ]
-      }
-    """
 
   val configServiceEmpty =
     "[]"
@@ -636,25 +529,23 @@ object JsonData {
       }
       """
 
-  val libraryData: String =
+  val libraryData: String = {
     """{
-        "name"         : "lib",
-        "isPrivate"    : false,
-        "isArchived"   : false,
-        "description"  : "some description",
-        "createdAt"    : "2016-02-24T15:08:50Z",
-        "lastActive"   : "2016-11-08T10:55:55Z",
-        "repoType"     : "Library",
-        "owningTeams"  : [ "The True Owners" ],
-        "teamNames"    : ["teamA", "teamB"],
-        "defaultBranch": "main",
-        "githubUrl"    : {
-          "name"       : "github",
-          "displayName": "github.com",
-          "url"        : "https://github.com/hmrc/lib"
-        }
+        "name"           : "lib",
+        "isPrivate"      : false,
+        "isArchived"     : false,
+        "description"    : "some description",
+        "createdDate"    : "2016-02-24T15:08:50Z",
+        "lastActiveDate" : "2016-11-08T10:55:55Z",
+        "repoType"       : "Library",
+        "language"       : "Scala",
+        "owningTeams"    : [ "The True Owners" ],
+        "teamNames"      : ["teamA", "teamB"],
+        "defaultBranch"  : "main",
+        "url"            : "https://github.com/hmrc/lib"
       }
     """
+  }
 
   def repositoryModules(name: String, dependenciesCompile: String) =
     s"""{

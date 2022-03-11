@@ -18,17 +18,14 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest.{BeforeAndAfterEach, EitherValues, OptionValues}
-import org.scalatest.concurrent.{ScalaFutures, IntegrationPatience}
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{BeforeAndAfterEach, EitherValues, OptionValues}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.test.FakeRequest
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.JsonData
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
@@ -44,8 +41,6 @@ class TeamsAndRepositoriesConnectorSpec
      with TypeCheckedTripleEquals
      with OptionValues
      with EitherValues {
-
-  import JsonData.{createdAt, lastActiveAt}
 
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()

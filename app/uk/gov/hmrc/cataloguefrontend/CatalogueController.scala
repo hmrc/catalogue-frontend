@@ -30,7 +30,7 @@ import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
-import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
+import uk.gov.hmrc.cataloguefrontend.util.{MarkdownLoader, TelemetryLinks}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
@@ -86,6 +86,9 @@ class CatalogueController @Inject() (
   private lazy val whatsNewDisplayLines  = configuration.get[Int]("whats-new.display.lines")
   private lazy val blogPostsDisplayLines = configuration.get[Int]("blog-posts.display.lines")
 
+  private lazy val telemetryLogsLinkTemplate = configuration.get[String]("telemetry.templates.logs")
+  private lazy val telemetryMetricsLinkTemplate = configuration.get[String]("telemetry.templates.metrics")
+
   private val logger = Logger(getClass)
 
   private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
@@ -95,16 +98,6 @@ class CatalogueController @Inject() (
       val whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines).merge
       val blogPosts = MarkdownLoader.markdownFromFile("BLOG_POSTS.md", blogPostsDisplayLines).merge
       Ok(indexPage(whatsNew, blogPosts))
-    }
-
-  def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
-    Action.async { implicit request =>
-      (
-        serviceDependenciesConnector.dependenciesForTeam(teamName),
-        serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
-      ).mapN { (masterTeamDependencies, prodDependencies) =>
-        Ok(outOfDateTeamDependenciesPage(teamName, masterTeamDependencies, prodDependencies))
-      }
     }
 
   def serviceConfig(serviceName: String): Action[AnyContent] =
@@ -173,7 +166,10 @@ class CatalogueController @Inject() (
                              version           = version,
                              repoModules       = repoModules,
                              optShutterState   = optShutterState,
-                             optTelemetryLinks = None
+                             optTelemetryLinks = Some(Seq(
+                               TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, env, serviceName),
+                               TelemetryLinks.create("Kibanan", telemetryLogsLinkTemplate, env, serviceName),
+                             ))
                            )
                        )
                      }
@@ -215,7 +211,7 @@ class CatalogueController @Inject() (
       Ok(
         serviceInfoPage(
           serviceName                 = serviceName,
-          repositoryDetails           = repositoryDetails,
+          repositoryDetails           = repositoryDetails.copy(jenkinsURL = jenkinsLink.map(_.url)),
           costEstimate                = costEstimate,
           costEstimateConfig          = serviceCostEstimateConfig,
           repositoryCreationDate      = repositoryDetails.createdDate,
@@ -260,7 +256,7 @@ class CatalogueController @Inject() (
              ) =>
       Ok(
         libraryInfoPage(
-          repoDetails,
+          repoDetails.copy(jenkinsURL = jenkinsLink.map(_.url)),
           repoModules,
           urlIfLeaksFound
         )
@@ -280,7 +276,7 @@ class CatalogueController @Inject() (
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name)
-    ).mapN { ( jenkinsLinks,
+    ).mapN { ( jenkinsLink,
                repoModules,
                urlIfLeaksFound
              ) =>
@@ -289,7 +285,8 @@ class CatalogueController @Inject() (
           repoDetails.copy(
             teamNames  = { val (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
                            owners.sorted ++ writers.sorted
-                         }
+                         },
+              jenkinsURL = jenkinsLink.map(_.url)
           ),
           repoModules,
           urlIfLeaksFound
@@ -324,7 +321,7 @@ class CatalogueController @Inject() (
             query =>
               Ok(
                 repositoriesListPage(
-                  repositories = repositories.filter(query),
+                  repositories = repositories.filter(query).sortBy(_.name.toLowerCase),
                   RepoListFilter.form.bindFromRequest()
                 )
               )
@@ -384,16 +381,6 @@ class CatalogueController @Inject() (
           estimatedCostCharts
         ))
         ).getOrElse(notFound)
-    }
-
-  private def convertToDisplayableTeamMembers(
-    teamName: TeamName,
-    errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]
-  ): Either[UMPError, Seq[DisplayableTeamMember]] =
-    errorOrTeamMembers match {
-      case Left(err) => Left(err)
-      case Right(tms) =>
-        Right(DisplayableTeamMembers(teamName, userManagementProfileBaseUrl, tms))
     }
 }
 

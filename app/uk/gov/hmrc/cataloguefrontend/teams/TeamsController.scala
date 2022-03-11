@@ -27,7 +27,8 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.{DisplayableTeamMember, DisplayableTeamMembers, UserManagementPortalConfig}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.{TeamInfoPage, error_404_template, teams_list}
+import views.html.teams.{TeamInfoPage, teams_list}
+import views.html.{OutOfDateTeamDependenciesPage, error_404_template}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,17 +41,27 @@ class TeamsController @Inject()(  userManagementConnector      : UserManagementC
                                   umpConfig                    : UserManagementPortalConfig,
                                   configuration                : Configuration,
                                   teamInfoPage                 : TeamInfoPage,
+                                  outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
                                   mcc                          : MessagesControllerComponents
                                ) (implicit val ec: ExecutionContext)
   extends FrontendController(mcc) {
 
-  private lazy val hideArchivedRepositoriesFromTeam: Boolean =
-    configuration.get[Boolean]("team.hideArchivedRepositories")
-
   def team(teamName: TeamName): Action[AnyContent] =
     Action.async { implicit request =>
-      teamsAndRepositoriesConnector.repositoriesForTeam(teamName).flatMap {
-        case Nil   => Future.successful(notFound)
+      teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)).flatMap {
+        case Nil   => for {
+          teamMembers <- userManagementConnector.getTeamMembersFromUMP(teamName)
+          teamDetails <- userManagementConnector.getTeamDetails(teamName)
+        } yield Ok( teamInfoPage(
+          teamName = teamName,
+          repos = Map.empty,
+          errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
+          errorOrTeamDetails = teamDetails,
+          umpMyTeamsUrl = "",
+          leaksFoundForTeam = false,
+          hasLeaks = _ => false,
+          Seq.empty,
+          Map.empty))
         case repos =>
           (
             userManagementConnector.getTeamMembersFromUMP(teamName),
@@ -58,27 +69,22 @@ class TeamsController @Inject()(  userManagementConnector      : UserManagementC
             leakDetectionService.repositoriesWithLeaks,
             serviceDependenciesConnector.dependenciesForTeam(teamName),
             serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),
-            if (hideArchivedRepositoriesFromTeam)
-              teamsAndRepositoriesConnector.archivedRepositories.map(_.map(_.name))
-            else
-              Future.successful(Nil)
             ).mapN { ( teamMembers,
                        teamDetails,
                        reposWithLeaks,
                        masterTeamDependencies,
                        prodDependencies,
-                       reposToHide
                      ) =>
             Ok(
               teamInfoPage(
                 teamName               = teamName,
-                repos                  = repos.groupBy(_.repoType).mapValues(_.map(_.name)),
+                repos                  = repos.groupBy(_.repoType),
                 errorOrTeamMembers     = convertToDisplayableTeamMembers(teamName, teamMembers),
                 errorOrTeamDetails     = teamDetails,
                 umpMyTeamsUrl          = umpConfig.umpMyTeamsPageUrl(teamName),
                 leaksFoundForTeam      = repos.exists(r => leakDetectionService.hasLeaks(reposWithLeaks)(r.name)),
                 hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
-                masterTeamDependencies = masterTeamDependencies.filterNot(repo => reposToHide.contains(repo.repositoryName)),
+                masterTeamDependencies = masterTeamDependencies.flatMap(mtd => repos.find(_.name == mtd.repositoryName).map(gr => RepoAndDependencies(gr, mtd))),
                 prodDependencies       = prodDependencies
               )
             )
@@ -95,6 +101,20 @@ class TeamsController @Inject()(  userManagementConnector      : UserManagementC
       }
     }
 
+  def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
+    Action.async { implicit request =>
+      (
+        teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)),
+        serviceDependenciesConnector.dependenciesForTeam(teamName),
+        serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
+        ).mapN { (repos, masterTeamDependencies, prodDependencies) =>
+        val repoLookup = repos.map(r => r.name -> r).toMap
+        Ok(outOfDateTeamDependenciesPage(
+          teamName,
+          masterTeamDependencies.flatMap(mtd => repoLookup.get(mtd.repositoryName).map(gr => RepoAndDependencies(gr, mtd))),
+          prodDependencies))
+      }
+    }
 
   private def convertToDisplayableTeamMembers(teamName: TeamName,
                                               errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]

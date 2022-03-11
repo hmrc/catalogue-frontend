@@ -35,7 +35,8 @@ class PrototypePageSpec
 
   "A prototype page" should {
     "show the teams owning the prototype" in {
-      serviceEndpoint(GET, "/api/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
+      serviceEndpoint(GET, "/api/jenkins-url/2fa-prototype", willRespondWith = (200, Some(jenkinsData)))
 
       val response = WS.url(s"http://localhost:$port/repositories/2fa-prototype").get.futureValue
       response.status shouldBe 200

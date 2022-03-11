@@ -55,37 +55,13 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show a list of libraries, services, prototypes and repositories" in {
       serviceEndpoint(
         GET,
-        "/api/teams/teamA?includeRepos=true",
+        "/api/v2/repositories?team=teamA&archived=false",
         willRespondWith = (
           200,
-          Some(
-            """
-               {
-                 "name": "teamA",
-                 "createdDate": "2009-02-13T21:20:00Z",
-                 "lastActiveDate": "2009-02-13T21:36:40Z",
-                 "repos":{
-                    "Library": [
-                        "teamA-lib"
-                    ],
-                    "Service": [
-                        "teamA-serv",
-                        "teamA-frontend"
-                    ],
-                    "Prototype": [
-                        "service1-prototype",
-                        "service2-prototype"
-                    ],
-                    "Other": [
-                        "teamA-other"
-                    ]
-                 },
-                 "ownedRepos": []
-               }
-            """
-          ))
+          Some(JsonData.repositoriesTeamAData))
       )
 
+      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
 
       val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
@@ -95,125 +71,22 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       val htmlDocument = asDocument(response.body)
       val anchorTags   = htmlDocument.getElementsByTag("a").asScala.toList
 
-      findAnchor(anchorTags, "/repositories/teamA-lib"         , "teamA-lib"         ) shouldBe defined
-      findAnchor(anchorTags, "/repositories/teamA-serv"        , "teamA-serv"        ) shouldBe defined
-      findAnchor(anchorTags, "/repositories/teamA-frontend"    , "teamA-frontend"    ) shouldBe defined
-      findAnchor(anchorTags, "/repositories/service1-prototype", "service1-prototype") shouldBe defined
-      findAnchor(anchorTags, "/repositories/service2-prototype", "service2-prototype") shouldBe defined
-      findAnchor(anchorTags, "/repositories/teamA-other"       , "teamA-other"       ) shouldBe defined
+      findAnchor(anchorTags, "/repositories/teamA-library", "teamA-library") shouldBe defined
+      findAnchor(anchorTags, "/repositories/teamA-serv"   , "teamA-serv"   ) shouldBe defined
+      findAnchor(anchorTags, "/repositories/teamA-proto"  , "teamA-proto"  ) shouldBe defined
+      findAnchor(anchorTags, "/repositories/teamA-other"  , "teamA-other"  ) shouldBe defined
     }
 
-    "filter out archived repositories from a list of libraries, services, prototypes and repositories" in {
-      serviceEndpoint(GET, "/api/repositories?archived=true", willRespondWith = (200, Some(
-        """
-          [{
-            "name": "service1-prototype",
-            "createdAt": "2009-02-13T21:20:00Z",
-            "lastUpdatedAt": "2009-02-13T21:36:40Z",
-            "repoType": "Prototype",
-            "language": "Scala",
-            "isArchived": true,
-            "teamNames": [],
-            "defaultBranch": "main"
-          }]
-          """
-        )))
-
-      serviceEndpoint(
-        GET,
-        "/api/teams/teamA?includeRepos=true",
-        willRespondWith = (
-          200,
-          Some(
-            """
-               {
-                 "name": "teamA",
-                 "createdDate": "2009-02-13T21:20:00Z",
-                 "lastActiveDate": "2009-02-13T21:36:40Z",
-                 "repos":{
-                    "Library": [
-                        "teamA-lib"
-                    ],
-                    "Service": [
-                        "teamA-serv",
-                        "teamA-frontend"
-                    ],
-                    "Prototype": [
-                        "service1-prototype",
-                        "service2-prototype"
-                    ],
-                    "Other": [
-                        "teamA-other"
-                    ]
-                 },
-                 "ownedRepos": []
-               }
-            """
-          ))
-      )
-
-      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
-
-      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
-
-      response.status shouldBe 200
-
-      val htmlDocument = asDocument(response.body)
-      val anchorTags   = htmlDocument.getElementsByTag("a").asScala.toList
-
-      findAnchor(anchorTags, "/repositories/teamA-lib"         , "teamA-lib"         ) shouldBe defined
-      findAnchor(anchorTags, "/repositories/teamA-serv"        , "teamA-serv"        ) shouldBe defined
-      findAnchor(anchorTags, "/repositories/teamA-frontend"    , "teamA-frontend"    ) shouldBe defined
-      findAnchor(anchorTags, "/repositories/service1-prototype", "service1-prototype") shouldBe empty // Note: assert that this anchor does NOT exist
-      findAnchor(anchorTags, "/repositories/service2-prototype", "service2-prototype") shouldBe defined
-      findAnchor(anchorTags, "/repositories/teamA-other"       , "teamA-other"       ) shouldBe defined
-    }
-
-    "show user management portal link" ignore {
-      serviceEndpoint(
-        GET,
-        "/api/teams/teamA",
-        willRespondWith = (
-          200,
-          Some(
-            """
-              {
-                "repos": { "Library": [], "Service": [] },
-                "ownedRepos" = []
-              }
-            """
-          ))
-      )
-
-      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
-
-      val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
-
-      response.status shouldBe 200
-
-      response.body.toString should include(
-        """<a href="http://usermanagement/link/teamA" target="_blank">Team Members</a>""")
-    }
 
     "show a message if no services are found" in {
       serviceEndpoint(
         GET,
-        "/api/teams/teamA?includeRepos=true",
+        "/api/v2/repositories?team=teamA&archived=false",
         willRespondWith = (
           200,
-          Some(
-            """
-              {
-                "name":"teamA",
-                "createdDate": "2009-02-13T21:20:00Z",
-                "lastActiveDate": "2009-02-13T21:36:40Z",
-                "repos": { "Library": [], "Service": [] },
-                "ownedRepos" : []
-              }
-            """
-          ))
+          Some("[]"))
       )
-
+      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
 
       val response = WS.url(s"http://localhost:$port/teams/teamA").get.futureValue
@@ -258,96 +131,13 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       verifyTeamOwnerIndicatorLabel(document)
     }
 
-    "show a First Active and Last Active fields in the Details box" in {
-      serviceEndpoint(
-        GET,
-        s"/api/teams/$teamName?includeRepos=true",
-        willRespondWith = (
-          200,
-          Some(
-            s"""
-               {
-                "name": "$teamName",
-                "createdDate": "$createdAt",
-                "lastActiveDate": "$lastActiveAt",
-                "repos":{
-                   "Library": [],
-                   "Service": [ "service1" ]
-                },
-                "ownedRepos": []
-               }
-            """
-          ))
-      )
-
-      serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
-
-      val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
-
-      response.status shouldBe 200
-
-      response.body should include(createdAt.displayFormat)
-      response.body should include(lastActiveAt.displayFormat)
-    }
-
-    "show link to UMP's front page when no members node returned" ignore {
-
-      def verifyForFile(fileName: String): Unit = {
-
-        val teamName = "CATO"
-
-        serviceEndpoint(
-          GET,
-          s"/api/teams/$teamName",
-          willRespondWith = (
-            200,
-            Some(
-              s"""
-                {
-                  "name": "$teamName",
-                  "createdDate": "2009-02-13T21:20:00Z",
-                  "lastActiveDate": "2009-02-13T21:36:40Z",
-                  "repos": {"Library":[], "Service": [] },
-                  "ownedRepos": []
-                }
-              """
-            ))
-        )
-
-        serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile(fileName))))
-
-        val response = WS.url(s"http://localhost:$port/teams/$teamName").get.futureValue
-
-        response.status shouldBe 200
-        response.body   should include(umpFrontPageUrl)
-
-        val document = asDocument(response.body)
-
-        document
-          .select("#linkToRectify")
-          .text() shouldBe s"Team $teamName is not defined in the User Management Portal, please add it here"
-      }
-
-      verifyForFile("user-management-empty-members.json")
-      verifyForFile("user-management-no-members.json")
-    }
-
     "show error message if UMP is not available" in {
       serviceEndpoint(
         GET,
-        "/api/teams/teamA?includeRepos=true",
+        "/api/v2/repositories?team=teamA",
         willRespondWith = (
           200,
-          Some(
-            """
-              {
-                "name": "teamA",
-                "createdDate": "2009-02-13T21:20:00Z",
-                "lastActiveDate": "2009-02-13T21:36:40Z",
-                "repos": {"Library":[], "Service": [] },
-                "ownedRepos" : []
-              }
-            """
+          Some(JsonData.repositoriesData
           ))
       )
 
@@ -361,21 +151,15 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     }
 
     "show team details correctly" in {
-      val teamName = "CATO"
+      val teamName = "teamA"
 
       serviceEndpoint(
         GET,
-        s"/api/teams/$teamName?includeRepos=true",
+        s"/api/v2/repositories?team=$teamName",
         willRespondWith = (
           200,
           Some(
-            s"""
-              {
-                "name":"$teamName",
-                "repos": { "Library": [], "Service": [] },
-                "ownedRepos": []
-              }
-            """
+            repositoriesData
           ))
       )
 
@@ -385,9 +169,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
       response.status shouldBe 200
       val document = asDocument(response.body)
-
-      document.select("#team-created").text() shouldBe "Created: None"
-      document.select("#team-last-active").text()  shouldBe "Last Active: None"
 
       document.select("#team-description").asScala.head.text()   shouldBe "Description: TEAM-A is a great team"
       document.select("#team-documentation").asScala.head.text() shouldBe "Documentation: Go to Confluence space"

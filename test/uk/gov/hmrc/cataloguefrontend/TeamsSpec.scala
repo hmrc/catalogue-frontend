@@ -30,26 +30,16 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
   "Teams list" should {
 
     "show a list of teams" in {
-      import uk.gov.hmrc.cataloguefrontend.DateHelper._
-
-      val now: LocalDateTime = LocalDateTime.now()
-      val firstactivityDate  = now.minusYears(2)
-      val lastactivityDate   = now.minusDays(2)
-
       serviceEndpoint(
         GET,
-        "/api/teams?includeRepos=true",
+        "/api/v2/teams",
         willRespondWith = (
           200,
           Some(
             s"""
                 [
                   {
-                    "name":"teamA",
-                    "createdDate": "$firstactivityDate",
-                    "lastActiveDate": "$lastactivityDate",
-                    "repos": {},
-                    "ownedRepos": []
+                    "name":"teamA"
                   }
                 ]
             """
@@ -60,8 +50,6 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
 
       response.status shouldBe 200
       response.body   should include("""<a class="team-name" href="/teams/teamA">teamA</a>""")
-      response.body   should include(firstactivityDate.asPattern("yyyy-MM-dd"))
-      response.body   should include(lastactivityDate.asPattern("yyyy-MM-dd"))
     }
   }
 }

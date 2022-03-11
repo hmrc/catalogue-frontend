@@ -21,7 +21,7 @@ import org.mockito.MockitoSugar.mock
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, RepositoryDisplayDetails, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDateTime
@@ -32,7 +32,7 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
 
   "filterRepositories" should {
     "return an integer representing how many repositories should be returned in a default search" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allDefaultBranches) thenReturn
+      when(mockTeamsAndRepositoriesConnector.allRepositories) thenReturn
         Future.successful(mockRepositories)
       defaultBranchesService.filterRepositories(
         repositories = mockRepositories,
@@ -47,7 +47,7 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
 
   "filterRepositoriesTwo" should {
     "return an integer representing how many repositories matches the provided parameters" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allDefaultBranches) thenReturn
+      when(mockTeamsAndRepositoriesConnector.allRepositories) thenReturn
         Future.successful(mockRepositoriesTwo)
       defaultBranchesService.filterRepositories(
         repositories = mockRepositoriesTwo,
@@ -62,9 +62,9 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
 
   "allTeams" should {
     "return an integer representing how many teams are found" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allDefaultBranches) thenReturn
+      when(mockTeamsAndRepositoriesConnector.allRepositories) thenReturn
         Future.successful(mockRepositoriesTwo)
-      val result: Seq[RepositoryDisplayDetails] = defaultBranchesService.filterRepositories(
+      val result: Seq[GitRepository] = defaultBranchesService.filterRepositories(
         repositories = mockRepositoriesTwo,
         name = Option(null),
         defaultBranch = Option(null),
@@ -81,80 +81,108 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val mockTeamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     val defaultBranchesService: DefaultBranchesService = new DefaultBranchesService()
-    val mockRepositories: Seq[RepositoryDisplayDetails] = Seq(
-      RepositoryDisplayDetails(
+    val mockRepositories: Seq[GitRepository] = Seq(
+      GitRepository(
         name = "test",
-        createdAt = LocalDateTime.now(),
-        lastUpdatedAt = LocalDateTime.now(),
+        createdDate = LocalDateTime.now(),
+        lastActiveDate = LocalDateTime.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-1", "Team-2"),
-        defaultBranch = "main"
+        defaultBranch = "main",
+        description = "",
+        githubUrl = "",
+        language = None
       ),
-      RepositoryDisplayDetails(
+      GitRepository(
         name = "test-2",
-        createdAt = LocalDateTime.now(),
-        lastUpdatedAt = LocalDateTime.now(),
+        createdDate = LocalDateTime.now(),
+        lastActiveDate = LocalDateTime.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-1"),
-        defaultBranch = "master"
+        defaultBranch = "master",
+        description = "",
+        githubUrl = "",
+        language = None
+
       ),
-      RepositoryDisplayDetails(
+      GitRepository(
         name = "test-3",
-        createdAt = LocalDateTime.now(),
-        lastUpdatedAt = LocalDateTime.now(),
+        createdDate = LocalDateTime.now(),
+        lastActiveDate = LocalDateTime.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-1"),
-        defaultBranch = "main"
+        defaultBranch = "main",
+        description = "",
+        githubUrl = "",
+        language = None
+
       ),
-      RepositoryDisplayDetails(
+      GitRepository(
         name = "test-4",
-        createdAt = LocalDateTime.now(),
-        lastUpdatedAt = LocalDateTime.now(),
+        createdDate = LocalDateTime.now(),
+        lastActiveDate = LocalDateTime.now(),
         repoType = RepoType.Service,
         isArchived = true,
         teamNames = Seq("Team-2"),
-        defaultBranch = "master"
+        defaultBranch = "master",
+        description = "",
+        githubUrl = "",
+        language = None
+
       )
     )
-    val mockRepositoriesTwo: Seq[RepositoryDisplayDetails] = Seq(
-      RepositoryDisplayDetails(
+    val mockRepositoriesTwo: Seq[GitRepository] = Seq(
+      GitRepository(
         name = "test",
-        createdAt = LocalDateTime.now(),
-        lastUpdatedAt = LocalDateTime.now(),
+        createdDate = LocalDateTime.now(),
+        lastActiveDate = LocalDateTime.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-3"),
-        defaultBranch = "main"
+        defaultBranch = "main",
+        description = "",
+        githubUrl = "",
+        language = None
+
       ),
-      RepositoryDisplayDetails(
+      GitRepository(
         name = "test-2",
-        createdAt = LocalDateTime.now(),
-        lastUpdatedAt = LocalDateTime.now(),
+        createdDate = LocalDateTime.now(),
+        lastActiveDate = LocalDateTime.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-1"),
-        defaultBranch = "main"
+        defaultBranch = "main",        description = "",
+        githubUrl = "",
+        language = None
+
       ),
-      RepositoryDisplayDetails(
+      GitRepository(
         name = "test-3",
-        createdAt = LocalDateTime.now(),
-        lastUpdatedAt = LocalDateTime.now(),
+        createdDate = LocalDateTime.now(),
+        lastActiveDate = LocalDateTime.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-1"),
-        defaultBranch = "main"
+        defaultBranch = "main",        description = "",
+        githubUrl = "",
+        language = None
+
       ),
-      RepositoryDisplayDetails(
+      GitRepository(
         name = "test-4",
-        createdAt = LocalDateTime.now(),
-        lastUpdatedAt = LocalDateTime.now(),
+        createdDate = LocalDateTime.now(),
+        lastActiveDate = LocalDateTime.now(),
         repoType = RepoType.Service,
         isArchived = true,
         teamNames = Seq("Team-2"),
-        defaultBranch = "master"
+        defaultBranch = "master",
+        description = "",
+        githubUrl = "",
+        language = None
       )
     )
 }
