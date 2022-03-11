@@ -255,8 +255,10 @@ object BobbyVersionRange {
   val format: Format[BobbyVersionRange] = new Format[BobbyVersionRange] {
     override def reads(json: JsValue) =
       json match {
-        case JsString(s) => parse(s).map(v => JsSuccess(v)).getOrElse(JsError("Could not parse range"))
-        case _           => JsError("Not a string")
+        case JsString(s) =>
+          parse(s).map(v => JsSuccess(v)).getOrElse(JsError("Could not parse range"))
+        case _           =>
+          JsError("Not a string")
       }
 
     override def writes(v: BobbyVersionRange) =
