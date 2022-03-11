@@ -64,9 +64,10 @@
             <thead>
                 <tr>
                     <th class="col-xs-5"><button class="sort no-border" data-sort="repository">Repository</button></th>
-                    <th class="col-xs-3"><button class="sort no-border" data-sort="first-scanned">Earliest violation</button></th>
-                    <th class="col-xs-3"><button class="sort no-border" data-sort="last-scanned">Latest violation</button></th>
+                    <th class="col-xs-2"><button class="sort no-border" data-sort="first-scanned">Earliest violation</button></th>
+                    <th class="col-xs-2"><button class="sort no-border" data-sort="last-scanned">Latest violation</button></th>
                     <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="warnings">Warnings</button></th>
+                    <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="exemptions">Exemptions</button></th>
                     <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="violations">Violations</button></th>
                 </tr>
             </thead>
@@ -77,7 +78,7 @@
     </div>
 
     <script>
-            var options = {valueNames: ['repository', 'first-scanned', 'last-scanned', 'warnings', 'violations']};
+            var options = {valueNames: ['repository', 'first-scanned', 'last-scanned', 'warnings', 'exemptions', 'violations']};
             repoList = new List('repo-list', options);
     </script>
 }
@@ -87,17 +88,17 @@
         <td class="repository"><a href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository)">@summary.repository</a></td>
         <td class="first-scanned">@summary.firstScannedAt.displayFormat</td>
         <td class="last-scanned">@summary.lastScannedAt.displayFormat</td>
-        <td class="warnings text-center"><div class="hide">@summary.warningCount</div>
-            @if(summary.warningCount > 0) {
-                <a href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository)">@summary.warningCount</a>
-            } else {
-                <span>0</span>
-            }</td>
-        <td class="violations text-center"><div class="hide">@summary.unresolvedCount</div>
-            @if(summary.unresolvedCount > 0) {
-                <a href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository)">@summary.unresolvedCount</a>
-            } else {
-                <span>0</span>
-            }</td>
+        @countWithLinkCell(summary.repository, "warnings", summary.warningCount)
+        @countWithLinkCell(summary.repository, "exemptions", summary.excludedCount)
+        @countWithLinkCell(summary.repository, "violations", summary.unresolvedCount)
     </tr>
+}
+
+@countWithLinkCell(repository: String, name: String, cnt: Int) = {
+    <td class="@name text-center"><div class="hide">@cnt</div>
+        @if(cnt > 0) {
+            <a href="@appRoutes.LeakDetectionController.branchSummaries(repository)">@cnt</a>
+        } else {
+            <span>0</span>
+        }</td>
 }
