@@ -164,7 +164,8 @@ final case class LeakDetectionReport(
   _id: String,
   timestamp: LocalDateTime,
   author: String,
-  commitId: String
+  commitId: String,
+  exclusions: Map[String, Int]
 )
 
 object LeakDetectionReport {

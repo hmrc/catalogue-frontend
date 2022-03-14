@@ -96,25 +96,28 @@ class LeakDetectionService @Inject() (
     leakDetectionConnector.leakDetectionReport(repository, branch)
 
   def reportLeaks(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] =
-    leakDetectionConnector.leakDetectionLeaks(reportId).map(_.groupBy(l => l.ruleId)
-      .map {
-        case (ruleId, leaks) =>
-          LeakDetectionLeaksByRule(
-            ruleId,
-            leaks.head.description,
-            leaks.head.scope,
-            leaks.head.priority,
-            leaks
-              .map(l => LeakDetectionLeakDetails(l.filePath, l.lineNumber, l.urlToSource, l.lineText, l.matches))
-              .sortBy(_.lineNumber)
-              .sortBy(_.filePath)
-          )
-      }
-      .toSeq
-      .sortBy(_.leaks.length)
-      .reverse
-      .sortBy(_.priority)
-    )
+    leakDetectionConnector.leakDetectionLeaks(reportId)
+      .map(_
+        .filterNot(_.excluded)
+        .groupBy(_.ruleId)
+        .map {
+          case (ruleId, leaks) =>
+            LeakDetectionLeaksByRule(
+              ruleId,
+              leaks.head.description,
+              leaks.head.scope,
+              leaks.head.priority,
+              leaks
+                .map(l => LeakDetectionLeakDetails(l.filePath, l.lineNumber, l.urlToSource, l.lineText, l.matches))
+                .sortBy(_.lineNumber)
+                .sortBy(_.filePath)
+            )
+        }
+        .toSeq
+        .sortBy(_.leaks.length)
+        .reverse
+        .sortBy(_.priority)
+      )
 
   def reportWarnings(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionWarning]] =
     leakDetectionConnector.leakDetectionWarnings(reportId)

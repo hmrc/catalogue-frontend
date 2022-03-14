@@ -81,7 +81,7 @@ class LeakDetectionController @Inject() (
           leaks        <- leakDetectionService.reportLeaks(report._id)
           warnings     <- leakDetectionService.reportWarnings(report._id)
           resolutionUrl = leakDetectionService.resolutionUrl
-        } yield Ok(leaksPage(report, leaks, warnings, resolutionUrl, isAuthorised))
+        } yield Ok(leaksPage(report, report.exclusions, leaks, warnings, resolutionUrl, isAuthorised))
       }
 }
 

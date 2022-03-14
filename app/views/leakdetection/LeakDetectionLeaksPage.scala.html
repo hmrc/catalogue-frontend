@@ -24,13 +24,15 @@
 
 @this(viewMessages: ViewMessages)
 
-@(report: LeakDetectionReport, leaks: Seq[LeakDetectionLeaksByRule], warnings: Seq[LeakDetectionWarning], leakResolutionUrl: String, isAuthorised: Boolean)(implicit messages: Messages, request: Request[_])
+@(report: LeakDetectionReport, exemptions: Map[String, Int], unresolvedLeaks: Seq[LeakDetectionLeaksByRule], warnings: Seq[LeakDetectionWarning], leakResolutionUrl: String, isAuthorised: Boolean)(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Leak detection report") {
     <header>
         <h1>Leak Detection Report</h1>
     </header>
 
+  <div class="row row-cols-2">
+      <div class="col-xs-6">
     <ul class="list list--minimal list-group row">
         <li class="col-xs-12">
             <label>Repository:</label>
@@ -53,12 +55,35 @@
             @report.author
         </li>
     </ul>
+      </div>
+      <div class="col-xs-6">
+      @if(exemptions.nonEmpty) {
+          <h3>Exemptions</h3>
+          <table class="table table-striped">
+              <thead>
+                  <tr>
+                      <th class="col-xs-10">Rule</th>
+                      <th class="col-xs-2">Exemptions</th>
+                  </tr>
+              </thead>
+              <tbody>
+              @exemptions.map { l =>
+                  <tr>
+                      <td class="exemptRule">@l._1</td>
+                      <td class="exemptCount text-center">@l._2</td>
+                  </tr>
+              }
+              </tbody>
+          </table>
+      }
+      </div>
+  </div>
 
     @warnings.map {warning =>
         <div class="alert alert-danger">@warning.message</div>
     }
 
-    @if(leaks.isEmpty) {
+    @if(unresolvedLeaks.isEmpty) {
         <div class="alert alert-success">
             There are no unresolved leaks associated to this branch
         </div>
@@ -85,7 +110,7 @@
                         </tr>
                     </thead>
                     <tbody class="list">
-                    @leaks.map(leakDetectionRuleViolations)
+                    @unresolvedLeaks.map(leakDetectionRuleViolations)
                     </tbody>
                 </table>
             </div>
