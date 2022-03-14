@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package views.partials
+package views.leakdetection
 
 import play.twirl.api.{Html, HtmlFormat}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeakDetails
@@ -37,4 +37,3 @@ object LeakDetectionHighlighter extends (LeakDetectionLeakDetails => Html) {
   }
 
 }
-

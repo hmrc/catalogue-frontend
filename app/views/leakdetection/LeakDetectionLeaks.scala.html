@@ -1,0 +1,95 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeaksByRule
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeakDetails
+
+@(leaks: Seq[LeakDetectionLeaksByRule], countHeader: String)
+
+<div id="leaks-list">
+    <div class="text-right">
+        <a id="expandLink" class="hand-pointer" onclick="expandAll()">expand all</a>
+        <a id="collapseLink" class="hand-pointer hidden" onclick="collapseAll()">collapse all</a>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th/>
+                <th class="col-xs-7"><button class="sort no-border" data-sort="rule">Rule</button></th>
+                <th class="col-xs-2"><button class="sort no-border" data-sort="scope">Scope</button></th>
+                <th class="col-xs-2"><button class="sort no-border" data-sort="priority">Priority</button></th>
+                <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">@countHeader</button></th>
+            </tr>
+        </thead>
+        <tbody class="list">
+        @leaks.map(leakDetectionRuleViolations)
+        </tbody>
+    </table>
+</div>
+<script>
+        var options = {valueNames: ['rule', 'scope', 'priority', 'total']};
+        leaksList = new List('leaks-list', options);
+
+        function expandAll() {
+            $("#expandLink").addClass('hidden')
+            $("#collapseLink").removeClass('hidden')
+            $(".multi-collapse").collapse('show')
+        }
+
+        function collapseAll() {
+            $("#expandLink").removeClass('hidden')
+            $("#collapseLink").addClass('hidden')
+            $(".multi-collapse").collapse('hide')
+        }
+</script>
+
+
+@leakDetectionRuleViolations(leaksByRule: LeakDetectionLeaksByRule) = {
+    <tr class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId" aria-expanded="false" aria-controls="collapsible-area-@leaksByRule.ruleId">
+        <td class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId" aria-expanded="false" aria-controls="collapsible-area-@leaksByRule.ruleId"/>
+        <td class="rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
+        <td class="scope">@leaksByRule.scope</td>
+        <td class="priority @leaksByRule.priority">@leaksByRule.priority</td>
+        <td class="total text-center">@leaksByRule.leaks.length</td>
+    </tr>
+    <tr id="collapsible-area-@leaksByRule.ruleId" class="collapse multi-collapse">
+        <td class="hide rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
+        <td class="hide scope">@leaksByRule.scope</td>
+        <td class="hide priority">@leaksByRule.priority</td>
+        <td class="hide total">@leaksByRule.leaks.length</td>
+        <td colspan="6">
+        @leaksByRule.leaks.map(l => leakDetectionLeaks(leaksByRule.scope, l))
+        </td>
+    </tr>
+}
+
+@leakDetectionLeaks(scope: String, leak: LeakDetectionLeakDetails) = {
+    <div class="col-xs-12">
+        <ul class="list list--minimal list-group row">
+            <li>
+                <span class="col-xs-12">
+                    <a href="@leak.urlToSource" target="_blank">@leak.filePath @if(scope == "fileContent") { #@leak.lineNumber}</a>
+                </span>
+            </li>
+            <li>
+                <span class="col-xs-12">
+                    <p class="monospace" style="word-break: break-all">@views.leakdetection.LeakDetectionHighlighter(leak)</p>
+                </span>
+            </li>
+        </ul>
+    </div>
+}

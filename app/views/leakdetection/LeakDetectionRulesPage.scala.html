@@ -34,13 +34,11 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th class="col-xs-1"><button class="sort no-border" data-sort="rule-id">Rule id</button></th>
-                            <th class="col-xs-4"><button class="sort no-border" data-sort="description">Description</button></th>
-                            <th class="col-xs-2"><button class="sort no-border" data-sort="first-scanned">Earliest violation</button></th>
-                            <th class="col-xs-2"><button class="sort no-border" data-sort="last-scanned">Latest violation</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="repo-count">Violating repositories</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="excluded">Rule exemptions</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="unresolved">Unresolved violations</button></th>
+                            <th class="col-xs-3"><button class="sort no-border" data-sort="rule-id">Rule id</button></th>
+                            <th class="col-xs-6"><button class="sort no-border" data-sort="description">Description</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="repo-count">Repositories</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="excluded">Exemptions</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="unresolved">Violations</button></th>
                         </tr>
                     </thead>
                     <tbody class="list">
@@ -61,36 +59,24 @@
             <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id"/>
             <td class="rule-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id">@summary.rule.id</td>
             <td class="description hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id">@summary.rule.description</td>
-            <td class="first-scanned">@if(summary.firstScannedAt.nonEmpty) {
-                @summary.firstScannedAt.get.displayFormat
-            } </td>
-            <td class="last-scanned">@if(summary.lastScannedAt.nonEmpty) {
-                @summary.lastScannedAt.get.displayFormat
-            } </td>
-            @countWithLinkCell(summary.rule.id, "repo-count", summary.repoCount)
-            @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount)
-            @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount)
+            @countWithLinkCell(summary.rule.id, "repo-count", summary.repoCount, false)
+            @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount, false)
+            @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount, false)
         </tr>
         <tr id="collapsible-area-@summary.rule.id" class="collapse">
             <td class="hide rule-id">@summary.rule.id</td>
             <td class="hide description">@summary.rule.description</td>
-            <td class="hide first-scanned">@if(summary.firstScannedAt.nonEmpty) {
-                @summary.firstScannedAt.get.displayFormat
-            } </td>
-            <td class="hide last-scanned">@if(summary.lastScannedAt.nonEmpty) {
-                @summary.lastScannedAt.get.displayFormat
-            } </td>
-            @countWithLinkCell(summary.rule.id, "repo-count", summary.repoCount)
-            @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount)
-            @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount)
-            <td colspan="8">
+            @countWithLinkCell(summary.rule.id, "repo-count", summary.repoCount, true)
+            @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount, true)
+            @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount, true)
+            <td colspan="6">
             @ruleDetails(summary.rule)
             </td>
         </tr>
     }
 
-    @countWithLinkCell(ruleId: String, name: String, cnt: Int) = {
-        <td class="@name text-center"><div class="hide">@cnt</div>
+    @countWithLinkCell(ruleId: String, name: String, cnt: Int, hidden: Boolean) = {
+        <td class="@name text-center @if(hidden) {hide}"><div class="hide">@cnt</div>
             @if(cnt > 0) {
                 <a href="@appRoutes.LeakDetectionController.repoSummaries?rule=@ruleId">@cnt</a>
             } else {
