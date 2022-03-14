@@ -80,11 +80,12 @@ class LeakDetectionService @Inject() (
         ).sortBy(_.unresolvedCount).reverse
       )
 
-  def repoSummaries(rule: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionRepositorySummary])] =
+  def repoSummaries(rule: Option[String], team: Option[String], includeWarnings: Boolean, includeExemptions: Boolean)(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionRepositorySummary])] =
     for {
       rules <- leakDetectionConnector.leakDetectionRules
       summaries <- leakDetectionConnector.leakDetectionRepoSummaries(rule, None, team)
-    } yield (rules.map(_.id), summaries.sortBy(_.repository))
+      filteredSummaries = filterSummaries(summaries, includeWarnings, includeExemptions)
+    } yield (rules.map(_.id), filteredSummaries.sortBy(_.repository))
 
   def branchSummaries(repo: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
     leakDetectionConnector
@@ -117,6 +118,15 @@ class LeakDetectionService @Inject() (
 
   def reportWarnings(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionWarning]] =
     leakDetectionConnector.leakDetectionWarnings(reportId)
+
+  private def filterSummaries(summaries: Seq[LeakDetectionRepositorySummary], includeWarnings: Boolean, includeExemptions: Boolean): Seq[LeakDetectionRepositorySummary] = {
+    (includeWarnings, includeExemptions) match {
+      case (true, true) => summaries
+      case (true, false) => summaries.filter(s => s.unresolvedCount > 0 || s.warningCount > 0)
+      case (false, true) => summaries.filter(s => s.unresolvedCount > 0 || s.excludedCount > 0)
+      case (false, false) => summaries.filter(_.unresolvedCount > 0)
+    }
+  }
 }
 
 final case class LeakDetectionRulesWithCounts(rule: LeakDetectionRule, firstScannedAt: Option[LocalDateTime], lastScannedAt: Option[LocalDateTime], repoCount: Int, excludedCount: Int, unresolvedCount: Int)

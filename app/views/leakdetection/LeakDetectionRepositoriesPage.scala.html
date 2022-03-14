@@ -15,11 +15,10 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionRepositorySummary, routes => appRoutes}
 @import views.html.helper.select
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionRepositorySummary
 
 @this(viewMessages: ViewMessages)
 
@@ -36,7 +35,7 @@
 
     <form id="form" method="get">
         <div class="form-group row">
-            <div class="col-xs-6">
+            <div class="col-xs-4">
             @select(
                 field = form("rule"),
                 options = rules.map(r => r -> r),
@@ -46,7 +45,7 @@
                 'id -> "rule-dropdown"
             )
             </div>
-            <div class="col-xs-6">
+            <div class="col-xs-4">
             @select(
                 field = form("team"),
                 options = teams.map(t => t.name.asString -> t.name.asString),
@@ -55,6 +54,18 @@
                 'onchange -> "this.form.submit()",
                 'id -> "team-dropdown"
             )
+            </div>
+            <div class="col-xs-4">
+                <div>
+                    <input name="includeWarnings" id="includeWarnings" type="checkbox" onchange="form.submit()" value="true"
+                    @if(form("includeWarnings").value == Some("true")) {checked} />
+                    <label>Include warnings</label>
+                </div>
+                <div>
+                    <input name="includeExemptions" id="includeExemptions" type="checkbox" onchange="form.submit()" value="true"
+                    @if(form("includeExemptions").value == Some("true")) {checked} />
+                    <label for="includeExemptions">Include exemptions</label>
+                </div>
             </div>
         </div>
     </form>

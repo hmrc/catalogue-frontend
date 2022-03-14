@@ -17,12 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.data.Form
-import play.api.data.Forms.{mapping, optional, text}
+import play.api.data.Forms.{boolean, mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionExplorerFilter.form
 import uk.gov.hmrc.cataloguefrontend.AuthController
-
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.leakdetection.{LeakDetectionLeaksPage, LeakDetectionRepositoriesPage, LeakDetectionRepositoryPage, LeakDetectionRulesPage}
@@ -56,7 +55,7 @@ class LeakDetectionController @Inject() (
           formWithErrors => Future.successful(BadRequest(ruleExplorerPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors))),
           validForm =>
             for {
-              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team)
+              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, validForm.includeWarnings, validForm.includeExemptions)
               teams     <- teamsAndRepositoriesConnector.allTeams
             } yield Ok(ruleExplorerPage(summaries._1, summaries._2, teams.sortBy(_.name), form.fill(validForm)))
         )
@@ -88,14 +87,18 @@ class LeakDetectionController @Inject() (
 
 case class LeakDetectionExplorerFilter(
   rule: Option[String] = None,
-  team: Option[String] = None
+  team: Option[String] = None,
+  includeWarnings: Boolean,
+  includeExemptions: Boolean
 )
 
 object LeakDetectionExplorerFilter {
   lazy val form: Form[LeakDetectionExplorerFilter] = Form(
     mapping(
       "rule" -> optional(text),
-      "team" -> optional(text)
+      "team" -> optional(text),
+      "includeWarnings" -> boolean,
+      "includeExemptions" -> boolean
     )(LeakDetectionExplorerFilter.apply)(LeakDetectionExplorerFilter.unapply)
   )
 }
