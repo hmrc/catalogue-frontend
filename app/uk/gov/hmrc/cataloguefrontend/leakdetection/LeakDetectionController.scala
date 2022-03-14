@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionExplorerFilter.f
 import uk.gov.hmrc.cataloguefrontend.AuthController
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.leakdetection.{LeakDetectionLeaksPage, LeakDetectionRepositoriesPage, LeakDetectionRepositoryPage, LeakDetectionRulesPage}
+import views.html.leakdetection._
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,6 +36,7 @@ class LeakDetectionController @Inject() (
   repositoryPage: LeakDetectionRepositoryPage,
   leaksPage: LeakDetectionLeaksPage,
   leakDetectionService: LeakDetectionService,
+  exemptionsPage: LeakDetectionExemptionsPage,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   auth: FrontendAuthComponents
 )(implicit val ec: ExecutionContext)
@@ -83,6 +84,14 @@ class LeakDetectionController @Inject() (
           resolutionUrl = leakDetectionService.resolutionUrl
         } yield Ok(leaksPage(report, report.exclusions, leaks, warnings, resolutionUrl, isAuthorised))
       }
+
+  def reportExemptions(repository: String, branch: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      for {
+        report <- leakDetectionService.report(repository, branch)
+        exemptions <- leakDetectionService.reportExemptions(report._id)
+      } yield Ok(exemptionsPage(repository, branch, exemptions))
+    }
 }
 
 case class LeakDetectionExplorerFilter(

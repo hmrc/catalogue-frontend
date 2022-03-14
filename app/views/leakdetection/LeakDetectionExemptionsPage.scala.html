@@ -21,105 +21,44 @@
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionWarning
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeakDetails
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionReport
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
 
 @this(viewMessages: ViewMessages)
 
-@(report: LeakDetectionReport, exemptions: Map[String, Int], unresolvedLeaks: Seq[LeakDetectionLeaksByRule], warnings: Seq[LeakDetectionWarning], leakResolutionUrl: String, isAuthorised: Boolean)(implicit messages: Messages, request: Request[_])
+@(repoName: String, branch : String, exemptions: Seq[LeakDetectionLeaksByRule])(implicit messages: Messages, request: Request[_])
 
-@standard_layout(s"Leak detection report") {
+@standard_layout(s"Leak detection exemptions") {
     <header>
-        <h1>Leak Detection Report</h1>
+        <h1>Leak Detection Exemptions</h1>
     </header>
 
-  <div class="row row-cols-2">
-      <div class="col-xs-6">
-    <ul class="list list--minimal list-group row">
-        <li class="col-xs-12">
-            <label>Repository:</label>
-            @report.repoName
-        </li>
-        <li class="col-xs-12">
-            <label>Branch: </label>
-            @report.branch
-        </li>
-        <li class="col-xs-12">
-            <label>Scanned at: </label>
-            @report.timestamp.displayFormat
-        </li>
-        <li class="col-xs-12">
-            <label>Commit id: </label>
-            @report.commitId
-        </li>
-        <li class="col-xs-12">
-            <label>Author: </label>
-            @report.author
-        </li>
-    </ul>
-      </div>
-      <div class="col-xs-6">
-      @if(exemptions.nonEmpty) {
-          <h3>Exemptions</h3>
-          <table class="table table-striped">
-              <thead>
-                  <tr>
-                      <th class="col-xs-10">Rule</th>
-                      <th class="col-xs-2">Exemptions</th>
-                  </tr>
-              </thead>
-              <tbody>
-              @exemptions.map { l =>
-                  <tr>
-                      <td class="exemptRule">@l._1</td>
-                      <td class="exemptCount text-center"><a href="@appRoutes.LeakDetectionController.reportExemptions(report.repoName, report.branch)">@l._2</a></td>
-                  </tr>
-              }
-              </tbody>
-          </table>
-      }
-      </div>
-  </div>
+    <h2>@repoName - @branch</h2>
 
-    @warnings.map {warning =>
-        <div class="alert alert-danger">@warning.message</div>
-    }
-
-    @if(unresolvedLeaks.isEmpty) {
+    @if(exemptions.isEmpty) {
         <div class="alert alert-success">
-            There are no unresolved leaks associated to this branch
+            There are no exemptions associated to this branch
         </div>
     } else {
-        <h2>Unresolved leaks</h2>
-        @if(isAuthorised) {
-            <div class="alert alert-warning">
-                Please click <a href="@leakResolutionUrl">here</a> to find out how to resolve the leaks
+        <div id="leaks-list">
+            <div class="text-right">
+                <a id="expandLink" class="hand-pointer" onclick="expandAll()">expand all</a>
+                <a id="collapseLink" class="hand-pointer hidden" onclick="collapseAll()">collapse all</a>
             </div>
-            <div id="leaks-list">
-                <div class="text-right">
-                    <a id="expandLink" class="hand-pointer" onclick="expandAll()">expand all</a>
-                    <a id="collapseLink" class="hand-pointer hidden" onclick="collapseAll()">collapse all</a>
-                </div>
 
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th/>
-                            <th class="col-xs-7"><button class="sort no-border" data-sort="rule">Rule</button></th>
-                            <th class="col-xs-2"><button class="sort no-border" data-sort="scope">Scope</button></th>
-                            <th class="col-xs-2"><button class="sort no-border" data-sort="priority">Priority</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
-                        </tr>
-                    </thead>
-                    <tbody class="list">
-                    @unresolvedLeaks.map(leakDetectionRuleViolations)
-                    </tbody>
-                </table>
-            </div>
-        } else {
-            <div class="alert alert-danger">
-                Only members of an owning team can view the unresolved leak details as they may contain sensitive data
-            </div>
-        }
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th/>
+                        <th class="col-xs-7"><button class="sort no-border" data-sort="rule">Rule</button></th>
+                        <th class="col-xs-2"><button class="sort no-border" data-sort="scope">Scope</button></th>
+                        <th class="col-xs-2"><button class="sort no-border" data-sort="priority">Priority</button></th>
+                        <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total exemptions</button></th>
+                    </tr>
+                </thead>
+                <tbody class="list">
+                @exemptions.map(leakDetectionRuleViolations)
+                </tbody>
+            </table>
+        </div>
     }
     <script>
             var options = {valueNames: ['rule', 'scope', 'priority', 'total']};

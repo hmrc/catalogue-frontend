@@ -100,19 +100,19 @@ class LeakDetectionService @Inject() (
       .map(_
         .filterNot(_.excluded)
         .groupBy(_.ruleId)
-        .map {
-          case (ruleId, leaks) =>
-            LeakDetectionLeaksByRule(
-              ruleId,
-              leaks.head.description,
-              leaks.head.scope,
-              leaks.head.priority,
-              leaks
-                .map(l => LeakDetectionLeakDetails(l.filePath, l.lineNumber, l.urlToSource, l.lineText, l.matches))
-                .sortBy(_.lineNumber)
-                .sortBy(_.filePath)
-            )
-        }
+        .map {case (ruleId, leaks) => mapLeak(ruleId, leaks)}
+        .toSeq
+        .sortBy(_.leaks.length)
+        .reverse
+        .sortBy(_.priority)
+      )
+
+  def reportExemptions(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] =
+    leakDetectionConnector.leakDetectionLeaks(reportId)
+      .map(_
+        .filter(_.excluded)
+        .groupBy(_.ruleId)
+        .map {case (ruleId, leaks) => mapLeak(ruleId, leaks)}
         .toSeq
         .sortBy(_.leaks.length)
         .reverse
@@ -121,6 +121,18 @@ class LeakDetectionService @Inject() (
 
   def reportWarnings(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionWarning]] =
     leakDetectionConnector.leakDetectionWarnings(reportId)
+
+  private def mapLeak(ruleId: String, leaks: Seq[LeakDetectionLeak]): LeakDetectionLeaksByRule =
+          LeakDetectionLeaksByRule(
+            ruleId,
+            leaks.head.description,
+            leaks.head.scope,
+            leaks.head.priority,
+            leaks
+              .map(l => LeakDetectionLeakDetails(l.filePath, l.lineNumber, l.urlToSource, l.lineText, l.matches))
+              .sortBy(_.lineNumber)
+              .sortBy(_.filePath)
+          )
 
   private def filterSummaries(summaries: Seq[LeakDetectionRepositorySummary], includeWarnings: Boolean, includeExemptions: Boolean): Seq[LeakDetectionRepositorySummary] = {
     (includeWarnings, includeExemptions) match {
