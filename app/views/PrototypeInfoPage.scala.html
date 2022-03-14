@@ -36,6 +36,7 @@
             <h1>
               Prototype: @prototype.name
               <span>@githubBadgeType(prototype)</span>
+              @if(prototype.isDeprecated) { <span>Deprecated</span> }
               @if(prototype.isArchived) { <span>Archived</span> }
             </h1>
         </div>

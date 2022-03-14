@@ -204,12 +204,12 @@
                   <ul class="list list--minimal">
                   @for(repo <- repos) {
                       <li class="list-item" id="@repo.name">
-                              <div class="@if(hasLeaks(repo.name)) {leak-detected} @if(repo.isDeprecated){deprecated}">
-                                  <a href="@appRoutes.CatalogueController.repository(repo.name)">
-                                  @repo.name
+                              <div>
+                                  <a class="@if(hasLeaks(repo.name)) {leak-detected} @if(repo.isDeprecated){deprecated}" href="@appRoutes.CatalogueController.repository(repo.name)">
+                                      @repo.name
                                       @if(hasLeaks(repo.name)) {<span class="glyphicon glyphicon-warning-sign"></span>}
-                                  @if(repo.isArchived){ <span class="glyphicon glyphicon-lock" title="archived"></span>}
-                                  @if(repo.isDeprecated && !repo.isArchived){ <span class="badge">deprecated</span> }
+                                      @if(repo.isArchived){ <span class="glyphicon glyphicon-lock" title="archived"></span>}
+                                      @if(repo.isDeprecated && !repo.isArchived){ <span class="badge">deprecated</span> }
                                   </a>
                                   @if(repo.teamNames.length > 1) { <span title="shared by @repo.teamNames.length teams">(@repo.teamNames.length)</span>  }
                               </div>
