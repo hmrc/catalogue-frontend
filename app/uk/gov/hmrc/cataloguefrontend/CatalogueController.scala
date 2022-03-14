@@ -168,7 +168,7 @@ class CatalogueController @Inject() (
                              optShutterState   = optShutterState,
                              optTelemetryLinks = Some(Seq(
                                TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, env, serviceName),
-                               TelemetryLinks.create("Kibanan", telemetryLogsLinkTemplate, env, serviceName),
+                               TelemetryLinks.create("Kibana", telemetryLogsLinkTemplate, env, serviceName),
                              ))
                            )
                        )

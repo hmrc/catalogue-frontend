@@ -203,7 +203,7 @@
               } else {
                   <ul class="list list--minimal">
                   @for(repo <- repos) {
-                      <li class="list-item" id="@repo">
+                      <li class="list-item" id="@repo.name">
                               <div class="@if(hasLeaks(repo.name)) {leak-detected} @if(repo.isDeprecated){deprecated}">
                                   <a href="@appRoutes.CatalogueController.repository(repo.name)">
                                   @repo.name
