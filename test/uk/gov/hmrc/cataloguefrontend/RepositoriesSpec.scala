@@ -45,23 +45,29 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
       val document = Jsoup.parse(response.body)
 
-      document.select("#row0_name").select("td a").text()       shouldBe "teamA-serv"
-      document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-serv"
+      document.select("#row0_name").select("td a").text()       shouldBe "teamA-library"
+      document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-library"
       document.select("#row0_created").text()                         shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
-      document.select("#row0_repotype").text()                        shouldBe "Service"
+      document.select("#row0_repotype").text()                        shouldBe "Library"
       document.select("#row0_lastActive").text()                      shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
 
-      document.select("#row1_name").select("td a").text()      shouldBe "teamA-library"
-      document.select("#row1_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-library"
+      document.select("#row1_name").select("td a").text()      shouldBe "teamA-other"
+      document.select("#row1_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-other"
       document.select("#row1_created").text()                         shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
-      document.select("#row1_repotype").text()                        shouldBe "Library"
+      document.select("#row1_repotype").text()                        shouldBe "Other"
       document.select("#row1_lastActive").text()                      shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
 
-      document.select("#row2_name").select("td a").text()      shouldBe "teamA-other"
-      document.select("#row2_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-other"
+      document.select("#row2_name").select("td a").text()      shouldBe "teamA-proto"
+      document.select("#row2_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-proto"
       document.select("#row2_created").text()                         shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
-      document.select("#row2_repotype").text()                        shouldBe "Other"
+      document.select("#row2_repotype").text()                        shouldBe "Prototype"
       document.select("#row2_lastActive").text()                      shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
+
+      document.select("#row4_name").select("td a").text()      shouldBe "teamA-serv"
+      document.select("#row4_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-serv"
+      document.select("#row4_created").text()                         shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
+      document.select("#row4_repotype").text()                        shouldBe "Service"
+      document.select("#row4_lastActive").text()                      shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
     }
 
     "show a list of all libraries when 'Library' is selected" in {
