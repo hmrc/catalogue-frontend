@@ -80,11 +80,11 @@ class LeakDetectionService @Inject() (
         ).sortBy(_.unresolvedCount).reverse
       )
 
-  def repoSummaries(rule: Option[String], team: Option[String], includeWarnings: Boolean, includeExemptions: Boolean)(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionRepositorySummary])] =
+  def repoSummaries(rule: Option[String], team: Option[String], includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean)(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionRepositorySummary])] =
     for {
       rules <- leakDetectionConnector.leakDetectionRules
       summaries <- leakDetectionConnector.leakDetectionRepoSummaries(rule, None, team)
-      filteredSummaries = filterSummaries(summaries, includeWarnings, includeExemptions)
+      filteredSummaries = filterSummaries(summaries, includeWarnings, includeExemptions, includeViolations)
     } yield (rules.map(_.id), filteredSummaries.sortBy(_.repository))
 
   def branchSummaries(repo: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
@@ -134,12 +134,16 @@ class LeakDetectionService @Inject() (
               .sortBy(_.filePath)
           )
 
-  private def filterSummaries(summaries: Seq[LeakDetectionRepositorySummary], includeWarnings: Boolean, includeExemptions: Boolean): Seq[LeakDetectionRepositorySummary] = {
-    (includeWarnings, includeExemptions) match {
-      case (true, true) => summaries
-      case (true, false) => summaries.filter(s => s.unresolvedCount > 0 || s.warningCount > 0)
-      case (false, true) => summaries.filter(s => s.unresolvedCount > 0 || s.excludedCount > 0)
-      case (false, false) => summaries.filter(_.unresolvedCount > 0)
+  private def filterSummaries(summaries: Seq[LeakDetectionRepositorySummary], includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean): Seq[LeakDetectionRepositorySummary] = {
+    (includeWarnings, includeExemptions, includeViolations) match {
+      case (true, true, true) => summaries
+      case (true, true, false) => summaries.filter(s => s.warningCount > 0 || s.excludedCount > 0)
+      case (true, false, true) => summaries.filter(s => s.warningCount > 0 || s.unresolvedCount > 0)
+      case (true, false, false) => summaries.filter(s => s.warningCount > 0)
+      case (false, true, true) => summaries.filter(s => s.excludedCount > 0 || s.unresolvedCount > 0)
+      case (false, true, false) => summaries.filter(s => s.excludedCount > 0)
+      case (false, false, true) => summaries.filter(s => s.unresolvedCount > 0)
+      case (false, false, false) => Seq.empty
     }
   }
 }

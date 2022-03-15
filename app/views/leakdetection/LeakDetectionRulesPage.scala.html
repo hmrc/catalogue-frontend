@@ -78,7 +78,7 @@
     @countWithLinkCell(ruleId: String, name: String, cnt: Int, hidden: Boolean) = {
         <td class="@name text-center @if(hidden) {hide}"><div class="hide">@cnt</div>
             @if(cnt > 0) {
-                <a href="@appRoutes.LeakDetectionController.repoSummaries?rule=@ruleId">@cnt</a>
+                <a href="@appRoutes.LeakDetectionController.repoSummaries?rule=@ruleId&includeViolations=true">@cnt</a>
             } else {
                 <span>0</span>
             }</td>

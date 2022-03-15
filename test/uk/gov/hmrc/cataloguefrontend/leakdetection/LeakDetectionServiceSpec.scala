@@ -81,7 +81,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
               aRule.copy(id = "rule-2"),
               Seq(
                 aRepositorySummary.copy(repository = "repo1", firstScannedAt = timestamp.minus(3, HOURS), unresolvedCount = 4),
-                aRepositorySummary.copy(repository = "repo2", lastScannedAt = timestamp.plus(1, HOURS))
+                aRepositorySummary.copy(repository = "repo2", lastScannedAt = timestamp.plus(1, HOURS), unresolvedCount = 1)
               )
             ),
             LeakDetectionSummary(aRule.copy(id = "rule-3"), Seq())
@@ -96,6 +96,101 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
         LeakDetectionRulesWithCounts(aRule.copy(id = "rule-1"), Some(timestamp), Some(timestamp), 1, 0, 3),
         LeakDetectionRulesWithCounts(aRule.copy(id = "rule-3"), None, None, 0, 0, 0)
       )
+    }
+
+    "return repo summaries" should {
+      "include warnings, exemptions and violations" in new Setup {
+        givenRepoSummariesWithAllCountCombinations()
+        val results = service.repoSummaries(None, None, true, true, true).futureValue
+
+        results._2.map(_.repository) should contain theSameElementsAs Seq(
+          "warnings, exemptions and violations",
+          "warnings and exemptions",
+          "warnings and violations",
+          "warnings",
+          "exemptions and violations",
+          "exemptions",
+          "violations"
+        )
+      }
+
+      "include warnings and exemptions" in new Setup {
+        givenRepoSummariesWithAllCountCombinations()
+        val results = service.repoSummaries(None, None, true, true, false).futureValue
+
+        results._2.map(_.repository) should contain theSameElementsAs Seq(
+          "warnings, exemptions and violations",
+          "warnings and exemptions",
+          "warnings and violations",
+          "warnings",
+          "exemptions and violations",
+          "exemptions"
+        )
+      }
+
+      "include warnings and violations" in new Setup {
+        givenRepoSummariesWithAllCountCombinations()
+        val results = service.repoSummaries(None, None, true, false, true).futureValue
+
+        results._2.map(_.repository) should contain theSameElementsAs Seq(
+          "warnings, exemptions and violations",
+          "warnings and exemptions",
+          "warnings and violations",
+          "warnings",
+          "exemptions and violations",
+          "violations"
+        )
+      }
+
+      "include warnings" in new Setup {
+        givenRepoSummariesWithAllCountCombinations()
+        val results = service.repoSummaries(None, None, true, false, false).futureValue
+
+        results._2.map(_.repository) should contain theSameElementsAs Seq(
+          "warnings, exemptions and violations",
+          "warnings and exemptions",
+          "warnings and violations",
+          "warnings"
+        )
+      }
+
+      "include exemptions and violations" in new Setup {
+        givenRepoSummariesWithAllCountCombinations()
+        val results = service.repoSummaries(None, None, false, true, true).futureValue
+
+        results._2.map(_.repository) should contain theSameElementsAs Seq(
+          "warnings, exemptions and violations",
+          "warnings and exemptions",
+          "warnings and violations",
+          "exemptions and violations",
+          "exemptions",
+          "violations"
+        )
+      }
+
+      "include exemptions" in new Setup {
+        givenRepoSummariesWithAllCountCombinations()
+        val results = service.repoSummaries(None, None, false, true, false).futureValue
+
+        results._2.map(_.repository) should contain theSameElementsAs Seq(
+          "warnings, exemptions and violations",
+          "warnings and exemptions",
+          "exemptions and violations",
+          "exemptions",
+        )
+      }
+
+      "include violations" in new Setup {
+        givenRepoSummariesWithAllCountCombinations()
+        val results = service.repoSummaries(None, None, false, false, true).futureValue
+
+        results._2.map(_.repository) should contain theSameElementsAs Seq(
+          "warnings, exemptions and violations",
+          "warnings and violations",
+          "exemptions and violations",
+          "violations"
+        )
+      }
     }
 
     "get unresolved leaks for a report and group by rule" in new Setup {
@@ -180,6 +275,23 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
     val timestamp = LocalDateTime.now().minus(2, HOURS)
 
     def aRule              = LeakDetectionRule("", "", "", "", List(), List(), "")
-    def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 0, 0, 1, Seq())
+    def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 0, 0, 0, Seq())
+
+
+    when(connector.leakDetectionRules()).thenReturn(Future.successful(Seq.empty))
+
+    def givenRepoSummariesWithAllCountCombinations() = when(connector.leakDetectionRepoSummaries(None, None, None)).thenReturn(
+      Future.successful(
+        Seq(
+          aRepositorySummary.copy(repository = "warnings, exemptions and violations", warningCount = 1, excludedCount = 1, unresolvedCount = 1),
+          aRepositorySummary.copy(repository = "warnings and exemptions", warningCount = 1, excludedCount = 1),
+          aRepositorySummary.copy(repository = "warnings and violations", warningCount = 1, unresolvedCount = 1),
+          aRepositorySummary.copy(repository = "warnings", warningCount = 1),
+          aRepositorySummary.copy(repository = "exemptions and violations", excludedCount = 1, unresolvedCount = 1),
+          aRepositorySummary.copy(repository = "exemptions", excludedCount = 1),
+          aRepositorySummary.copy(repository = "violations", unresolvedCount = 1)
+        )
+      )
+    )
   }
 }

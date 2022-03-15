@@ -56,7 +56,7 @@ class LeakDetectionController @Inject() (
           formWithErrors => Future.successful(BadRequest(ruleExplorerPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors))),
           validForm =>
             for {
-              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, validForm.includeWarnings, validForm.includeExemptions)
+              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, validForm.includeWarnings, validForm.includeExemptions, validForm.includeViolations)
               teams     <- teamsAndRepositoriesConnector.allTeams
             } yield Ok(ruleExplorerPage(summaries._1, summaries._2, teams.sortBy(_.name), form.fill(validForm)))
         )
@@ -98,7 +98,8 @@ case class LeakDetectionExplorerFilter(
   rule: Option[String] = None,
   team: Option[String] = None,
   includeWarnings: Boolean,
-  includeExemptions: Boolean
+  includeExemptions: Boolean,
+  includeViolations: Boolean
 )
 
 object LeakDetectionExplorerFilter {
@@ -107,7 +108,8 @@ object LeakDetectionExplorerFilter {
       "rule" -> optional(text),
       "team" -> optional(text),
       "includeWarnings" -> boolean,
-      "includeExemptions" -> boolean
+      "includeExemptions" -> boolean,
+      "includeViolations" -> boolean
     )(LeakDetectionExplorerFilter.apply)(LeakDetectionExplorerFilter.unapply)
   )
 }

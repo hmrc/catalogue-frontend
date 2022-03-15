@@ -56,7 +56,7 @@
             )
             </div>
             <div class="col-xs-4">
-                <label>Include none violating repositories with:</label>
+                <label>Show repositories with:</label>
                 <div>
                     <input name="includeWarnings" id="includeWarnings" type="checkbox" onchange="form.submit()" value="true"
                     @if(form("includeWarnings").value == Some("true")) {checked}> Warnings</input>
@@ -64,6 +64,10 @@
                 <div>
                     <input name="includeExemptions" id="includeExemptions" type="checkbox" onchange="form.submit()" value="true"
                     @if(form("includeExemptions").value == Some("true")) {checked}> Exemptions</input>
+                </div>
+                <div>
+                    <input name="includeViolations" id="includeViolations" type="checkbox" onchange="form.submit()" value="true"
+                    @if(form("includeViolations").value == Some("true")) {checked}> Violations</input>
                 </div>
             </div>
         </div>
