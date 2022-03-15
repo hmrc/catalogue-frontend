@@ -1,4 +1,4 @@
-@*
+/*
  * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +12,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *@
+ */
 
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+package uk.gov.hmrc.cataloguefrontend.util
 
-@(repo: GitRepository)
+import play.api.Configuration
+import uk.gov.hmrc.cataloguefrontend.connector.Link
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 
-<div id="code">
-    <div class="board">
-        <h3 class="board__heading">Code</h3>
-        <div class="board__body">
-            <div class="single-item">
-                <a id="link-to-github" href="@{repo.githubUrl}" target="_blank">
-                    Github.com<span class="glyphicon glyphicon-new-window"/>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+object TelemetryLinks {
+
+  def create(name: String, template: String, env: Environment, serviceName: String): Link = {
+    val url = template
+      .replace("${env}", UrlUtils.encodePathParam(env.asString))
+      .replace("${service}", UrlUtils.encodePathParam(serviceName))
+    Link(name, name, url)
+  }
+}

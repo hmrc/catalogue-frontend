@@ -1,4 +1,4 @@
-@*
+/*
  * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +12,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *@
+ */
 
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+package uk.gov.hmrc.cataloguefrontend.teams
 
-@(repo: GitRepository)
+import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 
-<div id="code">
-    <div class="board">
-        <h3 class="board__heading">Code</h3>
-        <div class="board__body">
-            <div class="single-item">
-                <a id="link-to-github" href="@{repo.githubUrl}" target="_blank">
-                    Github.com<span class="glyphicon glyphicon-new-window"/>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+case class RepoAndDependencies(repo: GitRepository, dependencies: Dependencies )

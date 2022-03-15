@@ -26,6 +26,8 @@ import play.api.libs.ws.{WSClient, WSResponse}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDateTime
+
 class HealthIndicatorsControllerSpec
   extends AnyWordSpec
      with Matchers
@@ -79,13 +81,13 @@ class HealthIndicatorsControllerSpec
 
       serviceEndpoint(
         GET,
-        "/api/repository_teams",
-        willRespondWith = (200, Some(teamsByServiceJSON))
+        "/api/v2/repositories",
+        willRespondWith = (200, Some(repositoriesJson))
       )
 
       serviceEndpoint(
         GET,
-        "/api/teams?includeRepos=true",
+        "/api/v2/teams",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -105,15 +107,16 @@ class HealthIndicatorsControllerSpec
 
       serviceEndpoint(
         GET,
-        "/api/repository_teams",
-        willRespondWith = (200, Some(teamsByServiceJSON))
+        "/api/v2/repositories",
+        willRespondWith = (200, Some(repositoriesJson))
       )
 
       serviceEndpoint(
         GET,
-        "/api/teams?includeRepos=true",
+        "/api/v2/teams",
         willRespondWith = (200, Some(teamsJSON))
       )
+
 
       private val response: WSResponse =
         ws.url(s"http://localhost:$port/health-indicators?repoType=Service").get.futureValue
@@ -131,15 +134,17 @@ class HealthIndicatorsControllerSpec
 
       serviceEndpoint(
         GET,
-        "/api/repository_teams",
-        willRespondWith = (200, Some(teamsByServiceJSON))
+        "/api/v2/repositories",
+        willRespondWith = (200, Some(repositoriesJson))
       )
 
       serviceEndpoint(
         GET,
-        "/api/teams?includeRepos=true",
+        "/api/v2/teams",
         willRespondWith = (200, Some(teamsJSON))
       )
+
+
 
       private val response: WSResponse =
         ws.url(s"http://localhost:$port/health-indicators?repoType=All+Types").get.futureValue
@@ -159,15 +164,16 @@ class HealthIndicatorsControllerSpec
 
       serviceEndpoint(
         GET,
-        "/api/repository_teams",
-        willRespondWith = (200, Some(teamsByServiceJSON))
+        "/api/v2/repositories",
+        willRespondWith = (200, Some(repositoriesJson))
       )
 
       serviceEndpoint(
         GET,
-        "/api/teams?includeRepos=true",
+        "/api/v2/teams",
         willRespondWith = (200, Some(teamsJSON))
       )
+
 
       private val response: WSResponse =
         ws.url(s"http://localhost:$port/health-indicators?repoType=Other").get.futureValue
@@ -185,13 +191,13 @@ class HealthIndicatorsControllerSpec
 
       serviceEndpoint(
         GET,
-        "/api/repository_teams",
-        willRespondWith = (200, Some(teamsByServiceJSON))
+        "/api/v2/repositories",
+        willRespondWith = (200, Some(repositoriesJson))
       )
 
       serviceEndpoint(
         GET,
-        "/api/teams?includeRepos=true",
+        "/api/v2/teams",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -211,13 +217,13 @@ class HealthIndicatorsControllerSpec
 
       serviceEndpoint(
         GET,
-        "/api/repository_teams",
-        willRespondWith = (200, Some(teamsByServiceJSON))
+        "/api/v2/repositories",
+        willRespondWith = (200, Some(repositoriesJson))
       )
 
       serviceEndpoint(
         GET,
-        "/api/teams?includeRepos=true",
+        "/api/v2/teams",
         willRespondWith = (200, Some(teamsJSON))
       )
 
@@ -327,16 +333,36 @@ class HealthIndicatorsControllerSpec
         | "weightedMetrics": []
         |}]""".stripMargin
 
+    val createdAt    = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
+    val lastActiveAt = LocalDateTime.of(2016, 10, 12, 10, 30, 12)
 
-    val teamsByServiceJSON: String = """{"team-indicator-dashboard-frontend": [
-                              |"Classic Services Manchester",
-                              |"Classic Services Telford"
-                              |]}""".stripMargin
+
+    val repositoriesJson: String = s"""[
+                              | {
+                              | "name":"team-indicator-dashboard-frontend",
+                              | "description": "",
+                              | "teamNames":["Classic Services Manchester","Classic Services Telford"],
+                              | "createdDate":"$createdAt",
+                              | "lastActiveDate":"$lastActiveAt",
+                              | "repoType":"Service",
+                              | "language":"Scala",
+                              | "isArchived":false,
+                              | "defaultBranch":"main",
+                              | "isDeprecated":false,
+                              | "url": "http://git/repoa"
+                              | }
+                              |]""".stripMargin
 
     val teamsJSON: String = """[{
-                              |  "name": "Classic Services Manchester"
+                              |  "name": "Classic Services Manchester",
+                              |  "createdDate": "2020-10-28T13:15:19Z",
+                              |  "lastActiveDate": "2021-07-09T10:00:49Z",
+                              |  "repos": 7
                               |},{
-                              |  "name": "Classic Services Telford"
+                              |  "name": "Classic Services Telford",
+                              |  "createdDate": "2020-10-28T13:15:19Z",
+                              |  "lastActiveDate": "2021-07-09T10:00:49Z",
+                              |  "repos": 7
                               |}]""".stripMargin
   }
 }

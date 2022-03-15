@@ -14,9 +14,9 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 
-@(repo: RepositoryDetails)
+@(repo: GitRepository)
 <div id="owning-team">
     <div class="board">
     <h3 class="board__heading">Teams</h3>
@@ -24,13 +24,13 @@
           <ul class="list list--minimal">
             @for(teamName <- repo.teamNames) {
                 <li class="list-item">
-                    <a id="link-to-@{teamName.asString.toLowerCase.replaceAll(" ", "-")}" href="/teams/@teamName.asString">
+                    <a id="link-to-@{teamName.toLowerCase.replaceAll(" ", "-")}" href="/teams/@teamName">
                         @if(repo.owningTeams.contains(teamName)) {
                             <strong>
-                                @teamName.asString <span class="repo-owner">Owner</span>
+                                @teamName <span class="repo-owner">Owner</span>
                             </strong>
                         } else {
-                            @teamName.asString
+                            @teamName
                         }
                     </a>
                 </li>

@@ -14,14 +14,14 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 
 @this(viewMessages: ViewMessages)
 
-@(repo: RepositoryDetails)
+@(repo: GitRepository)
 
 <div id="details" >
     <div class="board" class="col-md-12">
@@ -35,7 +35,7 @@
                     </li>
                 <li  id="created-at" class="col-xs-6">
                     <label>Created: </label>
-                    @repo.createdAt.displayFormat
+                    @repo.createdDate.displayFormat
                 </li>
                 <li id="description-url" class="col-xs-6">
                     <label>Url: </label>
@@ -43,7 +43,7 @@
                 </li>
                 <li id="last-active" class="col-xs-6">
                     <label>Last Active: </label>
-                    @repo.lastActive.displayFormat
+                    @repo.lastActiveDate.displayFormat
                 </li>
             </ul>
         </div>

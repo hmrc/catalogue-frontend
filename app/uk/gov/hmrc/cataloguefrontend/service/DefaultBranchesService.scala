@@ -16,27 +16,27 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
+import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class DefaultBranchesService @Inject()()(implicit val ec: ExecutionContext){
 
-  def allTeams(repos: Seq[RepositoryDisplayDetails]): Seq[String] = {
+  def allTeams(repos: Seq[GitRepository]): Seq[String] = {
     val repositories = repos.map(t => t.teamNames)
     repositories.flatten.distinct.sorted
   }
 
   def filterRepositories(
-      repositories:     Seq[RepositoryDisplayDetails],
+      repositories:     Seq[GitRepository],
       name:             Option[String],
       defaultBranch:    Option[String],
       teamNames:        Option[String],
       singleOwnership:  Boolean,
-      includeArchived:  Boolean): Seq[RepositoryDisplayDetails] = {
+      includeArchived:  Boolean): Seq[GitRepository] = {
 
-    val results: Seq[RepositoryDisplayDetails] = {
+    val results: Seq[GitRepository] = {
       repositories
         .filter(repo => name.fold(true)(repo.name contains _))
         .filter(repo => defaultBranch.fold(true)(repo.defaultBranch contains _))

@@ -44,7 +44,6 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
   }
 
   private lazy val catalogueController = new CatalogueController(
-    userManagementConnector       = mock[UserManagementConnector],
     teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
     configService                 = mock[ConfigService],
     costEstimationService         = mock[CostEstimationService],
@@ -57,10 +56,8 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
     userManagementPortalConfig    = mock[UserManagementPortalConfig],
     configuration                 = Configuration.empty,
     mcc                           = stubMessagesControllerComponents(),
-    digitalServiceInfoPage        = mock[DigitalServiceInfoPage],
     whatsRunningWhereService      = mock[WhatsRunningWhereService],
     indexPage                     = mock[IndexPage],
-    teamInfoPage                  = mock[TeamInfoPage],
     serviceInfoPage               = mock[ServiceInfoPage],
     serviceConfigPage             = mock[ServiceConfigPage],
     serviceConfigRawPage          = mock[ServiceConfigRawPage],

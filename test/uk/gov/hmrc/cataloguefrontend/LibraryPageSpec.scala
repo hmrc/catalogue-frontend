@@ -30,7 +30,7 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
     "show the teams owning the service with github and ci links and info box" in {
       val libName = "lib"
 
-      serviceEndpoint(GET, s"/api/repositories/$libName"       , willRespondWith = (200, Some(libraryData)))
+      serviceEndpoint(GET, s"/api/v2/repositories/$libName"    , willRespondWith = (200, Some(libraryData)))
       serviceEndpoint(GET, s"/api/jenkins-url/$libName"        , willRespondWith = (200, Some(jenkinsData)))
       serviceEndpoint(GET, s"/api/module-dependencies/$libName", willRespondWith = (404, None))
 
@@ -51,7 +51,7 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
     "render dependencies" in {
       val libName = "lib"
 
-      serviceEndpoint(GET, s"/api/repositories/$libName"       , willRespondWith = (200, Some(libraryData)))
+      serviceEndpoint(GET, s"/api/v2/repositories/$libName"    , willRespondWith = (200, Some(libraryData)))
       serviceEndpoint(GET, s"/api/module-dependencies/$libName", willRespondWith = (200, Some(repositoryModules(
                                                                                                 libName,
                                                                                                 dependenciesCompile = dependencies

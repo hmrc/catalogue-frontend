@@ -16,14 +16,14 @@
 
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDisplayDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
-@(repositories: Seq[RepositoryDisplayDetails],
+@(repositories: Seq[GitRepository],
   form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
@@ -75,24 +75,35 @@
         <table class="table table-striped">
             <tr>
                 <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
-                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
-                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
-                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
+                <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="repo-type">Team</button></th>
+                <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
+                <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
+                <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
             </tr>
             <tbody class="list">
             @repositories.zipWithIndex.map{case (repo, i) =>
             <tr id="row@i">
                 <td class="service-name" id="row@{i}_name">
-                    <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name @if(repo.isArchived) { (isArchived) }</a>
+                    @if(repo.isDeprecated) { <span class="badge">deprecated</span> } @if(repo.isArchived) { <span class="badge">archived</span> }
+                    <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
+                </td>
+                <td>
+                    @if(repo.teamNames.length <= 4) {
+                        @repo.teamNames.take(4).map {tn => <div>@tn</div> }
+                    } else {
+                        <div title="@repo.teamNames.mkString("\n")">
+                          <em>Shared by @{repo.teamNames.length} teams</em>
+                        </div>
+                    }
                 </td>
                 <td class="repo-type monospaced" id="row@{i}_repotype">
                     @repo.repoType.asString
                 </td>
                 <td class="created monospaced" id="row@{i}_created">
-                    @repo.createdAt.asPattern("yyyy-MM-dd")
+                    @repo.createdDate.asPattern("yyyy-MM-dd")
                 </td>
                 <td class="last-active monospaced" id="row@{i}_lastActive">
-                    @repo.lastUpdatedAt.asPattern("yyyy-MM-dd")
+                    @repo.lastActiveDate.asPattern("yyyy-MM-dd")
                 </td>
             </tr>
             }

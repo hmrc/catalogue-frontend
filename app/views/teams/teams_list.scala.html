@@ -14,25 +14,15 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
 
-@(teams: Seq[Team], form: Form[_])(implicit messages: Messages, request: Request[_])
+@(teams: Seq[Team])(implicit messages: Messages, request: Request[_])
 
     @standard_layout("Teams list", "teams") {
         <header>
             <h1>Teams</h1>
         </header>
-
-        @if(form.hasErrors) {
-            <div class="alert alert-danger" role="alert">
-                <ul class="list">
-                @form.errors.map { error =>
-                    <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
-                }
-                </ul>
-            </div>
-        }
 
         <div id="teams-list">
             <form action="/teams" method="get">
@@ -42,7 +32,7 @@
                     </div>
                     <div class="col col-xs-3">
                         <input class="search form-control" id="search" type="text" name="name"
-                        value="@form("name").value" autofocus>
+                        value="" autofocus>
                     </div>
                 </div>
             </form>
@@ -52,31 +42,32 @@
                     <th class="col-lg-6">
                         <button role="button" class="sort no-border" data-sort="service-name">Team</button>
                     </th>
-                    <th class="col-lg-3">
+                    <th class="col-lg-2">
                         <button role="button" class="sort no-border" data-sort="created">Created</button>
                     </th>
-                    <th class="col-lg-3">
+                    <th class="col-lg-2">
                         <button role="button" class="sort no-border" data-sort="last-active">Last Active</button>
                     </th>
+                    <th class="col-lg-2">
+                        <button role="button" class="sort no-border" data-sort="created" title="Excluding common shared repos">Repositories</button>
+                    </th>
+
                 </tr>
                 <tbody class="list">
                 @teams.zipWithIndex.map { case (team, i) =>
                 <tr id="row@i">
-                    <td class="service-name" id="row@{
-                        i
-                    }_name">
+                    <td class="service-name" id="row@{i}_name">
                         <a class="team-name" href="/teams/@team.name.asString">@team.name.asString</a>
                     </td>
-                    <td class="created monospaced" id="row@{
-                        i
-                    }_created">
-                    @team.createdDate.map(_.asPattern("yyyy-MM-dd"))
+                    <td class="created monospaced" id="row@{i}_created">
+                      @team.createdDate.map(_.atZone(utc).format(`yyyy-MM-dd`)).getOrElse("")
                     </td>
-                    <td class="last-active monospaced" id="row@{
-                        i
-                    }_lastActive">
-                    @team.lastActiveDate.map(_.asPattern("yyyy-MM-dd"))
-                </td>
+                    <td class="last-active monospaced" id="row@{i}_lastActive">
+                      @team.lastActiveDate.map(_.atZone(utc).format(`yyyy-MM-dd`)).getOrElse("")
+                    </td>
+                    <td class="created monospaced" id="row@{i}_repos">
+                      @team.repos
+                    </td>
                 </tr>
                 }
                 </tbody>

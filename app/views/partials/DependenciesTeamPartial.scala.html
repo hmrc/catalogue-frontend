@@ -16,16 +16,18 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.model._
+@import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
 
 @this()
+
 @( teamName              : TeamName
- , masterTeamDependencies: Seq[Dependencies]
+ , masterTeamDependencies: Seq[RepoAndDependencies]
  , prodDependencies      : Map[String, Seq[Dependency]]
  , showLink              : Boolean
  )
 
 @* value to show thoses were later versions are available? *@
-@defining(masterTeamDependencies.filter(_.hasOutOfDateDependencies)) { outOfDateDependencies =>
+@defining(masterTeamDependencies.filter(_.dependencies.hasOutOfDateDependencies)) { outOfDateDependencies =>
 
 <div id="team-dependencies" class="board">
     <h3 class="board__heading">Out of Date Platform Dependencies for Team @teamName.asString</h3>
@@ -40,10 +42,10 @@
         }
         <div class="col-xs-9">
              @for(dependency <- masterTeamDependencies) {
-               @defining(prodDependencies.getOrElse(dependency.repositoryName, Seq.empty)){ prodDependencies =>
-                 <ul class="list list--minimal list-group row" id="ood-@dependency.repositoryName">
+               @defining(prodDependencies.getOrElse(dependency.dependencies.repositoryName, Seq.empty)){ prodDependencies =>
+                 <ul class="list list--minimal list-group row" id="ood-@dependency.dependencies.repositoryName">
 
-                     <h4>@dependency.repositoryName</h4>
+                     <h4>@dependency.dependencies.repositoryName @if(dependency.repo.isArchived){ <span class="archived">archived</span>} @if(dependency.repo.isDeprecated && !dependency.repo.isArchived){<span class="badge">deprecated</span>} </h4>
 
                      @bobby_alerts(prodDependencies, pending = false)
                      @bobby_alerts(prodDependencies, pending = true )
@@ -55,9 +57,9 @@
                          <span class="col-xs-2"><label>Violation</label></span>
 
                      </li>
-                     @partials.dependency_section(dependency.libraryDependencies.filter(_.isOutOfDate).sortBy(_.scope))
-                     @partials.dependency_section(dependency.sbtPluginsDependencies.filter(_.isOutOfDate))
-                     @partials.dependency_section(dependency.otherDependencies.filter(_.isOutOfDate))
+                     @partials.dependency_section(dependency.dependencies.libraryDependencies.filter(_.isOutOfDate).sortBy(_.scope))
+                     @partials.dependency_section(dependency.dependencies.sbtPluginsDependencies.filter(_.isOutOfDate))
+                     @partials.dependency_section(dependency.dependencies.otherDependencies.filter(_.isOutOfDate))
 
                  </ul>
                }

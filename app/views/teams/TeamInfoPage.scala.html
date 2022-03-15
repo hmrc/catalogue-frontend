@@ -22,32 +22,33 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependencies, Dependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
 
 @this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
 
 @(teamName              : TeamName,
-  repos                 : Map[RepoType, Seq[String]],
-  activityDates         : TeamActivityDates,
+  repos                 : Map[RepoType, Seq[GitRepository]],
   errorOrTeamMembers    : Either[UMPError, Seq[DisplayableTeamMember]],
   errorOrTeamDetails    : Either[UMPError, TeamDetails],
   umpMyTeamsUrl         : String,
   leaksFoundForTeam     : Boolean,
   hasLeaks              : String => Boolean,
-  masterTeamDependencies: Seq[Dependencies],
+  masterTeamDependencies: Seq[RepoAndDependencies],
   prodDependencies      : Map[String, Seq[Dependency]]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(teamName.asString, "teams") {
     <header>
         <h1>@teamName.asString</h1>
-        <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script type="text/javascript" src="@controllers.routes.Assets.versioned("../../../public/charts-loader-51.js")"></script>
     </header>
 
     @partials.team_leak_detection_banner(leaksFoundForTeam)
-    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.toDependencySeq), pending = false, team = true)
-    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.toDependencySeq), pending = true , team = true)
-    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.toDependencySeq), pending = false, team = true)
-    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.toDependencySeq), pending = true , team = true)
+    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true)
+    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true)
+    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true)
+    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true)
 
     <section class="section-wrapper">
 
@@ -61,12 +62,8 @@
 
                         <ul class="list list--minimal" id="team_details">
                             <li id="team-created">
-                                <label>Created: </label>
-                                @activityDates.created.map(_.displayFormat).getOrElse("None")
                             </li>
                             <li id="team-last-active">
-                                <label>Last Active: </label>
-                                @activityDates.lastActive.map(_.displayFormat).getOrElse("None")
                             </li>
                             @errorOrTeamDetails match {
                               case Right(teamDetails) => {
@@ -196,7 +193,7 @@
   </div>
 }
 
-@showRepositories(repos: Seq[String], headerName: String, typeName: String) = {
+@showRepositories(repos: Seq[GitRepository], headerName: String, typeName: String) = {
   <div class="col-md-3">
       <div id="@headerName" class="board">
           <h3 class="board__heading">@headerName</h3>
@@ -205,15 +202,17 @@
                   <p>@Html(viewMessages.noRepoOfTypeForTeam(typeName))</p>
               } else {
                   <ul class="list list--minimal">
-                  @for(repo <- repos) {
-                      <li class="list-item" id="@repo">
-                          <a href="@appRoutes.CatalogueController.repository(repo)">
-                              @if(hasLeaks(repo)) {
-                                  <div class="leak-detected">@repo <span class="glyphicon glyphicon-warning-sign"/></div>
-                              } else {
-                                  @repo
-                              }
-                          </a>
+                  @for(repo <- repos.sortBy(r => (r.teamNames.length>1, r.name))) {
+                      <li class="list-item" id="@repo.name">
+                              <div>
+                                  <a class="@if(hasLeaks(repo.name)) {leak-detected} @if(repo.isDeprecated){deprecated}" href="@appRoutes.CatalogueController.repository(repo.name)">
+                                      @repo.name
+                                      @if(hasLeaks(repo.name)) {<span class="glyphicon glyphicon-warning-sign"></span>}
+                                      @if(repo.isArchived){ <span class="glyphicon glyphicon-lock" title="archived"></span>}
+                                      @if(repo.isDeprecated && !repo.isArchived){ <span class="badge">deprecated</span> }
+                                  </a>
+                                  @if(repo.teamNames.length > 1) { <span title="shared by @repo.teamNames.length teams">(@repo.teamNames.length)</span>  }
+                              </div>
                       </li>
                   }
                   </ul>

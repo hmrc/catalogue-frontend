@@ -19,18 +19,18 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import play.api.Logger
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.connector.DigitalService.DigitalServiceRepository
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 sealed trait RepoType { def asString: String }
+
 object RepoType {
   case object Service   extends RepoType { override val asString = "Service"   }
   case object Library   extends RepoType { override val asString = "Library"   }
@@ -68,118 +68,67 @@ object Link {
 
 case class JenkinsLink(service: String, jenkinsURL: String)
 
-case class TargetEnvironment(environment: Environment, services: Seq[Link]) {
-  val id: String = environment.asString
-}
+case class GitRepository(
+                          name                : String,
+                          description         : String,
+                          githubUrl           : String,
+                          createdDate         : LocalDateTime,
+                          lastActiveDate      : LocalDateTime,
+                          isPrivate           : Boolean        = false,
+                          repoType            : RepoType       = RepoType.Other,
+                          digitalServiceName  : Option[String] = None,
+                          owningTeams         : Seq[String]    = Nil,
+                          language            : Option[String],
+                          isArchived          : Boolean,
+                          defaultBranch       : String,
+                          isDeprecated        : Boolean        = false,
+                          teamNames           : Seq[String]    = Nil,
+                          jenkinsURL          : Option[String] = None
+                        )
 
-object TargetEnvironment {
-  val format: Format[TargetEnvironment] = {
-    implicit val ef = TeamsAndRepositoriesEnvironment.format
-    implicit val lf = Link.format
-    ( (__ \ "name"    ).format[Environment]
-    ~ (__ \ "services").format[Seq[Link]]
-    )(apply, unlift(unapply))
-  }
-}
-
-case class RepositoryDetails(
-  name          : String,
-  description   : String,
-  createdAt     : LocalDateTime,
-  lastActive    : LocalDateTime,
-  owningTeams   : Seq[TeamName],
-  teamNames     : Seq[TeamName],
-  githubUrl     : Link,
-  jenkinsURL    : Option[Link],
-  environments  : Option[Seq[TargetEnvironment]],
-  repoType      : RepoType,
-  isPrivate     : Boolean,
-  isArchived    : Boolean,
-  defaultBranch : String
-)
-
-object RepositoryDetails {
-  val format: Format[RepositoryDetails] = {
-    implicit val tnf = TeamName.format
-    implicit val lf  = Link.format
-    implicit val tef = TargetEnvironment.format
+object GitRepository {
+  val apiFormat: OFormat[GitRepository] = {
     implicit val rtf = RepoType.format
-    Json.format[RepositoryDetails]
-  }
-}
 
-case class RepositoryDisplayDetails(
-  name          : String,
-  createdAt     : LocalDateTime,
-  lastUpdatedAt : LocalDateTime,
-  repoType      : RepoType,
-  isArchived    : Boolean,
-  teamNames     : Seq[String],
-  defaultBranch : String
-)
-
-object RepositoryDisplayDetails {
-  val format: OFormat[RepositoryDisplayDetails] = {
-    implicit val rtf = RepoType.format
-    Json.format[RepositoryDisplayDetails]
+    ( (__ \ "name"              ).format[String]
+    ~ (__ \ "description"       ).format[String]
+    ~ (__ \ "url"               ).format[String]
+    ~ (__ \ "createdDate"       ).format[LocalDateTime]
+    ~ (__ \ "lastActiveDate"    ).format[LocalDateTime]
+    ~ (__ \ "isPrivate"         ).formatWithDefault[Boolean](false)
+    ~ (__ \ "repoType"          ).format[RepoType]
+    ~ (__ \ "digitalServiceName").formatNullable[String]
+    ~ (__ \ "owningTeams"       ).formatWithDefault[Seq[String]](Nil)
+    ~ (__ \ "language"          ).formatNullable[String]
+    ~ (__ \ "isArchived"        ).formatWithDefault[Boolean](false)
+    ~ (__ \ "defaultBranch"     ).format[String]
+    ~ (__ \ "isDeprecated"      ).formatWithDefault[Boolean](false)
+    ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Nil)
+    ~ (__ \ "jenkinsUrl"       ).formatNullable[String]
+    ) (apply, unlift(unapply))
   }
 }
 
 case class Team(
   name           : TeamName,
-  createdDate    : Option[LocalDateTime],
-  lastActiveDate : Option[LocalDateTime],
-  repos          : Option[Map[RepoType, Seq[String]]]
+  createdDate    : Option[Instant],
+  lastActiveDate : Option[Instant],
+  repos          : Int = 0
 )
 
 object Team {
   val format: OFormat[Team] = {
     implicit val tnf = TeamName.format
     ( (__ \ "name"          ).format[TeamName]
-    ~ (__ \ "createdDate"   ).formatNullable[LocalDateTime]
-    ~ (__ \ "lastActiveDate").formatNullable[LocalDateTime]
-    ~ (__ \ "repos"         ).formatNullable[Map[String, Seq[String]]]
-                             .inmap[Option[Map[RepoType, Seq[String]]]](
-                               _.map(_.map { case (k, v) => RepoType.parse(k).getOrElse(sys.error("Invalid repoType")) -> v }),
-                               _.map(_.map { case (k, v) => k.asString                                                 -> v })
-                             )
+    ~ (__ \ "createdDate"   ).formatNullable[Instant]
+    ~ (__ \ "lastActiveDate").formatNullable[Instant]
+    ~ (__ \ "repos"         ).format[Int]
     )(apply, unlift(unapply))
-  }
-}
-
-case class DigitalService(
-  name         : String,
-  lastUpdatedAt: LocalDateTime,
-  repositories : Seq[DigitalServiceRepository]
-)
-
-object DigitalService {
-  case class DigitalServiceRepository(
-    name         : String,
-    createdAt    : LocalDateTime,
-    lastUpdatedAt: LocalDateTime,
-    repoType     : RepoType,
-    teamNames    : Seq[TeamName]
-  )
-
-  object DigitalServiceRepository {
-    val format: OFormat[DigitalServiceRepository] = {
-      implicit val rtf = RepoType.format
-      implicit val tnf = TeamName.format
-      Json.format[DigitalServiceRepository]
-    }
-  }
-
-  val format: OFormat[DigitalService] = {
-    implicit val dsrf = DigitalServiceRepository.format
-    Json.format[DigitalService]
   }
 }
 
 object TeamsAndRepositoriesEnvironment {
   val format: Format[Environment] =
-    // The source of environment is url-templates.envrionments (sic)
-    // https://github.com/hmrc/app-config-base/blob/227e006901c96ad10230a2f88a305b70645bf7d1/teams-and-repositories.conf
     new Format[Environment] {
       override def reads(json: JsValue) =
         json
@@ -212,9 +161,7 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
   private implicit val tf   = Team.format
   private implicit val tnf  = TeamName.format
   private implicit val jf   = Json.format[JenkinsLink]
-  private implicit val rdf  = RepositoryDetails.format
-  private implicit val rddf = RepositoryDisplayDetails.format
-  private implicit val dsf  = DigitalService.format
+  private implicit val ghrf = GitRepository.apiFormat // v2 model
 
   def lookupLink(service: String)(implicit hc: HeaderCarrier): Future[Option[Link]] = {
     val url = url"$teamsAndServicesBaseUrl/api/jenkins-url/$service"
@@ -229,48 +176,40 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
   }
 
   def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
-    http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/teams?includeRepos=true")
+    http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/v2/teams")
 
-  def teamInfo(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Option[Team]] = {
-    val url = url"$teamsAndServicesBaseUrl/api/teams/${teamName.asString}?includeRepos=true"
+  def repositoriesForTeam(teamName: TeamName, includeArchived: Option[Boolean] = None)(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
+    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?team=${teamName.asString}&archived=$includeArchived"
+
     http
-      .GET[Option[Team]](url)
+      .GET[Seq[GitRepository]](url)
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          None
+          Nil
       }
   }
 
-  def allDigitalServices(implicit hc: HeaderCarrier): Future[Seq[String]] =
-    http.GET[Seq[String]](url"$teamsAndServicesBaseUrl/api/digital-services")
+  def allRepositories(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
+    http.GET[Seq[GitRepository]](url"$teamsAndServicesBaseUrl/api/v2/repositories")
 
-  def digitalServiceInfo(digitalServiceName: String)(implicit hc: HeaderCarrier): Future[Option[DigitalService]] =
-    http.GET[Option[DigitalService]](url"$teamsAndServicesBaseUrl/api/digital-services/$digitalServiceName")
+  def archivedRepositories(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
+    http.GET[Seq[GitRepository]](url"$teamsAndServicesBaseUrl/api/v2/repositories?archived=true")
 
-  def allRepositories(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
-    repositories(archived = None)
-
-  def archivedRepositories(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
-    repositories(archived = Some(true))
-
-  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryDetails]] =
-    http.GET[Option[RepositoryDetails]](url"$teamsAndServicesBaseUrl/api/repositories/$name")
+  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[GitRepository]] = {
+    for {
+      repo    <- http.GET[Option[GitRepository]] (url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
+      jenkins <- lookupLink(name)
+      withLink = repo.map(_.copy(jenkinsURL = jenkins.map(_.url)))
+    } yield withLink
+  }
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
-    http.GET[Map[ServiceName, Seq[TeamName]]](
-      url"$teamsAndServicesBaseUrl/api/repository_teams"
-    )
+    for {
+      repos <- http.GET[Seq[GitRepository]](url"$teamsAndServicesBaseUrl/api/v2/repositories")
+      teamsByService = repos.map(r => r.name -> r.teamNames.map(TeamName.apply)).toMap
+    } yield teamsByService
 
-  def allDefaultBranches(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
-    http.GET[Seq[RepositoryDisplayDetails]](
-      url"$teamsAndServicesBaseUrl/api/repositories"
-    )
-
-  private def repositories(archived: Option[Boolean])(implicit hc: HeaderCarrier): Future[Seq[RepositoryDisplayDetails]] =
-    http.GET[Seq[RepositoryDisplayDetails]](
-      url"$teamsAndServicesBaseUrl/api/repositories?archived=$archived"
-    )
 }
 
 object TeamsAndRepositoriesConnector {

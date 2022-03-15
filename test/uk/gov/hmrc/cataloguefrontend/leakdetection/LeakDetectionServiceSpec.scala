@@ -33,44 +33,6 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
   private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
   "Service" should {
-    "determine if at least one of team's repos has leaks" in new Setup {
-      val team = Team(
-        name = TeamName("team0"),
-        createdDate = None,
-        lastActiveDate = None,
-        repos = Some(Map(RepoType.Library -> List("repo1", "repo2")))
-      )
-
-      val repoWithLeak = RepositoryWithLeaks("repo1")
-
-      service.teamHasLeaks(team, Seq(repoWithLeak)) shouldBe true
-    }
-
-    "determine if a team has no leaks" in new Setup {
-      val team = Team(
-        name = TeamName("team0"),
-        createdDate = None,
-        lastActiveDate = None,
-        repos = Some(Map(RepoType.Library -> List("repo1", "repo2")))
-      )
-
-      val repoWithLeak = RepositoryWithLeaks("repo3")
-
-      service.teamHasLeaks(team, Seq(repoWithLeak)) shouldBe false
-    }
-
-    "filter repositories in the exclusion list" in new Setup {
-      val team = Team(
-        name = TeamName("team0"),
-        createdDate = None,
-        lastActiveDate = None,
-        repos = Some(Map(RepoType.Library -> List("a-repo-to-ignore")))
-      )
-
-      val repoToIgnore = RepositoryWithLeaks("a-repo-to-ignore")
-
-      service.teamHasLeaks(team, Seq(repoToIgnore)) shouldBe false
-    }
 
     "return rule summaries with counts" in new Setup {
       when(connector.leakDetectionSummaries(None, None, None)).thenReturn(

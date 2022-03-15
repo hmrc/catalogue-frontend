@@ -21,17 +21,18 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
 @import views.html.partials.DependenciesTeamPartial
-
+@import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
 
 @this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
 
+
 @( teamName              : TeamName
- , masterTeamDependencies: Seq[Dependencies]
+ , masterTeamDependencies: Seq[RepoAndDependencies]
  , prodDependencies      : Map[String, Seq[Dependency]]
  )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(teamName.asString, "teams") {
-    @partials.bobby_violations_banner(environment = None, dependencies = masterTeamDependencies.flatMap(_.toDependencySeq), pending = false, team = true)
-    @partials.bobby_violations_banner(environment = None, dependencies = masterTeamDependencies.flatMap(_.toDependencySeq), pending = true , team = true)
+    @partials.bobby_violations_banner(environment = None, dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true)
+    @partials.bobby_violations_banner(environment = None, dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true)
     @dependenciesTeamPartial(teamName, masterTeamDependencies, prodDependencies, showLink = false)
 }

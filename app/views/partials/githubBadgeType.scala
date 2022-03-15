@@ -16,11 +16,11 @@
 
 package views.partials
 
-import uk.gov.hmrc.cataloguefrontend.connector.RepositoryDetails
+import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 
-object githubBadgeType extends (RepositoryDetails => String) {
-  def apply(rd: RepositoryDetails): String =
-    if (rd.isPrivate)
+object githubBadgeType extends (GitRepository => String) {
+  def apply(gr: GitRepository): String =
+    if (gr.isPrivate)
       "Private"
     else
       "Public"
