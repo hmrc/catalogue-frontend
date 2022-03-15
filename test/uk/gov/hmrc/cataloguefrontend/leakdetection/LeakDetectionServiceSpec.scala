@@ -92,32 +92,21 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       val results = service.ruleSummaries().futureValue
 
       results shouldBe Seq(
-        LeakDetectionRulesWithCounts(
-          aRule.copy(id = "rule-2"),
-          Some(timestamp.minus(3, HOURS)),
-          Some(timestamp.plus(1, HOURS)),
-          2,
-          5
-        ),
-        LeakDetectionRulesWithCounts(
-          aRule.copy(id = "rule-1"),
-          Some(timestamp),
-          Some(timestamp),
-          1,
-          3
-        ),
-        LeakDetectionRulesWithCounts(aRule.copy(id = "rule-3"), None, None, 0, 0)
+        LeakDetectionRulesWithCounts(aRule.copy(id = "rule-2"), Some(timestamp.minus(3, HOURS)), Some(timestamp.plus(1, HOURS)), 2, 0, 5),
+        LeakDetectionRulesWithCounts(aRule.copy(id = "rule-1"), Some(timestamp), Some(timestamp), 1, 0, 3),
+        LeakDetectionRulesWithCounts(aRule.copy(id = "rule-3"), None, None, 0, 0, 0)
       )
     }
 
-    "get leaks for a report and group by rule" in new Setup {
+    "get unresolved leaks for a report and group by rule" in new Setup {
       when(connector.leakDetectionLeaks("reportId")).thenReturn(
         Future.successful(
           Seq(
-            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 1, "/link-to-github/file1", "secret=123", List(Match(1, 6)), "high"),
-            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 9, "/link-to-github/file1", "the secret sauce", List(Match(5, 10)), "high"),
-            LeakDetectionLeak("rule1", "description1", "file2", "fileContent", 3, "/link-to-github/file2", "my_secret: abc", List(Match(4, 9)), "high"),
-            LeakDetectionLeak("rule2", "description2", "file2", "fileName", 5, "/link-to-github/file2", "---BEGIN---", List(Match(4, 8)), "medium")
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 1, "/link-to-github/file1", "secret=123", List(Match(1, 6)), "high", false),
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 3, "/link-to-github/file1", "secret=12345", List(Match(1, 8)), "high", true),
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 9, "/link-to-github/file1", "the secret sauce", List(Match(5, 10)), "high", false),
+            LeakDetectionLeak("rule1", "description1", "file2", "fileContent", 3, "/link-to-github/file2", "my_secret: abc", List(Match(4, 9)), "high", false),
+            LeakDetectionLeak("rule2", "description2", "file2", "fileName", 5, "/link-to-github/file2", "---BEGIN---", List(Match(4, 8)), "medium", false)
           )
         )
       )
@@ -147,6 +136,34 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
         )
       )
     }
+
+    "get exemptions for a report and group by rule" in new Setup {
+      when(connector.leakDetectionLeaks("reportId")).thenReturn(
+        Future.successful(
+          Seq(
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 1, "/link-to-github/file1", "secret=123", List(Match(1, 6)), "high", false),
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 3, "/link-to-github/file1", "secret=12345", List(Match(1, 8)), "high", true),
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 9, "/link-to-github/file1", "the secret sauce", List(Match(5, 10)), "high", false),
+            LeakDetectionLeak("rule1", "description1", "file2", "fileContent", 3, "/link-to-github/file2", "my_secret: abc", List(Match(4, 9)), "high", false),
+            LeakDetectionLeak("rule2", "description2", "file2", "fileName", 5, "/link-to-github/file2", "---BEGIN---", List(Match(4, 8)), "medium", false)
+          )
+        )
+      )
+
+      val results = service.reportExemptions("reportId").futureValue
+
+      results shouldBe Seq(
+        LeakDetectionLeaksByRule(
+          "rule1",
+          "description1",
+          "fileContent",
+          "high",
+          Seq(
+            LeakDetectionLeakDetails("file1", 3, "/link-to-github/file1", "secret=12345", List(Match(1, 8)))
+          )
+        )
+      )
+    }
   }
 
   private trait Setup {
@@ -163,7 +180,6 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
     val timestamp = LocalDateTime.now().minus(2, HOURS)
 
     def aRule              = LeakDetectionRule("", "", "", "", List(), List(), "")
-    def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 0, 1, Seq())
-    def aBranchSummary     = LeakDetectionBranchSummary("", "", timestamp, 0, 1)
+    def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 0, 0, 1, Seq())
   }
 }
