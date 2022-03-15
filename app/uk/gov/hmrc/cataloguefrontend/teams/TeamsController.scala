@@ -55,7 +55,7 @@ class TeamsController @Inject()(  userManagementConnector      : UserManagementC
         } yield Ok( teamInfoPage(
           teamName = teamName,
           repos = Map.empty,
-          errorOrTeamMembers = convertToDisplayableTeamMembers(teamName, teamMembers),
+          errorOrTeamMembers = teamMembers.map(tms => DisplayableTeamMembers(teamName, umpConfig.userManagementProfileBaseUrl, tms)),
           errorOrTeamDetails = teamDetails,
           umpMyTeamsUrl = "",
           leaksFoundForTeam = false,
@@ -79,7 +79,7 @@ class TeamsController @Inject()(  userManagementConnector      : UserManagementC
               teamInfoPage(
                 teamName               = teamName,
                 repos                  = repos.groupBy(_.repoType),
-                errorOrTeamMembers     = convertToDisplayableTeamMembers(teamName, teamMembers),
+                errorOrTeamMembers     = teamMembers.map(tms => DisplayableTeamMembers(teamName, umpConfig.userManagementProfileBaseUrl, tms)),
                 errorOrTeamDetails     = teamDetails,
                 umpMyTeamsUrl          = umpConfig.umpMyTeamsPageUrl(teamName),
                 leaksFoundForTeam      = repos.exists(r => leakDetectionService.hasLeaks(reposWithLeaks)(r.name)),
@@ -115,16 +115,5 @@ class TeamsController @Inject()(  userManagementConnector      : UserManagementC
           prodDependencies))
       }
     }
-
-  private def convertToDisplayableTeamMembers(teamName: TeamName,
-                                              errorOrTeamMembers: Either[UMPError, Seq[TeamMember]]
-                                             ): Either[UMPError, Seq[DisplayableTeamMember]] =
-    errorOrTeamMembers match {
-      case Left(err) => Left(err)
-      case Right(tms) =>
-        Right(DisplayableTeamMembers(teamName, umpConfig.userManagementProfileBaseUrl, tms))
-    }
-
-  private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
 
 }

@@ -179,7 +179,7 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
     http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/v2/teams")
 
   def repositoriesForTeam(teamName: TeamName, includeArchived: Option[Boolean] = None)(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
-    val url = includeArchived.fold( url"$teamsAndServicesBaseUrl/api/v2/repositories?team=${teamName.asString}")(arc =>  url"$teamsAndServicesBaseUrl/api/v2/repositories?team=${teamName.asString}&archived=$arc")
+    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?team=${teamName.asString}&archived=$includeArchived"
 
     http
       .GET[Seq[GitRepository]](url)
