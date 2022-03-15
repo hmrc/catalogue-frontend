@@ -21,7 +21,6 @@ import org.scalatest.BeforeAndAfter
 import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-import java.time.LocalDateTime
 
 class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
@@ -39,7 +38,10 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
             s"""
                 [
                   {
-                    "name":"teamA"
+                    "name":"teamA",
+                    "createdDate": "2020-10-28T13:15:19Z",
+                    "lastActiveDate": "2021-07-09T10:00:49Z",
+                    "repos": 7
                   }
                 ]
             """

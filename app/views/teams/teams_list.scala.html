@@ -42,31 +42,32 @@
                     <th class="col-lg-6">
                         <button role="button" class="sort no-border" data-sort="service-name">Team</button>
                     </th>
-                    <th class="col-lg-3">
+                    <th class="col-lg-2">
                         <button role="button" class="sort no-border" data-sort="created">Created</button>
                     </th>
-                    <th class="col-lg-3">
+                    <th class="col-lg-2">
                         <button role="button" class="sort no-border" data-sort="last-active">Last Active</button>
                     </th>
+                    <th class="col-lg-2">
+                        <button role="button" class="sort no-border" data-sort="created" title="Excluding common shared repos">Repositories</button>
+                    </th>
+
                 </tr>
                 <tbody class="list">
                 @teams.zipWithIndex.map { case (team, i) =>
                 <tr id="row@i">
-                    <td class="service-name" id="row@{
-                        i
-                    }_name">
+                    <td class="service-name" id="row@{i}_name">
                         <a class="team-name" href="/teams/@team.name.asString">@team.name.asString</a>
                     </td>
-                    <td class="created monospaced" id="row@{
-                        i
-                    }_created">
-
+                    <td class="created monospaced" id="row@{i}_created">
+                      @team.createdDate.map(_.atZone(utc).format(`yyyy-MM-dd`)).getOrElse("")
                     </td>
-                    <td class="last-active monospaced" id="row@{
-                        i
-                    }_lastActive">
-
-                </td>
+                    <td class="last-active monospaced" id="row@{i}_lastActive">
+                      @team.lastActiveDate.map(_.atZone(utc).format(`yyyy-MM-dd`)).getOrElse("")
+                    </td>
+                    <td class="created monospaced" id="row@{i}_repos">
+                      @team.repos
+                    </td>
                 </tr>
                 }
                 </tbody>

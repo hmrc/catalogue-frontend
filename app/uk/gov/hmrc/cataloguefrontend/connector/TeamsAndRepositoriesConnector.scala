@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -111,16 +111,18 @@ object GitRepository {
 
 case class Team(
   name           : TeamName,
-  createdDate    : Option[LocalDateTime],
-  lastActiveDate : Option[LocalDateTime],
+  createdDate    : Option[Instant],
+  lastActiveDate : Option[Instant],
+  repos          : Int = 0
 )
 
 object Team {
   val format: OFormat[Team] = {
     implicit val tnf = TeamName.format
     ( (__ \ "name"          ).format[TeamName]
-    ~ (__ \ "createdDate"   ).formatNullable[LocalDateTime]
-    ~ (__ \ "lastActiveDate").formatNullable[LocalDateTime]
+    ~ (__ \ "createdDate"   ).formatNullable[Instant]
+    ~ (__ \ "lastActiveDate").formatNullable[Instant]
+    ~ (__ \ "repos"         ).format[Int]
     )(apply, unlift(unapply))
   }
 }

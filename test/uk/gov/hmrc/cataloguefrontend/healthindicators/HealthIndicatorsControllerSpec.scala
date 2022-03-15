@@ -354,9 +354,15 @@ class HealthIndicatorsControllerSpec
                               |]""".stripMargin
 
     val teamsJSON: String = """[{
-                              |  "name": "Classic Services Manchester"
+                              |  "name": "Classic Services Manchester",
+                              |  "createdDate": "2020-10-28T13:15:19Z",
+                              |  "lastActiveDate": "2021-07-09T10:00:49Z",
+                              |  "repos": 7
                               |},{
-                              |  "name": "Classic Services Telford"
+                              |  "name": "Classic Services Telford",
+                              |  "createdDate": "2020-10-28T13:15:19Z",
+                              |  "lastActiveDate": "2021-07-09T10:00:49Z",
+                              |  "repos": 7
                               |}]""".stripMargin
   }
 }
