@@ -26,7 +26,7 @@ import play.api.libs.ws.{WSClient, WSResponse}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDateTime
+import java.time.Instant
 
 class HealthIndicatorsControllerSpec
   extends AnyWordSpec
@@ -333,8 +333,8 @@ class HealthIndicatorsControllerSpec
         | "weightedMetrics": []
         |}]""".stripMargin
 
-    val createdAt    = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
-    val lastActiveAt = LocalDateTime.of(2016, 10, 12, 10, 30, 12)
+    val createdAt    = Instant.parse("2016-05-23T16:45:30.00Z")
+    val lastActiveAt = Instant.parse("2016-10-12T10:30:12.00Z")
 
 
     val repositoriesJson: String = s"""[

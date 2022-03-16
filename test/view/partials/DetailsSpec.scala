@@ -22,15 +22,15 @@ import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 
 class DetailsSpec extends AnyWordSpec with Matchers {
 
   val repo = GitRepository(
     name           = "reponame",
     description    = "some description",
-    createdDate    = LocalDateTime.of(2018, 12, 31, 8, 30, 30),
-    lastActiveDate = LocalDateTime.of(2018, 12, 31, 18, 30, 30),
+    createdDate    = Instant.parse("2018-12-31T08:30:30.00Z"),
+    lastActiveDate = Instant.parse("2018-12-31T18:30:30.00Z"),
     owningTeams    = Seq(),
     teamNames      = Seq(),
     githubUrl      = "http://url",

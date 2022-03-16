@@ -24,7 +24,7 @@ import play.api.i18n.Messages
 import play.api.mvc._
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
@@ -35,14 +35,8 @@ import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
-import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-
-case class TeamActivityDates(
-  created   : Option[LocalDateTime],
-  lastActive: Option[LocalDateTime]
-)
 
 case class EnvData(
   version          : Version,

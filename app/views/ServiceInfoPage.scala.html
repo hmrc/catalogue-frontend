@@ -14,8 +14,6 @@
  * limitations under the License.
  *@
 
-@import java.time.LocalDateTime
-
 @import partials.DependenciesByEnvironmentPartial
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
@@ -26,6 +24,9 @@
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import views.partials.githubBadgeType
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import java.time.Instant
+
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
 @this(
   dependenciesByEnvironmentPartial: DependenciesByEnvironmentPartial,
@@ -38,7 +39,7 @@
   repositoryDetails            : GitRepository,
   costEstimate                 : ServiceCostEstimate,
   costEstimateConfig           : CostEstimateConfig,
-  repositoryCreationDate       : LocalDateTime,
+  repositoryCreationDate       : Instant,
   envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
   productionEnvironmentRoute   : Option[EnvironmentRoute],

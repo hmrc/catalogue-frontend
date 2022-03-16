@@ -53,13 +53,16 @@ object DateHelper {
       d.format(`dd MMM uuuu HH:mm`)
   }
 
-  implicit class InstantToZonedDateTime(instant: Instant) {
-    def asUTC: ZonedDateTime =
-      // use ZoneId.of("UTC") rather than ZoneOffset.UTC to get "UTC" as short displayName rather than "Z"
-      ZonedDateTime.ofInstant(instant, utc)
+  implicit class InstantImplicits(d: Instant) {
 
-    def asUTCString: String =
-      asUTC.format(`yyyy-MM-dd HH:mm:ss z`)
+    def asPattern(pattern: String): String =
+      d.atZone(utc).format(DateTimeFormatter.ofPattern(pattern))
+
+    def asPattern(dtf: DateTimeFormatter): String =
+      d.atZone(utc).format(dtf)
+
+    def displayFormat: String =
+      d.atZone(utc).format(`dd MMM uuuu HH:mm`)
   }
 
   def longToLocalDate(l: Long): LocalDate =
