@@ -67,10 +67,16 @@
     </tr>
 }
 
-@countWithLinkCell(repoName: String, branch: String, name: String, cnt: Int) = {
-    <td class="@name text-center"><div class="hide">@cnt</div>
-        @if(cnt > 0) {
-            <a href="@appRoutes.LeakDetectionController.report(repoName, branch)">@cnt</a>
+@countWithLinkCell(repoName: String, branch: String, name: String, count: Int) = {
+    <td class="@name text-center"><div class="hide">@count</div>
+        @if(count > 0) {
+            <a href="
+                @if(name == "exemptions") {
+                    @appRoutes.LeakDetectionController.reportExemptions(repoName, branch)
+                } else {
+                    @appRoutes.LeakDetectionController.report(repoName, branch)
+                }
+            ">@count</a>
         } else {
             <span>0</span>
         }</td>

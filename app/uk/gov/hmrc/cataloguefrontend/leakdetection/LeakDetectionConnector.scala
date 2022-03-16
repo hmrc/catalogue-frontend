@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.Logger
 import play.api.libs.json.{Json, Reads}
+import uk.gov.hmrc.cataloguefrontend.leakdetection.Priority.{High, Low, Medium}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -108,6 +109,33 @@ object RepositoryWithLeaks {
     implicitly[Reads[String]].map(RepositoryWithLeaks.apply)
 }
 
+sealed trait Priority {
+  val name: String = this match {
+    case High => "high"
+    case Medium => "medium"
+    case Low => "low"
+  }
+  protected val ordering: Int = this match {
+    case High => 1
+    case Medium => 2
+    case Low => 3
+  }
+}
+
+object Priority {
+  implicit val order: Ordering[Priority] = Ordering.by(_.ordering)
+  val reads: Reads[Priority] = Reads.StringReads.map {
+    case "high" => High
+    case "medium" => Medium
+    case "low" => Low
+    case p => throw new RuntimeException(s"Priority type '$p' unknown")
+  }
+
+  case object High extends Priority
+  case object Medium extends Priority
+  case object Low extends Priority
+}
+
 final case class LeakDetectionSummary(rule: LeakDetectionRule, leaks: Seq[LeakDetectionRepositorySummary])
 
 object LeakDetectionSummary {
@@ -123,10 +151,11 @@ final case class LeakDetectionRule(
   description: String,
   ignoredFiles: List[String],
   ignoredExtensions: List[String],
-  priority: String
+  priority: Priority
 )
 
 object LeakDetectionRule {
+  implicit val pr = Priority.reads
   implicit val reads = Json.reads[LeakDetectionRule]
 }
 
@@ -155,7 +184,7 @@ final case class LeakDetectionBranchSummary(
 )
 
 object LeakDetectionBranchSummary {
-  implicit val reads = Json.reads[LeakDetectionBranchSummary]
+  val reads = Json.reads[LeakDetectionBranchSummary]
 }
 
 final case class LeakDetectionReport(
@@ -181,12 +210,13 @@ final case class LeakDetectionLeak(
   urlToSource: String,
   lineText: String,
   matches: List[Match],
-  priority: String,
+  priority: Priority,
   excluded: Boolean
 )
 
 object LeakDetectionLeak {
   implicit val mr    = Match.reads
+  implicit val pr    = Priority.reads
   implicit val reads = Json.reads[LeakDetectionLeak]
 }
 

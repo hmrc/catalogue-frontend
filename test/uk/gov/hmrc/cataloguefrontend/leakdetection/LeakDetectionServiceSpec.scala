@@ -197,11 +197,11 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       when(connector.leakDetectionLeaks("reportId")).thenReturn(
         Future.successful(
           Seq(
-            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 1, "/link-to-github/file1", "secret=123", List(Match(1, 6)), "high", false),
-            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 3, "/link-to-github/file1", "secret=12345", List(Match(1, 8)), "high", true),
-            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 9, "/link-to-github/file1", "the secret sauce", List(Match(5, 10)), "high", false),
-            LeakDetectionLeak("rule1", "description1", "file2", "fileContent", 3, "/link-to-github/file2", "my_secret: abc", List(Match(4, 9)), "high", false),
-            LeakDetectionLeak("rule2", "description2", "file2", "fileName", 5, "/link-to-github/file2", "---BEGIN---", List(Match(4, 8)), "medium", false)
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 1, "/link-to-github/file1", "secret=123", List(Match(1, 6)), Priority.High, false),
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 3, "/link-to-github/file1", "secret=12345", List(Match(1, 8)), Priority.High, true),
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 9, "/link-to-github/file1", "the secret sauce", List(Match(5, 10)), Priority.High, false),
+            LeakDetectionLeak("rule1", "description1", "file2", "fileContent", 3, "/link-to-github/file2", "my_secret: abc", List(Match(4, 9)), Priority.High, false),
+            LeakDetectionLeak("rule2", "description2", "file2", "fileName", 5, "/link-to-github/file2", "---BEGIN---", List(Match(4, 8)), Priority.Medium, false)
           )
         )
       )
@@ -213,7 +213,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
           "rule1",
           "description1",
           "fileContent",
-          "high",
+          Priority.High,
           Seq(
             LeakDetectionLeakDetails("file1", 1, "/link-to-github/file1", "secret=123", List(Match(1, 6))),
             LeakDetectionLeakDetails("file1", 9, "/link-to-github/file1", "the secret sauce", List(Match(5, 10))),
@@ -224,7 +224,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
           "rule2",
           "description2",
           "fileName",
-          "medium",
+          Priority.Medium,
           Seq(
             LeakDetectionLeakDetails("file2", 5, "/link-to-github/file2", "---BEGIN---", List(Match(4, 8)))
           )
@@ -236,11 +236,11 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       when(connector.leakDetectionLeaks("reportId")).thenReturn(
         Future.successful(
           Seq(
-            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 1, "/link-to-github/file1", "secret=123", List(Match(1, 6)), "high", false),
-            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 3, "/link-to-github/file1", "secret=12345", List(Match(1, 8)), "high", true),
-            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 9, "/link-to-github/file1", "the secret sauce", List(Match(5, 10)), "high", false),
-            LeakDetectionLeak("rule1", "description1", "file2", "fileContent", 3, "/link-to-github/file2", "my_secret: abc", List(Match(4, 9)), "high", false),
-            LeakDetectionLeak("rule2", "description2", "file2", "fileName", 5, "/link-to-github/file2", "---BEGIN---", List(Match(4, 8)), "medium", false)
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 1, "/link-to-github/file1", "secret=123", List(Match(1, 6)), Priority.High, false),
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 3, "/link-to-github/file1", "secret=12345", List(Match(1, 8)), Priority.High, true),
+            LeakDetectionLeak("rule1", "description1", "file1", "fileContent", 9, "/link-to-github/file1", "the secret sauce", List(Match(5, 10)), Priority.High, false),
+            LeakDetectionLeak("rule1", "description1", "file2", "fileContent", 3, "/link-to-github/file2", "my_secret: abc", List(Match(4, 9)), Priority.High, false),
+            LeakDetectionLeak("rule2", "description2", "file2", "fileName", 5, "/link-to-github/file2", "---BEGIN---", List(Match(4, 8)), Priority.Medium, false)
           )
         )
       )
@@ -252,7 +252,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
           "rule1",
           "description1",
           "fileContent",
-          "high",
+          Priority.High,
           Seq(
             LeakDetectionLeakDetails("file1", 3, "/link-to-github/file1", "secret=12345", List(Match(1, 8)))
           )
@@ -274,7 +274,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
     val timestamp = LocalDateTime.now().minus(2, HOURS)
 
-    def aRule              = LeakDetectionRule("", "", "", "", List(), List(), "")
+    def aRule              = LeakDetectionRule("", "", "", "", List(), List(), Priority.Low)
     def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 0, 0, 0, Seq())
 
 
