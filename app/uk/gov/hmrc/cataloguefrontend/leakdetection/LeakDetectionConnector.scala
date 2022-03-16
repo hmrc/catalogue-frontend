@@ -211,7 +211,7 @@ final case class LeakDetectionLeak(
   lineText: String,
   matches: List[Match],
   priority: Priority,
-  excluded: Boolean
+  isExcluded: Boolean
 )
 
 object LeakDetectionLeak {

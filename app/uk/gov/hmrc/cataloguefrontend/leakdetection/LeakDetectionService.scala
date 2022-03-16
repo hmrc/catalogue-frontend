@@ -98,7 +98,7 @@ class LeakDetectionService @Inject() (
   def reportLeaks(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] = {
     leakDetectionConnector.leakDetectionLeaks(reportId)
       .map(_
-        .filterNot(_.excluded)
+        .filterNot(_.isExcluded)
         .groupBy(_.ruleId)
         .map {case (ruleId, leaks) => mapLeak(ruleId, leaks)}
         .toSeq
@@ -109,7 +109,7 @@ class LeakDetectionService @Inject() (
   def reportExemptions(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] =
     leakDetectionConnector.leakDetectionLeaks(reportId)
       .map(_
-        .filter(_.excluded)
+        .filter(_.isExcluded)
         .groupBy(_.ruleId)
         .map {case (ruleId, leaks) => mapLeak(ruleId, leaks)}
         .toSeq
