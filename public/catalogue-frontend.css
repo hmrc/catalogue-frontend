@@ -12482,3 +12482,15 @@ table.shutter-events {
 .low {
   color: green;
 }
+
+.deprecated {
+  font-style: italic;
+}
+
+.archived {
+  color: gray;
+}
+
+.archived:visited {
+  color: gray;
+}

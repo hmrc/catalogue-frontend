@@ -16,11 +16,11 @@
 
 package view.partials
 
-import java.time.LocalDateTime
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Link, RepoType}
 import views.partials.githubBadgeType
+import java.time.Instant
 
 class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
 
@@ -48,8 +48,8 @@ class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
   val aRepo = GitRepository(
     name          = "name",
     description   = "description",
-    createdDate    = LocalDateTime.now,
-    lastActiveDate = LocalDateTime.now,
+    createdDate    = Instant.now,
+    lastActiveDate = Instant.now,
     owningTeams   = Nil,
     teamNames     = Nil,
     githubUrl     = "https://github.com/hmrc/name",

@@ -75,8 +75,9 @@
         <table class="table table-striped">
             <tr>
                 <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
-                <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="repo-type">Team</button></th>
+                <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-status">Status</button></th>
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
+                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-team">Team</button></th>
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
             </tr>
@@ -84,26 +85,35 @@
             @repositories.zipWithIndex.map{case (repo, i) =>
             <tr id="row@i">
                 <td class="service-name" id="row@{i}_name">
-                    @if(repo.isDeprecated) { <span class="badge">deprecated</span> } @if(repo.isArchived) { <span class="badge">archived</span> }
-                    <a class="repo-name" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
+
+                    <a class="repo-name @if(repo.isDeprecated || repo.isArchived){deprecated} @if(repo.isArchived){archived}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
                 </td>
-                <td>
-                    @if(repo.teamNames.length <= 4) {
-                        @repo.teamNames.take(4).map {tn => <div>@tn</div> }
-                    } else {
-                        <div title="@repo.teamNames.mkString("\n")">
-                          <em>Shared by @{repo.teamNames.length} teams</em>
-                        </div>
+
+                <td class="" id="row@{i}_repostatus">
+
+                    @if(repo.isArchived) { <span class="repo-status badge">archived</span> } else {
+                        @if(repo.isDeprecated) { <span class="repo-status badge badge-warning">deprecated</span> }
                     }
+
                 </td>
+
                 <td class="repo-type monospaced" id="row@{i}_repotype">
                     @repo.repoType.asString
                 </td>
+                <td id="row@{i}_team">
+                @if(repo.teamNames.length <= 4) {
+                    @repo.teamNames.take(4).map {tn => <div  class="repo-team" >@tn</div> }
+                } else {
+                    <div title="@repo.teamNames.take(15).mkString("\n")" class="repo-team" >
+                        <em>Shared by @{repo.teamNames.length} teams</em>
+                    </div>
+                }
+                </td>
                 <td class="created monospaced" id="row@{i}_created">
-                    @repo.createdDate.asPattern("yyyy-MM-dd")
+                    @repo.createdDate.asPattern(`yyyy-MM-dd`)
                 </td>
                 <td class="last-active monospaced" id="row@{i}_lastActive">
-                    @repo.lastActiveDate.asPattern("yyyy-MM-dd")
+                    @repo.lastActiveDate.asPattern(`yyyy-MM-dd`)
                 </td>
             </tr>
             }
@@ -114,7 +124,7 @@
 
 <!-- listjs configuration -->
 <script>
-    var options = { valueNames: [ 'service-name', 'repo-name', 'repo-type', 'created', 'last-active' ],
+    var options = { valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'created', 'last-active' ],
                     searchColumns: ['repo-name', 'team', 'version', 'deploy-time', 'deployer'] };
 
     var serviceList = new List('service-list', options);

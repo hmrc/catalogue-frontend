@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.LocalDateTime
-
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType}
 
@@ -26,20 +25,28 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType
   */
 object JsonData {
 
+  val createdAt    = Instant.parse("2016-04-23T16:45:30.00Z")
+  val lastActiveAt = Instant.parse("2016-10-12T10:30:12.00Z")
+
   val teams =
-    """
+    s"""
       |[
       |  {
-      |    "name": "team1"
+      |    "name": "team1",
+      |    "createdDate": "$createdAt",
+      |    "lastActiveDate": "$lastActiveAt",
+      |    "repos": 7
       |  },
       |  {
-      |    "name": "team2"
+      |    "name": "team2",
+      |    "createdDate": "$createdAt",
+      |    "lastActiveDate": "$lastActiveAt",
+      |    "repos": 9
       |  }
       |]
     """.stripMargin
 
-  val createdAt    = LocalDateTime.of(2016, 5, 23, 16, 45, 30)
-  val lastActiveAt = LocalDateTime.of(2016, 10, 12, 10, 30, 12)
+
 
   val repositoriesData = {
     s"""[

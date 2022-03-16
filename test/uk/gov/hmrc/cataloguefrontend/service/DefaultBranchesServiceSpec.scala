@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -84,8 +84,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
     val mockRepositories: Seq[GitRepository] = Seq(
       GitRepository(
         name = "test",
-        createdDate = LocalDateTime.now(),
-        lastActiveDate = LocalDateTime.now(),
+        createdDate = Instant.now(),
+        lastActiveDate = Instant.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-1", "Team-2"),
@@ -96,8 +96,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
       ),
       GitRepository(
         name = "test-2",
-        createdDate = LocalDateTime.now(),
-        lastActiveDate = LocalDateTime.now(),
+        createdDate = Instant.now(),
+        lastActiveDate = Instant.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-1"),
@@ -109,8 +109,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
       ),
       GitRepository(
         name = "test-3",
-        createdDate = LocalDateTime.now(),
-        lastActiveDate = LocalDateTime.now(),
+        createdDate = Instant.now(),
+        lastActiveDate = Instant.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-1"),
@@ -122,8 +122,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
       ),
       GitRepository(
         name = "test-4",
-        createdDate = LocalDateTime.now(),
-        lastActiveDate = LocalDateTime.now(),
+        createdDate = Instant.now(),
+        lastActiveDate = Instant.now(),
         repoType = RepoType.Service,
         isArchived = true,
         teamNames = Seq("Team-2"),
@@ -137,8 +137,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
     val mockRepositoriesTwo: Seq[GitRepository] = Seq(
       GitRepository(
         name = "test",
-        createdDate = LocalDateTime.now(),
-        lastActiveDate = LocalDateTime.now(),
+        createdDate = Instant.now(),
+        lastActiveDate = Instant.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-3"),
@@ -150,8 +150,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
       ),
       GitRepository(
         name = "test-2",
-        createdDate = LocalDateTime.now(),
-        lastActiveDate = LocalDateTime.now(),
+        createdDate = Instant.now(),
+        lastActiveDate = Instant.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-1"),
@@ -162,8 +162,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
       ),
       GitRepository(
         name = "test-3",
-        createdDate = LocalDateTime.now(),
-        lastActiveDate = LocalDateTime.now(),
+        createdDate = Instant.now(),
+        lastActiveDate = Instant.now(),
         repoType = RepoType.Service,
         isArchived = false,
         teamNames = Seq("Team-1"),
@@ -174,8 +174,8 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
       ),
       GitRepository(
         name = "test-4",
-        createdDate = LocalDateTime.now(),
-        lastActiveDate = LocalDateTime.now(),
+        createdDate = Instant.now(),
+        lastActiveDate = Instant.now(),
         repoType = RepoType.Service,
         isArchived = true,
         teamNames = Seq("Team-2"),

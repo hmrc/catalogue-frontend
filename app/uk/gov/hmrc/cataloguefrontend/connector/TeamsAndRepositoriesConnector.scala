@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.{Instant, LocalDateTime}
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -72,8 +72,8 @@ case class GitRepository(
                           name                : String,
                           description         : String,
                           githubUrl           : String,
-                          createdDate         : LocalDateTime,
-                          lastActiveDate      : LocalDateTime,
+                          createdDate         : Instant,
+                          lastActiveDate      : Instant,
                           isPrivate           : Boolean        = false,
                           repoType            : RepoType       = RepoType.Other,
                           digitalServiceName  : Option[String] = None,
@@ -93,8 +93,8 @@ object GitRepository {
     ( (__ \ "name"              ).format[String]
     ~ (__ \ "description"       ).format[String]
     ~ (__ \ "url"               ).format[String]
-    ~ (__ \ "createdDate"       ).format[LocalDateTime]
-    ~ (__ \ "lastActiveDate"    ).format[LocalDateTime]
+    ~ (__ \ "createdDate"       ).format[Instant]
+    ~ (__ \ "lastActiveDate"    ).format[Instant]
     ~ (__ \ "isPrivate"         ).formatWithDefault[Boolean](false)
     ~ (__ \ "repoType"          ).format[RepoType]
     ~ (__ \ "digitalServiceName").formatNullable[String]

@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.LocalDateTime
-
+import java.time.{Instant, LocalDateTime}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.SearchFiltering._
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, GitRepository}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
 
 class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
 
   "RepositoryFiltering" should {
     "get repositories filtered by only repository name" in {
-      val now = LocalDateTime.now()
+      val now = Instant.now()
 
       val repositories = Seq(
         GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
@@ -49,7 +48,7 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
     }
 
     "get repositories filtered by partial repository name and case insensitive" in {
-      val now = LocalDateTime.now()
+      val now = Instant.now()
 
       val repositories = Seq(
         GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
@@ -73,7 +72,7 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
     }
 
     "get repositories filtered by only repository type" in {
-      val now = LocalDateTime.now()
+      val now = Instant.now()
 
       val repositories = Seq(
         GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
@@ -93,7 +92,7 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
     }
 
     "get repositories filtered repository type using 'service' as type " in {
-      val now = LocalDateTime.now()
+      val now = Instant.now()
 
       val repositories = Seq(
         GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
@@ -113,7 +112,7 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
     }
 
     "get repositories filtered repository type using 'deployable' as type " in {
-      val now = LocalDateTime.now()
+      val now = Instant.now()
 
       val repositories = Seq(
         GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
@@ -133,7 +132,7 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
     }
 
     "get repositories filtered by both name and repository type" in {
-      val now = LocalDateTime.now()
+      val now = Instant.now()
 
       val repositories = Seq(
         GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
@@ -155,7 +154,7 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
     }
 
     "get all repositories (no filter)" in {
-      val now = LocalDateTime.now()
+      val now = Instant.now()
 
       val repositories = Seq(
         GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,

@@ -39,7 +39,7 @@
 
             <table class="table table-striped" id="service-list">
                 <tr>
-                    <th class="col-lg-6">
+                    <th class="col-lg-7">
                         <button role="button" class="sort no-border" data-sort="service-name">Team</button>
                     </th>
                     <th class="col-lg-2">
@@ -48,10 +48,9 @@
                     <th class="col-lg-2">
                         <button role="button" class="sort no-border" data-sort="last-active">Last Active</button>
                     </th>
-                    <th class="col-lg-2">
-                        <button role="button" class="sort no-border" data-sort="created" title="Excluding common shared repos">Repositories</button>
+                    <th class="col-lg-1">
+                        <button role="button" class="sort no-border" data-sort="repo-count" title="Excluding common shared repos">Repositories</button>
                     </th>
-
                 </tr>
                 <tbody class="list">
                 @teams.zipWithIndex.map { case (team, i) =>
@@ -60,12 +59,12 @@
                         <a class="team-name" href="/teams/@team.name.asString">@team.name.asString</a>
                     </td>
                     <td class="created monospaced" id="row@{i}_created">
-                      @team.createdDate.map(_.atZone(utc).format(`yyyy-MM-dd`)).getOrElse("")
+                      @team.createdDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")
                     </td>
                     <td class="last-active monospaced" id="row@{i}_lastActive">
-                      @team.lastActiveDate.map(_.atZone(utc).format(`yyyy-MM-dd`)).getOrElse("")
+                      @team.lastActiveDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")
                     </td>
-                    <td class="created monospaced" id="row@{i}_repos">
+                    <td class="repo-count" id="row@{i}_repos">
                       @team.repos
                     </td>
                 </tr>
@@ -76,7 +75,7 @@
     }
 
     <script>
-       var options = { valueNames: ['service-name', 'team-name', 'created', 'last-active' ],
+       var options = { valueNames: ['team-name', 'created', 'last-active', 'repo-count' ],
                        searchColumns: ['team-name'] };
 
        var serviceList = new List('teams-list', options);
