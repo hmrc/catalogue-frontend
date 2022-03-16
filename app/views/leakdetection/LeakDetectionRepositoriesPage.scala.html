@@ -25,7 +25,10 @@
 @(rules: Seq[String],
         summaries: Seq[LeakDetectionRepositorySummary],
         teams: Seq[Team],
-        form: Form[_]
+        form: Form[_],
+        includeWarnings: Boolean,
+        includeExemptions: Boolean,
+        includeViolations: Boolean
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Leak detection repositories") {
@@ -59,15 +62,15 @@
                 <label>Show repositories with:</label>
                 <div>
                     <input name="includeWarnings" id="includeWarnings" type="checkbox" onchange="form.submit()" value="true"
-                    @if(form("includeWarnings").value == Some("true")) {checked}> Warnings</input>
+                    @if(includeWarnings) {checked}> Warnings</input>
                 </div>
                 <div>
                     <input name="includeExemptions" id="includeExemptions" type="checkbox" onchange="form.submit()" value="true"
-                    @if(form("includeExemptions").value == Some("true")) {checked}> Exemptions</input>
+                    @if(includeExemptions) {checked}> Exemptions</input>
                 </div>
                 <div>
                     <input name="includeViolations" id="includeViolations" type="checkbox" onchange="form.submit()" value="true"
-                    @if(form("includeViolations").value == Some("true")) {checked}> Violations</input>
+                    @if(includeViolations) {checked}> Violations</input>
                 </div>
             </div>
         </div>
@@ -108,10 +111,10 @@
     </tr>
 }
 
-@countWithLinkCell(repository: String, name: String, cnt: Int) = {
-    <td class="@name text-center"><div class="hide">@cnt</div>
-        @if(cnt > 0) {
-            <a href="@appRoutes.LeakDetectionController.branchSummaries(repository)">@cnt</a>
+@countWithLinkCell(repository: String, name: String, count: Int) = {
+    <td class="@name text-center"><div class="hide">@count</div>
+        @if(count > 0) {
+            <a href="@appRoutes.LeakDetectionController.branchSummaries(repository)">@count</a>
         } else {
             <span>0</span>
         }</td>

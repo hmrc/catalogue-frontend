@@ -48,17 +48,17 @@ class LeakDetectionController @Inject() (
       leakDetectionService.ruleSummaries.map(s => Ok(rulesPage(s)))
     }
 
-  def repoSummaries(): Action[AnyContent] =
+  def repoSummaries(includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
       form
         .bindFromRequest()
         .fold(
-          formWithErrors => Future.successful(BadRequest(ruleExplorerPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors))),
+          formWithErrors => Future.successful(BadRequest(ruleExplorerPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors, includeWarnings, includeExemptions, includeViolations))),
           validForm =>
             for {
-              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, validForm.includeWarnings, validForm.includeExemptions, validForm.includeViolations)
+              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, includeWarnings, includeExemptions, includeViolations)
               teams     <- teamsAndRepositoriesConnector.allTeams
-            } yield Ok(ruleExplorerPage(summaries._1, summaries._2, teams.sortBy(_.name), form.fill(validForm)))
+            } yield Ok(ruleExplorerPage(summaries._1, summaries._2, teams.sortBy(_.name), form.fill(validForm), includeWarnings, includeExemptions, includeViolations))
         )
     }
 
@@ -96,20 +96,14 @@ class LeakDetectionController @Inject() (
 
 case class LeakDetectionExplorerFilter(
   rule: Option[String] = None,
-  team: Option[String] = None,
-  includeWarnings: Boolean,
-  includeExemptions: Boolean,
-  includeViolations: Boolean
+  team: Option[String] = None
 )
 
 object LeakDetectionExplorerFilter {
   lazy val form: Form[LeakDetectionExplorerFilter] = Form(
     mapping(
       "rule" -> optional(text),
-      "team" -> optional(text),
-      "includeWarnings" -> boolean,
-      "includeExemptions" -> boolean,
-      "includeViolations" -> boolean
+      "team" -> optional(text)
     )(LeakDetectionExplorerFilter.apply)(LeakDetectionExplorerFilter.unapply)
   )
 }
