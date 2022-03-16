@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{Instant, LocalDateTime}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.SearchFiltering._
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+
+import java.time.Instant
 
 class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
 

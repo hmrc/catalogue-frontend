@@ -105,7 +105,7 @@
                     </ul>
                   </td>
                   <td id="row@{i}_version"    class="version">@{d.version.asString}</td>
-                  <td id="row@{i}_deploytime" class="deploy-time monospaced">@{d.time.time.asUTCString}</td>
+                  <td id="row@{i}_deploytime" class="deploy-time monospaced">@{d.time.time.asPattern(`yyyy-MM-dd HH:mm:ss z`)}</td>
                   <td id="row@{i}_deployer" class="deployer">@userLink(d.username)</td>
                 </tr>
                 }

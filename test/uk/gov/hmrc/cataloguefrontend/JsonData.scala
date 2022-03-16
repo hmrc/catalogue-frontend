@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.{Instant, LocalDateTime, ZoneOffset}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType}
+
+import java.time.Instant
 
 /**
   * Created by armin.

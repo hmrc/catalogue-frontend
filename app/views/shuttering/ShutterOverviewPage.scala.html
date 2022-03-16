@@ -150,7 +150,7 @@
             @usernameFor(state.lastEvent)
           </td>
           <td id="row@{i}_date" class="shutter-date">
-            @state.lastEvent.map(_.timestamp.asUTCString).getOrElse("")
+            @state.lastEvent.map(_.timestamp.asPattern(`yyyy-MM-dd HH:mm:ss z`)).getOrElse("")
           </td>
           <td id="row@{i}_event">
             @if(state.lastEvent.isDefined) {
