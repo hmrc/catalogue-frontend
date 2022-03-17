@@ -16,17 +16,26 @@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionBranchSummary
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionBranchSummary, routes => appRoutes}
 
 @this(viewMessages: ViewMessages)
 
-@(repoName: String, summaries: Seq[LeakDetectionBranchSummary])(implicit messages: Messages, request: Request[_])
+@(repoName: String, includeActiveBranches: Boolean, summaries: Seq[LeakDetectionBranchSummary])(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Leak detection: $repoName") {
     <header>
         <h1>Leak Detection: @repoName</h1>
     </header>
+
+    <form id="form" method="get">
+        <div class="form-group row">
+            <div class="col-xs-12">
+                <input name="includeActiveBranches" id="includeActiveBranches" type="checkbox" onchange="form.submit()" value="true"
+                @if(includeActiveBranches) {checked}/>
+                <label>Include reports for all active branches</label>
+            </div>
+        </div>
+    </form>
 
     @if(summaries.isEmpty) {
         <div class="alert alert-success">
