@@ -74,12 +74,12 @@
         </form>
         <table class="table table-striped">
             <tr>
-                <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
+                <th class="col-lg-4"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-status">Status</button></th>
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
                 <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-team">Team</button></th>
-                <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
-                <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
+                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
+                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
             </tr>
             <tbody class="list">
             @repositories.zipWithIndex.map{case (repo, i) =>
