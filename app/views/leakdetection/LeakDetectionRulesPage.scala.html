@@ -34,12 +34,11 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th class="col-xs-1"><button class="sort no-border" data-sort="rule-id">Rule id</button></th>
-                            <th class="col-xs-3"><button class="sort no-border" data-sort="description">Description</button></th>
-                            <th class="col-xs-3"><button class="sort no-border" data-sort="first-scanned">Earliest violation</button></th>
-                            <th class="col-xs-3"><button class="sort no-border" data-sort="last-scanned">Latest violation</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="repo-count">Violating repositories</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">Total violations</button></th>
+                            <th class="col-xs-3"><button class="sort no-border" data-sort="rule-id">Rule id</button></th>
+                            <th class="col-xs-6"><button class="sort no-border" data-sort="description">Description</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="repo-count">Repositories</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="excluded">Exemptions</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="unresolved">Violations</button></th>
                         </tr>
                     </thead>
                     <tbody class="list">
@@ -49,7 +48,7 @@
             </div>
 
             <script>
-                    var options = {valueNames: ['rule-id', 'description', 'first-scanned', 'last-scanned', 'repo-count', 'total']};
+                    var options = {valueNames: ['rule-id', 'description', 'first-scanned', 'last-scanned', 'repo-count', 'excluded', 'unresolved']};
                     rulesList = new List('rules-list', options);
             </script>
         }
@@ -60,40 +59,29 @@
             <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id"/>
             <td class="rule-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id">@summary.rule.id</td>
             <td class="description hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id">@summary.rule.description</td>
-            <td class="first-scanned">@if(summary.firstScannedAt.nonEmpty) {
-                @summary.firstScannedAt.get.displayFormat
-            } </td>
-            <td class="last-scanned">@if(summary.lastScannedAt.nonEmpty) {
-                @summary.lastScannedAt.get.displayFormat
-            } </td>
-            <td class="repo-count text-center">@summary.repoCount</td>
-            <td class="total text-center"><div class="hide">@summary.totalCount</div>
-                @if(summary.totalCount > 0) {
-                    <a href="@appRoutes.LeakDetectionController.repoSummaries?rule=@summary.rule.id">@summary.totalCount</a>
-                } else {
-                    <span>0</span>
-                }</td>
+            @countWithLinkCell(summary.rule.id, "repo-count", summary.repoCount, false)
+            @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount, false)
+            @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount, false)
         </tr>
         <tr id="collapsible-area-@summary.rule.id" class="collapse">
             <td class="hide rule-id">@summary.rule.id</td>
             <td class="hide description">@summary.rule.description</td>
-            <td class="hide first-scanned">@if(summary.firstScannedAt.nonEmpty) {
-                @summary.firstScannedAt.get.displayFormat
-            } </td>
-            <td class="hide last-scanned">@if(summary.lastScannedAt.nonEmpty) {
-                @summary.lastScannedAt.get.displayFormat
-            } </td>
-            <td class="hide repo-count">@summary.repoCount</td>
-            <td class="hide total"><div class="hide">@summary.totalCount</div>
-                @if(summary.totalCount > 0) {
-                    <a href="@appRoutes.LeakDetectionController.repoSummaries?rule=@summary.rule.id">@summary.totalCount</a>
-                } else {
-                    <span>0</span>
-                }</td>
-            <td colspan="7">
+            @countWithLinkCell(summary.rule.id, "repo-count", summary.repoCount, true)
+            @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount, true)
+            @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount, true)
+            <td colspan="6">
             @ruleDetails(summary.rule)
             </td>
         </tr>
+    }
+
+    @countWithLinkCell(ruleId: String, name: String, count: Int, hidden: Boolean) = {
+        <td class="@name text-center @if(hidden) {hide}"><div class="hide">@count</div>
+            @if(count > 0) {
+                <a href="@appRoutes.LeakDetectionController.repoSummaries(false, name == "excluded", name == "unresolved" || name == "repo-count")&rule=@ruleId">@count</a>
+            } else {
+                <span>0</span>
+            }</td>
     }
 
     @ruleDetails(rule: LeakDetectionRule) = {
