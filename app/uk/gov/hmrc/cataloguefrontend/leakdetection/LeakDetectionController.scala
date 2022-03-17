@@ -62,9 +62,9 @@ class LeakDetectionController @Inject() (
         )
     }
 
-  def branchSummaries(repository: String, includeActiveBranches: Boolean): Action[AnyContent] =
+  def branchSummaries(repository: String, showAll: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
-      leakDetectionService.branchSummaries(repository).map(s => Ok(repositoryPage(repository, includeActiveBranches, s)))
+      leakDetectionService.branchSummaries(repository, showAll).map(s => Ok(repositoryPage(repository, showAll, s)))
     }
 
   def leaksPermission(repository: String): Predicate =

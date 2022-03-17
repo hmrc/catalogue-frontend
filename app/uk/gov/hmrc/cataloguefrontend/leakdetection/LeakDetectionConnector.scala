@@ -181,7 +181,9 @@ final case class LeakDetectionBranchSummary(
   warningCount: Int,
   excludedCount: Int,
   unresolvedCount: Int
-)
+) {
+  def totalCount: Int = warningCount + excludedCount + unresolvedCount
+}
 
 object LeakDetectionBranchSummary {
   val reads = Json.reads[LeakDetectionBranchSummary]

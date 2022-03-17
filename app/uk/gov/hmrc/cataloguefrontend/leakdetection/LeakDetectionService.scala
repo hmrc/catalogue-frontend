@@ -78,10 +78,14 @@ class LeakDetectionService @Inject() (
       filteredSummaries = filterSummaries(summaries, includeWarnings, includeExemptions, includeViolations)
     } yield (rules.map(_.id), filteredSummaries.sortBy(_.repository))
 
-  def branchSummaries(repo: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
+  def branchSummaries(repo: String, showAll: Boolean)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
     leakDetectionConnector
       .leakDetectionRepoSummaries(None, Some(repo), None)
-      .map(_.flatMap(_.branchSummary).sortBy(_.branch))
+      .map(_
+        .flatMap(_.branchSummary)
+        .filter(b => showAll || b.totalCount > 0)
+        .sortBy(_.branch)
+      )
 
   def report(repository: String, branch: String)(implicit hc: HeaderCarrier): Future[LeakDetectionReport] =
     leakDetectionConnector.leakDetectionReport(repository, branch)
