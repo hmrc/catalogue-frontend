@@ -28,7 +28,8 @@
         form: Form[_],
         includeWarnings: Boolean,
         includeExemptions: Boolean,
-        includeViolations: Boolean
+        includeViolations: Boolean,
+        includeNoIssues: Boolean
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Leak detection repositories") {
@@ -71,6 +72,10 @@
                 <div>
                     <input name="includeViolations" id="includeViolations" type="checkbox" onchange="form.submit()" value="true"
                     @if(includeViolations) {checked}> Violations</input>
+                </div>
+                <div>
+                    <input name="includeNoIssues" id="includeNoIssues" type="checkbox" onchange="form.submit()" value="true"
+                    @if(includeNoIssues) {checked}> No issues</input>
                 </div>
             </div>
         </div>

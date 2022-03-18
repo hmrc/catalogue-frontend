@@ -63,7 +63,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
     "return repo summaries and" should {
       "include warnings, exemptions and violations" in new Setup {
         givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, true, true, true).futureValue
+        val results = service.repoSummaries(None, None, true, true, true, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -78,7 +78,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
       "include warnings and exemptions" in new Setup {
         givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, true, true, false).futureValue
+        val results = service.repoSummaries(None, None, true, true, false, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -92,7 +92,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
       "include warnings and violations" in new Setup {
         givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, true, false, true).futureValue
+        val results = service.repoSummaries(None, None, true, false, true, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -106,7 +106,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
       "include warnings" in new Setup {
         givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, true, false, false).futureValue
+        val results = service.repoSummaries(None, None, true, false, false, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -118,7 +118,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
       "include exemptions and violations" in new Setup {
         givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, false, true, true).futureValue
+        val results = service.repoSummaries(None, None, false, true, true, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -133,7 +133,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       "include exemptions" in new Setup {
         givenRepoSummariesWithAllCountCombinations()
 
-        val results = service.repoSummaries(None, None, false, true, false).futureValue
+        val results = service.repoSummaries(None, None, false, true, false, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -146,13 +146,23 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       "include violations" in new Setup {
         givenRepoSummariesWithAllCountCombinations()
 
-        val results = service.repoSummaries(None, None, false, false, true).futureValue
+        val results = service.repoSummaries(None, None, false, false, true, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
           "warnings and violations",
           "exemptions and violations",
           "violations"
+        )
+      }
+
+      "include no issues" in new Setup {
+        givenRepoSummariesWithAllCountCombinations()
+
+        val results = service.repoSummaries(None, None, false, false, false, true).futureValue
+
+        results._2.map(_.repository) should contain theSameElementsAs Seq(
+          "no issues"
         )
       }
     }

@@ -167,7 +167,9 @@ final case class LeakDetectionRepositorySummary(
   excludedCount: Int,
   unresolvedCount: Int,
   branchSummary: Seq[LeakDetectionBranchSummary]
-)
+) {
+  def totalCount:Int = warningCount + excludedCount + unresolvedCount
+}
 
 object LeakDetectionRepositorySummary {
   implicit val ldbr  = LeakDetectionBranchSummary.reads
