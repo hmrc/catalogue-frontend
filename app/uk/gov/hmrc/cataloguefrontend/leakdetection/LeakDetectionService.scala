@@ -80,9 +80,9 @@ class LeakDetectionService @Inject() (
 
   def branchSummaries(repo: String, showAll: Boolean)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
     leakDetectionConnector
-      .leakDetectionRepoSummaries(None, Some(repo), None)
+      .leakDetectionBranchSummaries(repo)
       .map(_
-        .flatMap(_.branchSummary)
+        .flatMap(_.branchSummary.getOrElse(Seq.empty))
         .filter(b => showAll || b.totalCount > 0)
         .sortBy(_.branch)
       )

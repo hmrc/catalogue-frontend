@@ -68,6 +68,14 @@ class LeakDetectionConnector @Inject() (
     )
   }
 
+  def leakDetectionBranchSummaries(repo: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRepositorySummary]] = {
+    implicit val ldrs: Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
+    http.GET[Seq[LeakDetectionRepositorySummary]](
+      url"$url/api/branches/summary?repository=$repo",
+      headers = Seq("Accept" -> "application/json")
+    )
+  }
+
   def leakDetectionReport(repository: String, branch: String)(implicit hc: HeaderCarrier): Future[LeakDetectionReport] = {
     implicit val ldrl: Reads[LeakDetectionReport] = LeakDetectionReport.reads
     http.GET[LeakDetectionReport](
@@ -166,7 +174,7 @@ final case class LeakDetectionRepositorySummary(
   warningCount: Int,
   excludedCount: Int,
   unresolvedCount: Int,
-  branchSummary: Seq[LeakDetectionBranchSummary]
+  branchSummary: Option[Seq[LeakDetectionBranchSummary]]
 ) {
   def totalCount:Int = warningCount + excludedCount + unresolvedCount
 }
