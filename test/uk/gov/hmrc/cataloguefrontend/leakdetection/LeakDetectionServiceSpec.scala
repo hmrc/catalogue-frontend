@@ -282,7 +282,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
     val timestamp = LocalDateTime.now().minus(2, HOURS)
 
     def aRule              = LeakDetectionRule("", "", "", "", List(), List(), Priority.Low)
-    def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 0, 0, 0, Seq())
+    def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 0, 0, 0, None)
     def aBranchSummary = LeakDetectionBranchSummary("", "", timestamp, 0, 0, 0)
 
     when(connector.leakDetectionRules()).thenReturn(Future.successful(Seq.empty))
@@ -302,10 +302,10 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       )
     )
 
-    def givenBranchSummariesWithAllCountCombinations() = when(connector.leakDetectionRepoSummaries(None, Some("test-repo"), None)).thenReturn(
+    def givenBranchSummariesWithAllCountCombinations() = when(connector.leakDetectionBranchSummaries("test-repo")).thenReturn(
       Future.successful(
         Seq(
-          aRepositorySummary.copy(repository = "test-repo", branchSummary = Seq(
+          aRepositorySummary.copy(repository = "test-repo", branchSummary = Some(Seq(
             aBranchSummary.copy(branch = "warnings, exemptions and violations", warningCount = 1, excludedCount = 1, unresolvedCount = 1),
             aBranchSummary.copy(branch = "warnings and exemptions", warningCount = 1, excludedCount = 1),
             aBranchSummary.copy(branch = "warnings and violations", warningCount = 1, unresolvedCount = 1),
@@ -313,8 +313,8 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
             aBranchSummary.copy(branch = "exemptions and violations", excludedCount = 1, unresolvedCount = 1),
             aBranchSummary.copy(branch = "exemptions", excludedCount = 1),
             aBranchSummary.copy(branch = "violations", unresolvedCount = 1),
-            aBranchSummary.copy(branch = "no issues")
-          )),
+            aBranchSummary.copy(branch = "no issues")))
+          ),
         )
       )
     )
