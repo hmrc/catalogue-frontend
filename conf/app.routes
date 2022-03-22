@@ -72,6 +72,6 @@ GET        /platform-initiatives                        uk.gov.hmrc.cataloguefro
 
 GET        /leak-detection                                                 uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.ruleSummaries
 GET        /leak-detection/repositories                                    uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.repoSummaries(includeWarnings: Boolean ?= false, includeExemptions: Boolean ?= false, includeViolations: Boolean ?= false, includeNoIssues: Boolean ?= false)
-GET        /leak-detection/repositories/:repository                        uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.branchSummaries(repository: String, showAll: Boolean ?= false)
+GET        /leak-detection/repositories/:repository                        uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.branchSummaries(repository: String, includeBranchesWithNoIssues: Boolean ?= false)
 GET        /leak-detection/repositories/:repository/:branch                uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.report(repository: String, branch: String)
 GET        /leak-detection/repositories/:repository/:branch/exemptions     uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.reportExemptions(repository: String, branch: String)

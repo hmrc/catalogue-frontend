@@ -107,7 +107,7 @@
 
 @leakDetectionRuleSummary(summary: LeakDetectionRepositorySummary) = {
     <tr>
-        <td class="repository"><a href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository, showAll = true)">@summary.repository</a></td>
+        <td class="repository"><a href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository, includeBranchesWithNoIssues = true)">@summary.repository</a></td>
         <td class="first-scanned">@summary.firstScannedAt.displayFormat</td>
         <td class="last-scanned">@summary.lastScannedAt.displayFormat</td>
         @countWithLinkCell(summary.repository, "warnings", summary.warningCount)
