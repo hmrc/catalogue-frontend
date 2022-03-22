@@ -41,10 +41,7 @@ class LeakDetectionConnector @Inject() (
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] = {
     implicit val rwlr = RepositoryWithLeaks.reads
     http
-      .GET[Seq[RepositoryWithLeaks]](
-        url"$url/api/repository",
-        headers = Seq("Accept" -> "application/json")
-      )
+      .GET[Seq[RepositoryWithLeaks]](url"$url/api/repository")
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
@@ -52,60 +49,46 @@ class LeakDetectionConnector @Inject() (
       }
   }
 
-  def leakDetectionSummaries(rule: Option[String], repo: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionSummary]] = {
+  def leakDetectionSummaries(ruleId: Option[String], repo: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionSummary]] = {
     implicit val ldrs: Reads[LeakDetectionSummary] = LeakDetectionSummary.reads
-    http.GET[Seq[LeakDetectionSummary]](
-      url"$url/api/rules/summary?rule=$rule&repository=$repo&team=$team",
-      headers = Seq("Accept" -> "application/json")
-    )
+    http
+      .GET[Seq[LeakDetectionSummary]](url"$url/api/rules/summary?ruleId=$ruleId&repository=$repo&team=$team")
   }
 
-  def leakDetectionRepoSummaries(rule: Option[String], repo: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRepositorySummary]] = {
+  def leakDetectionRepoSummaries(ruleId: Option[String], repo: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRepositorySummary]] = {
     implicit val ldrs: Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
-    http.GET[Seq[LeakDetectionRepositorySummary]](
-      url"$url/api/repositories/summary?rule=$rule&repository=$repo&team=$team",
-      headers = Seq("Accept" -> "application/json")
-    )
+    http
+      .GET[Seq[LeakDetectionRepositorySummary]](url"$url/api/repositories/summary?ruleId=$ruleId&repository=$repo&team=$team")
   }
 
   def leakDetectionBranchSummaries(repo: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRepositorySummary]] = {
     implicit val ldrs: Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
-    http.GET[Seq[LeakDetectionRepositorySummary]](
-      url"$url/api/branches/summary?repository=$repo",
-      headers = Seq("Accept" -> "application/json")
-    )
+    http
+      .GET[Seq[LeakDetectionRepositorySummary]](url"$url/api/branches/summary?repository=$repo")
   }
 
   def leakDetectionReport(repository: String, branch: String)(implicit hc: HeaderCarrier): Future[LeakDetectionReport] = {
     implicit val ldrl: Reads[LeakDetectionReport] = LeakDetectionReport.reads
-    http.GET[LeakDetectionReport](
-      url"$url/api/$repository/$branch/report",
-      headers = Seq("Accept" -> "application/json")
-    )
+    http
+      .GET[LeakDetectionReport](url"$url/api/$repository/$branch/report")
   }
 
   def leakDetectionLeaks(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionLeak]] = {
     implicit val ldrl: Reads[LeakDetectionLeak] = LeakDetectionLeak.reads
-    http.GET[Seq[LeakDetectionLeak]](
-      url"$url/api/report/$reportId/leaks",
-      headers = Seq("Accept" -> "application/json")
-    )
+    http
+      .GET[Seq[LeakDetectionLeak]](url"$url/api/report/$reportId/leaks")
   }
 
   def leakDetectionWarnings(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionWarning]] = {
     implicit val ldrl: Reads[LeakDetectionWarning] = LeakDetectionWarning.reads
-    http.GET[Seq[LeakDetectionWarning]](
-      url"$url/api/report/$reportId/warnings",
-      headers = Seq("Accept" -> "application/json")
-    )
+    http
+      .GET[Seq[LeakDetectionWarning]](url"$url/api/report/$reportId/warnings")
   }
 
   def leakDetectionRules()(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRule]] = {
     implicit val ldrl: Reads[LeakDetectionRule] = LeakDetectionRule.reads
-    http.GET[Seq[LeakDetectionRule]](
-      url"$url/api/rules",
-      headers = Seq("Accept" -> "application/json")
-    )
+    http
+      .GET[Seq[LeakDetectionRule]](url"$url/api/rules")
   }
 
 }
