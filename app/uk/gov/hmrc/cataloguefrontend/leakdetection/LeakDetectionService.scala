@@ -74,7 +74,7 @@ class LeakDetectionService @Inject() (
   def repoSummaries(rule: Option[String], team: Option[String], includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean, includeNoIssues: Boolean)(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionRepositorySummary])] =
     for {
       rules <- leakDetectionConnector.leakDetectionRules
-      summaries <- leakDetectionConnector.leakDetectionRepoSummaries(rule, None, team)
+      summaries <- leakDetectionConnector.leakDetectionRepoSummaries(rule, None, team, includeNoIssues)
       filteredSummaries = filterSummaries(summaries, includeWarnings, includeExemptions, includeViolations, includeNoIssues)
     } yield (rules.map(_.id), filteredSummaries.sortBy(_.repository.toLowerCase))
 

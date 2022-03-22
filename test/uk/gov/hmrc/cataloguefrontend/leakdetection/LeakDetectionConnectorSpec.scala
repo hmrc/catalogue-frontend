@@ -58,7 +58,6 @@ class LeakDetectionConnectorSpec
 
       verify(
         getRequestedFor(urlEqualTo("/api/repository"))
-          .withHeader("Accept", equalTo("application/json"))
       )
     }
 
