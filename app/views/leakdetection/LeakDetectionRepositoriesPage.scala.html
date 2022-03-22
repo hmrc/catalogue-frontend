@@ -29,7 +29,7 @@
         includeWarnings: Boolean,
         includeExemptions: Boolean,
         includeViolations: Boolean,
-        includeNoIssues: Boolean
+        includeNonIssues: Boolean
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Leak detection repositories") {
@@ -74,8 +74,8 @@
                     @if(includeViolations) {checked}> Violations</input>
                 </div>
                 <div>
-                    <input name="includeNoIssues" id="includeNoIssues" type="checkbox" onchange="form.submit()" value="true"
-                    @if(includeNoIssues) {checked}> No issues</input>
+                    <input name="includeNonIssues" id="includeNonIssues" type="checkbox" onchange="form.submit()" value="true"
+                    @if(includeNonIssues) {checked}> No issues</input>
                 </div>
             </div>
         </div>
@@ -107,7 +107,7 @@
 
 @leakDetectionRuleSummary(summary: LeakDetectionRepositorySummary) = {
     <tr>
-        <td class="repository"><a href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository, includeBranchesWithNoIssues = true)">@summary.repository</a></td>
+        <td class="repository"><a href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository, includeNonIssues = true)">@summary.repository</a></td>
         <td class="first-scanned">@summary.firstScannedAt.displayFormat</td>
         <td class="last-scanned">@summary.lastScannedAt.displayFormat</td>
         @countWithLinkCell(summary.repository, "warnings", summary.warningCount)

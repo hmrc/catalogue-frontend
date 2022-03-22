@@ -20,7 +20,7 @@
 
 @this(viewMessages: ViewMessages)
 
-@(repoName: String, includeBranchesWithNoIssues: Boolean, summaries: Seq[LeakDetectionBranchSummary])(implicit messages: Messages, request: Request[_])
+@(repoName: String, includeNonIssues: Boolean, summaries: Seq[LeakDetectionBranchSummary])(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Leak detection: $repoName") {
     <header>
@@ -30,8 +30,8 @@
     <form id="form" method="get">
         <div class="form-group row">
             <div class="col-xs-12">
-                <input name="includeBranchesWithNoIssues" id="includeBranchesWithNoIssues" type="checkbox" onchange="form.submit()" value="true"
-                @if(includeBranchesWithNoIssues) {checked}/>
+                <input name="includeNonIssues" id="includeNonIssues" type="checkbox" onchange="form.submit()" value="true"
+                @if(includeNonIssues) {checked}/>
                 <label>Show all branch reports</label>
             </div>
         </div>

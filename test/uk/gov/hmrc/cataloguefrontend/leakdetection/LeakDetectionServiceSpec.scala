@@ -169,7 +169,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
     "return branch summaries and" should {
       "only show branches with issues" in new Setup {
-        givenBranchSummariesWithAllCountCombinations()
+        givenRepoSummariesWithAllCountCombinations("test-repo", false)
 
         val results = service.branchSummaries("test-repo", false).futureValue
 
@@ -184,7 +184,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
         )
       }
       "include all branches" in new Setup {
-        givenBranchSummariesWithAllCountCombinations()
+        givenRepoSummariesWithAllCountCombinations("test-repo", true)
         val results = service.branchSummaries("test-repo", true).futureValue
 
         results.map(_.branch) should contain theSameElementsAs Seq(
@@ -288,7 +288,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
     when(connector.leakDetectionRules()).thenReturn(Future.successful(Seq.empty))
 
 
-    def givenRepoSummariesWithAllCountCombinations(includeNoIssues: Boolean) = when(connector.leakDetectionRepoSummaries(None, None, None, includeNoIssues)).thenReturn(
+    def givenRepoSummariesWithAllCountCombinations(includeNonIssues: Boolean) = when(connector.leakDetectionRepoSummaries(None, None, None, includeNonIssues, false)).thenReturn(
       Future.successful(Seq(
           aRepositorySummary.copy(repository = "warnings, exemptions and violations", warningCount = 1, excludedCount = 1, unresolvedCount = 1),
           aRepositorySummary.copy(repository = "warnings and exemptions", warningCount = 1, excludedCount = 1),
@@ -302,7 +302,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       )
     )
 
-    def givenBranchSummariesWithAllCountCombinations() = when(connector.leakDetectionBranchSummaries("test-repo")).thenReturn(
+    def givenRepoSummariesWithAllCountCombinations(repoName: String, includeNonIssues: Boolean) = when(connector.leakDetectionRepoSummaries(None, Some(repoName), None, includeNonIssues, true)).thenReturn(
       Future.successful(
         Seq(
           aRepositorySummary.copy(repository = "test-repo", branchSummary = Some(Seq(

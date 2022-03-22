@@ -48,23 +48,23 @@ class LeakDetectionController @Inject() (
       leakDetectionService.ruleSummaries.map(s => Ok(rulesPage(s)))
     }
 
-  def repoSummaries(includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean, includeNoIssues: Boolean): Action[AnyContent] =
+  def repoSummaries(includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean, includeNonIssues: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
       form
         .bindFromRequest()
         .fold(
-          formWithErrors => Future.successful(BadRequest(repositoriesPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors, includeWarnings, includeExemptions, includeViolations, includeNoIssues))),
+          formWithErrors => Future.successful(BadRequest(repositoriesPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors, includeWarnings, includeExemptions, includeViolations, includeNonIssues))),
           validForm =>
             for {
-              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, includeWarnings, includeExemptions, includeViolations, includeNoIssues)
+              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, includeWarnings, includeExemptions, includeViolations, includeNonIssues)
               teams     <- teamsAndRepositoriesConnector.allTeams
-            } yield Ok(repositoriesPage(summaries._1, summaries._2, teams.sortBy(_.name), form.fill(validForm), includeWarnings, includeExemptions, includeViolations, includeNoIssues))
+            } yield Ok(repositoriesPage(summaries._1, summaries._2, teams.sortBy(_.name), form.fill(validForm), includeWarnings, includeExemptions, includeViolations, includeNonIssues))
         )
     }
 
-  def branchSummaries(repository: String, includeBranchesWithNoIssues: Boolean): Action[AnyContent] =
+  def branchSummaries(repository: String, includeNonIssues: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
-      leakDetectionService.branchSummaries(repository, includeBranchesWithNoIssues).map(s => Ok(repositoryPage(repository, includeBranchesWithNoIssues, s)))
+      leakDetectionService.branchSummaries(repository, includeNonIssues).map(s => Ok(repositoryPage(repository, includeNonIssues, s)))
     }
 
   def leaksPermission(repository: String): Predicate =

@@ -71,19 +71,26 @@ class LeakDetectionService @Inject() (
         ).sortBy(_.unresolvedCount).reverse
       )
 
-  def repoSummaries(rule: Option[String], team: Option[String], includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean, includeNoIssues: Boolean)(implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionRepositorySummary])] =
+  def repoSummaries(
+                     ruleId: Option[String],
+                     team: Option[String],
+                     includeWarnings: Boolean,
+                     includeExemptions: Boolean,
+                     includeViolations: Boolean,
+                     includeNonIssues: Boolean)
+                   (implicit hc: HeaderCarrier): Future[(Seq[String], Seq[LeakDetectionRepositorySummary])] =
     for {
       rules <- leakDetectionConnector.leakDetectionRules
-      summaries <- leakDetectionConnector.leakDetectionRepoSummaries(rule, None, team, includeNoIssues)
-      filteredSummaries = filterSummaries(summaries, includeWarnings, includeExemptions, includeViolations, includeNoIssues)
+      summaries <- leakDetectionConnector.leakDetectionRepoSummaries(ruleId = ruleId, repo = None, team = team, includeNonIssues = includeNonIssues, includeBranches = false)
+      filteredSummaries = filterSummaries(summaries, includeWarnings, includeExemptions, includeViolations, includeNonIssues)
     } yield (rules.map(_.id), filteredSummaries.sortBy(_.repository.toLowerCase))
 
-  def branchSummaries(repo: String, includeBranchesWithNoIssues: Boolean)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
+  def branchSummaries(repo: String, includeNonIssues: Boolean)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
     leakDetectionConnector
-      .leakDetectionBranchSummaries(repo)
+      .leakDetectionRepoSummaries(ruleId = None, repo = Some(repo), team = None, includeNonIssues = includeNonIssues, includeBranches = true)
       .map(_
         .flatMap(_.branchSummary.getOrElse(Seq.empty))
-        .filter(b => includeBranchesWithNoIssues || b.totalCount > 0)
+        .filter(b => includeNonIssues || b.totalCount > 0)
         .sortBy(_.branch.toLowerCase)
       )
 
@@ -126,9 +133,9 @@ class LeakDetectionService @Inject() (
               .sortBy(_.filePath)
           )
 
-  private def filterSummaries(summaries: Seq[LeakDetectionRepositorySummary], includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean, includeNoIssues: Boolean): Seq[LeakDetectionRepositorySummary] = {
+  private def filterSummaries(summaries: Seq[LeakDetectionRepositorySummary], includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean, includeNonIssues: Boolean): Seq[LeakDetectionRepositorySummary] = {
     def filter(s: LeakDetectionRepositorySummary) =
-      (includeNoIssues && s.totalCount == 0 ||
+      (includeNonIssues && s.totalCount == 0 ||
         includeWarnings && (s.warningCount > 0)) ||
         (includeExemptions && (s.excludedCount > 0)) ||
         (includeViolations && (s.unresolvedCount > 0))
