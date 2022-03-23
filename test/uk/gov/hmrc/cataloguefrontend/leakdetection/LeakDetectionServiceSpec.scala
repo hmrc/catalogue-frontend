@@ -60,10 +60,10 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       )
     }
 
-    "return repo summaries" should {
+    "return repo summaries and" should {
       "include warnings, exemptions and violations" in new Setup {
-        givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, true, true, true).futureValue
+        givenRepoSummariesWithAllCountCombinations(false)
+        val results = service.repoSummaries(None, None, true, true, true, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -77,8 +77,8 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       }
 
       "include warnings and exemptions" in new Setup {
-        givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, true, true, false).futureValue
+        givenRepoSummariesWithAllCountCombinations(false)
+        val results = service.repoSummaries(None, None, true, true, false, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -91,8 +91,8 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       }
 
       "include warnings and violations" in new Setup {
-        givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, true, false, true).futureValue
+        givenRepoSummariesWithAllCountCombinations(false)
+        val results = service.repoSummaries(None, None, true, false, true, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -105,8 +105,8 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       }
 
       "include warnings" in new Setup {
-        givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, true, false, false).futureValue
+        givenRepoSummariesWithAllCountCombinations(false)
+        val results = service.repoSummaries(None, None, true, false, false, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -117,8 +117,8 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       }
 
       "include exemptions and violations" in new Setup {
-        givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, false, true, true).futureValue
+        givenRepoSummariesWithAllCountCombinations(false)
+        val results = service.repoSummaries(None, None, false, true, true, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -131,8 +131,9 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       }
 
       "include exemptions" in new Setup {
-        givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, false, true, false).futureValue
+        givenRepoSummariesWithAllCountCombinations(false)
+
+        val results = service.repoSummaries(None, None, false, true, false, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
@@ -143,14 +144,58 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       }
 
       "include violations" in new Setup {
-        givenRepoSummariesWithAllCountCombinations()
-        val results = service.repoSummaries(None, None, false, false, true).futureValue
+        givenRepoSummariesWithAllCountCombinations(false)
+
+        val results = service.repoSummaries(None, None, false, false, true, false).futureValue
 
         results._2.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
           "warnings and violations",
           "exemptions and violations",
           "violations"
+        )
+      }
+
+      "include no issues" in new Setup {
+        givenRepoSummariesWithAllCountCombinations(true)
+
+        val results = service.repoSummaries(None, None, false, false, false, true).futureValue
+
+        results._2.map(_.repository) should contain theSameElementsAs Seq(
+          "no issues"
+        )
+      }
+    }
+
+    "return branch summaries and" should {
+      "only show branches with issues" in new Setup {
+        givenRepoSummariesWithAllCountCombinations("test-repo", false)
+
+        val results = service.branchSummaries("test-repo", false).futureValue
+
+        results.map(_.branch) should contain theSameElementsAs Seq(
+          "warnings, exemptions and violations",
+          "warnings and exemptions",
+          "warnings and violations",
+          "warnings",
+          "exemptions and violations",
+          "exemptions",
+          "violations"
+        )
+      }
+      "include all branches" in new Setup {
+        givenRepoSummariesWithAllCountCombinations("test-repo", true)
+        val results = service.branchSummaries("test-repo", true).futureValue
+
+        results.map(_.branch) should contain theSameElementsAs Seq(
+          "warnings, exemptions and violations",
+          "warnings and exemptions",
+          "warnings and violations",
+          "warnings",
+          "exemptions and violations",
+          "exemptions",
+          "violations",
+          "no issues"
         )
       }
     }
@@ -237,21 +282,39 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
     val timestamp = LocalDateTime.now().minus(2, HOURS)
 
     def aRule              = LeakDetectionRule("", "", "", "", List(), List(), Priority.Low)
-    def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 0, 0, 0, Seq())
-
+    def aRepositorySummary = LeakDetectionRepositorySummary("", timestamp, timestamp, 0, 0, 0, None)
+    def aBranchSummary = LeakDetectionBranchSummary("", "", timestamp, 0, 0, 0)
 
     when(connector.leakDetectionRules()).thenReturn(Future.successful(Seq.empty))
 
-    def givenRepoSummariesWithAllCountCombinations() = when(connector.leakDetectionRepoSummaries(None, None, None)).thenReturn(
-      Future.successful(
-        Seq(
+
+    def givenRepoSummariesWithAllCountCombinations(includeNonIssues: Boolean) = when(connector.leakDetectionRepoSummaries(None, None, None, includeNonIssues, false)).thenReturn(
+      Future.successful(Seq(
           aRepositorySummary.copy(repository = "warnings, exemptions and violations", warningCount = 1, excludedCount = 1, unresolvedCount = 1),
           aRepositorySummary.copy(repository = "warnings and exemptions", warningCount = 1, excludedCount = 1),
           aRepositorySummary.copy(repository = "warnings and violations", warningCount = 1, unresolvedCount = 1),
           aRepositorySummary.copy(repository = "warnings", warningCount = 1),
           aRepositorySummary.copy(repository = "exemptions and violations", excludedCount = 1, unresolvedCount = 1),
           aRepositorySummary.copy(repository = "exemptions", excludedCount = 1),
-          aRepositorySummary.copy(repository = "violations", unresolvedCount = 1)
+          aRepositorySummary.copy(repository = "violations", unresolvedCount = 1),
+          aRepositorySummary.copy(repository = "no issues")
+        )
+      )
+    )
+
+    def givenRepoSummariesWithAllCountCombinations(repoName: String, includeNonIssues: Boolean) = when(connector.leakDetectionRepoSummaries(None, Some(repoName), None, includeNonIssues, true)).thenReturn(
+      Future.successful(
+        Seq(
+          aRepositorySummary.copy(repository = "test-repo", branchSummary = Some(Seq(
+            aBranchSummary.copy(branch = "warnings, exemptions and violations", warningCount = 1, excludedCount = 1, unresolvedCount = 1),
+            aBranchSummary.copy(branch = "warnings and exemptions", warningCount = 1, excludedCount = 1),
+            aBranchSummary.copy(branch = "warnings and violations", warningCount = 1, unresolvedCount = 1),
+            aBranchSummary.copy(branch = "warnings", warningCount = 1),
+            aBranchSummary.copy(branch = "exemptions and violations", excludedCount = 1, unresolvedCount = 1),
+            aBranchSummary.copy(branch = "exemptions", excludedCount = 1),
+            aBranchSummary.copy(branch = "violations", unresolvedCount = 1),
+            aBranchSummary.copy(branch = "no issues")))
+          ),
         )
       )
     )

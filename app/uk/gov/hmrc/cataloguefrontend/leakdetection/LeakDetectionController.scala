@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class LeakDetectionController @Inject() (
   mcc: MessagesControllerComponents,
   rulesPage: LeakDetectionRulesPage,
-  ruleExplorerPage: LeakDetectionRepositoriesPage,
+  repositoriesPage: LeakDetectionRepositoriesPage,
   repositoryPage: LeakDetectionRepositoryPage,
   leaksPage: LeakDetectionLeaksPage,
   leakDetectionService: LeakDetectionService,
@@ -48,23 +48,23 @@ class LeakDetectionController @Inject() (
       leakDetectionService.ruleSummaries.map(s => Ok(rulesPage(s)))
     }
 
-  def repoSummaries(includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean): Action[AnyContent] =
+  def repoSummaries(includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean, includeNonIssues: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
       form
         .bindFromRequest()
         .fold(
-          formWithErrors => Future.successful(BadRequest(ruleExplorerPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors, includeWarnings, includeExemptions, includeViolations))),
+          formWithErrors => Future.successful(BadRequest(repositoriesPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors, includeWarnings, includeExemptions, includeViolations, includeNonIssues))),
           validForm =>
             for {
-              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, includeWarnings, includeExemptions, includeViolations)
+              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, includeWarnings, includeExemptions, includeViolations, includeNonIssues)
               teams     <- teamsAndRepositoriesConnector.allTeams
-            } yield Ok(ruleExplorerPage(summaries._1, summaries._2, teams.sortBy(_.name), form.fill(validForm), includeWarnings, includeExemptions, includeViolations))
+            } yield Ok(repositoriesPage(summaries._1, summaries._2, teams.sortBy(_.name), form.fill(validForm), includeWarnings, includeExemptions, includeViolations, includeNonIssues))
         )
     }
 
-  def branchSummaries(repository: String): Action[AnyContent] =
+  def branchSummaries(repository: String, includeNonIssues: Boolean): Action[AnyContent] =
     Action.async { implicit request =>
-      leakDetectionService.branchSummaries(repository).map(s => Ok(repositoryPage(repository, s)))
+      leakDetectionService.branchSummaries(repository, includeNonIssues).map(s => Ok(repositoryPage(repository, includeNonIssues, s)))
     }
 
   def leaksPermission(repository: String): Predicate =
