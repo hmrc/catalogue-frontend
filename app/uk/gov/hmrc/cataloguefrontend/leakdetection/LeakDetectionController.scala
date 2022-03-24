@@ -90,7 +90,7 @@ class LeakDetectionController @Inject() (
       for {
         report <- leakDetectionService.report(repository, branch)
         exemptions <- leakDetectionService.reportExemptions(report._id)
-      } yield Ok(exemptionsPage(repository, branch, exemptions))
+      } yield Ok(exemptionsPage(repository, branch, exemptions, report.unusedExemptions))
     }
 }
 
