@@ -56,7 +56,7 @@
     </ul>
       </div>
       <div class="col-xs-6">
-      @if(exemptions.nonEmpty) {
+      @if(exemptions.nonEmpty || report.unusedExemptions.nonEmpty) {
           <h3>Exemptions</h3>
           <table class="table table-striped">
               <thead>
@@ -70,6 +70,12 @@
                   <tr>
                       <td class="exemptRule">@l._1</td>
                       <td class="exemptCount text-center"><a href="@appRoutes.LeakDetectionController.reportExemptions(report.repoName, report.branch)">@l._2</a></td>
+                  </tr>
+              }
+              @if(report.unusedExemptions.nonEmpty) {
+                  <tr>
+                      <td class="exemptRule">Unused exemptions</td>
+                      <td class="exemptCount text-center"><a href="@appRoutes.LeakDetectionController.reportExemptions(report.repoName, report.branch)">@report.unusedExemptions.length</a></td>
                   </tr>
               }
               </tbody>

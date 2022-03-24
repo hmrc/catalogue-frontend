@@ -177,6 +177,16 @@ object LeakDetectionBranchSummary {
   val reads = Json.reads[LeakDetectionBranchSummary]
 }
 
+final case class UnusedExemption(
+                                  ruleId: String,
+                                  filePath: String,
+                                  text: Option[String]
+                                )
+
+object UnusedExemption {
+  implicit val format = Json.format[UnusedExemption]
+}
+
 final case class LeakDetectionReport(
   repoName: String,
   branch: String,
@@ -184,7 +194,8 @@ final case class LeakDetectionReport(
   timestamp: LocalDateTime,
   author: String,
   commitId: String,
-  exclusions: Map[String, Int]
+  exclusions: Map[String, Int],
+  unusedExemptions: Seq[UnusedExemption]
 )
 
 object LeakDetectionReport {

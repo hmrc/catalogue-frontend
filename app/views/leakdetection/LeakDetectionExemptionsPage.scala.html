@@ -15,11 +15,11 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeaksByRule
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionLeaksByRule, UnusedExemption}
 
 @this(viewMessages: ViewMessages)
 
-@(repoName: String, branch : String, exemptions: Seq[LeakDetectionLeaksByRule])(implicit messages: Messages, request: Request[_])
+@(repoName: String, branch: String, exemptions: Seq[LeakDetectionLeaksByRule], unusedExemptions: Seq[UnusedExemption])(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Leak detection exemptions") {
     <header>
@@ -28,11 +28,45 @@
 
     <h2>@repoName - @branch</h2>
 
-    @if(exemptions.isEmpty) {
+    @if(exemptions.isEmpty && unusedExemptions.isEmpty) {
         <div class="alert alert-success">
             There are no exemptions associated to this branch
         </div>
-    } else {
-        @LeakDetectionLeaks(exemptions, "Exemptions")
     }
+
+    @if(exemptions.nonEmpty) {
+        <div>
+            <h3>Exemptions</h3>
+            @LeakDetectionLeaks(exemptions, "Exemptions")
+        </div>
+    }
+
+    @if(unusedExemptions.nonEmpty) {
+      <div id="unused-list">
+        <h3>Unused Exemptions</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="col-xs-4"><button class="sort no-border" data-sort="rule">Rule</button></th>
+                    <th class="col-xs-4"><button class="sort no-border" data-sort="filePath">File</button></th>
+                    <th class="col-xs-4"><button class="sort no-border" data-sort="text">Text</button></th>
+                </tr>
+            </thead>
+            <tbody class="list">
+            @unusedExemptions.map { e =>
+                <tr>
+                    <td class="rule">@e.ruleId</td>
+                    <td class="filePath">@e.filePath</td>
+                    <td class="text">@e.text</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+      </div>
+    }
+
+    <script>
+            var unusedOptions = {valueNames: ['rule', 'filePath', 'text']};
+            unusedList = new List('unused-list', unusedOptions);
+    </script>
 }
