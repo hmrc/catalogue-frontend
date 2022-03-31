@@ -67,12 +67,16 @@ class LeakDetectionController @Inject() (
     }
 
   def branchSummaries(repository: String, includeNonIssues: Boolean): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      leakDetectionService.branchSummaries(repository, includeNonIssues).map(s => Ok(repositoryPage(repository, includeNonIssues, s)))
+    BasicAuthAction
+      .async { implicit request =>
+      for {
+        isAuthorised    <- auth.verify(Retrieval.hasPredicate(leaksPermission(repository, "RESCAN")))
+        branchSummaries <- leakDetectionService.branchSummaries(repository, includeNonIssues)
+      } yield Ok(repositoryPage(repository, includeNonIssues, branchSummaries, isAuthorised.getOrElse(false)))
     }
 
-  def leaksPermission(repository: String): Predicate =
-    Predicate.Permission(Resource.from("repository-leaks", repository), IAAction("READ"))
+  def leaksPermission(repository: String, action: String): Predicate =
+    Predicate.Permission(Resource.from("repository-leaks", repository), IAAction(action))
 
   def report(repository: String, branch: String): Action[AnyContent] =
     auth
@@ -81,7 +85,7 @@ class LeakDetectionController @Inject() (
       )
       .async { implicit request =>
         for {
-          isAuthorised <- auth.authorised(None, Retrieval.hasPredicate(leaksPermission(repository)))
+          isAuthorised <- auth.authorised(None, Retrieval.hasPredicate(leaksPermission(repository, "READ")))
           report       <- leakDetectionService.report(repository, branch)
           leaks        <- leakDetectionService.reportLeaks(report._id)
           warnings     <- leakDetectionService.reportWarnings(report._id)
