@@ -19,26 +19,33 @@ package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class PlatformInitiativesController @Inject()
-( mcc                           : MessagesControllerComponents
+( override val mcc              : MessagesControllerComponents
 , platformInitiativesConnector  : PlatformInitiativesConnector
 , platformInitiativesListPage   : PlatformInitiativesListPage
 , teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
-)(implicit val ec: ExecutionContext)
-  extends FrontendController(mcc) {
+, override val auth             : FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
+
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] = Action.async { implicit request =>
+  def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] = BasicAuthAction.async { implicit request =>
     val boundForm = PlatformInitiativesFilter.form.bindFromRequest()
       boundForm.fold(
         formWithErrors =>

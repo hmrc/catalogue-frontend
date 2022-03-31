@@ -159,7 +159,6 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
     servicesConfig.baseUrl("teams-and-repositories")
 
   private implicit val tf   = Team.format
-  private implicit val tnf  = TeamName.format
   private implicit val jf   = Json.format[JenkinsLink]
   private implicit val ghrf = GitRepository.apiFormat // v2 model
 

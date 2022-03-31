@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.auth
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.concurrent.ScalaFutures
@@ -26,6 +26,7 @@ import play.api.i18n.{Lang, MessagesApi}
 import play.api.mvc._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.SessionKeys
+import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
@@ -101,7 +102,7 @@ class AuthControllerSpec
 
       val result = controller.postSignIn(targetUrl = None)(request)
 
-      redirectLocation(result) shouldBe Some(routes.CatalogueController.index.url)
+      redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
 
       Helpers.session(result).apply(AuthController.SESSION_USERNAME) shouldBe "user.name"
     }
@@ -135,7 +136,7 @@ class AuthControllerSpec
 
       val result = controller.postSignIn(targetUrl = Some(RedirectUrl("http://other-site/my-url")))(request)
 
-      redirectLocation(result) shouldBe Some(routes.CatalogueController.index.url)
+      redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
     }
   }
 
@@ -145,7 +146,7 @@ class AuthControllerSpec
 
       val result = controller.signOut(request)
 
-      redirectLocation(result)      shouldBe Some(routes.CatalogueController.index.url)
+      redirectLocation(result)      shouldBe Some(appRoutes.CatalogueController.index.url)
       result.futureValue.newSession shouldBe Some(Session())
     }
   }

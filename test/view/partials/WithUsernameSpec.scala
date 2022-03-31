@@ -21,7 +21,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.AuthController
+import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 import views.html.partials.with_username
 
 class WithDisplayNameSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {

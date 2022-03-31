@@ -16,17 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.Link
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 
 object TelemetryLinks {
 
   def create(name: String, template: String, env: Environment, serviceName: String): Link = {
     val url = template
-      .replace("${env}", UrlUtils.encodePathParam(env.asString))
-      .replace("${service}", UrlUtils.encodePathParam(serviceName))
+      .replace(s"$${env}", UrlUtils.encodePathParam(env.asString))
+      .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
     Link(name, name, url)
   }
 }

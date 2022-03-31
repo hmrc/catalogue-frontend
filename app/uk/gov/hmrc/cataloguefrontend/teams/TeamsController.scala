@@ -18,36 +18,41 @@ package uk.gov.hmrc.cataloguefrontend.teams
 
 import cats.implicits._
 import play.api.Configuration
-import play.api.i18n.Messages
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, UMPError}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
-import uk.gov.hmrc.cataloguefrontend.{DisplayableTeamMember, DisplayableTeamMembers, UserManagementPortalConfig}
+import uk.gov.hmrc.cataloguefrontend.{DisplayableTeamMembers, UserManagementPortalConfig}
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.teams.{TeamInfoPage, teams_list}
-import views.html.{OutOfDateTeamDependenciesPage, error_404_template}
+import views.html.OutOfDateTeamDependenciesPage
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class TeamsController @Inject()(  userManagementConnector      : UserManagementConnector,
-                                  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-                                  serviceDependenciesConnector : ServiceDependenciesConnector,
-                                  leakDetectionService         : LeakDetectionService,
-                                  umpConfig                    : UserManagementPortalConfig,
-                                  configuration                : Configuration,
-                                  teamInfoPage                 : TeamInfoPage,
-                                  outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
-                                  mcc                          : MessagesControllerComponents
-                               ) (implicit val ec: ExecutionContext)
-  extends FrontendController(mcc) {
+class TeamsController @Inject()(
+  userManagementConnector      : UserManagementConnector,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  serviceDependenciesConnector : ServiceDependenciesConnector,
+  leakDetectionService         : LeakDetectionService,
+  umpConfig                    : UserManagementPortalConfig,
+  configuration                : Configuration,
+  teamInfoPage                 : TeamInfoPage,
+  outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
+  override val mcc             : MessagesControllerComponents,
+  override val auth            : FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   def team(teamName: TeamName): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)).flatMap {
         case Nil   => for {
           teamMembers <- userManagementConnector.getTeamMembersFromUMP(teamName)
@@ -94,7 +99,7 @@ class TeamsController @Inject()(  userManagementConnector      : UserManagementC
     }
 
   def allTeams(): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
 
       teamsAndRepositoriesConnector.allTeams.map { response =>
           Ok(teams_list(response))
@@ -102,7 +107,7 @@ class TeamsController @Inject()(  userManagementConnector      : UserManagementC
     }
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       (
         teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)),
         serviceDependenciesConnector.dependenciesForTeam(teamName),

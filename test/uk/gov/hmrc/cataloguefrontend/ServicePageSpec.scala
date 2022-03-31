@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -28,10 +27,9 @@ import scala.io.Source
 
 class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
-  private[this] lazy val ws = app.injector.instanceOf[WSClient]
-
   override def beforeEach(): Unit = {
     super.beforeEach()
+    setupAuthEndpoint()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/frontend-route/service-1", willRespondWith = (200, Some(configServiceService1)))
     serviceEndpoint(GET, "/frontend-route/service-name", willRespondWith = (200, Some(configServiceService1)))
@@ -45,7 +43,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
   "A service page" should {
     "return a 404 when a Library is viewed as a service" in {
       serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
-      val response = ws.url(s"http://localhost:$port/service/serv").get.futureValue
+
+      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get.futureValue
       response.status shouldBe 404
     }
 
@@ -53,7 +52,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (404, None))
       serviceEndpoint(GET, "/config-by-key/serv", willRespondWith = (200, Some("""{}""")))
 
-      val response = ws.url(s"http://localhost:$port/service/serv").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get.futureValue
       response.status shouldBe 404
     }
 
@@ -77,7 +76,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         ))
       )
 
-      val response = ws.url(s"http://localhost:$port/service/serv").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get.futureValue
       response.status shouldBe 404
     }
 
@@ -108,7 +107,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         ))
       )
 
-      val response = ws.url(s"http://localhost:$port/service/serv").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get.futureValue
       response.status shouldBe 500
     }
 
@@ -171,8 +170,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
           }"""
         ))
       )
-
-      val response = ws.url(s"http://localhost:$port/service/$serviceName").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body     should include("links on this page are automatically generated")
       response.body     should include("teamA")
@@ -188,7 +186,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     }
 
     "show shuttered environments when they are shuttered" in new Setup {
-      val response = ws.url(s"http://localhost:$port/service/$serviceName").get.futureValue
+
+      val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       val document = Jsoup.parse(response.body)
 
@@ -201,7 +200,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     }
 
     "render platform dependencies section" in new Setup {
-      val response = ws.url(s"http://localhost:$port/service/$serviceName").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)

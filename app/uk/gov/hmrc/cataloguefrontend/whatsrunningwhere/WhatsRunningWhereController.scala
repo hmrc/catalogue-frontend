@@ -20,7 +20,10 @@ import cats.implicits._
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.whatsrunningwhere.WhatsRunningWherePage
 
@@ -29,11 +32,14 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class WhatsRunningWhereController @Inject() (
-  service: WhatsRunningWhereService,
-  page: WhatsRunningWherePage,
-  mcc: MessagesControllerComponents
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  service           : WhatsRunningWhereService,
+  page              : WhatsRunningWherePage,
+  override val mcc  : MessagesControllerComponents,
+  override val auth : FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
     form.fold(
@@ -49,7 +55,7 @@ class WhatsRunningWhereController @Inject() (
     releases.flatMap(_.versions.map(_.environment)).distinct.sorted
 
   def releases(showDiff: Boolean): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
         profile             = profileFrom(form)

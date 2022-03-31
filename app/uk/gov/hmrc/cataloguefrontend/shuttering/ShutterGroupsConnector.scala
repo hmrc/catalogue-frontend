@@ -21,7 +21,12 @@ import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
+import play.api.mvc.MessagesControllerComponents
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.GithubConfig
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,9 +34,15 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ShutterGroupsConnector @Inject() (
-  http      : HttpClient,
-  githubConf: GithubConfig
-)(implicit val ec: ExecutionContext) {
+  override val mcc : MessagesControllerComponents,
+  http             : HttpClient,
+  githubConf       : GithubConfig,
+  override val auth: FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
+
   import HttpReads.Implicits._
 
   val logger = Logger(this.getClass)

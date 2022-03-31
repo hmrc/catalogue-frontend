@@ -20,8 +20,11 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsFilter.form
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
@@ -29,15 +32,18 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class HealthIndicatorsController @Inject() (
-  healthIndicatorsConnector: HealthIndicatorsConnector,
+  healthIndicatorsConnector    : HealthIndicatorsConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  mcc: MessagesControllerComponents,
-  healthIndicatorsService: HealthIndicatorsService
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
-  
+  override val mcc             : MessagesControllerComponents,
+  healthIndicatorsService      : HealthIndicatorsService,
+  override val auth            : FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
+
   def breakdownForRepo(name: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         indicator <- healthIndicatorsConnector.getIndicator(name)
         history   <- healthIndicatorsConnector.getHistoricIndicators(name)
@@ -50,7 +56,7 @@ class HealthIndicatorsController @Inject() (
     }
 
   def indicatorsForRepoType(): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       form
         .bindFromRequest()
         .fold(

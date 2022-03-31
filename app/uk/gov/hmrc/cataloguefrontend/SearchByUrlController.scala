@@ -20,7 +20,10 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.SearchByUrlPage
 
@@ -28,22 +31,24 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SearchByUrlController @Inject() (
-  mcc               : MessagesControllerComponents,
+  override val mcc  : MessagesControllerComponents,
   searchByUrlService: SearchByUrlService,
-  searchByUrlPage   : SearchByUrlPage
+  searchByUrlPage   : SearchByUrlPage,
+  override val auth : FrontendAuthComponents
 )(implicit
-  ec: ExecutionContext
-) extends FrontendController(mcc) {
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   private val serviceNameToUrl = routes.CatalogueController.service _
 
   def searchLanding: Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       Future.successful(Ok(searchByUrlPage(UrlSearchFilter.form, Nil, serviceNameToUrl)))
     }
 
   def searchUrl =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       UrlSearchFilter.form
         .bindFromRequest()
         .fold(

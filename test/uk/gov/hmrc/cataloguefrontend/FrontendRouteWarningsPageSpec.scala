@@ -17,15 +17,13 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class FrontendRouteWarningsPageSpec extends UnitSpec with FakeApplicationBuilder {
 
-  private[this] lazy val ws = app.injector.instanceOf[WSClient]
-
   override def beforeEach(): Unit = {
     super.beforeEach()
+    setupAuthEndpoint()
     serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend" , willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/integration/frontend-route-warnings/abc-frontend" , willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/qa/frontend-route-warnings/abc-frontend"          , willRespondWith = (200, Some(emptyJson)))
@@ -38,7 +36,7 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with FakeApplicationBuilder
     "shows the table with route warnings" in {
       serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(abcWarnings)))
 
-      val response = ws.url(s"http://localhost:$port/frontend-route-warnings/development/abc-frontend").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/frontend-route-warnings/development/abc-frontend").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body.contains("""<li id="tab-development" class="navbar-item active">""") shouldBe true
       response.body.contains("""LegacyErrorPageMisconfigured""") shouldBe true

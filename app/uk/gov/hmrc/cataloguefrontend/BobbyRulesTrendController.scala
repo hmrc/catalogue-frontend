@@ -23,10 +23,13 @@ import cats.instances.future._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
 import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.BobbyRulesTrendPage
 
@@ -34,16 +37,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class BobbyRulesTrendController @Inject() (
-  mcc: MessagesControllerComponents,
-  service: DependenciesService,
-  configConnector: ConfigConnector,
-  serviceDeps: ServiceDependenciesConnector,
-  page: BobbyRulesTrendPage
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  override val mcc : MessagesControllerComponents,
+  service          : DependenciesService,
+  configConnector  : ConfigConnector,
+  serviceDeps      : ServiceDependenciesConnector,
+  page             : BobbyRulesTrendPage,
+  override val auth: FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   def landing: Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         allRules <- configConnector.bobbyRules.map(_.libraries)
       } yield Ok(
@@ -57,7 +63,7 @@ class BobbyRulesTrendController @Inject() (
     }
 
   def display: Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         allRules <- configConnector.bobbyRules
                       .map(_.libraries)

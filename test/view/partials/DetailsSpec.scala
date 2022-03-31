@@ -22,7 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.Instant
 
 class DetailsSpec extends AnyWordSpec with Matchers {
 

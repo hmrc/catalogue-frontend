@@ -20,6 +20,8 @@ import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
@@ -31,14 +33,16 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ShutterOverviewController @Inject() (
-  mcc                      : MessagesControllerComponents,
-  auth                     : FrontendAuthComponents,
+  override val mcc         : MessagesControllerComponents,
   shutterOverviewPage      : ShutterOverviewPage,
   frontendRoutesWarningPage: FrontendRouteWarningsPage,
   shutterService           : ShutterService,
-  catalogueConfig          : CatalogueConfig
-)(implicit ec              : ExecutionContext
-) extends FrontendController(mcc) {
+  catalogueConfig          : CatalogueConfig,
+  override val auth        : FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   private val logger = Logger(getClass)
 
@@ -49,7 +53,7 @@ class ShutterOverviewController @Inject() (
     )
 
   def allStatesForEnv(shutterType: ShutterType, env: Environment): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         envAndCurrentStates <- Environment.values.traverse { env =>
                                  shutterService
@@ -71,7 +75,7 @@ class ShutterOverviewController @Inject() (
     }
 
   def frontendRouteWarnings(env: Environment, serviceName: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         envsAndWarnings <- Environment.values.traverse { env =>
                              shutterService
