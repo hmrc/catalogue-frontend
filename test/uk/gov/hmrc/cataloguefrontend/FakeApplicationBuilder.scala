@@ -20,17 +20,28 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.ws.{DefaultWSCookie, WSCookie, WSClient, WSRequest}
+import play.api.mvc.{Session, SessionCookieBaker}
+import uk.gov.hmrc.http.SessionKeys
+import uk.gov.hmrc.crypto.PlainText
+import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
 
 trait FakeApplicationBuilder
   extends AnyWordSpecLike
      with GuiceOneServerPerSuite
      with WireMockEndpoints {
 
+  protected lazy val wsClient = app.injector.instanceOf[WSClient]
+  protected lazy val sessionCookieBaker = app.injector.instanceOf[SessionCookieBaker]
+  protected lazy val sessionCookieCrypto = app.injector.instanceOf[SessionCookieCrypto]
+
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()
       .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(
         Map(
+          "microservice.services.internal-auth.port"           -> wireMockPort,
+          "microservice.services.internal-auth.host"           -> wireMockHost,
           "microservice.services.health-indicators.port"       -> wireMockPort,
           "microservice.services.health-indicators.host"       -> wireMockHost,
           "microservice.services.teams-and-repositories.port"  -> wireMockPort,
@@ -61,4 +72,18 @@ trait FakeApplicationBuilder
         ))
       .build()
 
+  def cookieForAuth(value: String): WSCookie = {
+    val sessionCookie =
+      sessionCookieBaker
+        .encodeAsCookie(Session(Map(SessionKeys.authToken -> value)))
+    DefaultWSCookie(
+      sessionCookie.name,
+      sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
+    )
+  }
+
+  implicit class WSRequestOps(request: WSRequest) {
+    def withAuthToken(token: String): WSRequest =
+      request.withCookies(cookieForAuth(token))
+  }
 }

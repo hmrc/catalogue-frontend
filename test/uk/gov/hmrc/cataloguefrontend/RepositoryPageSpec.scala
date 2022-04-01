@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -30,16 +29,20 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
     repositoryType: RepoType
   )
 
-  private[this] lazy val WS = app.injector.instanceOf[WSClient]
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    setupAuthEndpoint()
+  }
 
   "A repository page" should {
     "return a 404 when the teams-and-repositories microservice returns a 404" in {
       val repoName = "other"
+
       serviceEndpoint(GET, s"/api/repositories/$repoName"       , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/module-dependencies/$repoName", willRespondWith = (404, None))
 
-      val response = WS.url(s"http://localhost:$port/repositories/$repoName").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get.futureValue
       response.status shouldBe 404
     }
 
@@ -51,7 +54,7 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/module-dependencies/$repoName", willRespondWith = (404, None))
 
-      val response = WS.url(s"http://localhost:$port/repositories/$repoName").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get.futureValue
 
       response.status shouldBe 200
       response.body   should include(s"links on this page are automatically generated")
@@ -64,19 +67,17 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       val repoName = "other"
       val repositoryDetails = RepositoryDetails(repoName, RepoType.Other)
 
-      serviceEndpoint(GET, s"/api/v2/repositories/$repoName"       , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
+      serviceEndpoint(GET, s"/api/v2/repositories/$repoName"    , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
       serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/module-dependencies/$repoName", willRespondWith = (200, Some(repositoryModules(
                                                                                                 repoName,
                                                                                                 dependenciesCompile = dependencies
                                                                                               ))))
 
-      val response = WS.url(s"http://localhost:$port/repositories/$repoName").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)
-
       document.select("#platform-dependencies-m1").size() shouldBe 1
     }
   }

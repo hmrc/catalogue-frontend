@@ -18,23 +18,30 @@ package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.service.BobbyService
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+
 import views.html.BobbyExplorerPage
 
 import scala.concurrent.ExecutionContext
 
 class BobbyExplorerController @Inject() (
-  mcc: MessagesControllerComponents,
-  page: BobbyExplorerPage,
-  bobbyService: BobbyService,
-  serviceDeps: ServiceDependenciesConnector
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  override val mcc : MessagesControllerComponents,
+  page             : BobbyExplorerPage,
+  bobbyService     : BobbyService,
+  serviceDeps      : ServiceDependenciesConnector,
+  override val auth: FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   def list(): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         rules  <- bobbyService.getRules
         counts <- serviceDeps.getBobbyRuleViolations

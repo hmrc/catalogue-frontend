@@ -19,9 +19,12 @@ package uk.gov.hmrc.cataloguefrontend
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.utils.UriEncoding
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, Version}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependenciesPage
 import views.html.dependencies.DependencyGraphs
@@ -31,17 +34,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DependenciesController @Inject() (
-  mcc                     : MessagesControllerComponents,
+  override val mcc        : MessagesControllerComponents,
   dependenciesService     : DependenciesService,
   whatsRunningWhereService: WhatsRunningWhereService,
   dependenciesPage        : DependenciesPage,
-  graphsPage              : DependencyGraphs
+  graphsPage              : DependencyGraphs,
+  override val auth       : FrontendAuthComponents
 )(implicit
-  val ec: ExecutionContext
-) extends FrontendController(mcc) {
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   def services(name: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         deployments         <- whatsRunningWhereService.releasesForService(name).map(_.versions)
         serviceDependencies <- dependenciesService.search(name, deployments)
@@ -49,13 +54,13 @@ class DependenciesController @Inject() (
     }
 
   def service(name: String, version: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       dependenciesService.getServiceDependencies(name, Version(version))
         .map(maybeDeps => Ok(dependenciesPage(name, maybeDeps.toSeq)))
     }
 
   def graphs(name: String, version: String, scope: String): Action[AnyContent] =
-    Action.async { implicit  request =>
+    BasicAuthAction.async { implicit  request =>
       (for {
          scope        <- EitherT.fromEither[Future](DependencyScope.parse(scope))
                            .leftMap(_ => BadRequest(s"Invalid scope $scope"))

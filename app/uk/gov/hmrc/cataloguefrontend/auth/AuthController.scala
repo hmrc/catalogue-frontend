@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.auth
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Call, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
@@ -44,7 +45,7 @@ class AuthController @Inject() (
     ){ implicit request =>
       Redirect(
         targetUrl.flatMap(_.getEither(OnlyRelative).toOption)
-          .fold(routes.CatalogueController.index.url)(_.url)
+          .fold(appRoutes.CatalogueController.index.url)(_.url)
       )
       .addingToSession(
         AuthController.SESSION_USERNAME -> request.retrieval.value
@@ -53,7 +54,7 @@ class AuthController @Inject() (
 
   val signOut =
     Action(
-      Redirect(routes.CatalogueController.index).withNewSession
+      Redirect(appRoutes.CatalogueController.index).withNewSession
     )
 }
 
@@ -70,5 +71,9 @@ object AuthController {
   }
 
   def continueUrl(targetUrl: Call): Call =
-    routes.AuthController.postSignIn(sanitize(Some(RedirectUrl(targetUrl.url))))
+    routes.AuthController.postSignIn(sanitize(
+      Some(targetUrl.url)
+        .filterNot(_ == "/") // RedirectUrl does not support "/". Without a RedirectUrl target Url will come here anyway.
+        .map(RedirectUrl.apply)
+    ))
 }

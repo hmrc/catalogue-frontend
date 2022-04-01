@@ -22,7 +22,6 @@ import org.scalatest.OptionValues
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.ws.{WSClient, WSResponse}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -37,6 +36,11 @@ class HealthIndicatorsControllerSpec
      with ScalaFutures
      with IntegrationPatience {
 
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    setupAuthEndpoint()
+  }
+
   "HealthIndicatorsController.breakdownForRepo()" should {
     "respond with status 200 and contain specified elements" in new Setup {
       serviceEndpoint(
@@ -47,9 +51,7 @@ class HealthIndicatorsControllerSpec
           Some(testJson)
         ))
 
-      private val response: WSResponse =
-        ws.url(s"http://localhost:$port/health-indicators/team-indicator-dashboard-frontend").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/health-indicators/team-indicator-dashboard-frontend").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body   should include("""frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)""")
       response.body   should include("""<td id="section_2_row_0_col_2">No Readme defined</td>""")
@@ -64,9 +66,7 @@ class HealthIndicatorsControllerSpec
           None
         ))
 
-      private val response: WSResponse =
-        ws.url(s"http://localhost:$port/service/team-indicator-dashboard-frontend/health-indicators").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/service/team-indicator-dashboard-frontend/health-indicators").withAuthToken("Token token").get.futureValue
       response.status shouldBe 404
     }
   }
@@ -91,9 +91,7 @@ class HealthIndicatorsControllerSpec
         willRespondWith = (200, Some(teamsJSON))
       )
 
-      private val response: WSResponse =
-        ws.url(s"http://localhost:$port/health-indicators").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/health-indicators").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
     }
@@ -117,10 +115,7 @@ class HealthIndicatorsControllerSpec
         willRespondWith = (200, Some(teamsJSON))
       )
 
-
-      private val response: WSResponse =
-        ws.url(s"http://localhost:$port/health-indicators?repoType=Service").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/health-indicators?repoType=Service").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
     }
@@ -144,11 +139,7 @@ class HealthIndicatorsControllerSpec
         willRespondWith = (200, Some(teamsJSON))
       )
 
-
-
-      private val response: WSResponse =
-        ws.url(s"http://localhost:$port/health-indicators?repoType=All+Types").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/health-indicators?repoType=All+Types").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
       response.body should include("""<a href="/health-indicators/api-platform-scripts"><span class="repoName">api-platform-scripts</span></a>""")
@@ -174,10 +165,7 @@ class HealthIndicatorsControllerSpec
         willRespondWith = (200, Some(teamsJSON))
       )
 
-
-      private val response: WSResponse =
-        ws.url(s"http://localhost:$port/health-indicators?repoType=Other").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/health-indicators?repoType=Other").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body should include("""<a href="/health-indicators/api-platform-scripts"><span class="repoName">api-platform-scripts</span></a>""")
     }
@@ -201,9 +189,7 @@ class HealthIndicatorsControllerSpec
         willRespondWith = (200, Some(teamsJSON))
       )
 
-      private val response: WSResponse =
-        ws.url(s"http://localhost:$port/health-indicators?repoType=Prototype").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/health-indicators?repoType=Prototype").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body should include("""<a href="/health-indicators/the-childcare-service-prototype"><span class="repoName">the-childcare-service-prototype</span></a>""")
     }
@@ -227,9 +213,7 @@ class HealthIndicatorsControllerSpec
         willRespondWith = (200, Some(teamsJSON))
       )
 
-      private val response: WSResponse =
-        ws.url(s"http://localhost:$port/health-indicators?team=Classic+Services+Manchester&repoType=All+Types").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/health-indicators?team=Classic+Services+Manchester&repoType=All+Types").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
       response.body shouldNot include("""<a href="/health-indicators/api-platform-scripts"><span class="repoName">api-platform-scripts</span></a>""")
@@ -246,7 +230,6 @@ class HealthIndicatorsControllerSpec
   }
 
   private[this] trait Setup {
-    lazy val ws                    = app.injector.instanceOf[WSClient]
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val testJson: String =
       """{

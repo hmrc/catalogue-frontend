@@ -23,7 +23,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.AuthController
+import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 import views.html.standard_layout
 
 class StandardLayoutSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {

@@ -24,6 +24,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
@@ -31,6 +33,7 @@ import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodeQueryParam
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependencyExplorerPage
 
@@ -38,18 +41,20 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DependencyExplorerController @Inject() (
-  mcc                : MessagesControllerComponents,
+  override val mcc   : MessagesControllerComponents,
   trConnector        : TeamsAndRepositoriesConnector,
   dependenciesService: DependenciesService,
-  page               : DependencyExplorerPage
+  page               : DependencyExplorerPage,
+  override val auth  : FrontendAuthComponents
 )(implicit
-  val ec: ExecutionContext
-) extends FrontendController(mcc) {
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   import DependencyExplorerController._
 
   def landing: Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
         groupArtefacts <- dependenciesService.getGroupArtefacts
@@ -77,7 +82,7 @@ class DependencyExplorerController @Inject() (
     }
 
   def search =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       // first preserve old API
       if (request.queryString.contains("versionOp"))
         (for {
@@ -110,7 +115,7 @@ class DependencyExplorerController @Inject() (
     }
 
   def search2 =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import org.mockito.MockitoSugar
-import org.mockito.ArgumentMatchers.{any, anyString}
+import org.mockito.ArgumentMatchers.any
 import org.scalatest.OptionValues
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
@@ -30,7 +30,9 @@ import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType.Chart
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.internalauth.client.Retrieval
+import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
+import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.http.test.HttpClientSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -78,16 +80,19 @@ class PlatformInitiativesControllerSpec
           inProgressLegend      = "Not completed"
         )
       )
-      when(mockTRConnector.allTeams(any[HeaderCarrier])) thenReturn {
-        Future.successful(Seq())
-      }
-      when(mockPIConnector.getInitiatives(any[Option[String]])(any[HeaderCarrier], any[OFormat[PlatformInitiative]])) thenReturn {
-        Future.successful(mockInitiatives)
-      }
+
+      when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
+        .thenReturn(Future.unit)
+
+      when(mockTRConnector.allTeams(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Seq()))
+
+      when(mockPIConnector.getInitiatives(any[Option[String]])(any[HeaderCarrier], any[OFormat[PlatformInitiative]]))
+        .thenReturn(Future.successful(mockInitiatives))
 
       val result: Future[Result] = controller
         .platformInitiatives(display = Chart, team = None)
-        .apply(FakeRequest())
+        .apply(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
 
       status(result) shouldBe 200
       contentAsString(result) should include("""<h3> Test initiative </h3>""")
@@ -99,11 +104,13 @@ class PlatformInitiativesControllerSpec
   }
 
   private trait Setup {
-    implicit val hc     : HeaderCarrier                 = HeaderCarrier()
-    val mcc             : MessagesControllerComponents  = app.injector.instanceOf[MessagesControllerComponents]
-    val mockPIView      : PlatformInitiativesListPage   = app.injector.instanceOf[PlatformInitiativesListPage]
-    val mockTRConnector : TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
-    val mockPIConnector : PlatformInitiativesConnector  = mock[PlatformInitiativesConnector]
-    val controller = new PlatformInitiativesController(mcc, mockPIConnector, mockPIView, mockTRConnector)
+    implicit val hc       = HeaderCarrier()
+    implicit val mcc      = app.injector.instanceOf[MessagesControllerComponents]
+    val mockPIView        = app.injector.instanceOf[PlatformInitiativesListPage]
+    val mockTRConnector   = mock[TeamsAndRepositoriesConnector]
+    val mockPIConnector   = mock[PlatformInitiativesConnector]
+    val authStubBehaviour = mock[StubBehaviour]
+    val authComponent     = FrontendAuthComponentsStub(authStubBehaviour)
+    val controller        = new PlatformInitiativesController(mcc, mockPIConnector, mockPIView, mockTRConnector, authComponent)
   }
 }

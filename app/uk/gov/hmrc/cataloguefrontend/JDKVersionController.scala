@@ -17,9 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.MessagesControllerComponents
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
 
@@ -27,15 +30,18 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class JDKVersionController @Inject() (
-  cc: MessagesControllerComponents,
+  override val mcc   : MessagesControllerComponents,
   dependenciesService: DependenciesService,
-  jdkPage: JdkVersionPage,
-  jdkCountsPage: JdkAcrossEnvironmentsPage
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(cc) {
+  jdkPage            : JdkVersionPage,
+  jdkCountsPage      : JdkAcrossEnvironmentsPage,
+  override val auth  : FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   def findLatestVersions(flag: String) =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         flag        <- Future.successful(SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest))
         jdkVersions <- dependenciesService.getJDKVersions(flag)
@@ -43,7 +49,7 @@ class JDKVersionController @Inject() (
     }
 
   def compareAllEnvironments() =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         envs <- Future.sequence(SlugInfoFlag.values.map(dependenciesService.getJDKCountsForEnv))
         jdks = envs.flatMap(_.usage.keys).distinct.sortBy(byJDKVersion)

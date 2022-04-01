@@ -27,22 +27,33 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
+import uk.gov.hmrc.internalauth.client.Retrieval
+import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
+import uk.gov.hmrc.http.SessionKeys
 import views.html._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 
 class PrototypesSpec extends UnitSpec with MockitoSugar {
   import ExecutionContext.Implicits.global
 
   "/prototypes" should {
     "redirect to the repositories page with a filter showing only prototypes" in {
-      val result = catalogueController.allPrototypes(FakeRequest())
+      when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
+        .thenReturn(Future.unit)
+
+      val result = catalogueController.allPrototypes(
+        FakeRequest().withSession(SessionKeys.authToken -> "Token token")
+      )
 
       status(result)           shouldBe 303
       redirectLocation(result) shouldBe Some("/repositories?repoType=Prototype")
     }
   }
 
+  implicit private val mcc = stubMessagesControllerComponents()
+
+  private lazy val authStubBehaviour = mock[StubBehaviour]
   private lazy val catalogueController = new CatalogueController(
     teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
     configService                 = mock[ConfigService],
@@ -55,7 +66,7 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     defaultBranchesService        = mock[DefaultBranchesService],
     userManagementPortalConfig    = mock[UserManagementPortalConfig],
     configuration                 = Configuration.empty,
-    mcc                           = stubMessagesControllerComponents(),
+    mcc                           = mcc,
     whatsRunningWhereService      = mock[WhatsRunningWhereService],
     indexPage                     = mock[IndexPage],
     serviceInfoPage               = mock[ServiceInfoPage],
@@ -67,6 +78,7 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     repositoriesListPage          = mock[RepositoriesListPage],
     defaultBranchListPage         = mock[DefaultBranchListPage],
     outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
-    costEstimationPage            = mock[CostEstimationPage]
+    costEstimationPage            = mock[CostEstimationPage],
+    auth                          = FrontendAuthComponentsStub(authStubBehaviour)
   )
 }

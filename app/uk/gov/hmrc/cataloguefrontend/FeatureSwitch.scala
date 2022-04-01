@@ -40,4 +40,7 @@ object CatalogueFrontendSwitches {
 
   def costEstimates: FeatureSwitch =
     FeatureSwitch.forName("cost-estimates")
+
+  def requiresLogin: FeatureSwitch =
+    FeatureSwitch.forName("requires-login")
 }

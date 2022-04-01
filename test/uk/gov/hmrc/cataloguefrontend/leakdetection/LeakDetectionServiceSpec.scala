@@ -18,8 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import org.mockito.MockitoSugar
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 

@@ -25,6 +25,9 @@ import play.api.i18n.Messages
 import play.api.libs.json.Json
 import play.api.mvc.{MessagesControllerComponents, Request, Result}
 import play.twirl.api.Html
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -37,26 +40,26 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering.shutterService._
 
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.cataloguefrontend.AuthController
 
 @Singleton
 class ShutterWizardController @Inject() (
-  mcc                 : MessagesControllerComponents,
+  override val  mcc   : MessagesControllerComponents,
   shutterService      : ShutterService,
   page1               : Page1,
   page2a              : Page2a,
   page2b              : Page2b,
   page3               : Page3,
   page4               : Page4,
-  auth                : FrontendAuthComponents,
+  override val auth   : FrontendAuthComponents,
   catalogueConfig     : CatalogueConfig,
   routeRulesConnector : RouteRulesConnector,
   mongoComponent      : MongoComponent,
   servicesConfig      : ServicesConfig,
   timestampSupport    : TimestampSupport
 )(implicit
-  ec: ExecutionContext
+  override val ec: ExecutionContext
 ) extends FrontendController(mcc)
+     with CatalogueAuthBuilders
      with play.api.i18n.I18nSupport {
 
   import ShutterWizardController._

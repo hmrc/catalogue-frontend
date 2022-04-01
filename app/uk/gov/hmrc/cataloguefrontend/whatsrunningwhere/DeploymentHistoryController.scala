@@ -22,9 +22,12 @@ import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.mvc._
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DeploymentHistoryPage
@@ -33,20 +36,23 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DeploymentHistoryController @Inject() (
-  releasesConnector: ReleasesConnector,
+  releasesConnector            : ReleasesConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  page: DeploymentHistoryPage,
-  config: Configuration,
-  mcc: MessagesControllerComponents
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
+  page                         : DeploymentHistoryPage,
+  config                       : Configuration,
+  override val mcc             : MessagesControllerComponents,
+  override val auth            : FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   import DeploymentHistoryController._
 
   private val userProfileUrl = config.getOptional[String]("microservice.services.user-management.profileBaseUrl")
 
   def history(env: Environment = Production): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
       form

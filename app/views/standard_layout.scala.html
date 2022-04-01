@@ -123,10 +123,10 @@
                                 @username <span class="caret"></span>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a href="@appRoutes.AuthController.signOut">Sign out</a></li>
+                                <li><a href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signOut">Sign out</a></li>
                             </ul>
                         }{
-                          <a id="sign-in" href="@appRoutes.AuthController.signIn(targetUrl = if (request.target.uriString == "/") None else Some(RedirectUrl(request.target.uriString)))" class="@if(active=="sign-in") {active}">
+                          <a id="sign-in" href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signIn(targetUrl = if (request.target.uriString == "/") None else Some(RedirectUrl(request.target.uriString)))" class="@if(active=="sign-in") {active}">
                             Sign in
                           </a>
                         }

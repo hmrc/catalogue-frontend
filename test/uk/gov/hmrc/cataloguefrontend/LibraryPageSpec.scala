@@ -18,13 +18,15 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
 
-  private[this] lazy val WS = app.injector.instanceOf[WSClient]
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    setupAuthEndpoint()
+  }
 
   "A library page" should {
     "show the teams owning the service with github and ci links and info box" in {
@@ -34,7 +36,7 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(GET, s"/api/jenkins-url/$libName"        , willRespondWith = (200, Some(jenkinsData)))
       serviceEndpoint(GET, s"/api/module-dependencies/$libName", willRespondWith = (404, None))
 
-      val response = WS.url(s"http://localhost:$port/repositories/$libName").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body   should include(s"links on this page are automatically generated")
       response.body   should include(s"teamA")
@@ -50,7 +52,6 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
 
     "render dependencies" in {
       val libName = "lib"
-
       serviceEndpoint(GET, s"/api/v2/repositories/$libName"    , willRespondWith = (200, Some(libraryData)))
       serviceEndpoint(GET, s"/api/module-dependencies/$libName", willRespondWith = (200, Some(repositoryModules(
                                                                                                 libName,
@@ -58,7 +59,7 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
                                                                                               ))))
       serviceEndpoint(GET, s"/api/jenkins-url/$libName"        , willRespondWith = (404, None))
 
-      val response = WS.url(s"http://localhost:$port/repositories/$libName").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)

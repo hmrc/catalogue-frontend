@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -26,19 +25,19 @@ class PrototypePageSpec
   extends UnitSpec
   with FakeApplicationBuilder {
 
-  private[this] lazy val WS = app.injector.instanceOf[WSClient]
-
   override def beforeEach(): Unit = {
     super.beforeEach()
+    setupAuthEndpoint()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
   }
 
   "A prototype page" should {
     "show the teams owning the prototype" in {
       serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
-      serviceEndpoint(GET, "/api/jenkins-url/2fa-prototype", willRespondWith = (200, Some(jenkinsData)))
+      serviceEndpoint(GET, "/api/jenkins-url/2fa-prototype"    , willRespondWith = (200, Some(jenkinsData)))
 
-      val response = WS.url(s"http://localhost:$port/repositories/2fa-prototype").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories/2fa-prototype").withAuthToken("Token token").get.futureValue
+
       response.status shouldBe 200
       response.body   should include("links on this page are automatically generated")
       response.body   should include("Designers")

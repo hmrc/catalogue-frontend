@@ -18,13 +18,15 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
-import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.{FakeApplicationBuilder, JsonData, WireMockEndpoints}
 
 class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder with WireMockEndpoints {
 
-  private[this] lazy val WS = app.injector.instanceOf[WSClient]
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    setupAuthEndpoint()
+  }
 
   "What's running where page" should {
     "show a list of applications, environments and version numbers for releases" in {
@@ -63,16 +65,12 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
                  |]""".stripMargin))
       )
 
-      val response = WS.url(s"http://localhost:$port/whats-running-where").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/whats-running-where").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
-
       response.body should include("api-definition")
       response.body should include("1.58.0")
-
       response.body should include("api-documentation")
       response.body should include("0.41.0")
-
       response.body should include("Integration")
     }
   }

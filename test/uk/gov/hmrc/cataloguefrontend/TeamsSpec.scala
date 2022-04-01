@@ -18,17 +18,15 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest.BeforeAndAfter
-import play.api.libs.ws._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 
 class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
-  private[this] lazy val WS = app.injector.instanceOf[WSClient]
-
   "Teams list" should {
 
     "show a list of teams" in {
+      setupAuthEndpoint()
       serviceEndpoint(
         GET,
         "/api/v2/teams",
@@ -48,8 +46,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
           ))
       )
 
-      val response = WS.url(s"http://localhost:$port/teams").get.futureValue
-
+      val response = wsClient.url(s"http://localhost:$port/teams").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body   should include("""<a class="team-name" href="/teams/teamA">teamA</a>""")
     }

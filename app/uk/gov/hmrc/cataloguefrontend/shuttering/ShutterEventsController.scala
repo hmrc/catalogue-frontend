@@ -21,8 +21,11 @@ import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering.ShutterEventsPage
 
@@ -31,11 +34,14 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ShutterEventsController @Inject() (
-  mcc      : MessagesControllerComponents,
-  connector: ShutterConnector
+  override val mcc : MessagesControllerComponents,
+  connector        : ShutterConnector,
+  override val auth: FrontendAuthComponents
 )(implicit
-  ec: ExecutionContext
-)extends FrontendController(mcc) {
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders
+     with play.api.i18n.I18nSupport {
 
   private val logger = Logger(getClass)
 
@@ -45,7 +51,7 @@ class ShutterEventsController @Inject() (
     }
 
   def shutterEventsList(env: Environment, serviceName: Option[String]): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       val filter = filterFor(env, serviceName)
       val form   = ShutterEventsForm.fromFilter(filter)
 

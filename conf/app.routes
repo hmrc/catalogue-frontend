@@ -23,9 +23,9 @@ GET        /assets/*file                                controllers.Assets.versi
 GET        /                                            uk.gov.hmrc.cataloguefrontend.CatalogueController.index
 GET        /admin/metrics                               @com.kenshoo.play.metrics.MetricsController.metrics
 
-GET        /sign-in                                     @uk.gov.hmrc.cataloguefrontend.AuthController.signIn(targetUrl: Option[RedirectUrl] ?= None)
-GET        /post-sign-in                                @uk.gov.hmrc.cataloguefrontend.AuthController.postSignIn(targetUrl: Option[RedirectUrl] ?= None)
-GET        /sign-out                                    @uk.gov.hmrc.cataloguefrontend.AuthController.signOut
+GET        /sign-in                                     uk.gov.hmrc.cataloguefrontend.auth.AuthController.signIn(targetUrl: Option[RedirectUrl] ?= None)
+GET        /post-sign-in                                uk.gov.hmrc.cataloguefrontend.auth.AuthController.postSignIn(targetUrl: Option[RedirectUrl] ?= None)
+GET        /sign-out                                    uk.gov.hmrc.cataloguefrontend.auth.AuthController.signOut
 
 GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchLanding
 POST       /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchUrl

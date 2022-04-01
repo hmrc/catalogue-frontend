@@ -23,6 +23,8 @@ import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.mvc._
 import play.api.{Configuration, Logger}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
@@ -32,6 +34,7 @@ import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig,
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.{MarkdownLoader, TelemetryLinks}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
@@ -58,7 +61,7 @@ class CatalogueController @Inject() (
   defaultBranchesService       : DefaultBranchesService,
   userManagementPortalConfig   : UserManagementPortalConfig,
   configuration                : Configuration,
-  mcc                          : MessagesControllerComponents,
+  override val mcc             : MessagesControllerComponents,
   whatsRunningWhereService     : WhatsRunningWhereService,
   indexPage                    : IndexPage,
   serviceInfoPage              : ServiceInfoPage,
@@ -70,12 +73,12 @@ class CatalogueController @Inject() (
   repositoriesListPage         : RepositoriesListPage,
   defaultBranchListPage        : DefaultBranchListPage,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
-  costEstimationPage           : CostEstimationPage
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc) {
-
-  import UserManagementConnector._
-  import userManagementPortalConfig._
+  costEstimationPage           : CostEstimationPage,
+  override val auth            : FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders {
 
   private lazy val whatsNewDisplayLines  = configuration.get[Int]("whats-new.display.lines")
   private lazy val blogPostsDisplayLines = configuration.get[Int]("blog-posts.display.lines")
@@ -88,21 +91,21 @@ class CatalogueController @Inject() (
   private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
 
   def index(): Action[AnyContent] =
-    Action { implicit request =>
+    BasicAuthAction { implicit request =>
       val whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines).merge
       val blogPosts = MarkdownLoader.markdownFromFile("BLOG_POSTS.md", blogPostsDisplayLines).merge
       Ok(indexPage(whatsNew, blogPosts))
     }
 
   def serviceConfig(serviceName: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         configByKey <- configService.configByKey(serviceName)
       } yield Ok(serviceConfigPage(serviceName, configByKey))
     }
 
   def serviceConfigRaw(serviceName: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         configByEnvironment <- configService.configByEnvironment(serviceName)
       } yield Ok(serviceConfigRawPage(serviceName, configByEnvironment))
@@ -113,7 +116,7 @@ class CatalogueController @Inject() (
     * considers the name of the repository.
     */
   def service(serviceName: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       def buildServicePageFromItsArtifactName(serviceName: String): Future[Result] =
         configService.findArtifactName(serviceName).flatMap {
           case ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName).getOrElse(notFound)
@@ -225,7 +228,7 @@ class CatalogueController @Inject() (
     Action(Redirect(routes.CatalogueController.repository(name)))
 
   def repository(name: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
         .foldF(Future.successful(notFound))(repoDetails =>
           repoDetails.repoType match {
@@ -304,7 +307,7 @@ class CatalogueController @Inject() (
     }
 
   def allRepositories(repoType: Option[String]): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       import SearchFiltering._
 
       teamsAndRepositoriesConnector.allRepositories.map { repositories =>
@@ -324,7 +327,7 @@ class CatalogueController @Inject() (
     }
 
   def dependencyRepository(group: String, artefact: String, version: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       serviceDependenciesConnector.getRepositoryName(group, artefact, Version(version))
         .map { repoName =>
           Redirect(routes.CatalogueController.repository(repoName.getOrElse(artefact)).copy(fragment = artefact))
@@ -332,7 +335,7 @@ class CatalogueController @Inject() (
     }
 
   def allDefaultBranches(singleOwnership: Boolean, includeArchived: Boolean): Action[AnyContent] = {
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       teamsAndRepositoriesConnector.allRepositories.map { repositories =>
         DefaultBranchesFilter.form
           .bindFromRequest()
@@ -359,7 +362,7 @@ class CatalogueController @Inject() (
   }
 
   def costEstimation(serviceName: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       (for {
         repositoryDetails <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
         if repositoryDetails.repoType == RepoType.Service

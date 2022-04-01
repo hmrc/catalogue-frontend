@@ -17,12 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.data.Form
-import play.api.data.Forms.{boolean, mapping, optional, text}
+import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionExplorerFilter.form
-import uk.gov.hmrc.cataloguefrontend.AuthController
-import uk.gov.hmrc.internalauth.client._
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.leakdetection._
 
@@ -30,26 +32,28 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class LeakDetectionController @Inject() (
-  mcc: MessagesControllerComponents,
-  rulesPage: LeakDetectionRulesPage,
-  repositoriesPage: LeakDetectionRepositoriesPage,
-  repositoryPage: LeakDetectionRepositoryPage,
-  leaksPage: LeakDetectionLeaksPage,
-  leakDetectionService: LeakDetectionService,
-  exemptionsPage: LeakDetectionExemptionsPage,
+  override val mcc             : MessagesControllerComponents,
+  rulesPage                    : LeakDetectionRulesPage,
+  repositoriesPage             : LeakDetectionRepositoriesPage,
+  repositoryPage               : LeakDetectionRepositoryPage,
+  leaksPage                    : LeakDetectionLeaksPage,
+  leakDetectionService         : LeakDetectionService,
+  exemptionsPage               : LeakDetectionExemptionsPage,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  auth: FrontendAuthComponents
-)(implicit val ec: ExecutionContext)
-    extends FrontendController(mcc)
-    with play.api.i18n.I18nSupport {
+  override val auth            : FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+     with CatalogueAuthBuilders
+     with play.api.i18n.I18nSupport {
 
   def ruleSummaries(): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       leakDetectionService.ruleSummaries.map(s => Ok(rulesPage(s)))
     }
 
   def repoSummaries(includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean, includeNonIssues: Boolean): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       form
         .bindFromRequest()
         .fold(
@@ -63,7 +67,7 @@ class LeakDetectionController @Inject() (
     }
 
   def branchSummaries(repository: String, includeNonIssues: Boolean): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       leakDetectionService.branchSummaries(repository, includeNonIssues).map(s => Ok(repositoryPage(repository, includeNonIssues, s)))
     }
 
@@ -86,7 +90,7 @@ class LeakDetectionController @Inject() (
       }
 
   def reportExemptions(repository: String, branch: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       for {
         report <- leakDetectionService.report(repository, branch)
         exemptions <- leakDetectionService.reportExemptions(report._id)
