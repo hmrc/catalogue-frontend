@@ -100,6 +100,16 @@ class LeakDetectionController @Inject() (
         exemptions <- leakDetectionService.reportExemptions(report._id)
       } yield Ok(exemptionsPage(repository, branch, exemptions, report.unusedExemptions))
     }
+
+  def rescan(repository: String, branch: String): Action[AnyContent] =
+    auth
+      .authenticatedAction(
+        continueUrl = AuthController.continueUrl(routes.LeakDetectionController.branchSummaries(repository))
+      ).async { implicit request =>
+      for {
+        _ <- leakDetectionService.rescan(repository, branch)
+      } yield Redirect(routes.LeakDetectionController.report(repository, branch))
+    }
 }
 
 case class LeakDetectionExplorerFilter(
