@@ -22,5 +22,9 @@
   request
     .session
     .get(AuthController.SESSION_USERNAME)
+    .map {
+      case u if u.startsWith("guest-") => "Guest"
+      case u                           => u
+    }
     .fold(ifNotLoggedIn)(ifLoggedIn)
 }
