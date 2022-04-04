@@ -18,14 +18,16 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-
+import play.api.i18n.Messages
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionExplorerFilter.form
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import views.html.error_404_template
 import views.html.leakdetection._
 
 import javax.inject.Inject
@@ -103,8 +105,9 @@ class LeakDetectionController @Inject() (
 
   def rescan(repository: String, branch: String): Action[AnyContent] =
     auth
-      .authenticatedAction(
-        continueUrl = AuthController.continueUrl(routes.LeakDetectionController.branchSummaries(repository))
+      .authorizedAction(
+        continueUrl = AuthController.continueUrl(routes.LeakDetectionController.branchSummaries(repository)),
+        predicate = leaksPermission(repository, "RESCAN")
       ).async { implicit request =>
       for {
         _ <- leakDetectionService.rescan(repository, branch)
