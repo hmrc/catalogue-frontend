@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.config
 
-import java.time.Clock
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.cataloguefrontend.search.IndexScheduler
+import play.api.Configuration
 
-class CatalogueFrontendModule extends AbstractModule {
+import javax.inject.Inject
+import scala.concurrent.duration.FiniteDuration
 
-  override def configure(): Unit = {
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    if(CatalogueFrontendSwitches.search.isEnabled) bind(classOf[IndexScheduler]).asEagerSingleton()
-  }
+class SearchConfig @Inject()(configuration: Configuration) {
+
+  lazy val indexRebuildInterval: FiniteDuration = configuration.get[FiniteDuration]("search.rebuild.interval")
+
 }

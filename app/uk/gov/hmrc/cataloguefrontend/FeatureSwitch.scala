@@ -36,11 +36,14 @@ object FeatureSwitch {
 }
 
 object CatalogueFrontendSwitches {
-  //def shuttering = FeatureSwitch.forName("shuttering")
 
   def costEstimates: FeatureSwitch =
     FeatureSwitch.forName("cost-estimates")
 
   def requiresLogin: FeatureSwitch =
     FeatureSwitch.forName("requires-login")
+
+  def search: FeatureSwitch =
+    FeatureSwitch.forName("search")
+
 }
