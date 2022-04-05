@@ -113,9 +113,13 @@ object GitRepository {
 
 final case class BranchProtection(
   requiresApprovingReviews: Boolean,
-  dismissesStaleReview: Boolean,
+  dismissesStaleReviews: Boolean,
   requiresCommitSignatures: Boolean
-)
+) {
+
+  def isProtected: Boolean =
+    requiresApprovingReviews && dismissesStaleReviews && requiresCommitSignatures
+}
 
 object BranchProtection {
 
