@@ -18,14 +18,16 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-
+import play.api.i18n.Messages
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionExplorerFilter.form
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import views.html.error_404_template
 import views.html.leakdetection._
 
 import javax.inject.Inject
@@ -67,12 +69,16 @@ class LeakDetectionController @Inject() (
     }
 
   def branchSummaries(repository: String, includeNonIssues: Boolean): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      leakDetectionService.branchSummaries(repository, includeNonIssues).map(s => Ok(repositoryPage(repository, includeNonIssues, s)))
+    BasicAuthAction
+      .async { implicit request =>
+      for {
+        isAuthorised    <- auth.verify(Retrieval.hasPredicate(leaksPermission(repository, "RESCAN")))
+        branchSummaries <- leakDetectionService.branchSummaries(repository, includeNonIssues)
+      } yield Ok(repositoryPage(repository, includeNonIssues, branchSummaries, isAuthorised.getOrElse(false)))
     }
 
-  def leaksPermission(repository: String): Predicate =
-    Predicate.Permission(Resource.from("repository-leaks", repository), IAAction("READ"))
+  def leaksPermission(repository: String, action: String): Predicate =
+    Predicate.Permission(Resource.from("repository-leaks", repository), IAAction(action))
 
   def report(repository: String, branch: String): Action[AnyContent] =
     auth
@@ -81,7 +87,7 @@ class LeakDetectionController @Inject() (
       )
       .async { implicit request =>
         for {
-          isAuthorised <- auth.authorised(None, Retrieval.hasPredicate(leaksPermission(repository)))
+          isAuthorised <- auth.authorised(None, Retrieval.hasPredicate(leaksPermission(repository, "READ")))
           report       <- leakDetectionService.report(repository, branch)
           leaks        <- leakDetectionService.reportLeaks(report._id)
           warnings     <- leakDetectionService.reportWarnings(report._id)
@@ -95,6 +101,17 @@ class LeakDetectionController @Inject() (
         report <- leakDetectionService.report(repository, branch)
         exemptions <- leakDetectionService.reportExemptions(report._id)
       } yield Ok(exemptionsPage(repository, branch, exemptions, report.unusedExemptions))
+    }
+
+  def rescan(repository: String, branch: String): Action[AnyContent] =
+    auth
+      .authorizedAction(
+        continueUrl = AuthController.continueUrl(routes.LeakDetectionController.branchSummaries(repository)),
+        predicate = leaksPermission(repository, "RESCAN")
+      ).async { implicit request =>
+      for {
+        _ <- leakDetectionService.rescan(repository, branch)
+      } yield Redirect(routes.LeakDetectionController.report(repository, branch))
     }
 }
 

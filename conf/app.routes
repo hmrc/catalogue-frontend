@@ -74,4 +74,5 @@ GET        /leak-detection                                                 uk.go
 GET        /leak-detection/repositories                                    uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.repoSummaries(includeWarnings: Boolean ?= false, includeExemptions: Boolean ?= false, includeViolations: Boolean ?= false, includeNonIssues: Boolean ?= false)
 GET        /leak-detection/repositories/:repository                        uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.branchSummaries(repository: String, includeNonIssues: Boolean ?= false)
 GET        /leak-detection/repositories/:repository/:branch                uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.report(repository: String, branch: String)
+POST       /leak-detection/repositories/:repository/:branch                uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.rescan(repository: String, branch: String)
 GET        /leak-detection/repositories/:repository/:branch/exemptions     uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.reportExemptions(repository: String, branch: String)

@@ -14,20 +14,21 @@
  * limitations under the License.
  *@
 
+@import views.html.helper.CSRF
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionBranchSummary, routes => appRoutes}
 
 @this(viewMessages: ViewMessages)
 
-@(repoName: String, includeNonIssues: Boolean, summaries: Seq[LeakDetectionBranchSummary])(implicit messages: Messages, request: Request[_])
+@(repoName: String, includeNonIssues: Boolean, summaries: Seq[LeakDetectionBranchSummary], canRescan: Boolean)(implicit messages: Messages, request: Request[_])
 
 @standard_layout(s"Leak detection: $repoName") {
     <header>
         <h1>Leak Detection: @repoName</h1>
     </header>
 
-    <form id="form" method="get">
+    <form id="form" method="GET">
         <div class="form-group row">
             <div class="col-xs-12">
                 <input name="includeNonIssues" id="includeNonIssues" type="checkbox" onchange="form.submit()" value="true"
@@ -43,14 +44,19 @@
         </div>
     } else {
         <div id="branch-list">
+            <form id="rescan-form" method="POST">
+                @{
+                    play.filters.csrf.CSRF.getToken(request).map { token => CSRF.formField(request) }
+                }
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th class="col-xs-6"><button class="sort no-border" data-sort="branch">Branch</button></th>
+                        <th class="col-xs-5"><button class="sort no-border" data-sort="branch">Branch</button></th>
                         <th class="col-xs-3"><button class="sort no-border" data-sort="scanned">Last scanned</button></th>
                         <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="warnings">Warnings</button></th>
                         <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="exemptions">Exemptions</button></th>
                         <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="violations">Violations</button></th>
+                        @if(canRescan){<th class="col-xs-1 text-center">Rescan</th>}
                     </tr>
                 </thead>
                 <tbody class="list">
@@ -73,6 +79,7 @@
         @countWithLinkCell(repoName, summary.branch, "warnings", summary.warningCount)
         @countWithLinkCell(repoName, summary.branch, "exemptions", summary.excludedCount)
         @countWithLinkCell(repoName, summary.branch, "violations", summary.unresolvedCount)
+        @if(canRescan){<td class="text-center"><button type="submit" formaction="@appRoutes.LeakDetectionController.rescan(repoName, summary.branch)" class="no-border glyphicon glyphicon-refresh"/></td>}
     </tr>
 }
 

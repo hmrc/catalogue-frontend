@@ -86,6 +86,12 @@ class LeakDetectionConnector @Inject() (
       .GET[Seq[LeakDetectionRule]](url"$url/api/rules")
   }
 
+  def rescan(repository: String, branch: String)(implicit hc: HeaderCarrier): Future[LeakDetectionReport] = {
+    implicit val ldrl: Reads[LeakDetectionReport] = LeakDetectionReport.reads
+    http
+      .POSTEmpty[LeakDetectionReport](url"$url/admin/rescan/$repository/$branch")
+  }
+
 }
 
 final case class RepositoryWithLeaks(name: String) extends AnyVal

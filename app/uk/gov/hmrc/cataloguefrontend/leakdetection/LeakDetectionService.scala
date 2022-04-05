@@ -121,6 +121,10 @@ class LeakDetectionService @Inject() (
   def reportWarnings(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionWarning]] =
     leakDetectionConnector.leakDetectionWarnings(reportId)
 
+  def rescan(repository: String, branch: String)(implicit hc: HeaderCarrier) = {
+   leakDetectionConnector.rescan(repository, branch)
+  }
+
   private def mapLeak(ruleId: String, leaks: Seq[LeakDetectionLeak]): LeakDetectionLeaksByRule =
           LeakDetectionLeaksByRule(
             ruleId,
