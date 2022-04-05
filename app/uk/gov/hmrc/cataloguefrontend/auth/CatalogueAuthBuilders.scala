@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.auth
 
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
+import uk.gov.hmrc.internalauth.client.{IAAction, FrontendAuthComponents, Predicate, ResourceType, ResourceLocation, Resource}
 import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import play.api.mvc.{ActionBuilder, AnyContent, BodyParser, Call, MessagesControllerComponents, MessagesRequest, Result, Request}
 
@@ -27,6 +27,8 @@ trait CatalogueAuthBuilders {
   def ec: ExecutionContext
   def mcc: MessagesControllerComponents
 
+  private val readPerm = Predicate.Permission(Resource(ResourceType("catalogue-frontend"), ResourceLocation("*")), IAAction("READ"))
+
   def BasicAuthAction =
     new ActionBuilder[MessagesRequest[*], AnyContent] {
       override def executionContext: ExecutionContext = ec
@@ -34,7 +36,7 @@ trait CatalogueAuthBuilders {
       override def invokeBlock[A](request: Request[A], block: MessagesRequest[A] => Future[Result]): Future[Result] =
         if (CatalogueFrontendSwitches.requiresLogin.isEnabled)
           auth
-            .authenticatedAction(continueUrl = AuthController.continueUrl(Call("GET", request.uri))) // Other HTTP methods are not suported in targetUrl
+            .authorizedAction(AuthController.continueUrl(Call("GET", request.uri)), readPerm) // Other HTTP methods are not suported in targetUrl
             .invokeBlock[A](request, ar => block(new MessagesRequest[A](ar.request, mcc.messagesApi)))
         else
           block(new MessagesRequest[A](request, mcc.messagesApi))
