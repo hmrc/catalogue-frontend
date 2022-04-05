@@ -40,14 +40,14 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
   val cachedIndex = new AtomicReference[Seq[SearchTerm]]()
 
   val hardcodedLinks = List(
-    new SearchTerm("dependency explorer",      catalogueRoutes.DependencyExplorerController.landing.url, "explorer") {
+    new SearchTerm("dependency explorer", catalogueRoutes.DependencyExplorerController.landing.url, "explorer") {
       override lazy val term: String = "depex"
     },
     SearchTerm("dependency explorer", catalogueRoutes.DependencyExplorerController.landing.url, "explorer"),
-    SearchTerm("bobby",      catalogueRoutes.BobbyExplorerController.list().url, "explorer"),
-    SearchTerm("jvm",        catalogueRoutes.JDKVersionController.compareAllEnvironments.url, "explorer"),
-    SearchTerm("leaks",      leakRoutes.LeakDetectionController.ruleSummaries.url, "explorer"),
-    SearchTerm("lds",        leakRoutes.LeakDetectionController.ruleSummaries.url, "explorer"),
+    SearchTerm("bobby", catalogueRoutes.BobbyExplorerController.list().url, "explorer"),
+    SearchTerm("jvm",   catalogueRoutes.JDKVersionController.compareAllEnvironments.url, "explorer"),
+    SearchTerm("leaks", leakRoutes.LeakDetectionController.ruleSummaries.url, "explorer"),
+    SearchTerm("lds",   leakRoutes.LeakDetectionController.ruleSummaries.url, "explorer"),
   )
 
   def buildIndexes(): Future[List[SearchTerm]] = {
@@ -56,7 +56,7 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
       repos         <- teamsAndRepositoriesConnector.allRepositories
       teams         <- teamsAndRepositoriesConnector.allTeams
       teamPageLinks =  teams.flatMap(t => List(SearchTerm(t.name.asString, teamRoutes.TeamsController.team(t.name).url, "teams"),
-                                               SearchTerm(t.name.asString, url"${wrwRoutes.WhatsRunningWhereController.releases(false).url}?profile_type=team&profile_name=${t.name.asString}".toString, "deployments")))
+                                               SearchTerm(t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(false).url}?profile_type=team&profile_name=${t.name.asString}".toString, "deployments")))
       repoLinks     =  repos.flatMap(r => List(SearchTerm(r.name, catalogueRoutes.CatalogueController.repository(r.name).url, "repo"),
                                                SearchTerm(r.name, healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url, "health"),
                                                SearchTerm(r.name, leakRoutes.LeakDetectionController.report(r.name, r.defaultBranch).url,"leaks")))
@@ -64,20 +64,22 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
     } yield hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks
   }
 
-  def getIndex(refresh: Boolean = false): Future[Seq[SearchTerm]] = {
-    if (cachedIndex.get() == null || refresh) {
-      for {
-        idx <- buildIndexes()
-        _    = cachedIndex.set(idx)
-      } yield idx
-    } else {
-      Future.successful(cachedIndex.get())
-    }
-  }
-
+  def getIndex(): Seq[SearchTerm] =
+      cachedIndex.get()
 }
+
 object IndexBuilder {
+
   def normalizeTerm(term: String): String = {
     term.toLowerCase.replaceAll(" -_", "")
   }
+
+  def search(query: String, index: Seq[SearchTerm]): Seq[SearchTerm] = {
+      val searchTerms  = query.split(" ", 2).filter(_.nonEmpty)
+      val termFilter   = searchTerms.headOption.map(IndexBuilder.normalizeTerm).getOrElse("")
+      val kindFilter   = searchTerms.tail.lastOption.map(_.toLowerCase)
+      val matches      = index.filter(st => st.term.contains(termFilter))
+      kindFilter.map(kf => matches.filter(_.linkType.toLowerCase.contains(kf))).getOrElse(matches)
+  }
+
 }

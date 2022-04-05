@@ -40,7 +40,7 @@ class IndexScheduler @Inject()(indexBuilder: IndexBuilder, searchConfig: SearchC
       for {
         idx <- indexBuilder.buildIndexes()
         _    = indexBuilder.cachedIndex.set(idx)
-        _    = logger.info("search indexes rebuilt")
+        _    = logger.info(s"search indexes rebuilt: ${idx.length} terms")
       } yield ()
     }
   }

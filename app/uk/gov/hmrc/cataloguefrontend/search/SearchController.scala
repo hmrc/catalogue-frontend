@@ -21,7 +21,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.search._
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SearchController @Inject()(indexBuilder: IndexBuilder, view: SearchResults, cc: MessagesControllerComponents)(implicit ec: ExecutionContext)
@@ -29,13 +29,9 @@ class SearchController @Inject()(indexBuilder: IndexBuilder, view: SearchResults
 
   def search(query: String) =  Action.async { request =>
     for {
-      index       <- indexBuilder.getIndex()
-      searchTerms  = query.split(" ", 2).filter(_.nonEmpty)
-      termFilter   = searchTerms.headOption.map(IndexBuilder.normalizeTerm).getOrElse("")
-      kindFilter   = searchTerms.tail.lastOption.map(_.toLowerCase)
-      matches      = index.filter(st => st.term.contains(termFilter))
-      matches2     = kindFilter.map(kf => matches.filter(_.linkType.toLowerCase.contains(kf))).getOrElse(matches)
-    } yield Ok(view(matches2.sortBy(_.term).take(20)))
+      index         <- Future.successful(indexBuilder.getIndex())
+      searchMatches  = IndexBuilder.search(query, index)
+    } yield Ok(view(searchMatches.sortBy(_.term).take(20)))
   }
 
 }
