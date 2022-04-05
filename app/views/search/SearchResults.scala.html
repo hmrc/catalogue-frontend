@@ -1,4 +1,4 @@
-/*
+@*
  * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,18 +12,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ *@
 
-package uk.gov.hmrc.cataloguefrontend
+@import uk.gov.hmrc.cataloguefrontend.search.SearchTerm
 
-import java.time.Clock
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.cataloguefrontend.search.IndexScheduler
+@this()
+@(matches: Seq[SearchTerm])
 
-class CatalogueFrontendModule extends AbstractModule {
-
-  override def configure(): Unit = {
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    if(CatalogueFrontendSwitches.search.isEnabled) bind(classOf[IndexScheduler]).asEagerSingleton()
-  }
-}
+<table style="width:100%">
+  @matches.zipWithIndex.map { case (m, i) => <tr><td><strong class="search-item-type">@{m.linkType}</strong> </td> <td><a id="search-item-@i" href="@{m.link}"> @{m.name}</a></td></tr> }
+</table>

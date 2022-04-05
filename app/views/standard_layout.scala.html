@@ -20,6 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
 @import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @(
   title      : String = "Home",
@@ -115,7 +116,9 @@
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
                         </ul>
                     </li>
+
                 </ul>
+
                 <ul class="nav navbar-nav navbar-right">
                     <li class="dropdown">
                         @partials.with_username { username =>
@@ -131,18 +134,32 @@
                           </a>
                         }
                     </li>
-                    <li >
+                    <li>
 
                     </li>
+                    @if(CatalogueFrontendSwitches.search.isEnabled) {
+                        <li><a id="searchicon" onclick="toggleSearch()"><span class="glyphicon glyphicon-search"></span></a></li>
+                    }
                 </ul>
             </div>
+          <!-- pop out search bar -->
+          <div id="catalogue-search-bar" class="container menu-searchbar hide">
+            <ul class="nav navbar-nav navbar-right">
+                <div class="search-width catalogue-search">
+                    <input id="catalogue-search" class="search-input" type="text" placeholder="Search">
+                    <div id="catalogue-search-matches" class="search-dropdown search-width hide">
+                    </div>
+                </div>
+            </ul>
+          </div>
         </nav>
 
         @preContent
-
-        <section class="container">
+        <div id="standard-layout-container">
+            <section class="container">
             @content
-        </section>
+            </section>
+        </div>
 
         @postContent
 
@@ -162,5 +179,11 @@
                 $('[data-toggle="tooltip"]').tooltip()
             })
         </script>
+
+
     </body>
+
+    @if(CatalogueFrontendSwitches.search.isEnabled) {
+        <script src="@routes.Assets.versioned("search.js")" defer></script>
+    }
 </html>
