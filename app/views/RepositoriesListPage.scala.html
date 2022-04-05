@@ -27,6 +27,14 @@
   form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
+@boolToGlyph(bool: Boolean, hint: String) = {
+  @if(bool) {
+    <span class="glyphicon glyphicon-ok text-success" data-toggle="tooltip" title="@hint"></span>
+  } else {
+    <span class="glyphicon glyphicon-remove text-danger" data-toggle="tooltip" title="@hint"></span>
+  }
+}
+
 @standard_layout("Repositories", "repositories") {
     <header>
         <h1>Repositories</h1>
@@ -74,10 +82,11 @@
         </form>
         <table class="table table-striped">
             <tr>
-                <th class="col-lg-4"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
+                <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-status">Status</button></th>
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
                 <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-team">Team</button></th>
+                <th class="col-lg-1"><button role="button" class="no-border">Branch Protection</button></th>
                 <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
                 <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
             </tr>
@@ -108,6 +117,20 @@
                         <em>Shared by @{repo.teamNames.length} teams</em>
                     </div>
                 }
+                </td>
+                <td class="branch-protection monospaced" id="row@{i}_branch-protection">
+                    @boolToGlyph(
+                      repo.branchProtection.exists(_.requiresApprovingReviews),
+                      "Requires approving reviews"
+                    )
+                    @boolToGlyph(
+                      repo.branchProtection.exists(_.dismissesStaleReviews),
+                      "Dismisses stale reviews"
+                    )
+                    @boolToGlyph(
+                      repo.branchProtection.exists(_.requiresCommitSignatures),
+                      "Requires commit signatures"
+                    )
                 </td>
                 <td class="created monospaced" id="row@{i}_created">
                     @repo.createdDate.asPattern(`yyyy-MM-dd`)
