@@ -19,11 +19,13 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
 @(repositories: Seq[GitRepository],
+  teams: Seq[Team],
   form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
@@ -52,32 +54,36 @@
 
     <div id="service-list">
         <form action="/repositories" method="get">
-            <div class="form-group row">
-                <div class="col-xs-1 padding-reset-right">
-                    <label for="search">Name:</label>
-                </div>
-                <div class="col col-xs-3">
+            <div class="form-row">
+                <div class="form-group col-md-5">
+                    <label for="search">Name</label>
                     <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
                 </div>
-                <div class="col-xs-1 col-xs-offset-2">
-                    <label for="type-search">Type:</label>
-                </div>
-
-                <div class="col col-xs-2">
+                <div class="form-group col-md-3">
                     @select(
-                        field   = form("repoType"),
-                        options = Seq(
-                            "Library"   -> "Library",
-                            "Prototype" -> "Prototype",
-                            "Service"   -> "Service",
-                            "Other"     -> "Other"
-                        ),
-                        '_default -> "All",
-                        '_label   -> "",
-                        'onchange -> "this.form.submit()",
-                        'id       -> "type-search"
+                    field      = form("team"),
+                    options    = teams.map(t => t.name.asString -> t.name.asString),
+                    '_default -> "All",
+                    '_label   -> "Team",
+                    'onchange -> "this.form.submit()",
+                    'id       -> "team-filter"
                     )
-            </div>
+                </div>
+                <div class="form-group col-md-3">
+                    @select(
+                    field   = form("repoType"),
+                    options = Seq(
+                    "Library"   -> "Library",
+                    "Prototype" -> "Prototype",
+                    "Service"   -> "Service",
+                    "Other"     -> "Other"
+                    ),
+                    '_default -> "All",
+                    '_label   -> "Type",
+                    'onchange -> "this.form.submit()",
+                    'id       -> "type-search"
+                    )
+                </div>
             </div>
         </form>
         <table class="table table-striped">
@@ -148,7 +154,7 @@
 <!-- listjs configuration -->
 <script>
     var options = { valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'created', 'last-active' ],
-                    searchColumns: ['repo-name', 'team', 'version', 'deploy-time', 'deployer'] };
+                    searchColumns: ['repo-name'] };
 
     var serviceList = new List('service-list', options);
 </script>

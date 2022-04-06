@@ -25,6 +25,7 @@ object SearchFiltering {
     def filter(q: RepoListFilter): Seq[GitRepository] =
       repositories.toStream
         .filter(x => q.name.fold(true)(name => x.name.toLowerCase.contains(name.toLowerCase)))
+        .filter(x => q.team.fold(true)(team => x.teamNames.exists(_.toLowerCase.contains(team.toLowerCase))))
         .filter(x =>
           q.repoType.fold(true)(repoType =>
             repoType.equalsIgnoreCase(x.repoType.toString)

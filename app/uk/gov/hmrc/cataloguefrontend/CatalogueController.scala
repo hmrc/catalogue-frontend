@@ -310,20 +310,26 @@ class CatalogueController @Inject() (
     BasicAuthAction.async { implicit request =>
       import SearchFiltering._
 
-      teamsAndRepositoriesConnector.allRepositories.map { repositories =>
-        RepoListFilter.form
-          .bindFromRequest()
-          .fold(
-            formWithErrors => Ok(repositoriesListPage(repositories = Seq.empty, formWithErrors)),
-            query =>
-              Ok(
-                repositoriesListPage(
-                  repositories = repositories.filter(query).sortBy(_.name.toLowerCase),
-                  RepoListFilter.form.bindFromRequest()
-                )
-              )
-          )
-      }
+      val allTeams =
+        teamsAndRepositoriesConnector
+          .allTeams
+          .map(_.sortBy(_.name.asString))
+
+      val allRepositories =
+        teamsAndRepositoriesConnector
+          .allRepositories
+          .map(_.sortBy(_.name.toLowerCase))
+
+      val form =
+        RepoListFilter.form.bindFromRequest()
+
+      for {
+        teams        <- allTeams
+        repositories <- allRepositories
+      } yield form.fold(
+        formWithErrors => Ok(repositoriesListPage(repositories = Seq.empty, teams = teams, formWithErrors)),
+        query => Ok(repositoriesListPage(repositories = repositories.filter(query), teams = teams, form))
+      )
     }
 
   def dependencyRepository(group: String, artefact: String, version: String): Action[AnyContent] =
@@ -409,15 +415,18 @@ object DigitalServiceNameFilter {
 
 case class RepoListFilter(
   name    : Option[String] = None,
+  team    : Option[String] = None,
   repoType: Option[String] = None
 ) {
-  def isEmpty: Boolean = name.isEmpty && repoType.isEmpty
+  def isEmpty: Boolean =
+    name.isEmpty && team.isEmpty && repoType.isEmpty
 }
 
 object RepoListFilter {
   lazy val form = Form(
     mapping(
       "name"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+      "team"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
       "repoType" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(RepoListFilter.apply)(RepoListFilter.unapply)
   )
