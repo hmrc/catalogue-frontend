@@ -43,6 +43,9 @@ object CatalogueFrontendSwitches {
   def requiresLogin: FeatureSwitch =
     FeatureSwitch.forName("requires-login")
 
+  def branchProtectionDisplay: FeatureSwitch =
+    FeatureSwitch.forName("branch-protection-display")
+
   def search: FeatureSwitch =
     FeatureSwitch.forName("search")
 
