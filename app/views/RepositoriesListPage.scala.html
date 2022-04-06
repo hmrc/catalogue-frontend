@@ -29,14 +29,6 @@
   form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
-@boolToGlyph(bool: Boolean, hint: String) = {
-  @if(bool) {
-    <span class="glyphicon glyphicon-ok text-success" data-toggle="tooltip" title="@hint"></span>
-  } else {
-    <span class="glyphicon glyphicon-remove text-danger" data-toggle="tooltip" title="@hint"></span>
-  }
-}
-
 @standard_layout("Repositories", "repositories") {
     <header>
         <h1>Repositories</h1>
@@ -92,7 +84,7 @@
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-status">Status</button></th>
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
                 <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-team">Team</button></th>
-                <th class="col-lg-1"><button role="button" class="no-border">Branch Protection</button></th>
+                <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-bp">Branch Protection</button></th>
                 <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
                 <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
             </tr>
@@ -124,19 +116,19 @@
                     </div>
                 }
                 </td>
-                <td class="branch-protection monospaced" id="row@{i}_branch-protection">
-                    @boolToGlyph(
-                      repo.branchProtection.exists(_.requiresApprovingReviews),
-                      "Requires approving reviews"
-                    )
-                    @boolToGlyph(
-                      repo.branchProtection.exists(_.dismissesStaleReviews),
-                      "Dismisses stale reviews"
-                    )
-                    @boolToGlyph(
-                      repo.branchProtection.exists(_.requiresCommitSignatures),
-                      "Requires commit signatures"
-                    )
+                <td class="repo-bp monospaced" id="row@{i}_branch-protection">
+                    @if(repo.branchProtection.exists(_.isProtected)) {
+                      Yes <span class="glyphicon glyphicon-ok text-success"></span>
+                    } else {
+                      No <span class="glyphicon glyphicon-remove text-danger"
+                            data-toggle="tooltip"
+                            title="@List(
+                              s"Requires approving reviews = ${repo.branchProtection.exists(_.requiresApprovingReviews)}",
+                              s"Dismisses stale reviews = ${repo.branchProtection.exists(_.dismissesStaleReviews)}",
+                              s"Requires commit signatures = ${repo.branchProtection.exists(_.requiresCommitSignatures)}"
+                            ).mkString("\n")">
+                      </span>
+                    }
                 </td>
                 <td class="created monospaced" id="row@{i}_created">
                     @repo.createdDate.asPattern(`yyyy-MM-dd`)
@@ -153,7 +145,7 @@
 
 <!-- listjs configuration -->
 <script>
-    var options = { valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'created', 'last-active' ],
+    var options = { valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
                     searchColumns: ['repo-name'] };
 
     var serviceList = new List('service-list', options);
