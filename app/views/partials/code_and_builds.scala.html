@@ -26,8 +26,10 @@
 @boolToGlyph(bool: Boolean) = {
   @if(bool) {
     <span class="glyphicon glyphicon-ok text-success"></span>
+    <span class="sr-only">enabled</span>
   } else {
     <span class="glyphicon glyphicon-remove text-danger"></span>
+    <span class="sr-only">not enabled</span>
   }
 }
 
@@ -36,15 +38,11 @@
         <h3 class="board__heading">Code and Build</h3>
         <div class="board__body">
             <h5 style="margin-left: 19.2px">Branch Protection</h5>
-            @if(repo.branchProtection.exists(_.isProtected)) {
-            <p>Branch protection is enabled for this repository's default branch <span class="glyphicon glyphicon-ok text-success"></span></p>
-            } else {
               <ul class="list list--minimal">
-                  <li class="list-item">Requires approving reviews @boolToGlyph(repo.branchProtection.exists(_.requiresApprovingReviews))</li>
-                  <li class="list-item">Dismisses stale reviews @boolToGlyph(repo.branchProtection.exists(_.dismissesStaleReviews))</li>
-                  <li class="list-item">Requires commit signatures @boolToGlyph(repo.branchProtection.exists(_.requiresCommitSignatures))</li>
+                  <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresApprovingReviews)) Requires approving reviews</li>
+                  <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.dismissesStaleReviews)) Dismisses stale reviews</li>
+                  <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresCommitSignatures)) Requires commit signatures</li>
               </ul>
-            }
             <hr style="margin-top: 0px">
             <ul class="list list--minimal list-two-columns">
                 <li class="list-item"><a id="link-to-github" href="@{repo.githubUrl}" target="_blank">Github.com<span class="glyphicon glyphicon-new-window"/></a></li>
