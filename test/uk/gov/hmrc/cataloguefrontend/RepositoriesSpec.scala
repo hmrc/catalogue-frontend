@@ -31,6 +31,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
   "Repositories list" should {
     "show a list of all repositories when 'All' is selected" in {
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams )))
       serviceEndpoint(GET , "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoriesTeamAData)))
 
       val response = wsClient.url(s"http://localhost:$port/repositories").withAuthToken("Token token").get.futureValue
@@ -64,6 +65,8 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     }
 
     "show a list of all libraries when 'Library' is selected" in {
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams )))
+
       serviceEndpoint(
         GET,
         "/api/v2/repositories",

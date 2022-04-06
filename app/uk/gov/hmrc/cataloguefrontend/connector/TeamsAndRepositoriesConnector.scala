@@ -69,22 +69,23 @@ object Link {
 case class JenkinsLink(service: String, jenkinsURL: String)
 
 case class GitRepository(
-                          name                : String,
-                          description         : String,
-                          githubUrl           : String,
-                          createdDate         : Instant,
-                          lastActiveDate      : Instant,
-                          isPrivate           : Boolean        = false,
-                          repoType            : RepoType       = RepoType.Other,
-                          digitalServiceName  : Option[String] = None,
-                          owningTeams         : Seq[String]    = Nil,
-                          language            : Option[String],
-                          isArchived          : Boolean,
-                          defaultBranch       : String,
-                          isDeprecated        : Boolean        = false,
-                          teamNames           : Seq[String]    = Nil,
-                          jenkinsURL          : Option[String] = None
-                        )
+  name                : String,
+  description         : String,
+  githubUrl           : String,
+  createdDate         : Instant,
+  lastActiveDate      : Instant,
+  isPrivate           : Boolean                  = false,
+  repoType            : RepoType                 = RepoType.Other,
+  digitalServiceName  : Option[String]           = None,
+  owningTeams         : Seq[String]              = Nil,
+  language            : Option[String],
+  isArchived          : Boolean,
+  defaultBranch       : String,
+  branchProtection    : Option[BranchProtection] = None,
+  isDeprecated        : Boolean                  = false,
+  teamNames           : Seq[String]              = Nil,
+  jenkinsURL          : Option[String]           = None
+)
 
 object GitRepository {
   val apiFormat: OFormat[GitRepository] = {
@@ -102,11 +103,31 @@ object GitRepository {
     ~ (__ \ "language"          ).formatNullable[String]
     ~ (__ \ "isArchived"        ).formatWithDefault[Boolean](false)
     ~ (__ \ "defaultBranch"     ).format[String]
+    ~ (__ \ "branchProtection"  ).formatNullable(BranchProtection.format)
     ~ (__ \ "isDeprecated"      ).formatWithDefault[Boolean](false)
     ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Nil)
     ~ (__ \ "jenkinsUrl"       ).formatNullable[String]
     ) (apply, unlift(unapply))
   }
+}
+
+final case class BranchProtection(
+  requiresApprovingReviews: Boolean,
+  dismissesStaleReviews: Boolean,
+  requiresCommitSignatures: Boolean
+) {
+
+  def isProtected: Boolean =
+    requiresApprovingReviews && dismissesStaleReviews && requiresCommitSignatures
+}
+
+object BranchProtection {
+
+  val format: Format[BranchProtection] =
+    ( (__ \ "requiresApprovingReviews").format[Boolean]
+    ~ (__ \ "dismissesStaleReviews"   ).format[Boolean]
+    ~ (__ \ "requiresCommitSignatures").format[Boolean]
+    )(apply, unlift(unapply))
 }
 
 case class Team(

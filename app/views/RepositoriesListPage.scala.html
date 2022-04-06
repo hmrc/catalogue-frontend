@@ -19,11 +19,14 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
 @(repositories: Seq[GitRepository],
+  teams: Seq[Team],
   form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
@@ -44,40 +47,47 @@
 
     <div id="service-list">
         <form action="/repositories" method="get">
-            <div class="form-group row">
-                <div class="col-xs-1 padding-reset-right">
-                    <label for="search">Name:</label>
-                </div>
-                <div class="col col-xs-3">
+            <div class="form-row">
+                <div class="form-group col-md-5">
+                    <label for="search">Name</label>
                     <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
                 </div>
-                <div class="col-xs-1 col-xs-offset-2">
-                    <label for="type-search">Type:</label>
-                </div>
-
-                <div class="col col-xs-2">
+                <div class="form-group col-md-3">
                     @select(
-                        field   = form("repoType"),
-                        options = Seq(
-                            "Library"   -> "Library",
-                            "Prototype" -> "Prototype",
-                            "Service"   -> "Service",
-                            "Other"     -> "Other"
-                        ),
-                        '_default -> "All",
-                        '_label   -> "",
-                        'onchange -> "this.form.submit()",
-                        'id       -> "type-search"
+                    field      = form("team"),
+                    options    = teams.map(t => t.name.asString -> t.name.asString),
+                    '_default -> "All",
+                    '_label   -> "Team",
+                    'onchange -> "this.form.submit()",
+                    'id       -> "team-filter"
                     )
-            </div>
+                </div>
+                <div class="form-group col-md-3">
+                    @select(
+                    field   = form("repoType"),
+                    options = Seq(
+                    "Library"   -> "Library",
+                    "Prototype" -> "Prototype",
+                    "Service"   -> "Service",
+                    "Other"     -> "Other"
+                    ),
+                    '_default -> "All",
+                    '_label   -> "Type",
+                    'onchange -> "this.form.submit()",
+                    'id       -> "type-search"
+                    )
+                </div>
             </div>
         </form>
         <table class="table table-striped">
             <tr>
-                <th class="col-lg-4"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
+                <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-status">Status</button></th>
                 <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
                 <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-team">Team</button></th>
+                @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
+                  <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-bp">Branch Protection</button></th>
+                }
                 <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
                 <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
             </tr>
@@ -109,6 +119,24 @@
                     </div>
                 }
                 </td>
+                @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
+                  <td class="repo-bp monospaced" id="row@{i}_branch-protection">
+                      @if(repo.branchProtection.exists(_.isProtected)) {
+                        <span class="glyphicon glyphicon-ok text-success"></span>
+                        <span class="sr-only">Branch protection is enabled</span>
+                      } else {
+                        <span class="glyphicon glyphicon-remove text-danger"
+                              data-toggle="tooltip"
+                              title="@List(
+                                s"Requires approving reviews = ${repo.branchProtection.exists(_.requiresApprovingReviews)}",
+                                s"Dismisses stale reviews = ${repo.branchProtection.exists(_.dismissesStaleReviews)}",
+                                s"Requires commit signatures = ${repo.branchProtection.exists(_.requiresCommitSignatures)}"
+                              ).mkString("\n")">
+                        </span>
+                      <span class="sr-only">Branch protection is not enabled</span>
+                      }
+                  </td>
+                }
                 <td class="created monospaced" id="row@{i}_created">
                     @repo.createdDate.asPattern(`yyyy-MM-dd`)
                 </td>
@@ -124,8 +152,8 @@
 
 <!-- listjs configuration -->
 <script>
-    var options = { valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'created', 'last-active' ],
-                    searchColumns: ['repo-name', 'team', 'version', 'deploy-time', 'deployer'] };
+    var options = { valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
+                    searchColumns: ['repo-name'] };
 
     var serviceList = new List('service-list', options);
 </script>
