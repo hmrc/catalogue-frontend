@@ -27,11 +27,11 @@ import scala.concurrent.{ExecutionContext, Future}
 class SearchController @Inject()(indexBuilder: IndexBuilder, view: SearchResults, cc: MessagesControllerComponents)(implicit ec: ExecutionContext)
   extends FrontendController(cc){
 
-  def search(query: String) =  Action.async { request =>
+  def search(query: String, limit: Int) =  Action.async { request =>
     for {
       index         <- Future.successful(indexBuilder.getIndex())
       searchMatches  = IndexBuilder.search(query, index)
-    } yield Ok(view(searchMatches.sortBy(_.term).take(20)))
+    } yield Ok(view(searchMatches.take(limit)))
   }
 
 }

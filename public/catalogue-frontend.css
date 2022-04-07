@@ -12513,12 +12513,17 @@ table.shutter-events {
   border-width: 1px;
   position: absolute;
   overflow-y: scroll;
-  height: 25em;
+  height: 28em;
   z-index: 1000000;
+  padding-left: 6px;
+}
+
+.catalogue-search-matches-body tr:nth-child(even) {
+  background-color: #dedede;
 }
 
 .search-item-selected {
-  background: #ccc;
+  background: #ccc !important;
 }
 
 .search-item-type {
