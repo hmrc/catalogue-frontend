@@ -6,8 +6,10 @@ let input = document.getElementById("catalogue-search")
 let matches = document.getElementById("catalogue-search-matches")
 let selectedItem = 0
 
+const minSearchLen = 3
+
 input.onkeyup = e => {
-    if (e.target.value.length > 3) {
+    if (e.target.value.length >= minSearchLen) {
         matches.classList.remove("hide")
         if (e.keyCode > 46 || e.keyCode === 32) { // exclude arrow keys
             search(e.target.value)
@@ -34,7 +36,7 @@ function search(q) {
         };
         oReq.open("GET", "/quicksearch?query=" + encodeURIComponent(q));
         oReq.send();
-    }, 150)
+    }, 250)
 
 }
 
@@ -95,7 +97,7 @@ function searchInputListener(e) {
     } else if (e.keyCode === 27) { // escape
         clearAutoComplete()
     } else if (e.keyCode > 40 || e.keyCode < 33) { // trigger search
-        if (e.target.value.length >= 3) {
+        if (e.target.value.length >= minSearchLen) {
             matches.classList.remove("hide")
             search(e.target.value)
         } else {
