@@ -4,6 +4,8 @@
 let bar = document.getElementById("catalogue-search-bar")
 let input = document.getElementById("catalogue-search")
 let matches = document.getElementById("catalogue-search-matches")
+let mainmenu = document.getElementById("main-menu-bar")
+
 let selectedItem = 0
 
 const minSearchLen = 3
@@ -51,6 +53,7 @@ function toggleSearch() {
 
 function showSearchBar() {
     bar.classList.remove("hide")
+    mainmenu.classList.add("hide")
     input.focus()
     input.value = ""
 }
@@ -58,6 +61,7 @@ function showSearchBar() {
 function hideSearchBar() {
     bar.classList.add("hide")
     matches.classList.add("hide")
+    mainmenu.classList.remove("hide")
     input.value = ""
     selectedItem = -1
     matches.innerHTML = ""
@@ -95,7 +99,7 @@ function searchInputListener(e) {
         selectedItem++
         highlight(selectedItem)
     } else if (e.keyCode === 27) { // escape
-        clearAutoComplete()
+        hideSearchBar()
     } else if (e.keyCode > 40 || e.keyCode < 33) { // trigger search
         if (e.target.value.length >= minSearchLen) {
             matches.classList.remove("hide")

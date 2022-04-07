@@ -12505,6 +12505,7 @@ table.shutter-events {
 
 .search-input {
   width: 100%;
+  margin-top:0.66em;
 }
 
 .search-dropdown {

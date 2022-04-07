@@ -73,14 +73,15 @@
     </head>
     <body>
         <nav class="navbar navbar-default">
-            <div class="container">
+            <div class="container" id="navbar">
                 <header class="navbar-header">
                     <a href="/" class="navbar-brand">
                         <img src="@routes.Assets.versioned("govuk-crown-white.png")" alt="GOVUK crown" class="gov-crown">
                         Tax Platform Catalogue
                     </a>
                 </header>
-                <ul class="nav navbar-nav">
+
+                <ul id="main-menu-bar" class="nav navbar-nav">
                     <li>
                         <a id="link-to-teams" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams" class="@if(active=="teams") {active}">Teams</a>
                     </li>
@@ -120,6 +121,9 @@
                 </ul>
 
                 <ul class="nav navbar-nav navbar-right">
+                    @if(CatalogueFrontendSwitches.search.isEnabled) {
+                        <li><a id="searchicon" onclick="toggleSearch()"><span class="glyphicon glyphicon-search"></span></a></li>
+                    }
                     <li class="dropdown">
                         @partials.with_username { username =>
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
@@ -134,24 +138,17 @@
                           </a>
                         }
                     </li>
-                    <li>
-
-                    </li>
-                    @if(CatalogueFrontendSwitches.search.isEnabled) {
-                        <li><a id="searchicon" onclick="toggleSearch()"><span class="glyphicon glyphicon-search"></span></a></li>
-                    }
                 </ul>
-            </div>
-          <!-- pop out search bar -->
-          <div id="catalogue-search-bar" class="container menu-searchbar hide">
-            <ul class="nav navbar-nav navbar-right">
-                <div class="search-width catalogue-search">
-                    <input id="catalogue-search" class="search-input" type="text" placeholder="Search (shortcut ctrl+space)">
-                    <div id="catalogue-search-matches" class="search-dropdown search-width hide">
+
+                <ul id="catalogue-search-bar" class="nav navbar-nav navbar-right hide">
+                    <li class="search-width catalogue-search">
+                        <input id="catalogue-search" class="search-input" type="text" placeholder="Search (shortcut ctrl+space)">
+                        <div id="catalogue-search-matches" class="search-dropdown search-width hide">
                     </div>
-                </div>
-            </ul>
-          </div>
+                    </li>
+                </ul>
+
+            </div>
         </nav>
 
         @preContent
