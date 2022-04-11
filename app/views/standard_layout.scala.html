@@ -76,11 +76,9 @@
             <div class="container" id="navbar">
                 <header class="navbar-header">
                     <a href="/" class="navbar-brand">
-                        <img src="@routes.Assets.versioned("govuk-crown-white.png")" alt="GOVUK crown" class="gov-crown">
-                        Tax Platform Catalogue
+                        MDTP
                     </a>
                 </header>
-
                 <ul id="main-menu-bar" class="nav navbar-nav">
                     <li>
                         <a id="link-to-teams" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams" class="@if(active=="teams") {active}">Teams</a>
@@ -88,36 +86,45 @@
                     <li>
                         <a id="link-to-repositories" href="@appRoutes.CatalogueController.allRepositories(repoType = None)" class="@if(active=="repositories") {active}">Repositories</a>
                     </li>
-                    <li>
-                        <a id="link-to-deployments" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(Production)" class="@if(active=="deployments") {active}">Deployments</a>
-                    </li>
+
                     <li>
                         <a id="link-to-whats-running-where" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()" class="@if(active=="whats-running-where") {active}">What's Running Where</a>
                     </li>
+                    <li>
+                        <a id="link-to-deployments" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(Production)" class="@if(active=="deployments") {active}">Deployments</a>
+                    </li>
+
+
                     <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                            Tools<span class="caret"></span>
-                        </a>
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Shuttering<span class="caret"></span></a>
                         <ul class="dropdown-menu">
-                            <li><a href="@appRoutes.BobbyExplorerController.list">Bobby Explorer</a></li>
-                            <li><a href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
-                            <li><a href="@appRoutes.JDKVersionController.compareAllEnvironments">JDK Explorer</a></li>
-                            <li><a href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
-                            <li><a href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
-                            <li role="separator" class="divider"></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Frontend)">Shutter Overview - Frontend</a></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Api)">Shutter Overview - Api</a></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Rate)">Shutter Overview - Rate</a></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEvents">Shutter Events</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Health<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@HealthIndicatorsController.indicatorsForRepoType()">Health-Indicators</a></li>
+                            <li><a href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="@appRoutes.BobbyExplorerController.list">Bobby Explorer</a></li>
                             <li role="separator" class="divider"></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.ruleSummaries">Leak Detection - Rules</a></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(false, false, true)">Leak Detection - Repositories</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a href="@HealthIndicatorsController.indicatorsForRepoType()">Health-Indicators</a></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
                         </ul>
                     </li>
-
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Explore<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
+                            <li><a href="@appRoutes.JDKVersionController.compareAllEnvironments">JDK Explorer</a></li>
+                            <li><a href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
+                            <li><a href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
+                        </ul>
+                    </li>
                 </ul>
 
                 <ul class="nav navbar-nav navbar-right">

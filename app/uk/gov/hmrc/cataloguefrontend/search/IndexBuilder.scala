@@ -40,9 +40,9 @@ case class SearchTerm(linkType: String, name: String, link: String, weight: Floa
 class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector)(implicit ec: ExecutionContext){
 
 
-  val cachedIndex = new AtomicReference[Seq[SearchTerm]]()
+  protected[search] val cachedIndex = new AtomicReference[Seq[SearchTerm]](Seq.empty)
 
-  val hardcodedLinks = List(
+  private val hardcodedLinks = List(
     SearchTerm("explorer", "dependency",        catalogueRoutes.DependencyExplorerController.landing.url,                    1.0f, Set("depex")),
     SearchTerm("explorer", "bobby",             catalogueRoutes.BobbyExplorerController.list().url,                          1.0f),
     SearchTerm("explorer", "jvm",               catalogueRoutes.JDKVersionController.compareAllEnvironments.url,             1.0f, Set("jdk", "jre")),
@@ -64,8 +64,8 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
       repos         <- teamsAndRepositoriesConnector.allRepositories
       teams         <- teamsAndRepositoriesConnector.allTeams
       teamPageLinks =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
-                                               SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(false).url}?profile_type=team&profile_name=${t.name.asString}".toString)))
-      repoLinks     =  repos.flatMap(r => List(SearchTerm(r.repoType.asString,        r.name,          catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
+                                               SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(false).url}?profile_type=team&profile_name=${t.name.asString}")))
+      repoLinks     =  repos.flatMap(r => List(SearchTerm(r.repoType.asString,    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
@@ -87,7 +87,6 @@ object IndexBuilder {
   // TODO: we could cache the results short term, generally the next query will be the previous query + 1 letter
   //       so we can reuse the partial result set
   def search(query: String, index: Seq[SearchTerm]): Seq[SearchTerm] = {
-
       query
         .split(" ", 5)       // cap number of searchable terms at 5 (seems reasonable?)
         .filter(term => term.length > 2) // ignore search terms less than 3 chars
