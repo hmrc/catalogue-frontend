@@ -141,5 +141,5 @@ document.getElementById("searchicon").addEventListener("click", function (e) {
 }, true)
 input.addEventListener("keyup", searchInputListener, false)
 input.addEventListener("keydown", disableArrowKeys, false)
-document.getElementById("standard-layout-container").addEventListener("click", clearAutoComplete, true)
+document.getElementById("standard-layout-container").addEventListener("click", e => hideSearchBar(), true)
 document.addEventListener("keyup", globalSearchShortcut, false)
