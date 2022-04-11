@@ -12538,3 +12538,7 @@ table.shutter-events {
   overflow: hidden;
   width: 10em;
 }
+
+#standard-layout-container {
+  height: 100%;
+}
