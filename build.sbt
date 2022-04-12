@@ -4,7 +4,7 @@ import play.sbt.routes.RoutesKeys
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
 
-val silencerVersion = "1.7.5"
+val silencerVersion = "1.7.6"
 
 lazy val microservice = Project("catalogue-frontend", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
