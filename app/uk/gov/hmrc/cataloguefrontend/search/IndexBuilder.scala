@@ -49,7 +49,7 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
     SearchTerm("explorer", "leaks",             leakRoutes.LeakDetectionController.ruleSummaries.url,                        1.0f, Set("lds")),
     SearchTerm("page",     "whatsrunningwhere", wrwRoutes.WhatsRunningWhereController.releases().url,                        1.0f, Set("wrw")),
     SearchTerm("page",     "deployment",        wrwRoutes.DeploymentHistoryController.history(Environment.Production).url,   1.0f),
-    SearchTerm("page",     "shutter-frontend",  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url, 1.0f),
+    SearchTerm("page",     "shutter-overview",  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url, 1.0f),
     SearchTerm("page",     "shutter-api",       shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,      1.0f),
     SearchTerm("page",     "shutter-rate",      shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,     1.0f),
     SearchTerm("page",     "shutter-events",    shutterRoutes.ShutterEventsController.shutterEvents.url,                     1.0f),
@@ -86,10 +86,9 @@ object IndexBuilder {
 
   // TODO: we could cache the results short term, generally the next query will be the previous query + 1 letter
   //       so we can reuse the partial result set
-  def search(query: String, index: Seq[SearchTerm]): Seq[SearchTerm] = {
+  def search(query: Seq[String], index: Seq[SearchTerm]): Seq[SearchTerm] = {
       query
-        .split(" ", 5)       // cap number of searchable terms at 5 (seems reasonable?)
-        .filter(term => term.length > 2) // ignore search terms less than 3 chars
+        .map(normalizeTerm)
         .foldLeft(index) {
           case (acc, cur) => acc.filter(_.terms.exists(_.contains(cur)))
         }.sortWith( (a,b) => a.weight > b.weight )

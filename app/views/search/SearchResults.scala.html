@@ -15,12 +15,15 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.search.SearchTerm
+@import uk.gov.hmrc.cataloguefrontend.search.Highlighter
 
 @this()
-@(matches: Seq[SearchTerm])
+
+@(matches: Seq[SearchTerm], highlight: Highlighter)
 
 <table style="width:100%">
  <tbody class="catalogue-search-matches-body">
-  @matches.zipWithIndex.map { case (m, i) => <tr> <td><a id="search-item-@i" href="@{m.link}"> @{m.name}</a></td> <td><strong class="search-item-type">@{m.linkType.toLowerCase}</strong> </td></tr> }
+  @if(matches.isEmpty) {<tr><td>No matches found</td></tr>}
+  @matches.zipWithIndex.map { case (m, i) => <tr><td><a id="search-item-@i" href="@{m.link}">@{highlight(m.name)}</a></td> <td><strong class="search-item-type">@{m.linkType.toLowerCase}</strong> </td></tr> }
  </tbody>
 </table>

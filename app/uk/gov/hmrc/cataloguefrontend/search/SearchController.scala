@@ -30,8 +30,11 @@ class SearchController @Inject()(indexBuilder: IndexBuilder, view: SearchResults
   def search(query: String, limit: Int) =  Action.async { request =>
     for {
       index         <- Future.successful(indexBuilder.getIndex())
-      searchMatches  = IndexBuilder.search(query, index)
-    } yield Ok(view(searchMatches.take(limit)))
+      searchTerms    =  query.split(" ", 5)       // cap number of searchable terms at 5 (seems reasonable?)
+                             .filter(term => term.length > 2) // ignore search terms less than 3 chars
+      searchMatches  = IndexBuilder.search(searchTerms, index)
+      highlighter    = new BoldHighlighter(searchTerms)
+    } yield Ok(view(searchMatches.take(limit), highlighter))
   }
 
 }
