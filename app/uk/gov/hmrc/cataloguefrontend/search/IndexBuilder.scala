@@ -28,6 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.net.URLEncoder
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,7 +40,6 @@ case class SearchTerm(linkType: String, name: String, link: String, weight: Floa
 @Singleton
 class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector)(implicit ec: ExecutionContext){
 
-
   protected[search] val cachedIndex = new AtomicReference[Seq[SearchTerm]](Seq.empty)
 
   private val hardcodedLinks = List(
@@ -49,7 +49,7 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
     SearchTerm("explorer", "leaks",             leakRoutes.LeakDetectionController.ruleSummaries.url,                        1.0f, Set("lds")),
     SearchTerm("page",     "whatsrunningwhere", wrwRoutes.WhatsRunningWhereController.releases().url,                        1.0f, Set("wrw")),
     SearchTerm("page",     "deployment",        wrwRoutes.DeploymentHistoryController.history(Environment.Production).url,   1.0f),
-    SearchTerm("page",     "shutter-frontend",  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url, 1.0f),
+    SearchTerm("page",     "shutter-overview",  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url, 1.0f),
     SearchTerm("page",     "shutter-api",       shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,      1.0f),
     SearchTerm("page",     "shutter-rate",      shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,     1.0f),
     SearchTerm("page",     "shutter-events",    shutterRoutes.ShutterEventsController.shutterEvents.url,                     1.0f),
@@ -64,7 +64,7 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
       repos         <- teamsAndRepositoriesConnector.allRepositories
       teams         <- teamsAndRepositoriesConnector.allTeams
       teamPageLinks =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
-                                               SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(false).url}?profile_type=team&profile_name=${t.name.asString}")))
+                                               SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(false).url}?profile_type=team&profile_name=${URLEncoder.encode(t.name.asString, "UTF-8")}")))
       repoLinks     =  repos.flatMap(r => List(SearchTerm(r.repoType.asString,    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
@@ -86,10 +86,9 @@ object IndexBuilder {
 
   // TODO: we could cache the results short term, generally the next query will be the previous query + 1 letter
   //       so we can reuse the partial result set
-  def search(query: String, index: Seq[SearchTerm]): Seq[SearchTerm] = {
+  def search(query: Seq[String], index: Seq[SearchTerm]): Seq[SearchTerm] = {
       query
-        .split(" ", 5)       // cap number of searchable terms at 5 (seems reasonable?)
-        .filter(term => term.length > 2) // ignore search terms less than 3 chars
+        .map(normalizeTerm)
         .foldLeft(index) {
           case (acc, cur) => acc.filter(_.terms.exists(_.contains(cur)))
         }.sortWith( (a,b) => a.weight > b.weight )

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 import play.api.mvc.MessagesControllerComponents
+import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.search._
 
@@ -24,14 +25,17 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SearchController @Inject()(indexBuilder: IndexBuilder, view: SearchResults, cc: MessagesControllerComponents)(implicit ec: ExecutionContext)
+class SearchController @Inject()(indexBuilder: IndexBuilder, view: SearchResults, config: SearchConfig, cc: MessagesControllerComponents)(implicit ec: ExecutionContext)
   extends FrontendController(cc){
 
   def search(query: String, limit: Int) =  Action.async { request =>
     for {
       index         <- Future.successful(indexBuilder.getIndex())
-      searchMatches  = IndexBuilder.search(query, index)
-    } yield Ok(view(searchMatches.take(limit)))
+      searchTerms    =  query.split(" +", 5) // cap number of searchable terms at 5 (seems reasonable?)
+                             .filter(_.length > 2)      // ignore search terms less than 3 chars
+      searchMatches  = IndexBuilder.search(searchTerms, index)
+      highlighter    = if(config.highlight) new BoldHighlighter(searchTerms) else NoHighlighter
+    } yield Ok(view(searchMatches.take(limit), highlighter))
   }
 
 }

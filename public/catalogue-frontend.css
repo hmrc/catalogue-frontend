@@ -12509,18 +12509,14 @@ table.shutter-events {
 }
 
 .search-dropdown {
-  background: #dddddd;
+  background: #eee;
   border-style: solid;
   border-width: 1px;
   position: absolute;
   overflow-y: scroll;
-  height: 28em;
+  height: 29em;
   z-index: 1000000;
   padding-left: 6px;
-}
-
-.catalogue-search-matches-body tr:nth-child(even) {
-  background-color: #dedede;
 }
 
 .search-item-selected {
