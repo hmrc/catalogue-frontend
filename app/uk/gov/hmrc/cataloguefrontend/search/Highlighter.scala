@@ -16,15 +16,18 @@
 
 package uk.gov.hmrc.cataloguefrontend.search
 
+
 import play.twirl.api.Html
+import play.twirl.api.HtmlFormat.fill
 import play.twirl.api.HtmlFormat.escape
+
 import java.util.regex.Pattern
 
 trait Highlighter {
   def apply(text: String): Html
 }
 
-class NoHighlighter() extends Highlighter {
+object NoHighlighter extends Highlighter {
   override def apply(text: String): Html = escape(text)
 }
 
@@ -33,10 +36,16 @@ class BoldHighlighter(terms: Seq[String]) extends Highlighter {
 
   def apply(text: String):Html = {
     val matcher = rx.matcher(text)
-    val res = Iterator.continually(matcher).takeWhile(_.find()).foldLeft( (new StringBuffer(text), 0)) {
-      case ( (sb, i), cur) =>
-        (sb.insert(i+cur.start(), "<b>").insert(3+i+cur.end(), "</b>"), i+7)
-    }._1.toString
-    Html(res)
+
+    val res = Iterator.continually(matcher).takeWhile(_.find()).foldLeft( (scala.collection.immutable.Seq.empty[Html], 0)) {
+      case ( (l, last)  , cur) => (
+        l ++ Seq(
+          escape(text.substring(last, cur.start())),
+          Html("<b>"),
+          escape(text.substring(cur.start(), cur.end())),
+          Html("</b>"),
+      ), cur.end())
+    }
+    fill(res._1 :+ escape(text.substring(res._2, text.length)))
   }
 }

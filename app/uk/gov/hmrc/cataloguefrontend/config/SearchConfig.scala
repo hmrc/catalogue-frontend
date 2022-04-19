@@ -22,7 +22,6 @@ import javax.inject.Inject
 import scala.concurrent.duration.FiniteDuration
 
 class SearchConfig @Inject()(configuration: Configuration) {
-
   lazy val indexRebuildInterval: FiniteDuration = configuration.get[FiniteDuration]("search.rebuild.interval")
-
+  lazy val highlight: Boolean                   = configuration.get[Boolean]("search.highlight")
 }

@@ -28,6 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.net.URLEncoder
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,7 +39,6 @@ case class SearchTerm(linkType: String, name: String, link: String, weight: Floa
 
 @Singleton
 class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector)(implicit ec: ExecutionContext){
-
 
   protected[search] val cachedIndex = new AtomicReference[Seq[SearchTerm]](Seq.empty)
 
@@ -64,7 +64,7 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
       repos         <- teamsAndRepositoriesConnector.allRepositories
       teams         <- teamsAndRepositoriesConnector.allTeams
       teamPageLinks =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
-                                               SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(false).url}?profile_type=team&profile_name=${t.name.asString}")))
+                                               SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(false).url}?profile_type=team&profile_name=${URLEncoder.encode(t.name.asString, "UTF-8")}")))
       repoLinks     =  repos.flatMap(r => List(SearchTerm(r.repoType.asString,    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
