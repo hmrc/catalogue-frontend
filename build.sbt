@@ -4,7 +4,7 @@ import play.sbt.routes.RoutesKeys
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
 
-val silencerVersion = "1.7.6"
+val silencerVersion = "1.7.8"
 
 lazy val microservice = Project("catalogue-frontend", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
@@ -35,8 +35,8 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "5.22.0"
-val hmrcMongoVersion     = "0.62.0"
+val bootstrapPlayVersion = "5.24.0"
+val hmrcMongoVersion     = "0.63.0"
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-28"   % bootstrapPlayVersion,
