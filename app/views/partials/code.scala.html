@@ -15,13 +15,18 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
-@(repo: GitRepository)
+@(repo: GitRepository, request: Request[_])
 
 <div id="code">
     <div class="board">
         <h3 class="board__heading">Code</h3>
         <div class="board__body">
+            @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
+              @partials.branchProtection(repo, request)
+              <hr style="margin-top: 0px">
+            }
             <div class="single-item">
                 <a id="link-to-github" href="@{repo.githubUrl}" target="_blank">
                     Github.com<span class="glyphicon glyphicon-new-window"/>

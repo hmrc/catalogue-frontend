@@ -21,8 +21,9 @@
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import views.html.helper.CSRF
 
-@(serviceName: String, repo: GitRepository)
+@(serviceName: String, repo: GitRepository, request: Request[_])
 
 @boolToGlyph(bool: Boolean) = {
   @if(bool) {
@@ -39,12 +40,7 @@
         <h3 class="board__heading">Code and Build</h3>
         <div class="board__body">
             @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
-              <h5 style="margin-left: 19.2px">Branch Protection</h5>
-                <ul class="list list--minimal">
-                    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresApprovingReviews)) Requires approving reviews</li>
-                    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.dismissesStaleReviews)) Dismisses stale reviews</li>
-                    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresCommitSignatures)) Requires commit signatures</li>
-                </ul>
+              @partials.branchProtection(repo, request)
               <hr style="margin-top: 0px">
             }
             <ul class="list list--minimal list-two-columns">
@@ -62,3 +58,4 @@
         </div>
     </div>
 </div>
+

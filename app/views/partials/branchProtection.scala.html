@@ -1,0 +1,78 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import views.html.helper.CSRF
+
+@(repo: GitRepository, request: Request[_])
+
+@boolToGlyph(bool: Boolean) = {
+  @if(bool) {
+    <span class="glyphicon glyphicon-ok text-success"></span>
+    <span class="sr-only">enabled</span>
+  } else {
+    <span class="glyphicon glyphicon-remove text-danger"></span>
+    <span class="sr-only">not enabled</span>
+  }
+}
+
+<h5 style="margin-left: 19.2px">Branch Protection</h5>
+<ul class="list list--minimal">
+    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresApprovingReviews)) Requires approving reviews</li>
+    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.dismissesStaleReviews)) Dismisses stale reviews</li>
+    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresCommitSignatures)) Requires commit signatures</li>
+</ul>
+<div class="modal fade" id="setBranchProtectionModal" tabindex="-1" role="dialog" aria-labelledby="setBranchProtectionModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="setBranchProtectionModalTitle">Enable Branch Protection</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to enable branch protection on the @{repo.name} repository?
+            </div>
+            <div class="modal-footer">
+                <form id="setBranchProtection" method="post">
+                    @{CSRF.formField(request)}
+                    <input type="hidden" name="repoName" value="@{repo.name}"/>
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" form="setBranchProtection" class="btn btn-primary">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+@if(repo.branchProtection.exists(_.isProtected)) {
+  <button type="button"
+          class="btn btn-primary"
+          data-toggle="modal"
+          data-target="#setBranchProtectionModal"
+          style="margin-left: 15px; margin-bottom: 15px"
+          disabled>
+      Enable
+  </button>
+} else {
+  <button type="button"
+          class="btn btn-primary"
+          data-toggle="modal"
+          data-target="#setBranchProtectionModal"
+          style="margin-left: 15px; margin-bottom: 15px">
+      Enable
+  </button>
+}
