@@ -44,7 +44,7 @@
                         <label >Service Owner: </label>
                         <span id="service_owner_view_component" class="service-owner-view" >
                             @digitalServiceOwner.map { so =>
-                                <a href="@{so.umpLink}" target="_blank" id="service_owner_view_field">@{so.displayName}<span class="glyphicon glyphicon-new-window"/></a>
+                                <a href="@{so.umpLink}" target="_blank" rel="noreferrer noopener" id="service_owner_view_field">@{so.displayName}<span class="glyphicon glyphicon-new-window"/></a>
                             }.getOrElse {
                                 <span id="service_owner_view_field">
                                     @{viewMessages.notSpecifiedText}
@@ -76,7 +76,7 @@
                                case Right(members) => {
                                    @for(teamMember <- members) {
                                        <li class="col-xs-3">
-                                           <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a>
+                                           <a href="@teamMember.umpLink" target="_blank" rel="noreferrer noopener">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a>
                                        </li>
                                    }
                                }
