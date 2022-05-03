@@ -24,7 +24,7 @@ class ViewMessages @Inject() (configuration: Configuration) {
   val noJobExecutionData: String = "<p>It's possible that there is no Jenkins job set up for this repository, or a job exists " +
     "but there is no past build data available. If you think you're seeing this message in error or have any other feedback, " +
     "please let us know in " +
-    """<a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank">#team-platops<span class="glyphicon glyphicon-new-window"/></a></p>"""
+    """<a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"/></a></p>"""
 
   def noRepoOfTypeForTeam(item: String) =
     s"This team doesn't have any $item repositories, or our <a href='/#maintenance'>$item repository detection strategy</a> needs " +

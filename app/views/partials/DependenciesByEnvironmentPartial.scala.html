@@ -75,7 +75,7 @@
                             } else {
                               @for(tool <- telemetryLinks) {
                                 <li class="list-item col-xs-6">
-                                  <a id="link-to-@{tool.id}-@{slugInfoFlag.asString}" href="@{tool.url}" target="_blank">
+                                  <a id="link-to-@{tool.id}-@{slugInfoFlag.asString}" href="@{tool.url}" target="_blank" rel="noreferrer noopener">
                                       @{tool.displayName}<span class="glyphicon glyphicon-new-window"></span>
                                   </a>
                                 </li>

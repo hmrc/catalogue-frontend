@@ -74,7 +74,7 @@
                                 <li id="team-documentation">
                                   <label>Documentation: </label>
                                   @teamDetails.documentation.map { d =>
-                                    <a href="@d" target="_blank">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
+                                    <a href="@d" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
                                   }
                                 </li>
                                 <li id="team-organisation">
@@ -128,7 +128,7 @@
                                 case Right(teamMembers) => {
                                   @for(teamMember <- teamMembers) {
                                     <li class="col-xs-6">
-                                      <a href="@teamMember.umpLink" target="_blank">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
+                                      <a href="@teamMember.umpLink" target="_blank" rel="noreferrer noopener">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
                                     </li>
                                   }
                                 }
@@ -169,16 +169,16 @@
     <li class="list-item">
       <strong>@label: </strong>
       <span>@slackInfo.url <span class="glyphicon glyphicon-warning-sign" /></span>
-      <div>Please change to a URL via <a href="@umpMyTeamsUrl" target="_blank">UMP<span class="glyphicon glyphicon-new-window"/></a></div>
+      <div>Please change to a URL via <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">UMP<span class="glyphicon glyphicon-new-window"/></a></div>
     </li>
   } else if (!slackInfo.hasValidName) {
     <li class="list-item">
-      <a href="@slackInfo.url" target="_blank">Go to @label.toLowerCase channel<span class="glyphicon glyphicon-new-window"/></a>
+      <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">Go to @label.toLowerCase channel<span class="glyphicon glyphicon-new-window"/></a>
     </li>
   } else {
     <li class="list-item">
       <strong>@label: </strong>
-      <a href="@slackInfo.url" target="_blank">#@slackInfo.name<span class="glyphicon glyphicon-new-window"/></a>
+      <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window"/></a>
     </li>
   }
 }
@@ -186,9 +186,9 @@
 @umpUpdateLink(isMemberBox: Boolean) = {
   <div id="ump-correct-data-link" class="list list--minimal">
     @if(isMemberBox) {
-        To update @teamName.asString team members, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+        To update @teamName.asString team members, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
     } else {
-        To update @teamName.asString team details, go to the <a href="@umpMyTeamsUrl" target="_blank">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+        To update @teamName.asString team details, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
     }
   </div>
 }

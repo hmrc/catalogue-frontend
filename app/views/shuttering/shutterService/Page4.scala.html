@@ -54,7 +54,7 @@
                         @serviceLinks.map { case (name, optUrl) =>
                             <li>
                                 @optUrl match {
-                                    case Some(url) => { <a href="@url" target="_blank">@name</a> }
+                                    case Some(url) => { <a href="@url" target="_blank" rel="noreferrer noopener">@name</a> }
                                     case _ => { @name }
                                 }
                             </li>

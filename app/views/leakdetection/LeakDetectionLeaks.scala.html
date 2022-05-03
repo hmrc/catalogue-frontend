@@ -82,7 +82,7 @@
         <ul class="list list--minimal list-group row">
             <li>
                 <span class="col-xs-12">
-                    <a href="@leak.urlToSource" target="_blank">@leak.filePath @if(scope == "fileContent") { #@leak.lineNumber}</a>
+                    <a href="@leak.urlToSource" target="_blank" rel="noreferrer noopener">@leak.filePath @if(scope == "fileContent") { #@leak.lineNumber}</a>
                 </span>
             </li>
             <li>
