@@ -23,7 +23,6 @@ import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.mvc._
 import play.api.{Configuration, Logger}
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version}
@@ -132,7 +131,12 @@ class CatalogueController @Inject() (
             case _ => Future.successful(notFound)
           }
 
-      buildServicePageFromRepoName(serviceName).getOrElseF(buildServicePageFromItsArtifactName(serviceName))
+      SetBranchProtection
+        .form
+        .bindFromRequest()
+        .value
+        .traverse_(sbp => teamsAndRepositoriesConnector.setBranchProtection(sbp.repoName)) *>
+          buildServicePageFromRepoName(serviceName).getOrElseF(buildServicePageFromItsArtifactName(serviceName))
     }
 
   private def renderServicePage(
@@ -229,18 +233,24 @@ class CatalogueController @Inject() (
 
   def repository(name: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
-        .foldF(Future.successful(notFound))(repoDetails =>
-          repoDetails.repoType match {
-            case RepoType.Service   => renderServicePage(
-                                         serviceName       = repoDetails.name,
-                                         repositoryDetails = repoDetails
-                                       )
-            case RepoType.Library   => renderLibrary(repoDetails)
-            case RepoType.Prototype => renderPrototype(repoDetails)
-            case RepoType.Other     => renderOther(repoDetails)
-          }
-        )
+
+    SetBranchProtection
+      .form
+      .bindFromRequest()
+      .value
+      .traverse_(sbp => teamsAndRepositoriesConnector.setBranchProtection(sbp.repoName)) *>
+        OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
+          .foldF(Future.successful(notFound))(repoDetails =>
+            repoDetails.repoType match {
+              case RepoType.Service   => renderServicePage(
+                                           serviceName       = repoDetails.name,
+                                           repositoryDetails = repoDetails
+                                         )
+              case RepoType.Library   => renderLibrary(repoDetails)
+              case RepoType.Prototype => renderPrototype(repoDetails)
+              case RepoType.Other     => renderOther(repoDetails)
+            }
+          )
     }
 
   def renderLibrary(repoDetails: GitRepository)(implicit messages: Messages, request: Request[_]): Future[Result] =
@@ -430,6 +440,13 @@ object RepoListFilter {
       "repoType" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(RepoListFilter.apply)(RepoListFilter.unapply)
   )
+}
+
+case class SetBranchProtection(repoName: String)
+
+object SetBranchProtection {
+  lazy val form: Form[SetBranchProtection] =
+    Form(mapping("repoName" -> text)(SetBranchProtection.apply)(SetBranchProtection.unapply))
 }
 
 case class DefaultBranchesFilter(
