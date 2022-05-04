@@ -254,7 +254,7 @@ class CatalogueController @Inject() (
       .bindFromRequest()
       .value
       .traverse_(sbp => teamsAndRepositoriesConnector.setBranchProtection(sbp.repoName)) *>
-        akka.pattern.after(500.milliseconds, actorSystem.scheduler)(Future.unit)
+        akka.pattern.after(2.seconds, actorSystem.scheduler)(Future.unit)
 
   def renderLibrary(repoDetails: GitRepository)(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
