@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import akka.actor.ActorSystem
 import org.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.test.FakeRequest
@@ -32,7 +33,7 @@ import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBeh
 import uk.gov.hmrc.http.SessionKeys
 import views.html._
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 class ServicesSpec extends UnitSpec with MockitoSugar {
   import ExecutionContext.Implicits.global
@@ -79,6 +80,7 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
     defaultBranchListPage         = mock[DefaultBranchListPage],
     outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
     costEstimationPage            = mock[CostEstimationPage],
-    auth                          = FrontendAuthComponentsStub(authStubBehaviour)
+    auth                          = FrontendAuthComponentsStub(authStubBehaviour),
+    actorSystem                   = mock[ActorSystem]
   )
 }

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import akka.actor.ActorSystem
 import cats.data.OptionT
 import cats.implicits._
 import play.api.data.Form
@@ -38,6 +39,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
 case class EnvData(
@@ -73,7 +75,8 @@ class CatalogueController @Inject() (
   defaultBranchListPage        : DefaultBranchListPage,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
   costEstimationPage           : CostEstimationPage,
-  override val auth            : FrontendAuthComponents
+  override val auth            : FrontendAuthComponents,
+  actorSystem                  : ActorSystem
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -131,12 +134,8 @@ class CatalogueController @Inject() (
             case _ => Future.successful(notFound)
           }
 
-      SetBranchProtection
-        .form
-        .bindFromRequest()
-        .value
-        .traverse_(sbp => teamsAndRepositoriesConnector.setBranchProtection(sbp.repoName)) *>
-          buildServicePageFromRepoName(serviceName).getOrElseF(buildServicePageFromItsArtifactName(serviceName))
+          enableBranchProtection *>
+            buildServicePageFromRepoName(serviceName).getOrElseF(buildServicePageFromItsArtifactName(serviceName))
     }
 
   private def renderServicePage(
@@ -234,11 +233,7 @@ class CatalogueController @Inject() (
   def repository(name: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
 
-    SetBranchProtection
-      .form
-      .bindFromRequest()
-      .value
-      .traverse_(sbp => teamsAndRepositoriesConnector.setBranchProtection(sbp.repoName)) *>
+      enableBranchProtection *>
         OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
           .foldF(Future.successful(notFound))(repoDetails =>
             repoDetails.repoType match {
@@ -252,6 +247,14 @@ class CatalogueController @Inject() (
             }
           )
     }
+
+  private def enableBranchProtection(implicit request: Request[_]): Future[Unit] =
+    SetBranchProtection
+      .form
+      .bindFromRequest()
+      .value
+      .traverse_(sbp => teamsAndRepositoriesConnector.setBranchProtection(sbp.repoName)) *>
+        akka.pattern.after(500.milliseconds, actorSystem.scheduler)(Future.unit)
 
   def renderLibrary(repoDetails: GitRepository)(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
