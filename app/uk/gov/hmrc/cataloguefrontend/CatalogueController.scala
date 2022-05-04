@@ -245,7 +245,7 @@ class CatalogueController @Inject() (
               case RepoType.Prototype => renderPrototype(repoDetails)
               case RepoType.Other     => renderOther(repoDetails)
             }
-          )
+          ).map(_.withHeaders("Cache-Control" -> "no-cache"))
     }
 
   private def enableBranchProtection(implicit request: Request[_]): Future[Unit] =
