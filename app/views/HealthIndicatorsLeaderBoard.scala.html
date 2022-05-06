@@ -18,11 +18,12 @@
 @import views.html.helper.select
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 
-@(  indicatorsWithTeams :   Seq[IndicatorsWithTeams]
-,   repoTypes  : Seq[RepoType]
-,   teams      : Seq[Team]
-,   form       : Form[_]
+@(indicatorsWithTeams: Seq[IndicatorsWithTeams]
+, repoTypes          : Seq[RepoType]
+, teams              : Seq[Team]
+, form               : Form[_]
 )(implicit messages: Messages, request: Request[_])
+
 @standard_layout("Service Health Indicators", "health-indicators") {
     <header>
         <h1>Health Indicator Leaderboard</h1>
@@ -37,21 +38,21 @@
                 </div>
                 <div class="col-xs-3">
                     @select(
-                        field = form("team"),
-                        options = teams.map(t => t.name.asString -> t.name.asString),
+                        field     = form("team"),
+                        options   =  teams.map(t => t.name.asString -> t.name.asString),
                         '_default -> "All",
-                        '_label -> "Owning Team",
+                        '_label   -> "Owning Team",
                         'onchange -> "this.form.submit()",
-                        'id -> "team-search"
+                        'id       -> "team-search"
                     )
                 </div>
                 <div class="col-xs-3">
                     @select(
-                        field = form("repoType"),
-                        options = repoTypes.map(r => r.asString -> r.asString),
-                        '_label -> "Repository Type",
+                        field     =  form("repoType"),
+                        options   =  repoTypes.map(r => r.asString -> r.asString),
+                        '_label   -> "Repository Type",
                         'onchange -> "this.form.submit()",
-                        'id -> "repo-type-search"
+                        'id       -> "repo-type-search"
                     )
                 </div>
             </div>
@@ -91,14 +92,14 @@
     </div>
 
     <script>
-            var options = {valueNames: ['repoName']};
-            var indicatorsList = new List('leaderboard-display', options);
+        var options = {valueNames: ['repoName']};
+        var indicatorsList = new List('leaderboard-display', options);
 
-            var searchBox = document.getElementById("repo-name-search");
-            indicatorsList.search(searchBox.value);
+        var searchBox = document.getElementById("repo-name-search");
+        indicatorsList.search(searchBox.value);
 
-            var length = searchBox.value.length;
-            searchBox.focus();
-            searchBox.setSelectionRange(length, length);
+        var length = searchBox.value.length;
+        searchBox.focus();
+        searchBox.setSelectionRange(length, length);
     </script>
-    }
+}

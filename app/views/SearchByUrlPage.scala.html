@@ -14,15 +14,16 @@
  * limitations under the License.
  *@
 
-@import views.html.helper.CSRF
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
 
 @this(viewMessages: ViewMessages)
-@(form: Form[_],
- searchResults: Seq[FrontendRoutes],
- serviceNameToUrl: String => Call)(implicit request: Request[_])
+
+@(form            : Form[_],
+  searchResults   : Seq[FrontendRoutes],
+  serviceNameToUrl: String => Call
+)(implicit request: Request[_])
 
 @standard_layout("Service Search", "search") {
     <header>
@@ -45,9 +46,7 @@
         <div class="board">
             <div class="board__body">
                 <form action="@uk.gov.hmrc.cataloguefrontend.routes.SearchByUrlController.searchUrl" method="post">
-                    @{
-                        play.filters.csrf.CSRF.getToken(request).map { token => CSRF.formField(request) }
-                    }
+                    @csrfFormField
                     <div class="form-group row col-xs-12">
                         <div class="col-xs-3"><label for="search">https://www.tax.service.gov.uk/</label></div>
                         <div class="col-xs-8"><input class="search form-control" id="search-box" type="text" name="name" value="@form("name").value" autofocus /></div>

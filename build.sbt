@@ -24,6 +24,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
     ),
+    TwirlKeys.templateImports += "uk.gov.hmrc.cataloguefrontend.util.ViewHelper.csrfFormField",
     // ***************
     // Use the silencer plugin to suppress warnings from unused imports in compiled twirl templates
     scalacOptions += "-P:silencer:pathFilters=html;routes",

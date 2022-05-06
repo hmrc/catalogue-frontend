@@ -54,7 +54,9 @@
                 @helper.form(
                     action =  appRoutes.BobbyRulesTrendController.display,
                     'class -> "form-inline",
-                    'id    -> "bobby-rules-trend-form") {
+                    'id    -> "bobby-rules-trend-form"
+                ) {
+                    @csrfFormField
 
                     <table class="padded-table">
                         <tr>

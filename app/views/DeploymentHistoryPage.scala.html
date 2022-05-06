@@ -37,13 +37,13 @@
     </header>
 
     @if(form.hasErrors) {
-    <div class="alert alert-danger" role="alert">
+      <div class="alert alert-danger" role="alert">
         <ul class="list">
             @form.errors.map { error =>
-            <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+              <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
             }
         </ul>
-    </div>
+      </div>
     }
 
     <div id="service-list">
@@ -56,12 +56,12 @@
                 </div>
                 <div class="col-xs-3">
                     @select(
-                        field = form("team"),
-                        options = teams.map(t => t.name.asString -> t.name.asString),
+                        field     =  form("team"),
+                        options   =  teams.map(t => t.name.asString -> t.name.asString),
                         '_default -> "All",
-                        '_label -> "Team",
+                        '_label   -> "Team",
                         'onchange -> "this.form.submit()",
-                        'id -> "team-search"
+                        'id       -> "team-search"
                     )
                 </div>
                 <div class="col-xs-2">
@@ -92,7 +92,7 @@
                 <th class="col-lg-2"><button role="button" class="no-border" data-sort="deployer">Deployer</button></th>
             </tr>
             <tbody class="list">
-                @deployments.zipWithIndex.map{case (d, i) =>
+              @deployments.zipWithIndex.map{case (d, i) =>
                 <tr id="row@i">
                   <td id="row@{i}_name" class="service-name">
                       <a class="service-name-link" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString)">@{d.name.asString}</a>
@@ -106,12 +106,12 @@
                   </td>
                   <td id="row@{i}_version"    class="version">@{d.version.asString}</td>
                   <td id="row@{i}_deploytime" class="deploy-time monospaced">@{d.time.time.asPattern(`yyyy-MM-dd HH:mm:ss z`)}</td>
-                  <td id="row@{i}_deployer" class="deployer">@userLink(d.username)</td>
+                  <td id="row@{i}_deployer"   class="deployer">@userLink(d.username)</td>
                 </tr>
-                }
-          </tbody>
+              }
+            </tbody>
             @pageNavigation()
-      </table>
+        </table>
     </div>
 }
 
