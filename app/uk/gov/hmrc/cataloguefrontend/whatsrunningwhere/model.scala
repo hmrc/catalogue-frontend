@@ -146,6 +146,20 @@ object JsonCodecs {
     ~ (__ \ "username"   ).read[Username]
     )(DeploymentHistory.apply _)
   }
+
+  val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] = {
+    implicit val ef  = environmentFormat
+    implicit val anf = applicationNameFormat
+    (
+      (__ \ "environment" ).read[Environment]
+    ~ (__ \ "version"     ).read[String]
+    ~ (__ \ "username"    ).read[String]
+    ~ (__ \ "start"       ).read[Instant]
+    ~ (__ \ "end"         ).read[Instant]
+    ~ (__ \ "displayStart").readNullable[Instant]
+    ~ (__ \ "displayEnd"  ).readNullable[Instant]
+    )(DeploymentTimelineEvent.apply _ )
+  }
 }
 
 case class TimeSeen(time: Instant)
@@ -244,3 +258,13 @@ object Pagination {
       .setParameter("page", page.toString)
       .build()
 }
+
+case class DeploymentTimelineEvent(
+  env         : Environment,
+  version     : String,
+  userName    : String,
+  start       : Instant,
+  end         : Instant,
+  displayStart: Option[Instant] = None, // set on the first/last event to the actual end date rather than the end of the chart
+  displayEnd  : Option[Instant] = None
+)

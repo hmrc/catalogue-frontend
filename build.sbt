@@ -22,6 +22,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.cataloguefrontend.model.Environment",
       "uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType",
       "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType",
+      "uk.gov.hmrc.cataloguefrontend.binders.Binders._",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
     ),
     // ***************

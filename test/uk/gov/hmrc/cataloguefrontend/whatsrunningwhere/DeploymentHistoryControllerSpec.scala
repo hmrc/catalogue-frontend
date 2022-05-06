@@ -29,6 +29,7 @@ import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.http.SessionKeys
 import views.html.DeploymentHistoryPage
+import views.html.whatsrunningwhere.DeploymentTimeline
 
 import java.time.{Instant, LocalDate}
 import scala.concurrent.{ExecutionContext, Future}
@@ -46,13 +47,17 @@ class DeploymentHistoryControllerSpec
     lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     lazy val mockedReleasesConnector             = mock[ReleasesConnector]
     lazy val authStubBehaviour                   = mock[StubBehaviour]
+    lazy val mockedDeploymentGraphService        = mock[DeploymentGraphService]
     lazy val authComponent                       = FrontendAuthComponentsStub(authStubBehaviour)
     lazy val page                                = new DeploymentHistoryPage()
+    lazy val timelinePage                        = new DeploymentTimeline()
 
     lazy val controller = new DeploymentHistoryController(
       mockedReleasesConnector,
       mockedTeamsAndRepositoriesConnector,
+      mockedDeploymentGraphService,
       page,
+      timelinePage,
       Configuration.empty,
       mcc,
       authComponent
@@ -166,4 +171,5 @@ class DeploymentHistoryControllerSpec
       status(response) shouldBe 200
     }
   }
+
 }
