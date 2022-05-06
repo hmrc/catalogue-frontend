@@ -19,6 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import views.partials.githubBadgeType
 
 @this(
@@ -28,7 +29,8 @@
 
 @(repository         : GitRepository,
   repositoryModules  : Option[RepositoryModules],
-  linkToLeakDetection: Option[String]
+  linkToLeakDetection: Option[String],
+  authorisation      : EnableBranchProtection.HasAuthorisation
 )(implicit
   messages           : Messages,
   request            : Request[_]
@@ -68,7 +70,7 @@
       </div>
 
       <div class="col-md-6">
-        @partials.code(repository, request)
+        @partials.code(repository, authorisation, request)
       </div>
     </div>
 

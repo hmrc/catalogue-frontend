@@ -33,6 +33,7 @@ class PrototypePageSpec
 
   "A prototype page" should {
     "show the teams owning the prototype" in {
+      setupEnableBranchProtectionAuthEndpoint()
       serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
       serviceEndpoint(GET, "/api/jenkins-url/2fa-prototype"    , willRespondWith = (200, Some(jenkinsData)))
 

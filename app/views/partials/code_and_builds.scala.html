@@ -21,26 +21,17 @@
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import views.html.helper.CSRF
 
-@(serviceName: String, repo: GitRepository, request: Request[_])
-
-@boolToGlyph(bool: Boolean) = {
-  @if(bool) {
-    <span class="glyphicon glyphicon-ok text-success"></span>
-    <span class="sr-only">enabled</span>
-  } else {
-    <span class="glyphicon glyphicon-remove text-danger"></span>
-    <span class="sr-only">not enabled</span>
-  }
-}
+@(serviceName: String, repo: GitRepository, authorisation: EnableBranchProtection.HasAuthorisation, request: Request[_])
 
 <div id="code-and-build">
     <div class="board">
         <h3 class="board__heading">Code and Build</h3>
         <div class="board__body">
             @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
-              @partials.branchProtection(repo, request)
+              @partials.branchProtection(repo, authorisation, request)
               <hr style="margin-top: 0px">
             }
             <ul class="list list--minimal list-two-columns">
