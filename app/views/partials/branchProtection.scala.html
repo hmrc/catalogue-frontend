@@ -15,7 +15,9 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import views.html.helper.CSRF
+@import uk.gov.hmrc.cataloguefrontend.routes
 
 @(repo: GitRepository, request: Request[_])
 
@@ -48,9 +50,8 @@
                 Are you sure you want to enable branch protection on the @{repo.name} repository?
             </div>
             <div class="modal-footer">
-                <form id="setBranchProtection" method="post">
+                <form id="setBranchProtection" action="@{routes.CatalogueController.enableBranchProtection(repo.name)}" method="post">
                     @{CSRF.formField(request)}
-                    <input type="hidden" name="repoName" value="@{repo.name}"/>
                 </form>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button type="submit" form="setBranchProtection" class="btn btn-primary">Yes</button>

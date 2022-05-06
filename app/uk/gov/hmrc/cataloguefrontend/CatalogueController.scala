@@ -33,7 +33,8 @@ import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig,
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.{MarkdownLoader, TelemetryLinks}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
-import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource}
+import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
@@ -131,11 +132,6 @@ class CatalogueController @Inject() (
             case _ => Future.successful(notFound)
           }
 
-      SetBranchProtection
-        .form
-        .bindFromRequest()
-        .value
-        .traverse_(sbp => teamsAndRepositoriesConnector.setBranchProtection(sbp.repoName)) *>
           buildServicePageFromRepoName(serviceName).getOrElseF(buildServicePageFromItsArtifactName(serviceName))
     }
 
@@ -234,11 +230,6 @@ class CatalogueController @Inject() (
   def repository(name: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
 
-    SetBranchProtection
-      .form
-      .bindFromRequest()
-      .value
-      .traverse_(sbp => teamsAndRepositoriesConnector.setBranchProtection(sbp.repoName)) *>
         OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
           .foldF(Future.successful(notFound))(repoDetails =>
             repoDetails.repoType match {
@@ -252,6 +243,17 @@ class CatalogueController @Inject() (
             }
           )
     }
+
+  def enableBranchProtection(repoName: String) =
+    auth
+      .authorizedAction(
+        continueUrl = routes.CatalogueController.repository(repoName),
+        predicate = EnableBranchProtection.permission(repoName))
+      .async { implicit request =>
+        teamsAndRepositoriesConnector
+          .enableBranchProtection(repoName)
+          .map(_ => Redirect(routes.CatalogueController.repository(repoName)))
+      }
 
   def renderLibrary(repoDetails: GitRepository)(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
@@ -442,11 +444,12 @@ object RepoListFilter {
   )
 }
 
-case class SetBranchProtection(repoName: String)
-
-object SetBranchProtection {
-  lazy val form: Form[SetBranchProtection] =
-    Form(mapping("repoName" -> text)(SetBranchProtection.apply)(SetBranchProtection.unapply))
+object EnableBranchProtection {
+  def permission(repoName: String): Permission =
+    Predicate.Permission(
+      Resource.from("catalogue-repository", repoName),
+      IAAction("WRITE_BRANCH_PROTECTION")
+    )
 }
 
 case class DefaultBranchesFilter(
