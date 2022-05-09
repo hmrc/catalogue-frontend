@@ -271,7 +271,7 @@ class CatalogueController @Inject() (
   ): Future[EnableBranchProtection.HasAuthorisation] =
     auth
       .verify(Retrieval.hasPredicate(EnableBranchProtection.permission(repoName)))
-      .map(r => EnableBranchProtection.HasAuthorisation.fromBoolean(r.getOrElse(false)))
+      .map(r => EnableBranchProtection.HasAuthorisation(r.getOrElse(false)))
 
   def renderLibrary(
     repoDetails: GitRepository,
@@ -476,19 +476,7 @@ object RepoListFilter {
 
 object EnableBranchProtection {
 
-  sealed trait HasAuthorisation
-
-  object HasAuthorisation {
-
-    final case object Yes extends HasAuthorisation
-    final case object No extends HasAuthorisation
-
-    def fromBoolean(hasAuthorisation: Boolean): HasAuthorisation =
-      if (hasAuthorisation)
-        Yes
-      else
-        No
-  }
+  final case class HasAuthorisation(value: Boolean) extends AnyVal
 
   def permission(repoName: String): Permission =
     Predicate.Permission(

@@ -38,8 +38,7 @@
     <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresCommitSignatures)) Requires commit signatures</li>
 </ul>
 
-@hasBranchProtectionAuth match {
-  case EnableBranchProtection.HasAuthorisation.Yes if repo.branchProtection.forall(!_.isProtected) => {
+@if(hasBranchProtectionAuth.value && repo.branchProtection.forall(!_.isProtected)) {
     <button type="button"
             class="btn btn-primary"
             data-toggle="modal"
@@ -47,8 +46,7 @@
             style="margin-left: 15px; margin-bottom: 15px">
         Enable
     </button>
-  }
-  case _ => {
+} else {
     <button type="button"
             class="btn btn-primary"
             data-toggle="modal"
@@ -57,7 +55,6 @@
             disabled>
         Enable
     </button>
-  }
 }
 
 <div class="modal fade" id="enableBranchProtectionModal" tabindex="-1" role="dialog" aria-labelledby="enableBranchProtectionModalTitle" aria-hidden="true">
