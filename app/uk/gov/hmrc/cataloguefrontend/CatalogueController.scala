@@ -118,25 +118,25 @@ class CatalogueController @Inject() (
     */
   def service(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      def buildServicePageFromItsArtifactName(serviceName: String, hasAuth: EnableBranchProtection.HasAuthorisation): Future[Result] =
+      def buildServicePageFromItsArtifactName(serviceName: String, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): Future[Result] =
         configService.findArtifactName(serviceName).flatMap {
-          case ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName, hasAuth).getOrElse(notFound)
+          case ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName, hasBranchProtectionAuth).getOrElse(notFound)
           case ArtifactNameNotFound            => Future.successful(notFound)
           case ArtifactNameError(error)        => logger.error(error)
                                                   Future.successful(InternalServerError)
         }
 
-      def buildServicePageFromRepoName(repoName: String, hasAuth: EnableBranchProtection.HasAuthorisation): OptionT[Future, Result] =
+      def buildServicePageFromRepoName(repoName: String, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): OptionT[Future, Result] =
         OptionT(teamsAndRepositoriesConnector.repositoryDetails(repoName))
           .semiflatMap {
-            case repositoryDetails if repositoryDetails.repoType == RepoType.Service => renderServicePage(serviceName, repositoryDetails, hasAuth)
+            case repositoryDetails if repositoryDetails.repoType == RepoType.Service => renderServicePage(serviceName, repositoryDetails, hasBranchProtectionAuth)
             case _ => Future.successful(notFound)
           }
 
       for {
-        hasAuth <- hasEnableBranchProtectionAuthorisation(serviceName)
-        result <- buildServicePageFromRepoName(serviceName, hasAuth)
-                    .getOrElseF(buildServicePageFromItsArtifactName(serviceName, hasAuth))
+        hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(serviceName)
+        result <- buildServicePageFromRepoName(serviceName, hasBranchProtectionAuth)
+                    .getOrElseF(buildServicePageFromItsArtifactName(serviceName, hasBranchProtectionAuth))
       } yield result
 
     }
@@ -144,7 +144,7 @@ class CatalogueController @Inject() (
   private def renderServicePage(
     serviceName      : String,
     repositoryDetails: GitRepository,
-    hasAuth: EnableBranchProtection.HasAuthorisation
+    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit
     messages: Messages,
     request : Request[_]
@@ -223,7 +223,7 @@ class CatalogueController @Inject() (
           linkToLeakDetection         = urlIfLeaksFound,
           productionEnvironmentRoute  = serviceUrl,
           serviceRoutes               = serviceRoutes,
-          authorisation               = hasAuth
+          hasBranchProtectionAuth     = hasBranchProtectionAuth
         )
       )
     }
@@ -238,18 +238,18 @@ class CatalogueController @Inject() (
   def repository(name: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        hasAuth <- hasEnableBranchProtectionAuthorisation(name)
+        hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(name)
         result <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
                     .foldF(Future.successful(notFound))(repoDetails =>
                       repoDetails.repoType match {
                         case RepoType.Service   => renderServicePage(
                           serviceName       = repoDetails.name,
                           repositoryDetails = repoDetails,
-                          hasAuth = hasAuth
+                          hasBranchProtectionAuth = hasBranchProtectionAuth
                         )
-                        case RepoType.Library   => renderLibrary(repoDetails, hasAuth)
-                        case RepoType.Prototype => renderPrototype(repoDetails, hasAuth)
-                        case RepoType.Other     => renderOther(repoDetails, hasAuth)
+                        case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth)
+                        case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth)
+                        case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth)
                       }
                     )
       } yield result
@@ -275,7 +275,7 @@ class CatalogueController @Inject() (
 
   def renderLibrary(
     repoDetails: GitRepository,
-    hasAuth: EnableBranchProtection.HasAuthorisation
+    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
@@ -289,14 +289,14 @@ class CatalogueController @Inject() (
           repoDetails.copy(jenkinsURL = jenkinsLink.map(_.url)),
           repoModules,
           urlIfLeaksFound,
-          hasAuth
+          hasBranchProtectionAuth
         )
       )
     }
 
   private def renderPrototype(
     repoDetails: GitRepository,
-    hasAuth: EnableBranchProtection.HasAuthorisation
+    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit messages: Messages, request: Request[_]): Future[Result] =
     for {
       urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
@@ -304,12 +304,12 @@ class CatalogueController @Inject() (
       Ok(prototypeInfoPage(
         repoDetails,
         urlIfLeaksFound,
-        hasAuth
+        hasBranchProtectionAuth
       ))
 
   private def renderOther(
     repoDetails: GitRepository,
-    hasAuth: EnableBranchProtection.HasAuthorisation
+    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
@@ -328,7 +328,7 @@ class CatalogueController @Inject() (
           ),
           repoModules,
           urlIfLeaksFound,
-          hasAuth
+          hasBranchProtectionAuth
         )
       )
     }

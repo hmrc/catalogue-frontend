@@ -19,7 +19,7 @@
 @import views.html.helper.CSRF
 @import uk.gov.hmrc.cataloguefrontend.routes
 
-@(repo: GitRepository, authorisation: EnableBranchProtection.HasAuthorisation, request: Request[_])
+@(repo: GitRepository, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation, request: Request[_])
 
 @boolToGlyph(bool: Boolean) = {
   @if(bool) {
@@ -38,7 +38,7 @@
     <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresCommitSignatures)) Requires commit signatures</li>
 </ul>
 
-@authorisation match {
+@hasBranchProtectionAuth match {
   case EnableBranchProtection.HasAuthorisation.Yes if repo.branchProtection.forall(!_.isProtected) => {
     <button type="button"
             class="btn btn-primary"

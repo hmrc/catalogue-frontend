@@ -27,13 +27,13 @@
   modulesPartial     : ModulesPartial
 )
 
-@(repository         : GitRepository,
-  repositoryModules  : Option[RepositoryModules],
-  linkToLeakDetection: Option[String],
-  authorisation      : EnableBranchProtection.HasAuthorisation
+@(repository             : GitRepository,
+  repositoryModules      : Option[RepositoryModules],
+  linkToLeakDetection    : Option[String],
+  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
 )(implicit
-  messages           : Messages,
-  request            : Request[_]
+  messages               : Messages,
+  request                : Request[_]
 )
 
 @standard_layout(repository.name, "repositories") {
@@ -70,7 +70,7 @@
       </div>
 
       <div class="col-md-6">
-        @partials.code(repository, authorisation, request)
+        @partials.code(repository, hasBranchProtectionAuth, request)
       </div>
     </div>
 

@@ -23,9 +23,9 @@
 
 @this(prototypeDetailsPartial: PrototypeDetailsPartial, viewMessages: ViewMessages)
 
-@(prototype          : GitRepository,
-  linkToLeakDetection: Option[String],
-  authorisation      : EnableBranchProtection.HasAuthorisation
+@(prototype              : GitRepository,
+  linkToLeakDetection    : Option[String],
+  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
 )(implicit
   messages: Messages,
   request: Request[_]
@@ -59,7 +59,7 @@
             </div>
 
             <div class="col-md-6">
-                @partials.code(prototype, authorisation, request)
+                @partials.code(prototype, hasBranchProtectionAuth, request)
             </div>
         </div>
     </section>
