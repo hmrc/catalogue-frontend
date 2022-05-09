@@ -16,10 +16,9 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
-@import views.html.helper.CSRF
 @import uk.gov.hmrc.cataloguefrontend.routes
 
-@(repo: GitRepository, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation, request: Request[_])
+@(repo: GitRepository, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation)(implicit request: Request[_])
 
 @boolToGlyph(bool: Boolean) = {
   @if(bool) {
@@ -62,7 +61,7 @@
             </div>
             <div class="modal-footer">
                 <form id="enableBranchProtection" action="@{routes.CatalogueController.enableBranchProtection(repo.name)}" method="post">
-                    @{CSRF.formField(request)}
+                    @csrfFormField
                 </form>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button type="submit" form="enableBranchProtection" class="btn btn-primary">Yes</button>

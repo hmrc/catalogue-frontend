@@ -24,14 +24,14 @@
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import views.html.helper.CSRF
 
-@(serviceName: String, repo: GitRepository, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation, request: Request[_])
+@(serviceName: String, repo: GitRepository, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation)(implicit request: Request[_])
 
 <div id="code-and-build">
     <div class="board">
         <h3 class="board__heading">Code and Build</h3>
         <div class="board__body">
             @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
-              @partials.branchProtection(repo, hasBranchProtectionAuth, request)
+              @partials.branchProtection(repo, hasBranchProtectionAuth)
               <hr style="margin-top: 0px">
             }
             <ul class="list list--minimal list-two-columns">
