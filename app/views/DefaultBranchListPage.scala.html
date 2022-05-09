@@ -36,13 +36,13 @@
 </header>
 
 @if(form.hasErrors) {
-<div class="alert alert-danger" role="alert">
+  <div class="alert alert-danger" role="alert">
     <ul class="list">
-        @form.errors.map { error =>
+      @form.errors.map { error =>
         <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
-        }
+      }
     </ul>
-</div>
+  </div>
 }
 
 <div id="default-branches">
@@ -55,15 +55,15 @@
                 </div>
             </div>
             <div class="col col-xs-3" style="padding-left: 15px; padding-right: 15px;">
-                @select(
-                field = form("teamNames"),
-                options = teams.map(t => t -> t),
+              @select(
+                field     =  form("teamNames"),
+                options   =  teams.map(t => t -> t),
                 '_default -> "All",
-                '_label -> "Teams: ",
-                'name -> "teamNames",
-                'value -> "form('teamNames').value",
-                'id -> "teamNames"
-                )
+                '_label   -> "Teams: ",
+                'name     -> "teamNames",
+                'value    -> "form('teamNames').value",
+                'id       -> "teamNames"
+              )
                 <div>
                     Single ownership
                     <input class="checkbox" id="singleOwnership" name="singleOwnership" type="checkbox" data-toggle="tooltip" title="Return repositories that are owned solely by the selected team." value="true" @if(singleOwnership){checked}/>
@@ -103,18 +103,18 @@
             </td>
             <td class="teamNames monospaced" id="row@{i}_teamNames">
                 @if(repo.teamNames.length > 0 && repo.teamNames.length <= 10) {
-                        @repo.teamNames.mkString(", ")
-                    } else  {
-                        <i title="@repo.teamNames.mkString(", ")">Various Teams</i>
-                    }
+                    @repo.teamNames.mkString(", ")
+                } else  {
+                    <i title="@repo.teamNames.mkString(", ")">Various Teams</i>
+                }
             </td>
             <td class="defaultBranch monospaced" id="row@{i}_defaultBranch">
                 @repo.defaultBranch
             </td>
             @if(includeArchived) {
-            <td class="isArchived monospaced" id="row@{i}_isArchived">
+              <td class="isArchived monospaced" id="row@{i}_isArchived">
                 @repo.isArchived
-            </td>
+              </td>
             }
         </tr>
         }

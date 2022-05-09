@@ -52,7 +52,7 @@
             , 'style -> "padding-left: 20px; padding-right: 20px"
             ) {
 
-            @CSRF.formField
+              @csrfFormField
 
             <div class="panel @if(env == Environment.Production) {panel-danger} else {panel-warning}">
                 <div class="panel-heading">

@@ -14,14 +14,20 @@
  * limitations under the License.
  *@
 
-@import views.html.helper.CSRF
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionBranchSummary, routes => appRoutes}
 
 @this(viewMessages: ViewMessages)
 
-@(repoName: String, includeNonIssues: Boolean, summaries: Seq[LeakDetectionBranchSummary], canRescan: Boolean)(implicit messages: Messages, request: Request[_])
+@(repoName        : String,
+  includeNonIssues: Boolean,
+  summaries       : Seq[LeakDetectionBranchSummary],
+  canRescan       : Boolean
+)(implicit
+  messages: Messages,
+  request : Request[_]
+)
 
 @standard_layout(s"Leak detection: $repoName") {
     <header>
@@ -44,10 +50,8 @@
         </div>
     } else {
         <div id="branch-list">
-            <form id="rescan-form" method="POST">
-                @{
-                    play.filters.csrf.CSRF.getToken(request).map { token => CSRF.formField(request) }
-                }
+          <form id="rescan-form" method="POST">
+            @csrfFormField
             <table class="table table-striped">
                 <thead>
                     <tr>
@@ -63,11 +67,12 @@
                 @summaries.map(leakDetectionBranchSummary(repoName, _))
                 </tbody>
             </table>
+          </form>
         </div>
 
         <script>
-                var options = {valueNames: ['branch', 'scanned', 'warnings', 'exemptions', 'violations']};
-                branchList = new List('branch-list', options);
+            var options = {valueNames: ['branch', 'scanned', 'warnings', 'exemptions', 'violations']};
+            branchList = new List('branch-list', options);
         </script>
     }
 }
@@ -95,5 +100,6 @@
             ">@count</a>
         } else {
             <span>0</span>
-        }</td>
+        }
+    </td>
 }

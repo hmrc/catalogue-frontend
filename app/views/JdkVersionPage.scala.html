@@ -54,7 +54,7 @@
         <div class="form-inline">
             <label for="flag">Environment:</label>
             <select name="flag" onchange="this.options[this.selectedIndex].value && (window.location = this.options[this.selectedIndex].value);">
-            @flags.map(flagSelect)
+              @flags.map(flagSelect)
             </select>
         </div>
     </form>

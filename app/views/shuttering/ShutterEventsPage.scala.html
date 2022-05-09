@@ -18,76 +18,83 @@
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterEventsView, ShutterStateChangeEvent}
 
-@(events: Seq[ShutterStateChangeEvent], form: Form[_], environments: List[Environment])(implicit messages: Messages, request: Request[_])
+@(
+  events      : Seq[ShutterStateChangeEvent],
+  form        : Form[_],
+  environments: List[Environment]
+)(implicit
+  messages: Messages,
+  request : Request[_]
+)
 
 @standard_layout("Shutter Events", "shuttering") {
-<header>
- <h1>Shutter Events</h1>
-</header>
+  <header>
+    <h1>Shutter Events</h1>
+  </header>
 
-<div id="events">
- <form id="shutter-events-form" action="/shutter-events/list" method="get" class="form-inline">
-  <input id="environment" name="environment" type="text" value="@form("environment").value" hidden>
-  <label>Service: <input id="serviceName" name="serviceName" type="search" autofocus value=@form("serviceName").value></label>
-  <a id="clear" class="btn btn-secondary" href="@clearTargetFor(environments.find(env => form("environment").value.contains(env.asString)).getOrElse(environments.head))">Clear</a>
-  <button id="search-button" class="btn btn-primary" type="submit">Search</button>
- </form>
+  <div id="events">
+    <form id="shutter-events-form" action="/shutter-events/list" method="get" class="form-inline">
+      <input id="environment" name="environment" type="text" value="@form("environment").value" hidden>
+      <label>Service: <input id="serviceName" name="serviceName" type="search" autofocus value=@form("serviceName").value></label>
+      <a id="clear" class="btn btn-secondary" href="@clearTargetFor(environments.find(env => form("environment").value.contains(env.asString)).getOrElse(environments.head))">Clear</a>
+      <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+    </form>
 
- <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
-   @environments.map(makeTab)
- </ul>
+    <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
+      @environments.map(makeTab)
+    </ul>
 
- <table class="table table-striped shutter-events" id="events-list">
-  <thead>
-   <tr>
-    <th class="service">
-     <button role="button" class="sort no-border" data-sort="service">Service</button>
-    </th>
-    <th class="type">
-     <button role="button" class="sort no-border" data-sort="type">Type</button>
-    </th>
-    <th class="status">
-     <button role="button" class="sort no-border" data-sort="status">Status</button>
-    </th>
-    <th class="reason">
-     <button role="button" class="sort no-border" data-sort="reason">Reason</button>
-    </th>
-    <th class="cause">
-     <button role="button" class="sort no-border" data-sort="cause">Cause</button>
-    </th>
-    <th class="username">
-     <button role="button" class="sort no-border" data-sort="username">Username</button>
-    </th>
-    <th class="timestamp">
-     <button role="button" class="sort no-border" data-sort="timestamp">Timestamp</button>
-    </th>
-   </tr>
-  </thead>
-  <tbody class="list">
-  @events.zipWithIndex.map { case (event, i) =>
-  <tr id="row@i">
-   <td class="service" id="row@{i}_service">@event.serviceName</td>
-   <td class="type" id="row@{i}_type">@event.shutterType.asString</td>
-   <td class="status" id="row@{i}_status">@event.status.value.asString</td>
-   <td class="reason" id="row@{i}_reason">@ShutterEventsView.reasonFor(event.status)</td>
-   <td class="cause" id="row@{i}_cause">@event.cause.asString</td>
-   <td class="username" id="row@{i}_username">@event.username</td>
-   <td class="timestamp" id="row@{i}_timestamp">@event.timestamp.asPattern(`yyyy-MM-dd HH:mm:ss z`)</td>
-  </tr>
-  }
-  </tbody>
- </table>
-</div>
+    <table class="table table-striped shutter-events" id="events-list">
+      <thead>
+        <tr>
+          <th class="service">
+            <button role="button" class="sort no-border" data-sort="service">Service</button>
+          </th>
+          <th class="type">
+            <button role="button" class="sort no-border" data-sort="type">Type</button>
+          </th>
+          <th class="status">
+            <button role="button" class="sort no-border" data-sort="status">Status</button>
+          </th>
+          <th class="reason">
+            <button role="button" class="sort no-border" data-sort="reason">Reason</button>
+          </th>
+          <th class="cause">
+            <button role="button" class="sort no-border" data-sort="cause">Cause</button>
+          </th>
+          <th class="username">
+            <button role="button" class="sort no-border" data-sort="username">Username</button>
+          </th>
+          <th class="timestamp">
+            <button role="button" class="sort no-border" data-sort="timestamp">Timestamp</button>
+          </th>
+        </tr>
+      </thead>
+      <tbody class="list">
+        @events.zipWithIndex.map { case (event, i) =>
+          <tr id="row@i">
+             <td class="service" id="row@{i}_service">@event.serviceName</td>
+             <td class="type" id="row@{i}_type">@event.shutterType.asString</td>
+             <td class="status" id="row@{i}_status">@event.status.value.asString</td>
+             <td class="reason" id="row@{i}_reason">@ShutterEventsView.reasonFor(event.status)</td>
+             <td class="cause" id="row@{i}_cause">@event.cause.asString</td>
+             <td class="username" id="row@{i}_username">@event.username</td>
+             <td class="timestamp" id="row@{i}_timestamp">@event.timestamp.asPattern(`yyyy-MM-dd HH:mm:ss z`)</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 }
 
 @makeTab(env: Environment) = {
-<li id="tab-@env.asString" class="navbar-item @if(form("environment").value.contains(env.asString)) {active}">
-  <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, form("serviceName").value)" class="navbar-link">@env.displayString</a>
-</li>
+  <li id="tab-@env.asString" class="navbar-item @if(form("environment").value.contains(env.asString)) {active}">
+    <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, form("serviceName").value)" class="navbar-link">@env.displayString</a>
+  </li>
 }
 
 @clearTargetFor(env: Environment) = {
- @uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, None)
+  @uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, None)
 }
 
 <script>

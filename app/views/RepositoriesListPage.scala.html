@@ -39,7 +39,7 @@
         <div class="alert alert-danger" role="alert">
         <ul class="list">
             @form.errors.map { error =>
-            <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+              <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
             }
         </ul>
     </div>
@@ -64,13 +64,13 @@
                 </div>
                 <div class="form-group col-md-3">
                     @select(
-                    field   = form("repoType"),
-                    options = Seq(
-                    "Library"   -> "Library",
-                    "Prototype" -> "Prototype",
-                    "Service"   -> "Service",
-                    "Other"     -> "Other"
-                    ),
+                    field       =  form("repoType"),
+                    options     =  Seq(
+                                     "Library"   -> "Library",
+                                     "Prototype" -> "Prototype",
+                                     "Service"   -> "Service",
+                                     "Other"     -> "Other"
+                                   ),
                     '_default -> "All",
                     '_label   -> "Type",
                     'onchange -> "this.form.submit()",
@@ -95,13 +95,14 @@
             @repositories.zipWithIndex.map{case (repo, i) =>
             <tr id="row@i">
                 <td class="service-name" id="row@{i}_name">
-
                     <a class="repo-name @if(repo.isDeprecated || repo.isArchived){deprecated} @if(repo.isArchived){archived}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
                 </td>
 
                 <td class="" id="row@{i}_repostatus">
 
-                    @if(repo.isArchived) { <span class="repo-status badge">archived</span> } else {
+                    @if(repo.isArchived) {
+                        <span class="repo-status badge">archived</span>
+                    } else {
                         @if(repo.isDeprecated) { <span class="repo-status badge badge-warning">deprecated</span> }
                     }
 

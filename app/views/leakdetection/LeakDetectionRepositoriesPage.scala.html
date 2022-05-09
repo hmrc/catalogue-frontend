@@ -22,15 +22,18 @@
 
 @this(viewMessages: ViewMessages)
 
-@(rules: Seq[String],
-        summaries: Seq[LeakDetectionRepositorySummary],
-        teams: Seq[Team],
-        form: Form[_],
-        includeWarnings: Boolean,
-        includeExemptions: Boolean,
-        includeViolations: Boolean,
-        includeNonIssues: Boolean
-)(implicit messages: Messages, request: Request[_])
+@(rules            : Seq[String],
+  summaries        : Seq[LeakDetectionRepositorySummary],
+  teams            : Seq[Team],
+  form             : Form[_],
+  includeWarnings  : Boolean,
+  includeExemptions: Boolean,
+  includeViolations: Boolean,
+  includeNonIssues : Boolean
+)(implicit
+  messages : Messages,
+  request: Request[_]
+)
 
 @standard_layout(s"Leak detection repositories") {
     <header>
@@ -41,22 +44,22 @@
         <div class="form-group row">
             <div class="col-xs-4">
             @select(
-                field = form("rule"),
-                options = rules.map(r => r -> r),
+                field     =  form("rule"),
+                options   =  rules.map(r => r -> r),
                 '_default -> "All",
-                '_label -> "Rule",
+                '_label   -> "Rule",
                 'onchange -> "this.form.submit()",
-                'id -> "rule-dropdown"
+                'id       -> "rule-dropdown"
             )
             </div>
             <div class="col-xs-4">
             @select(
-                field = form("team"),
-                options = teams.map(t => t.name.asString -> t.name.asString),
+                field     =  form("team"),
+                options   =  teams.map(t => t.name.asString -> t.name.asString),
                 '_default -> "All",
-                '_label -> "Team",
+                '_label   -> "Team",
                 'onchange -> "this.form.submit()",
-                'id -> "team-dropdown"
+                'id       -> "team-dropdown"
             )
             </div>
             <div class="col-xs-4">
