@@ -62,37 +62,20 @@ object DeploymentGraphService {
     val last  = data.find(_.end.isAfter(end))
     (first.toSeq ++ body ++ last.toSeq) match {
       case Nil           => Nil
-      case single :: Nil => {
+      case single :: Nil =>
+        // a single event, an awkward edge case that can represent several things
         single match {
-          case s if s.start.isAfter(end) && s.end.isAfter(s.start)   => Seq() // not deployed in this range
-          case s if s.start.isBefore(start) && s.end.isBefore(start) => Seq() // is this right?
-          case s if s.start.isBefore(start) && s.end.isBefore(end)   => Seq(s.copy(start=start, end=end))
-          case s if s.start.isBefore(start) && s.end.isAfter(end)    => Seq(s.copy(start=start, end=end))
-          case s if s.start.isAfter(start) && s.end.isBefore(end)    => Seq(s)  // single deployment inside range? maybe should extend end?
-          case s if s.start.isAfter(start) && s.end.isAfter(end)     => Seq(s.copy(end=end))  // clip end
-          case s                                                     => Seq(s.copy(start=max(start, s.start), end=min(end, s.end)))
+          case s if s.start.isAfter(end)    && s.end.isAfter(s.start) => Seq()                             // completely outside, drop
+          case s if s.start.isAfter(start)  && s.end.isBefore(end)    => Seq(s)                            // single deployment inside range
+          case s if s.start.isAfter(start)  && s.end.isAfter(end)     => Seq(s.copy(end=end))              // inside but clip end
+          case s if s.start.isBefore(start) && s.end.isBefore(start)  => Seq()                             // completely outside, drop
+          case s if s.start.isBefore(start) && s.end.isBefore(end)    => Seq(s.copy(start=start))          // last deployment is latest, stretch end/clip start
+          case s if s.start.isBefore(start) && s.end.isAfter(end)     => Seq(s.copy(start=start, end=end)) // clip start/end
+          case s                                                      => Seq(s.copy(start=max(start, s.start), end=min(end, s.end)) ) // clip when needed
         }
-        // e before start ->
-        // s before start e before end-> s=start, e=?
-        // s before start e after end-> s=start, e=end
-        // s after start e after end -> s=s, e=end
-        // s after start e before end -> s=s, e=e
-        // s after end -> no events
-        // e before start -> no events
-
-  /*      if(first.isDefined) {
-          // clip start, stretch end to
-          Seq(single.copy(start = start, end = max(end, min(start, single.end))))
-        } else if(last.isDefined) {
-          Seq(single.copy(start = max(start, single.start), end = end))
-        } else {
-          Seq(single.copy(start = max(start, single.start), end = min(max(start, single.end), end)))
-        }
-*/
-      }
       case all =>
-        all.updated(0,            all.head.copy(start = start, displayStart = Some(min(all.head.start, start))))
-           .updated(all.length-1, all.last.copy(end   = end, displayEnd     = Some(max(all.last.end, end))))
+        all.updated(0,            all.head.copy(start = start, displayStart = Some(min(all.head.start, start)))) // displayStart/end are for tool tips, showing unclipped dates
+           .updated(all.length-1, all.last.copy(end   = end, displayEnd     = Some(max(all.last.end, end)) ))
     }
   }
 
