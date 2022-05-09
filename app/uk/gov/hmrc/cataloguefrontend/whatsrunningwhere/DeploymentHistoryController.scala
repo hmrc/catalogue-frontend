@@ -17,28 +17,29 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import play.api.Configuration
-
-import java.time.LocalDate
-import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.mvc._
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
-import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DeploymentHistoryPage
+import views.html.whatsrunningwhere.DeploymentTimeline
 
+import java.time.{LocalDate, ZoneOffset}
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DeploymentHistoryController @Inject() (
   releasesConnector            : ReleasesConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  deploymentGraphService       : DeploymentGraphService,
   page                         : DeploymentHistoryPage,
+  timelinePage                 : DeploymentTimeline,
   config                       : Configuration,
   override val mcc             : MessagesControllerComponents,
   override val auth            : FrontendAuthComponents
@@ -84,6 +85,20 @@ class DeploymentHistoryController @Inject() (
             )
         )
     }
+
+  def graph(service: String, to: LocalDate, from: LocalDate) = BasicAuthAction.async { implicit request =>
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+
+    val start  = to.atStartOfDay().toInstant(ZoneOffset.UTC)
+    val end    = from.atTime(23,59,59).toInstant(ZoneOffset.UTC)
+
+    for {
+      services    <- teamsAndRepositoriesConnector.allServices
+      serviceNames = services.map(_.name.toLowerCase).sorted
+      data        <- deploymentGraphService.findEvents(service, start, end)
+      view         = timelinePage(service, start, end, data, serviceNames)
+    } yield Ok(view)
+  }
 }
 
 object DeploymentHistoryController {
@@ -119,4 +134,5 @@ object DeploymentHistoryController {
         verifying ("To Date must be greater than or equal to From Date", f => f.to.isAfter(f.from))
     )
   }
+
 }

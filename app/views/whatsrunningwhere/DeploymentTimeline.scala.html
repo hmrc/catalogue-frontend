@@ -1,0 +1,133 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import helper._
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
+@import java.time.Instant
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentGraphService
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.TimelinePalette
+
+@this()
+
+
+@(service: String, start: Instant, end: Instant, events: Seq[DeploymentTimelineEvent], services: Seq[String])(implicit messages: Messages, request: Request[_])
+
+
+@colorForVersion(version: String) = @{
+
+    if(version == DeploymentGraphService.notDeployedMessage) {
+      "color: #ccc"
+    } else {
+      TimelinePalette.rgb(Math.abs(version.hashCode) % TimelinePalette.rgb.length)
+    }
+}
+
+@standard_layout("Deployments", "deployments") {
+
+    <style>
+        .timeline-tooltip {
+            padding: 6px;
+        }
+    </style>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script type="text/javascript">
+            google.charts.load("current", {packages:["timeline"]});
+            google.charts.setOnLoadCallback(drawChart);
+
+            function drawChart() {
+
+                let data = [
+                    @events.map{ e =>
+                        ['@e.env',
+                        '@{e.version}',
+                         makeToolTip('@{e.version}', '@{e.userName}', '@{e.displayStart.getOrElse(e.start).asPattern(`yyyy-MM-dd HH:mm z`)}' ,'@{e.displayEnd.getOrElse(e.end).asPattern(`yyyy-MM-dd HH:mm z`)}', @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays}),
+                        '@colorForVersion(e.version)',
+                        new Date(@{e.start.toEpochMilli}),
+                        new Date(@{e.end.toEpochMilli}),
+
+                    ], }
+
+                ]
+
+                let options = {tooltip: { isHtml: true }, enableInteractivity: false};
+                let container = document.getElementById('history-chart');
+                if(container == null) return
+                let chart = new google.visualization.Timeline(container);
+                let dataTable = new google.visualization.DataTable();
+                dataTable.addColumn({ type: 'string', id: 'Position' });
+                dataTable.addColumn({ type: 'string', id: 'Name' });
+                dataTable.addColumn({ type: 'string', role: 'tooltip' });
+                dataTable.addColumn({ type: 'string', role: 'style'});
+                dataTable.addColumn({ type: 'date', id: 'Start' });
+                dataTable.addColumn({ type: 'date', id: 'End' });
+
+                dataTable.addRows(data)
+                chart.draw(dataTable, options);
+            }
+
+            function makeToolTip(ver, user, start, end, days) {
+                if(ver === "@DeploymentGraphService.notDeployedMessage") {
+                    return `<div class="timeline-tooltip">No deployment events found in this date range</div>`
+                }
+                return `<div class="timeline-tooltip"><b> ${ver} deployed by ${user} </b><br>From ${start} To  ${end}<br><em>Deployed for ${days} days</em> </div>`
+            }
+    </script>
+    <h2>Deployment History - @service</h2>
+    <div class="row">
+        <form action="" method="get" class="form-horizontal">
+
+            <div class="col-sm-3">
+                <select name="service" id="service" class="form-control" onchange="this.form.submit()">
+                    <option value=""></option>
+                    @services.map { s => <option value="@s" @if(service.equalsIgnoreCase(s)) { selected="true" } >@s</option> }
+                </select>
+            </div>
+
+            <div class="col-sm-2">
+              <input type="date" id="start" name="start" value="@start.asPattern("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()">
+            </div>
+            <div class="col-sm-2">
+                <input type="date" id="end" name="end" value="@end.asPattern("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()">
+            </div>
+            <div class="col-sm-1">
+                <input type="submit" value="Submit" class="form-control btn btn-primary">
+            </div>
+
+        </form>
+    </div>
+    <br>
+
+  @if(events.isEmpty) {
+    <div class="row">
+        @if(start.equals(end) || start.isAfter(end)) {
+              <p class="red">Start date must be before the End date.</p>
+        }
+        @if(services.contains(service)) {
+          <p>
+              No data in this date range.
+          </p>
+
+        }
+
+    </div>
+  } else {
+      <div id="history-chart" style="height: 300px;"></div>
+  }
+}
+

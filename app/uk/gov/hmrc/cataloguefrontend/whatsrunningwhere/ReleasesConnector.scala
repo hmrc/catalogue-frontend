@@ -22,7 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpReadsInstances, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.{LocalDate, LocalTime, ZoneOffset}
+import java.time.{Instant, LocalDate, LocalTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -41,6 +41,7 @@ class ReleasesConnector @Inject() (
   implicit val wrwf = JsonCodecs.whatsRunningWhereReads
   implicit val pf   = JsonCodecs.profileFormat
   implicit val sdf  = JsonCodecs.serviceDeploymentsFormat
+
 
   def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
     val baseUrl = s"$serviceUrl/releases-api/whats-running-where"
@@ -94,12 +95,12 @@ class ReleasesConnector @Inject() (
 
   def deploymentHistory(
     environment: Environment,
-    from: Option[LocalDate] = None,
-    to: Option[LocalDate] = None,
-    team: Option[String] = None,
-    service: Option[String] = None,
-    skip: Option[Int] = None,
-    limit: Option[Int] = None
+    from   : Option[LocalDate] = None,
+    to     : Option[LocalDate] = None,
+    team   : Option[String]    = None,
+    service: Option[String]    = None,
+    skip   : Option[Int]       = None,
+    limit  : Option[Int]       = None
   )(implicit hc: HeaderCarrier): Future[PaginatedDeploymentHistory] = {
 
     implicit val mr: HttpReads[PaginatedDeploymentHistory] = paginatedHistoryReads
@@ -114,5 +115,20 @@ class ReleasesConnector @Inject() (
 
     http
       .GET[PaginatedDeploymentHistory](url"$serviceUrl/releases-api/deployments/${environment.asString}?$params")
+  }
+
+  def deploymentHistoryGraphData(service: String,
+                                  from:    Instant,
+                                  to:      Instant)(implicit hc: HeaderCarrier): Future[Map[String, Seq[DeploymentTimelineEvent]]] = {
+
+    val params = Seq(
+      "from"    -> DateTimeFormatter.ISO_INSTANT.format(from),
+      "to"      -> DateTimeFormatter.ISO_INSTANT.format(to),
+    )
+    implicit val dtr  = JsonCodecs.deploymentTimelineEventReads
+    implicit val ef   = JsonCodecs.environmentFormat
+
+    http
+      .GET[Map[String, Seq[DeploymentTimelineEvent]]](url"$serviceUrl/releases-api/history/$service?$params")
   }
 }

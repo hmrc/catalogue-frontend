@@ -69,7 +69,9 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
-                            .map(r =>          SearchTerm("config",      r.name,          catalogueRoutes.CatalogueController.serviceConfig(r.name).url ))
+                            .flatMap(r => List(SearchTerm("config",      r.name,          catalogueRoutes.CatalogueController.serviceConfig(r.name).url ),
+                                               SearchTerm("history",     r.name,          wrwRoutes.DeploymentHistoryController.graph(r.name).url)
+                            ))
       allLinks = hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks
     } yield allLinks
   }

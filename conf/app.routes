@@ -77,4 +77,5 @@ GET        /leak-detection/repositories/:repository/:branch                uk.go
 POST       /leak-detection/repositories/:repository/:branch                uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.rescan(repository: String, branch: String)
 GET        /leak-detection/repositories/:repository/:branch/exemptions     uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.reportExemptions(repository: String, branch: String)
 
-GET        /quicksearch                                 uk.gov.hmrc.cataloguefrontend.search.SearchController.search(query: String, limit: Int ?= 20)
+GET        /quicksearch                                                    uk.gov.hmrc.cataloguefrontend.search.SearchController.search(query: String, limit: Int ?= 20)
+GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.graph(service ?="", start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())

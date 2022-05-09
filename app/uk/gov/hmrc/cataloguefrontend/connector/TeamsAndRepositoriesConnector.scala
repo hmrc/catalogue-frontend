@@ -213,6 +213,9 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
   def allRepositories(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
     http.GET[Seq[GitRepository]](url"$teamsAndServicesBaseUrl/api/v2/repositories")
 
+  def allServices(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
+    http.GET[Seq[GitRepository]](url"$teamsAndServicesBaseUrl/api/v2/repositories?repoType=Service")
+
   def archivedRepositories(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
     http.GET[Seq[GitRepository]](url"$teamsAndServicesBaseUrl/api/v2/repositories?archived=true")
 
