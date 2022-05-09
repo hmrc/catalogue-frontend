@@ -30,6 +30,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
   override def beforeEach(): Unit = {
     super.beforeEach()
     setupAuthEndpoint()
+    setupEnableBranchProtectionAuthEndpoint()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/frontend-route/service-1", willRespondWith = (200, Some(configServiceService1)))
     serviceEndpoint(GET, "/frontend-route/service-name", willRespondWith = (200, Some(configServiceService1)))

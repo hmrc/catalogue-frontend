@@ -16,14 +16,16 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import play.twirl.api.Html
 @import views.partials.githubBadgeType
 @import partials.PrototypeDetailsPartial
 
 @this(prototypeDetailsPartial: PrototypeDetailsPartial, viewMessages: ViewMessages)
 
-@(prototype          : GitRepository,
-  linkToLeakDetection: Option[String]
+@(prototype              : GitRepository,
+  linkToLeakDetection    : Option[String],
+  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
 )(implicit
   messages: Messages,
   request: Request[_]
@@ -57,7 +59,7 @@
             </div>
 
             <div class="col-md-6">
-                @partials.code(prototype)
+                @partials.code(prototype, hasBranchProtectionAuth)
             </div>
         </div>
     </section>

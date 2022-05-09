@@ -32,6 +32,7 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
   override def beforeEach(): Unit = {
     super.beforeEach()
     setupAuthEndpoint()
+    setupEnableBranchProtectionAuthEndpoint()
   }
 
   "A repository page" should {

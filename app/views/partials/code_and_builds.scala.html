@@ -21,30 +21,17 @@
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
+@import views.html.helper.CSRF
 
-@(serviceName: String, repo: GitRepository)
-
-@boolToGlyph(bool: Boolean) = {
-  @if(bool) {
-    <span class="glyphicon glyphicon-ok text-success"></span>
-    <span class="sr-only">enabled</span>
-  } else {
-    <span class="glyphicon glyphicon-remove text-danger"></span>
-    <span class="sr-only">not enabled</span>
-  }
-}
+@(serviceName: String, repo: GitRepository, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation)(implicit request: Request[_])
 
 <div id="code-and-build">
     <div class="board">
         <h3 class="board__heading">Code and Build</h3>
         <div class="board__body">
             @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
-              <h5 style="margin-left: 19.2px">Branch Protection</h5>
-                <ul class="list list--minimal">
-                    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresApprovingReviews)) Requires approving reviews</li>
-                    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.dismissesStaleReviews)) Dismisses stale reviews</li>
-                    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresCommitSignatures)) Requires commit signatures</li>
-                </ul>
+              @partials.branchProtection(repo, hasBranchProtectionAuth)
               <hr style="margin-top: 0px">
             }
             <ul class="list list--minimal list-two-columns">
@@ -62,3 +49,4 @@
         </div>
     </div>
 </div>
+

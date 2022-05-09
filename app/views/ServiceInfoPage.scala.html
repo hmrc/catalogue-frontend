@@ -20,6 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
+@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import views.partials.githubBadgeType
@@ -44,6 +45,7 @@
   linkToLeakDetection          : Option[String],
   productionEnvironmentRoute   : Option[EnvironmentRoute],
   serviceRoutes                : ServiceRoutes,
+  hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation
 )(implicit messages: Messages, request: Request[_])
 
 
@@ -105,7 +107,7 @@
             </div>
 
             <div class="col-md-6">
-                @partials.code_and_builds(serviceName, repositoryDetails)
+                @partials.code_and_builds(serviceName, repositoryDetails, hasBranchProtectionAuth)
             </div>
         </div>
 

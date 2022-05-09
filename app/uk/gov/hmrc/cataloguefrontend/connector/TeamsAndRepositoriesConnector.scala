@@ -233,6 +233,12 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
       teamsByService = repos.map(r => r.name -> r.teamNames.map(TeamName.apply)).toMap
     } yield teamsByService
 
+  def enableBranchProtection(repoName: String)(implicit hc: HeaderCarrier): Future[Unit] =
+    http.POST[JsValue, Unit](
+      url"$teamsAndServicesBaseUrl/api/v2/repositories/$repoName/branch-protection/enabled",
+      JsBoolean(true)
+    )
+
 }
 
 object TeamsAndRepositoriesConnector {
