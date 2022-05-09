@@ -65,7 +65,7 @@
 
                 ]
 
-                let options = {tooltip: { isHtml: true }};
+                let options = {tooltip: { isHtml: true }, enableInteractivity: false};
                 let container = document.getElementById('history-chart');
                 if(container == null) return
                 let chart = new google.visualization.Timeline(container);
@@ -114,10 +114,17 @@
     <br>
 
   @if(events.isEmpty) {
-    <div>
-        @if(services.contains(service)) {
-            No data in this date range
+    <div class="row">
+        @if(start.equals(end) || start.isAfter(end)) {
+              <p class="red">Start date must be before the End date.</p>
         }
+        @if(services.contains(service)) {
+          <p>
+              No data in this date range.
+          </p>
+
+        }
+
     </div>
   } else {
       <div id="history-chart" style="height: 300px;"></div>
