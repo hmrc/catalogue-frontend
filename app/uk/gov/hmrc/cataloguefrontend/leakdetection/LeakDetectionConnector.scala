@@ -153,6 +153,7 @@ object LeakDetectionRule {
 
 final case class LeakDetectionRepositorySummary(
   repository: String,
+  isArchived: Boolean,
   firstScannedAt: LocalDateTime,
   lastScannedAt: LocalDateTime,
   warningCount: Int,
