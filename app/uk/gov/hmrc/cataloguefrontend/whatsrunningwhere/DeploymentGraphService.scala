@@ -69,7 +69,7 @@ object DeploymentGraphService {
           case s if s.start.isAfter(start)  && s.end.isBefore(end)    => Seq(s)                            // single deployment inside range
           case s if s.start.isAfter(start)  && s.end.isAfter(end)     => Seq(s.copy(end=end))              // inside but clip end
           case s if s.start.isBefore(start) && s.end.isBefore(start)  => Seq()                             // completely outside, drop
-          case s if s.start.isBefore(start) && s.end.isBefore(end)    => Seq(s.copy(start=start))          // last deployment is latest, stretch end/clip start
+          case s if s.start.isBefore(start) && s.end.isBefore(end)    => Seq(s.copy(start=start, end=end)) // last deployment is latest, stretch end/clip start
           case s if s.start.isBefore(start) && s.end.isAfter(end)     => Seq(s.copy(start=start, end=end)) // clip start/end
           case s                                                      => Seq(s.copy(start=max(start, s.start), end=min(end, s.end)) ) // clip when needed
         }
