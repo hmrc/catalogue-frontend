@@ -117,9 +117,9 @@ class ReleasesConnector @Inject() (
       .GET[PaginatedDeploymentHistory](url"$serviceUrl/releases-api/deployments/${environment.asString}?$params")
   }
 
-  def deploymentHistoryGraphData(service: String,
-                                  from:    Instant,
-                                  to:      Instant)(implicit hc: HeaderCarrier): Future[Map[String, Seq[DeploymentTimelineEvent]]] = {
+  def deploymentTimeline(service: String,
+                         from:    Instant,
+                         to:      Instant)(implicit hc: HeaderCarrier): Future[Map[String, Seq[DeploymentTimelineEvent]]] = {
 
     val params = Seq(
       "from"    -> DateTimeFormatter.ISO_INSTANT.format(from),
@@ -129,6 +129,6 @@ class ReleasesConnector @Inject() (
     implicit val ef   = JsonCodecs.environmentFormat
 
     http
-      .GET[Map[String, Seq[DeploymentTimelineEvent]]](url"$serviceUrl/releases-api/history/$service?$params")
+      .GET[Map[String, Seq[DeploymentTimelineEvent]]](url"$serviceUrl/releases-api/timeline/$service?$params")
   }
 }
