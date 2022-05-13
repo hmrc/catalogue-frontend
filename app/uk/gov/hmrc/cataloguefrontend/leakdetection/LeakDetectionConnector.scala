@@ -17,7 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.Logger
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Json, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.Priority.{High, Low, Medium}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -29,7 +30,7 @@ import scala.util.control.NonFatal
 
 @Singleton
 class LeakDetectionConnector @Inject() (
-  http: HttpClient,
+  httpClient: HttpClient,
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
@@ -40,7 +41,7 @@ class LeakDetectionConnector @Inject() (
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] = {
     implicit val rwlr = RepositoryWithLeaks.reads
-    http
+    httpClient
       .GET[Seq[RepositoryWithLeaks]](url"$url/api/repository")
       .recover {
         case NonFatal(ex) =>
@@ -51,44 +52,44 @@ class LeakDetectionConnector @Inject() (
 
   def leakDetectionSummaries(ruleId: Option[String], repo: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionSummary]] = {
     implicit val ldrs: Reads[LeakDetectionSummary] = LeakDetectionSummary.reads
-    http
+    httpClient
       .GET[Seq[LeakDetectionSummary]](url"$url/api/rules/summary?ruleId=$ruleId&repository=$repo&team=$team")
   }
 
   def leakDetectionRepoSummaries(ruleId: Option[String], repo: Option[String], team: Option[String], includeNonIssues: Boolean, includeBranches: Boolean)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRepositorySummary]] = {
     implicit val ldrs: Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
     val excludeNonIssues = !includeNonIssues
-    http
+    httpClient
       .GET[Seq[LeakDetectionRepositorySummary]](url"$url/api/repositories/summary?ruleId=$ruleId&repository=$repo&team=$team&excludeNonIssues=$excludeNonIssues&includeBranches=$includeBranches")
   }
 
   def leakDetectionReport(repository: String, branch: String)(implicit hc: HeaderCarrier): Future[LeakDetectionReport] = {
     implicit val ldrl: Reads[LeakDetectionReport] = LeakDetectionReport.reads
-    http
+    httpClient
       .GET[LeakDetectionReport](url"$url/api/$repository/$branch/report")
   }
 
   def leakDetectionLeaks(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionLeak]] = {
     implicit val ldrl: Reads[LeakDetectionLeak] = LeakDetectionLeak.reads
-    http
+    httpClient
       .GET[Seq[LeakDetectionLeak]](url"$url/api/report/$reportId/leaks")
   }
 
   def leakDetectionWarnings(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionWarning]] = {
     implicit val ldrl: Reads[LeakDetectionWarning] = LeakDetectionWarning.reads
-    http
+    httpClient
       .GET[Seq[LeakDetectionWarning]](url"$url/api/report/$reportId/warnings")
   }
 
   def leakDetectionRules()(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRule]] = {
     implicit val ldrl: Reads[LeakDetectionRule] = LeakDetectionRule.reads
-    http
+    httpClient
       .GET[Seq[LeakDetectionRule]](url"$url/api/rules")
   }
 
   def rescan(repository: String, branch: String)(implicit hc: HeaderCarrier): Future[LeakDetectionReport] = {
     implicit val ldrl: Reads[LeakDetectionReport] = LeakDetectionReport.reads
-    http
+    httpClient
       .POSTEmpty[LeakDetectionReport](url"$url/admin/rescan/$repository/$branch")
   }
 
@@ -152,21 +153,30 @@ object LeakDetectionRule {
 }
 
 final case class LeakDetectionRepositorySummary(
-  repository: String,
-  isArchived: Boolean,
-  firstScannedAt: LocalDateTime,
-  lastScannedAt: LocalDateTime,
-  warningCount: Int,
-  excludedCount: Int,
+  repository     : String,
+  isArchived     : Boolean,
+  firstScannedAt : LocalDateTime,
+  lastScannedAt  : LocalDateTime,
+  warningCount   : Int,
+  excludedCount  : Int,
   unresolvedCount: Int,
-  branchSummary: Option[Seq[LeakDetectionBranchSummary]]
+  branchSummary  : Option[Seq[LeakDetectionBranchSummary]]
 ) {
   def totalCount:Int = warningCount + excludedCount + unresolvedCount
 }
 
 object LeakDetectionRepositorySummary {
-  implicit val ldbr  = LeakDetectionBranchSummary.reads
-  implicit val reads = Json.reads[LeakDetectionRepositorySummary]
+  private implicit val ldbr  = LeakDetectionBranchSummary.reads
+  implicit val reads =
+    ( (__ \ "repository"     ).read[String]
+    ~ (__ \ "isArchived"     ).readNullable[Boolean].map(_.getOrElse(false))
+    ~ (__ \ "firstScannedAt" ).read[LocalDateTime]
+    ~ (__ \ "lastScannedAt"  ).read[LocalDateTime]
+    ~ (__ \ "warningCount"   ).read[Int]
+    ~ (__ \ "excludedCount"  ).read[Int]
+    ~ (__ \ "unresolvedCount").read[Int]
+    ~ (__ \ "branchSummary"  ).readNullable[Seq[LeakDetectionBranchSummary]]
+    )(LeakDetectionRepositorySummary.apply _)
 }
 
 final case class LeakDetectionBranchSummary(
