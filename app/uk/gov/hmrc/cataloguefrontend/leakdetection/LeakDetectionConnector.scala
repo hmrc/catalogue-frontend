@@ -169,7 +169,7 @@ object LeakDetectionRepositorySummary {
   private implicit val ldbr  = LeakDetectionBranchSummary.reads
   implicit val reads =
     ( (__ \ "repository"     ).read[String]
-    ~ (__ \ "isArchived"     ).readNullable[Boolean].map(_.getOrElse(false))
+    ~ (__ \ "isArchived"     ).read[Boolean]
     ~ (__ \ "firstScannedAt" ).read[LocalDateTime]
     ~ (__ \ "lastScannedAt"  ).read[LocalDateTime]
     ~ (__ \ "warningCount"   ).read[Int]
