@@ -81,9 +81,8 @@ class BobbyRulesTrendController @Inject() (
                    hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, allRules, flags = SlugInfoFlag.values, data = None))),
                    success = query =>
                      (for {
-                       violations <- EitherT.right[Result](serviceDeps.getHistoricBobbyRuleViolations)
+                       violations <- EitherT.right[Result](serviceDeps.getHistoricBobbyRuleViolations(query.rules.toList))
                        countData = violations.summary
-                                     .filter { case ((r, _), _) => query.rules.contains(s"${r.group}:${r.artefact}:${r.range.range}") }
                      } yield Ok(
                        page(
                          form.bindFromRequest(),

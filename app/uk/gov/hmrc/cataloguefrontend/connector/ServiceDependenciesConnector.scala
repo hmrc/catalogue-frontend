@@ -108,9 +108,9 @@ class ServiceDependenciesConnector @Inject() (
       .map(_.summary)
   }
 
-  def getHistoricBobbyRuleViolations(implicit hc: HeaderCarrier): Future[HistoricBobbyRulesSummary] = {
+  def getHistoricBobbyRuleViolations(query: List[String])(implicit hc: HeaderCarrier): Future[HistoricBobbyRulesSummary] = {
     implicit val brvr = HistoricBobbyRulesSummary.reads
-    httpClient.GET[HistoricBobbyRulesSummary](url"$servicesDependenciesBaseUrl/api/historicBobbyViolations")
+    httpClient.GET[HistoricBobbyRulesSummary](url"$servicesDependenciesBaseUrl/api/historicBobbyViolations?query=$query")
   }
 
   def getRepositoryName(group: String, artefact: String, version: Version)(implicit hc: HeaderCarrier): Future[Option[String]] =
