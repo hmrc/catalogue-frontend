@@ -24,6 +24,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -108,9 +109,9 @@ class ServiceDependenciesConnector @Inject() (
       .map(_.summary)
   }
 
-  def getHistoricBobbyRuleViolations(query: List[String])(implicit hc: HeaderCarrier): Future[HistoricBobbyRulesSummary] = {
+  def getHistoricBobbyRuleViolations(query: List[String], from: LocalDate, to: LocalDate)(implicit hc: HeaderCarrier): Future[HistoricBobbyRulesSummary] = {
     implicit val brvr = HistoricBobbyRulesSummary.reads
-    httpClient.GET[HistoricBobbyRulesSummary](url"$servicesDependenciesBaseUrl/api/historicBobbyViolations?query=$query")
+    httpClient.GET[HistoricBobbyRulesSummary](url"$servicesDependenciesBaseUrl/api/historicBobbyViolations?query=$query&from=$from&to=$to")
   }
 
   def getRepositoryName(group: String, artefact: String, version: Version)(implicit hc: HeaderCarrier): Future[Option[String]] =
