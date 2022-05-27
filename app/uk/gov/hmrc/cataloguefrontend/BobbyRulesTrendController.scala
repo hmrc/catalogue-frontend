@@ -17,13 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import java.time.format.DateTimeFormatter
-
 import cats.data.EitherT
 import cats.instances.future._
+
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
 import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ServiceDependenciesConnector}
@@ -33,6 +32,7 @@ import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.BobbyRulesTrendPage
 
+import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -54,7 +54,7 @@ class BobbyRulesTrendController @Inject() (
         allRules <- configConnector.bobbyRules.map(_.libraries)
       } yield Ok(
         page(
-          form.fill(SearchForm(rules = Seq.empty)),
+          form.fill(SearchForm(rules = Seq.empty, from = LocalDate.now().minusYears(2) , to = LocalDate.now())),
           allRules,
           flags = SlugInfoFlag.values,
           data = None
@@ -81,7 +81,7 @@ class BobbyRulesTrendController @Inject() (
                    hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, allRules, flags = SlugInfoFlag.values, data = None))),
                    success = query =>
                      (for {
-                       violations <- EitherT.right[Result](serviceDeps.getHistoricBobbyRuleViolations(query.rules.toList))
+                       violations <- EitherT.right[Result](serviceDeps.getHistoricBobbyRuleViolations(query.rules.toList, query.from, query.to))
                        countData = violations.summary
                      } yield Ok(
                        page(
@@ -113,14 +113,20 @@ class BobbyRulesTrendController @Inject() (
     }
 
   case class SearchForm(
-    rules: Seq[String]
+    rules: Seq[String],
+    from: LocalDate,
+    to: LocalDate
   )
 
   def form() = {
-    import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmptySeq
+    import uk.gov.hmrc.cataloguefrontend.util.FormUtils._
+    import play.api.data._
+    import play.api.data.Forms._
     Form(
       Forms.mapping(
-        "rules" -> Forms.seq(Forms.text).verifying(notEmptySeq)
+        "rules" -> Forms.seq(Forms.text).verifying(notEmptySeq),
+        "from" -> default(Forms.localDate, LocalDate.now().minusYears(2)),
+        "to" -> default(Forms.localDate, LocalDate.now())
       )(SearchForm.apply)(SearchForm.unapply)
     )
   }
