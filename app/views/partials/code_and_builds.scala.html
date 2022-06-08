@@ -20,6 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import views.html.helper.CSRF
@@ -36,6 +37,9 @@
             }
             <ul class="list list--minimal list-two-columns">
                 <li class="list-item"><a id="link-to-github" href="@{repo.githubUrl}" target="_blank" rel="noreferrer noopener">Github.com<span class="glyphicon glyphicon-new-window"/></a></li>
+                @if(repo.repoType == RepoType.Service) {
+                    <li class="list-item"><a id="link-to-timeline" href="@DeploymentHistoryController.graph(repo.name)">Deployment Timeline</a></li>
+                }
                 <li class="list-item"><a id="link-to-@{repo.name}-config" href="@appRoutes.CatalogueController.serviceConfig(serviceName)" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
             @for(ciLink <- repo.jenkinsURL) {
                 <li class="list-item"><a id="link-to-build" href="@{ciLink}" target="_blank" rel="noreferrer noopener">Build<span class="glyphicon glyphicon-new-window"/></a></li>

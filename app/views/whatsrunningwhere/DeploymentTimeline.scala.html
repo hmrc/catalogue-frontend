@@ -18,6 +18,7 @@
 @import helper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
+@import uk.gov.hmrc.cataloguefrontend.routes.CatalogueController
 @import java.time.Instant
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentGraphService
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.TimelinePalette
@@ -88,10 +89,9 @@
                 return `<div class="timeline-tooltip"><b> ${ver} deployed by ${user} </b><br>From ${start} To  ${end}<br><em>Deployed for ${days} days</em> </div>`
             }
     </script>
-    <h2>Deployment Timeline @if(service != ""){ - @service}</h2>
+   <h2>Deployment Timeline @if(service != ""){<a id="link-to-service-info-page" href="@CatalogueController.service(service)">- @service</a></h2>}
     <div class="row">
         <form action="" method="get" class="form-horizontal">
-
             <div class="col-sm-3">
                 <select name="service" id="service" class="form-control" onchange="this.form.submit()">
                     <option value=""></option>
@@ -108,7 +108,6 @@
             <div class="col-sm-1">
                 <input type="submit" value="Submit" class="form-control btn btn-primary">
             </div>
-
         </form>
     </div>
     <br>
