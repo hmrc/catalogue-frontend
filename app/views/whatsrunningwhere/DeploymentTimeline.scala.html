@@ -89,7 +89,7 @@
                 return `<div class="timeline-tooltip"><b> ${ver} deployed by ${user} </b><br>From ${start} To  ${end}<br><em>Deployed for ${days} days</em> </div>`
             }
     </script>
-   <h2>Deployment Timeline <a id="link-to-service-info-page" href="@CatalogueController.service(service)">- @service</a></h2>
+   <h2>Deployment Timeline @if(service != ""){<a id="link-to-service-info-page" href="@CatalogueController.service(service)">- @service</a></h2>}
     <div class="row">
         <form action="" method="get" class="form-horizontal">
             <div class="col-sm-3">
