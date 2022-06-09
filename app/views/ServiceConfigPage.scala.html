@@ -53,12 +53,12 @@
                             @for(env <- ConfigEnvironment.values) {
                                 <div class="grid-item column-@env.asString" style="width:510px;">
                                     <ul>
-                                    @for(sourceValue: ConfigSourceValue <- ConfigService.sortBySourcePrecedence(envSources.get(env))) {
+                                      @for(sourceValue: ConfigSourceValue <- envSources.get(env).getOrElse(Seq.empty)) {
                                         <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env)">
                                             <span class="truncate-content">@sourceValue.value</span>
                                             <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env.asString-@sourceValue.source-@key"></a>
                                         </li>
-                                    }
+                                      }
                                     </ul>
                                 </div>
                             }
