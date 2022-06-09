@@ -130,9 +130,7 @@
                 </ul>
 
                 <ul class="nav navbar-nav navbar-right">
-                    @if(CatalogueFrontendSwitches.search.isEnabled) {
                         <li><a id="searchicon" onclick="toggleSearch()"><span class="glyphicon glyphicon-search"></span></a></li>
-                    }
                     <li class="dropdown">
                         @partials.with_username { username =>
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
@@ -189,7 +187,5 @@
 
     </body>
 
-    @if(CatalogueFrontendSwitches.search.isEnabled) {
         <script src="@routes.Assets.versioned("search.js")" defer></script>
-    }
 </html>

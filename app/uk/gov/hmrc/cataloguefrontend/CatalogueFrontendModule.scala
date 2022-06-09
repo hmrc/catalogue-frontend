@@ -24,6 +24,6 @@ class CatalogueFrontendModule extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    if(CatalogueFrontendSwitches.search.isEnabled) bind(classOf[IndexScheduler]).asEagerSingleton()
+    bind(classOf[IndexScheduler]).asEagerSingleton()
   }
 }

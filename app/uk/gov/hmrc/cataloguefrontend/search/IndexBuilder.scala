@@ -21,7 +21,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesCo
 import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthRoutes}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.search.IndexBuilder.normalizeTerm
+import uk.gov.hmrc.cataloguefrontend.search.IndexBuilder.{normalizeTerm, optimizeIndex}
 import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
 import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
@@ -40,7 +40,7 @@ case class SearchTerm(linkType: String, name: String, link: String, weight: Floa
 @Singleton
 class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector)(implicit ec: ExecutionContext){
 
-  protected[search] val cachedIndex = new AtomicReference[Seq[SearchTerm]](Seq.empty)
+  protected[search] val cachedIndex = new AtomicReference[Map[String, Seq[SearchTerm]]](Map.empty)
 
   private val hardcodedLinks = List(
     SearchTerm("explorer", "dependency",        catalogueRoutes.DependencyExplorerController.landing.url,                    1.0f, Set("depex")),
@@ -58,7 +58,7 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
     SearchTerm("page",     "defaultbranch",     catalogueRoutes.CatalogueController.allDefaultBranches().url,                1.0f),
   )
 
-  def buildIndexes(): Future[List[SearchTerm]] = {
+  def buildIndexes(): Future[(Int, Map[String, Seq[SearchTerm]])] = {
     implicit val hc = HeaderCarrier()
     for {
       repos         <- teamsAndRepositoriesConnector.allRepositories
@@ -73,10 +73,10 @@ class IndexBuilder @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositories
                                                SearchTerm("timeline",     r.name,          wrwRoutes.DeploymentHistoryController.graph(r.name).url)
                             ))
       allLinks = hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks
-    } yield allLinks
+    } yield (allLinks.length, optimizeIndex(allLinks))
   }
 
-  def getIndex(): Seq[SearchTerm] =
+  def getIndex(): Map[String, Seq[SearchTerm]] =
       cachedIndex.get()
 }
 
@@ -88,12 +88,19 @@ object IndexBuilder {
 
   // TODO: we could cache the results short term, generally the next query will be the previous query + 1 letter
   //       so we can reuse the partial result set
-  def search(query: Seq[String], index: Seq[SearchTerm]): Seq[SearchTerm] = {
-      query
-        .map(normalizeTerm)
-        .foldLeft(index) {
-          case (acc, cur) => acc.filter(_.terms.exists(_.contains(cur)))
-        }.sortWith( (a,b) => a.weight > b.weight )
+
+  def search(query: Seq[String], index: Map[String, Seq[SearchTerm]]): Seq[SearchTerm] = {
+    val normalised = query.map(normalizeTerm)
+    normalised
+      .foldLeft(index.getOrElse(normalised.head.slice(0,3), Seq.empty)) {
+        case (acc, cur) => acc.filter(_.terms.exists(_.contains(cur)))
+      }.sortWith( (a,b) => a.weight > b.weight )
+      .distinct
   }
 
+  def optimizeIndex(index: Seq[SearchTerm]): Map[String, Seq[SearchTerm]] =
+    index.flatMap(st => (st.linkType.sliding(3,1) ++ st.name.sliding(3,1) ++ st.hints.mkString.sliding(3,1))
+      .map(key => (key,st)))
+      .groupBy(_._1)
+      .mapValues(_.map(_._2))
 }
