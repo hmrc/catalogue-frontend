@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -38,7 +39,7 @@ class ConfigService @Inject() (configConnector: ConfigConnector)(implicit ec: Ex
     configByKey(serviceName)
       .map(
         _.getOrElse("artifact_name", Map.empty)
-          .mapValues(values => ConfigService.sortBySourcePrecedence(Some(values)).headOption.map(_.value))
+          .mapValues(_.headOption.map(_.value))
           .values
           .flatten
           .groupBy(identity)
@@ -48,7 +49,7 @@ class ConfigService @Inject() (configConnector: ConfigConnector)(implicit ec: Ex
       .map {
         case Nil                 => ArtifactNameNotFound
         case artifactName :: Nil => ArtifactNameFound(artifactName)
-        case list =>
+        case list                =>
           ArtifactNameError(s"Different artifact names found for service in different environments - [${list.mkString(",")}]")
       }
 }
@@ -73,11 +74,10 @@ object ConfigService {
             .validate[String]
             .flatMap {
               case "local" => JsSuccess(ConfigEnvironment.Local)
-              case s =>
-                Environment.parse(s) match {
-                  case Some(env) => JsSuccess(ForEnvironment(env))
-                  case None      => JsError(__, s"Invalid Environment '$s'")
-                }
+              case s       => Environment.parse(s) match {
+                                case Some(env) => JsSuccess(ForEnvironment(env))
+                                case None      => JsError(__, s"Invalid Environment '$s'")
+                              }
             }
       }
   }
@@ -107,27 +107,28 @@ object ConfigService {
   }
 
   case class ConfigSourceEntries(
-    source: String,
-    precedence: Int,
-    entries: Map[KeyName, String] = Map()
+    source : String,
+    entries: Map[KeyName, String]
   )
 
   object ConfigSourceEntries {
-    val reads = Json.reads[ConfigSourceEntries]
+    val reads =
+      ( (__ \ "source" ).read[String]
+      ~ (__ \ "entries").read[Map[KeyName, String]]
+      )(ConfigSourceEntries.apply _)
   }
 
   case class ConfigSourceValue(
     source: String,
-    precedence: Int,
-    value: String
+    value : String
   )
 
   object ConfigSourceValue {
-    val reads = Json.reads[ConfigSourceValue]
+    val reads =
+      ( (__ \ "source").read[String]
+      ~ (__ \ "value" ).read[String]
+      )(ConfigSourceValue.apply _)
   }
-
-  def sortBySourcePrecedence(entries: Option[Seq[ConfigSourceValue]]): Seq[ConfigSourceValue] =
-    entries.map(_.sortBy(_.precedence)).getOrElse(Seq())
 
   def friendlySourceName(source: String, environment: ConfigEnvironment): String =
     source match {
@@ -144,9 +145,8 @@ object ConfigService {
   sealed trait ArtifactNameResult
 
   object ArtifactNameResult {
-    case class ArtifactNameFound(name: String) extends ArtifactNameResult
-    case object ArtifactNameNotFound extends ArtifactNameResult
+    case class ArtifactNameFound(name: String)  extends ArtifactNameResult
+    case object ArtifactNameNotFound            extends ArtifactNameResult
     case class ArtifactNameError(error: String) extends ArtifactNameResult
   }
-
 }
