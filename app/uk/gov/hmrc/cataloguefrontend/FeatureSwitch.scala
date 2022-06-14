@@ -46,7 +46,4 @@ object CatalogueFrontendSwitches {
   def branchProtectionDisplay: FeatureSwitch =
     FeatureSwitch.forName("branch-protection-display")
 
-  def search: FeatureSwitch =
-    FeatureSwitch.forName("search")
-
 }
