@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 @Singleton
-class IndexScheduler @Inject()(indexBuilder: IndexBuilder, searchConfig: SearchConfig)(
+class IndexScheduler @Inject()(searchIndex: SearchIndex, searchConfig: SearchConfig)(
   implicit actorSystem: ActorSystem,
   applicationLifecycle: ApplicationLifecycle,
   ec: ExecutionContext) {
@@ -37,11 +37,7 @@ class IndexScheduler @Inject()(indexBuilder: IndexBuilder, searchConfig: SearchC
   private val cancellable = actorSystem.scheduler.scheduleAtFixedRate(1.second, searchConfig.indexRebuildInterval) {
     () => {
       logger.info("rebuilding search indexes")
-      for {
-        (termCount, idx) <- indexBuilder.buildIndexes()
-        _    = indexBuilder.cachedIndex.set(idx)
-        _    = logger.info(s"search indexes rebuilt: $termCount terms")
-      } yield ()
+      searchIndex.updateIndexes()
     }
   }
 

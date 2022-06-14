@@ -25,17 +25,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SearchController @Inject()(indexBuilder: IndexBuilder, view: SearchResults, config: SearchConfig, cc: MessagesControllerComponents)(implicit ec: ExecutionContext)
+class SearchController @Inject()(searchIndex: SearchIndex, view: SearchResults, config: SearchConfig, cc: MessagesControllerComponents)(implicit ec: ExecutionContext)
   extends FrontendController(cc){
 
-  def search(query: String, limit: Int) =  Action.async { request =>
-    for {
-      index         <- Future.successful(indexBuilder.getIndex())
-      searchTerms    =  query.split(" +", 5) // cap number of searchable terms at 5 (seems reasonable?)
-                             .filter(_.length > 2)      // ignore search terms less than 3 chars
-      searchMatches  = IndexBuilder.search(searchTerms, index)
-      highlighter    = if(config.highlight) new BoldHighlighter(searchTerms) else NoHighlighter
-    } yield Ok(view(searchMatches.take(limit), highlighter))
+  def search(query: String, limit: Int) =  Action { request =>
+    val searchTerms    =  query.split(" +", 5).map(_.trim) // cap number of searchable terms at 5 (seems reasonable?)
+      .filter(_.length > 2) // ignore search terms less than 3 chars
+    Ok(view(
+        matches   = searchIndex.search(searchTerms).take(limit),
+        highlight = if (config.highlight) new BoldHighlighter(searchTerms) else NoHighlighter
+    ))
   }
-
 }
