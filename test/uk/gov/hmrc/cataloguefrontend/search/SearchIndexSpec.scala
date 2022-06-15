@@ -33,7 +33,7 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
     SearchTerm(linkType = "timeline", name = "PODS File Upload",                           link = "/somethings/pods",                                               weight = 0.5f, Set()),
     SearchTerm(linkType = "timeline", name = "xi-eori-common-component-frontend",          link = "/deployment-timeline?service=xi-eori-common-component-frontend", weight = 0.5f,Set()),
     SearchTerm(linkType = "timeline", name = "verification-questions",                     link = "/deployment-timeline?service=verification-questions",            weight = 0.5f,Set()),
-    SearchTerm(linkType = "config",   name = "wristband",                                  link = "/service/wristband/config",                                      weight = 0.5f,Set()),
+    SearchTerm(linkType = "config",   name = "vmv-frontend",                               link = "/service/wristband/config",                                      weight = 0.5f,Set()),
     SearchTerm(linkType = "config",   name = "verify-your-identity-for-a-trust-frontend",  link = "/service/verify-your-identity-for-a-trust-frontend/config",      weight = 0.5f,Set()),
     SearchTerm(linkType = "health",   name = "voa-api-proxy-performance-tests",            link = "/health-indicators/voa-api-proxy-performance-tests",             weight = 0.5f,Set()),
     SearchTerm(linkType = "health",   name = "vmv-frontend",                               link = "/health-indicators/vmv-frontend",                                weight = 0.5f,Set()),
@@ -42,7 +42,8 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
     SearchTerm(linkType = "Other",    name = "vault-app-config-service-info-parser",       link = "/repositories/vault-app-config-service-info-parser",             weight = 0.5f,Set("repository")),
     SearchTerm(linkType = "Other",    name = "vat-deferral-new-payment-scheme-perf-tests", link = "/repositories/vat-deferral-new-payment-scheme-perf-tests",       weight = 0.5f,Set("repository")),
     SearchTerm(linkType = "Service",  name = "time-to-pay-taxpayer",                       link = "/repositories/time-to-pay-taxpayer",                             weight = 0.5f,Set("repository")),
-    SearchTerm(linkType = "Service",  name = "time-based-one-time-password",               link = "/repositories/time-based-one-time-password",                     weight = 0.5f,Set("repository"))
+    SearchTerm(linkType = "Service",  name = "time-based-one-time-password",               link = "/repositories/time-based-one-time-password",                     weight = 0.5f,Set("repository")),
+    SearchTerm(linkType = "health",   name = "voa",                                        link = "/health-indicators/voa-api-proxy-performance-tests",             weight = 0.5f,Set())
   )
 
   private val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
@@ -70,8 +71,8 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
     "return all SearchTerms filtered by a 2 term query, without duplicates" in {
       val res = testIndex.search(query = Seq("tim", "erv"))
       res shouldBe Seq(
-        SearchTerm(linkType = "Service",  name = "time-to-pay-taxpayer",         link = "/repositories/time-to-pay-taxpayer",                             weight = 0.5f,Set("repository")),
-        SearchTerm(linkType = "Service",  name = "time-based-one-time-password", link = "/repositories/time-based-one-time-password",                     weight = 0.5f,Set("repository"))
+        SearchTerm(linkType = "Service",  name = "time-based-one-time-password", link = "/repositories/time-based-one-time-password",                     weight = 0.5f,Set("repository")),
+        SearchTerm(linkType = "Service",  name = "time-to-pay-taxpayer",         link = "/repositories/time-to-pay-taxpayer",                             weight = 0.5f,Set("repository"))
       )
     }
 
@@ -85,10 +86,10 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
     "return all SearchTerms containing the query within the 'hints' field" in {
       val res = testIndex.search(query = Seq("rep"))
       res shouldBe Seq(
-        SearchTerm(linkType = "Other",    name = "vault-app-config-service-info-parser",       link = "/repositories/vault-app-config-service-info-parser",             weight = 0.5f,Set("repository")),
-        SearchTerm(linkType = "Other",    name = "vat-deferral-new-payment-scheme-perf-tests", link = "/repositories/vat-deferral-new-payment-scheme-perf-tests",       weight = 0.5f,Set("repository")),
+        SearchTerm(linkType = "Service",  name = "time-based-one-time-password",               link = "/repositories/time-based-one-time-password",                     weight = 0.5f,Set("repository")),
         SearchTerm(linkType = "Service",  name = "time-to-pay-taxpayer",                       link = "/repositories/time-to-pay-taxpayer",                             weight = 0.5f,Set("repository")),
-        SearchTerm(linkType = "Service",  name = "time-based-one-time-password",               link = "/repositories/time-based-one-time-password",                     weight = 0.5f,Set("repository"))
+        SearchTerm(linkType = "Other",    name = "vat-deferral-new-payment-scheme-perf-tests", link = "/repositories/vat-deferral-new-payment-scheme-perf-tests",       weight = 0.5f,Set("repository")),
+        SearchTerm(linkType = "Other",    name = "vault-app-config-service-info-parser",       link = "/repositories/vault-app-config-service-info-parser",             weight = 0.5f,Set("repository"))
       )
     }
 
@@ -97,6 +98,24 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
       res shouldBe Seq.empty
     }
 
+    "return SearchTerms belonging to the same service next to one another, and in alphabetical order" in {
+      val res = testIndex.search(query = Seq("fro"))
+      res shouldBe Seq(
+        SearchTerm(linkType = "config",   name = "verify-your-identity-for-a-trust-frontend",  link = "/service/verify-your-identity-for-a-trust-frontend/config",      weight = 0.5f,Set()),
+        SearchTerm(linkType = "config",   name = "vmv-frontend",                               link = "/service/wristband/config",                                      weight = 0.5f,Set()),
+        SearchTerm(linkType = "health",   name = "vmv-frontend",                               link = "/health-indicators/vmv-frontend",                                weight = 0.5f,Set()),
+        SearchTerm(linkType = "timeline", name = "xi-eori-common-component-frontend",          link = "/deployment-timeline?service=xi-eori-common-component-frontend", weight = 0.5f,Set())
+      )
+    }
+
+    "return an exact match first (with increased weighting)" in {
+      val res = testIndex.search(query = Seq("voa"))
+      res shouldBe Seq(
+        SearchTerm(linkType = "health",   name = "voa",                                        link = "/health-indicators/voa-api-proxy-performance-tests",             weight = 1.0f,Set()),
+        SearchTerm(linkType = "health",   name = "voa-api-proxy-performance-tests",            link = "/health-indicators/voa-api-proxy-performance-tests",             weight = 0.5f,Set())
+      )
+    }
+    
     "Be case insensitive" in {
       val res1 = testIndex.search(query = Seq("pods"))
       val res2 = testIndex.search(query = Seq("PODS"))

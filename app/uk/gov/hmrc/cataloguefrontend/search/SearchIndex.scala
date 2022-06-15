@@ -89,17 +89,20 @@ object SearchIndex {
   //       so we can reuse the partial result set
 
   private[search] def search(query: Seq[String], index: Map[String, Seq[SearchTerm]]): Seq[SearchTerm] = {
+    val ordering = Ordering.Tuple2(Ordering.Float.reverse, Ordering.String)  //Custom ordering to allow ascending & descending sort in same SortBy)
     val normalised = query.map(normalizeTerm)
     normalised
       .foldLeft(index.getOrElse(normalised.head.slice(0,3), Seq.empty)) {
         (acc, cur) => acc.filter(_.terms.exists(_.contains(cur)))
-      }.sortBy(_.weight)
+      }.map(st =>
+      if(normalised.exists(_.equalsIgnoreCase(st.name))) st.copy(weight = 1f) else st) //Increase weighting of an exact match
+      .sortBy(st => (st.weight, st.name.toLowerCase()))(ordering)
       .distinct
   }
 
   def optimizeIndex(index: Seq[SearchTerm]): Map[String, Seq[SearchTerm]] =
     index.flatMap(st => (st.linkType.sliding(3,1) ++ st.name.sliding(3,1) ++ st.hints.mkString.sliding(3,1))
-      .map(key => (key.toLowerCase(),st)))
+      .map(_.toLowerCase() -> st))
       .groupBy(_._1)
       .mapValues(_.map(_._2))
 }
