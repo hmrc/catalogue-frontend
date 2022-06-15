@@ -115,7 +115,7 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
         SearchTerm(linkType = "health",   name = "voa-api-proxy-performance-tests",            link = "/health-indicators/voa-api-proxy-performance-tests",             weight = 0.5f,Set())
       )
     }
-
+    
     "Be case insensitive" in {
       val res1 = testIndex.search(query = Seq("pods"))
       val res2 = testIndex.search(query = Seq("PODS"))
