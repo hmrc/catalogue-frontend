@@ -55,7 +55,7 @@
                                     <ul>
                                       @for(sourceValue: ConfigSourceValue <- envSources.get(env).getOrElse(Seq.empty)) {
                                         <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env)">
-                                            <span class="truncate-content">@sourceValue.value</span>
+                                            <span class="truncate-content-overflow">@sourceValue.value</span>
                                             <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env.asString-@sourceValue.source-@key"></a>
                                         </li>
                                       }
@@ -102,6 +102,7 @@
             <h2>How to use the config explorer</h2>
             <ul class="bullets">
                 <li>Drag the handles to the left of column headers to re-size columns</li>
+                <li>Hover over a key and click the icon to copy bookmark url to clipboard</li>
                 <li>Hover over a config value to see it's source</li>
                 <li>Triple click a truncated value to select the whole thing</li>
                 <li>Crossed out values indicate an eviction according to their precendence in the config hierarchy</li>

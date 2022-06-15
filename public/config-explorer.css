@@ -958,6 +958,10 @@ aside {
   overflow-wrap: break-word;
   text-overflow: ellipsis; }
 
+.truncate-content-overflow {
+  overflow-x: auto;
+  overflow-wrap: break-word; }
+
 .grid-header > .grid-item {
   font-weight: bold;
   text-transform: capitalize; }
@@ -1005,6 +1009,7 @@ aside {
 
 .grid-row > .grid-item:hover > a {
   visibility: visible;
+  color: #008770;
 }
 
 .highlight {
@@ -1042,6 +1047,7 @@ aside {
   position: -webkit-sticky;
   left: 0;
   padding-left: 8px;
+  padding-right: 25px;
   background: inherit;
   z-index: 5; }
 
