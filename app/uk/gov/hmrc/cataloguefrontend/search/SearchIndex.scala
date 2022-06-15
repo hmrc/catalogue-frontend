@@ -99,7 +99,7 @@ object SearchIndex {
 
   def optimizeIndex(index: Seq[SearchTerm]): Map[String, Seq[SearchTerm]] =
     index.flatMap(st => (st.linkType.sliding(3,1) ++ st.name.sliding(3,1) ++ st.hints.mkString.sliding(3,1))
-      .map(key => (key,st)))
+      .map(key => (key.toLowerCase(),st)))
       .groupBy(_._1)
       .mapValues(_.map(_._2))
 }
