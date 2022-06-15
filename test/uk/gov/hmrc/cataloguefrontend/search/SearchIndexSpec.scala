@@ -30,6 +30,7 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
   }
 
   private val index = Seq(
+    SearchTerm(linkType = "timeline", name = "PODS File Upload",                           link = "/somethings/pods",                                               weight = 0.5f, Set()),
     SearchTerm(linkType = "timeline", name = "xi-eori-common-component-frontend",          link = "/deployment-timeline?service=xi-eori-common-component-frontend", weight = 0.5f,Set()),
     SearchTerm(linkType = "timeline", name = "verification-questions",                     link = "/deployment-timeline?service=verification-questions",            weight = 0.5f,Set()),
     SearchTerm(linkType = "config",   name = "wristband",                                  link = "/service/wristband/config",                                      weight = 0.5f,Set()),
@@ -94,6 +95,17 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
     "return an empty Sequence if no SearchTerms contain the query" in {
       val res = testIndex.search(query = Seq("zzz"))
       res shouldBe Seq.empty
+    }
+
+    "Be case insensitive" in {
+      val res1 = testIndex.search(query = Seq("pods"))
+      val res2 = testIndex.search(query = Seq("PODS"))
+      val res3 = testIndex.search(query = Seq("oad"))
+      val res4 = testIndex.search(query = Seq("OAD"))
+      List(res1, res2, res3, res4).foreach(_ shouldBe Seq(
+        SearchTerm(linkType = "timeline", name = "PODS File Upload", link = "/somethings/pods", weight = 0.5f, Set())
+      ))
+
     }
   }
 }
