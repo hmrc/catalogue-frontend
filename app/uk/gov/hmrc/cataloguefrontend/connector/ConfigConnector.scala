@@ -21,6 +21,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentInfra
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -57,5 +58,11 @@ class ConfigConnector @Inject() (
     http.GET[Option[DeploymentConfig]](
       url"$serviceConfigsBaseUrl/deployment-config/${environment.asString}/$service"
     )
+  }
+
+  def allDeploymentInfra(environment: Environment)(implicit hc: HeaderCarrier): Future[Seq[ServiceDeploymentInfra]] = {
+    implicit val adsr = ServiceDeploymentInfra.reads
+    http.GET[Seq[ServiceDeploymentInfra]](url"$serviceConfigsBaseUrl/deployment-config/${environment.asString}")
+
   }
 }

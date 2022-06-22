@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController, WhatsRunningWhereVersion}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentInfraSummary}
 
 @this(viewMessages: ViewMessages)
 
@@ -27,6 +28,7 @@
  , profileNames       : Seq[ProfileName]
  , form               : Form[_]
  , showDiff           : Boolean
+ , deployedInfra      : Seq[ServiceDeploymentInfraSummary]
  )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("What's Running Where?", "whats-running-where") {

@@ -23,6 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ResourceUsageCo
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{CostedResourceUsage, CostedResourceUsageTotal, DeploymentConfig, EstimatedCostCharts, ServiceCostEstimate}
 import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentInfra, ServiceDeploymentInfraSummary}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
@@ -50,6 +51,13 @@ class CostEstimationService @Inject() (
         ServiceCostEstimate
           .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment.toMap, serviceCostEstimateConfig)
       )
+
+  def estimateServiceCostsForEnvironment(
+    environment: Environment,
+    serviceCostEstimateConfig: CostEstimateConfig
+  )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Seq[ServiceDeploymentInfraSummary]] =
+    configConnector.allDeploymentInfra(environment)
+      .map(_.map(ServiceCostEstimate.fromServiceDeploymentInfra(_, serviceCostEstimateConfig)))
 
   def historicResourceUsageForService(
     serviceName: String,
@@ -208,6 +216,18 @@ object CostEstimationService {
   }
 
   object ServiceCostEstimate {
+
+    def fromServiceDeploymentInfra(
+      serviceDeploymentInfra: ServiceDeploymentInfra,
+      serviceCostEstimateConfig: CostEstimateConfig): ServiceDeploymentInfraSummary = {
+      val totalSlots =
+        serviceDeploymentInfra.slots * serviceDeploymentInfra.instances
+
+      val yearlyCostGbp =
+        totalSlots * serviceCostEstimateConfig.slotCostPerYear
+
+      ServiceDeploymentInfraSummary(serviceDeploymentInfra, yearlyCostGbp)
+    }
 
     def fromDeploymentConfigByEnvironment(
       deploymentConfigByEnvironment: DeploymentConfigByEnvironment,
