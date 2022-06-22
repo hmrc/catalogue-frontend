@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ResourceUsageCo
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{CostedResourceUsage, CostedResourceUsageTotal, DeploymentConfig, EstimatedCostCharts, ServiceCostEstimate}
 import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentInfra, ServiceDeploymentInfraSummary}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentConfig, ServiceDeploymentConfigSummary}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
@@ -52,12 +52,11 @@ class CostEstimationService @Inject() (
           .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment.toMap, serviceCostEstimateConfig)
       )
 
-  def estimateServiceCostsForEnvironment(
-    environment: Environment,
+  def estimateCostOfServices(
     serviceCostEstimateConfig: CostEstimateConfig
-  )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Seq[ServiceDeploymentInfraSummary]] =
-    configConnector.allDeploymentInfra(environment)
-      .map(_.map(ServiceCostEstimate.fromServiceDeploymentInfra(_, serviceCostEstimateConfig)))
+  )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Seq[ServiceDeploymentConfigSummary]] =
+    configConnector.allDeploymentConfig
+      .map(_.map(ServiceCostEstimate.fromServiceDeploymentConfig(_, serviceCostEstimateConfig)))
 
   def historicResourceUsageForService(
     serviceName: String,
@@ -217,16 +216,16 @@ object CostEstimationService {
 
   object ServiceCostEstimate {
 
-    def fromServiceDeploymentInfra(
-      serviceDeploymentInfra: ServiceDeploymentInfra,
-      serviceCostEstimateConfig: CostEstimateConfig): ServiceDeploymentInfraSummary = {
+    def fromServiceDeploymentConfig(
+                                     serviceDeploymentConfig: ServiceDeploymentConfig,
+                                     serviceCostEstimateConfig: CostEstimateConfig): ServiceDeploymentConfigSummary = {
       val totalSlots =
-        serviceDeploymentInfra.slots * serviceDeploymentInfra.instances
+        serviceDeploymentConfig.slots * serviceDeploymentConfig.instances
 
       val yearlyCostGbp =
         totalSlots * serviceCostEstimateConfig.slotCostPerYear
 
-      ServiceDeploymentInfraSummary(serviceDeploymentInfra, yearlyCostGbp)
+      ServiceDeploymentConfigSummary(serviceDeploymentConfig, yearlyCostGbp)
     }
 
     def fromDeploymentConfigByEnvironment(

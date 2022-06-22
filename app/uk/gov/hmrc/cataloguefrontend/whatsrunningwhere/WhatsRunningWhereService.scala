@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentInfraSummary
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 
 import javax.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
@@ -37,12 +37,20 @@ class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector, 
   def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
     releasesConnector.releasesForService(service)
 
-  def allReleases(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier,  ec: ExecutionContext): Future[Seq[ServiceDeploymentInfraSummary]] = {
+//  def allReleases(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier,  ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
+//    val releasesPerEnv = releases.map(r => (r.applicationName.asString, r.versions.map(v => v.environment.asString))).toMap
+//    Future.reduceLeft(Environment.values
+//      .map(env => costEstimationService.estimateCostOfServices(serviceCostEstimateConfig))
+//    )(_ ++ _)
+//      .map(_.filter(inf =>
+//        releasesPerEnv.getOrElse(inf.serviceDetails.name, List.empty).contains(inf.serviceDetails.environment)
+//      ))
+//  }
+
+  def allReleases(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier,  ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
     val releasesPerEnv = releases.map(r => (r.applicationName.asString, r.versions.map(v => v.environment.asString))).toMap
-    Future.reduceLeft(Environment.values
-      .map(env => costEstimationService.estimateServiceCostsForEnvironment(env, serviceCostEstimateConfig))
-    )(_ ++ _)
-      .map(_.filter(inf =>
+    costEstimationService.estimateCostOfServices(serviceCostEstimateConfig)
+    .map(_.filter(inf =>
         releasesPerEnv.getOrElse(inf.serviceDetails.name, List.empty).contains(inf.serviceDetails.environment)
       ))
   }

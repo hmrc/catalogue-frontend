@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 
-case class ServiceDeploymentInfra
+case class ServiceDeploymentConfig
 (
   name       : String,
   environment: String,
@@ -28,18 +28,18 @@ case class ServiceDeploymentInfra
   instances  : Int = 0,
 )
 
-object ServiceDeploymentInfra {
-  val reads: Reads[ServiceDeploymentInfra] = {
+object ServiceDeploymentConfig {
+  val reads: Reads[ServiceDeploymentConfig] = {
     ((__ \ "name").read[String]
     ~ (__ \ "environment").read[String]
     ~ (__ \ "slots").read[Int]
     ~ (__ \ "instances").read[Int]
-      )(ServiceDeploymentInfra.apply _)
+      )(ServiceDeploymentConfig.apply _)
     }
 }
 
-case class ServiceDeploymentInfraSummary
+case class ServiceDeploymentConfigSummary
 (
-  serviceDetails: ServiceDeploymentInfra,
+  serviceDetails: ServiceDeploymentConfig,
   cost          : Double
 )
