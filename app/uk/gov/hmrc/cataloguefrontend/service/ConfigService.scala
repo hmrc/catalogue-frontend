@@ -149,13 +149,4 @@ object ConfigService {
     case object ArtifactNameNotFound            extends ArtifactNameResult
     case class ArtifactNameError(error: String) extends ArtifactNameResult
   }
-
-  def readableSourceValues(value: String): List[String] = {
-    value match {
-      case a if value.startsWith("ENC[") => List("ENC[...]")
-      case b if value.startsWith("[\"") && value.endsWith("\"]") => value.split(",").toList
-      case _ => List(value)
-    }
-
-  }
 }
