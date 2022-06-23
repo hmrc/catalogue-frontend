@@ -38,8 +38,17 @@ object ServiceDeploymentConfig {
     }
 }
 
+case class ServiceDeploymentConfigWithCost
+(
+  serviceName : String,
+  environment : String,
+  slots      : Int = 0,
+  instances  : Int = 0,
+  cost       : Double
+)
+
 case class ServiceDeploymentConfigSummary
 (
-  serviceDetails: ServiceDeploymentConfig,
-  cost          : Double
+   serviceName : String,
+   environments: Seq[ServiceDeploymentConfigWithCost]
 )

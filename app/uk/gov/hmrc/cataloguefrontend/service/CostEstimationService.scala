@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ResourceUsageCo
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{CostedResourceUsage, CostedResourceUsageTotal, DeploymentConfig, EstimatedCostCharts, ServiceCostEstimate}
 import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentConfig, ServiceDeploymentConfigSummary}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentConfig, ServiceDeploymentConfigWithCost}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
@@ -54,7 +54,7 @@ class CostEstimationService @Inject() (
 
   def estimateCostOfServices(
     serviceCostEstimateConfig: CostEstimateConfig
-  )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Seq[ServiceDeploymentConfigSummary]] =
+  )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Seq[ServiceDeploymentConfigWithCost]] =
     configConnector.allDeploymentConfig
       .map(_.map(ServiceCostEstimate.fromServiceDeploymentConfig(_, serviceCostEstimateConfig)))
 
@@ -217,16 +217,18 @@ object CostEstimationService {
   object ServiceCostEstimate {
 
     def fromServiceDeploymentConfig(
-                                     serviceDeploymentConfig: ServiceDeploymentConfig,
-                                     serviceCostEstimateConfig: CostEstimateConfig): ServiceDeploymentConfigSummary = {
+                                     depConfig: ServiceDeploymentConfig,
+                                     serviceCostEstimateConfig: CostEstimateConfig): ServiceDeploymentConfigWithCost = {
       val totalSlots =
-        serviceDeploymentConfig.slots * serviceDeploymentConfig.instances
+        depConfig.slots * depConfig.instances
 
       val yearlyCostGbp =
         totalSlots * serviceCostEstimateConfig.slotCostPerYear
 
-      ServiceDeploymentConfigSummary(serviceDeploymentConfig, yearlyCostGbp)
-    }
+      ServiceDeploymentConfigWithCost(depConfig.name, depConfig.environment, depConfig.slots, depConfig.instances, yearlyCostGbp)
+
+      }
+
 
     def fromDeploymentConfigByEnvironment(
       deploymentConfigByEnvironment: DeploymentConfigByEnvironment,
