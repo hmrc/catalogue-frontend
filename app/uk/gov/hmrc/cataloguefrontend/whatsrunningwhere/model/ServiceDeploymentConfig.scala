@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 case class ServiceDeploymentConfig
 (

@@ -20,12 +20,11 @@ import cats.implicits._
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.whatsrunningwhere.WhatsRunningWherePage
+import views.html.whatsrunningwhere.{WhatsRunningWhereConfig, WhatsRunningWherePage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,6 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class WhatsRunningWhereController @Inject() (
   service           : WhatsRunningWhereService,
   page              : WhatsRunningWherePage,
+  page2: WhatsRunningWhereConfig,
   override val mcc  : MessagesControllerComponents,
   override val auth : FrontendAuthComponents
 )(implicit
@@ -76,7 +76,7 @@ class WhatsRunningWhereController @Inject() (
         environments          = distinctEnvironments(releases)
         serviceDeployments   <- service.allReleases(releases)
         profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield Ok(page(environments, releases, selectedProfileType, profileNames, form, showDiff))
+      } yield Ok(page2(environments, releases, selectedProfileType, profileNames, form, showDiff, serviceDeployments.sortBy(_.serviceName)))
     }
 }
 

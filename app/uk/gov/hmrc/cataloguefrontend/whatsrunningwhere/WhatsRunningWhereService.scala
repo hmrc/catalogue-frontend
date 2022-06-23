@@ -16,17 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
-import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentConfigByEnv, ServiceDeploymentConfigSummary, ServiceDeploymentConfigWithCost}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 
 import javax.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector, costEstimationService : CostEstimationService, configConnector: ConfigConnector, serviceCostEstimateConfig : CostEstimateConfig) {
+class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector, costEstimationService : CostEstimationService, serviceCostEstimateConfig : CostEstimateConfig) {
 
   def releasesForProfile(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     releasesConnector.releases(profile)
