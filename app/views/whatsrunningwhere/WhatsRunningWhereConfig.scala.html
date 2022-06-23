@@ -74,11 +74,11 @@
                         </select>
                     </div>
                 </div>
+                <div style="float: right">
+                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">versions</a> | instances
+                </div>
             </div>
         </form>
-
-        <!--
-        List(ServiceDeploymentConfigSummary(user-details,Vector(ServiceDeploymentConfigWithCost(user-details,staging,9,15,135.0), ServiceDeploymentConfigWithCost(user-details,production,9,16,144.0)))) -->
 
         <table class="table table-striped" id="service-list">
             <thead>
@@ -111,7 +111,7 @@
                     }
                 }
                 <td>
-                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.serviceName)"><span class="glyphicon glyphicon-stats"></span> </a>
+                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.serviceName)"><span class="glyphicon glyphicon-stats"></span></a>
             </td>
             </tr>
             }
