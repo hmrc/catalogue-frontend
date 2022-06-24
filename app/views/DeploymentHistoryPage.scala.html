@@ -50,47 +50,49 @@
         <form id="form">
             <div class="form-group row">
                 <input type="hidden" id="selected-environment" value="@selectedEnv.asString">
-                <div class="col-xs-5">
+                <div class="col-md-5">
                     <label for="service" title="Search by service name" data-toggle="tooltip">Service</label>
                     <input id="service" class="search form-control" type="text" name="service" value='@form("service").value' autofocus autocomplete="off">
                 </div>
-                <div class="col-xs-3">
+                <div class="col-md-3">
                     @select(
                         field     =  form("team"),
                         options   =  teams.map(t => t.name.asString -> t.name.asString),
                         '_default -> "All",
                         '_label   -> "Team",
                         'onchange -> "this.form.submit()",
-                        'id       -> "team-search"
+                        'id       -> "team-search",
+                        'class    -> "form-control"
                     )
                 </div>
-                <div class="col-xs-2">
+                <div class="col-md-2">
                     <label for="from-search-input" title="From the start of this day" data-toggle="tooltip">Date From</label>
-                    <input id="from-search-input" class="form-control" type="date" name="from" onchange="dateFilterChange(event)" value='@form("from").value'>
+                    <input id="from-search-input" class="form-control" type="date" name="from" onchange="dateFilterChange(event)" value='@form("from").value' style="line-height: 20px">
                 </div>
-                <div class="col-xs-2">
+                <div class="col-md-2">
                     <label for="to-search-input" title="To the end of this day" data-toggle="tooltip" >Date To</label>
-                    <input id="to-search-input" class="form-control" type="date" name="to" onchange="dateFilterChange(event)" value='@form("to").value'>
+                    <input id="to-search-input" class="form-control" type="date" name="to" onchange="dateFilterChange(event)" value='@form("to").value' style="line-height: 20px">
                 </div>
             </div>
         </form>
 
-        <div class="row">
+        <div class="row container">
             <ul id="environment" class="nav nav-tabs">
                 @Environment.values.map(envOption)
             </ul>
-
         </div>
 
         <table class="table table-striped">
-            @pageNavigation()
-            <tr>
-                <th class="col-lg-3"><button role="button" class="no-border" data-sort="service-name">Service</button></th>
-                <th class="col-lg-2"><button role="button" class="no-border" data-sort="team">Teams</button></th>
-                <th class="col-lg-2"><button role="button" class="no-border" data-sort="version">Version</button></th>
-                <th class="col-lg-3"><button role="button" class="no-border" data-sort="deploy-time">Deploy Time</button></th>
-                <th class="col-lg-2"><button role="button" class="no-border" data-sort="deployer">Deployer</button></th>
-            </tr>
+            <thead>
+                @pageNavigation()
+                <tr>
+                    <th class="col-lg-3"><button role="button" class="no-border" data-sort="service-name">Service</button></th>
+                    <th class="col-lg-2"><button role="button" class="no-border" data-sort="team">Teams</button></th>
+                    <th class="col-lg-2"><button role="button" class="no-border" data-sort="version">Version</button></th>
+                    <th class="col-lg-3"><button role="button" class="no-border" data-sort="deploy-time">Deploy Time</button></th>
+                    <th class="col-lg-2"><button role="button" class="no-border" data-sort="deployer">Deployer</button></th>
+                </tr>
+            </thead>
             <tbody class="list">
               @deployments.zipWithIndex.map{case (d, i) =>
                 <tr id="row@i">

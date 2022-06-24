@@ -47,43 +47,35 @@
 
   <section id="shutter-overview">
 
-    <div class="row">
-        <ul id="environment" class="nav nav-tabs">
-            @Environment.values.map(envOption)
-        </ul>
+    <ul id="environment" class="nav nav-tabs">
+        @Environment.values.map(envOption)
+    </ul>
+    <div class="shuttered-checkbox"><input id="shuttered-only" type="checkbox" name="shuttered-only" value="false" onclick="filterUnshuttered()"> Only Show Shuttered @{shutterType}s</div>
 
-        <div class="shuttered-checkbox"><input id="shuttered-only" type="checkbox" name="shuttered-only" value="false" onclick="filterUnshuttered()"> Only Show Shuttered @{shutterType}s</div>
+    <p class="shutter-info-link">
+      Select a service from the list below or <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None)">
+        click here to go to the shutter wizard
+      </a>.
+    </p>
+
+    <div id="service-list">
+        <table id="shutter-state-table" class="table table-striped">
+            <thead>
+              <tr>
+                  <th id="service-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-service">Service</button></p></th>
+                  <th id="status-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-state">Status</button></p></th>
+                  <th id="last-update-by-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-user">Last Updated By</button></p></th>
+                  <th id="date-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-date">Date</button></p></th>
+                  <th id="events-link"><p class="shutter-overview-header">Events</p></th>
+                  <th id="update-header"><p class="shutter-overview-header">Update</p></th>
+              </tr>
+            </thead>
+            <tbody class="list">
+              @shutterRows(shutterStates.get(selectedEnv).getOrElse(Seq.empty))
+            </tbody>
+
+        </table>
     </div>
-
-      <div class="row tabs-bottom">
-          <div class="sm-col-12">
-              <p class="shutter-info-link">
-                  Select a service from the list below or
-                  <a href="@{
-                      uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None)
-                  }">click here to go to the shutter wizard</a>
-                  .</p>
-          </div>
-      </div>
-
-  <div id="service-list" class="row tabs-bottom">
-      <table id="shutter-state-table" class="table table-striped">
-          <tr>
-              <th id="service-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-service">Service</button></p></th>
-              <th id="status-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-state">Status</button></p></th>
-              <th id="last-update-by-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-user">Last Updated By</button></p></th>
-              <th id="date-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-date">Date</button></p></th>
-              <th id="events-link"><p class="shutter-overview-header">Events</p></th>
-              <th id="update-header"><p class="shutter-overview-header">Update</p></th>
-          </tr>
-
-          <tbody class="list">
-            @shutterRows(shutterStates.get(selectedEnv).getOrElse(Seq.empty))
-          </tbody>
-
-      </table>
-
-  </div>
   </section>
 
   <script>
@@ -108,8 +100,8 @@
 }
 
 @envOption(env: Environment) = {
-  <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)" class="navbar-link">@env.displayString (@shutteredCount(env) / @serviceCount(env))</a>
+  <li id="tab-@env.asString" class="nav-item @if(env == selectedEnv){active}">
+      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)" class="nav-link">@env.displayString (@shutteredCount(env) / @serviceCount(env))</a>
   </li>
 }
 

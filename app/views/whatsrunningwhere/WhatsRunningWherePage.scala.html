@@ -46,32 +46,33 @@
 
     <div id="whats-running-where-list">
         <form id="form" method="get">
-            <input type="hidden" id="profile_type" name="profile_type" value="@selectedProfileType.asString">
+            <input type="hidden" id="profile_type" name="profile_type" value="@selectedProfileType.asString" />
             @if(showDiff) {
-              <input type="hidden" id="showDiff" name="showDiff" value="true">
+              <input type="hidden" id="showDiff" name="showDiff" value="true" />
             }
             <div class="form-group row">
-                <div class="col-xs-2 padding-reset-right">
+                <div class="col-md-2 padding-reset-right">
                     <label for="search">Application name:</label>
                 </div>
-                <div class="col col-xs-3">
-                    <input class="search form-control" id="search" type="text" name="application_name"
-                    value='@form("application_name").value' autofocus>
+                <div class="col-md-4">
+                    <input class="search form-control" id="search" type="text" name="application_name" value='@form("application_name").value' autofocus>
                 </div>
             </div>
-            <div class="form-group row">
-              <ul class="nav nav-tabs" id="nav-tab" role="tablist">
+            <ul class="nav nav-tabs" id="nav-tab" role="tablist">
                 @ProfileType.values.map(profileTypeTab)
-              </ul>
-              <div class="tab-content" id="nav-tabContent">
+            </ul>
+            <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane show active in" role="tabpanel">
-                    <select id="profile_name" name="profile_name" onchange="this.form.submit();" style="margin: 20px">
-                      @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
-                        @options.map(selectOption(form("profile_name").value))
-                      }
-                    </select>
+                    <div class="form-group row">
+                        <div class="col-md-2">
+                            <select class="form-control" id="profile_name" name="profile_name" onchange="this.form.submit();">
+                            @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
+                                @options.map(selectOption(form("profile_name").value))
+                            }
+                            </select>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
         </form>
 

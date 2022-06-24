@@ -33,11 +33,22 @@
   </header>
 
   <div id="events">
-    <form id="shutter-events-form" action="/shutter-events/list" method="get" class="form-inline">
+
+    <form id="shutter-events-form" action="/shutter-events/list" method="get">
       <input id="environment" name="environment" type="text" value="@form("environment").value" hidden>
-      <label>Service: <input id="serviceName" name="serviceName" type="search" autofocus value=@form("serviceName").value></label>
-      <a id="clear" class="btn btn-secondary" href="@clearTargetFor(environments.find(env => form("environment").value.contains(env.asString)).getOrElse(environments.head))">Clear</a>
-      <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+
+      <div class="form-group row">
+        <div class="col-md-1">
+          <label for="serviceName">Service:</label>
+        </div>
+        <div class="col-md-4">
+          <input class="search form-control" id="serviceName" name="serviceName" type="search" autofocus value=@form("serviceName").value>
+        </div>
+        <div class="col-md-3">
+          <a id="clear" class="btn btn-secondary" href="@clearTargetFor(environments.find(env => form("environment").value.contains(env.asString)).getOrElse(environments.head))">Clear</a>
+          <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+        </div>
+      </div>
     </form>
 
     <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
@@ -88,8 +99,8 @@
 }
 
 @makeTab(env: Environment) = {
-  <li id="tab-@env.asString" class="navbar-item @if(form("environment").value.contains(env.asString)) {active}">
-    <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, form("serviceName").value)" class="navbar-link">@env.displayString</a>
+  <li id="tab-@env.asString" class="nav-item @if(form("environment").value.contains(env.asString)) {active}">
+    <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, form("serviceName").value)" class="nav-link">@env.displayString</a>
   </li>
 }
 

@@ -38,7 +38,7 @@
     }
 }
 
-@standard_layout("Deployments", "deployments") {
+@standard_layout("Deployment Timeline", "deployment-timeline") {
 
     <style>
         .timeline-tooltip {
@@ -89,44 +89,42 @@
                 return `<div class="timeline-tooltip"><b> ${ver} deployed by ${user} </b><br>From ${start} To  ${end}<br><em>Deployed for ${days} days</em> </div>`
             }
     </script>
-   <h2>Deployment Timeline @if(service != ""){<a id="link-to-service-info-page" href="@CatalogueController.service(service)">- @service</a>}</h2>
-    <div class="row">
-        <form action="" method="get" class="form-horizontal">
-            <div class="col-sm-3">
+    <header>
+        <h1>Deployment Timeline @if(service != ""){<a id="link-to-service-info-page" href="@CatalogueController.service(service)">- @service</a>}</h1>
+    </header>
+    <form action="" method="get">
+        <div class="form-group row">
+            <div class="col-md-3">
+                <label for="service" title="Search by service name" data-toggle="tooltip">Service</label>
                 <select name="service" id="service" class="form-control" onchange="this.form.submit()">
                     <option value=""></option>
                     @services.map { s => <option value="@s" @if(service.equalsIgnoreCase(s)) { selected="true" } >@s</option> }
                 </select>
             </div>
 
-            <div class="col-sm-2">
-              <input type="date" id="start" name="start" value="@start.asPattern("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()">
+            <div class="col-md-2">
+                <label for="start" title="From the start of this day" data-toggle="tooltip">Date From</label>
+                <input type="date" id="start" name="start" value="@start.asPattern("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()" style="line-height: 20px">
             </div>
-            <div class="col-sm-2">
-                <input type="date" id="end" name="end" value="@end.asPattern("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()">
+            <div class="col-md-2">
+                <label for="end" title="To the end of this day" data-toggle="tooltip" >Date To</label>
+                <input type="date" id="end" name="end" value="@end.asPattern("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()" style="line-height: 20px">
             </div>
-            <div class="col-sm-1">
+            <div class="col-md-2" style="padding-top: 40px;">
                 <input type="submit" value="Submit" class="form-control btn btn-primary">
             </div>
-        </form>
-    </div>
-    <br>
+        </div>
+    </form>
 
-  @if(events.isEmpty) {
-    <div class="row">
+    @if(events.isEmpty) {
         @if(start.equals(end) || start.isAfter(end)) {
-              <p class="red">Start date must be before the End date.</p>
+            <p class="red">Start date must be before the End date.</p>
         }
         @if(services.contains(service)) {
-          <p>
-              No data in this date range.
-          </p>
-
+            <p>No data in this date range.</p>
         }
-
-    </div>
-  } else {
-      <div id="history-chart" style="height: 300px;"></div>
-  }
+    } else {
+        <div id="history-chart" style="height: 300px;"></div>
+    }
 }
 
