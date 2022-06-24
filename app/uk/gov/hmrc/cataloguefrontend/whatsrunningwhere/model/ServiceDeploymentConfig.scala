@@ -21,7 +21,7 @@ import play.api.libs.json.{Reads, __}
 
 case class ServiceDeploymentConfig
 (
-  name       : String,
+  serviceName: String,
   environment: String,
   slots      : Int = 0,
   instances  : Int = 0,
@@ -37,17 +37,8 @@ object ServiceDeploymentConfig {
     }
 }
 
-case class ServiceDeploymentConfigWithCost
-(
-  serviceName : String,
-  environment : String,
-  slots      : Int = 0,
-  instances  : Int = 0,
-  cost       : Double
-)
-
 case class ServiceDeploymentConfigSummary
 (
    serviceName : String,
-   environments: Seq[ServiceDeploymentConfigWithCost]
+   environments: Seq[ServiceDeploymentConfig]
 )

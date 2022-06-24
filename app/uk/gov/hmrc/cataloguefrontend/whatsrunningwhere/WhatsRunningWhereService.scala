@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
+import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 
@@ -24,7 +25,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector, costEstimationService : CostEstimationService, serviceCostEstimateConfig : CostEstimateConfig) {
+class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector, configConnector: ConfigConnector) {
 
   def releasesForProfile(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     releasesConnector.releases(profile)
@@ -37,7 +38,7 @@ class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector, 
 
   def allReleases(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier,  ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
     val releasesPerEnv = releases.map(r => (r.applicationName.asString, r.versions.map(v => v.environment.asString))).toMap
-    costEstimationService.estimateCostOfServices(serviceCostEstimateConfig)
+    configConnector.allDeploymentConfig
     .map(_.filter(config =>
         releasesPerEnv.getOrElse(config.serviceName, List.empty).contains(config.environment)
       )
