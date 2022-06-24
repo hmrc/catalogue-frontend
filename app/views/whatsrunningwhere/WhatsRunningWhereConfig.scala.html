@@ -88,14 +88,14 @@
                 }
             </thead>
             <tbody class="list">
-            @serviceDeployments.zipWithIndex.map { case (wrw, i) =>
+            @serviceDeployments.zipWithIndex.map { case (sdc, i) =>
             <tr role="row" id="row@i">
                 <td class="application-name" id="row@{i}_application">
-                    <a href="@appRoutes.CatalogueController.service(wrw.serviceName)">@{wrw.serviceName}</a>
+                    <a href="@appRoutes.CatalogueController.service(sdc.serviceName)">@{sdc.serviceName}</a>
                 </td>
 
                 @environments.map { env =>
-                    @wrw.environments.find(_.environment == env.asString).map { envVersion =>
+                    @sdc.environments.find(_.environment == env.asString).map { envVersion =>
                     <td id="row@{i}_version_@{env.asString}"
                         @if(showDiff && env == Environment.Production) {
 
@@ -111,7 +111,7 @@
                     }
                 }
                 <td>
-                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.serviceName)"><span class="glyphicon glyphicon-stats"></span></a>
+                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(sdc.serviceName)"><span class="glyphicon glyphicon-stats"></span></a>
             </td>
             </tr>
             }
