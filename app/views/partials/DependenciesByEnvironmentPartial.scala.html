@@ -31,7 +31,7 @@
   envDatas   : Map[SlugInfoFlag, EnvData]
 )(implicit messages: Messages)
 
-<ul id="environmentTabs" class="nav nav-tabs" role="tablist">
+<ul id="environmentTabs" class="nav nav-tabs environment-tabs" role="tablist">
   @for(slugInfoFlag <- SlugInfoFlag.values) {
     @defining(envDatas.get(slugInfoFlag)){ optEnvData =>
       <li class="nav-item @if(slugInfoFlag == SlugInfoFlag.Latest) { active }">

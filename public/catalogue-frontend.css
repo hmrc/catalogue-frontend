@@ -3539,7 +3539,6 @@ tbody.collapse.in {
     margin-left: -1px; }
 
 .nav {
-  margin-bottom: 0;
   padding-left: 0;
   list-style: none; }
   .nav:before, .nav:after {
@@ -9365,7 +9364,6 @@ tbody.collapse.in {
     margin-left: -1px; }
 
 .nav {
-  margin-bottom: 0;
   padding-left: 0;
   list-style: none; }
   .nav:before, .nav:after {
@@ -11817,8 +11815,7 @@ label {
   border: none;
   font-weight: 700; }
   .navbar .navbar-header {
-    padding-top: 10px;
-    padding-left: 10px; }
+    padding-top: 10px; }
   .navbar .navbar-brand {
     font-size: 30px;
     height: 30px;
@@ -12304,27 +12301,31 @@ table.shutter-events {
   margin-bottom: 10px;
 }
 
-#environmentTabs li a {
+.environment-tabs {
+  margin-bottom: 0px;
+}
+
+.environment-tabs li a {
   padding: 2px;
   padding-bottom: 0px;
 }
 
-#environmentTabs li a .board {
+.environment-tabs li a .board {
   margin-bottom: 2px;
   border: none;
 }
 
-#environmentTabs li a .board .board__heading {
+.environment-tabs li a .board .board__heading {
   border: none;
   padding-top: 2px;
   padding-bottom: 0px;
 }
 
-#environmentTabs li a .board .board__heading p {
+.environment-tabs li a .board .board__heading p {
   margin-bottom: 0px;
 }
 
-#environmentTabs li a .board .board__body {
+.environment-tabs li a .board .board__body {
   padding: 0px;
 }
 
