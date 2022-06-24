@@ -41,7 +41,7 @@
                 <thead>
                     <tr>
                         <th class="col-lg-7">
-                            <button role="button" class="sort no-border" data-sort="service-name">Team</button>
+                            <button role="button" class="sort no-border" data-sort="team-name">Team</button>
                         </th>
                         <th class="col-lg-2">
                             <button role="button" class="sort no-border" data-sort="created">Created</button>
@@ -57,8 +57,8 @@
                 <tbody class="list">
                 @teams.zipWithIndex.map { case (team, i) =>
                 <tr id="row@i">
-                    <td class="service-name" id="row@{i}_name">
-                        <a class="team-name" href="/teams/@team.name.asString">@team.name.asString</a>
+                    <td class="team-name" id="row@{i}_name">
+                        <a  href="/teams/@team.name.asString">@team.name.asString</a>
                     </td>
                     <td class="created monospaced" id="row@{i}_created">
                       @team.createdDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")
