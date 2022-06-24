@@ -100,10 +100,8 @@
                         @if(showDiff && env == Environment.Production) {
 
                         }
-                    ><ul style="padding-left: unset">
-                        <li>slots: @envVersion.slots</li>
-                        <li>instances: @envVersion.instances</li>
-                    </ul>
+                    >
+                        <span>@envVersion.instances x @{envVersion.slotsToMemory}m</span>
                        </td>
                     }.getOrElse {
                         <td id="row@{i}_version_@{env.asString}"></td>

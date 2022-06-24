@@ -19,13 +19,11 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
 
-case class ServiceDeploymentConfig
-(
-  serviceName: String,
-  environment: String,
-  slots      : Int = 0,
-  instances  : Int = 0,
-)
+case class ServiceDeploymentConfig(serviceName: String, environment: String, slots : Int, instances: Int) {
+  val slotsToMemory: Int = slots * 128
+  val slotsAndInstancesToMemory: Int = slotsToMemory * instances
+}
+
 
 object ServiceDeploymentConfig {
   val reads: Reads[ServiceDeploymentConfig] = {
