@@ -64,7 +64,7 @@ GET        /shutter-events                              uk.gov.hmrc.cataloguefro
 GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(env: Environment, serviceName: Option[String] ?= None)
 
 GET        /whats-running-where                         uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases(showDiff: Boolean ?= false)
-GET        /whats-running-where-config                  uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases2(showDiff: Boolean ?= false)
+GET        /whats-running-where-config                  uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases2(showMemoryUse: Boolean ?= false)
 GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.history(env: Environment)
 
 GET        /health-indicators                           uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepoType()

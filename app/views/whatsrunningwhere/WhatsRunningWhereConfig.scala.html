@@ -27,8 +27,9 @@
         , selectedProfileType: ProfileType
         , profileNames       : Seq[ProfileName]
         , form               : Form[_]
-        , showDiff           : Boolean
-        , serviceDeployments: Seq[ServiceDeploymentConfigSummary]
+        , showMemoryUse      : Boolean
+        , serviceDeployments : Seq[ServiceDeploymentConfigSummary]
+        , maxMemory          : Double
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("What's Running Where?", "whats-running-where") {
@@ -49,8 +50,8 @@
     <div id="whats-running-where-list">
         <form id="form" method="get">
             <input type="hidden" id="profile_type" name="profile_type" value="@selectedProfileType.asString">
-            @if(showDiff) {
-                <input type="hidden" id="showDiff" name="showDiff" value="true">
+            @if(showMemoryUse) {
+                <input type="hidden" id="showMemoryUse" name="showMemoryUse" value="true">
             }
             <div class="form-group row">
                 <div class="col-xs-2 padding-reset-right">
@@ -96,12 +97,8 @@
 
                 @environments.map { env =>
                     @sdc.environments.find(_.environment == env.asString).map { envVersion =>
-                    <td id="row@{i}_version_@{env.asString}"
-                        @if(showDiff && env == Environment.Production) {
-
-                        }
-                    >
-                        <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128MB) instances:@envVersion.instances slots:@envVersion.slots">@envVersion.instances x @{envVersion.slotsToMemory}mb</abbr>
+                    <td @if(showMemoryUse) {style="background: rgba(255,0,0, @{envVersion.slotsAndInstancesToMemory/maxMemory})"} id="row@{i}_version_@{env.asString})">
+                        <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@envVersion.instances slots:@envVersion.slots">@envVersion.instances x @{envVersion.slotsToMemory}mb</abbr>
 
                        </td>
                     }.getOrElse {
