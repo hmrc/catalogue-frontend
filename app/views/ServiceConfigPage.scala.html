@@ -124,6 +124,12 @@
                         el.classList.add("highlight-amber");
                     }
                 })();
+                // For chrome set checkboxes to true needed when browser back/forward button used
+                setTimeout(function() {
+                    Array.from(document.querySelectorAll(".column-filter")).forEach(input => {
+                        input.checked = true;
+                    });
+                }, 10);
 
                 Split(["#header-0", "#header-1", "#header-2", "#header-3", "#header-4", "#header-5", "#header-6", "#header-7"], {
                     sizes: [300, 500, 500, 500, 500, 500, 500, 500]
