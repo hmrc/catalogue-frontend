@@ -101,7 +101,8 @@
 
                         }
                     >
-                        <span>@envVersion.instances x @{envVersion.slotsToMemory}m</span>
+                        <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128MB) instances:@envVersion.instances slots:@envVersion.slots">@envVersion.instances x @{envVersion.slotsToMemory}mb</abbr>
+
                        </td>
                     }.getOrElse {
                         <td id="row@{i}_version_@{env.asString}"></td>
