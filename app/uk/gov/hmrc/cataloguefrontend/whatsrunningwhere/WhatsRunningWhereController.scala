@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class WhatsRunningWhereController @Inject() (
   service           : WhatsRunningWhereService,
   page              : WhatsRunningWherePage,
-  page2: WhatsRunningWhereConfig,
+  instance_page     : WhatsRunningWhereConfig,
   override val mcc  : MessagesControllerComponents,
   override val auth : FrontendAuthComponents
 )(implicit
@@ -66,7 +66,7 @@ class WhatsRunningWhereController @Inject() (
       } yield Ok(page(environments, releases, selectedProfileType, profileNames, form, showDiff))
     }
 
-  def releases2(showMemoryUse: Boolean): Action[AnyContent] = {
+  def releasesConfig(showMemoryUse: Boolean): Action[AnyContent] = {
     //The threshold of memory across instances and slots, for which the RGBA alpha value will be at its maximum.
     //Any slotsAndInstancesToMemory values above this will be bounded to this figure.
     val maxMemory = 32768.0
@@ -80,7 +80,7 @@ class WhatsRunningWhereController @Inject() (
         environments          = distinctEnvironments(releases)
         serviceDeployments   <- service.allReleases(releases)
         profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield Ok(page2(environments, releases, selectedProfileType, profileNames, form, showMemoryUse, serviceDeployments.sortBy(_.serviceName), maxMemory))
+      } yield Ok(instance_page(environments, releases, selectedProfileType, profileNames, form, showMemoryUse, serviceDeployments.sortBy(_.serviceName), maxMemory))
     }
   }
 }

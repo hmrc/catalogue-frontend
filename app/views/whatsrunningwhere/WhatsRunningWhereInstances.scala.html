@@ -34,7 +34,7 @@
 
 @standard_layout("What's Running Where?", "whats-running-where") {
     <header>
-        <h1>What's Running Where TEST?</h1>
+        <h1>What's Running Where? - Instances and Slots</h1>
     </header>
 
     @if(form.hasErrors) {
@@ -76,7 +76,7 @@
                     </div>
                 </div>
                 <div style="float: right">
-                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">versions</a> | instances
+                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">versions</a>
                 </div>
             </div>
         </form>
@@ -94,12 +94,10 @@
                 <td class="application-name" id="row@{i}_application">
                     <a href="@appRoutes.CatalogueController.service(sdc.serviceName)">@{sdc.serviceName}</a>
                 </td>
-
                 @environments.map { env =>
                     @sdc.environments.find(_.environment == env.asString).map { envVersion =>
-                    <td @if(showMemoryUse) {style="background: rgba(255,0,0, @{envVersion.slotsAndInstancesToMemory/maxMemory})"} id="row@{i}_version_@{env.asString})">
+                     <td @if(showMemoryUse) {style="background: rgba(255,0,0, @{envVersion.slotsAndInstancesToMemory/maxMemory}); color: black;"}  id="row@{i}_version_@{env.asString}">
                         <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@envVersion.instances slots:@envVersion.slots">@envVersion.instances x @{envVersion.slotsToMemory}mb</abbr>
-
                        </td>
                     }.getOrElse {
                         <td id="row@{i}_version_@{env.asString}"></td>
