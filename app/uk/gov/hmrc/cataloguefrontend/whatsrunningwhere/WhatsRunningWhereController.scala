@@ -33,7 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class WhatsRunningWhereController @Inject() (
                                               service           : WhatsRunningWhereService,
                                               page              : WhatsRunningWherePage,
-                                              instance_page     : WhatsRunningWhereInstances,
+                                              instancePage      : WhatsRunningWhereInstances,
+                                              config            : WhatsRunningWhereServiceConfig,
                                               override val mcc  : MessagesControllerComponents,
                                               override val auth : FrontendAuthComponents
 )(implicit
@@ -67,10 +68,6 @@ class WhatsRunningWhereController @Inject() (
     }
 
   def releasesConfig(showMemoryUse: Boolean): Action[AnyContent] = {
-    //The threshold of memory across instances and slots, for which the RGBA alpha value will be at its maximum.
-    //Any slotsAndInstancesToMemory values above this will be bounded to this figure.
-    val maxMemory = 32768.0
-
     BasicAuthAction.async { implicit request =>
       for {
         form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
@@ -79,8 +76,9 @@ class WhatsRunningWhereController @Inject() (
         (releases, profiles) <- (service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString)), service.profiles).mapN((r, p) => (r, p))
         environments          = distinctEnvironments(releases)
         serviceDeployments   <- service.allReleases(releases)
+        _ = println(config.maxMemoryAmount)
         profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield Ok(instance_page(environments, releases, selectedProfileType, profileNames, form, showMemoryUse, serviceDeployments.sortBy(_.serviceName), maxMemory))
+      } yield Ok(instancePage(environments, releases, selectedProfileType, profileNames, form, showMemoryUse, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount))
     }
   }
 }
