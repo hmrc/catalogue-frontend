@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
-import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 
 import javax.inject.Inject
@@ -39,10 +38,12 @@ class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector, 
   def allReleases(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier,  ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
     val releasesPerEnv = releases.map(r => (r.applicationName.asString, r.versions.map(v => v.environment.asString))).toMap
     configConnector.allDeploymentConfig
-    .map(_.filter(config =>
-        releasesPerEnv.getOrElse(config.serviceName, List.empty).contains(config.environment)
-      )
-      .groupBy(_.serviceName)
+    .map(_.filter(config => {
+        println(releasesPerEnv)
+        println(config.serviceName)
+        println(config.environment)
+        releasesPerEnv.getOrElse(config.serviceName, List.empty).contains(config.environment)}
+      ).groupBy(_.serviceName)
       .map(service => ServiceDeploymentConfigSummary(service._1, service._2))
       .toSeq
     )
