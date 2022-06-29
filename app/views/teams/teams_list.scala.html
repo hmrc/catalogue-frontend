@@ -27,10 +27,10 @@
         <div id="teams-list">
             <form action="/teams" method="get">
                 <div class="form-group row">
-                    <div class="col-xs-1 padding-reset-right">
+                    <div class="col-md-1">
                         <label for="search">Team:</label>
                     </div>
-                    <div class="col col-xs-3">
+                    <div class="col-md-4">
                         <input class="search form-control" id="search" type="text" name="name"
                         value="" autofocus>
                     </div>
@@ -38,25 +38,27 @@
             </form>
 
             <table class="table table-striped" id="service-list">
-                <tr>
-                    <th class="col-lg-7">
-                        <button role="button" class="sort no-border" data-sort="service-name">Team</button>
-                    </th>
-                    <th class="col-lg-2">
-                        <button role="button" class="sort no-border" data-sort="created">Created</button>
-                    </th>
-                    <th class="col-lg-2">
-                        <button role="button" class="sort no-border" data-sort="last-active">Last Active</button>
-                    </th>
-                    <th class="col-lg-1">
-                        <button role="button" class="sort no-border" data-sort="repo-count" title="Excluding common shared repos">Repositories</button>
-                    </th>
-                </tr>
+                <thead>
+                    <tr>
+                        <th class="col-lg-7">
+                            <button role="button" class="sort no-border" data-sort="team-name">Team</button>
+                        </th>
+                        <th class="col-lg-2">
+                            <button role="button" class="sort no-border" data-sort="created">Created</button>
+                        </th>
+                        <th class="col-lg-2">
+                            <button role="button" class="sort no-border" data-sort="last-active">Last Active</button>
+                        </th>
+                        <th class="col-lg-1">
+                            <button role="button" class="sort no-border" data-sort="repo-count" title="Excluding common shared repos">Repositories</button>
+                        </th>
+                    </tr>
+                </thead>
                 <tbody class="list">
                 @teams.zipWithIndex.map { case (team, i) =>
                 <tr id="row@i">
-                    <td class="service-name" id="row@{i}_name">
-                        <a class="team-name" href="/teams/@team.name.asString">@team.name.asString</a>
+                    <td class="team-name" id="row@{i}_name">
+                        <a  href="/teams/@team.name.asString">@team.name.asString</a>
                     </td>
                     <td class="created monospaced" id="row@{i}_created">
                       @team.createdDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")

@@ -48,53 +48,54 @@
 <div id="default-branches">
     <form action="/defaultbranch" method="get">
         <div class="form-group row">
-            <div class="col col-xs-3">
+            <div class="col-md-3">
                 <label for="search">Name:</label>
                 <div>
                     <input class="form-control" id="search" type="text" name="name" value='@form("name").value'>
                 </div>
             </div>
-            <div class="col col-xs-3" style="padding-left: 15px; padding-right: 15px;">
-              @select(
-                field     =  form("teamNames"),
-                options   =  teams.map(t => t -> t),
-                '_default -> "All",
-                '_label   -> "Teams: ",
-                'name     -> "teamNames",
-                'value    -> "form('teamNames').value",
-                'id       -> "teamNames"
-              )
+            <div class="col-md-3" style="padding-left: 15px; padding-right: 15px;">
+                @select(
+                    field     =  form("teamNames"),
+                    options   =  teams.map(t => t -> t),
+                    '_default -> "All",
+                    '_label   -> "Teams: ",
+                    'name     -> "teamNames",
+                    'value    -> "form('teamNames').value",
+                    'id       -> "teamNames",
+                    'class    -> "form-control"
+                )
                 <div>
                     Single ownership
                     <input class="checkbox" id="singleOwnership" name="singleOwnership" type="checkbox" data-toggle="tooltip" title="Return repositories that are owned solely by the selected team." value="true" @if(singleOwnership){checked}/>
                 </div>
             </div>
-            <div class="col-xs-3">
+            <div class="col-md-3">
                 <label for="defaultBranch">Branch:</label>
-            <div>
                 <input class="form-control" id="defaultBranch" type="text" name="defaultBranch" value='@form("defaultBranch").value'>
             </div>
-            </div>
-            <div style="float: right; ">
-                <button class="btn btn-primary" type="submit" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.allDefaultBranches()">Search</button>
-            </div>
         </div>
+        <button class="btn btn-primary" type="submit" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.allDefaultBranches()">Search</button>
     </form>
-    <table class="table table-striped">
-        <div>
+
+    <div style="margin-top: 15px;">
         @defining(repositories.filter(_.defaultBranch != "master").length) { nonMasterCount =>
-        <td colspan="4"><progress class="progress" style="width: 100%;" id="nomenclature" max="@repositories.length" value='@nonMasterCount'> @@nonMasterCount </progress> </td>
+            <progress class="progress" style="width: 100%;" id="nomenclature" max="@repositories.length" value='@nonMasterCount'> @@nonMasterCount </progress>
             Updated default branch names: @nonMasterCount/@repositories.length
         }
-        </div>
-        <tr>
-            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
-            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="teamNames">Team/s</button></th>
-            <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="defaultBranch">Default Branch</button></th>
-            @if(includeArchived) {
-                <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="isArchived">Archived</button></th>
-            }
-        </tr>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
+                <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="teamNames">Team/s</button></th>
+                <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="defaultBranch">Default Branch</button></th>
+                @if(includeArchived) {
+                    <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="isArchived">Archived</button></th>
+                }
+            </tr>
+        </thead>
         <tbody class="list">
         @repositories.zipWithIndex.map{case (repo, i) =>
         <tr id="row@i">

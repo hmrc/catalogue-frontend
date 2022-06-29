@@ -53,7 +53,7 @@
             </div>
         }
 
-        <div class="board">
+        <div class="board container">
             <div class="board__body">
                 @helper.form(
                     action =  appRoutes.DependencyExplorerController.search,
@@ -69,29 +69,31 @@
                                     helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
                                                    groupArtefacts.map(_.group).map(g => (g, g)) :_*),
                                     '_label -> "",
-                                    '_class -> "form-group"
+                                    '_class -> "form-group",
+                                    'class -> "form-control"
                                 )
                                 @helper.select(
                                     form("artefact"),
                                     helper.options(List()),
                                     '_label -> "",
-                                    '_class -> "form-group"
+                                    '_class -> "form-group",
+                                    'class -> "form-control"
                                 )
                             </td>
                         </tr>
                         <tr>
                             <td style="padding-top: 1em;">
-                                <input type="text" id="lbValue" value="@versionRange.lowerBound.map(_.version)" size="20" placeholder="0.0.0">
-                                <select id="lbInclusive">
+                                <input class="form-control" type="text" id="lbValue" value="@versionRange.lowerBound.map(_.version)" size="20" placeholder="0.0.0">
+                                <select id="lbInclusive" class="form-control">
                                      <option value="false">&lt;</option>
                                      <option value="true" @selected(versionRange.lowerBound)>&lt;=</option>
                                </select>
                                version
-                                <select id="ubInclusive">
+                                <select id="ubInclusive" class="form-control">
                                      <option value="false">&lt;</option>
                                      <option value="true" @selected(versionRange.upperBound)>&lt;=</option>
                                </select>
-                                <input type="text" id="ubValue" value="@versionRange.upperBound.map(_.version)" size="20" placeholder="">
+                                <input class="form-control" type="text" id="ubValue" value="@versionRange.upperBound.map(_.version)" size="20" placeholder="">
                             </td>
                         </tr>
                         <tr>
@@ -101,19 +103,22 @@
                                     helper.options(Seq("" -> Messages("dependencyexplorer.select.teams.all")) ++
                                                    teams.map(_.asString).map(t => (t, t)) :_*),
                                     '_label -> "",
-                                    '_class -> "form-group"
+                                    '_class -> "form-group",
+                                    'class  -> "form-control"
                                 )
                                 @helper.select(
                                     form("flag"),
                                     helper.options(flags.map(t => (t.asString, t.displayString)) :_*),
                                     '_label -> "",
-                                    '_class -> "form-group"
+                                    '_class -> "form-group",
+                                    'class  -> "form-control"
                                 )
                                 @helper.select(
                                     form("scope"),
                                     helper.options(scopes.map(t => (t.asString, t.displayString)) :_*),
                                     '_label -> "",
-                                    '_class -> "form-group"
+                                    '_class -> "form-group",
+                                    'class  -> "form-control"
                                 )
                             </td>
                             <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value">

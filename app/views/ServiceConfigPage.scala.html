@@ -55,7 +55,7 @@
                                     <ul>
                                       @for(sourceValue: ConfigSourceValue <- envSources.get(env).getOrElse(Seq.empty)) {
                                         <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env)">
-                                            <span class="truncate-content-overflow">@if(sourceValue.value.startsWith("ENC[")){ENCRYPTED} else {@sourceValue.value}</span>
+                                            <span class="truncate-content-overflow">@if(sourceValue.value.startsWith("ENC[")){ENC[...]} else {@sourceValue.value}</span>
                                             <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env.asString-@sourceValue.source-@key"></a>
                                         </li>
                                       }

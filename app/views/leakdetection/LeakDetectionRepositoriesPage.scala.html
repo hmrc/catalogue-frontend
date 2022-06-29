@@ -42,27 +42,30 @@
 
     <form id="form" method="get">
         <div class="form-group row">
-            <div class="col-xs-4">
+            <div class="col-md-3">
             @select(
                 field     =  form("rule"),
                 options   =  rules.map(r => r -> r),
                 '_default -> "All",
                 '_label   -> "Rule",
                 'onchange -> "this.form.submit()",
-                'id       -> "rule-dropdown"
+                'id       -> "rule-dropdown",
+                'class    -> "form-control"
+
             )
             </div>
-            <div class="col-xs-4">
+            <div class="col-md-3">
             @select(
                 field     =  form("team"),
                 options   =  teams.map(t => t.name.asString -> t.name.asString),
                 '_default -> "All",
                 '_label   -> "Team",
                 'onchange -> "this.form.submit()",
-                'id       -> "team-dropdown"
+                'id       -> "team-dropdown",
+                'class    -> "form-control"
             )
             </div>
-            <div class="col-xs-4">
+            <div class="col-md-3">
                 <label>Show repositories with:</label>
                 <div>
                     <input name="includeWarnings" id="includeWarnings" type="checkbox" onchange="form.submit()" value="true"

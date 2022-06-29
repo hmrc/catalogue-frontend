@@ -47,22 +47,23 @@
 
     <div id="service-list">
         <form action="/repositories" method="get">
-            <div class="form-row">
-                <div class="form-group col-md-5">
+            <div class="form-group row">
+                <div class="col-md-5">
                     <label for="search">Name</label>
                     <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="col-md-3">
                     @select(
                     field      = form("team"),
                     options    = teams.map(t => t.name.asString -> t.name.asString),
                     '_default -> "All",
                     '_label   -> "Team",
                     'onchange -> "this.form.submit()",
-                    'id       -> "team-filter"
+                    'id       -> "team-filter",
+                    'class   -> "form-control"
                     )
                 </div>
-                <div class="form-group col-md-3">
+                <div class="col-md-3">
                     @select(
                     field       =  form("repoType"),
                     options     =  Seq(
@@ -74,28 +75,31 @@
                     '_default -> "All",
                     '_label   -> "Type",
                     'onchange -> "this.form.submit()",
-                    'id       -> "type-search"
+                    'id       -> "type-search",
+                    'class   -> "form-control"
                     )
                 </div>
             </div>
         </form>
         <table class="table table-striped">
-            <tr>
-                <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="service-name">Name</button></th>
-                <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-status">Status</button></th>
-                <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
-                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-team">Team</button></th>
-                @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
-                  <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-bp">Branch Protection</button></th>
-                }
-                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
-                <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
-            </tr>
+            <thead>
+                <tr>
+                    <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
+                    <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-status">Status</button></th>
+                    <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
+                    <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-team">Team</button></th>
+                    @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
+                    <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-bp">Branch Protection</button></th>
+                    }
+                    <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
+                    <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
+                </tr>
+            </thead>
             <tbody class="list">
             @repositories.zipWithIndex.map{case (repo, i) =>
             <tr id="row@i">
-                <td class="service-name" id="row@{i}_name">
-                    <a class="repo-name @if(repo.isDeprecated || repo.isArchived){deprecated} @if(repo.isArchived){archived}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
+                <td class="repo-name" id="row@{i}_name">
+                    <a class="@if(repo.isDeprecated || repo.isArchived){deprecated} @if(repo.isArchived){archived}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
                 </td>
 
                 <td class="" id="row@{i}_repostatus">

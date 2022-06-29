@@ -32,27 +32,29 @@
     <div id="leaderboard-display">
         <form id="form" method="get">
             <div class="form-group row">
-                <div class="col-xs-5">
+                <div class="col-md-5">
                     <label for="repo-name-search">Repository</label>
                     <input class="search form-control" id="repo-name-search" type="text" name="repoName" value='@form("repoName").value' autofocus/>
                 </div>
-                <div class="col-xs-3">
+                <div class="col-md-4">
                     @select(
                         field     = form("team"),
                         options   =  teams.map(t => t.name.asString -> t.name.asString),
                         '_default -> "All",
                         '_label   -> "Owning Team",
                         'onchange -> "this.form.submit()",
-                        'id       -> "team-search"
+                        'id       -> "team-search",
+                        'class    -> "form-control"
                     )
                 </div>
-                <div class="col-xs-3">
+                <div class="col-md-3">
                     @select(
                         field     =  form("repoType"),
                         options   =  repoTypes.map(r => r.asString -> r.asString),
                         '_label   -> "Repository Type",
                         'onchange -> "this.form.submit()",
-                        'id       -> "repo-type-search"
+                        'id       -> "repo-type-search",
+                        'class    -> "form-control"
                     )
                 </div>
             </div>
