@@ -88,7 +88,7 @@
                     <th class="wrw-table-head wrw-environment-head">@env.displayString</th>
                 }
             </thead>
-            <tbody class="list">
+            <tbody @if(showMemoryUse) {class="list-darker-text"} class="list">
             @serviceDeployments.zipWithIndex.map { case (sdc, i) =>
             <tr role="row" id="row@i">
                 <td class="application-name" id="row@{i}_application">
@@ -96,16 +96,18 @@
                 </td>
                 @environments.map { env =>
                     @sdc.environments.find(_.environment == env.asString).map { envVersion =>
-                     <td @if(showMemoryUse) {style="background: rgba(255,0,0, @{envVersion.slotsAndInstancesToMemory/maxMemory}); color: black;"}  id="row@{i}_version_@{env.asString}">
-                        <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@envVersion.instances slots:@envVersion.slots">@envVersion.instances x @{envVersion.slotsToMemory}mb</abbr>
-                       </td>
+                     <td id="row@{i}_version_@{env.asString}"
+                         @if(showMemoryUse) {
+                             style="background: rgba(255,0,0, @{envVersion.slotsAndInstancesToMemory/maxMemory});"
+                             }
+                     ><abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@envVersion.instances slots:@envVersion.slots">@envVersion.instances x @{envVersion.slotsToMemory}mb</abbr></td>
                     }.getOrElse {
                         <td id="row@{i}_version_@{env.asString}"></td>
                     }
                 }
                 <td>
                     <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(sdc.serviceName)"><span class="glyphicon glyphicon-stats"></span></a>
-            </td>
+                </td>
             </tr>
             }
             </tbody>

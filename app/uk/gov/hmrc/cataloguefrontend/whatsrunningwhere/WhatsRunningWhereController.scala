@@ -24,18 +24,18 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.whatsrunningwhere.{WhatsRunningWhereConfig, WhatsRunningWherePage}
+import views.html.whatsrunningwhere.{WhatsRunningWhereInstances, WhatsRunningWherePage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class WhatsRunningWhereController @Inject() (
-  service           : WhatsRunningWhereService,
-  page              : WhatsRunningWherePage,
-  instance_page     : WhatsRunningWhereConfig,
-  override val mcc  : MessagesControllerComponents,
-  override val auth : FrontendAuthComponents
+                                              service           : WhatsRunningWhereService,
+                                              page              : WhatsRunningWherePage,
+                                              instance_page     : WhatsRunningWhereInstances,
+                                              override val mcc  : MessagesControllerComponents,
+                                              override val auth : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
