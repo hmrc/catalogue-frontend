@@ -39,9 +39,6 @@ class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector, 
     val releasesPerEnv = releases.map(r => (r.applicationName.asString, r.versions.map(v => v.environment.asString))).toMap
     configConnector.allDeploymentConfig
     .map(_.filter(config => {
-        println(releasesPerEnv)
-        println(config.serviceName)
-        println(config.environment)
         releasesPerEnv.getOrElse(config.serviceName, List.empty).contains(config.environment)}
       ).groupBy(_.serviceName)
       .map(service => ServiceDeploymentConfigSummary(service._1, service._2))

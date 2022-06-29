@@ -89,24 +89,24 @@
                 }
             </thead>
             <tbody @if(showMemoryUse) {class="list-darker-text"} class="list">
-            @serviceDeployments.zipWithIndex.map { case (sdc, i) =>
+            @serviceDeployments.zipWithIndex.map { case (sdcSummary, i) =>
             <tr role="row" id="row@i">
                 <td class="application-name" id="row@{i}_application">
-                    <a href="@appRoutes.CatalogueController.service(sdc.serviceName)">@{sdc.serviceName}</a>
+                    <a href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName}</a>
                 </td>
                 @environments.map { env =>
-                    @sdc.environments.find(_.environment == env.asString).map { envVersion =>
+                    @sdcSummary.environments.find(_.environment == env.asString).map { sdc =>
                      <td id="row@{i}_version_@{env.asString}"
                          @if(showMemoryUse) {
-                             style="background: rgba(255,0,0, @{envVersion.slotsAndInstancesToMemory/maxMemory});"
+                             style="background: rgba(255,0,0, @{sdc.slotsAndInstancesToMemory/maxMemory});"
                              }
-                     ><abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@envVersion.instances slots:@envVersion.slots">@envVersion.instances x @{envVersion.slotsToMemory}mb</abbr></td>
+                     ><abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@sdc.instances slots:@sdc.slots">@sdc.instances x @{sdc.slotsToMemory}mb</abbr></td>
                     }.getOrElse {
                         <td id="row@{i}_version_@{env.asString}"></td>
                     }
                 }
                 <td>
-                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(sdc.serviceName)"><span class="glyphicon glyphicon-stats"></span></a>
+                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(sdcSummary.serviceName)"><span class="glyphicon glyphicon-stats"></span></a>
                 </td>
             </tr>
             }
