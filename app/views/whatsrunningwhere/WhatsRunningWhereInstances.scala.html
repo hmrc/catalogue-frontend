@@ -15,21 +15,21 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController, WhatsRunningWhereVersion}
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 
 @this(viewMessages: ViewMessages)
 
-@( environments       : Seq[Environment]
-        , whatsRunning       : Seq[WhatsRunningWhere]
+@(environments: Seq[Environment]
+        , whatsRunning: Seq[WhatsRunningWhere]
         , selectedProfileType: ProfileType
-        , profileNames       : Seq[ProfileName]
-        , form               : Form[_]
-        , showMemoryUse      : Boolean
-        , serviceDeployments : Seq[ServiceDeploymentConfigSummary]
-        , maxMemory          : Double
+        , profileNames: Seq[ProfileName]
+        , form: Form[_]
+        , showMemoryUse: Boolean
+        , serviceDeployments: Seq[ServiceDeploymentConfigSummary]
+        , maxMemory: Double
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("What's Running Where?", "whats-running-where") {
@@ -46,7 +46,6 @@
             </ul>
         </div>
     }
-
     <div id="whats-running-where-list">
         <form id="form" method="get">
             <input type="hidden" id="profile_type" name="profile_type" value="@selectedProfileType.asString">
@@ -54,32 +53,35 @@
                 <input type="hidden" id="showMemoryUse" name="showMemoryUse" value="true">
             }
             <div class="form-group row">
-                <div class="col-xs-2 padding-reset-right">
+                <div class="col-md-2 padding-reset-right">
                     <label for="search">Application name:</label>
                 </div>
-                <div class="col col-xs-3">
-                    <input class="search form-control" id="search" type="text" name="application_name"
-                    value='@form("application_name").value' autofocus>
+                <div class="col-md-4">
+                    <input class="search form-control" id="search" type="text" name="application_name" value='@form("application_name").value' autofocus>
                 </div>
             </div>
-            <div class="form-group row">
-                <ul class="nav nav-tabs" id="nav-tab" role="tablist">
-                @ProfileType.values.map(profileTypeTab)
-                </ul>
-                <div class="tab-content" id="nav-tabContent">
-                    <div class="tab-pane show active in" role="tabpanel">
-                        <select id="profile_name" name="profile_name" onchange="this.form.submit();" style="margin: 20px">
-                        @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
-                            @options.map(selectOption(form("profile_name").value))
-                        }
-                        </select>
+            <ul class="nav nav-tabs" id="nav-tab" role="tablist">
+            @ProfileType.values.map(profileTypeTab)
+            </ul>
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane show active in" role="tabpanel">
+                    <div class="form-group row">
+                        <div class="col-md-2">
+                            <select id="form-control" name="profile_name" onchange="this.form.submit();" style="margin: 20px">
+                            @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))) { options =>
+                                @options.map(selectOption(form("profile_name").value))
+                            }
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div style="float: right">
-                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">versions</a>
                 </div>
             </div>
         </form>
+
+        <div style="float: right">
+            <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">
+                versions</a>
+        </div>
 
         <table class="table table-striped" id="service-list">
             <thead>
@@ -88,7 +90,7 @@
                     <th class="wrw-table-head wrw-environment-head">@env.displayString</th>
                 }
             </thead>
-            <tbody @if(showMemoryUse) {class="list-darker-text"} class="list">
+            <tbody @if(showMemoryUse) { class="list list-darker-text" } else { class="list" }>
             @serviceDeployments.zipWithIndex.map { case (sdcSummary, i) =>
             <tr role="row" id="row@i">
                 <td class="application-name" id="row@{i}_application">
@@ -96,18 +98,21 @@
                 </td>
                 @environments.map { env =>
                     @sdcSummary.environments.find(_.environment == env.asString).map { sdc =>
-                     <td id="row@{i}_version_@{env.asString}"
-                         @if(showMemoryUse) {
-                             style="background: rgba(255,0,0, @{sdc.slotsAndInstancesToMemory/maxMemory});"
-                             }
-                     ><abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@sdc.instances slots:@sdc.slots">@sdc.instances x @{sdc.slotsToMemory}mb</abbr></td>
+                    <td id="row@{i}_version_@{env.asString}"
+                        @if(showMemoryUse) {
+                            style="background: rgba(255, 0, 0, @{sdc.slotsAndInstancesToMemory/maxMemory});"
+                            }
+                    ><abbr style="text-decoration: none;
+                        border-bottom: none;" title="instances * (number of slots * 128mb) instances:@sdc.instances slots:@sdc.slots">@sdc.instances
+                        x @{sdc.slotsToMemory}mb</abbr>
+                    </td>
                     }.getOrElse {
                         <td id="row@{i}_version_@{env.asString}"></td>
                     }
                 }
                 <td>
                     <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(sdcSummary.serviceName)"><span class="glyphicon glyphicon-stats"></span></a>
-                </td>
+            </td>
             </tr>
             }
             </tbody>
@@ -116,7 +121,7 @@
 }
 
 <script>
-        var options = { valueNames: [ 'application-name' ] };
+        var options = {valueNames: ['application-name']};
         var serviceList = new List('whats-running-where-list', options);
 
         // re-search the list upon page load.
@@ -137,15 +142,19 @@
 
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 @selectOption(selected: Option[String])(option: (String, String)) = {
-    <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected"}>
+    <option value="@{
+        option._1
+    }" @{
+        if(selected.exists(_ == option._1)) "selected"
+    }>
     @option._2
     </option>
 }
 
 @profileTypeTab(profileType: ProfileType) = {
-@defining(profileType == selectedProfileType){ active =>
-    <li id="tab-@profileType.asString" class="nav-item @if(active){active}">
-        <a class="nav-link @if(active){active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">
+@defining(profileType == selectedProfileType) { active =>
+    <li id="tab-@profileType.asString" class="nav-item @if(active) {active}">
+        <a class="nav-link @if(active) {active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">
             @profileType Profile
         </a>
     </li>
