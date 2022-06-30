@@ -72,6 +72,7 @@
             <ul>
                 @for(env <- ConfigEnvironment.values) {
                     <li>
+                        <!-- Without turning autocomplete off, some browsers (e.g. chrome) will set the checkbox state inconsistent with the viewed data when returning to the page -->
                         <input class="column-filter" type="checkbox" id="show-@env.asString" checked="checked" autocomplete="off" />
                         <label for="show-@env.asString">@env.asString</label>
                     </li>
