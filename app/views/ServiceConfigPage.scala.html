@@ -28,11 +28,7 @@
         <script src="@routes.Assets.versioned("split.js")"></script>
         <script src="@routes.Assets.versioned("config-explorer.js")"></script>
     </head>
-    <!-- The unload function is to handle an issue with chrome remembering checkbox states in the bfcache -->
-    <body class="hide-refconf-only" onunload="
-        Array.from(document.querySelectorAll('.column-filter')).forEach(input => {
-            input.checked = true;
-        })">
+    <body class="hide-refconf-only">
         <header class="opaque">
             <h1 id="service-header">Config: @serviceName</h1>
             <i class="glyphicon glyphicon-question-sign help-icon"></i>
@@ -76,7 +72,7 @@
             <ul>
                 @for(env <- ConfigEnvironment.values) {
                     <li>
-                        <input class="column-filter" type="checkbox" id="show-@env.asString" checked="checked" />
+                        <input class="column-filter" type="checkbox" id="show-@env.asString" checked="checked" autocomplete="off" />
                         <label for="show-@env.asString">@env.asString</label>
                     </li>
                 }
@@ -84,15 +80,15 @@
             <h2>Values</h2>
             <ul>
                 <li>
-                    <input type="checkbox" id="show-referenceConf" />
+                    <input type="checkbox" id="show-referenceConf" autocomplete="off" />
                     <label for="show-referenceConf">Show all reference.conf files</label>
                 </li>
                 <li>
-                    <input type="checkbox" id="show-evictions" checked="checked" />
+                    <input type="checkbox" id="show-evictions" checked="checked" autocomplete="off" />
                     <label for="show-evictions">Show evictions</label>
                 </li>
                 <li>
-                    <input type="checkbox" id="word-wrap" />
+                    <input type="checkbox" id="word-wrap" autocomplete="off" />
                     <label for="word-wrap">Word wrap</label>
                 </li>
             </ul>
