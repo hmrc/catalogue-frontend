@@ -162,6 +162,7 @@ final case class LeakDetectionRule(
   description      : String,
   ignoredFiles     : List[String],
   ignoredExtensions: List[String],
+  ignoredContent   : List[String],
   priority         : Priority,
   draft            : Boolean
 )

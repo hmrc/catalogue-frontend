@@ -108,6 +108,16 @@
                         <label>Regex: </label>
                         @rule.regex
                     </li>
+                    @if(rule.ignoredContent.nonEmpty) {
+                        <li class="col-xs-6">
+                            <label>Ignored content: </label>
+                            <ul class="list list--minimal list-group row">
+                            @rule.ignoredContent.map { content =>
+                                <li>@content</li>
+                            }
+                            </ul>
+                        </li>
+                    }
                     @if(rule.ignoredFiles.nonEmpty) {
                         <li class="col-xs-6">
                             <label>Ignored files: </label>
