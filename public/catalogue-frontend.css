@@ -11873,11 +11873,6 @@ section span.other-teams-message {
   margin-bottom: .4em; }
 
 .list-darker-text {
-  overflow: hidden;
-  padding-left: 1.2em;
-  padding-right: 1.2em;
-  list-style: disc;
-  margin-bottom: .4em;
   color: #101010;
 }
 

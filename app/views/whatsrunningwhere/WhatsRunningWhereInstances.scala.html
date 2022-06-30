@@ -57,12 +57,11 @@
                     <label for="search">Application name:</label>
                 </div>
                 <div class="col-md-4">
-                    <input class="search form-control" id="search" type="text" name="application_name"
-                    value='@form("application_name").value' autofocus>
+                    <input class="search form-control" id="search" type="text" name="application_name" value='@form("application_name").value' autofocus>
                 </div>
             </div>
             <ul class="nav nav-tabs" id="nav-tab" role="tablist">
-            @ProfileType.values.map(profileTypeTab)
+                @ProfileType.values.map(profileTypeTab)
             </ul>
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane show active in" role="tabpanel">
@@ -92,7 +91,7 @@
                 }
             </thead>
             <tbody @if(showMemoryUse) {
-                class="list-darker-text"
+                class="list list-darker-text"
             } class="list">
             @serviceDeployments.zipWithIndex.map { case (sdcSummary, i) =>
             <tr role="row" id="row@i">
