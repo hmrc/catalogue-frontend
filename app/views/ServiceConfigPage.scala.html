@@ -28,6 +28,7 @@
         <script src="@routes.Assets.versioned("split.js")"></script>
         <script src="@routes.Assets.versioned("config-explorer.js")"></script>
     </head>
+    <!-- The unload function is to handle an issue with chrome remembering checkbox states in the bfcache -->
     <body class="hide-refconf-only" onunload="
         Array.from(document.querySelectorAll('.column-filter')).forEach(input => {
             input.checked = true;
