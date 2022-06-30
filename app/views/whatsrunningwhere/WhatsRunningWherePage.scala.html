@@ -22,12 +22,12 @@
 @this(viewMessages: ViewMessages)
 
 @( environments       : Seq[Environment]
- , whatsRunning       : Seq[WhatsRunningWhere]
- , selectedProfileType: ProfileType
- , profileNames       : Seq[ProfileName]
- , form               : Form[_]
- , showDiff           : Boolean
- )(implicit messages: Messages, request: Request[_])
+        , whatsRunning       : Seq[WhatsRunningWhere]
+        , selectedProfileType: ProfileType
+        , profileNames       : Seq[ProfileName]
+        , form               : Form[_]
+        , showDiff           : Boolean
+)(implicit messages: Messages, request: Request[_])
 
 @standard_layout("What's Running Where?", "whats-running-where") {
     <header>
@@ -48,7 +48,7 @@
         <form id="form" method="get">
             <input type="hidden" id="profile_type" name="profile_type" value="@selectedProfileType.asString" />
             @if(showDiff) {
-              <input type="hidden" id="showDiff" name="showDiff" value="true" />
+                <input type="hidden" id="showDiff" name="showDiff" value="true" />
             }
             <div class="form-group row">
                 <div class="col-md-2 padding-reset-right">
@@ -59,7 +59,7 @@
                 </div>
             </div>
             <ul class="nav nav-tabs" id="nav-tab" role="tablist">
-                @ProfileType.values.map(profileTypeTab)
+            @ProfileType.values.map(profileTypeTab)
             </ul>
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane show active in" role="tabpanel">
@@ -73,12 +73,12 @@
                         </div>
                     </div>
                 </div>
-              </div>
-                <div style="float: right">
-                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releasesConfig()">instances</a>
-                </div>
             </div>
         </form>
+
+        <div style="float: right">
+            <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releasesConfig()">instances</a>
+        </div>
 
         <table class="table table-striped" id="service-list">
             <thead>
@@ -96,20 +96,20 @@
 
                 @environments.map { env =>
                     @wrw.versions.find(_.environment == env).map { envVersion =>
-                        <td id="row@{i}_version_@{env.asString}"
+                    <td id="row@{i}_version_@{env.asString}"
                         @if(showDiff && env == Environment.Production) {
                             @if(!WhatsRunningWhereController.matchesProduction(wrw, envVersion, Environment.Staging)){
                                 class="env-version-difference"
-                            }
+                                }
                         }
-                        >@envVersion.versionNumber.asString</td>
+                    >@envVersion.versionNumber.asString</td>
                     }.getOrElse {
                         <td id="row@{i}_version_@{env.asString}"></td>
                     }
                 }
-              <td>
-                  <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.applicationName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
-              </td>
+                <td>
+                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.applicationName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
+            </td>
             </tr>
             }
             </tbody>
@@ -118,37 +118,37 @@
 }
 
 <script>
-    var options = { valueNames: [ 'application-name' ] };
-    var serviceList = new List('whats-running-where-list', options);
+        var options = { valueNames: [ 'application-name' ] };
+        var serviceList = new List('whats-running-where-list', options);
 
-    // re-search the list upon page load.
-    var searchBox = document.getElementById("search");
-    serviceList.search(searchBox.value);
+        // re-search the list upon page load.
+        var searchBox = document.getElementById("search");
+        serviceList.search(searchBox.value);
 
-    // set autofocus cursor to right of text in search box
-    var length = searchBox.value.length;
-    searchBox.focus();
-    searchBox.setSelectionRange(length, length);
+        // set autofocus cursor to right of text in search box
+        var length = searchBox.value.length;
+        searchBox.focus();
+        searchBox.setSelectionRange(length, length);
 
-    function selectProfileType(profileType) {
-      document.getElementById('profile_type').value = profileType;
-      document.getElementById('profile_name').value = '';
-      document.getElementById('form').submit();
-    };
+        function selectProfileType(profileType) {
+            document.getElementById('profile_type').value = profileType;
+            document.getElementById('profile_name').value = '';
+            document.getElementById('form').submit();
+        };
 </script>
 
 @selectOption(selected: Option[String])(option: (String, String)) = {
     <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected"}>
-        @option._2
+    @option._2
     </option>
 }
 
 @profileTypeTab(profileType: ProfileType) = {
-  @defining(profileType == selectedProfileType){ active =>
+@defining(profileType == selectedProfileType){ active =>
     <li id="tab-@profileType.asString" class="nav-item @if(active){active}">
         <a class="nav-link @if(active){active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">
-          @profileType Profile
+            @profileType Profile
         </a>
     </li>
-  }
+}
 }
