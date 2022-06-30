@@ -28,7 +28,10 @@
         <script src="@routes.Assets.versioned("split.js")"></script>
         <script src="@routes.Assets.versioned("config-explorer.js")"></script>
     </head>
-    <body class="hide-refconf-only">
+    <body class="hide-refconf-only" onunload="
+        Array.from(document.querySelectorAll('.column-filter')).forEach(input => {
+            input.checked = true;
+        })">
         <header class="opaque">
             <h1 id="service-header">Config: @serviceName</h1>
             <i class="glyphicon glyphicon-question-sign help-icon"></i>
