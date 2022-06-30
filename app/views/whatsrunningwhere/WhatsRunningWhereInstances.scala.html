@@ -100,7 +100,7 @@
                     @sdcSummary.environments.find(_.environment == env.asString).map { sdc =>
                     <td id="row@{i}_version_@{env.asString}"
                         @if(showMemoryUse) {
-                            style="background: rgba(255, 0, 0, @{sdc.slotsAndInstancesToMemory/maxMemory});"
+                            style="background: rgba(246, 124, 27, @{sdc.slotsAndInstancesToMemory/maxMemory});"
                             }
                     ><abbr style="text-decoration: none;
                         border-bottom: none;" title="instances * (number of slots * 128mb) instances:@sdc.instances slots:@sdc.slots">@sdc.instances
