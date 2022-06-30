@@ -5197,6 +5197,33 @@ button.close {
   .modal-lg {
     width: 900px; } }
 
+.slots-tooltip {
+  position: relative;
+  display: inline-block;
+  border: 5px black;
+}
+
+/* Tooltip text */
+.slots-tooltip .tooltiptext {
+  visibility: hidden;
+  width: 200px;
+  background-color: white;
+  color: black;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  border: 100px whitesmoke;
+
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.slots-tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
 .tooltip {
   position: absolute;
   z-index: 1070;
@@ -11844,6 +11871,15 @@ section span.other-teams-message {
   list-style: disc;
   color: #6f777b;
   margin-bottom: .4em; }
+
+.list-darker-text {
+  overflow: hidden;
+  padding-left: 1.2em;
+  padding-right: 1.2em;
+  list-style: disc;
+  margin-bottom: .4em;
+  color: #101010;
+}
 
 .list-item {
   margin-bottom: .6em; }

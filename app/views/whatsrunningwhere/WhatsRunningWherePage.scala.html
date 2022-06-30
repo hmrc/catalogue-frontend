@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController, WhatsRunningWhereVersion}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController}
 
 @this(viewMessages: ViewMessages)
 
@@ -72,6 +72,10 @@
                             </select>
                         </div>
                     </div>
+                </div>
+              </div>
+                <div style="float: right">
+                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releasesConfig()">instances</a>
                 </div>
             </div>
         </form>

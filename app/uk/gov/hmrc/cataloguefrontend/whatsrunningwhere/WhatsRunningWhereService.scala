@@ -16,12 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
+import play.api.Configuration
+import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
+
 import javax.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector) {
+class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector, configConnector: ConfigConnector) {
 
   def releasesForProfile(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     releasesConnector.releases(profile)
@@ -31,4 +35,22 @@ class WhatsRunningWhereService @Inject() (releasesConnector: ReleasesConnector) 
 
   def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
     releasesConnector.releasesForService(service)
+
+  def allReleases(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
+    val releasesPerEnv = releases.map(r => (r.applicationName.asString, r.versions.map(v => v.environment.asString))).toMap
+    configConnector.allDeploymentConfig
+      .map(_.filter(config => {
+        releasesPerEnv.getOrElse(config.serviceName, List.empty).contains(config.environment)
+      }
+      ).groupBy(_.serviceName)
+        .map(service => ServiceDeploymentConfigSummary(service._1, service._2))
+        .toSeq
+      )
+  }
+}
+
+class WhatsRunningWhereServiceConfig @Inject()(configuration: Configuration) {
+  def maxMemoryAmount: Double =
+    configuration
+      .get[Double]("whats-running-where.max-memory")
 }

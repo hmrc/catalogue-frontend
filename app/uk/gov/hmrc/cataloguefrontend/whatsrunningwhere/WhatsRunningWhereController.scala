@@ -20,22 +20,23 @@ import cats.implicits._
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.whatsrunningwhere.WhatsRunningWherePage
+import views.html.whatsrunningwhere.{WhatsRunningWhereInstances, WhatsRunningWherePage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class WhatsRunningWhereController @Inject() (
-  service           : WhatsRunningWhereService,
-  page              : WhatsRunningWherePage,
-  override val mcc  : MessagesControllerComponents,
-  override val auth : FrontendAuthComponents
+                                              service           : WhatsRunningWhereService,
+                                              page              : WhatsRunningWherePage,
+                                              instancePage      : WhatsRunningWhereInstances,
+                                              config            : WhatsRunningWhereServiceConfig,
+                                              override val mcc  : MessagesControllerComponents,
+                                              override val auth : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -57,14 +58,29 @@ class WhatsRunningWhereController @Inject() (
   def releases(showDiff: Boolean): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        form <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profile             = profileFrom(form)
-        selectedProfileType = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
+        form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
+        profile               = profileFrom(form)
+        selectedProfileType   = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
         (releases, profiles) <- (service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString)), service.profiles).mapN((r, p) => (r, p))
-        environments = distinctEnvironments(releases)
-        profileNames = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+        environments          = distinctEnvironments(releases)
+        profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
       } yield Ok(page(environments, releases, selectedProfileType, profileNames, form, showDiff))
     }
+
+  def releasesConfig(showMemoryUse: Boolean): Action[AnyContent] = {
+    BasicAuthAction.async { implicit request =>
+      for {
+        form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
+        profile               = profileFrom(form)
+        selectedProfileType   = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
+        (releases, profiles) <- (service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString)), service.profiles).mapN((r, p) => (r, p))
+        environments          = distinctEnvironments(releases)
+        serviceDeployments   <- service.allReleases(releases)
+        _ = println(config.maxMemoryAmount)
+        profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+      } yield Ok(instancePage(environments, releases, selectedProfileType, profileNames, form, showMemoryUse, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount))
+    }
+  }
 }
 
 object WhatsRunningWhereController {

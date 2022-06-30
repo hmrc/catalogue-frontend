@@ -1,0 +1,153 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController, WhatsRunningWhereVersion}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
+
+@this(viewMessages: ViewMessages)
+
+@( environments       : Seq[Environment]
+        , whatsRunning       : Seq[WhatsRunningWhere]
+        , selectedProfileType: ProfileType
+        , profileNames       : Seq[ProfileName]
+        , form               : Form[_]
+        , showMemoryUse      : Boolean
+        , serviceDeployments : Seq[ServiceDeploymentConfigSummary]
+        , maxMemory          : Double
+)(implicit messages: Messages, request: Request[_])
+
+@standard_layout("What's Running Where?", "whats-running-where") {
+    <header>
+        <h1>What's Running Where? - Instances and Slots</h1>
+    </header>
+
+    @if(form.hasErrors) {
+        <div class="alert alert-danger" role="alert">
+            <ul class="list">
+            @form.errors.map { error =>
+                <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+            }
+            </ul>
+        </div>
+    }
+
+    <div id="whats-running-where-list">
+        <form id="form" method="get">
+            <input type="hidden" id="profile_type" name="profile_type" value="@selectedProfileType.asString">
+            @if(showMemoryUse) {
+                <input type="hidden" id="showMemoryUse" name="showMemoryUse" value="true">
+            }
+            <div class="form-group row">
+                <div class="col-xs-2 padding-reset-right">
+                    <label for="search">Application name:</label>
+                </div>
+                <div class="col col-xs-3">
+                    <input class="search form-control" id="search" type="text" name="application_name"
+                    value='@form("application_name").value' autofocus>
+                </div>
+            </div>
+            <div class="form-group row">
+                <ul class="nav nav-tabs" id="nav-tab" role="tablist">
+                @ProfileType.values.map(profileTypeTab)
+                </ul>
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane show active in" role="tabpanel">
+                        <select id="profile_name" name="profile_name" onchange="this.form.submit();" style="margin: 20px">
+                        @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
+                            @options.map(selectOption(form("profile_name").value))
+                        }
+                        </select>
+                    </div>
+                </div>
+                <div style="float: right">
+                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">versions</a>
+                </div>
+            </div>
+        </form>
+
+        <table class="table table-striped" id="service-list">
+            <thead>
+                <th class="wrw-table-head"><button role="button" class="sort no-border" data-sort="application-name">Application Name</button></th>
+                @environments.map { env =>
+                    <th class="wrw-table-head wrw-environment-head">@env.displayString</th>
+                }
+            </thead>
+            <tbody @if(showMemoryUse) {class="list-darker-text"} class="list">
+            @serviceDeployments.zipWithIndex.map { case (sdcSummary, i) =>
+            <tr role="row" id="row@i">
+                <td class="application-name" id="row@{i}_application">
+                    <a href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName}</a>
+                </td>
+                @environments.map { env =>
+                    @sdcSummary.environments.find(_.environment == env.asString).map { sdc =>
+                     <td id="row@{i}_version_@{env.asString}"
+                         @if(showMemoryUse) {
+                             style="background: rgba(255,0,0, @{sdc.slotsAndInstancesToMemory/maxMemory});"
+                             }
+                     ><abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@sdc.instances slots:@sdc.slots">@sdc.instances x @{sdc.slotsToMemory}mb</abbr></td>
+                    }.getOrElse {
+                        <td id="row@{i}_version_@{env.asString}"></td>
+                    }
+                }
+                <td>
+                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(sdcSummary.serviceName)"><span class="glyphicon glyphicon-stats"></span></a>
+                </td>
+            </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+<script>
+        var options = { valueNames: [ 'application-name' ] };
+        var serviceList = new List('whats-running-where-list', options);
+
+        // re-search the list upon page load.
+        var searchBox = document.getElementById("search");
+        serviceList.search(searchBox.value);
+
+        // set autofocus cursor to right of text in search box
+        var length = searchBox.value.length;
+        searchBox.focus();
+        searchBox.setSelectionRange(length, length);
+
+        function selectProfileType(profileType) {
+            document.getElementById('profile_type').value = profileType;
+            document.getElementById('profile_name').value = '';
+            document.getElementById('form').submit();
+        };
+</script>
+
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
+@selectOption(selected: Option[String])(option: (String, String)) = {
+    <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected"}>
+    @option._2
+    </option>
+}
+
+@profileTypeTab(profileType: ProfileType) = {
+@defining(profileType == selectedProfileType){ active =>
+    <li id="tab-@profileType.asString" class="nav-item @if(active){active}">
+        <a class="nav-link @if(active){active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">
+            @profileType Profile
+        </a>
+    </li>
+}
+}
