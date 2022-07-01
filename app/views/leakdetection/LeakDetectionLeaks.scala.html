@@ -44,6 +44,8 @@
         var options = {valueNames: ['rule', 'scope', 'priority', 'total']};
         leaksList = new List('leaks-list', options);
 
+        $(".collapse").collapse('hide')
+
         function expandAll() {
             $("#expandLink").addClass('hidden')
             $("#collapseLink").removeClass('hidden')
