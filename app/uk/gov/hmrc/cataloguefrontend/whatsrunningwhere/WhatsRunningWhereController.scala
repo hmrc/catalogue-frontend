@@ -76,7 +76,6 @@ class WhatsRunningWhereController @Inject() (
         (releases, profiles) <- (service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString)), service.profiles).mapN((r, p) => (r, p))
         environments          = distinctEnvironments(releases)
         serviceDeployments   <- service.allReleases(releases)
-        _ = println(config.maxMemoryAmount)
         profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
       } yield Ok(instancePage(environments, releases, selectedProfileType, profileNames, form, showMemoryUse, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount))
     }

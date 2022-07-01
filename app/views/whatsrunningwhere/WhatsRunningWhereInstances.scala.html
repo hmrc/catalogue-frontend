@@ -61,13 +61,13 @@
                 </div>
             </div>
             <ul class="nav nav-tabs" id="nav-tab" role="tablist">
-            @ProfileType.values.map(profileTypeTab)
+                @ProfileType.values.map(profileTypeTab)
             </ul>
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane show active in" role="tabpanel">
                     <div class="form-group row">
                         <div class="col-md-2">
-                            <select id="form-control" name="profile_name" onchange="this.form.submit();" style="margin: 20px">
+                            <select class="form-control" id="profile_name" name="profile_name" onchange="this.form.submit();">
                             @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))) { options =>
                                 @options.map(selectOption(form("profile_name").value))
                             }
@@ -77,7 +77,6 @@
                 </div>
             </div>
         </form>
-
         <div style="float: right">
             <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">
                 versions</a>
@@ -140,7 +139,6 @@
         };
 </script>
 
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 @selectOption(selected: Option[String])(option: (String, String)) = {
     <option value="@{
         option._1
@@ -153,8 +151,8 @@
 
 @profileTypeTab(profileType: ProfileType) = {
 @defining(profileType == selectedProfileType) { active =>
-    <li id="tab-@profileType.asString" class="nav-item @if(active) {active}">
-        <a class="nav-link @if(active) {active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">
+    <li id="tab-@profileType.asString" class="nav-item @if(active){active}">
+        <a class="nav-link @if(active){active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">
             @profileType Profile
         </a>
     </li>
