@@ -15,11 +15,14 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
+@import views.html.partials.WhatsRunningWhereVersions
+@import views.html.partials.WhatsRunningWhereInstances
 
 @this(viewMessages: ViewMessages)
+
 
 @( environments       : Seq[Environment]
         , whatsRunning       : Seq[WhatsRunningWhere]
@@ -27,6 +30,9 @@
         , profileNames       : Seq[ProfileName]
         , form               : Form[_]
         , showDiff           : Boolean
+        , serviceDeployments: Seq[ServiceDeploymentConfigSummary]
+        , maxMemory: Double
+        , x: Boolean
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("What's Running Where?", "whats-running-where") {
@@ -76,9 +82,13 @@
             </div>
         </form>
 
-        <div style="float: right">
-            <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releasesConfig()">instances</a>
+
+
+        <div style="float: right; color:#008770;">
+            <button class="wrw-button" id="versionsButton" onclick='toggleTableData()'>instances</button>
+            <button class="wrw-button hidden" id="instancesButton" onclick='toggleTableData()'>versions</button>
         </div>
+
 
         <table class="table table-striped" id="service-list">
             <thead>
@@ -87,31 +97,11 @@
                     <th class="wrw-table-head wrw-environment-head">@env.displayString</th>
                 }
             </thead>
-            <tbody class="list">
-            @whatsRunning.zipWithIndex.map { case (wrw, i) =>
-            <tr role="row" id="row@i">
-                <td class="application-name" id="row@{i}_application">
-                    <a href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
-                </td>
-
-                @environments.map { env =>
-                    @wrw.versions.find(_.environment == env).map { envVersion =>
-                    <td id="row@{i}_version_@{env.asString}"
-                        @if(showDiff && env == Environment.Production) {
-                            @if(!WhatsRunningWhereController.matchesProduction(wrw, envVersion, Environment.Staging)){
-                                class="env-version-difference"
-                                }
-                        }
-                    >@envVersion.versionNumber.asString</td>
-                    }.getOrElse {
-                        <td id="row@{i}_version_@{env.asString}"></td>
-                    }
-                }
-                <td>
-                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.applicationName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
-            </td>
-            </tr>
-            }
+            <tbody class="list" id="versions">
+               @WhatsRunningWhereVersions(whatsRunning, environments, showDiff)
+            </tbody>
+            <tbody class="list list-darker-text hidden" id="instances">
+                @WhatsRunningWhereInstances(serviceDeployments, environments, maxMemory)
             </tbody>
         </table>
     </div>
@@ -135,6 +125,18 @@
             document.getElementById('profile_name').value = '';
             document.getElementById('form').submit();
         };
+
+        const versionsTable = document.getElementById("versions");
+        const instancesTable = document.getElementById("instances")
+        const versionsButton = document.getElementById("versionsButton");
+        const instancesButton = document.getElementById("instancesButton")
+
+        function toggleTableData() {
+            versionsTable.classList.toggle("hidden")
+            instancesTable.classList.toggle("hidden")
+            versionsButton.classList.toggle("hidden")
+            instancesButton.classList.toggle("hidden")
+        }
 </script>
 
 @selectOption(selected: Option[String])(option: (String, String)) = {

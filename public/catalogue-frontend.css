@@ -12572,3 +12572,9 @@ table.shutter-events {
 #standard-layout-container {
   height: 100%;
 }
+
+.wrw-button {
+  background: none;
+  border: none;
+  padding: 0!important;
+}
