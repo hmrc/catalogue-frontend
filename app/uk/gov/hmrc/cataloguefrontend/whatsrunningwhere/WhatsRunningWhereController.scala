@@ -19,11 +19,13 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import cats.implicits._
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.i18n.Messages.implicitMessagesProviderToMessages
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Request, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ViewMode.Versions
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.whatsrunningwhere.WhatsRunningWherePage
@@ -53,22 +55,43 @@ class WhatsRunningWhereController @Inject() (
         } yield Profile(profileType, profileName)
     )
 
-  private def distinctEnvironments(releases: Seq[WhatsRunningWhere]) =
+  private def distinctEnvironments(releases: Seq[WhatsRunningWhere]): Seq[Environment] =
     releases.flatMap(_.versions.map(_.environment)).distinct.sorted
 
   def releases(showDiff: Boolean): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
-        form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
-        profile               = profileFrom(form)
-        selectedProfileType   = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        selectedViewMode      = form.fold(_ => None, _.viewMode).getOrElse(ViewMode.Versions)
-        (releases, profiles) <- (service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString)), service.profiles).mapN((r, p) => (r, p))
-        environments          = distinctEnvironments(releases)
-        serviceDeployments   <- service.allReleases(releases)
-        profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield Ok(page(environments, releases, selectedProfileType, profileNames, form, showDiff, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode))
+
+        val form                  = WhatsRunningWhereFilter.form.bindFromRequest
+        val profile               = profileFrom(form)
+        val selectedProfileType   = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
+        val selectedViewMode      = form.fold(_ => None, _.viewMode).getOrElse(ViewMode.Versions)
+
+        selectedViewMode match {
+          case ViewMode.Instances => instancesPage(form, profile, selectedProfileType, selectedViewMode).map(page => Ok(page))
+          case ViewMode.Versions => versionsPage(form, profile, selectedProfileType, selectedViewMode, showDiff).map(page => Ok(page))
+      }
     }
+
+
+  private def versionsPage(form: Form[WhatsRunningWhereFilter], profile: Option[Profile], selectedProfileType: ProfileType, selectedViewMode: ViewMode, showDiff: Boolean)
+                          (implicit request: MessagesRequest[AnyContent]) =
+    for {
+      profiles             <- service.profiles
+      releases             <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
+      environments          = distinctEnvironments(releases)
+      profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+    } yield page(environments, releases, selectedProfileType, profileNames, form, showDiff, Seq.empty, config.maxMemoryAmount, selectedViewMode)
+
+
+  private def instancesPage(form: Form[WhatsRunningWhereFilter], profile: Option[Profile], selectedProfileType: ProfileType, selectedViewMode: ViewMode)
+                           (implicit request: MessagesRequest[AnyContent]) =
+    for {
+      profiles             <- service.profiles
+      releases             <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
+      environments          = distinctEnvironments(releases)
+      serviceDeployments   <- service.allDeploymentConfigs(releases)
+      profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+    } yield page(environments, Seq.empty, selectedProfileType, profileNames, form, showDiff = false, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode)
 }
 
 object WhatsRunningWhereController {

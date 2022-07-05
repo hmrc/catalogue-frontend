@@ -36,7 +36,7 @@ class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector, c
   def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
     releasesConnector.releasesForService(service)
 
-  def allReleases(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
+  def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
     val releasesPerEnv = releases.map(r => (r.applicationName.asString, r.versions.map(v => v.environment.asString))).toMap
     configConnector.allDeploymentConfig
       .map(_.filter(config => {
