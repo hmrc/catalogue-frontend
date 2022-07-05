@@ -80,7 +80,7 @@ class WhatsRunningWhereServiceSpec extends AnyWordSpec with Matchers {
         ))
       )
 
-      Await.result(testService.allReleases(releases), 5.seconds) shouldBe expectedResult
+      Await.result(testService.allDeploymentConfigs(releases), 5.seconds) shouldBe expectedResult
 
     }
   }

@@ -15,9 +15,10 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, WhatsRunningWhereController}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, ViewMode}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
+@import views.html.partials.{WhatsRunningWhereVersions, WhatsRunningWhereInstances}
 
 @this(viewMessages: ViewMessages)
 
@@ -27,6 +28,9 @@
         , profileNames       : Seq[ProfileName]
         , form               : Form[_]
         , showDiff           : Boolean
+        , serviceDeployments : Seq[ServiceDeploymentConfigSummary]
+        , maxMemory          : Double
+        , viewMode           : ViewMode
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("What's Running Where?", "whats-running-where") {
@@ -74,11 +78,13 @@
                     </div>
                 </div>
             </div>
+            <input type="hidden" id="view_mode" name="view_mode" value="@viewMode.asString"/>
+            @if(viewMode.asString == "versions"){
+                <a style="float: right" onclick='selectViewMode("instances");'>instances</a>
+              } else {
+                <a style="float: right"  onclick='selectViewMode("versions");'>versions</a>
+              }
         </form>
-
-        <div style="float: right">
-            <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releasesConfig()">instances</a>
-        </div>
 
         <table class="table table-striped" id="service-list">
             <thead>
@@ -87,32 +93,11 @@
                     <th class="wrw-table-head wrw-environment-head">@env.displayString</th>
                 }
             </thead>
-            <tbody class="list">
-            @whatsRunning.zipWithIndex.map { case (wrw, i) =>
-            <tr role="row" id="row@i">
-                <td class="application-name" id="row@{i}_application">
-                    <a href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
-                </td>
-
-                @environments.map { env =>
-                    @wrw.versions.find(_.environment == env).map { envVersion =>
-                    <td id="row@{i}_version_@{env.asString}"
-                        @if(showDiff && env == Environment.Production) {
-                            @if(!WhatsRunningWhereController.matchesProduction(wrw, envVersion, Environment.Staging)){
-                                class="env-version-difference"
-                                }
-                        }
-                    >@envVersion.versionNumber.asString</td>
-                    }.getOrElse {
-                        <td id="row@{i}_version_@{env.asString}"></td>
-                    }
-                }
-                <td>
-                    <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.applicationName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
-            </td>
-            </tr>
+            @if(viewMode.asString == "versions") {
+                @WhatsRunningWhereVersions(whatsRunning, environments, showDiff)
+            } else {
+                @WhatsRunningWhereInstances(serviceDeployments, environments, maxMemory)
             }
-            </tbody>
         </table>
     </div>
 }
@@ -135,6 +120,12 @@
             document.getElementById('profile_name').value = '';
             document.getElementById('form').submit();
         };
+
+        function selectViewMode(viewMode){
+            document.getElementById('view_mode').value = viewMode
+            document.getElementById('form').submit();
+        }
+
 </script>
 
 @selectOption(selected: Option[String])(option: (String, String)) = {

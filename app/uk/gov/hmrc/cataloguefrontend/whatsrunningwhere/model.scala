@@ -184,6 +184,30 @@ object ProfileName {
     Ordering.by(_.asString)
 }
 
+sealed trait ViewMode {
+  def asString: String
+}
+
+object ViewMode {
+  def parse(s: String): Either[String, ViewMode] =
+    values
+      .find(_.asString == s)
+      .toRight(s"Invalid viewMode - should be one of ${values.map(_.asString).mkString(", ")}")
+
+  val values: List[ViewMode] = List(
+    Versions,
+    Instances
+  )
+
+  case object Versions extends ViewMode {
+    override val asString: String = "versions"
+  }
+
+  case object Instances extends ViewMode {
+    override val asString: String = "instances"
+  }
+}
+
 sealed trait ProfileType {
   def asString: String
 }
