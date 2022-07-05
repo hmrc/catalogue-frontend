@@ -80,9 +80,9 @@
             </div>
             <input type="hidden" id="view_mode" name="view_mode" value="@viewMode.asString"/>
             @if(viewMode.asString == "versions"){
-                <a style="float: right" onclick='selectViewMode();'>instances</a>
+                <a style="float: right" onclick='selectViewMode("instances");'>instances</a>
               } else {
-                <a style="float: right"  onclick='selectViewMode();'>versions</a>
+                <a style="float: right"  onclick='selectViewMode("versions");'>versions</a>
               }
         </form>
 
@@ -94,13 +94,9 @@
                 }
             </thead>
             @if(viewMode.asString == "versions") {
-                <tbody class="list">
                 @WhatsRunningWhereVersions(whatsRunning, environments, showDiff)
-                </tbody>
             } else {
-                <tbody class="list list-darker-text">
                 @WhatsRunningWhereInstances(serviceDeployments, environments, maxMemory)
-                </tbody>
             }
         </table>
     </div>
@@ -125,12 +121,8 @@
             document.getElementById('form').submit();
         };
 
-        function selectViewMode(){
-            if(document.getElementById('view_mode').value === "versions") {
-                document.getElementById('view_mode').value = "instances"
-            } else {
-                document.getElementById('view_mode').value = "versions"
-            }
+        function selectViewMode(viewMode){
+            document.getElementById('view_mode').value = viewMode
             document.getElementById('form').submit();
         }
 

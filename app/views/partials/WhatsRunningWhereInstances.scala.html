@@ -22,7 +22,7 @@
         , environments       : Seq[Environment]
         , maxMemory          : Double
 )
-
+<tbody class="list list-darker-text">
 @serviceDeployments.zipWithIndex.map { case (sdcSummary, i) =>
 <tr role="row" id="row@i">
     <td class="application-name" id="row@{i}_application">
@@ -44,3 +44,4 @@
 </td>
 </tr>
 }
+</tbody>
