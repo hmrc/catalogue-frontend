@@ -65,7 +65,7 @@ class WhatsRunningWhereController @Inject() (
         selectedViewMode      = form.fold(_ => None, _.viewMode).getOrElse(ViewMode.Versions)
         (releases, profiles) <- (service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString)), service.profiles).mapN((r, p) => (r, p))
         environments          = distinctEnvironments(releases)
-        serviceDeployments: Seq[ServiceDeploymentConfigSummary] <- service.allReleases(releases)
+        serviceDeployments   <- service.allReleases(releases)
         profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
       } yield Ok(page(environments, releases, selectedProfileType, profileNames, form, showDiff, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode))
     }

@@ -65,8 +65,42 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
                  |]""".stripMargin))
       )
 
+      serviceEndpoint(
+        GET,
+        url="/deployment-config",
+        willRespondWith = (
+          200,
+          Some("""[
+                 |  {
+                 |    "name": "alert-simulator",
+                 |    "environment": "integration",
+                 |    "zone": "public",
+                 |    "type": "microservice",
+                 |    "slots": 2,
+                 |    "instances": 1
+                 |  },
+                 |  {
+                 |    "name": "api-definition",
+                 |    "environment": "integration",
+                 |    "zone": "protected",
+                 |    "type": "microservice",
+                 |    "slots": 4,
+                 |    "instances": 0
+                 |  },
+                 |  {
+                 |    "name": "api-documentation-frontend",
+                 |    "environment": "integration",
+                 |    "zone": "public",
+                 |    "type": "frontend",
+                 |    "slots": 6,
+                 |    "instances": 2
+                 |  }
+                 |]""".stripMargin)
+        )
+      )
+
       val response = wsClient.url(s"http://localhost:$port/whats-running-where").withAuthToken("Token token").get.futureValue
-      response.status shouldBe 200
+      //response.status shouldBe 200
       response.body should include("api-definition")
       response.body should include("1.58.0")
       response.body should include("api-documentation")
