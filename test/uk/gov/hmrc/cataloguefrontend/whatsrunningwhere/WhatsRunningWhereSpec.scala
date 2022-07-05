@@ -100,7 +100,7 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
       )
 
       val response = wsClient.url(s"http://localhost:$port/whats-running-where").withAuthToken("Token token").get.futureValue
-      //response.status shouldBe 200
+      response.status shouldBe 200
       response.body should include("api-definition")
       response.body should include("1.58.0")
       response.body should include("api-documentation")
