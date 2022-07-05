@@ -16,13 +16,11 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, ViewMode}
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
-@import views.html.partials.WhatsRunningWhereVersions
-@import views.html.partials.WhatsRunningWhereInstances
+@import views.html.partials.{WhatsRunningWhereVersions, WhatsRunningWhereInstances}
 
 @this(viewMessages: ViewMessages)
-
 
 @( environments       : Seq[Environment]
         , whatsRunning       : Seq[WhatsRunningWhere]
@@ -30,9 +28,9 @@
         , profileNames       : Seq[ProfileName]
         , form               : Form[_]
         , showDiff           : Boolean
-        , serviceDeployments: Seq[ServiceDeploymentConfigSummary]
-        , maxMemory: Double
-        , x: Boolean
+        , serviceDeployments : Seq[ServiceDeploymentConfigSummary]
+        , maxMemory          : Double
+        , viewMode           : ViewMode
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("What's Running Where?", "whats-running-where") {
@@ -80,15 +78,13 @@
                     </div>
                 </div>
             </div>
+            <input type="hidden" id="view_mode" name="view_mode" value="@viewMode.asString"/>
+            @if(viewMode.asString == "versions"){
+                <a style="float: right" onclick='selectViewMode();'>instances</a>
+              } else {
+                <a style="float: right"  onclick='selectViewMode();'>versions</a>
+              }
         </form>
-
-
-
-        <div style="float: right; color:#008770;">
-            <button class="wrw-button" id="versionsButton" onclick='toggleTableData()'>instances</button>
-            <button class="wrw-button hidden" id="instancesButton" onclick='toggleTableData()'>versions</button>
-        </div>
-
 
         <table class="table table-striped" id="service-list">
             <thead>
@@ -97,12 +93,15 @@
                     <th class="wrw-table-head wrw-environment-head">@env.displayString</th>
                 }
             </thead>
-            <tbody class="list" id="versions">
-               @WhatsRunningWhereVersions(whatsRunning, environments, showDiff)
-            </tbody>
-            <tbody class="list list-darker-text hidden" id="instances">
+            @if(viewMode.asString == "versions") {
+                <tbody class="list">
+                @WhatsRunningWhereVersions(whatsRunning, environments, showDiff)
+                </tbody>
+            } else {
+                <tbody class="list list-darker-text">
                 @WhatsRunningWhereInstances(serviceDeployments, environments, maxMemory)
-            </tbody>
+                </tbody>
+            }
         </table>
     </div>
 }
@@ -126,16 +125,21 @@
             document.getElementById('form').submit();
         };
 
-        const versionsTable = document.getElementById("versions");
-        const instancesTable = document.getElementById("instances")
-        const versionsButton = document.getElementById("versionsButton");
-        const instancesButton = document.getElementById("instancesButton")
+        function selectViewMode(){
+            if(document.getElementById('view_mode').value === "versions") {
+                document.getElementById('view_mode').value = "instances"
+            } else {
+                document.getElementById('view_mode').value = "versions"
+            }
+            document.getElementById('form').submit();
+        }
 
-        function toggleTableData() {
-            versionsTable.classList.toggle("hidden")
-            instancesTable.classList.toggle("hidden")
-            versionsButton.classList.toggle("hidden")
-            instancesButton.classList.toggle("hidden")
+        function getTargetViewMode(viewMode) {
+            if(viewMode === "versions") {
+                return "instances";
+            } else {
+                return "versions";
+            }
         }
 </script>
 

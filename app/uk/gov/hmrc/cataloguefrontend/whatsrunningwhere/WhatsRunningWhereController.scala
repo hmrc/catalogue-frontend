@@ -22,6 +22,7 @@ import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ViewMode.Versions
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -61,11 +62,12 @@ class WhatsRunningWhereController @Inject() (
         form                 <- Future.successful(WhatsRunningWhereFilter.form.bindFromRequest)
         profile               = profileFrom(form)
         selectedProfileType   = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
+        selectedViewMode      = form.fold(_ => None, _.viewMode).getOrElse(ViewMode.Versions)
         (releases, profiles) <- (service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString)), service.profiles).mapN((r, p) => (r, p))
         environments          = distinctEnvironments(releases)
         serviceDeployments: Seq[ServiceDeploymentConfigSummary] <- service.allReleases(releases)
         profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-      } yield Ok(page(environments, releases, selectedProfileType, profileNames, form, showDiff, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, x = false))
+      } yield Ok(page(environments, releases, selectedProfileType, profileNames, form, showDiff, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode))
     }
 }
 
@@ -80,7 +82,8 @@ object WhatsRunningWhereController {
 case class WhatsRunningWhereFilter(
   profileName: Option[ProfileName] = None,
   profileType: Option[ProfileType] = None,
-  serviceName: Option[ServiceName] = None
+  serviceName: Option[ServiceName] = None,
+  viewMode:    Option[ViewMode]    = None
 )
 
 object WhatsRunningWhereFilter {
@@ -101,6 +104,11 @@ object WhatsRunningWhereFilter {
       "service_name" -> optional(text)
         .transform[Option[ServiceName]](
           filterEmptyString(_).map(ServiceName.apply),
+          _.map(_.asString)
+        ),
+      "view_mode" -> optional(text)
+        .transform[Option[ViewMode]](
+          _.flatMap(s => ViewMode.parse(s).toOption),
           _.map(_.asString)
         )
     )(WhatsRunningWhereFilter.apply)(WhatsRunningWhereFilter.unapply)
