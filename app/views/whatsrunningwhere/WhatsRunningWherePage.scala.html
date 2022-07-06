@@ -85,12 +85,17 @@
                 <a style="float: right"  onclick='selectViewMode("versions");'>versions</a>
               }
         </form>
-
         <table class="table table-striped" id="service-list">
             <thead>
                 <th class="wrw-table-head"><button role="button" class="sort no-border" data-sort="application-name">Application Name</button></th>
-                @environments.map { env =>
-                    <th class="wrw-table-head wrw-environment-head">@env.displayString</th>
+                @if(viewMode.asString == "versions") {
+                    @environments.map { env =>
+                        <th class="wrw-table-head wrw-environment-head">@env.displayString</th>
+                    }
+                } else {
+                    @environments.map { env =>
+                        <th class="wrw-table-head wrw-environment-head"><button role="button" class="sort no-border order-desc" data-sort="@env.asString">@env.displayString</button></th>
+                    }
                 }
             </thead>
             @if(viewMode.asString == "versions") {
@@ -101,9 +106,8 @@
         </table>
     </div>
 }
-
 <script>
-        var options = { valueNames: [ 'application-name' ] };
+        var options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
         var serviceList = new List('whats-running-where-list', options);
 
         // re-search the list upon page load.

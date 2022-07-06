@@ -22,7 +22,6 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 
 import scala.collection.Seq
-import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SearchIndexSpec extends AnyWordSpec with Matchers{
