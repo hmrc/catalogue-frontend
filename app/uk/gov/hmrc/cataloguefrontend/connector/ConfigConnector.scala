@@ -22,14 +22,15 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfig
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ConfigConnector @Inject() (
-  http: HttpClient,
+  httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
@@ -40,14 +41,20 @@ class ConfigConnector @Inject() (
   implicit val cbkr = ConfigByKey.reads
 
   def configByEnv(service: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
-    http.GET[ConfigByEnvironment](url"$serviceConfigsBaseUrl/config-by-env/$service")
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/config-by-env/$service")
+      .execute[ConfigByEnvironment]
 
   def configByKey(service: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
-    http.GET[ConfigByKey](url"$serviceConfigsBaseUrl/config-by-key/$service")
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/config-by-key/$service")
+      .execute[ConfigByKey]
 
   def bobbyRules()(implicit hc: HeaderCarrier): Future[BobbyRuleSet] = {
     implicit val brsr = BobbyRuleSet.reads
-    http.GET[BobbyRuleSet](url"$serviceConfigsBaseUrl/bobby/rules")
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/bobby/rules")
+      .execute[BobbyRuleSet]
   }
 
   def deploymentConfig(
@@ -55,13 +62,15 @@ class ConfigConnector @Inject() (
     environment: Environment
   )(implicit hc: HeaderCarrier): Future[Option[DeploymentConfig]] = {
     implicit val dcr = DeploymentConfig.reads
-    http.GET[Option[DeploymentConfig]](
-      url"$serviceConfigsBaseUrl/deployment-config/${environment.asString}/$service"
-    )
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/deployment-config/${environment.asString}/$service")
+      .execute[Option[DeploymentConfig]]
   }
 
   def allDeploymentConfig(implicit hc: HeaderCarrier): Future[Seq[ServiceDeploymentConfig]] = {
     implicit val adsr = ServiceDeploymentConfig.reads
-    http.GET[Seq[ServiceDeploymentConfig]](url"$serviceConfigsBaseUrl/deployment-config")
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/deployment-config")
+      .execute[Seq[ServiceDeploymentConfig]]
   }
 }

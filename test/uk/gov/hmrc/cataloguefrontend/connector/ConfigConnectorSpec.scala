@@ -22,15 +22,15 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.{HttpClientSupport, WireMockSupport}
+import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 final class ConfigConnectorSpec
   extends UnitSpec
-    with HttpClientSupport
-    with WireMockSupport {
+     with HttpClientV2Support
+     with WireMockSupport {
 
   val servicesConfig =
     new ServicesConfig(
@@ -41,7 +41,7 @@ final class ConfigConnectorSpec
     )
 
   val configConnector =
-    new ConfigConnector(httpClient, servicesConfig)
+    new ConfigConnector(httpClientV2, servicesConfig)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 

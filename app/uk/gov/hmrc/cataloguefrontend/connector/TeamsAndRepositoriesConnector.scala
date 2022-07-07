@@ -21,7 +21,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.Instant
@@ -170,7 +171,10 @@ object TeamsAndRepositoriesEnvironment {
 }
 
 @Singleton
-class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: ServicesConfig)(implicit val ec: ExecutionContext) {
+class TeamsAndRepositoriesConnector @Inject()(
+  httpClientV2  : HttpClientV2,
+  servicesConfig: ServicesConfig
+)(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
   import TeamsAndRepositoriesConnector._
 
@@ -185,8 +189,9 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
 
   def lookupLink(service: String)(implicit hc: HeaderCarrier): Future[Option[Link]] = {
     val url = url"$teamsAndServicesBaseUrl/api/jenkins-url/$service"
-    http
-      .GET[Option[JenkinsLink]](url)
+    httpClientV2
+      .get(url)
+      .execute[Option[JenkinsLink]]
       .map(_.map(l => Link(l.service, "Build", l.jenkinsURL)))
       .recover {
         case NonFatal(ex) =>
@@ -196,13 +201,16 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
   }
 
   def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
-    http.GET[Seq[Team]](url"$teamsAndServicesBaseUrl/api/v2/teams")
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/v2/teams")
+      .execute[Seq[Team]]
 
   def repositoriesForTeam(teamName: TeamName, includeArchived: Option[Boolean] = None)(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
     val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?team=${teamName.asString}&archived=$includeArchived"
 
-    http
-      .GET[Seq[GitRepository]](url)
+    httpClientV2
+      .get(url)
+      .execute[Seq[GitRepository]]
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
@@ -211,17 +219,25 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
   }
 
   def allRepositories(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
-    http.GET[Seq[GitRepository]](url"$teamsAndServicesBaseUrl/api/v2/repositories")
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
+      .execute[Seq[GitRepository]]
 
   def allServices(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
-    http.GET[Seq[GitRepository]](url"$teamsAndServicesBaseUrl/api/v2/repositories?repoType=Service")
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?repoType=Service")
+      .execute[Seq[GitRepository]]
 
   def archivedRepositories(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
-    http.GET[Seq[GitRepository]](url"$teamsAndServicesBaseUrl/api/v2/repositories?archived=true")
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?archived=true")
+      .execute[Seq[GitRepository]]
 
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[GitRepository]] = {
     for {
-      repo    <- http.GET[Option[GitRepository]] (url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
+      repo    <- httpClientV2
+                   .get(url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
+                   .execute[Option[GitRepository]]
       jenkins <- lookupLink(name)
       withLink = repo.map(_.copy(jenkinsURL = jenkins.map(_.url)))
     } yield withLink
@@ -229,16 +245,17 @@ class TeamsAndRepositoriesConnector @Inject()(http: HttpClient, servicesConfig: 
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     for {
-      repos <- http.GET[Seq[GitRepository]](url"$teamsAndServicesBaseUrl/api/v2/repositories")
+      repos         <- httpClientV2
+                         .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
+                         .execute[Seq[GitRepository]]
       teamsByService = repos.map(r => r.name -> r.teamNames.map(TeamName.apply)).toMap
     } yield teamsByService
 
   def enableBranchProtection(repoName: String)(implicit hc: HeaderCarrier): Future[Unit] =
-    http.POST[JsValue, Unit](
-      url"$teamsAndServicesBaseUrl/api/v2/repositories/$repoName/branch-protection/enabled",
-      JsBoolean(true)
-    )
-
+    httpClientV2
+      .post(url"$teamsAndServicesBaseUrl/api/v2/repositories/$repoName/branch-protection/enabled")
+      .withBody(JsBoolean(true))
+      .execute[Unit](HttpReads.Implicits.throwOnFailure(implicitly[HttpReads[Either[UpstreamErrorResponse, Unit]]]), implicitly[ExecutionContext])
 }
 
 object TeamsAndRepositoriesConnector {

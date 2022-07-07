@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.Inject
 import play.api.Configuration
-import play.twirl.api.Html
 
 class ViewMessages @Inject() (configuration: Configuration) {
   def noRepoOfTypeForTeam(item: String) =

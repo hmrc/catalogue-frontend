@@ -20,8 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, Route}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
-import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,24 +29,27 @@ import scala.util.control.NonFatal
 
 @Singleton
 class RouteRulesConnector @Inject() (
-  http: HttpClient,
+  httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
 
-  private val url: String = s"${servicesConfig.baseUrl("service-configs")}/frontend-route"
+  private val baseUrl: String = servicesConfig.baseUrl("service-configs")
 
   implicit val routeReads: Reads[Route]                       = Json.reads[Route]
   implicit val environmentRouteReads: Reads[EnvironmentRoute] = Json.using[Json.WithDefaultValues].reads[EnvironmentRoute]
 
-  def serviceRoutes(service: String)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] =
-    http
-      .GET[Seq[EnvironmentRoute]](url"$url/$service")
+  def serviceRoutes(service: String)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
+    val url = url"$baseUrl/frontend-route/$service"
+    httpClientV2
+      .get(url)
+      .execute[Seq[EnvironmentRoute]]
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty
       }
+    }
 }

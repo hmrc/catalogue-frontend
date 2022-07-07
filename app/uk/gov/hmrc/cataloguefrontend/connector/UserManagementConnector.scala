@@ -21,14 +21,14 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
-import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 case class UserManagementConnector @Inject() (
-  httpClient: HttpClient,
+  httpClientV2              : HttpClientV2,
   userManagementPortalConfig: UserManagementPortalConfig
 )(implicit val ec: ExecutionContext) {
 
@@ -51,10 +51,12 @@ case class UserManagementConnector @Inject() (
       .map(_.toMap)
 
   def getTeamMembersFromUMP(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
-    val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    val url              = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}/members"
-    httpClient
-      .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
+    val url = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}/members"
+    httpClientV2
+      .get(url)
+      .replaceHeader("requester" -> "None")
+      .replaceHeader("Token"     -> "None")
+      .execute[HttpResponse]
       .map { response =>
         response.status match {
           case 200 =>
@@ -75,11 +77,13 @@ case class UserManagementConnector @Inject() (
       }
   }
 
-  def getAllUsersFromUMP: Future[Either[UMPError, Seq[TeamMember]]] = {
-    val newHeaderCarrier = HeaderCarrier().withExtraHeaders("requester" -> "None", "Token" -> "None")
-    val url              = url"$userManagementBaseUrl/v2/organisations/users"
-    httpClient
-      .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
+  def getAllUsersFromUMP(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
+    val url = url"$userManagementBaseUrl/v2/organisations/users"
+    httpClientV2
+      .get(url)
+      .replaceHeader("requester" -> "None")
+      .replaceHeader("Token"     -> "None")
+      .execute[HttpResponse]
       .map { response =>
         response.status match {
           case 200 =>
@@ -97,10 +101,12 @@ case class UserManagementConnector @Inject() (
   }
 
   def getTeamDetails(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Either[UMPError, TeamDetails]] = {
-    val newHeaderCarrier = hc.withExtraHeaders("requester" -> "None", "Token" -> "None")
-    val url              = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}"
-    httpClient
-      .GET[HttpResponse](url)(httpReads, newHeaderCarrier, ec)
+    val url = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}"
+    httpClientV2
+      .get(url)
+      .replaceHeader("requester" -> "None")
+      .replaceHeader("Token"     -> "None")
+      .execute[HttpResponse]
       .map { response =>
         response.status match {
           case 200 =>

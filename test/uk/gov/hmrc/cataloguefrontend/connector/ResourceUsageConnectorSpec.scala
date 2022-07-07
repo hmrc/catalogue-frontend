@@ -22,7 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUs
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.{HttpClientSupport, WireMockSupport}
+import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.{LocalDateTime, ZoneOffset}
@@ -30,8 +30,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 final class ResourceUsageConnectorSpec
   extends UnitSpec
-    with HttpClientSupport
-    with WireMockSupport {
+     with HttpClientV2Support
+     with WireMockSupport {
 
   val servicesConfig =
     new ServicesConfig(
@@ -42,7 +42,7 @@ final class ResourceUsageConnectorSpec
     )
 
   val resourceUsageConnector =
-    new ResourceUsageConnector(httpClient, servicesConfig)
+    new ResourceUsageConnector(httpClientV2, servicesConfig)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 

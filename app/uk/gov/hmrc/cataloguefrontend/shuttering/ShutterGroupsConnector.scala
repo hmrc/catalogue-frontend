@@ -27,7 +27,8 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.GithubConfig
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -35,7 +36,7 @@ import scala.util.control.NonFatal
 @Singleton
 class ShutterGroupsConnector @Inject() (
   override val mcc : MessagesControllerComponents,
-  http             : HttpClient,
+  httpClientV2     : HttpClientV2,
   githubConf       : GithubConfig,
   override val auth: FrontendAuthComponents
 )(implicit
@@ -51,10 +52,11 @@ class ShutterGroupsConnector @Inject() (
     val url = url"${githubConf.rawUrl}/hmrc/outage-pages/HEAD/conf/shutter-groups.json"
     implicit val hc: HeaderCarrier = HeaderCarrier()
     implicit val gr = ShutterGroup.reads
-    http.GET[Option[List[ShutterGroup]]](
-      url,
-      headers = Seq("Authorization" -> s"token ${githubConf.token}")
-    )
+    httpClientV2
+      .get(url)
+      .replaceHeader("Authorization" -> s"token ${githubConf.token}")
+      .withProxy
+      .execute[Option[List[ShutterGroup]]]
       .map(_.getOrElse {
         logger.info(s"No shutter groups found at $url, defaulting to an empty list")
         List.empty[ShutterGroup]

@@ -20,7 +20,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, __}
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -30,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ResourceUsageConnector @Inject() (
-  http: HttpClient,
+  httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
 )(implicit ec: ExecutionContext) {
 
@@ -41,26 +42,28 @@ class ResourceUsageConnector @Inject() (
     ResourceUsage.format
 
   def historicResourceUsageForService(serviceName: String)(implicit hc: HeaderCarrier): Future[List[ResourceUsage]] =
-    http.GET[List[ResourceUsage]](url = url"$baseUrl/services/$serviceName/snapshots")
+    httpClientV2
+      .get(url"$baseUrl/services/$serviceName/snapshots")
+      .execute[List[ResourceUsage]]
 }
 
 object ResourceUsageConnector {
 
   final case class ResourceUsage(
-    date: Instant,
+    date       : Instant,
     serviceName: String,
     environment: Environment,
-    slots: Int,
-    instances: Int
+    slots      : Int,
+    instances  : Int
   )
 
   object ResourceUsage {
     val format: Format[ResourceUsage] =
-      (   (__ \ "date"        ).format[Instant]
-        ~ (__ \ "serviceName" ).format[String]
-        ~ (__ \ "environment" ).format[Environment](Environment.format)
-        ~ (__ \ "slots"       ).format[Int]
-        ~ (__ \ "instances"   ).format[Int]
-        ) (ResourceUsage.apply, unlift(ResourceUsage.unapply))
+      ( (__ \ "date"        ).format[Instant]
+      ~ (__ \ "serviceName" ).format[String]
+      ~ (__ \ "environment" ).format[Environment](Environment.format)
+      ~ (__ \ "slots"       ).format[Int]
+      ~ (__ \ "instances"   ).format[Int]
+      ) (ResourceUsage.apply, unlift(ResourceUsage.unapply))
   }
 }

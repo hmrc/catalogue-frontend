@@ -22,7 +22,6 @@ import org.scalatest.OptionValues
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.OFormat
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
@@ -33,20 +32,18 @@ import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiative
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
-import uk.gov.hmrc.http.test.HttpClientSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PlatformInitiativesControllerSpec
   extends AnyWordSpec
-    with Matchers
-    with MockitoSugar
-    with FakeApplicationBuilder
-    with OptionValues
-    with ScalaFutures
-    with HttpClientSupport
-    with IntegrationPatience {
+     with Matchers
+     with MockitoSugar
+     with FakeApplicationBuilder
+     with OptionValues
+     with ScalaFutures
+     with IntegrationPatience {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "Platform Initiatives controller" should {
@@ -87,7 +84,7 @@ class PlatformInitiativesControllerSpec
       when(mockTRConnector.allTeams(any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq()))
 
-      when(mockPIConnector.getInitiatives(any[Option[String]])(any[HeaderCarrier], any[OFormat[PlatformInitiative]]))
+      when(mockPIConnector.getInitiatives(any[Option[String]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(mockInitiatives))
 
       val result: Future[Result] = controller

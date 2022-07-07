@@ -20,16 +20,15 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.{HttpClientSupport, WireMockSupport}
+import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext
 
 class LeakDetectionConnectorSpec
    extends UnitSpec
-     with HttpClientSupport
-     with WireMockSupport
- {
+      with HttpClientV2Support
+      with WireMockSupport {
   import ExecutionContext.Implicits.global
 
   val servicesConfig =
@@ -40,7 +39,7 @@ class LeakDetectionConnectorSpec
       )
     )
 
-  val leakDetectionConnector = new LeakDetectionConnector(httpClient, servicesConfig)
+  val leakDetectionConnector = new LeakDetectionConnector(httpClientV2, servicesConfig)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
