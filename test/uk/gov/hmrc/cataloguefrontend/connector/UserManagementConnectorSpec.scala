@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, EitherValues, OptionValues}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
@@ -28,11 +27,10 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, SlackInfo, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.UserManagementPortalConfig
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class UserManagementConnectorSpec
   extends AnyWordSpec
@@ -46,8 +44,6 @@ class UserManagementConnectorSpec
      with WireMockSupport
      with MockitoSugar {
 
-  import ExecutionContext.Implicits.global
-
   override def fakeApplication: Application =
     new GuiceApplicationBuilder()
       .configure(
@@ -60,9 +56,6 @@ class UserManagementConnectorSpec
 
   private lazy val userManagementConnector: UserManagementConnector =
     app.injector.instanceOf[UserManagementConnector]
-
-  private lazy val userManagementPortalConfig: UserManagementPortalConfig =
-    app.injector.instanceOf[UserManagementPortalConfig]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -122,25 +115,6 @@ class UserManagementConnectorSpec
       error shouldBe UMPError.UnknownTeam
     }
 
-    "api returns a connection error" in {
-      val mockedHttpGet = mock[HttpClient]
-
-      val userManagementConnector = new UserManagementConnector(
-        mockedHttpGet,
-        userManagementPortalConfig
-      )
-
-      when(mockedHttpGet.GET(any())(any(), any(), any()))
-        .thenReturn(Future.failed(new RuntimeException("some error")))
-
-      val error: UMPError = userManagementConnector
-        .getTeamMembersFromUMP(TeamName("teamName"))
-        .futureValue
-        .left
-        .value
-      error.isInstanceOf[UMPError.ConnectionError] shouldBe true
-    }
-
     "should get the team details from the user-management service" in {
       stubFor(
           get(urlEqualTo("/v2/organisations/teams/TEAM-A"))
@@ -198,25 +172,6 @@ class UserManagementConnectorSpec
         .value
 
       teamDetails shouldBe UMPError.HTTPError(500)
-    }
-
-    "api returns a connection error for team details" in {
-      val mockedHttpGet = mock[HttpClient]
-
-      val userManagementConnector = new UserManagementConnector(
-        mockedHttpGet,
-        userManagementPortalConfig
-      )
-
-      when(mockedHttpGet.GET(any())(any(), any(), any()))
-        .thenReturn(Future.failed(new RuntimeException("some error")))
-
-      val error: UMPError = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))
-        .futureValue
-        .left
-        .value
-      error.isInstanceOf[UMPError.ConnectionError] shouldBe true
     }
 
     "getTeamMembersForTeams" should {
@@ -284,32 +239,6 @@ class UserManagementConnectorSpec
         getMembersDetails(_.primaryEmail.value) shouldBe Seq(
           "joe.black@digital.hmrc.gov.uk",
           "james.roger@hmrc.gsi.gov.uk")
-      }
-
-      "should return a connection error for calls which fail with an exception" in {
-        val mockedHttpGet = mock[HttpClient]
-
-        val userManagementConnector = new UserManagementConnector(
-          mockedHttpGet,
-          userManagementPortalConfig
-        )
-
-        val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
-
-        when(mockedHttpGet.GET(any())(any(), any(), any()))
-          .thenReturn(Future.failed(new RuntimeException("Boooom!")))
-
-        val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
-          .getTeamMembersForTeams(teamNames)
-          .futureValue
-
-        teamsAndMembers.keys should contain theSameElementsAs teamNames
-
-        val team1Result = teamsAndMembers.get(TeamName("Team1")).value
-        val team2Result = teamsAndMembers.get(TeamName("Team2")).value
-
-        team1Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
-        team2Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
       }
 
       "should return a no data error if the json from UMP doesn't conform to the expected shape" in {

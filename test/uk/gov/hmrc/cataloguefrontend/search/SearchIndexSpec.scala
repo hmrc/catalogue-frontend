@@ -21,10 +21,9 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 
-import scala.collection.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SearchIndexSpec extends AnyWordSpec with Matchers{
+class SearchIndexSpec extends AnyWordSpec with Matchers {
 
   "optimiseIndex" should {
     "Return the expected index structure" in {
@@ -130,7 +129,7 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
         SearchTerm(linkType = "health",   name = "voa-api-proxy-performance-tests",            link = "/health-indicators/voa-api-proxy-performance-tests",             weight = 0.5f,Set())
       )
     }
-    
+
     "Be case insensitive" in {
       val res1 = testIndex.search(query = Seq("pods"))
       val res2 = testIndex.search(query = Seq("PODS"))
@@ -139,7 +138,6 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
       List(res1, res2, res3, res4).foreach(_ shouldBe Seq(
         SearchTerm(linkType = "timeline", name = "PODS File Upload", link = "/somethings/pods", weight = 0.5f, Set())
       ))
-
     }
   }
 }

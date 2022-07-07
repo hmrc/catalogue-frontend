@@ -17,13 +17,15 @@
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import play.api.libs.json.OFormat
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class PlatformInitiativesConnector @Inject()(
-  httpClient: HttpClient,
+  httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
@@ -31,14 +33,17 @@ class PlatformInitiativesConnector @Inject()(
   private val platformInitiativesBaseUrl: String =
     servicesConfig.baseUrl("platform-initiatives")
 
-  def getInitiatives(team: Option[String])(
-    implicit hc: HeaderCarrier,
-    formatPI: OFormat[PlatformInitiative] = PlatformInitiative.format
-  ): Future[Seq[PlatformInitiative]] =
-    team match {
+  private implicit val pif: OFormat[PlatformInitiative] = PlatformInitiative.format
+
+  def getInitiatives(team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
+    val url = team match {
       case None =>
-        httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/initiatives")
+        url"$platformInitiativesBaseUrl/platform-initiatives/initiatives"
       case Some(team) =>
-        httpClient.GET[Seq[PlatformInitiative]](url"$platformInitiativesBaseUrl/platform-initiatives/teams/$team/initiatives")
+        url"$platformInitiativesBaseUrl/platform-initiatives/teams/$team/initiatives"
     }
+    httpClientV2
+      .get(url)
+      .execute[Seq[PlatformInitiative]]
+  }
 }

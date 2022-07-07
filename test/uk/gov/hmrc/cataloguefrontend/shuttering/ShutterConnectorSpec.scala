@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.{HttpClientSupport, WireMockSupport}
+import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class ShutterConnectorSpec
@@ -34,7 +34,7 @@ class ShutterConnectorSpec
      with ScalaFutures
      with IntegrationPatience
      with WireMockSupport
-     with HttpClientSupport {
+     with HttpClientV2Support {
 
   private trait Fixture {
     val servicesConfig = mock[ServicesConfig]
@@ -43,7 +43,7 @@ class ShutterConnectorSpec
 
     implicit val headerCarrier = HeaderCarrier()
     implicit val executionContext = scala.concurrent.ExecutionContext.global
-    val connector = new ShutterConnector(httpClient, servicesConfig)
+    val connector = new ShutterConnector(httpClientV2, servicesConfig)
   }
 
   "Shutter Events" should {

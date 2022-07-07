@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.OptionValues
-import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -33,7 +33,9 @@ class HealthIndicatorsConnectorSpec
      with Matchers
      with OptionValues
      with GuiceOneAppPerSuite
-     with WireMockSupport {
+     with WireMockSupport
+     with ScalaFutures
+     with IntegrationPatience {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
