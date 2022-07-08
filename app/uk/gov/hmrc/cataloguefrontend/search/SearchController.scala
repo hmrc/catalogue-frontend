@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.search
 import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.search._
+import views.html.search.SearchResults
 
 import javax.inject.{Inject, Singleton}
 
@@ -33,9 +33,9 @@ class SearchController @Inject()(
 
   def search(query: String, limit: Int) =  Action { request =>
     val searchTerms =
-      query.split("+", 5) // cap number of searchable terms at 5 (seems reasonable?)
-        .map(_.trim)
-        .filter(_.length > 2) // ignore search terms less than 3 chars
+      query.trim.split("\\s+") // query is space delimited
+        .take(5)               // cap number of searchable terms at 5
+        .filter(_.length > 2)  // ignore search terms less than 3 chars
     Ok(view(
         matches   = searchIndex.search(searchTerms).take(limit),
         highlight = if (config.highlight) new BoldHighlighter(searchTerms) else NoHighlighter
