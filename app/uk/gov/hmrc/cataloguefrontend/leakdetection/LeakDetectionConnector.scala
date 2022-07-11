@@ -67,6 +67,13 @@ class LeakDetectionConnector @Inject() (
       .execute[Seq[LeakDetectionRepositorySummary]]
   }
 
+  def leakDetectionDraftReports(ruleId: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionReport]] = {
+    implicit val ldrs: Reads[LeakDetectionReport] = LeakDetectionReport.reads
+    httpClientV2
+      .get(url"$url/admin/draft?rule=$ruleId")
+      .execute[Seq[LeakDetectionReport]]
+  }
+
   def leakDetectionReport(repository: String, branch: String)(implicit hc: HeaderCarrier): Future[LeakDetectionReport] = {
     implicit val ldrl: Reads[LeakDetectionReport] = LeakDetectionReport.reads
     httpClientV2
@@ -155,7 +162,8 @@ final case class LeakDetectionRule(
   description      : String,
   ignoredFiles     : List[String],
   ignoredExtensions: List[String],
-  priority         : Priority
+  priority         : Priority,
+  draft            : Boolean
 )
 
 object LeakDetectionRule {
@@ -222,8 +230,8 @@ final case class LeakDetectionReport(
   timestamp       : LocalDateTime,
   author          : String,
   commitId        : String,
+  rulesViolated   : Map[String, Int],
   exclusions      : Map[String, Int],
-  unusedExemptions: Seq[UnusedExemption]
 )
 
 object LeakDetectionReport {
