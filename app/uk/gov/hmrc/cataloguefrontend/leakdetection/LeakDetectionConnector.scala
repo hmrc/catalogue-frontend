@@ -232,6 +232,7 @@ final case class LeakDetectionReport(
   commitId        : String,
   rulesViolated   : Map[String, Int],
   exclusions      : Map[String, Int],
+  unusedExemptions: Seq[UnusedExemption]
 )
 
 object LeakDetectionReport {
