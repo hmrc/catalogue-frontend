@@ -72,6 +72,7 @@ GET        /health-indicators/:name                     uk.gov.hmrc.cataloguefro
 GET        /platform-initiatives                        uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesController.platformInitiatives(display: DisplayType ?= DisplayType.Chart, team: Option[TeamName] ?= None)
 
 GET        /leak-detection                                                 uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.ruleSummaries
+GET        /leak-detection/drafts                                          uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.draftReports
 GET        /leak-detection/repositories                                    uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.repoSummaries(includeWarnings: Boolean ?= false, includeExemptions: Boolean ?= false, includeViolations: Boolean ?= false, includeNonIssues: Boolean ?= false)
 GET        /leak-detection/repositories/:repository                        uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.branchSummaries(repository: String, includeNonIssues: Boolean ?= false)
 GET        /leak-detection/repositories/:repository/:branch                uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.report(repository: String, branch: String)
