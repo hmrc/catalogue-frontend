@@ -63,7 +63,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
         givenRepoSummariesWithAllCountCombinations(false)
         val results = service.repoSummaries(None, None, true, true, true, false).futureValue
 
-        results._2.map(_.repository) should contain theSameElementsAs Seq(
+        results.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
           "warnings and exemptions",
           "warnings and violations",
@@ -78,7 +78,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
         givenRepoSummariesWithAllCountCombinations(false)
         val results = service.repoSummaries(None, None, true, true, false, false).futureValue
 
-        results._2.map(_.repository) should contain theSameElementsAs Seq(
+        results.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
           "warnings and exemptions",
           "warnings and violations",
@@ -92,7 +92,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
         givenRepoSummariesWithAllCountCombinations(false)
         val results = service.repoSummaries(None, None, true, false, true, false).futureValue
 
-        results._2.map(_.repository) should contain theSameElementsAs Seq(
+        results.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
           "warnings and exemptions",
           "warnings and violations",
@@ -106,7 +106,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
         givenRepoSummariesWithAllCountCombinations(false)
         val results = service.repoSummaries(None, None, true, false, false, false).futureValue
 
-        results._2.map(_.repository) should contain theSameElementsAs Seq(
+        results.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
           "warnings and exemptions",
           "warnings and violations",
@@ -118,7 +118,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
         givenRepoSummariesWithAllCountCombinations(false)
         val results = service.repoSummaries(None, None, false, true, true, false).futureValue
 
-        results._2.map(_.repository) should contain theSameElementsAs Seq(
+        results.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
           "warnings and exemptions",
           "warnings and violations",
@@ -133,7 +133,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
         val results = service.repoSummaries(None, None, false, true, false, false).futureValue
 
-        results._2.map(_.repository) should contain theSameElementsAs Seq(
+        results.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
           "warnings and exemptions",
           "exemptions and violations",
@@ -146,7 +146,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
         val results = service.repoSummaries(None, None, false, false, true, false).futureValue
 
-        results._2.map(_.repository) should contain theSameElementsAs Seq(
+        results.map(_.repository) should contain theSameElementsAs Seq(
           "warnings, exemptions and violations",
           "warnings and violations",
           "exemptions and violations",
@@ -159,7 +159,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
         val results = service.repoSummaries(None, None, false, false, false, true).futureValue
 
-        results._2.map(_.repository) should contain theSameElementsAs Seq(
+        results.map(_.repository) should contain theSameElementsAs Seq(
           "no issues"
         )
       }
@@ -279,7 +279,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
     val timestamp = LocalDateTime.now().minus(2, HOURS)
 
-    def aRule              = LeakDetectionRule("", "", "", "", List(), List(), Priority.Low)
+    def aRule              = LeakDetectionRule("", "", "", "", List(), List(), Priority.Low, false)
     def aRepositorySummary = LeakDetectionRepositorySummary("", true, timestamp, timestamp, 0, 0, 0, None)
     def aBranchSummary = LeakDetectionBranchSummary("", "", timestamp, 0, 0, 0)
 

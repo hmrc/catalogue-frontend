@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionExplorerFilter.form
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import views.html.error_404_template
 import views.html.leakdetection._
 
 import javax.inject.Inject
