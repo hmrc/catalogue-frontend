@@ -19,11 +19,10 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.auth.AuthController
+import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionExplorerFilter.form
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
+import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.leakdetection._
 
@@ -38,6 +37,7 @@ class LeakDetectionController @Inject() (
   leaksPage                    : LeakDetectionLeaksPage,
   leakDetectionService         : LeakDetectionService,
   exemptionsPage               : LeakDetectionExemptionsPage,
+  draftPage                    : LeakDetectionDraftPage,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   override val auth            : FrontendAuthComponents
 )(implicit
@@ -60,8 +60,9 @@ class LeakDetectionController @Inject() (
           validForm =>
             for {
               summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, includeWarnings, includeExemptions, includeViolations, includeNonIssues)
+              rules     <- leakDetectionService.rules().map(_.filterNot(_.draft).map(_.id))
               teams     <- teamsAndRepositoriesConnector.allTeams
-            } yield Ok(repositoriesPage(summaries._1, summaries._2, teams.sortBy(_.name), form.fill(validForm), includeWarnings, includeExemptions, includeViolations, includeNonIssues))
+            } yield Ok(repositoriesPage(rules, summaries, teams.sortBy(_.name), form.fill(validForm), includeWarnings, includeExemptions, includeViolations, includeNonIssues))
         )
     }
 
@@ -76,6 +77,21 @@ class LeakDetectionController @Inject() (
 
   def leaksPermission(repository: String, action: String): Predicate =
     Predicate.Permission(Resource.from("repository-leaks", repository), IAAction(action))
+
+  def draftReports(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      form
+        .bindFromRequest()
+        .fold(
+          formWithErrors => Future.successful(BadRequest(draftPage(Seq.empty, Seq.empty, formWithErrors))),
+          validForm =>
+            for {
+              reports <- leakDetectionService.draftReports(validForm.rule)
+              rules   <- leakDetectionService.rules().map(_.filter(_.draft).map(_.id))
+            }
+            yield Ok(draftPage(rules, reports, form.fill(validForm)))
+        )
+    }
 
   def report(repository: String, branch: String): Action[AnyContent] =
     auth
@@ -95,7 +111,7 @@ class LeakDetectionController @Inject() (
   def reportExemptions(repository: String, branch: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        report <- leakDetectionService.report(repository, branch)
+        report     <- leakDetectionService.report(repository, branch)
         exemptions <- leakDetectionService.reportExemptions(report._id)
       } yield Ok(exemptionsPage(repository, branch, exemptions, report.unusedExemptions))
     }

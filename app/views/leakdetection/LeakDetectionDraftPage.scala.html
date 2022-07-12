@@ -1,0 +1,94 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionReport
+@import views.html.helper.select
+
+@this(viewMessages: ViewMessages)
+
+@(
+        rules     : Seq[String],
+        summaries : Seq[LeakDetectionReport],
+        form      : Form[_]
+)(implicit
+  messages : Messages,
+  request  : Request[_]
+)
+
+@standard_layout(s"Leak detection draft results") {
+    <header>
+        <h1>Leak Detection - Draft Results</h1>
+    </header>
+
+    <form id="form" method="get">
+        <div class="form-group row">
+            <div class="col-md-3">
+            @select(
+                field     =  form("rule"),
+                options   =  rules.map(r => r -> r),
+                '_default -> "All",
+                '_label   -> "Draft rule",
+                'onchange -> "this.form.submit()",
+                'id       -> "rule-dropdown",
+                'class    -> "form-control"
+
+            )
+            </div>
+        </div>
+    </form>
+
+    <div id="repo-list">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="col-xs-7"><button class="sort no-border" data-sort="repository">Repository</button></th>
+                    <th class="col-xs-3"><button class="sort no-border" data-sort="scanned">Scanned</button></th>
+                    <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="exemptions">Exemptions</button></th>
+                    <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="violations">Violations</button></th>
+                </tr>
+            </thead>
+            <tbody class="list">
+            @summaries.map { report =>
+                <tr>
+                    <td class="repository">@report.repoName</td>
+                    <td class="scanned">@report.timestamp.displayFormat</td>
+                    <td class="exemptions text-center">
+                        @if(form.data.contains("rule")) {
+                            @report.exclusions.get(form.data("rule")).getOrElse(0)
+                        } else {
+                            @report.exclusions.values.sum
+                        }
+                    </td>
+                    <td class="violations text-center">
+                        @if(form.data.contains("rule")) {
+                            @report.rulesViolated.get(form.data("rule")).getOrElse(0)
+                        } else {
+                            @report.rulesViolated.values.sum
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+            var options = {valueNames: ['repository', 'scanned', 'exemptions', 'violations']};
+            repoList = new List('repo-list', options);
+    </script>
+}
