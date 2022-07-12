@@ -279,7 +279,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
     val timestamp = LocalDateTime.now().minus(2, HOURS)
 
-    def aRule              = LeakDetectionRule("", "", "", "", List(), List(), Priority.Low, false)
+    def aRule              = LeakDetectionRule("", "", "", "", List(), List(), List(), Priority.Low, false)
     def aRepositorySummary = LeakDetectionRepositorySummary("", true, timestamp, timestamp, 0, 0, 0, None)
     def aBranchSummary = LeakDetectionBranchSummary("", "", timestamp, 0, 0, 0)
 
