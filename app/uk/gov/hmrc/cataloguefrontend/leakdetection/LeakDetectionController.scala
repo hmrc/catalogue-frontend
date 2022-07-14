@@ -87,7 +87,7 @@ class LeakDetectionController @Inject() (
           validForm =>
             for {
               reports <- leakDetectionService.draftReports(validForm.rule)
-              rules   <- leakDetectionService.rules().map(_.filter(_.draft).map(_.id))
+              rules   <- leakDetectionService.rules().map(_.filter(_.draft))
             }
             yield Ok(draftPage(rules, reports, form.fill(validForm)))
         )
