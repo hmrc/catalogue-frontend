@@ -105,7 +105,7 @@ class LeakDetectionConnector @Inject() (
   def rescan(repository: String, branch: String)(implicit hc: HeaderCarrier): Future[LeakDetectionReport] = {
     implicit val ldrl: Reads[LeakDetectionReport] = LeakDetectionReport.reads
     httpClientV2
-      .post(url"$url/admin/rescan/$repository/$branch")
+      .post(url"$url/admin/rescan/$repository/$branch?mode=normal")
       .execute[LeakDetectionReport]
   }
 }
