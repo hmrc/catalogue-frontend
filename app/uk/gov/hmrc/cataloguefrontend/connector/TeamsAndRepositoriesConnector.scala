@@ -85,7 +85,9 @@ case class GitRepository(
   branchProtection    : Option[BranchProtection] = None,
   isDeprecated        : Boolean                  = false,
   teamNames           : Seq[String]              = Nil,
-  jenkinsURL          : Option[String]           = None
+  jenkinsURL          : Option[String]           = None,
+  prototypeUrl        : Option[String]           = None
+
 )
 
 object GitRepository {
@@ -108,6 +110,7 @@ object GitRepository {
     ~ (__ \ "isDeprecated"      ).formatWithDefault[Boolean](false)
     ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Nil)
     ~ (__ \ "jenkinsUrl"       ).formatNullable[String]
+    ~ (__ \ "prototypeUrl"      ).formatNullable[String]
     ) (apply, unlift(unapply))
   }
 }

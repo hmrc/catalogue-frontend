@@ -33,7 +33,4 @@ class ViewMessages @Inject() (configuration: Configuration) {
 
   val notSpecifiedText =
     "Not specified"
-
-  val prototypesBaseUrl: String =
-    configuration.get[String](s"prototypes-base-url")
 }
