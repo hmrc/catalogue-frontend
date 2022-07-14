@@ -18,11 +18,13 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionReport
 @import views.html.helper.select
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionRule
+@import views.html.leakdetection.RuleDetails
 
 @this(viewMessages: ViewMessages)
 
 @(
-        rules     : Seq[String],
+        rules     : Seq[LeakDetectionRule],
         summaries : Seq[LeakDetectionReport],
         form      : Form[_]
 )(implicit
@@ -40,7 +42,7 @@
             <div class="col-md-3">
             @select(
                 field     =  form("rule"),
-                options   =  rules.map(r => r -> r),
+                options   =  rules.map(_.id).map(r => r -> r),
                 '_default -> "All",
                 '_label   -> "Draft rule",
                 'onchange -> "this.form.submit()",
@@ -51,6 +53,15 @@
             </div>
         </div>
     </form>
+
+    @if(form.data.contains("rule")) {
+        <div class="board">
+            <h3 class="board__heading">Rule Details</h3>
+            <div class="board__body">
+                @RuleDetails(rules.filter(_.id == form.data("rule")).head)
+            </div>
+        </div>
+    }
 
     <div id="repo-list">
         <table class="table table-striped">
