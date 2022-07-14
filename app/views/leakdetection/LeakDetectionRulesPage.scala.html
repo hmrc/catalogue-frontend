@@ -14,10 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionRule, LeakDetectionRulesWithCounts}
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionRulesWithCounts
 @import uk.gov.hmrc.cataloguefrontend.{ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
+@import views.html.leakdetection.RuleDetails
 
 @this(viewMessages: ViewMessages)
 
@@ -70,7 +70,7 @@
             @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount, true)
             @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount, true)
             <td colspan="6">
-            @ruleDetails(summary.rule)
+            @RuleDetails(summary.rule)
             </td>
         </tr>
     }
@@ -82,63 +82,4 @@
             } else {
                 <span>0</span>
             }</td>
-    }
-
-    @ruleDetails(rule: LeakDetectionRule) = {
-        <div class="row">
-            <div class="col-xs-12">
-                <ul class="list list--minimal list-group row">
-                    <li class="col-xs-6">
-                        <label>Rule id: </label>
-                        @rule.id
-                    </li>
-                    <li class="col-xs-6">
-                        <label>Description: </label>
-                        @rule.description
-                    </li>
-                    <li class="col-xs-6">
-                        <label>Scope: </label>
-                        @rule.scope
-                    </li>
-                    <li class="col-xs-6">
-                        <label>Priority: </label>
-                        @rule.priority
-                    </li>
-                    <li class="col-xs-12">
-                        <label>Regex: </label>
-                        @rule.regex
-                    </li>
-                    @if(rule.ignoredContent.nonEmpty) {
-                        <li class="col-xs-6">
-                            <label>Ignored content: </label>
-                            <ul class="list list--minimal list-group row">
-                            @rule.ignoredContent.map { content =>
-                                <li>@content</li>
-                            }
-                            </ul>
-                        </li>
-                    }
-                    @if(rule.ignoredFiles.nonEmpty) {
-                        <li class="col-xs-6">
-                            <label>Ignored files: </label>
-                            <ul class="list list--minimal list-group row">
-                            @rule.ignoredFiles.map { fileName =>
-                                <li>@fileName</li>
-                            }
-                            </ul>
-                        </li>
-                    }
-                    @if(rule.ignoredExtensions.nonEmpty) {
-                        <li class="col-xs-6">
-                            <label>Ignored extensions: </label>
-                            <ul class="list list--minimal list-group row">
-                            @rule.ignoredExtensions.map { fileExt =>
-                                <li class="col-xs-3">@fileExt</li>
-                            }
-                            </ul>
-                        </li>
-                    }
-                </ul>
-            </div>
-        </div>
     }
