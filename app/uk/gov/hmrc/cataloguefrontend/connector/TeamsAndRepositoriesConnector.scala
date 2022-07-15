@@ -87,8 +87,10 @@ case class GitRepository(
   teamNames           : Seq[String]              = Nil,
   jenkinsURL          : Option[String]           = None,
   prototypeUrl        : Option[String]           = None
-
-)
+) {
+// Repos with joint ownership of 8+ teams, defines the repo as shared
+  def isShared: Boolean = teamNames.length >= 8
+}
 
 object GitRepository {
   val apiFormat: OFormat[GitRepository] = {

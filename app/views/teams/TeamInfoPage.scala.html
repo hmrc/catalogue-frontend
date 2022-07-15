@@ -202,22 +202,29 @@
                   <p>@Html(viewMessages.noRepoOfTypeForTeam(typeName))</p>
               } else {
                   <ul class="list list--minimal">
-                  @for(repo <- repos.sortBy(r => (r.teamNames.length>1, r.name))) {
-                      <li class="list-item" id="@repo.name">
-                              <div>
-                                  <a class="@if(hasLeaks(repo.name)) {leak-detected} @if(repo.isDeprecated){deprecated}" href="@appRoutes.CatalogueController.repository(repo.name)">
-                                      @repo.name
-                                      @if(hasLeaks(repo.name)) {<span class="glyphicon glyphicon-warning-sign"></span>}
-                                      @if(repo.isArchived){ <span class="glyphicon glyphicon-lock" title="archived"></span>}
-                                      @if(repo.isDeprecated && !repo.isArchived){ <span class="badge">deprecated</span> }
-                                  </a>
-                                  @if(repo.teamNames.length > 1) { <span title="shared by @repo.teamNames.length teams">(@repo.teamNames.length)</span>  }
-                              </div>
-                      </li>
-                  }
+                    @defining(repos.partition(_.isShared)) { case (shared, nonShared) =>
+                        @repoListFor(nonShared)
+                        @if(shared.nonEmpty){<label style="padding-top: 5px">Shared</label>}
+                        @repoListFor(shared)
+                        }
                   </ul>
               }
           </div>
       </div>
   </div>
+}
+
+@repoListFor(repos: Seq[GitRepository]) = {
+    @for(repo <- repos.sortBy(_.name)) {
+        <li class="list-item" id="@repo.name">
+            <div>
+                <a class="@if(hasLeaks(repo.name)) {leak-detected} @if(repo.isDeprecated){deprecated}" href="@appRoutes.CatalogueController.repository(repo.name)">
+                    @repo.name
+                    @if(hasLeaks(repo.name)) {<span class="glyphicon glyphicon-warning-sign"></span>}
+                    @if(repo.isArchived){ <span class="glyphicon glyphicon-lock" title="archived"></span>}
+                    @if(repo.isDeprecated && !repo.isArchived){ <span class="badge">deprecated</span> }
+                </a>
+            </div>
+        </li>
+    }
 }
