@@ -215,7 +215,7 @@
 }
 
 @repoListFor(repos: Seq[GitRepository]) = {
-    @for(repo <- repos.sortBy(_.name)) {
+    @for(repo <- repos.sortBy(_.name.toLowerCase)) {
         <li class="list-item" id="@repo.name">
             <div>
                 <a class="@if(hasLeaks(repo.name)) {leak-detected} @if(repo.isDeprecated){deprecated}" href="@appRoutes.CatalogueController.repository(repo.name)">
