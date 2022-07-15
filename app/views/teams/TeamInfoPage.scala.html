@@ -196,30 +196,33 @@
 @showRepositories(repos: Seq[GitRepository], headerName: String, typeName: String) = {
   <div class="col-md-3">
       <div id="@headerName" class="board">
-          <abbr style="text-decoration: none; border-bottom: none;" title="Shared repos (owned by 8+ teams), are at the bottom of the list">
-              <h3 class="board__heading">@headerName</h3>
-          </abbr>
+          <h3 class="board__heading">@headerName</h3>
           <div class="board__body">
               @if(repos.isEmpty) {
                   <p>@Html(viewMessages.noRepoOfTypeForTeam(typeName))</p>
               } else {
                   <ul class="list list--minimal">
-                  @for(repo <- repos.sortBy(r => (r.teamNames.length >= 8, r.name))) {
-                      <li class="list-item" id="@repo.name">
-                              <div>
-                                  <a class="@if(hasLeaks(repo.name)) {leak-detected} @if(repo.isDeprecated){deprecated}" href="@appRoutes.CatalogueController.repository(repo.name)">
-                                      @repo.name
-                                      @if(hasLeaks(repo.name)) {<span class="glyphicon glyphicon-warning-sign"></span>}
-                                      @if(repo.isArchived){ <span class="glyphicon glyphicon-lock" title="archived"></span>}
-                                      @if(repo.isDeprecated && !repo.isArchived){ <span class="badge">deprecated</span> }
-                                  </a>
-                                  @if(repo.teamNames.length > 1) { <span title="shared by @repo.teamNames.length teams">(@repo.teamNames.length)</span>  }
-                              </div>
-                      </li>
-                  }
+                      @repoListFor(repos.partition(_.isShared)._2)
+                      @if(repos.partition(_.isShared)._1 nonEmpty){<label style="padding-top: 5px">Shared</label>}
+                      @repoListFor(repos.partition(_.isShared)._1)
                   </ul>
               }
           </div>
       </div>
   </div>
+}
+
+@repoListFor(repos: Seq[GitRepository]) = {
+@for(repo <- repos.sortBy(r => r.name)) {
+    <li class="list-item" id="@repo.name">
+        <div>
+            <a class="@if(hasLeaks(repo.name)) {leak-detected} @if(repo.isDeprecated){deprecated}" href="@appRoutes.CatalogueController.repository(repo.name)">
+                @repo.name
+                @if(hasLeaks(repo.name)) {<span class="glyphicon glyphicon-warning-sign"></span>}
+                @if(repo.isArchived){ <span class="glyphicon glyphicon-lock" title="archived"></span>}
+                @if(repo.isDeprecated && !repo.isArchived){ <span class="badge">deprecated</span> }
+            </a>
+        </div>
+    </li>
+    }
 }
