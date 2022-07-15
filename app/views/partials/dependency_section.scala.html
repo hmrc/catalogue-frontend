@@ -20,23 +20,25 @@
 
 @(dependencies: Seq[Dependency])
 
-@defining(dependencies.filter(_.importBy.isDefined)) { transitiveDependencies =>
-    @for(dependency <- dependencies.filter(_.importBy.isEmpty).sortBy(_.name))  {
-      <li>
-        <div class="">
-            @dependencyRow(dependency)
-        </div>
+@defining(dependencies.groupBy(_.name).map(_._2.head).toSeq) { uniqueDependencies =>
+    @defining(uniqueDependencies.filter(_.importBy.isDefined)) { transitiveDependencies =>
+        @for(dependency <- uniqueDependencies.filter(_.importBy.isEmpty).sortBy(_.name)) {
+            <li>
+                <div class="">
+                    @dependencyRow(dependency)
+                </div>
 
-        <div class="">
-            <ul>
-            @for(transitiveDependency <- transitiveDependencies.filter(_.importBy.contains(ImportedBy(dependency.name, dependency.group, dependency.currentVersion)))) {
-              <li>
-                @dependencyRow(transitiveDependency)
-              </li>
-            }
-            </ul>
-        </div>
-      </li>
+                <div class="">
+                    <ul>
+                    @for(transitiveDependency <- transitiveDependencies.filter(_.importBy.contains(ImportedBy(dependency.name, dependency.group, dependency.currentVersion)))) {
+                        <li>
+                            @dependencyRow(transitiveDependency)
+                        </li>
+                    }
+                    </ul>
+                </div>
+            </li>
+        }
     }
 }
 
