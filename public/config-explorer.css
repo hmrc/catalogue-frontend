@@ -973,6 +973,11 @@ aside {
   display: none;
 }
 
+.suppressed {
+  color: grey;
+  font-style: italic; }
+}
+
 .grid-row > .grid-item {
   font-family: monospace; }
   .grid-row > .grid-item > ul > li {
