@@ -121,7 +121,7 @@ object ConfigService {
   case class ConfigSourceValue(
     source: String,
     value : String
-  )
+  ) { def isSuppressed = value == "<<SUPPRESSED>>" }
 
   object ConfigSourceValue {
     val reads =
