@@ -134,6 +134,8 @@ object ConfigService {
     source match {
       case "loggerConf"                 => "Microservice application-json-logger.xml file"
       case "referenceConf"              => "Microservice reference.conf files"
+      case "bootstrapFrontendConf"      => "Bootstrap frontend.conf file"
+      case "bootstrapBackendConf"       => "Bootstrap backend.conf file"
       case "applicationConf"            => "Microservice application.conf file"
       case "baseConfig"                 => "App-config-base"
       case "appConfigEnvironment"       => s"App-config-${environment.asString}"
