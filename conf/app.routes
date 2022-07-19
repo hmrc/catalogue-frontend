@@ -5,6 +5,7 @@ GET        /teams/:teamName                             uk.gov.hmrc.cataloguefro
 GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.teams.TeamsController.outOfDateTeamDependencies(teamName: TeamName)
 
 GET        /repositories                                uk.gov.hmrc.cataloguefrontend.CatalogueController.allRepositories(repoType: Option[String] ?= None)
+GET        /repositories-search                         uk.gov.hmrc.cataloguefrontend.CatalogueController.repositoriesSearch(query: String)
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
 GET        /services                                    uk.gov.hmrc.cataloguefrontend.CatalogueController.allServices

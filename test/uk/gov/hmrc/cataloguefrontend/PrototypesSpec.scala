@@ -31,8 +31,9 @@ import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.http.SessionKeys
 import views.html._
+import views.html.partials.RepoSearchResultsPage
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 class PrototypesSpec extends UnitSpec with MockitoSugar {
   import ExecutionContext.Implicits.global
@@ -76,6 +77,7 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     prototypeInfoPage             = mock[PrototypeInfoPage],
     repositoryInfoPage            = mock[RepositoryInfoPage],
     repositoriesListPage          = mock[RepositoriesListPage],
+    repositoriesSearchResultsPage = mock[RepoSearchResultsPage],
     defaultBranchListPage         = mock[DefaultBranchListPage],
     outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
     costEstimationPage            = mock[CostEstimationPage],

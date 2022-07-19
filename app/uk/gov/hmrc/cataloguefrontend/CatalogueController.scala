@@ -37,7 +37,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import views.html.partials.RepoSearchResultsPage
 import views.html._
+
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -72,6 +74,7 @@ class CatalogueController @Inject() (
   prototypeInfoPage            : PrototypeInfoPage,
   repositoryInfoPage           : RepositoryInfoPage,
   repositoriesListPage         : RepositoriesListPage,
+  repositoriesSearchResultsPage : RepoSearchResultsPage,
   defaultBranchListPage        : DefaultBranchListPage,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
   costEstimationPage           : CostEstimationPage,
@@ -373,6 +376,17 @@ class CatalogueController @Inject() (
         query => Ok(repositoriesListPage(repositories = repositories.filter(query), teams = teams, form))
       )
     }
+
+  def repositoriesSearch(query: String) = {
+    implicit val hc       = HeaderCarrier()
+    BasicAuthAction.async { implicit request =>
+     for {
+        repos <- teamsAndRepositoriesConnector.allRepositories.map(_.sortBy(_.name.toLowerCase))
+     } yield {
+       Ok(repositoriesSearchResultsPage(repos.filter(_.name.contains(query))))
+     }
+    }
+  }
 
   def dependencyRepository(group: String, artefact: String, version: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>

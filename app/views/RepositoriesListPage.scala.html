@@ -15,7 +15,6 @@
  *@
 
 @import play.api.mvc.Call
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
@@ -50,7 +49,7 @@
             <div class="form-group row">
                 <div class="col-md-5">
                     <label for="search">Name</label>
-                    <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
+                    <input class="form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
                 </div>
                 <div class="col-md-3">
                     @select(
@@ -95,61 +94,7 @@
                     <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
                 </tr>
             </thead>
-            <tbody class="list">
-            @repositories.zipWithIndex.map{case (repo, i) =>
-            <tr id="row@i">
-                <td class="repo-name" id="row@{i}_name">
-                    <a class="@if(repo.isDeprecated || repo.isArchived){deprecated} @if(repo.isArchived){archived}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
-                </td>
-
-                <td class="" id="row@{i}_repostatus">
-
-                    @if(repo.isArchived) {
-                        <span class="repo-status badge">archived</span>
-                    } else {
-                        @if(repo.isDeprecated) { <span class="repo-status badge badge-warning">deprecated</span> }
-                    }
-
-                </td>
-
-                <td class="repo-type monospaced" id="row@{i}_repotype">
-                    @repo.repoType.asString
-                </td>
-                <td id="row@{i}_team">
-                @if(repo.teamNames.length <= 4) {
-                    @repo.teamNames.take(4).map {tn => <div  class="repo-team" >@tn</div> }
-                } else {
-                    <div title="@repo.teamNames.take(15).mkString("\n")" class="repo-team" >
-                        <em>Shared by @{repo.teamNames.length} teams</em>
-                    </div>
-                }
-                </td>
-                @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
-                  <td class="repo-bp monospaced" id="row@{i}_branch-protection">
-                      @if(repo.branchProtection.exists(_.isProtected)) {
-                        <span class="glyphicon glyphicon-ok text-success"></span>
-                        <span class="sr-only">Branch protection is enabled</span>
-                      } else {
-                        <abbr style="text-decoration: none; border-bottom: none;" title="@List(
-                          s"Requires approving reviews = ${repo.branchProtection.exists(_.requiresApprovingReviews)}",
-                          s"Dismisses stale reviews = ${repo.branchProtection.exists(_.dismissesStaleReviews)}",
-                          s"Requires commit signatures = ${repo.branchProtection.exists(_.requiresCommitSignatures)}"
-                        ).mkString("\n")">
-                         <span class="glyphicon glyphicon-remove text-danger"></span>
-                        </abbr>
-                      <span class="sr-only">Branch protection is not enabled</span>
-                      }
-                  </td>
-                }
-                <td class="created monospaced" id="row@{i}_created">
-                    @repo.createdDate.asPattern(`yyyy-MM-dd`)
-                </td>
-                <td class="last-active monospaced" id="row@{i}_lastActive">
-                    @repo.lastActiveDate.asPattern(`yyyy-MM-dd`)
-                </td>
-            </tr>
-            }
-            </tbody>
+            @partials.repoSearchResults(repositories)
         </table>
     </div>
 }
@@ -161,7 +106,10 @@
                     indexAsync: true};
 
     var serviceList = new List('service-list', options);
+
 </script>
+
+<script src="@routes.Assets.versioned("repo-search.js")" defer></script>
 
 @repoTypes = @{
     ("" ,"All") +: RepoType.values.map(v => (v.asString, v.asString)).toList
