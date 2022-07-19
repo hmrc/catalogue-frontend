@@ -157,7 +157,8 @@
 <!-- listjs configuration -->
 <script>
     var options = { valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
-                    searchColumns: ['repo-name'] };
+                    searchColumns: ['repo-name'],
+                    indexAsync: true};
 
     var serviceList = new List('service-list', options);
 </script>
