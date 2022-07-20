@@ -38,7 +38,8 @@ class RepositoriesController @Inject() (
   override val mcc             : MessagesControllerComponents,
   repositoriesListPage         : RepositoriesListPage,
   repositoriesSearchResultsPage: RepoSearchResultsPage,
-  override val auth            : FrontendAuthComponents
+  override val auth            : FrontendAuthComponents,
+  repositoriesSearchCache      : RepositoriesSearchCache
  )(implicit
    override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -48,15 +49,8 @@ class RepositoriesController @Inject() (
     BasicAuthAction.async { implicit request =>
       import SearchFiltering._
 
-      val allTeams =
-        teamsAndRepositoriesConnector
-          .allTeams
-          .map(_.sortBy(_.name.asString))
-
-      val allRepositories =
-        teamsAndRepositoriesConnector
-          .allRepositories
-          .map(_.sortBy(_.name.toLowerCase))
+      val allTeams = repositoriesSearchCache.getTeamsOrElseUpdate()
+      val allRepositories = repositoriesSearchCache.getReposOrElseUpdate()
 
       val form =
         RepoListFilter.form.bindFromRequest()
@@ -70,14 +64,11 @@ class RepositoriesController @Inject() (
       )
     }
 
-  implicit val hc       = HeaderCarrier()
-  val cachedData = teamsAndRepositoriesConnector.allRepositories.map(_.sortBy(_.name.toLowerCase))
-
   def repositoriesSearch(name: Option[String], team: Option[String], repoType: Option[String]) = {
     BasicAuthAction.async { implicit request =>
       import SearchFiltering._
       for {
-        repos <- cachedData
+        repos <- repositoriesSearchCache.getReposOrElseUpdate()
       } yield {
         Ok(repositoriesSearchResultsPage(repos.filter(RepoListFilter(name, team, repoType))))
       }

@@ -73,8 +73,6 @@ class CatalogueController @Inject() (
   libraryInfoPage              : LibraryInfoPage,
   prototypeInfoPage            : PrototypeInfoPage,
   repositoryInfoPage           : RepositoryInfoPage,
-  repositoriesListPage         : RepositoriesListPage,
-  repositoriesSearchResultsPage : RepoSearchResultsPage,
   defaultBranchListPage        : DefaultBranchListPage,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
   costEstimationPage           : CostEstimationPage,
