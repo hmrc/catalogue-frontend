@@ -338,55 +338,18 @@ class CatalogueController @Inject() (
 
   def allServices: Action[AnyContent] =
     Action {
-      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Service.asString)))
+      Redirect(repositories.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Service.asString)))
     }
 
   def allLibraries: Action[AnyContent] =
     Action {
-      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Library.asString)))
+      Redirect(repositories.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Library.asString)))
     }
 
   def allPrototypes: Action[AnyContent] =
     Action {
-      Redirect(routes.CatalogueController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
+      Redirect(repositories.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
     }
-
-  def allRepositories(repoType: Option[String]): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      import SearchFiltering._
-
-      val allTeams =
-        teamsAndRepositoriesConnector
-          .allTeams
-          .map(_.sortBy(_.name.asString))
-
-      val allRepositories =
-        teamsAndRepositoriesConnector
-          .allRepositories
-          .map(_.sortBy(_.name.toLowerCase))
-
-      val form =
-        RepoListFilter.form.bindFromRequest()
-
-      for {
-        teams        <- allTeams
-        repositories <- allRepositories
-      } yield form.fold(
-        formWithErrors => Ok(repositoriesListPage(repositories = Seq.empty, teams = teams, formWithErrors)),
-        query => Ok(repositoriesListPage(repositories = repositories.filter(query), teams = teams, form))
-      )
-    }
-
-  def repositoriesSearch(query: String) = {
-    implicit val hc       = HeaderCarrier()
-    BasicAuthAction.async { implicit request =>
-     for {
-        repos <- teamsAndRepositoriesConnector.allRepositories.map(_.sortBy(_.name.toLowerCase))
-     } yield {
-       Ok(repositoriesSearchResultsPage(repos.filter(_.name.contains(query))))
-     }
-    }
-  }
 
   def dependencyRepository(group: String, artefact: String, version: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
@@ -466,25 +429,6 @@ object DigitalServiceNameFilter {
     mapping(
       "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(DigitalServiceNameFilter.apply)(DigitalServiceNameFilter.unapply)
-  )
-}
-
-case class RepoListFilter(
-  name    : Option[String] = None,
-  team    : Option[String] = None,
-  repoType: Option[String] = None
-) {
-  def isEmpty: Boolean =
-    name.isEmpty && team.isEmpty && repoType.isEmpty
-}
-
-object RepoListFilter {
-  lazy val form = Form(
-    mapping(
-      "name"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "team"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "repoType" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-    )(RepoListFilter.apply)(RepoListFilter.unapply)
   )
 }
 

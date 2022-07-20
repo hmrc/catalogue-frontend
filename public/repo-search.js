@@ -1,7 +1,10 @@
 let repoInput = document.getElementById("search")
 let repoMatches = document.getElementById("matches")
+let teamFilter = document.getElementById("team-filter").value
+let repoTypeFilter = document.getElementById("type-search").value
 
-const minSearchLength = 2
+
+const minSearchLength = 3
 
 repoInput.onkeyup = e => {
     if (e.target.value.length >= minSearchLength) {
@@ -23,7 +26,11 @@ function repoSearch(q) {
                 highlight(0)
             }
         };
-        oReq.open("GET", "/repositories-search?query=" + encodeURIComponent(q));
+
+        let teamQueryParam     = (teamFilter == "")     ? "" : "&team=" + encodeURIComponent(teamFilter)
+        let repoTypeQueryParam = (repoTypeFilter == "") ? "" : "&repoType=" + encodeURIComponent(repoTypeFilter)
+
+        oReq.open("GET", "/repositories-search?name=" + encodeURIComponent(q) + teamQueryParam + repoTypeQueryParam)
         oReq.send();
     }, 225)
 

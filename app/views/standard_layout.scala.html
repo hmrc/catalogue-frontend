@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.repositories.{routes => reposRoutes}
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
 @import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
@@ -84,7 +85,7 @@
                         <a id="link-to-teams" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams" class="@if(active=="teams") {active}">Teams</a>
                     </li>
                     <li>
-                        <a id="link-to-repositories" href="@appRoutes.CatalogueController.allRepositories(repoType = None)" class="@if(active=="repositories") {active}">Repositories</a>
+                        <a id="link-to-repositories" href="@reposRoutes.RepositoriesController.allRepositories(repoType = None)" class="@if(active=="repositories") {active}">Repositories</a>
                     </li>
 
                     <li>

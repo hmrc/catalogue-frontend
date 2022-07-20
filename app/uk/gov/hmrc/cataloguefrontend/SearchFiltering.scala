@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, GitRepository, Team}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, Team}
+import uk.gov.hmrc.cataloguefrontend.repositories.RepoListFilter
 
 object SearchFiltering {
 
