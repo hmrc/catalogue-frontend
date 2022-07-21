@@ -21,8 +21,11 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import helper._
+@import views.html.partials.RepoSearchResultsPage
 
-@this(viewMessages: ViewMessages)
+@this(viewMessages: ViewMessages,
+      repoSearchResultsPage: RepoSearchResultsPage
+)
 
 @(repositories: Seq[GitRepository],
   teams: Seq[Team],
@@ -95,7 +98,7 @@
                     <th class="col-lg-2"><button role="button" id="lastActiveDate" class="sort no-border">Last Active</button></th>
                 </tr>
             </thead>
-            @partials.repoSearchResults(repositories)
+            @repoSearchResultsPage(repositories)
         </table>
     </div>
 }
