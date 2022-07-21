@@ -64,13 +64,14 @@ class RepositoriesController @Inject() (
       )
     }
 
-  def repositoriesSearch(name: Option[String], team: Option[String], repoType: Option[String]) = {
+  def repositoriesSearch(name: Option[String], team: Option[String], repoType: Option[String], column: String, sortOrder: String) = {
     BasicAuthAction.async { implicit request =>
       import SearchFiltering._
       for {
         repos <- repositoriesSearchCache.getReposOrElseUpdate()
       } yield {
-        Ok(repositoriesSearchResultsPage(repos.filter(RepoListFilter(name, team, repoType))))
+        val filtered = repos.filter(RepoListFilter(name, team, repoType))
+        Ok(repositoriesSearchResultsPage(RepoSorter.sort(filtered, column, sortOrder)))
       }
     }
   }
@@ -78,9 +79,10 @@ class RepositoriesController @Inject() (
 }
 
 case class RepoListFilter(
-   name    : Option[String] = None,
-   team    : Option[String] = None,
-   repoType: Option[String] = None) {
+   name      : Option[String] = None,
+   team      : Option[String] = None,
+   repoType  : Option[String] = None
+                         ) {
   def isEmpty: Boolean =
     name.isEmpty && team.isEmpty && repoType.isEmpty
 }

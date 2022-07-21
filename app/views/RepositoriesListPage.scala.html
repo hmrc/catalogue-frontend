@@ -80,18 +80,19 @@
                 </div>
             </div>
         </form>
+
         <table class="table table-striped">
-            <thead>
+            <thead id="repo-table-headings">
                 <tr>
-                    <th class="col-lg-3"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
-                    <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-status">Status</button></th>
-                    <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-type">Type</button></th>
-                    <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="repo-team">Team</button></th>
+                    <th class="col-lg-3"><button role="button" id="name" class="sort no-border">Name</button></th>
+                    <th class="col-lg-1"><button role="button" id="status" class="sort no-border">Status</button></th>
+                    <th class="col-lg-1"><button role="button" id="repoType" class="sort no-border">Type</button></th>
+                    <th class="col-lg-2"><button role="button" id="teamNames" class="sort no-border">Team</button></th>
                     @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
-                    <th class="col-lg-1"><button role="button" class="sort no-border" data-sort="repo-bp">Branch Protection</button></th>
+                    <th class="col-lg-1"><button role="button" id="branchProtection" class="sort no-border">Branch Protection</button></th>
                     }
-                    <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="created">First Active</button></th>
-                    <th class="col-lg-2"><button role="button" class="sort no-border" data-sort="last-active">Last Active</button></th>
+                    <th class="col-lg-2"><button role="button" id="createdDate" class="sort no-border">First Active</button></th>
+                    <th class="col-lg-2"><button role="button" id="lastActiveDate" class="sort no-border">Last Active</button></th>
                 </tr>
             </thead>
             @partials.repoSearchResults(repositories)
