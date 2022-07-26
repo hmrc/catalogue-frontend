@@ -45,23 +45,20 @@ class RepositoriesController @Inject() (
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {
 
-  def allRepositories(repoType: Option[String]): Action[AnyContent] =
+  def allRepositories(name: Option[String], team: Option[String], repoType: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       import SearchFiltering._
 
       val allTeams = repositoriesSearchCache.getTeamsOrElseUpdate()
       val allRepositories = repositoriesSearchCache.getReposOrElseUpdate()
 
-      val form =
-        RepoListFilter.form.bindFromRequest()
-
       for {
         teams        <- allTeams
         repositories <- allRepositories
-      } yield form.fold(
-        formWithErrors => Ok(repositoriesListPage(repositories = Seq.empty, teams = teams, formWithErrors)),
-        query => Ok(repositoriesListPage(repositories = repositories.filter(query), teams = teams, form))
-      )
+      } yield
+        Ok(
+          repositoriesListPage(repositories = repositories.filter(RepoListFilter(name, team, repoType)), teams = teams, RepositoryType.values)
+        )
     }
 
   def repositoriesSearch(name: Option[String], team: Option[String], repoType: Option[String], column: String, sortOrder: String) = {
@@ -75,7 +72,6 @@ class RepositoriesController @Inject() (
       }
     }
   }
-
 }
 
 case class RepoListFilter(
@@ -87,12 +83,4 @@ case class RepoListFilter(
     name.isEmpty && team.isEmpty && repoType.isEmpty
 }
 
-object RepoListFilter {
-  lazy val form = Form(
-    mapping(
-      "name"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "team"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "repoType" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-    )(RepoListFilter.apply)(RepoListFilter.unapply)
-  )
-}
+

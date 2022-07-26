@@ -17,10 +17,9 @@
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+@import uk.gov.hmrc.cataloguefrontend.repositories.RepositoryType
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
-@import helper._
 @import views.html.partials.RepoSearchResultsPage
 
 @this(viewMessages: ViewMessages,
@@ -29,7 +28,7 @@
 
 @(repositories: Seq[GitRepository],
   teams: Seq[Team],
-  form: Form[_]
+  repoTypes: List[RepositoryType]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("Repositories", "repositories") {
@@ -37,49 +36,29 @@
         <h1>Repositories</h1>
     </header>
 
-    @if(form.hasErrors) {
-        <div class="alert alert-danger" role="alert">
-        <ul class="list">
-            @form.errors.map { error =>
-              <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
-            }
-        </ul>
-    </div>
-    }
-
     <div id="service-list">
-        <form action="/repositories" method="get">
-            <div class="form-group row">
+        <form id="repos-form" action="/repositories" method="get">
+            <div id="repos-form-row" class="form-group row">
                 <div class="col-md-5">
                     <label for="search">Name</label>
-                    <input class="form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
+                    <input class="form-control" id="search" type="text" name="name" autofocus>
                 </div>
                 <div class="col-md-3">
-                    @select(
-                    field      = form("team"),
-                    options    = teams.map(t => t.name.asString -> t.name.asString),
-                    '_default -> "All",
-                    '_label   -> "Team",
-                    'onchange -> "this.form.submit()",
-                    'id       -> "team-filter",
-                    'class   -> "form-control"
-                    )
+                    <label for="team-filter">Team</label>
+                    <select class = "form-control" id="team-filter" name="team">
+                        <option value="All">All</option>
+                        @teams.map(t =>
+                         generateOption(t.name.asString)
+                        )
+                    </select>
                 </div>
                 <div class="col-md-3">
-                    @select(
-                    field       =  form("repoType"),
-                    options     =  Seq(
-                                     "Library"   -> "Library",
-                                     "Prototype" -> "Prototype",
-                                     "Service"   -> "Service",
-                                     "Other"     -> "Other"
-                                   ),
-                    '_default -> "All",
-                    '_label   -> "Type",
-                    'onchange -> "this.form.submit()",
-                    'id       -> "type-search",
-                    'class   -> "form-control"
+                    <label for="type-search">Type</label>
+                    <select class = "form-control" id="type-search" name="repoType">
+                    @repoTypes.map(r =>
+                        generateOption(r.asString)
                     )
+                    </select>
                 </div>
             </div>
         </form>
@@ -103,8 +82,12 @@
     </div>
 }
 
-<script src="@routes.Assets.versioned("repo-search.js")" defer></script>
-
-@repoTypes = @{
-    ("" ,"All") +: RepoType.values.map(v => (v.asString, v.asString)).toList
+@*Helper function required as Twirl cannot interpolate in the HTML 'value' attribute with an inline map *@
+@generateOption(repoType: String) = {
+    <option value="@{repoType}">
+        @repoType
+    </option>
+)
 }
+
+<script src="@routes.Assets.versioned("repo-search.js")" defer></script>

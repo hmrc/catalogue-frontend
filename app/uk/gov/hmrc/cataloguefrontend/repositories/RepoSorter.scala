@@ -16,27 +16,35 @@
 
 package uk.gov.hmrc.cataloguefrontend.repositories
 
+import akka.util.ByteString
+import play.api.mvc.BodyParser
 import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+
+import java.io.{ByteArrayInputStream, InputStream}
+import javax.inject.Singleton
+import scala.io.Source
+import views.html.partials.RepoSearchResultsPage
 
 object RepoSorter {
 
-  val orderings: Map[String, Ordering[GitRepository]] = Map(
-    "name"             -> Ordering.by(_.name.toLowerCase),
-    "status"           -> Ordering.by(_.status),
-    "repoType"         -> Ordering.by(_.repoType.asString),
-    "teamNames"        -> Ordering.by(repo => repo.teamNames match {
-      case names if names.length > 4 => s"shared by ${names.length} teams"
-      case names if names.isEmpty    => ""
-      case names                     => names.minBy(_.toLowerCase()).toLowerCase
-    }),
-    "branchProtection" -> Ordering.by(_.branchProtectionEnabled),
-    "createdDate"      -> Ordering.by(_.createdDate),
-    "lastActiveDate"   -> Ordering.by(_.lastActiveDate)
-  )
+  def orderings(column: String): Ordering[GitRepository] = column match {
+    case "name"             => Ordering.by(_.name.toLowerCase)
+    case "status"           => Ordering.by(_.status)
+    case "repoType"         => Ordering.by(_.repoType.asString)
+    case "teamNames"        => Ordering.by(repo => repo.teamNames match {
+        case names if names.length > 4 => s"shared by ${names.length} teams"
+        case names if names.isEmpty    => ""
+        case names                     => names.minBy (_.toLowerCase () ).toLowerCase
+  })
+    case "branchProtection" => Ordering.by(_.branchProtectionEnabled)
+    case "createdDate"      => Ordering.by(_.createdDate)
+    case "lastActiveDate"   => Ordering.by(_.lastActiveDate)
+    case _                  => Ordering.by(_.name.toLowerCase)
+  }
 
   def sort(repos: Seq[GitRepository], column: String, sortOrder: String): Seq[GitRepository] =
    sortOrder match {
-      case "asc"             =>  repos.sorted(orderings(column))
       case "desc"            =>  repos.sorted(orderings(column).reverse)
+      case _                 =>  repos.sorted(orderings(column))
     }
 }

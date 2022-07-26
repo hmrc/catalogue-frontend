@@ -37,10 +37,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.partials.RepoSearchResultsPage
 import views.html._
-
-
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 

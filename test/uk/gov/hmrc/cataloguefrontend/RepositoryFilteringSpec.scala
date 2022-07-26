@@ -27,7 +27,7 @@ import java.time.Instant
 class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
 
   "RepositoryFiltering" should {
-    "get repositories filtered by only repository name" in {
+    "get repositories filtered by only repository name, and default to Service repos" in {
       val now = Instant.now()
 
       val repositories = Seq(
@@ -44,8 +44,6 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       repositories.filter(RepoListFilter(name       = Some("serv1"))) shouldBe Seq(
         GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
-        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
     }
 
@@ -68,8 +66,6 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
           teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
         GitRepository("serv2", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
-        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
-          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
     }
 
@@ -155,7 +151,7 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       )
     }
 
-    "get all repositories (no filter)" in {
+    "get all repositories when team and RepoTypes are set to 'all'" in {
       val now = Instant.now()
 
       val repositories = Seq(
@@ -169,7 +165,7 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
           teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
 
-      repositories.filter(RepoListFilter()) shouldBe repositories
+      repositories.filter(RepoListFilter(team=Some("All"), repoType = Some("All"))) shouldBe repositories
     }
   }
 }

@@ -23,7 +23,17 @@ object SearchFiltering {
 
   implicit class RepositoryResult(repositories: Seq[GitRepository]) {
 
-    def filter(q: RepoListFilter): Seq[GitRepository] =
+    def filter(query: RepoListFilter): Seq[GitRepository] = {
+
+      val q = query.copy(
+        team     = if (query.team.contains("All")) None else query.team,
+        repoType = query.repoType match {
+          case None            => Some("Service")
+          case Some("All")     => None
+          case _               => query.repoType
+        }
+      )
+
       repositories.toStream
         .filter(x => q.name.fold(true)(name => x.name.toLowerCase.contains(name.toLowerCase)))
         .filter(x => q.team.fold(true)(team => x.teamNames.exists(_.toLowerCase.contains(team.toLowerCase))))
@@ -33,6 +43,7 @@ object SearchFiltering {
               || ("service".equalsIgnoreCase(repoType) && x.repoType == RepoType.Service)
           )
         )
+    }
   }
 
   implicit class TeamResult(teams: Seq[Team]) {
