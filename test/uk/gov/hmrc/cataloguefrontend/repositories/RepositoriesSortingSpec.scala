@@ -287,7 +287,7 @@ class RepositoriesSortingSpec extends AnyWordSpec with Matchers {
         )
     }
 
-    "An invalid column name/column with an undefined ordering will default to sorting on name" in {
+    "An [invalid column name/column with an undefined ordering] will default to sorting on name" in {
       RepoSorter.sort(repos, "ThisColumnDoesntExist", "desc") shouldBe
         Seq(
           GitRepository("SERVICE2", createdDate    = now.minus(35, ChronoUnit.SECONDS),
@@ -307,9 +307,4 @@ class RepositoriesSortingSpec extends AnyWordSpec with Matchers {
     }
 
   }
-
-
-
-
-
 }

@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.repositories
 
-import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue}
-
 sealed trait RepositoryType {
   def asString: String
 }
