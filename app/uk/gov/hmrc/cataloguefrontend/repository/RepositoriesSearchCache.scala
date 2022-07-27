@@ -37,13 +37,13 @@ class RepositoriesSearchCache @Inject() (
   implicit val hc = HeaderCarrier()
   val cacheExpiry: Duration = config.get[Duration]("repositories.cache.expiry")
 
-  def getReposOrElseUpdate(): Future[Seq[GitRepository]] =
+  def allRepositories(): Future[Seq[GitRepository]] =
     cache.getOrElseUpdate[Seq[GitRepository]]("allRepos", cacheExpiry) {
       teamsAndRepositoriesConnector.allRepositories
         .map(_.sortBy(_.name.toLowerCase))
     }
 
-  def getTeamsOrElseUpdate(): Future[Seq[Team]] =
+  def allTeams(): Future[Seq[Team]] =
     cache.getOrElseUpdate[Seq[Team]]("allTeams", cacheExpiry) {
       teamsAndRepositoriesConnector.allTeams
         .map(_.sortBy(_.name.asString.toLowerCase))

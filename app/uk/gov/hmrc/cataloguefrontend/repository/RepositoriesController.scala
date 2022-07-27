@@ -46,8 +46,8 @@ class RepositoriesController @Inject() (
     BasicAuthAction.async { implicit request =>
       import SearchFiltering._
 
-      val allTeams        = repositoriesSearchCache.getTeamsOrElseUpdate()
-      val allRepositories = repositoriesSearchCache.getReposOrElseUpdate()
+      val allTeams        = repositoriesSearchCache.allTeams()
+      val allRepositories = repositoriesSearchCache.allRepositories()
 
       for {
         teams        <- allTeams
@@ -62,7 +62,7 @@ class RepositoriesController @Inject() (
     BasicAuthAction.async { implicit request =>
       import SearchFiltering._
       for {
-        repos <- repositoriesSearchCache.getReposOrElseUpdate()
+        repos <- repositoriesSearchCache.allRepositories()
       } yield {
         val filtered = repos.filter(RepoListFilter(name, team, repoType))
         Ok(repositoriesSearchResultsPage(RepoSorter.sort(filtered, column, sortOrder)))

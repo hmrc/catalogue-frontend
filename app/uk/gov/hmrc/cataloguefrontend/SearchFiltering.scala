@@ -26,9 +26,9 @@ object SearchFiltering {
     def filter(query: RepoListFilter): Seq[GitRepository] = {
 
       val q = query.copy(
-        name     = if (query.name.contains("")) None else query.name,
-        team     = if (query.team.contains("")) None else query.team,
-        repoType = if (query.repoType.contains("")) None else query.repoType
+        name     = query.name.filterNot(_.isEmpty),
+        team     = query.team.filterNot(_.isEmpty),
+        repoType = query.repoType.filterNot(_.isEmpty)
       )
 
       repositories.toStream

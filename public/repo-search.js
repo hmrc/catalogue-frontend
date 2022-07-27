@@ -33,11 +33,12 @@ function applyFilters() {
     };
 
     oReq.open("GET",
-        "/repositories-search?name=" + encodeURIComponent(getSearchInputValue())
-        + "&team=" + encodeURIComponent(getTeamFilter())
-        + "&repoType=" + encodeURIComponent(getRepoTypeFilter())
-        + "&column=" + encodeURIComponent(currentColumnSorted)
-        + "&sortOrder=" + encodeURIComponent(currentSortOrder))
+        "/repositories-search" +
+        "?name=" + encodeURIComponent(getSearchInputValue()) +
+        "&team=" + encodeURIComponent(getTeamFilter()) +
+        "&repoType=" + encodeURIComponent(getRepoTypeFilter()) +
+        "&column=" + encodeURIComponent(currentColumnSorted) +
+        "&sortOrder=" + encodeURIComponent(currentSortOrder))
 
     oReq.send();
 }
@@ -89,11 +90,12 @@ function sortByColumn(selectedCol, columnId, order) {
     };
 
     oReq.open("GET",
-        "/repositories-search?column=" + encodeURIComponent(columnId)
-        + "&sortOrder=" + encodeURIComponent(order)
-        + "&name=" + encodeURIComponent(getSearchInputValue())
-        + "&team=" + encodeURIComponent(getTeamFilter())
-        + "&repoType=" + encodeURIComponent(getRepoTypeFilter())
+        "/repositories-search" +
+        "?column=" + encodeURIComponent(columnId) +
+        "&sortOrder=" + encodeURIComponent(order) +
+        "&name=" + encodeURIComponent(getSearchInputValue()) +
+        "&team=" + encodeURIComponent(getTeamFilter()) +
+        "&repoType=" + encodeURIComponent(getRepoTypeFilter())
     )
     oReq.send()
 }
@@ -122,11 +124,12 @@ function repoSearch(searchTerm = "", ) {
         };
 
         oReq.open("GET",
-            "/repositories-search?name=" + encodeURIComponent(searchTerm)
-            + "&team=" + encodeURIComponent(getTeamFilter())
-            + "&repoType=" + encodeURIComponent(getRepoTypeFilter())
-            + "&column=" + encodeURIComponent(currentColumnSorted)
-            + "&sortOrder=" + encodeURIComponent(currentSortOrder))
+            "/repositories-search" +
+            "?name=" + encodeURIComponent(searchTerm) +
+            "&team=" + encodeURIComponent(getTeamFilter()) +
+            "&repoType=" + encodeURIComponent(getRepoTypeFilter()) +
+            "&column=" + encodeURIComponent(currentColumnSorted) +
+            "&sortOrder=" + encodeURIComponent(currentSortOrder))
         oReq.send();
     }, 225)
 
