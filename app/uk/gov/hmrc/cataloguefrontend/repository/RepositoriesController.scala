@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.repositories
+package uk.gov.hmrc.cataloguefrontend.repository
 
-import play.api.data.Form
-import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.SearchFiltering
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.{SearchFiltering, repository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -29,7 +27,6 @@ import views.html.RepositoriesListPage
 import views.html.partials.RepoSearchResultsPage
 
 import javax.inject.{Inject, Singleton}
-
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -49,7 +46,7 @@ class RepositoriesController @Inject() (
     BasicAuthAction.async { implicit request =>
       import SearchFiltering._
 
-      val allTeams = repositoriesSearchCache.getTeamsOrElseUpdate()
+      val allTeams        = repositoriesSearchCache.getTeamsOrElseUpdate()
       val allRepositories = repositoriesSearchCache.getReposOrElseUpdate()
 
       for {
@@ -57,7 +54,7 @@ class RepositoriesController @Inject() (
         repositories <- allRepositories
       } yield
         Ok(
-          repositoriesListPage(repositories = repositories.filter(RepoListFilter(name, team, repoType)), teams = teams, RepositoryType.values)
+          repositoriesListPage(repositories = repositories.filter(RepoListFilter(name, team, repoType)), teams = teams, RepoType.values)
         )
     }
 
@@ -72,6 +69,22 @@ class RepositoriesController @Inject() (
       }
     }
   }
+
+  def allServices: Action[AnyContent] =
+    Action {
+      Redirect(
+        repository.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Service.asString)))
+    }
+
+  def allLibraries: Action[AnyContent] =
+    Action {
+      Redirect(repository.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Library.asString)))
+    }
+
+  def allPrototypes: Action[AnyContent] =
+    Action {
+      Redirect(repository.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
+    }
 }
 
 case class RepoListFilter(

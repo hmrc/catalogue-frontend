@@ -34,7 +34,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams )))
       serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoriesTeamAData)))
 
-      val response = wsClient.url(s"http://localhost:$port/repositories?repoType=All").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories?repoType=").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body   should include("<h1>Repositories</h1>")
       val document = Jsoup.parse(response.body)

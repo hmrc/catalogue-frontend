@@ -22,6 +22,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
+import uk.gov.hmrc.cataloguefrontend.repository.{RepositoriesController, RepositoriesSearchCache}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -43,7 +44,7 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
 
-      val result = catalogueController.allPrototypes(
+      val result = repositoriesController.allPrototypes(
         FakeRequest().withSession(SessionKeys.authToken -> "Token token")
       )
 
@@ -55,30 +56,12 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
   implicit private val mcc = stubMessagesControllerComponents()
 
   private lazy val authStubBehaviour = mock[StubBehaviour]
-  private lazy val catalogueController = new CatalogueController(
+  private lazy val repositoriesController = new RepositoriesController(
     teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
-    configService                 = mock[ConfigService],
-    costEstimationService         = mock[CostEstimationService],
-    serviceCostEstimateConfig     = mock[CostEstimateConfig],
-    routeRulesService             = mock[RouteRulesService],
-    serviceDependenciesConnector  = mock[ServiceDependenciesConnector],
-    leakDetectionService          = mock[LeakDetectionService],
-    shutterService                = mock[ShutterService],
-    defaultBranchesService        = mock[DefaultBranchesService],
-    userManagementPortalConfig    = mock[UserManagementPortalConfig],
-    configuration                 = Configuration.empty,
     mcc                           = mcc,
-    whatsRunningWhereService      = mock[WhatsRunningWhereService],
-    indexPage                     = mock[IndexPage],
-    serviceInfoPage               = mock[ServiceInfoPage],
-    serviceConfigPage             = mock[ServiceConfigPage],
-    serviceConfigRawPage          = mock[ServiceConfigRawPage],
-    libraryInfoPage               = mock[LibraryInfoPage],
-    prototypeInfoPage             = mock[PrototypeInfoPage],
-    repositoryInfoPage            = mock[RepositoryInfoPage],
-    defaultBranchListPage         = mock[DefaultBranchListPage],
-    outOfDateTeamDependenciesPage = mock[OutOfDateTeamDependenciesPage],
-    costEstimationPage            = mock[CostEstimationPage],
-    auth                          = FrontendAuthComponentsStub(authStubBehaviour)
+    repositoriesListPage          = mock[RepositoriesListPage],
+    repositoriesSearchResultsPage = mock[RepoSearchResultsPage],
+    auth                          = FrontendAuthComponentsStub(authStubBehaviour),
+    repositoriesSearchCache       = mock[RepositoriesSearchCache]
   )
 }

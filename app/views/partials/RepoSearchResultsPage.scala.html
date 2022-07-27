@@ -45,11 +45,11 @@
         @repo.repoType.asString
         </td>
         <td id="row@{i}_team">
-        @if(repo.teamNames.length <= 4) {
-            @repo.teamNames.take(4).map {tn => <div  class="repo-team" >@tn</div> }
+        @if(!repo.isShared) {
+            @repo.teamNameDisplay.split(",").map {tn => <div  class="repo-team" >@tn</div> }
         } else {
             <div title="@repo.teamNames.take(15).mkString("\n")" class="repo-team" >
-                <em>Shared by @{repo.teamNames.length} teams</em>
+                <em>@repo.teamNameDisplay</em>
             </div>
         }
         </td>

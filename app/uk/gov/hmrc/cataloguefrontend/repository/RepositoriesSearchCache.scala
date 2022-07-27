@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.repositories
+package uk.gov.hmrc.cataloguefrontend.repository
 
 import akka.Done
 import play.api.{Configuration, cache}
@@ -34,28 +34,19 @@ class RepositoriesSearchCache @Inject() (
   teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
 )(implicit ec : ExecutionContext) {
 
+  implicit val hc = HeaderCarrier()
   val cacheExpiry: Duration = config.get[Duration]("repositories.cache.expiry")
-
-  def allRepositories(): Future[Seq[GitRepository]] = {
-    implicit val hc = HeaderCarrier()
-    teamsAndRepositoriesConnector.allRepositories
-      .map(_.sortBy(_.name.toLowerCase))
-  }
-
-  def allTeams(): Future[Seq[Team]] = {
-    implicit val hc = HeaderCarrier()
-    teamsAndRepositoriesConnector.allTeams
-      .map(_.sortBy(_.name.asString.toLowerCase))
-  }
 
   def getReposOrElseUpdate(): Future[Seq[GitRepository]] =
     cache.getOrElseUpdate[Seq[GitRepository]]("allRepos", cacheExpiry) {
-      allRepositories()
+      teamsAndRepositoriesConnector.allRepositories
+        .map(_.sortBy(_.name.toLowerCase))
     }
 
   def getTeamsOrElseUpdate(): Future[Seq[Team]] =
     cache.getOrElseUpdate[Seq[Team]]("allTeams", cacheExpiry) {
-      allTeams()
+      teamsAndRepositoriesConnector.allTeams
+        .map(_.sortBy(_.name.asString.toLowerCase))
     }
 
 }

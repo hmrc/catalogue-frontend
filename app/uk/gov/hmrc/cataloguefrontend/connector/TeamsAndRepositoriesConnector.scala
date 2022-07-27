@@ -90,6 +90,9 @@ case class GitRepository(
 ) {
 // Repos with joint ownership of 8+ teams, defines the repo as shared
   def isShared: Boolean = teamNames.length >= 8
+
+  def teamNameDisplay: String = if (isShared) s"Shared by ${teamNames.length} teams" else teamNames.sortBy(_.toLowerCase).mkString(",")
+
   def status: Option[String] = (isArchived, isDeprecated) match {
     case (true, false) => Some("archived")
     case (false, true) => Some("deprecated")

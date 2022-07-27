@@ -3,7 +3,7 @@ let repoMatches = document.getElementById("matches")
 let allButtons = document.getElementsByClassName("sort")
 
 let currentColumnSorted = "name"
-let currentSortOrder = "asc"
+let currentSortOrder = ""
 
 //Respect any Query String Params
 const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -13,10 +13,10 @@ const params = new Proxy(new URLSearchParams(window.location.search), {
 repoInput.value = params.name
 
 if(params.team !== null) {
-    document.getElementById("team-filter").value = (params.team === "" ? "All" : params.team)
+    document.getElementById("team-filter").value = params.team
 }
 if(params.repoType !== null) {
-    document.getElementById("type-search").value = (params.repoType === "" ? "All" : params.repoType)
+    document.getElementById("type-search").value = params.repoType
 }
 //Filters Listeners
 
@@ -32,17 +32,12 @@ function applyFilters() {
         }
     };
 
-    let teamQueryParam = "&team=" + encodeURIComponent(getTeamFilter())
-    let repoTypeQueryParam ="&repoType=" + encodeURIComponent(getRepoTypeFilter())
-    let columnQueryParam = "&column=" + encodeURIComponent(currentColumnSorted)
-    let orderQueryParam = "&sortOrder=" + encodeURIComponent(currentSortOrder)
-
     oReq.open("GET",
         "/repositories-search?name=" + encodeURIComponent(getSearchInputValue())
-        + teamQueryParam
-        + repoTypeQueryParam
-        + columnQueryParam
-        + orderQueryParam)
+        + "&team=" + encodeURIComponent(getTeamFilter())
+        + "&repoType=" + encodeURIComponent(getRepoTypeFilter())
+        + "&column=" + encodeURIComponent(currentColumnSorted)
+        + "&sortOrder=" + encodeURIComponent(currentSortOrder))
 
     oReq.send();
 }
@@ -51,13 +46,13 @@ function applyFilters() {
 document.getElementById("repo-table-headings").addEventListener("click", function(e) {
     let selected = e.target
     if(selected.nodeName === "BUTTON") {
-        let order = selected.classList.contains("asc") ? "asc" : "desc"
+        let requestedOrdering = selected.classList.contains("asc") ? "desc" : "asc"
 
-        //Set the current sorting configuration so it will be respected by repoSearch
+        //Set the current sorting configuration so it will be respected by other listeners
         currentColumnSorted = selected.id
-        currentSortOrder = order
+        currentSortOrder = requestedOrdering
 
-        sortByColumn(selected, selected.id, order)
+        sortByColumn(selected, selected.id, requestedOrdering)
     }
 })
 
@@ -75,8 +70,10 @@ function updateSelectedColumn(selected) {
     if(selected.classList.contains("asc")){
         selected.classList.remove("asc")
         selected.classList.add("desc")
-    } else {
+    } else if (selected.classList.contains("desc")){
         selected.classList.remove("desc")
+        selected.classList.add("asc")
+    } else {
         selected.classList.add("asc")
     }
 }
@@ -91,16 +88,12 @@ function sortByColumn(selectedCol, columnId, order) {
         }
     };
 
-    let orderQueryParam = "&sortOrder=" + encodeURIComponent(order)
-    let searchQueryParam = "&name=" + encodeURIComponent(getSearchInputValue())
-    let teamQueryParam     = "&team=" + encodeURIComponent(getTeamFilter())
-    let repoTypeQueryParam = "&repoType=" + encodeURIComponent(getRepoTypeFilter())
-
-    oReq.open("GET", "/repositories-search?column=" + encodeURIComponent(columnId) +
-        orderQueryParam +
-        searchQueryParam +
-        teamQueryParam +
-        repoTypeQueryParam
+    oReq.open("GET",
+        "/repositories-search?column=" + encodeURIComponent(columnId)
+        + "&sortOrder=" + encodeURIComponent(order)
+        + "&name=" + encodeURIComponent(getSearchInputValue())
+        + "&team=" + encodeURIComponent(getTeamFilter())
+        + "&repoType=" + encodeURIComponent(getRepoTypeFilter())
     )
     oReq.send()
 }
@@ -128,17 +121,12 @@ function repoSearch(searchTerm = "", ) {
             }
         };
 
-        let teamQueryParam     = "&team=" + encodeURIComponent(getTeamFilter())
-        let repoTypeQueryParam = "&repoType=" + encodeURIComponent(getRepoTypeFilter())
-        let columnQueryParam = "&column=" + encodeURIComponent(currentColumnSorted)
-        let orderQueryParam = "&sortOrder=" + encodeURIComponent(currentSortOrder)
-
         oReq.open("GET",
             "/repositories-search?name=" + encodeURIComponent(searchTerm)
-            + teamQueryParam
-            + repoTypeQueryParam
-            + columnQueryParam
-            + orderQueryParam)
+            + "&team=" + encodeURIComponent(getTeamFilter())
+            + "&repoType=" + encodeURIComponent(getRepoTypeFilter())
+            + "&column=" + encodeURIComponent(currentColumnSorted)
+            + "&sortOrder=" + encodeURIComponent(currentSortOrder))
         oReq.send();
     }, 225)
 

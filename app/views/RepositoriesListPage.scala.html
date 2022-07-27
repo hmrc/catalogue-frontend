@@ -17,7 +17,7 @@
 @import play.api.mvc.Call
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.repositories.RepositoryType
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import views.html.partials.RepoSearchResultsPage
@@ -28,7 +28,7 @@
 
 @(repositories: Seq[GitRepository],
   teams: Seq[Team],
-  repoTypes: List[RepositoryType]
+  repoTypes: List[RepoType]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("Repositories", "repositories") {
@@ -46,17 +46,18 @@
                 <div class="col-md-3">
                     <label for="team-filter">Team</label>
                     <select class = "form-control" id="team-filter" name="team">
-                        <option value="All">All</option>
+                        <option value="">All</option>
                         @teams.map(t =>
-                         generateOption(t.name.asString)
+                         mkOption(t.name.asString)
                         )
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label for="type-search">Type</label>
                     <select class = "form-control" id="type-search" name="repoType">
+                        <option value="">All</option>
                     @repoTypes.map(r =>
-                        generateOption(r.asString)
+                        mkOption(r.asString)
                     )
                     </select>
                 </div>
@@ -83,7 +84,7 @@
 }
 
 @*Helper function required as Twirl cannot interpolate in the HTML 'value' attribute with an inline map *@
-@generateOption(repoType: String) = {
+@mkOption(repoType: String) = {
     <option value="@{repoType}">
         @repoType
     </option>

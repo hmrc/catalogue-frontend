@@ -331,21 +331,6 @@ class CatalogueController @Inject() (
       )
     }
 
-  def allServices: Action[AnyContent] =
-    Action {
-      Redirect(repositories.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Service.asString)))
-    }
-
-  def allLibraries: Action[AnyContent] =
-    Action {
-      Redirect(repositories.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Library.asString)))
-    }
-
-  def allPrototypes: Action[AnyContent] =
-    Action {
-      Redirect(repositories.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
-    }
-
   def dependencyRepository(group: String, artefact: String, version: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       serviceDependenciesConnector.getRepositoryName(group, artefact, Version(version))

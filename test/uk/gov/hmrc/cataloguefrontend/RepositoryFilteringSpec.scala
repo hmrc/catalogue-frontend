@@ -20,14 +20,14 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.SearchFiltering._
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
-import uk.gov.hmrc.cataloguefrontend.repositories.RepoListFilter
+import uk.gov.hmrc.cataloguefrontend.repository.RepoListFilter
 
 import java.time.Instant
 
 class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
 
   "RepositoryFiltering" should {
-    "get repositories filtered by only repository name, and default to Service repos" in {
+    "get repositories filtered by only repository name" in {
       val now = Instant.now()
 
       val repositories = Seq(
@@ -44,6 +44,8 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       repositories.filter(RepoListFilter(name       = Some("serv1"))) shouldBe Seq(
         GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
     }
 
@@ -66,6 +68,8 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
           teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
         GitRepository("serv2", createdDate = now, lastActiveDate = now, repoType = RepoType.Service, isArchived = false,
           teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = ""),
+        GitRepository("serv1", createdDate = now, lastActiveDate = now, repoType = RepoType.Other  , isArchived = false,
+          teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
     }
 
@@ -165,7 +169,7 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
           teamNames = Seq("team1"), defaultBranch = "main", githubUrl = "", language = None, description = "")
       )
 
-      repositories.filter(RepoListFilter(team=Some("All"), repoType = Some("All"))) shouldBe repositories
+      repositories.filter(RepoListFilter()) shouldBe repositories
     }
   }
 }

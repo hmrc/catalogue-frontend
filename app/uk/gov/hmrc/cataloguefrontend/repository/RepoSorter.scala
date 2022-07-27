@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.repositories
+package uk.gov.hmrc.cataloguefrontend.repository
 
 import akka.util.ByteString
 import play.api.mvc.BodyParser
@@ -31,11 +31,7 @@ object RepoSorter {
     case "name"             => Ordering.by(_.name.toLowerCase)
     case "status"           => Ordering.by(_.status)
     case "repoType"         => Ordering.by(_.repoType.asString)
-    case "teamNames"        => Ordering.by(repo => repo.teamNames match {
-        case names if names.length > 4 => s"shared by ${names.length} teams"
-        case names if names.isEmpty    => ""
-        case names                     => names.minBy (_.toLowerCase () ).toLowerCase
-  })
+    case "teamNames"        => Ordering.by(_.teamNameDisplay)
     case "branchProtection" => Ordering.by(_.branchProtectionEnabled)
     case "createdDate"      => Ordering.by(_.createdDate)
     case "lastActiveDate"   => Ordering.by(_.lastActiveDate)
