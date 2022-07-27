@@ -16,22 +16,27 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, GitRepository, Team}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, Team}
+import uk.gov.hmrc.cataloguefrontend.repository.RepoListFilter
 
 object SearchFiltering {
 
   implicit class RepositoryResult(repositories: Seq[GitRepository]) {
 
-    def filter(q: RepoListFilter): Seq[GitRepository] =
+    def filter(query: RepoListFilter): Seq[GitRepository] = {
+
+      val q = query.copy(
+        name     = query.name.filterNot(_.isEmpty),
+        team     = query.team.filterNot(_.isEmpty),
+        repoType = query.repoType.filterNot(_.isEmpty)
+      )
+
       repositories.toStream
         .filter(x => q.name.fold(true)(name => x.name.toLowerCase.contains(name.toLowerCase)))
         .filter(x => q.team.fold(true)(team => x.teamNames.exists(_.toLowerCase.contains(team.toLowerCase))))
-        .filter(x =>
-          q.repoType.fold(true)(repoType =>
-            repoType.equalsIgnoreCase(x.repoType.toString)
-              || ("service".equalsIgnoreCase(repoType) && x.repoType == RepoType.Service)
-          )
-        )
+        .filter(x => q.repoType.fold(true)(repoType => repoType.equalsIgnoreCase(x.repoType.toString)))
+
+    }
   }
 
   implicit class TeamResult(teams: Seq[Team]) {

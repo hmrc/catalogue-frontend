@@ -31,14 +31,15 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     scalacOptions += "-P:silencer:pathFilters=html;routes",
     libraryDependencies ++= Seq(
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
+      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full,
+      caffeine
     ),
     // ***************
     pipelineStages := Seq(digest)
   )
 
 val bootstrapPlayVersion = "6.2.0"
-val hmrcMongoVersion     = "0.66.0"
+val hmrcMongoVersion     = "0.68.0"
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-28"   % bootstrapPlayVersion,

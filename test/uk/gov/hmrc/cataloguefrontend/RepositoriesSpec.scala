@@ -32,12 +32,11 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
   "Repositories list" should {
     "show a list of all repositories when 'All' is selected" in {
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams )))
-      serviceEndpoint(GET , "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoriesTeamAData)))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoriesTeamAData)))
 
-      val response = wsClient.url(s"http://localhost:$port/repositories").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories?repoType=").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
       response.body   should include("<h1>Repositories</h1>")
-
       val document = Jsoup.parse(response.body)
       document.select("#row0_name").select("td a").text()       shouldBe "teamA-library"
       document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-library"
@@ -66,15 +65,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
     "show a list of all libraries when 'Library' is selected" in {
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams )))
-
-      serviceEndpoint(
-        GET,
-        "/api/v2/repositories",
-        willRespondWith = (
-          200,
-          Some(
-            JsonData.repositoriesData
-          )))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoriesTeamAData)))
 
       val response = wsClient.url(s"http://localhost:$port/repositories?repoType=Library").withAuthToken("Token token").get.futureValue
       response.status shouldBe 200
@@ -82,8 +73,8 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
       val document = Jsoup.parse(response.body)
       document.select("tbody.list").select("tr").size() shouldBe 1
-      document.select("#row0_name"      ).select("td a").text()      shouldBe "teamB-library"
-      document.select("#row0_name"      ).select("td a[href]").attr("href") shouldBe "/repositories/teamB-library"
+      document.select("#row0_name"      ).select("td a").text()      shouldBe "teamA-library"
+      document.select("#row0_name"      ).select("td a[href]").attr("href") shouldBe "/repositories/teamA-library"
       document.select("#row0_created"   ).text()                            shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
       document.select("#row0_repotype"  ).text()                            shouldBe "Library"
       document.select("#row0_lastActive").text()                            shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")

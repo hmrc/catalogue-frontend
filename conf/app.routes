@@ -4,17 +4,19 @@ GET        /teams                                       uk.gov.hmrc.cataloguefro
 GET        /teams/:teamName                             uk.gov.hmrc.cataloguefrontend.teams.TeamsController.team(teamName: TeamName)
 GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.teams.TeamsController.outOfDateTeamDependencies(teamName: TeamName)
 
-GET        /repositories                                uk.gov.hmrc.cataloguefrontend.CatalogueController.allRepositories(repoType: Option[String] ?= None)
+GET        /repositories                                uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allRepositories(name: Option[String] ?= None, team: Option[String] ?= None, repoType: Option[String] ?= None)
+GET        /repositories-search                         uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.repositoriesSearch(name: Option[String] ?= None, team: Option[String] ?= None, repoType: Option[String] ?= None, column: String, sortOrder: String)
+GET        /services                                    uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allServices
+GET        /libraries                                   uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allLibraries
+GET        /prototypes                                  uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allPrototypes
+
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
-GET        /services                                    uk.gov.hmrc.cataloguefrontend.CatalogueController.allServices
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
 GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceConfig(name)
 GET        /service/:name/config/raw                    uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceConfigRaw(name)
 GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.CatalogueController.costEstimation(name)
-GET        /libraries                                   uk.gov.hmrc.cataloguefrontend.CatalogueController.allLibraries
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
-GET        /prototypes                                  uk.gov.hmrc.cataloguefrontend.CatalogueController.allPrototypes
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
 GET        /dependency-repository                       uk.gov.hmrc.cataloguefrontend.CatalogueController.dependencyRepository(group, artefact, version)
 

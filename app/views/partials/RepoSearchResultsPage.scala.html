@@ -1,0 +1,81 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+
+@this()
+
+@(
+    matches: Seq[GitRepository]
+)
+
+<tbody class="list" id="matches">
+    @matches.zipWithIndex.map{case (repo, i) =>
+    <tr id="row@i">
+        <td class="repo-name" id="row@{i}_name">
+            <a class="@if(repo.isDeprecated || repo.isArchived){deprecated} @if(repo.isArchived){archived}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
+        </td>
+
+        <td class="" id="row@{i}_repostatus">
+
+        @if(repo.isArchived) {
+            <span class="repo-status badge">archived</span>
+        } else {
+            @if(repo.isDeprecated) { <span class="repo-status badge badge-warning">deprecated</span> }
+        }
+
+        </td>
+
+        <td class="repo-type monospaced" id="row@{i}_repotype">
+        @repo.repoType.asString
+        </td>
+        <td id="row@{i}_team">
+        @if(!repo.isShared) {
+            @repo.teamNameDisplay.split(",").map {tn => <div  class="repo-team" >@tn</div> }
+        } else {
+            <div title="@repo.teamNames.take(15).mkString("\n")" class="repo-team" >
+                <em>@repo.teamNameDisplay</em>
+            </div>
+        }
+        </td>
+        @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
+            <td class="repo-bp monospaced" id="row@{i}_branch-protection">
+            @if(repo.branchProtection.exists(_.isProtected)) {
+                <span class="glyphicon glyphicon-ok text-success"></span>
+                <span class="sr-only">Branch protection is enabled</span>
+            } else {
+                <abbr style="text-decoration: none; border-bottom: none;" title="@List(
+                    s"Requires approving reviews = ${repo.branchProtection.exists(_.requiresApprovingReviews)}",
+                    s"Dismisses stale reviews = ${repo.branchProtection.exists(_.dismissesStaleReviews)}",
+                    s"Requires commit signatures = ${repo.branchProtection.exists(_.requiresCommitSignatures)}"
+                ).mkString("\n")">
+                    <span class="glyphicon glyphicon-remove text-danger"></span>
+                </abbr>
+                <span class="sr-only">Branch protection is not enabled</span>
+            }
+            </td>
+        }
+        <td class="created monospaced" id="row@{i}_created">
+        @repo.createdDate.asPattern(`yyyy-MM-dd`)
+        </td>
+        <td class="last-active monospaced" id="row@{i}_lastActive">
+        @repo.lastActiveDate.asPattern(`yyyy-MM-dd`)
+    </td>
+    </tr>
+    }
+</tbody>

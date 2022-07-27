@@ -20,6 +20,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.SearchFiltering._
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+import uk.gov.hmrc.cataloguefrontend.repository.RepoListFilter
 
 import java.time.Instant
 
@@ -154,7 +155,7 @@ class RepositoryFilteringSpec extends AnyWordSpec with Matchers {
       )
     }
 
-    "get all repositories (no filter)" in {
+    "get all repositories when team and RepoTypes are set to 'all'" in {
       val now = Instant.now()
 
       val repositories = Seq(
