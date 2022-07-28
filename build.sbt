@@ -31,8 +31,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     scalacOptions += "-P:silencer:pathFilters=html;routes",
     libraryDependencies ++= Seq(
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full,
-      caffeine
+      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
     ),
     // ***************
     pipelineStages := Seq(digest)

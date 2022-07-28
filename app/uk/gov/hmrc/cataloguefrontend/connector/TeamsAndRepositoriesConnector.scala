@@ -92,13 +92,6 @@ case class GitRepository(
   def isShared: Boolean = teamNames.length >= 8
 
   def teamNameDisplay: String = if (isShared) s"Shared by ${teamNames.length} teams" else teamNames.sortBy(_.toLowerCase).mkString(",")
-
-  def status: Option[String] = (isArchived, isDeprecated) match {
-    case (true, false) => Some("archived")
-    case (false, true) => Some("deprecated")
-    case _             => None
-  }
-  def branchProtectionEnabled = branchProtection.map(_.isProtected)
 }
 
 object GitRepository {
