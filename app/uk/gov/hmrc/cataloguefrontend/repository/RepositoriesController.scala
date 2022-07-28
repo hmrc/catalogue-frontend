@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.repository
 
+import play.api.data.Form
+import play.api.data.Forms._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
@@ -35,8 +37,7 @@ class RepositoriesController @Inject() (
   override val mcc             : MessagesControllerComponents,
   repositoriesListPage         : RepositoriesListPage,
   repositoriesSearchResultsPage: RepoSearchResultsPage,
-  override val auth            : FrontendAuthComponents,
-  repositoriesSearchCache      : RepositoriesSearchCache
+  override val auth            : FrontendAuthComponents
  )(implicit
    override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -46,29 +47,27 @@ class RepositoriesController @Inject() (
     BasicAuthAction.async { implicit request =>
       import SearchFiltering._
 
-      val allTeams        = repositoriesSearchCache.allTeams()
-      val allRepositories = repositoriesSearchCache.allRepositories()
+      val allTeams =
+        teamsAndRepositoriesConnector
+          .allTeams
+          .map(_.sortBy(_.name.asString))
+
+      val allRepositories =
+        teamsAndRepositoriesConnector
+          .allRepositories
+          .map(_.sortBy(_.name.toLowerCase))
+
+      val form =
+        RepoListFilter.form.bindFromRequest()
 
       for {
         teams        <- allTeams
         repositories <- allRepositories
-      } yield
-        Ok(
-          repositoriesListPage(repositories = repositories.filter(RepoListFilter(name, team, repoType)), teams = teams, RepoType.values)
-        )
-    }
+      } yield form.fold(
+        formWithErrors => Ok(repositoriesListPage(repositories = Seq.empty, teams = teams, formWithErrors)),
+        query => Ok(repositoriesListPage(repositories = repositories.filter(query), teams = teams, form))
+      )}
 
-  def repositoriesSearch(name: Option[String], team: Option[String], repoType: Option[String], column: String, sortOrder: String) = {
-    BasicAuthAction.async { implicit request =>
-      import SearchFiltering._
-      for {
-        repos <- repositoriesSearchCache.allRepositories()
-      } yield {
-        val filtered = repos.filter(RepoListFilter(name, team, repoType))
-        Ok(repositoriesSearchResultsPage(RepoSorter.sort(filtered, column, sortOrder)))
-      }
-    }
-  }
 
   def allServices: Action[AnyContent] =
     Action {
@@ -96,4 +95,13 @@ case class RepoListFilter(
     name.isEmpty && team.isEmpty && repoType.isEmpty
 }
 
+object RepoListFilter {
+  lazy val form = Form(
+  mapping(
+  "name"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+  "team"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+  "repoType" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+  )(RepoListFilter.apply)(RepoListFilter.unapply)
+  )
+}
 

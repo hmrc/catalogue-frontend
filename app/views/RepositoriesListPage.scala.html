@@ -21,6 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import views.html.partials.RepoSearchResultsPage
+@import views.html.helper.select
 
 @this(viewMessages: ViewMessages,
       repoSearchResultsPage: RepoSearchResultsPage
@@ -28,7 +29,7 @@
 
 @(repositories: Seq[GitRepository],
   teams: Seq[Team],
-  repoTypes: List[RepoType]
+  form: Form[_]
 )(implicit messages: Messages, request: Request[_])
 
 @standard_layout("Repositories", "repositories") {
@@ -36,30 +37,49 @@
         <h1>Repositories</h1>
     </header>
 
+    @if(form.hasErrors) {
+        <div class="alert alert-danger" role="alert">
+            <ul class="list">
+            @form.errors.map { error =>
+                <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+            }
+            </ul>
+        </div>
+    }
+
     <div id="service-list">
         <form id="repos-form" action="/repositories" method="get">
             <div id="repos-form-row" class="form-group row">
                 <div class="col-md-5">
                     <label for="search">Name</label>
-                    <input class="form-control" id="search" type="text" name="name" autofocus>
+                    <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
                 </div>
                 <div class="col-md-3">
-                    <label for="team-filter">Team</label>
-                    <select class = "form-control" id="team-filter" name="team">
-                        <option value="">All</option>
-                        @teams.map(t =>
-                         mkOption(t.name.asString)
-                        )
-                    </select>
+                @select(
+                    field      = form("team"),
+                    options    = teams.map(t => t.name.asString -> t.name.asString),
+                    '_default -> "All",
+                    '_label   -> "Team",
+                    'onchange -> "this.form.submit()",
+                    'id       -> "team-filter",
+                    'class   -> "form-control"
+                )
                 </div>
                 <div class="col-md-3">
-                    <label for="type-search">Type</label>
-                    <select class = "form-control" id="type-search" name="repoType">
-                        <option value="">All</option>
-                    @repoTypes.map(r =>
-                        mkOption(r.asString)
-                    )
-                    </select>
+                @select(
+                    field       =  form("repoType"),
+                    options     =  Seq(
+                        "Library"   -> "Library",
+                        "Prototype" -> "Prototype",
+                        "Service"   -> "Service",
+                        "Other"     -> "Other"
+                    ),
+                    '_default -> "All",
+                    '_label   -> "Type",
+                    'onchange -> "this.form.submit()",
+                    'id       -> "type-search",
+                    'class   -> "form-control"
+                )
                 </div>
             </div>
         </form>
@@ -67,28 +87,28 @@
         <table class="table table-striped">
             <thead id="repo-table-headings">
                 <tr>
-                    <th class="col-lg-3"><button role="button" id="name" class="sort no-border">Name</button></th>
-                    <th class="col-lg-1"><button role="button" id="status" class="sort no-border">Status</button></th>
-                    <th class="col-lg-1"><button role="button" id="repoType" class="sort no-border">Type</button></th>
-                    <th class="col-lg-2"><button role="button" id="teamNames" class="sort no-border">Team</button></th>
+                    <th class="col-lg-3"><button role="button" id="name" data-sort="repo-name" class="sort no-border">Name</button></th>
+                    <th class="col-lg-1"><button role="button" id="status" data-sort="repo-status" class="sort no-border">Status</button></th>
+                    <th class="col-lg-1"><button role="button" id="repoType" data-sort="repo-type" class="sort no-border">Type</button></th>
+                    <th class="col-lg-2"><button role="button" id="teamNames" data-sort="repo-team" class="sort no-border">Team</button></th>
                     @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
-                    <th class="col-lg-1"><button role="button" id="branchProtection" class="sort no-border">Branch Protection</button></th>
+                    <th class="col-lg-1"><button role="button" id="branchProtection" data-sort="repo-bp" class="sort no-border">Branch Protection</button></th>
                     }
-                    <th class="col-lg-2"><button role="button" id="createdDate" class="sort no-border">First Active</button></th>
-                    <th class="col-lg-2"><button role="button" id="lastActiveDate" class="sort no-border">Last Active</button></th>
+                    <th class="col-lg-2"><button role="button" id="createdDate" data-sort="created" class="sort no-border">First Active</button></th>
+                    <th class="col-lg-2"><button role="button" id="lastActiveDate" data-sort="last-active" class="sort no-border">Last Active</button></th>
                 </tr>
             </thead>
             @repoSearchResultsPage(repositories)
         </table>
     </div>
 }
+<!-- listjs configuration -->
+<script>
+var options = {
+    searchDelay: 350,
+    valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
+    searchColumns: ['repo-name'],
+    indexAsync: true};
 
-@*Helper function required as Twirl cannot interpolate in the HTML 'value' attribute with an inline map *@
-@mkOption(repoType: String) = {
-    <option value="@{repoType}">
-        @repoType
-    </option>
-)
-}
-
-<script src="@routes.Assets.versioned("repo-search.js")" defer></script>
+var serviceList = new List('service-list', options);
+</script>

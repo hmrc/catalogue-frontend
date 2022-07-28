@@ -22,7 +22,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
-import uk.gov.hmrc.cataloguefrontend.repository.{RepositoriesController, RepositoriesSearchCache}
+import uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterService
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -61,7 +61,6 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     mcc                           = mcc,
     repositoriesListPage          = mock[RepositoriesListPage],
     repositoriesSearchResultsPage = mock[RepoSearchResultsPage],
-    auth                          = FrontendAuthComponentsStub(authStubBehaviour),
-    repositoriesSearchCache       = mock[RepositoriesSearchCache]
+    auth                          = FrontendAuthComponentsStub(authStubBehaviour)
   )
 }
