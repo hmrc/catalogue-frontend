@@ -65,7 +65,7 @@
                 <th>Repository</th>
                 <th>Owning Teams</th>
                 <th>Repository Type</th>
-                <th><button role="button" class="sort no-border" data-sort="overallScore">Score</button></th>
+                <th><button role="button" class="sort no-border" data-sort="overallScore" id="overall-score-button">Score</button></th>
             </thead>
             <tbody class="list">
                 @indicatorsWithTeams.zipWithIndex.map { case (indicator, i) =>
@@ -93,12 +93,32 @@
         </table>
     </div>
 
+@*List.js configuration below >>>>> *@
     <script>
-        var options = {valueNames: ['repoName']};
+        var options = {valueNames: ['overallScore']};
         var indicatorsList = new List('leaderboard-display', options);
 
         var searchBox = document.getElementById("repo-name-search");
         indicatorsList.search(searchBox.value);
+
+        //Add a custom sorting function, as the default List.js sorting algorithm cannot handle negative numbers.
+        //Note: A Listener is required, as the List.js custom 'sortFunction' only auto-fires on page load, not on button click.
+        document.getElementById("overall-score-button").addEventListener("click", function (e) {
+            indicatorsList.sort('overallScore', {
+                order: e.target.classList.contains("desc") ? "desc" : "asc",
+                sortFunction: function(a, b) {
+                    var a = parseInt(a._values.overallScore)
+                    var b = parseInt(b._values.overallScore)
+                    if (a > b) {
+                        return 1;
+                    } else if (a < b) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                }
+            })
+        })
 
         var length = searchBox.value.length;
         searchBox.focus();
