@@ -24,9 +24,10 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
     ),
     TwirlKeys.templateImports += "uk.gov.hmrc.cataloguefrontend.util.ViewHelper.csrfFormField",
-    scalacOptions += "-Wconf:src=html/.*:silent", // suppress warnings from unused imports in compiled twirl templates (will also hide other warnings)
-    scalacOptions += "-Wconf:src=routes/.*:s", // and in routes files
-    //scalacOptions += "-Wconf:cat=unused-imports:s" // alternatively, this would suppress unused imports in all files...
+    // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
+    // suppress unused-imports in twirl and routes files
+    scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
+    scalacOptions += "-Wconf:cat=unused-imports&src=routes/.*:s",
     pipelineStages := Seq(digest)
   )
 
