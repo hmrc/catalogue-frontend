@@ -4,8 +4,6 @@ import play.sbt.routes.RoutesKeys
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
 
-val silencerVersion = "1.7.8"
-
 lazy val microservice = Project("catalogue-frontend", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
@@ -26,14 +24,9 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
     ),
     TwirlKeys.templateImports += "uk.gov.hmrc.cataloguefrontend.util.ViewHelper.csrfFormField",
-    // ***************
-    // Use the silencer plugin to suppress warnings from unused imports in compiled twirl templates
-    scalacOptions += "-P:silencer:pathFilters=html;routes",
-    libraryDependencies ++= Seq(
-      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-    ),
-    // ***************
+    scalacOptions += "-Wconf:src=html/.*:silent", // suppress warnings from unused imports in compiled twirl templates (will also hide other warnings)
+    scalacOptions += "-Wconf:src=routes/.*:s", // and in routes files
+    //scalacOptions += "-Wconf:cat=unused-imports:s" // alternatively, this would suppress unused imports in all files...
     pipelineStages := Seq(digest)
   )
 
