@@ -79,11 +79,10 @@
                 </div>
             </div>
             <input type="hidden" id="view_mode" name="view_mode" value="@viewMode.asString"/>
-            @if(viewMode.asString == "versions"){
-                <a style="float: right" onclick='selectViewMode("instances");'>instances</a>
-              } else {
-                <a style="float: right"  onclick='selectViewMode("versions");'>versions</a>
-              }
+            <select class="form-control" style="float: right; width: 120px;" onchange="selectViewMode(value)">
+                <option @if(viewMode.asString == "versions") {selected="selected"} value="versions">versions</option>
+                <option @if(viewMode.asString == "instances"){selected="selected"} value="instances">instances</option>
+            </select>
         </form>
         <table class="table table-striped" id="service-list">
             <thead>
