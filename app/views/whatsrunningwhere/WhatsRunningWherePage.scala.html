@@ -78,8 +78,7 @@
                     </div>
                 </div>
             </div>
-            <input type="hidden" id="view_mode" name="view_mode" value="@viewMode.asString"/>
-            <select class="form-control" style="float: right; width: 120px;" onchange="selectViewMode(value)">
+            <select class="form-control" id="view_mode" name="view_mode" style="float: right; width: 120px;" onchange="this.form.submit();">
                 <option @if(viewMode.asString == "versions") {selected="selected"} value="versions">versions</option>
                 <option @if(viewMode.asString == "instances"){selected="selected"} value="instances">instances</option>
             </select>
@@ -123,12 +122,6 @@
             document.getElementById('profile_name').value = '';
             document.getElementById('form').submit();
         };
-
-        function selectViewMode(viewMode){
-            document.getElementById('view_mode').value = viewMode
-            document.getElementById('form').submit();
-        }
-
 </script>
 
 @selectOption(selected: Option[String])(option: (String, String)) = {
