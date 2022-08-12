@@ -63,7 +63,7 @@ class HealthIndicatorsController @Inject() (
           formWithErrors => Future.successful(BadRequest(HealthIndicatorsLeaderBoard(Seq.empty, Seq.empty, Seq.empty, formWithErrors))),
           validForm =>
             for {
-              indicatorsWithTeams <- healthIndicatorsService.findIndicatorsWithTeams(validForm.repoType.getOrElse(RepoType.Service))
+              indicatorsWithTeams <- healthIndicatorsService.findIndicatorsWithTeams(validForm.repoType.getOrElse(RepoType.Service), validForm.repoName)
               teams <- teamsAndRepositoriesConnector.allTeams
               indicators = indicatorsFilteredByTeam(indicatorsWithTeams, validForm.team)
             } yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.values, teams.sortBy(_.name), form.fill(validForm)))

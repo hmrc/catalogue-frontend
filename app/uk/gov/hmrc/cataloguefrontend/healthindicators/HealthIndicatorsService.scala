@@ -32,14 +32,15 @@ class HealthIndicatorsService @Inject() (
   ec: ExecutionContext
 ) {
 
-  def findIndicatorsWithTeams(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[IndicatorsWithTeams]] = {
+  def findIndicatorsWithTeams(repoType: RepoType, repoNameFilter: Option[String])(implicit hc: HeaderCarrier): Future[Seq[IndicatorsWithTeams]] = {
     val eventualTeamLookUp: Future[Map[ServiceName, Seq[TeamName]]] = teamsAndReposConnector.allTeamsByService
     val eventualIndicators: Future[Seq[Indicator]]                  = healthIndicatorsConnector.getAllIndicators(repoType)
 
     for {
-      repoToTeams <- eventualTeamLookUp
-      indicators  <- eventualIndicators
-    } yield indicators.map { i =>
+      repoToTeams        <- eventualTeamLookUp
+      indicators         <- eventualIndicators
+      filteredIndicators = indicators.filter(ind => repoNameFilter.fold(true)(name => ind.repoName.toLowerCase.contains(name.toLowerCase)))
+    } yield filteredIndicators.map { i =>
       IndicatorsWithTeams(
         i.repoName,
         owningTeams = repoToTeams.getOrElse(i.repoName, Seq.empty).sorted,

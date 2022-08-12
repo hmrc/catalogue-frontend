@@ -36,7 +36,7 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
       when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
         Future.successful(Seq.empty)
 
-      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service).futureValue shouldBe
+      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service, None).futureValue shouldBe
         Seq()
     }
 
@@ -45,22 +45,55 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
         Future.successful(Map.empty)
 
       when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
-        Future.successful(Seq(Indicator("foo", RepoType.Service, 10, Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty)))))
+        Future.successful(Seq(Indicator(repoName = "foo", RepoType.Service, overallScore = 10, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty)))))
 
-      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service).futureValue shouldBe
-        Seq(IndicatorsWithTeams("foo", Seq.empty, RepoType.Service, 10, Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))))
+      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service, None).futureValue shouldBe
+        Seq(IndicatorsWithTeams(repoName = "foo", owningTeams = Seq.empty, RepoType.Service, overallScore = 10, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))))
     }
 
     "return correct IndicatorsWithTeams when TARConnector returns teams and HIConnector returns Indicators" in new Setup {
       when(mockTeamsAndReposConnector.allTeamsByService) thenReturn
-        Future.successful(Map("bar" -> Seq(TeamName("foo"))))
+        Future.successful(
+          Map("bar" -> Seq(TeamName("foo"))))
 
       when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
-        Future.successful(Seq(Indicator("bar", RepoType.Service, 10, Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty)))))
+        Future.successful(Seq(Indicator(repoName = "bar", RepoType.Service, overallScore = 10, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty)))))
 
-      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service).futureValue shouldBe
-        Seq(IndicatorsWithTeams("bar", Seq(TeamName("foo")), RepoType.Service, 10, Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))))
+      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service, None).futureValue shouldBe
+        Seq(IndicatorsWithTeams(repoName = "bar", owningTeams = Seq(TeamName("foo")), RepoType.Service, overallScore = 10, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))))
     }
+
+    "return indicators filtered by repository name" in new Setup {
+      when(mockTeamsAndReposConnector.allTeamsByService) thenReturn
+        Future.successful(Map(
+        "bAr"       -> Seq(TeamName("a")),
+        "foobaRfoo" -> Seq(TeamName("b")),
+        "foobar"    -> Seq(TeamName("c")),
+        "hello"     -> Seq(TeamName("d")),
+        "world"     -> Seq(TeamName("e"))
+      ))
+
+      when(mockHealthIndicatorsConnector.getAllIndicators(repoType = RepoType.Service)) thenReturn
+        Future.successful(
+          Seq(
+            Indicator(repoName = "bAr",       RepoType.Service, overallScore = 10, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))),
+            Indicator(repoName = "foobaRfoo", RepoType.Service, overallScore = 11, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 11, Seq.empty))),
+            Indicator(repoName = "hello",     RepoType.Service, overallScore = 10, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))),
+            Indicator(repoName = "foobar",    RepoType.Service, overallScore = 12, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 12, Seq.empty))),
+            Indicator(repoName = "world",     RepoType.Service, overallScore = 10, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty)))
+          )
+        )
+
+      Seq("bar", "BaR", "BAR") foreach { searchTerm =>
+        healthIndicatorsService.findIndicatorsWithTeams(repoType = RepoType.Service, repoNameFilter = Some(searchTerm)).futureValue shouldBe
+          Seq(
+            IndicatorsWithTeams(repoName = "bAr", owningTeams = Seq(TeamName("a")), RepoType.Service, overallScore = 10, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))),
+            IndicatorsWithTeams(repoName = "foobaRfoo", owningTeams = Seq(TeamName("b")), RepoType.Service, overallScore = 11, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 11, Seq.empty))),
+            IndicatorsWithTeams(repoName = "foobar", owningTeams = Seq(TeamName("c")), RepoType.Service, overallScore = 12, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 12, Seq.empty))),
+          )
+      }
+    }
+
   }
   private[this] trait Setup {
     implicit val hc: HeaderCarrier                                = HeaderCarrier()
