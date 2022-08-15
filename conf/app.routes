@@ -62,7 +62,7 @@ GET        /shuttering/4                                uk.gov.hmrc.cataloguefro
 GET        /shuttering/:shutterType/:env                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.start(shutterType: ShutterType, env: Environment, serviceName: Option[String])
 
 GET        /shutter-events                              uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEvents
-GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(env: Environment, serviceName: Option[String] ?= None)
+GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(env: Environment, serviceName: Option[String] ?= None, limit: Option[Int] ?= None, offset: Option[Int] ?= None)
 
 GET        /whats-running-where                         uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases(showDiff: Boolean ?= false)
 GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.history(env: Environment)

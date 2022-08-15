@@ -19,6 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterEventsView, ShutterStateChangeEvent}
 
 @(
+  services    : Seq[String],
   events      : Seq[ShutterStateChangeEvent],
   form        : Form[_],
   environments: List[Environment]
@@ -35,6 +36,11 @@
   <div id="events">
 
     <form id="shutter-events-form" action="/shutter-events/list" method="get">
+
+      <datalist id="servicenames">
+          @services.map { s: String => <option>@s</option> }
+      </datalist>
+
       <input id="environment" name="environment" type="text" value="@form("environment").value" hidden>
 
       <div class="form-group row">
@@ -42,7 +48,7 @@
           <label for="serviceName">Service:</label>
         </div>
         <div class="col-md-4">
-          <input class="search form-control" id="serviceName" name="serviceName" type="search" autofocus value=@form("serviceName").value>
+          <input class="search form-control" id="serviceName" name="serviceName" type="search" autofocus  autocomplete="off" list="servicenames"  value=@form("serviceName").value>
         </div>
         <div class="col-md-3">
           <a id="clear" class="btn btn-secondary" href="@clearTargetFor(environments.find(env => form("environment").value.contains(env.asString)).getOrElse(environments.head))">Clear</a>
@@ -109,7 +115,18 @@
 }
 
 <script>
-  var options = { valueNames: ['service', 'type', 'status', 'reason', 'cause', 'username', 'timestamp'] };
+  let options = {
+      valueNames: ['service', 'status', 'reason', 'cause', 'username', 'timestamp'],
+      searchDelay: 350,
+      indexAsync: true
+  };
 
-  var eventsList = new List('events', options);
+  let eventsList = new List('events', options);
+
+  // force search after picking an auto-complete option
+  var searchbox = document.getElementById("serviceName")
+  searchbox.onblur = e => {
+      eventsList.search(searchbox.value, ['service'])
+  }
+
 </script>

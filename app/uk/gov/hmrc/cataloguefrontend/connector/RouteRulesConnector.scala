@@ -41,6 +41,18 @@ class RouteRulesConnector @Inject() (
   implicit val routeReads: Reads[Route]                       = Json.reads[Route]
   implicit val environmentRouteReads: Reads[EnvironmentRoute] = Json.using[Json.WithDefaultValues].reads[EnvironmentRoute]
 
+  def frontendServices()(implicit hc: HeaderCarrier): Future[Seq[String]] = {
+    val url = url"$baseUrl/frontend-services"
+    httpClientV2.get(url)
+      .execute[Seq[String]]
+      .recover {
+        case NonFatal(ex) => {
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          Seq.empty
+        }
+      }
+  }
+
   def serviceRoutes(service: String)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
     val url = url"$baseUrl/frontend-route/$service"
     httpClientV2

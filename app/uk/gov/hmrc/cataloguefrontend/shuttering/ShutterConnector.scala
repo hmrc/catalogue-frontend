@@ -99,9 +99,9 @@ class ShutterConnector @Inject() (
       .map(_.flatMap(_.toShutterStateChangeEvent))
   }
 
-  def shutterEventsByTimestampDesc(filter: ShutterEventsFilter)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
+  def shutterEventsByTimestampDesc(filter: ShutterEventsFilter, limit: Option[Int] = None, offset: Option[Int] = None)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     httpClientV2
-      .get(url"$baseUrl/shutter-api/events?type=${EventType.ShutterStateChange.asString}&${filter.asQueryParams}")
+      .get(url"$baseUrl/shutter-api/events?type=${EventType.ShutterStateChange.asString}&${filter.asQueryParams}&limit=${limit.getOrElse(2500)}&offset=${offset.getOrElse(0)}")
       .execute[Seq[ShutterEvent]]
       .map(_.flatMap(_.toShutterStateChangeEvent))
 
