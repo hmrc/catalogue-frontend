@@ -21,8 +21,8 @@ import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -36,6 +36,7 @@ import scala.util.control.NonFatal
 class ShutterEventsController @Inject() (
   override val mcc : MessagesControllerComponents,
   connector        : ShutterConnector,
+  routeRulesConnector :RouteRulesConnector,
   override val auth: FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
@@ -50,21 +51,21 @@ class ShutterEventsController @Inject() (
       Redirect(routes.ShutterEventsController.shutterEventsList(Environment.Production))
     }
 
-  def shutterEventsList(env: Environment, serviceName: Option[String]): Action[AnyContent] =
+  def shutterEventsList(env: Environment, serviceName: Option[String], limit: Option[Int], offset: Option[Int]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val filter = filterFor(env, serviceName)
       val form   = ShutterEventsForm.fromFilter(filter)
 
-      connector
-        .shutterEventsByTimestampDesc(filter)
-        .recover {
-          case NonFatal(ex) =>
-            logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
-            Seq.empty
-        }
-        .map { events =>
-          Ok(ShutterEventsPage(events, form, Environment.values))
-        }
+      for {
+        services <- routeRulesConnector.frontendServices()
+        events   <- connector.shutterEventsByTimestampDesc(filter, limit, offset)
+                              .recover {
+                                case NonFatal(ex) =>
+                                  logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
+                                  Seq.empty
+                              }
+        page = ShutterEventsPage(services, events, form, Environment.values)
+      } yield Ok(page)
     }
 
   private def filterFor(env: Environment, serviceNameOpt: Option[String]): ShutterEventsFilter =
