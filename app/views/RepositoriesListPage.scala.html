@@ -67,12 +67,14 @@
                 </div>
                 <div class="col-md-3">
                 @select(
-                    field       =  form("repoType"),
+                    field       =  form("repoTypeFilter"),
                     options     =  Seq(
-                        "Library"   -> "Library",
-                        "Prototype" -> "Prototype",
-                        "Service"   -> "Service",
-                        "Other"     -> "Other"
+                        "Library"           -> "Library",
+                        "Prototype"         -> "Prototype",
+                        "Service"           -> "Service",
+                        "FrontendService"   -> "Service (Frontend)",
+                        "BackendService"    -> "Service (Backend)",
+                        "Other"             -> "Other"
                     ),
                     '_default -> "All",
                     '_label   -> "Type",

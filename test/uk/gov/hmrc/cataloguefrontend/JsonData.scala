@@ -69,6 +69,13 @@ object JsonData {
      """"
   }
 
+  val repositoriesTeamADataLibrary = {
+    s"""[
+       {"name":"teamA-library","description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"}
+       ]
+     """"
+  }
+
   def repositoryData(repoName: String = "service-1") =
     s"""
        {

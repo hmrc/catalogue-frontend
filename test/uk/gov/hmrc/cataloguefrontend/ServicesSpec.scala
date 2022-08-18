@@ -44,7 +44,7 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
       )
 
       status(result)           shouldBe 303
-      redirectLocation(result) shouldBe Some("/repositories?repoType=Service")
+      redirectLocation(result) shouldBe Some("/repositories?repoTypeFilter=Service")
     }
   }
 

@@ -62,7 +62,7 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
   def updateIndexes(): Future[Unit] = {
     implicit val hc = HeaderCarrier()
     for {
-      repos         <- teamsAndRepositoriesConnector.allRepositories
+      repos         <- teamsAndRepositoriesConnector.allRepositoriesNoFilters
       teams         <- teamsAndRepositoriesConnector.allTeams
       teamPageLinks =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
                                                SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(false).url}?profile_type=team&profile_name=${URLEncoder.encode(t.name.asString, "UTF-8")}")))

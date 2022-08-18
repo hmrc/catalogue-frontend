@@ -32,7 +32,7 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
 
   "filterRepositories" should {
     "return an integer representing how many repositories should be returned in a default search" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allRepositories) thenReturn
+      when(mockTeamsAndRepositoriesConnector.allRepositoriesNoFilters) thenReturn
         Future.successful(mockRepositories)
       defaultBranchesService.filterRepositories(
         repositories = mockRepositories,
@@ -47,7 +47,7 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
 
   "filterRepositoriesTwo" should {
     "return an integer representing how many repositories matches the provided parameters" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allRepositories) thenReturn
+      when(mockTeamsAndRepositoriesConnector.allRepositoriesNoFilters) thenReturn
         Future.successful(mockRepositoriesTwo)
       defaultBranchesService.filterRepositories(
         repositories = mockRepositoriesTwo,
@@ -62,7 +62,7 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
 
   "allTeams" should {
     "return an integer representing how many teams are found" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allRepositories) thenReturn
+      when(mockTeamsAndRepositoriesConnector.allRepositoriesNoFilters) thenReturn
         Future.successful(mockRepositoriesTwo)
       val result: Seq[GitRepository] = defaultBranchesService.filterRepositories(
         repositories = mockRepositoriesTwo,
