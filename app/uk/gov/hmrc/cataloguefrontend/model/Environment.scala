@@ -22,15 +22,15 @@ import play.api.mvc.{PathBindable, QueryStringBindable}
 sealed trait Environment { def asString: String; def displayString: String }
 
 object Environment {
-  case object Development extends Environment { val asString = "development"; override def displayString = "Development" }
   case object Integration extends Environment { val asString = "integration"; override def displayString = "Integration" }
+  case object Development extends Environment { val asString = "development"; override def displayString = "Development" }
   case object QA extends Environment { val asString = "qa"; override def displayString = "QA" }
   case object Staging extends Environment { val asString = "staging"; override def displayString = "Staging" }
   case object ExternalTest extends Environment { val asString = "externaltest"; override def displayString = "External Test" }
   case object Production extends Environment { val asString = "production"; override def displayString = "Production" }
 
   val values: List[Environment] =
-    List(Development, Integration, QA, Staging, ExternalTest, Production)
+    List(Integration, Development, QA, Staging, ExternalTest, Production)
 
   implicit val ordering = new Ordering[Environment] {
     def compare(x: Environment, y: Environment): Int =
