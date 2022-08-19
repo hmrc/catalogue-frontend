@@ -58,11 +58,11 @@ object RepoType {
     }
 }
 
-sealed trait ServiceType {def toString: String}
+sealed trait ServiceType {def asString: String}
 
 object ServiceType {
-  case object Frontend extends   ServiceType { override val toString = "FrontendService" }
-  case object Backend  extends   ServiceType { override val toString = "BackendService" }
+  case object Frontend extends   ServiceType { override val asString = "FrontendService" }
+  case object Backend  extends   ServiceType { override val asString = "BackendService" }
 
   val serviceTypes =
     Set(
@@ -72,10 +72,10 @@ object ServiceType {
 
   def parse(s: String): Either[String, ServiceType] =
     serviceTypes
-      .find(_.toString.equalsIgnoreCase(s))
-      .toRight(s"Invalid serviceType - should be one of: ${serviceTypes.map(_.toString).mkString(", ")}")
+      .find(_.asString.equalsIgnoreCase(s))
+      .toRight(s"Invalid serviceType - should be one of: ${serviceTypes.map(_.asString).mkString(", ")}")
 
-  def apply(value: String): Option[ServiceType] = serviceTypes.find(_.toString == value)
+  def apply(value: String): Option[ServiceType] = serviceTypes.find(_.asString == value)
 
   val stFormat: Format[ServiceType] = new Format[ServiceType] {
     override def reads(json: JsValue): JsResult[ServiceType] =
@@ -83,7 +83,7 @@ object ServiceType {
         ServiceType(str).fold[JsResult[ServiceType]](JsError(s"Invalid Service Type: $str"))(JsSuccess(_))
       }
 
-    override def writes(o: ServiceType): JsValue = JsString(o.toString)
+    override def writes(o: ServiceType): JsValue = JsString(o.asString)
   }
 }
 
@@ -257,9 +257,15 @@ class TeamsAndRepositoriesConnector @Inject()(
       }
   }
 
-  def allRepositories(name: Option[String] = None, team: Option[String] = None, archived: Option[Boolean] = Some(false),
-                      repoType: Option[String] = None, serviceType: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
-    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&team=$team&archived=$archived&repoType=$repoType&serviceType=$serviceType"
+  def allRepositories(
+   name: Option[String] = None,
+   team: Option[TeamName] = None,
+   archived: Option[Boolean] = Some(false),
+   repoType: Option[RepoType] = None,
+   serviceType: Option[ServiceType] = None)
+             (implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
+
+    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&team=${team.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}"
     httpClientV2
       .get(url)
       .execute[Seq[GitRepository]]

@@ -20,7 +20,8 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.repository
 import uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.teamsAndReposTypeMapping
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -43,18 +44,28 @@ class RepositoriesController @Inject() (
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {
 
-  def allRepositories(name: Option[String] = None, team: Option[String] = None, archived: Option[Boolean] = None, repoType: Option[String] = None): Action[AnyContent] =
+  def allRepositories(name: Option[String] = None, team: Option[String] = None, archived: Option[Boolean] = None, repoTypeString: Option[String] = None): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val allTeams =
         teamsAndRepositoriesConnector
           .allTeams
           .map(_.sortBy(_.name.asString))
 
-      val (teamsAndReposRepoType, teamsAndReposServiceType) = teamsAndReposTypeMapping(repoType)
+      val (repoType, serviceType) = repoTypeString match {
+        case Some("FrontendService")  => (Some(RepoType.Service), Some(ServiceType.Frontend))
+        case Some("BackendService")   => (Some(RepoType.Service), Some(ServiceType.Backend))
+        case Some(other)              => (RepoType.parse(other).toOption, None)
+        case None => (None, None)
+      }
 
       val allRepositories =
         teamsAndRepositoriesConnector
-          .allRepositories(name.filterNot(_.isEmpty), team.filterNot(_.isEmpty), archived, teamsAndReposRepoType, teamsAndReposServiceType)
+          .allRepositories(
+            name.filterNot(_.isEmpty),
+            team.filterNot(_.isEmpty).map(TeamName.apply),
+            archived,
+            repoType,
+            serviceType)
           .map(_.sortBy(_.name.toLowerCase))
 
       for {
@@ -85,14 +96,9 @@ object RepositoriesController {
 
   def teamsAndReposTypeMapping(repoType: Option[String]): (Option[String], Option[String]) = {
     repoType match {
-      case None                     => (None, None)
-      case Some("Service")          => (Some("Service"), None)
-      case Some("FrontendService")  => (Some("Service"), Some("FrontendService"))
-      case Some("BackendService")   => (Some("Service"), Some("BackendService"))
-      case Some("Library")          => (Some("Library"), None)
-      case Some("Prototype")        => (Some("Prototype"), None)
-      case Some("Other")            => (Some("Other"), None)
-      case _                        => (None, None)
+      case Some("FrontendService")  => (Some("Service"), Some("Frontend"))
+      case Some("BackendService")   => (Some("Service"), Some("Backend"))
+      case other                    => (other, None)
     }
   }
 }
