@@ -60,15 +60,14 @@ object RepoType {
 
 sealed trait ServiceType {def toString: String}
 
-case object FrontendService extends   ServiceType { override val toString = "FrontendService" }
-case object BackendService  extends   ServiceType { override val toString = "BackendService" }
-
 object ServiceType {
+  case object Frontend extends   ServiceType { override val toString = "FrontendService" }
+  case object Backend  extends   ServiceType { override val toString = "BackendService" }
 
   val serviceTypes =
     Set(
-      FrontendService,
-      BackendService
+      Frontend,
+      Backend
     )
 
   def parse(s: String): Either[String, ServiceType] =
