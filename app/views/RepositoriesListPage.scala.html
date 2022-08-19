@@ -67,7 +67,7 @@
                 </div>
                 <div class="col-md-3">
                 @select(
-                    field       =  form("repoTypeFilter"),
+                    field       =  form("repoType"),
                     options     =  Seq(
                         "Library"           -> "Library",
                         "Prototype"         -> "Prototype",
@@ -113,4 +113,16 @@ var options = {
     indexAsync: true};
 
 var serviceList = new List('service-list', options);
+
+        function onChange() {
+            const select = document.getElementById("type-search").value;
+            const value = select.options[select.selectedIndex].value;
+            console.log(value)
+        }
+        //const searchParams = new URLSearchParams(window.location.search);
+
+        //if(value==='FrontendSevice')
+        //searchParams.set("&serviceType=Frontend");
+        //window.location.search = searchParams.toString();
+
 </script>

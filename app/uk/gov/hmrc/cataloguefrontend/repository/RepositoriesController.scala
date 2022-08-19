@@ -22,7 +22,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.repository
-import uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.buildQueryParam
+import uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.teamsAndReposTypeMapping
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.RepositoriesListPage
@@ -43,18 +43,18 @@ class RepositoriesController @Inject() (
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {
 
-  def allRepositories(name: Option[String] = None, team: Option[String] = None, archived: Option[Boolean] = None, repoTypeFilter: Option[String] = None): Action[AnyContent] =
+  def allRepositories(name: Option[String] = None, team: Option[String] = None, archived: Option[Boolean] = None, repoType: Option[String] = None): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val allTeams =
         teamsAndRepositoriesConnector
           .allTeams
           .map(_.sortBy(_.name.asString))
 
-      val (repoType, serviceType) = buildQueryParam(repoTypeFilter)
+      val (teamsAndReposRepoType, teamsAndReposServiceType) = teamsAndReposTypeMapping(repoType)
 
       val allRepositories =
         teamsAndRepositoriesConnector
-          .allRepositories(name.filterNot(_.isEmpty), team.filterNot(_.isEmpty), archived, repoType, serviceType)
+          .allRepositories(name.filterNot(_.isEmpty), team.filterNot(_.isEmpty), archived, teamsAndReposRepoType, teamsAndReposServiceType)
           .map(_.sortBy(_.name.toLowerCase))
 
       for {
@@ -67,24 +67,24 @@ class RepositoriesController @Inject() (
   def allServices: Action[AnyContent] =
     Action {
       Redirect(
-        repository.routes.RepositoriesController.allRepositories(repoTypeFilter = Some(RepoType.Service.asString)))
+        repository.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Service.asString)))
     }
 
   def allLibraries: Action[AnyContent] =
     Action {
-      Redirect(repository.routes.RepositoriesController.allRepositories(repoTypeFilter = Some(RepoType.Library.asString)))
+      Redirect(repository.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Library.asString)))
     }
 
   def allPrototypes: Action[AnyContent] =
     Action {
-      Redirect(repository.routes.RepositoriesController.allRepositories(repoTypeFilter = Some(RepoType.Prototype.asString)))
+      Redirect(repository.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
     }
 }
 
 object RepositoriesController {
 
-  def buildQueryParam(repoTypeFilter: Option[String]): (Option[String], Option[String]) = {
-    repoTypeFilter match {
+  def teamsAndReposTypeMapping(repoType: Option[String]): (Option[String], Option[String]) = {
+    repoType match {
       case None                     => (None, None)
       case Some("Service")          => (Some("Service"), None)
       case Some("FrontendService")  => (Some("Service"), Some("FrontendService"))
@@ -100,10 +100,10 @@ object RepositoriesController {
 case class RepoListFilter(
                            name: Option[String] = None,
                            team: Option[String] = None,
-                           repoTypeFilter : Option[String] = None,
+                           repoType : Option[String] = None,
                          ) {
   def isEmpty: Boolean =
-    name.isEmpty && team.isEmpty && repoTypeFilter.isEmpty
+    name.isEmpty && team.isEmpty && repoType.isEmpty
 }
 
 object RepoListFilter {
@@ -111,8 +111,7 @@ object RepoListFilter {
   mapping(
   "name"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
   "team"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-  "repoTypeFilter"  -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+  "repoType"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
   )(RepoListFilter.apply)(RepoListFilter.unapply)
   )
 }
-
