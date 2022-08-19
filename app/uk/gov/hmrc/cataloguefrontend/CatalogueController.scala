@@ -341,7 +341,7 @@ class CatalogueController @Inject() (
 
   def allDefaultBranches(singleOwnership: Boolean, includeArchived: Boolean): Action[AnyContent] = {
     BasicAuthAction.async { implicit request =>
-      teamsAndRepositoriesConnector.allRepositoriesNoFilters.map { repositories =>
+      teamsAndRepositoriesConnector.allRepositories().map { repositories =>
         DefaultBranchesFilter.form
           .bindFromRequest()
           .fold(

@@ -258,12 +258,8 @@ class TeamsAndRepositoriesConnector @Inject()(
       }
   }
 
-  def allRepositoriesNoFilters(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
-    httpClientV2
-      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
-      .execute[Seq[GitRepository]]
-
-  def allRepositories(name: Option[String], team: Option[String], archived: Option[Boolean], repoType: Option[String], serviceType: Option[String])(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
+  def allRepositories(name: Option[String] = None, team: Option[String] = None, archived: Option[Boolean] = Some(false),
+                      repoType: Option[String] = None, serviceType: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
     val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&team=$team&archived=$archived&repoType=$repoType&serviceType=$serviceType"
     httpClientV2
       .get(url)
