@@ -23,7 +23,6 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.repository
-import uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.teamsAndReposTypeMapping
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.RepositoriesListPage
@@ -55,7 +54,7 @@ class RepositoriesController @Inject() (
         case Some("FrontendService")  => (Some(RepoType.Service), Some(ServiceType.Frontend))
         case Some("BackendService")   => (Some(RepoType.Service), Some(ServiceType.Backend))
         case Some(other)              => (RepoType.parse(other).toOption, None)
-        case None => (None, None)
+        case None                     => (None, None)
       }
 
       val allRepositories =
@@ -65,8 +64,7 @@ class RepositoriesController @Inject() (
             team.filterNot(_.isEmpty).map(TeamName.apply),
             archived,
             repoType,
-            serviceType)
-          .map(_.sortBy(_.name.toLowerCase))
+            serviceType).map(_.sortBy(_.name.toLowerCase))
 
       for {
         teams        <- allTeams
@@ -92,22 +90,11 @@ class RepositoriesController @Inject() (
     }
 }
 
-object RepositoriesController {
-
-  def teamsAndReposTypeMapping(repoType: Option[String]): (Option[String], Option[String]) = {
-    repoType match {
-      case Some("FrontendService")  => (Some("Service"), Some("Frontend"))
-      case Some("BackendService")   => (Some("Service"), Some("Backend"))
-      case other                    => (other, None)
-    }
-  }
-}
-
 case class RepoListFilter(
-                           name: Option[String] = None,
-                           team: Option[String] = None,
-                           repoType : Option[String] = None,
-                         ) {
+    name      : Option[String] = None,
+    team      : Option[String] = None,
+    repoType  : Option[String] = None
+) {
   def isEmpty: Boolean =
     name.isEmpty && team.isEmpty && repoType.isEmpty
 }
@@ -118,6 +105,5 @@ object RepoListFilter {
   "name"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
   "team"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
   "repoType"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-  )(RepoListFilter.apply)(RepoListFilter.unapply)
-  )
+  )(RepoListFilter.apply)(RepoListFilter.unapply))
 }
