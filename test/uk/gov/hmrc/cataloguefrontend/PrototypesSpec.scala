@@ -49,7 +49,7 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
       )
 
       status(result)           shouldBe 303
-      redirectLocation(result) shouldBe Some("/repositories?repoTypeFilter=Prototype")
+      redirectLocation(result) shouldBe Some("/repositories?repoType=Prototype")
     }
   }
 

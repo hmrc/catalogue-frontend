@@ -49,7 +49,7 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
       )
 
       status(result)           shouldBe 303
-      redirectLocation(result) shouldBe Some("/repositories?repoTypeFilter=Library")
+      redirectLocation(result) shouldBe Some("/repositories?repoType=Library")
     }
   }
 

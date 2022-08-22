@@ -91,13 +91,13 @@
                 <tr>
                     <th class="col-lg-3"><button role="button" id="name" data-sort="repo-name" class="sort no-border">Name</button></th>
                     <th class="col-lg-1"><button role="button" id="status" data-sort="repo-status" class="sort no-border">Status</button></th>
-                    <th class="col-lg-1"><button role="button" id="repoType" data-sort="repo-type" class="sort no-border">Type</button></th>
+                    <th class="col-lg-2"><button role="button" id="repoType" data-sort="repo-type" class="sort no-border">Type</button></th>
                     <th class="col-lg-2"><button role="button" id="teamNames" data-sort="repo-team" class="sort no-border">Team</button></th>
                     @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
                     <th class="col-lg-1"><button role="button" id="branchProtection" data-sort="repo-bp" class="sort no-border">Branch Protection</button></th>
                     }
                     <th class="col-lg-2"><button role="button" id="createdDate" data-sort="created" class="sort no-border">First Active</button></th>
-                    <th class="col-lg-2"><button role="button" id="lastActiveDate" data-sort="last-active" class="sort no-border">Last Active</button></th>
+                    <th class="col-lg-1"><button role="button" id="lastActiveDate" data-sort="last-active" class="sort no-border">Last Active</button></th>
                 </tr>
             </thead>
             @repoSearchResultsPage(repositories)
@@ -113,16 +113,4 @@ var options = {
     indexAsync: true};
 
 var serviceList = new List('service-list', options);
-
-        function onChange() {
-            const select = document.getElementById("type-search").value;
-            const value = select.options[select.selectedIndex].value;
-            console.log(value)
-        }
-        //const searchParams = new URLSearchParams(window.location.search);
-
-        //if(value==='FrontendSevice')
-        //searchParams.set("&serviceType=Frontend");
-        //window.location.search = searchParams.toString();
-
 </script>
