@@ -283,11 +283,6 @@ class TeamsAndRepositoriesConnector @Inject()(
       .execute[Seq[GitRepository]]
   }
 
-  def allBackendServices(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
-    httpClientV2
-      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?repoType=Service&serviceType=Backend")
-      .execute[Seq[GitRepository]]
-
   def allServices(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
     httpClientV2
       .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?repoType=Service")
