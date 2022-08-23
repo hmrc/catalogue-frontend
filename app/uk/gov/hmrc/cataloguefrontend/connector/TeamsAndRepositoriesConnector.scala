@@ -272,7 +272,7 @@ class TeamsAndRepositoriesConnector @Inject()(
   def allRepositories(
      name       : Option[String] = None,
      team       : Option[TeamName] = None,
-     archived   : Option[Boolean] = Some(false),
+     archived   : Option[Boolean] = None,
      repoType   : Option[RepoType] = None,
      serviceType: Option[ServiceType] = None
    )(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
