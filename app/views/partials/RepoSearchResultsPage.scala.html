@@ -17,8 +17,10 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 
 @this()
+
 
 @(
     repositories: Seq[GitRepository]
@@ -40,7 +42,7 @@
     </td>
 
     <td class="repo-type monospaced" id="row@{i}_repotype">
-        @repo.repoType.asString
+        @repo.serviceType.map(_.displayString).getOrElse(repo.repoType.asString)
     </td>
 
     <td id="row@{i}_team">

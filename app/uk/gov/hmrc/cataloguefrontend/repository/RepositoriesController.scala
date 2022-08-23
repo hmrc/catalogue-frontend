@@ -20,9 +20,9 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.{SearchFiltering, repository}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.repository
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.RepositoriesListPage
@@ -43,29 +43,33 @@ class RepositoriesController @Inject() (
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {
 
-  def allRepositories(name: Option[String], team: Option[String], repoType: Option[String]): Action[AnyContent] =
+  def allRepositories(name: Option[String] = None, team: Option[String] = None, archived: Option[Boolean] = None, repoTypeString: Option[String] = None): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      import SearchFiltering._
-
       val allTeams =
         teamsAndRepositoriesConnector
           .allTeams
           .map(_.sortBy(_.name.asString))
 
+      val (repoType, serviceType) = repoTypeString match {
+        case Some("FrontendService")  => (Some(RepoType.Service), Some(ServiceType.Frontend))
+        case Some("BackendService")   => (Some(RepoType.Service), Some(ServiceType.Backend))
+        case Some(other)              => (RepoType.parse(other).toOption, None)
+        case None                     => (None, None)
+      }
+
       val allRepositories =
         teamsAndRepositoriesConnector
-          .allRepositories
-          .map(_.sortBy(_.name.toLowerCase))
-
-      val form =
-        RepoListFilter.form.bindFromRequest()
+          .allRepositories(
+            name.filterNot(_.isEmpty),
+            team.filterNot(_.isEmpty).map(TeamName.apply),
+            archived,
+            repoType,
+            serviceType).map(_.sortBy(_.name.toLowerCase))
 
       for {
         teams        <- allTeams
         repositories <- allRepositories
-      } yield form.fold(
-        formWithErrors => Ok(repositoriesListPage(repositories = Seq.empty, teams = teams, formWithErrors)),
-        query => Ok(repositoriesListPage(repositories = repositories.filter(query), teams = teams, form))
+      } yield Ok(repositoriesListPage(repositories, teams, RepoListFilter.form.bindFromRequest())
       )}
 
 
@@ -87,10 +91,10 @@ class RepositoriesController @Inject() (
 }
 
 case class RepoListFilter(
-   name      : Option[String] = None,
-   team      : Option[String] = None,
-   repoType  : Option[String] = None
-                         ) {
+    name      : Option[String] = None,
+    team      : Option[String] = None,
+    repoType  : Option[String] = None
+) {
   def isEmpty: Boolean =
     name.isEmpty && team.isEmpty && repoType.isEmpty
 }
@@ -98,10 +102,8 @@ case class RepoListFilter(
 object RepoListFilter {
   lazy val form = Form(
   mapping(
-  "name"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-  "team"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-  "repoType" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-  )(RepoListFilter.apply)(RepoListFilter.unapply)
-  )
+  "name"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+  "team"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+  "repoType"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+  )(RepoListFilter.apply)(RepoListFilter.unapply))
 }
-

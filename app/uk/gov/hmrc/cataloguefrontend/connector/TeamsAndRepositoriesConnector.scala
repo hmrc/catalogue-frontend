@@ -58,6 +58,47 @@ object RepoType {
     }
 }
 
+sealed trait ServiceType {
+  def asString: String
+  val displayString: String
+}
+
+object ServiceType {
+  case object Frontend extends   ServiceType {
+    override val asString = "FrontendService"
+    override val displayString = "Service (Frontend)"
+  }
+
+  case object Backend  extends   ServiceType {
+    override val asString = "BackendService"
+    override val displayString = "Service (Backend)"
+  }
+
+  val serviceTypes =
+    Set(
+      Frontend,
+      Backend
+    )
+
+  def displayString = s"Service ($ServiceType)"
+
+  def parse(s: String): Either[String, ServiceType] =
+    serviceTypes
+      .find(_.asString.equalsIgnoreCase(s))
+      .toRight(s"Invalid serviceType - should be one of: ${serviceTypes.map(_.asString).mkString(", ")}")
+
+  def apply(value: String): Option[ServiceType] = serviceTypes.find(_.asString == value)
+
+  val stFormat: Format[ServiceType] = new Format[ServiceType] {
+    override def reads(json: JsValue): JsResult[ServiceType] =
+      json.validate[String].flatMap { str =>
+        ServiceType(str).fold[JsResult[ServiceType]](JsError(s"Invalid Service Type: $str"))(JsSuccess(_))
+      }
+
+    override def writes(o: ServiceType): JsValue = JsString(o.asString)
+  }
+}
+
 case class Link(name: String, displayName: String, url: String) {
   val id: String = displayName.toLowerCase.replaceAll(" ", "-")
 }
@@ -77,6 +118,7 @@ case class GitRepository(
   lastActiveDate      : Instant,
   isPrivate           : Boolean                  = false,
   repoType            : RepoType                 = RepoType.Other,
+  serviceType         : Option[ServiceType]      = None,
   digitalServiceName  : Option[String]           = None,
   owningTeams         : Seq[String]              = Nil,
   language            : Option[String],
@@ -97,6 +139,7 @@ case class GitRepository(
 object GitRepository {
   val apiFormat: OFormat[GitRepository] = {
     implicit val rtf = RepoType.format
+    implicit val stf = ServiceType.stFormat
 
     ( (__ \ "name"              ).format[String]
     ~ (__ \ "description"       ).format[String]
@@ -105,6 +148,7 @@ object GitRepository {
     ~ (__ \ "lastActiveDate"    ).format[Instant]
     ~ (__ \ "isPrivate"         ).formatWithDefault[Boolean](false)
     ~ (__ \ "repoType"          ).format[RepoType]
+    ~ (__ \ "serviceType"       ).formatNullable[ServiceType]
     ~ (__ \ "digitalServiceName").formatNullable[String]
     ~ (__ \ "owningTeams"       ).formatWithDefault[Seq[String]](Nil)
     ~ (__ \ "language"          ).formatNullable[String]
@@ -225,10 +269,19 @@ class TeamsAndRepositoriesConnector @Inject()(
       }
   }
 
-  def allRepositories(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
+  def allRepositories(
+     name       : Option[String] = None,
+     team       : Option[TeamName] = None,
+     archived   : Option[Boolean] = None,
+     repoType   : Option[RepoType] = None,
+     serviceType: Option[ServiceType] = None
+   )(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
+
+    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&team=${team.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}"
     httpClientV2
-      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
+      .get(url)
       .execute[Seq[GitRepository]]
+  }
 
   def allServices(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
     httpClientV2
