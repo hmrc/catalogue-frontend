@@ -54,7 +54,7 @@ class ShutterGroupsConnector @Inject() (
     implicit val gr = ShutterGroup.reads
     httpClientV2
       .get(url)
-      .replaceHeader("Authorization" -> s"token ${githubConf.token}")
+      .setHeader("Authorization" -> s"token ${githubConf.token}")
       .withProxy
       .execute[Option[List[ShutterGroup]]]
       .map(_.getOrElse {
