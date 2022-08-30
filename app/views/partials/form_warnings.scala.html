@@ -14,8 +14,9 @@
  * limitations under the License.
  *@
 
-@(form                  : Form[_])(implicit request       : Request[_]
-, messagesProvider: MessagesProvider
+@(form : Form[_]
+)(implicit
+  messagesProvider: MessagesProvider
 )
 
 @if(form.hasGlobalErrors) {

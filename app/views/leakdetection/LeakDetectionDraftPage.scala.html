@@ -19,14 +19,12 @@
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionReport
 @import views.html.helper.select
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionRule
-@import views.html.leakdetection.RuleDetails
 
 @this(viewMessages: ViewMessages)
 
-@(
-        rules     : Seq[LeakDetectionRule],
-        summaries : Seq[LeakDetectionReport],
-        form      : Form[_]
+@(rules     : Seq[LeakDetectionRule],
+  summaries : Seq[LeakDetectionReport],
+  form      : Form[_]
 )(implicit
   messages : Messages,
   request  : Request[_]

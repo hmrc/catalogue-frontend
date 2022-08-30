@@ -14,7 +14,6 @@
  * limitations under the License.
  *@
 
-@import partials.DependenciesPartial
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules, RepositoryModule}
 
 @this(
@@ -23,8 +22,6 @@
 
 @(
   repositoryModules: RepositoryModules
-)(implicit
-  messages           : Messages
 )
 
 @repositoryModules.modules match {

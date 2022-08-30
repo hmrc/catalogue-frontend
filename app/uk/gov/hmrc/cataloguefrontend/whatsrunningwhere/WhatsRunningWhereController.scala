@@ -20,18 +20,15 @@ import cats.implicits._
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.i18n.Messages.implicitMessagesProviderToMessages
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Request, RequestHeader}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ViewMode.Versions
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.whatsrunningwhere.WhatsRunningWherePage
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class WhatsRunningWhereController @Inject() (

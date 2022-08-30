@@ -36,7 +36,9 @@
   hasLeaks              : String => Boolean,
   masterTeamDependencies: Seq[RepoAndDependencies],
   prodDependencies      : Map[String, Seq[Dependency]]
-)(implicit messages: Messages, request: Request[_])
+)(implicit
+  request: Request[_]
+)
 
 @standard_layout(teamName.asString, "teams") {
     <header>
