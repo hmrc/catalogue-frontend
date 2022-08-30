@@ -45,7 +45,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     "return a 404 when a Library is viewed as a service" in {
       serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
 
-      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get().futureValue
       response.status shouldBe 404
     }
 
@@ -53,7 +53,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (404, None))
       serviceEndpoint(GET, "/config-by-key/serv", willRespondWith = (200, Some("""{}""")))
 
-      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get().futureValue
       response.status shouldBe 404
     }
 
@@ -77,7 +77,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         ))
       )
 
-      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get().futureValue
       response.status shouldBe 404
     }
 
@@ -108,7 +108,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         ))
       )
 
-      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get().futureValue
       response.status shouldBe 500
     }
 
@@ -171,7 +171,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
           }"""
         ))
       )
-      val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       response.body     should include("links on this page are automatically generated")
       response.body     should include("teamA")
@@ -188,11 +188,11 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
     "show shuttered environments when they are shuttered" in new Setup {
 
-      val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       val document = Jsoup.parse(response.body)
 
-      import scala.collection.JavaConverters._
+      import scala.jdk.CollectionConverters._
       val qaTabElements = document.getElementById("qa-tab").children().asScala
       qaTabElements.exists(_.hasClass("shutter_badge")) && !qaTabElements.exists(_.hasClass("noshutter_badge"))
 
@@ -201,7 +201,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     }
 
     "render platform dependencies section" in new Setup {
-      val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)
@@ -212,7 +212,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
   def readFile(jsonFilePath: String): String = {
     val path = "__files/" + jsonFilePath
     try {
-      Source.fromResource(path).getLines.mkString("\n")
+      Source.fromResource(path).getLines().mkString("\n")
     } catch {
       case _: NullPointerException => sys.error(s"Could not find file $path")
     }

@@ -122,18 +122,19 @@ object DeploymentHistoryController {
   lazy val form: Form[SearchForm] = {
     val dateFormat = "yyyy-MM-dd"
     Form(
-      Forms.mapping(
-        "from"    -> Forms
-                       .optional(Forms.localDate(dateFormat))
-                       .transform[LocalDate](o => o.getOrElse(defaultFromTime()), l => Some(l)), //Default to last week if not set
-        "to"      -> Forms
-                       .optional(Forms.localDate(dateFormat))
-                       .transform[LocalDate](o => o.getOrElse(defaultToTime()), l => Some(l)), //Default to now if not set
-        "team"    -> Forms.optional(Forms.text),
-        "service" -> Forms.optional(Forms.text),
-        "page"    -> Forms.optional(Forms.number(min = 0))
-      )(SearchForm.apply)(SearchForm.unapply)
-      verifying("To Date must be greater than or equal to From Date", f => f.to.isAfter(f.from))
+      Forms
+        .mapping(
+          "from"    -> Forms
+                        .optional(Forms.localDate(dateFormat))
+                        .transform[LocalDate](o => o.getOrElse(defaultFromTime()), l => Some(l)), //Default to last week if not set
+          "to"      -> Forms
+                        .optional(Forms.localDate(dateFormat))
+                        .transform[LocalDate](o => o.getOrElse(defaultToTime()), l => Some(l)), //Default to now if not set
+          "team"    -> Forms.optional(Forms.text),
+          "service" -> Forms.optional(Forms.text),
+          "page"    -> Forms.optional(Forms.number(min = 0))
+        )(SearchForm.apply)(SearchForm.unapply)
+        .verifying("To Date must be greater than or equal to From Date", f => f.to.isAfter(f.from))
     )
   }
 }

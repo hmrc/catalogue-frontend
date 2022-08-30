@@ -52,8 +52,10 @@ case class UserManagementConnector @Inject() (
     val url = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}/members"
     httpClientV2
       .get(url)
-      .replaceHeader("requester" -> "None")
-      .replaceHeader("Token"     -> "None")
+      .setHeader(
+        "requester" -> "None",
+        "Token"     -> "None"
+      )
       .execute[HttpResponse]
       .map { response =>
         response.status match {
@@ -79,8 +81,10 @@ case class UserManagementConnector @Inject() (
     val url = url"$userManagementBaseUrl/v2/organisations/users"
     httpClientV2
       .get(url)
-      .replaceHeader("requester" -> "None")
-      .replaceHeader("Token"     -> "None")
+      .setHeader(
+        "requester" -> "None",
+        "Token"     -> "None"
+      )
       .execute[HttpResponse]
       .map { response =>
         response.status match {
@@ -102,8 +106,10 @@ case class UserManagementConnector @Inject() (
     val url = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}"
     httpClientV2
       .get(url)
-      .replaceHeader("requester" -> "None")
-      .replaceHeader("Token"     -> "None")
+      .setHeader(
+        "requester" -> "None",
+        "Token"     -> "None"
+      )
       .execute[HttpResponse]
       .map { response =>
         response.status match {

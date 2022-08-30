@@ -65,8 +65,8 @@ class LeakDetectionService @Inject() (
           .map(summary =>
             LeakDetectionRulesWithCounts(
               summary.rule,
-              summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(s => s.firstScannedAt),
-              summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(s => s.lastScannedAt),
+              summary.leaks.reduceOption[LeakDetectionRepositorySummary](Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(s => s.firstScannedAt),
+              summary.leaks.reduceOption[LeakDetectionRepositorySummary](Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(s => s.lastScannedAt),
               summary.leaks.length,
               summary.leaks.map(_.excludedCount).sum,
               summary.leaks.map(_.unresolvedCount).sum
@@ -96,7 +96,7 @@ class LeakDetectionService @Inject() (
     } yield filteredSummaries.sortBy(_.repository.toLowerCase)
 
   def rules()(implicit headerCarrier: HeaderCarrier) =
-    leakDetectionConnector.leakDetectionRules
+    leakDetectionConnector.leakDetectionRules()
 
   def branchSummaries(repo: String, includeNonIssues: Boolean)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
     leakDetectionConnector

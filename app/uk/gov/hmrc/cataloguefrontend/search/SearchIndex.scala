@@ -110,4 +110,5 @@ object SearchIndex {
       .map(_.toLowerCase() -> st))
       .groupBy(_._1)
       .mapValues(_.map(_._2))
+      .toMap
 }

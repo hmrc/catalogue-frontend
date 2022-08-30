@@ -44,7 +44,7 @@ class UserManagementConnectorSpec
      with WireMockSupport
      with MockitoSugar {
 
-  override def fakeApplication: Application =
+  override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .configure(
         "microservice.services.user-management.url"        -> wireMockUrl,

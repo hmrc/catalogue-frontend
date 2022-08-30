@@ -48,10 +48,15 @@ class LeakDetectionController @Inject() (
 
   def ruleSummaries(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      leakDetectionService.ruleSummaries.map(s => Ok(rulesPage(s)))
+      leakDetectionService.ruleSummaries().map(s => Ok(rulesPage(s)))
     }
 
-  def repoSummaries(includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean, includeNonIssues: Boolean): Action[AnyContent] =
+  def repoSummaries(
+    includeWarnings  : Boolean,
+    includeExemptions: Boolean,
+    includeViolations: Boolean,
+    includeNonIssues : Boolean
+  ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       form
         .bindFromRequest()

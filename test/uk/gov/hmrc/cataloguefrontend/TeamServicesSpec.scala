@@ -25,8 +25,8 @@ import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-import scala.collection.JavaConverters._
 import scala.io.Source
+import scala.jdk.CollectionConverters._
 
 class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
@@ -55,7 +55,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
 
-      val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
 
       val anchorTags =  asDocument(response.body).getElementsByTag("a").asScala.toList
@@ -71,7 +71,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
 
-      val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       response.body   should include(viewMessages.noRepoOfTypeForTeam("service"))
       response.body   should include(viewMessages.noRepoOfTypeForTeam("library"))
@@ -93,7 +93,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       )))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("large-user-management-response.json"))))
 
-      val response = wsClient.url(s"http://localhost:$port/teams/$teamName").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/teams/$teamName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
 
       val document = asDocument(response.body)
@@ -106,7 +106,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       serviceEndpoint(GET, "/api/v2/repositories?team=teamA", willRespondWith = (200, Some(JsonData.repositoriesData)))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (404, Some(readFile("user-management-response.json"))))
 
-      val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       response.body should include("Sorry, the User Management Portal is not available")
     }
@@ -116,7 +116,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       serviceEndpoint(GET, s"/api/v2/repositories?team=$teamName", willRespondWith = (200, Some(repositoriesData)))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
 
-      val response = wsClient.url(s"http://localhost:$port/teams/$teamName").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/teams/$teamName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
 
       val document = asDocument(response.body)
@@ -166,7 +166,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
   def readFile(jsonFilePath: String): String = {
     val path = "__files/" + jsonFilePath
     try {
-      Source.fromResource(path).getLines.mkString("\n")
+      Source.fromResource(path).getLines().mkString("\n")
     } catch {
       case _: NullPointerException => sys.error(s"Could not find file $path")
     }

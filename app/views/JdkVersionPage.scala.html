@@ -114,7 +114,7 @@
                 data.addColumn('string', 'Version');
                 data.addColumn('number', 'Count');
                 data.addRows([
-                    @for(r <- jdkVersions.groupBy(j => j.vendor + "(" + j.kind + ")").mapValues(_.length)) {
+                    @for(r <- jdkVersions.groupBy(j => j.vendor.toString + "(" + j.kind + ")").mapValues(_.length)) {
                     ['@r._1', @r._2],
                     }
                 ].sort());

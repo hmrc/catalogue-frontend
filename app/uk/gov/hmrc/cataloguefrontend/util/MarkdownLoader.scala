@@ -30,7 +30,7 @@ object MarkdownLoader {
   def markdownFromFile(filename: String, maxLines: Int): Either[String, String] = {
     val source = scala.io.Source.fromResource(filename)
     val lines =
-      try source.getLines.toList.filterNot(_.isEmpty)
+      try source.getLines().toList.filterNot(_.isEmpty)
       finally source.close()
     transformer.transform(lines.take(maxLines).mkString("\n")) match {
       case Left(_)  => Left("<Unable to render at this time>")

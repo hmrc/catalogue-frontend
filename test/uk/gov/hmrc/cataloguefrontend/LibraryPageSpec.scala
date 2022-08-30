@@ -37,7 +37,7 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(GET, s"/api/jenkins-url/$libName"        , willRespondWith = (200, Some(jenkinsData)))
       serviceEndpoint(GET, s"/api/module-dependencies/$libName", willRespondWith = (404, None))
 
-      val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       response.body   should include(s"links on this page are automatically generated")
       response.body   should include(s"teamA")
@@ -60,7 +60,7 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
                                                                                               ))))
       serviceEndpoint(GET, s"/api/jenkins-url/$libName"        , willRespondWith = (404, None))
 
-      val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)

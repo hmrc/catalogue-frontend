@@ -57,7 +57,7 @@ class WhatsRunningWhereController @Inject() (
 
   def releases(showDiff: Boolean): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      val form                  = WhatsRunningWhereFilter.form.bindFromRequest
+      val form                  = WhatsRunningWhereFilter.form.bindFromRequest()
       val profile               = profileFrom(form)
       val selectedProfileType   = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
       val selectedViewMode      = form.fold(_ => None, _.viewMode).getOrElse(ViewMode.Versions)
