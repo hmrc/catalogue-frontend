@@ -34,8 +34,15 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SearchTerm(linkType: String, name: String, link: String, weight: Float = 0.5f, hints: Set[String] = Set.empty) {
-  lazy val terms: Set[String] = Set(name, linkType).union(hints).map(normalizeTerm)
+case class SearchTerm(
+  linkType: String,
+  name    : String,
+  link    : String,
+  weight  : Float       = 0.5f,
+  hints   : Set[String] = Set.empty
+) {
+  lazy val terms: Set[String] =
+    Set(name, linkType).union(hints).map(normalizeTerm)
 }
 
 @Singleton
@@ -77,18 +84,17 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
     } yield cachedIndex.set(optimizeIndex(allLinks))
   }
 
-  def search(query: Seq[String]): Seq[SearchTerm] = SearchIndex.search(query, cachedIndex.get())
+  def search(query: Seq[String]): Seq[SearchTerm] =
+    SearchIndex.search(query, cachedIndex.get())
 }
 
 object SearchIndex {
 
-  def normalizeTerm(term: String): String = {
+  def normalizeTerm(term: String): String =
     term.toLowerCase.replaceAll(" -_", "")
-  }
 
   // TODO: we could cache the results short term, generally the next query will be the previous query + 1 letter
   //       so we can reuse the partial result set
-
   private[search] def search(query: Seq[String], index: Map[String, Seq[SearchTerm]]): Seq[SearchTerm] = {
     val normalised = query.map(normalizeTerm)
     normalised

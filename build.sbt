@@ -27,7 +27,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress unused-imports in twirl and routes files
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
-    scalacOptions += "-Wconf:cat=unused-imports&src=routes/.*:s",
+    scalacOptions += "-Wconf:src=routes/.*:s",
     pipelineStages := Seq(digest)
   )
 

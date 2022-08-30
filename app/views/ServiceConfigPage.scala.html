@@ -20,7 +20,11 @@
 @import scala.collection.immutable.ListMap
 
 @this(viewMessages: ViewMessages)
-@(serviceName: String, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
+
+@(serviceName: String,
+  configByKey: ConfigByKey
+)
+
 <html>
     <head>
         <title>Config - @serviceName</title>

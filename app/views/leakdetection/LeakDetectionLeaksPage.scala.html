@@ -23,7 +23,13 @@
 
 @this(viewMessages: ViewMessages)
 
-@(report: LeakDetectionReport, exemptions: Map[String, Int], unresolvedLeaks: Seq[LeakDetectionLeaksByRule], warnings: Seq[LeakDetectionWarning], leakResolutionUrl: String, isAuthorised: Boolean)(implicit messages: Messages, request: Request[_])
+@(report           : LeakDetectionReport,
+  exemptions       : Map[String, Int],
+  unresolvedLeaks  : Seq[LeakDetectionLeaksByRule],
+  warnings         : Seq[LeakDetectionWarning],
+  leakResolutionUrl: String,
+  isAuthorised     : Boolean
+)(implicit request: Request[_])
 
 @standard_layout(s"Leak detection report") {
     <header>

@@ -42,7 +42,4 @@ object Binders {
       override def unbind(key: String, value: LocalDate): String =
         strBinder.unbind(key, value.toString)
     }
-
-
-
 }

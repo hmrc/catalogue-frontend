@@ -149,9 +149,7 @@ object JsonCodecs {
 
   val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] = {
     implicit val ef  = environmentFormat
-    implicit val anf = applicationNameFormat
-    (
-      (__ \ "environment" ).read[Environment]
+    ( (__ \ "environment" ).read[Environment]
     ~ (__ \ "version"     ).read[String]
     ~ (__ \ "username"    ).read[String]
     ~ (__ \ "start"       ).read[Instant]

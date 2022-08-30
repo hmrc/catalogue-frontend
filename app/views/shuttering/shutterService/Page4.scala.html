@@ -26,8 +26,8 @@
 , env          : Environment
 , step1Out     : ShutterWizardController.Step1Out
 , serviceLinks : Map[String, Option[String]]
-)(implicit request         : Request[_]
-, messagesProvider: MessagesProvider
+)(implicit
+  request      : Request[_]
 )
 
 @standard_layout(s"Shutter ${shutterType.asString.capitalize}") {

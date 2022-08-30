@@ -96,7 +96,7 @@ object HealthIndicatorsFilter {
   lazy val form: Form[HealthIndicatorsFilter] = Form(
     mapping(
       "repoName" -> optional(text),
-      "team" -> optional(text),
+      "team"     -> optional(text),
       "repoType" -> optional(text)
         .transform[Option[RepoType]](
           _.flatMap(s => RepoType.parse(s).toOption),

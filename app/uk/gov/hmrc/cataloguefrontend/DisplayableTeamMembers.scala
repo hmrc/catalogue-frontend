@@ -26,7 +26,7 @@ object DisplayableTeamMembers {
     teamName         : TeamName,
     umpProfileBaseUrl: String,
     teamMembers      : Seq[TeamMember]
-   ): Seq[DisplayableTeamMember] = {
+  ): Seq[DisplayableTeamMember] = {
 
     val displayableTeamMembers = teamMembers.map(tm =>
       DisplayableTeamMember(

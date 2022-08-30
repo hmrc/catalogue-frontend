@@ -293,9 +293,9 @@ class CatalogueController @Inject() (
     }
 
   private def renderPrototype(
-    repoDetails: GitRepository,
+    repoDetails            : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit messages: Messages, request: Request[_]): Future[Result] =
+  )(implicit request: Request[_]): Future[Result] =
     for {
       urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
     } yield
