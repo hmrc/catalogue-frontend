@@ -41,7 +41,7 @@ class ServiceDependenciesConnectorSpec
      with ScalaFutures
      with IntegrationPatience {
 
-  override def fakeApplication: Application =
+  override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(

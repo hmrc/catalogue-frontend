@@ -21,7 +21,6 @@ import cats.data.EitherT
 import cats.instances.future._
 
 import javax.inject.{Inject, Singleton}
-import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
@@ -51,10 +50,10 @@ class BobbyRulesTrendController @Inject() (
   def landing: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        allRules <- configConnector.bobbyRules.map(_.libraries)
+        allRules <- configConnector.bobbyRules().map(_.libraries)
       } yield Ok(
         page(
-          form.fill(SearchForm(rules = Seq.empty, from = LocalDate.now().minusYears(2) , to = LocalDate.now())),
+          form().fill(SearchForm(rules = Seq.empty, from = LocalDate.now().minusYears(2) , to = LocalDate.now())),
           allRules,
           flags = SlugInfoFlag.values,
           data = None
@@ -65,17 +64,17 @@ class BobbyRulesTrendController @Inject() (
   def display: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        allRules <- configConnector.bobbyRules
+        allRules <- configConnector.bobbyRules()
                       .map(_.libraries)
                       .map(_.sortBy(-_.from.toEpochDay))
         pageWithError = (msg: String) =>
                           page(
-                            form.bindFromRequest().withGlobalError(msg),
+                            form().bindFromRequest().withGlobalError(msg),
                             allRules,
                             flags = SlugInfoFlag.values,
                             data = None
                           )
-        res <- form
+        res <- form()
                  .bindFromRequest()
                  .fold(
                    hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, allRules, flags = SlugInfoFlag.values, data = None))),
@@ -85,7 +84,7 @@ class BobbyRulesTrendController @Inject() (
                        countData = violations.summary
                      } yield Ok(
                        page(
-                         form.bindFromRequest(),
+                         form().bindFromRequest(),
                          allRules,
                          flags = SlugInfoFlag.values,
                          Some(
@@ -94,17 +93,17 @@ class BobbyRulesTrendController @Inject() (
                              .mapValues(cd =>
                                BobbyRulesTrendController.GraphData(
                                  columns = List(("string", "Date")) ++
-                                   List(("number", "Total")) ++
-                                   cd.map(_._1).map { case (r, _) => s"${r.group}:${r.artefact}:${r.range.range}" }.toList.map(("number", _)),
-                                 rows = cd
-                                   .map(_._2.toList)
-                                   .toList
-                                   .transpose
-                                   .map(x => List(x.sum) ++ x)
-                                   .zipWithIndex
-                                   .map { case (x, i) => List("\"" + violations.date.plusDays(i).format(DateTimeFormatter.ofPattern("dd MMM")) + "\"") ++ x }
+                                             List(("number", "Total")) ++
+                                             cd.map(_._1).map { case (r, _) => s"${r.group}:${r.artefact}:${r.range.range}" }.toList.map(("number", _)),
+                                 rows    = cd
+                                             .map(_._2.toList)
+                                             .toList
+                                             .transpose
+                                             .map(x => List(x.sum) ++ x)
+                                             .zipWithIndex
+                                             .map { case (x, i) => List("\"" + violations.date.plusDays(i).format(DateTimeFormatter.ofPattern("dd MMM")) + "\"") ++ x }
                                )
-                             )
+                             ).toMap
                          )
                        )
                      )).merge
@@ -134,7 +133,7 @@ class BobbyRulesTrendController @Inject() (
 
 object BobbyRulesTrendController {
   def display(group: String, artefact: String, versionRange: BobbyVersionRange): String =
-    uk.gov.hmrc.cataloguefrontend.routes.BobbyRulesTrendController.display +
+    uk.gov.hmrc.cataloguefrontend.routes.BobbyRulesTrendController.display.toString +
       s"?rules[]=$group:$artefact:${versionRange.range}"
 
   case class GraphData(

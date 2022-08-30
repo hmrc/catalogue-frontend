@@ -36,7 +36,7 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with FakeApplicationBuilder
     "shows the table with route warnings" in {
       serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(abcWarnings)))
 
-      val response = wsClient.url(s"http://localhost:$port/frontend-route-warnings/development/abc-frontend").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/frontend-route-warnings/development/abc-frontend").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       response.body.contains("""<li id="tab-development" class="navbar-item active">""") shouldBe true
       response.body.contains("""LegacyErrorPageMisconfigured""") shouldBe true

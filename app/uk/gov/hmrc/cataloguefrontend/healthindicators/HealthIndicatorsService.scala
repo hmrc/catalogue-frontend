@@ -38,7 +38,7 @@ class HealthIndicatorsService @Inject() (
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[IndicatorsWithTeams]] = {
-    val eventualTeamLookUp: Future[Map[ServiceName, Seq[TeamName]]] = teamsAndReposConnector.allTeamsByService
+    val eventualTeamLookUp: Future[Map[ServiceName, Seq[TeamName]]] = teamsAndReposConnector.allTeamsByService()
     val eventualIndicators: Future[Seq[Indicator]]                  = healthIndicatorsConnector.getAllIndicators(repoType)
 
     for {

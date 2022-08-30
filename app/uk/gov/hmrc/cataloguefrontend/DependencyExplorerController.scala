@@ -60,7 +60,7 @@ class DependencyExplorerController @Inject() (
         groupArtefacts <- dependenciesService.getGroupArtefacts
       } yield Ok(
         page(
-          form           = form.fill(
+          form           = form().fill(
                              SearchForm(
                                team         = "",
                                flag         = SlugInfoFlag.Latest.asString,
@@ -124,7 +124,7 @@ class DependencyExplorerController @Inject() (
         res <- {
           def pageWithError(msg: String) =
             page(
-              form.bindFromRequest().withGlobalError(msg),
+              form().bindFromRequest().withGlobalError(msg),
               teams,
               flags,
               scopes,
@@ -133,7 +133,7 @@ class DependencyExplorerController @Inject() (
               searchResults = None,
               pieData       = None
             )
-          form
+          form()
             .bindFromRequest()
             .fold(
               hasErrors = formWithErrors =>
@@ -173,7 +173,7 @@ class DependencyExplorerController @Inject() (
                   } else
                     Ok(
                       page(
-                        form.bindFromRequest(),
+                        form().bindFromRequest(),
                         teams,
                         flags,
                         scopes,
@@ -236,6 +236,6 @@ object DependencyExplorerController {
     }
 
   def search(team: String = "", flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange): String =
-    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search +
+    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search.toString +
       s"?team=$team&flag=${flag.asString}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
 }

@@ -10,7 +10,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
   .settings(publishingSettings: _*)
   .settings(
     majorVersion := 4,
-    scalaVersion := "2.12.15",
+    scalaVersion := "2.13.8",
     scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
@@ -54,4 +54,4 @@ val test = Seq(
   ws
 )
 
-addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
+addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)

@@ -102,7 +102,7 @@ object ConfigService {
       implicit val csvf = ConfigSourceValue.reads
       Reads
         .of[Map[KeyName, Map[String, Seq[ConfigSourceValue]]]]
-        .map(_.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) }))
+        .map(_.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) }).toMap)
     }
   }
 

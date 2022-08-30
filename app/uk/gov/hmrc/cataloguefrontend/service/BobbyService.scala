@@ -44,7 +44,7 @@ class BobbyService @Inject() (configConnector: ConfigConnector, clock: Clock)(im
       )
     }
 
-    configConnector.bobbyRules
+    configConnector.bobbyRules()
       .map { ruleset =>
         val (upcomingLibraries, activeLibraries) = ruleset.libraries.partition(_.from isAfter today)
         val (upcomingPlugins, activePlugins)     = ruleset.plugins.partition(_.from isAfter today)
