@@ -35,11 +35,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class WhatsRunningWhereController @Inject() (
-                                              service           : WhatsRunningWhereService,
-                                              page              : WhatsRunningWherePage,
-                                              config            : WhatsRunningWhereServiceConfig,
-                                              override val mcc  : MessagesControllerComponents,
-                                              override val auth : FrontendAuthComponents
+  service           : WhatsRunningWhereService,
+  page              : WhatsRunningWherePage,
+  config            : WhatsRunningWhereServiceConfig,
+  override val mcc  : MessagesControllerComponents,
+  override val auth : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -60,37 +60,49 @@ class WhatsRunningWhereController @Inject() (
 
   def releases(showDiff: Boolean): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
+      val form                  = WhatsRunningWhereFilter.form.bindFromRequest
+      val profile               = profileFrom(form)
+      val selectedProfileType   = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
+      val selectedViewMode      = form.fold(_ => None, _.viewMode).getOrElse(ViewMode.Versions)
 
-        val form                  = WhatsRunningWhereFilter.form.bindFromRequest
-        val profile               = profileFrom(form)
-        val selectedProfileType   = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-        val selectedViewMode      = form.fold(_ => None, _.viewMode).getOrElse(ViewMode.Versions)
-
-        selectedViewMode match {
-          case ViewMode.Instances => instancesPage(form, profile, selectedProfileType, selectedViewMode).map(page => Ok(page))
-          case ViewMode.Versions => versionsPage(form, profile, selectedProfileType, selectedViewMode, showDiff).map(page => Ok(page))
+      selectedViewMode match {
+        case ViewMode.Instances => instancesPage(form, profile, selectedProfileType, selectedViewMode          ).map(page => Ok(page))
+        case ViewMode.Versions  => versionsPage (form, profile, selectedProfileType, selectedViewMode, showDiff).map(page => Ok(page))
       }
     }
 
 
-  private def versionsPage(form: Form[WhatsRunningWhereFilter], profile: Option[Profile], selectedProfileType: ProfileType, selectedViewMode: ViewMode, showDiff: Boolean)
-                          (implicit request: MessagesRequest[AnyContent]) =
+  private def versionsPage(
+    form               : Form[WhatsRunningWhereFilter],
+    profile            : Option[Profile],
+    selectedProfileType: ProfileType,
+    selectedViewMode   : ViewMode,
+    showDiff           : Boolean
+  )(implicit
+    request: MessagesRequest[AnyContent
+  ]) =
     for {
-      profiles             <- service.profiles
-      releases             <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
-      environments          = distinctEnvironments(releases)
-      profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+      profiles     <- service.profiles
+      releases     <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
+      environments =  distinctEnvironments(releases)
+      profileNames =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
     } yield page(environments, releases, selectedProfileType, profileNames, form, showDiff, Seq.empty, config.maxMemoryAmount, selectedViewMode)
 
 
-  private def instancesPage(form: Form[WhatsRunningWhereFilter], profile: Option[Profile], selectedProfileType: ProfileType, selectedViewMode: ViewMode)
-                           (implicit request: MessagesRequest[AnyContent]) =
+  private def instancesPage(
+    form: Form[WhatsRunningWhereFilter],
+    profile: Option[Profile],
+    selectedProfileType: ProfileType,
+    selectedViewMode: ViewMode
+  )(implicit
+    request: MessagesRequest[AnyContent]
+  ) =
     for {
-      profiles             <- service.profiles
-      releases             <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
-      environments          = distinctEnvironments(releases)
-      serviceDeployments   <- service.allDeploymentConfigs(releases)
-      profileNames          = profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
+      profiles           <- service.profiles
+      releases           <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
+      environments       =  distinctEnvironments(releases)
+      serviceDeployments <- service.allDeploymentConfigs(releases)
+      profileNames       =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
     } yield page(environments, Seq.empty, selectedProfileType, profileNames, form, showDiff = false, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode)
 }
 
@@ -115,25 +127,25 @@ object WhatsRunningWhereFilter {
   lazy val form = Form(
     mapping(
       "profile_name" -> optional(text)
-        .transform[Option[ProfileName]](
-          _.map(ProfileName.apply),
-          _.map(_.asString)
-        ),
+                          .transform[Option[ProfileName]](
+                            _.map(ProfileName.apply),
+                            _.map(_.asString)
+                          ),
       "profile_type" -> optional(text)
-        .transform[Option[ProfileType]](
-          _.flatMap(s => ProfileType.parse(s).toOption),
-          _.map(_.asString)
-        ),
+                          .transform[Option[ProfileType]](
+                            _.flatMap(s => ProfileType.parse(s).toOption),
+                            _.map(_.asString)
+                          ),
       "service_name" -> optional(text)
-        .transform[Option[ServiceName]](
-          filterEmptyString(_).map(ServiceName.apply),
-          _.map(_.asString)
-        ),
-      "view_mode" -> optional(text)
-        .transform[Option[ViewMode]](
-          _.flatMap(s => ViewMode.parse(s).toOption),
-          _.map(_.asString)
-        )
+                          .transform[Option[ServiceName]](
+                            filterEmptyString(_).map(ServiceName.apply),
+                            _.map(_.asString)
+                          ),
+      "view_mode"    -> optional(text)
+                         .transform[Option[ViewMode]](
+                           _.flatMap(s => ViewMode.parse(s).toOption),
+                           _.map(_.asString)
+                         )
     )(WhatsRunningWhereFilter.apply)(WhatsRunningWhereFilter.unapply)
   )
 }

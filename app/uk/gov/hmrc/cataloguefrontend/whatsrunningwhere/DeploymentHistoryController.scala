@@ -64,15 +64,15 @@ class DeploymentHistoryController @Inject() (
             for {
               deployments <- releasesConnector.deploymentHistory(
                                env,
-                               from = Some(validForm.from),
-                               to = Some(validForm.to),
-                               team = validForm.team,
+                               from    = Some(validForm.from),
+                               to      = Some(validForm.to),
+                               team    = validForm.team,
                                service = validForm.service,
-                               skip = validForm.page.map(i => i * pageSize),
-                               limit = Some(pageSize)
+                               skip    = validForm.page.map(i => i * pageSize),
+                               limit   = Some(pageSize)
                              )
-              teams <- teamsAndRepositoriesConnector.allTeams
-              pagination = Pagination(page = validForm.page.getOrElse(0), pageSize = pageSize, total = deployments.total)
+              teams       <- teamsAndRepositoriesConnector.allTeams
+              pagination  =  Pagination(page = validForm.page.getOrElse(0), pageSize = pageSize, total = deployments.total)
             } yield Ok(
               page(
                 env,
@@ -104,35 +104,36 @@ class DeploymentHistoryController @Inject() (
 object DeploymentHistoryController {
 
   case class SearchForm(
-    from: LocalDate,
-    to: LocalDate,
-    team: Option[String],
+    from   : LocalDate,
+    to     : LocalDate,
+    team   : Option[String],
     service: Option[String],
-    page: Option[Int]
+    page   : Option[Int]
   )
 
   val pageSize: Int = 50
 
-  def defaultFromTime(referenceDate: LocalDate = LocalDate.now()): LocalDate = referenceDate.minusDays(7)
+  def defaultFromTime(referenceDate: LocalDate = LocalDate.now()): LocalDate =
+    referenceDate.minusDays(7)
 
-  def defaultToTime(referenceDate: LocalDate = LocalDate.now()): LocalDate = referenceDate
+  def defaultToTime(referenceDate: LocalDate = LocalDate.now()): LocalDate =
+    referenceDate
 
   lazy val form: Form[SearchForm] = {
     val dateFormat = "yyyy-MM-dd"
     Form(
       Forms.mapping(
-        "from" -> Forms
-          .optional(Forms.localDate(dateFormat))
-          .transform[LocalDate](o => o.getOrElse(defaultFromTime()), l => Some(l)), //Default to last week if not set
-        "to" -> Forms
-          .optional(Forms.localDate(dateFormat))
-          .transform[LocalDate](o => o.getOrElse(defaultToTime()), l => Some(l)), //Default to now if not set
+        "from"    -> Forms
+                       .optional(Forms.localDate(dateFormat))
+                       .transform[LocalDate](o => o.getOrElse(defaultFromTime()), l => Some(l)), //Default to last week if not set
+        "to"      -> Forms
+                       .optional(Forms.localDate(dateFormat))
+                       .transform[LocalDate](o => o.getOrElse(defaultToTime()), l => Some(l)), //Default to now if not set
         "team"    -> Forms.optional(Forms.text),
         "service" -> Forms.optional(Forms.text),
         "page"    -> Forms.optional(Forms.number(min = 0))
       )(SearchForm.apply)(SearchForm.unapply)
-        verifying ("To Date must be greater than or equal to From Date", f => f.to.isAfter(f.from))
+      verifying("To Date must be greater than or equal to From Date", f => f.to.isAfter(f.from))
     )
   }
-
 }

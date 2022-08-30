@@ -61,7 +61,7 @@ object ConfigService {
 
   trait ConfigEnvironment { def asString: String }
   object ConfigEnvironment {
-    case object Local extends ConfigEnvironment { override def asString = "local" }
+    case object Local                           extends ConfigEnvironment { override def asString = "local"      }
     case class ForEnvironment(env: Environment) extends ConfigEnvironment { override def asString = env.asString }
 
     val values: List[ConfigEnvironment] =
@@ -121,7 +121,10 @@ object ConfigService {
   case class ConfigSourceValue(
     source: String,
     value : String
-  ) { def isSuppressed = value == "<<SUPPRESSED>>" }
+  ){
+    def isSuppressed: Boolean =
+      value == "<<SUPPRESSED>>"
+  }
 
   object ConfigSourceValue {
     val reads =

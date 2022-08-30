@@ -47,10 +47,11 @@ class SearchByUrlService @Inject() (
       val url = new URI(term.get)
 
       Option(url.getPath).getOrElse("").nonEmpty &&
-      (!Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") ||
-      Option(url.getHost).getOrElse("").isEmpty &&
-      Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") &&
-      url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim.nonEmpty)
+      ( !Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") ||
+        Option(url.getHost).getOrElse("").isEmpty &&
+        Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") &&
+        url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim.nonEmpty
+      )
     } catch {
       case e: URISyntaxException => false
     }
@@ -73,6 +74,16 @@ class SearchByUrlService @Inject() (
 }
 
 object SearchByUrlService {
-  case class FrontendRoute(frontendPath: String, backendPath: String, ruleConfigurationUrl: String = "", isRegex: Boolean = false)
-  case class FrontendRoutes(service: String, environment: String, routes: Seq[FrontendRoute])
+  case class FrontendRoute(
+    frontendPath        : String,
+    backendPath         : String,
+    ruleConfigurationUrl: String = "",
+    isRegex             : Boolean = false
+  )
+
+  case class FrontendRoutes(
+    service    : String,
+    environment: String,
+    routes     : Seq[FrontendRoute]
+  )
 }

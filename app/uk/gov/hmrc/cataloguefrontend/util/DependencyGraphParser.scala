@@ -72,7 +72,6 @@ object DependencyGraphParser {
     }
 
     def asServiceDependency: ServiceDependency = dep
-
   }
 
   case class Arrow(from: Node, to: Node) extends Token
@@ -80,10 +79,10 @@ object DependencyGraphParser {
   case class Eviction(old: Node, by: Node, reason: String) extends Token
 
   case class DependencyGraph(
-                              nodes    : Set[Node],
-                              arrows   : Set[Arrow],
-                              evictions: Set[Eviction]
-                            ) {
+    nodes    : Set[Node],
+    arrows   : Set[Arrow],
+    evictions: Set[Eviction]
+  ) {
 
     def dependencies: Seq[ServiceDependency] =
       nodes.toSeq.map(_.asServiceDependency)
@@ -115,6 +114,7 @@ object DependencyGraphParser {
       DependencyGraph(
         nodes     = Set.empty,
         arrows    = Set.empty,
-        evictions = Set.empty)
+        evictions = Set.empty
+      )
   }
 }

@@ -145,23 +145,23 @@ class DependencyExplorerController @Inject() (
               success = query =>
                 (for {
                   versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
-                  team = if (query.team.isEmpty) None else Some(TeamName(query.team))
-                  flag  <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
-                  scope <- EitherT.fromEither[Future](DependencyScope.parse(query.scope)).leftMap(msg => BadRequest(pageWithError(msg)))
-                  results <- EitherT.right[Result] {
-                               dependenciesService
-                                 .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
-                             }
-                  pieData = if (results.nonEmpty)
-                              Some(
-                                PieData(
-                                  "Version spread",
-                                  results
-                                    .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
-                                    .map(r => r._1 -> r._2.size)
-                                )
-                              )
-                            else None
+                  team         =  if (query.team.isEmpty) None else Some(TeamName(query.team))
+                  flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
+                  scope        <- EitherT.fromEither[Future](DependencyScope.parse(query.scope)).leftMap(msg => BadRequest(pageWithError(msg)))
+                  results      <- EitherT.right[Result] {
+                                    dependenciesService
+                                      .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
+                                  }
+                  pieData      = if (results.nonEmpty)
+                                   Some(
+                                     PieData(
+                                       "Version spread",
+                                       results
+                                         .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
+                                         .map(r => r._1 -> r._2.size)
+                                     )
+                                   )
+                                 else None
                 } yield
                   if (query.asCsv) {
                     val csv    = CsvUtils.toCsv(toRows(results))

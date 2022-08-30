@@ -28,30 +28,28 @@ case class Progress(
 }
 
 object Progress {
-  implicit val format: OFormat[Progress] = {
-    ((__ \ "current").format[Int]
-      ~ (__ \ "target").format[Int]
-      )(Progress.apply,unlift(Progress.unapply))
-  }
+  implicit val format: OFormat[Progress] =
+    ( (__ \ "current").format[Int]
+    ~ (__ \ "target" ).format[Int]
+    )(Progress.apply,unlift(Progress.unapply))
 }
 
 case class PlatformInitiative(
-   initiativeName       : String  ,
-   initiativeDescription: String  ,
-   progress             : Progress,
-   completedLegend      : String  ,
-   inProgressLegend     : String
+  initiativeName       : String  ,
+  initiativeDescription: String  ,
+  progress             : Progress,
+  completedLegend      : String  ,
+  inProgressLegend     : String
 )
 
 object PlatformInitiative {
-  val format: OFormat[PlatformInitiative] = {
-    ((__ \ "initiativeName").format[String]
-      ~ (__ \ "initiativeDescription").format[String]
-      ~ (__ \ "progress"    ).format[Progress]
-      ~ (__ \ "completedLegend").format[String]
-      ~ (__ \ "inProgressLegend").format[String]
-      ) (apply, unlift(unapply))
-  }
+  val format: OFormat[PlatformInitiative] =
+    ( (__ \ "initiativeName").format[String]
+    ~ (__ \ "initiativeDescription").format[String]
+    ~ (__ \ "progress"    ).format[Progress]
+    ~ (__ \ "completedLegend").format[String]
+    ~ (__ \ "inProgressLegend").format[String]
+    )(apply, unlift(unapply))
 }
 
 sealed trait DisplayType {

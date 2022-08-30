@@ -43,10 +43,8 @@ case class UserManagementConnector @Inject() (
 
   def getTeamMembersForTeams(teamNames: Seq[TeamName])(implicit hc: HeaderCarrier): Future[Map[TeamName, Either[UMPError, Seq[TeamMember]]]] =
     Future
-      .sequence(
-        teamNames.map { teamName =>
+      .traverse(teamNames)(teamName =>
           getTeamMembersFromUMP(teamName).map(umpErrorOrTeamMembers => (teamName, umpErrorOrTeamMembers))
-        }
       )
       .map(_.toMap)
 
@@ -149,12 +147,13 @@ object UserManagementConnector {
     def getUmpLink(umpProfileBaseUrl: String): String =
       username.map(x => url"$umpProfileBaseUrl/$x".toString).getOrElse("USERNAME NOT PROVIDED")
 
-    def getDisplayName: String = this.displayName.getOrElse("DISPLAY NAME NOT PROVIDED")
+    def getDisplayName: String =
+      this.displayName.getOrElse("DISPLAY NAME NOT PROVIDED")
   }
 
   case class SlackInfo(url : String) {
-    val name = url.split("/").lastOption.getOrElse(url)
-    val hasValidUrl = url.startsWith("http://") || url.startsWith("https://")
+    val name         = url.split("/").lastOption.getOrElse(url)
+    val hasValidUrl  = url.startsWith("http://") || url.startsWith("https://")
     val hasValidName = "^[A-Z0-9]+$".r.findFirstIn(name).isEmpty
   }
 
