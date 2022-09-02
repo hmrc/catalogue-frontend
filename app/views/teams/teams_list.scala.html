@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 
-@(teams: Seq[Team])(implicit messages: Messages, request: Request[_])
+@(teams: Seq[Team])(implicit request: Request[_])
 
     @standard_layout("Teams list", "teams") {
         <header>

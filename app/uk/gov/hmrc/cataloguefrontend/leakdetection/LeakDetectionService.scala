@@ -54,7 +54,9 @@ class LeakDetectionService @Inject() (
   def hasLeaks(reposWithLeaks: Seq[RepositoryWithLeaks])(repoName: String): Boolean =
     reposWithLeaks.exists(_.name == repoName)
 
-  implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toInstant(ZoneOffset.UTC))
+  implicit val localDateOrdering: Ordering[LocalDateTime] =
+    Ordering.by(_.toInstant(ZoneOffset.UTC))
+
   def ruleSummaries()(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRulesWithCounts]] =
     leakDetectionConnector
       .leakDetectionSummaries(None, None, None)
@@ -63,8 +65,8 @@ class LeakDetectionService @Inject() (
           .map(summary =>
             LeakDetectionRulesWithCounts(
               summary.rule,
-              summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(s => s.firstScannedAt),
-              summary.leaks.reduceOption(Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(s => s.lastScannedAt),
+              summary.leaks.reduceOption[LeakDetectionRepositorySummary](Ordering.by((_: LeakDetectionRepositorySummary).firstScannedAt).min).map(s => s.firstScannedAt),
+              summary.leaks.reduceOption[LeakDetectionRepositorySummary](Ordering.by((_: LeakDetectionRepositorySummary).lastScannedAt).max).map(s => s.lastScannedAt),
               summary.leaks.length,
               summary.leaks.map(_.excludedCount).sum,
               summary.leaks.map(_.unresolvedCount).sum
@@ -73,21 +75,29 @@ class LeakDetectionService @Inject() (
       )
 
   def repoSummaries(
-                     ruleId: Option[String],
-                     team: Option[String],
-                     includeWarnings: Boolean,
-                     includeExemptions: Boolean,
-                     includeViolations: Boolean,
-                     includeNonIssues: Boolean)
-                   (implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRepositorySummary]] =
+    ruleId           : Option[String],
+    team             : Option[String],
+    includeWarnings  : Boolean,
+    includeExemptions: Boolean,
+    includeViolations: Boolean,
+    includeNonIssues : Boolean
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[LeakDetectionRepositorySummary]] =
     for {
-      summaries <- leakDetectionConnector.leakDetectionRepoSummaries(ruleId = ruleId, repo = None, team = team, includeNonIssues = includeNonIssues, includeBranches = false)
-      filteredSummaries = filterSummaries(summaries, includeWarnings, includeExemptions, includeViolations, includeNonIssues)
+      summaries         <- leakDetectionConnector.leakDetectionRepoSummaries(
+                             ruleId           = ruleId,
+                             repo             = None,
+                             team             = team,
+                             includeNonIssues = includeNonIssues,
+                             includeBranches  = false
+                           )
+      filteredSummaries =  filterSummaries(summaries, includeWarnings, includeExemptions, includeViolations, includeNonIssues)
     } yield filteredSummaries.sortBy(_.repository.toLowerCase)
 
-  def rules()(implicit headerCarrier: HeaderCarrier) = {
-    leakDetectionConnector.leakDetectionRules
-  }
+  def rules()(implicit headerCarrier: HeaderCarrier) =
+    leakDetectionConnector.leakDetectionRules()
+
   def branchSummaries(repo: String, includeNonIssues: Boolean)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
     leakDetectionConnector
       .leakDetectionRepoSummaries(ruleId = None, repo = Some(repo), team = None, includeNonIssues = includeNonIssues, includeBranches = true)
@@ -103,7 +113,7 @@ class LeakDetectionService @Inject() (
   def draftReports(ruleId: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionReport]] =
     leakDetectionConnector.leakDetectionDraftReports(ruleId)
 
-  def reportLeaks(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] = {
+  def reportLeaks(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] =
     leakDetectionConnector.leakDetectionLeaks(reportId)
       .map(_
         .filterNot(_.isExcluded)
@@ -112,14 +122,13 @@ class LeakDetectionService @Inject() (
         .toSeq
         .sorted
       )
-  }
 
   def reportExemptions(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] =
     leakDetectionConnector.leakDetectionLeaks(reportId)
       .map(_
         .filter(_.isExcluded)
         .groupBy(_.ruleId)
-        .map {case (ruleId, leaks) => mapLeak(ruleId, leaks)}
+        .map { case (ruleId, leaks) => mapLeak(ruleId, leaks) }
         .toSeq
         .sorted
       )
@@ -127,21 +136,20 @@ class LeakDetectionService @Inject() (
   def reportWarnings(reportId: String)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionWarning]] =
     leakDetectionConnector.leakDetectionWarnings(reportId)
 
-  def rescan(repository: String, branch: String)(implicit hc: HeaderCarrier) = {
+  def rescan(repository: String, branch: String)(implicit hc: HeaderCarrier) =
    leakDetectionConnector.rescan(repository, branch)
-  }
 
   private def mapLeak(ruleId: String, leaks: Seq[LeakDetectionLeak]): LeakDetectionLeaksByRule =
-          LeakDetectionLeaksByRule(
-            ruleId,
-            leaks.head.description,
-            leaks.head.scope,
-            leaks.head.priority,
-            leaks
-              .map(l => LeakDetectionLeakDetails(l.filePath, l.lineNumber, l.urlToSource, l.lineText, l.matches))
-              .sortBy(_.lineNumber)
-              .sortBy(_.filePath)
-          )
+    LeakDetectionLeaksByRule(
+      ruleId,
+      leaks.head.description,
+      leaks.head.scope,
+      leaks.head.priority,
+      leaks
+        .map(l => LeakDetectionLeakDetails(l.filePath, l.lineNumber, l.urlToSource, l.lineText, l.matches))
+        .sortBy(_.lineNumber)
+        .sortBy(_.filePath)
+    )
 
   private def filterSummaries(summaries: Seq[LeakDetectionRepositorySummary], includeWarnings: Boolean, includeExemptions: Boolean, includeViolations: Boolean, includeNonIssues: Boolean): Seq[LeakDetectionRepositorySummary] = {
     def filter(s: LeakDetectionRepositorySummary) =
@@ -154,12 +162,32 @@ class LeakDetectionService @Inject() (
   }
 }
 
-final case class LeakDetectionRulesWithCounts(rule: LeakDetectionRule, firstScannedAt: Option[LocalDateTime], lastScannedAt: Option[LocalDateTime], repoCount: Int, excludedCount: Int, unresolvedCount: Int)
+final case class LeakDetectionRulesWithCounts(
+  rule           : LeakDetectionRule,
+  firstScannedAt : Option[LocalDateTime],
+  lastScannedAt  : Option[LocalDateTime],
+  repoCount      : Int,
+  excludedCount  : Int,
+  unresolvedCount: Int
+)
 
-final case class LeakDetectionLeaksByRule(ruleId: String, description: String, scope: String, priority: Priority, leaks: Seq[LeakDetectionLeakDetails])
+final case class LeakDetectionLeaksByRule(
+  ruleId     : String,
+  description: String,
+  scope      : String,
+  priority   : Priority,
+  leaks      : Seq[LeakDetectionLeakDetails]
+)
 
 object LeakDetectionLeaksByRule {
-  implicit val order: Ordering[LeakDetectionLeaksByRule] = Ordering.by(l => (l.priority, l.leaks.length * -1)) //length DESC
+  implicit val order: Ordering[LeakDetectionLeaksByRule] =
+    Ordering.by(l => (l.priority, l.leaks.length * -1)) //length DESC
 }
 
-final case class LeakDetectionLeakDetails(filePath: String, lineNumber: Int, urlToSource: String, lineText: String, matches: List[Match])
+final case class LeakDetectionLeakDetails(
+  filePath   : String,
+  lineNumber : Int,
+  urlToSource: String,
+  lineText   : String,
+  matches    : List[Match]
+)

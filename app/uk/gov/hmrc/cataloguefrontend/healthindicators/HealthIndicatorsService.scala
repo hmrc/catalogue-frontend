@@ -26,14 +26,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class HealthIndicatorsService @Inject() (
-  teamsAndReposConnector: TeamsAndRepositoriesConnector,
+  teamsAndReposConnector   : TeamsAndRepositoriesConnector,
   healthIndicatorsConnector: HealthIndicatorsConnector
 )(implicit
   ec: ExecutionContext
 ) {
 
-  def findIndicatorsWithTeams(repoType: RepoType, repoNameFilter: Option[String])(implicit hc: HeaderCarrier): Future[Seq[IndicatorsWithTeams]] = {
-    val eventualTeamLookUp: Future[Map[ServiceName, Seq[TeamName]]] = teamsAndReposConnector.allTeamsByService
+  def findIndicatorsWithTeams(
+    repoType      : RepoType,
+    repoNameFilter: Option[String]
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[IndicatorsWithTeams]] = {
+    val eventualTeamLookUp: Future[Map[ServiceName, Seq[TeamName]]] = teamsAndReposConnector.allTeamsByService()
     val eventualIndicators: Future[Seq[Indicator]]                  = healthIndicatorsConnector.getAllIndicators(repoType)
 
     for {
@@ -52,4 +57,10 @@ class HealthIndicatorsService @Inject() (
   }
 }
 
-case class IndicatorsWithTeams(repoName: String, owningTeams: Seq[TeamName], repoType: RepoType, overallScore: Int, weightedMetric: Seq[WeightedMetric])
+case class IndicatorsWithTeams(
+  repoName      : String,
+  owningTeams   : Seq[TeamName],
+  repoType      : RepoType,
+  overallScore  : Int,
+  weightedMetric: Seq[WeightedMetric]
+)

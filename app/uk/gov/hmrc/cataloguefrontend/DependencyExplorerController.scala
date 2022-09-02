@@ -60,7 +60,7 @@ class DependencyExplorerController @Inject() (
         groupArtefacts <- dependenciesService.getGroupArtefacts
       } yield Ok(
         page(
-          form           = form.fill(
+          form           = form().fill(
                              SearchForm(
                                team         = "",
                                flag         = SlugInfoFlag.Latest.asString,
@@ -124,7 +124,7 @@ class DependencyExplorerController @Inject() (
         res <- {
           def pageWithError(msg: String) =
             page(
-              form.bindFromRequest().withGlobalError(msg),
+              form().bindFromRequest().withGlobalError(msg),
               teams,
               flags,
               scopes,
@@ -133,7 +133,7 @@ class DependencyExplorerController @Inject() (
               searchResults = None,
               pieData       = None
             )
-          form
+          form()
             .bindFromRequest()
             .fold(
               hasErrors = formWithErrors =>
@@ -145,23 +145,23 @@ class DependencyExplorerController @Inject() (
               success = query =>
                 (for {
                   versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
-                  team = if (query.team.isEmpty) None else Some(TeamName(query.team))
-                  flag  <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
-                  scope <- EitherT.fromEither[Future](DependencyScope.parse(query.scope)).leftMap(msg => BadRequest(pageWithError(msg)))
-                  results <- EitherT.right[Result] {
-                               dependenciesService
-                                 .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
-                             }
-                  pieData = if (results.nonEmpty)
-                              Some(
-                                PieData(
-                                  "Version spread",
-                                  results
-                                    .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
-                                    .map(r => r._1 -> r._2.size)
-                                )
-                              )
-                            else None
+                  team         =  if (query.team.isEmpty) None else Some(TeamName(query.team))
+                  flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
+                  scope        <- EitherT.fromEither[Future](DependencyScope.parse(query.scope)).leftMap(msg => BadRequest(pageWithError(msg)))
+                  results      <- EitherT.right[Result] {
+                                    dependenciesService
+                                      .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
+                                  }
+                  pieData      = if (results.nonEmpty)
+                                   Some(
+                                     PieData(
+                                       "Version spread",
+                                       results
+                                         .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
+                                         .map(r => r._1 -> r._2.size)
+                                     )
+                                   )
+                                 else None
                 } yield
                   if (query.asCsv) {
                     val csv    = CsvUtils.toCsv(toRows(results))
@@ -173,7 +173,7 @@ class DependencyExplorerController @Inject() (
                   } else
                     Ok(
                       page(
-                        form.bindFromRequest(),
+                        form().bindFromRequest(),
                         teams,
                         flags,
                         scopes,
@@ -236,6 +236,6 @@ object DependencyExplorerController {
     }
 
   def search(team: String = "", flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange): String =
-    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search +
+    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search.toString +
       s"?team=$team&flag=${flag.asString}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
 }

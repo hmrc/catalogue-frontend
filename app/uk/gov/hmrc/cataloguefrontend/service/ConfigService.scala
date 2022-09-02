@@ -61,7 +61,7 @@ object ConfigService {
 
   trait ConfigEnvironment { def asString: String }
   object ConfigEnvironment {
-    case object Local extends ConfigEnvironment { override def asString = "local" }
+    case object Local                           extends ConfigEnvironment { override def asString = "local"      }
     case class ForEnvironment(env: Environment) extends ConfigEnvironment { override def asString = env.asString }
 
     val values: List[ConfigEnvironment] =
@@ -102,7 +102,7 @@ object ConfigService {
       implicit val csvf = ConfigSourceValue.reads
       Reads
         .of[Map[KeyName, Map[String, Seq[ConfigSourceValue]]]]
-        .map(_.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) }))
+        .map(_.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) }).toMap)
     }
   }
 
@@ -121,7 +121,10 @@ object ConfigService {
   case class ConfigSourceValue(
     source: String,
     value : String
-  ) { def isSuppressed = value == "<<SUPPRESSED>>" }
+  ){
+    def isSuppressed: Boolean =
+      value == "<<SUPPRESSED>>"
+  }
 
   object ConfigSourceValue {
     val reads =
@@ -130,7 +133,11 @@ object ConfigService {
       )(ConfigSourceValue.apply _)
   }
 
-  def friendlySourceName(source: String, environment: ConfigEnvironment): String =
+  def friendlySourceName(
+    source     : String,
+    environment: ConfigEnvironment,
+    key        : Option[String]
+  ): String =
     source match {
       case "loggerConf"                 => "Microservice application-json-logger.xml file"
       case "referenceConf"              => "Microservice reference.conf files"
@@ -141,6 +148,7 @@ object ConfigService {
       case "appConfigEnvironment"       => s"App-config-${environment.asString}"
       case "appConfigCommonFixed"       => "App-config-common fixed settings"
       case "appConfigCommonOverridable" => "App-config-common overridable settings"
+      case "base64"                     => s"Base64 (decoded from config ${key.getOrElse("'key'")}.base64)"
       case _                            => source
     }
 

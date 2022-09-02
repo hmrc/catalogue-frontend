@@ -58,15 +58,16 @@ class TeamsController @Inject()(
           teamMembers <- userManagementConnector.getTeamMembersFromUMP(teamName)
           teamDetails <- userManagementConnector.getTeamDetails(teamName)
         } yield Ok( teamInfoPage(
-          teamName = teamName,
-          repos = Map.empty,
-          errorOrTeamMembers = teamMembers.map(tms => DisplayableTeamMembers(teamName, umpConfig.userManagementProfileBaseUrl, tms)),
-          errorOrTeamDetails = teamDetails,
-          umpMyTeamsUrl = "",
-          leaksFoundForTeam = false,
-          hasLeaks = _ => false,
-          Seq.empty,
-          Map.empty))
+            teamName           = teamName,
+            repos              = Map.empty,
+            errorOrTeamMembers = teamMembers.map(tms => DisplayableTeamMembers(teamName, umpConfig.userManagementProfileBaseUrl, tms)),
+            errorOrTeamDetails = teamDetails,
+            umpMyTeamsUrl      = "",
+            leaksFoundForTeam  = false,
+            hasLeaks           = _ => false,
+            Seq.empty,
+            Map.empty
+          ))
         case repos =>
           (
             userManagementConnector.getTeamMembersFromUMP(teamName),
@@ -94,16 +95,14 @@ class TeamsController @Inject()(
               )
             )
           }
-
       }
     }
 
   def allTeams(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-
-      teamsAndRepositoriesConnector.allTeams.map { response =>
-          Ok(teams_list(response))
-      }
+      teamsAndRepositoriesConnector.allTeams.map(response =>
+        Ok(teams_list(response))
+      )
     }
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
@@ -112,13 +111,13 @@ class TeamsController @Inject()(
         teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)),
         serviceDependenciesConnector.dependenciesForTeam(teamName),
         serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
-        ).mapN { (repos, masterTeamDependencies, prodDependencies) =>
+      ).mapN { (repos, masterTeamDependencies, prodDependencies) =>
         val repoLookup = repos.map(r => r.name -> r).toMap
         Ok(outOfDateTeamDependenciesPage(
           teamName,
           masterTeamDependencies.flatMap(mtd => repoLookup.get(mtd.repositoryName).map(gr => RepoAndDependencies(gr, mtd))),
-          prodDependencies))
+          prodDependencies
+        ))
       }
     }
-
 }

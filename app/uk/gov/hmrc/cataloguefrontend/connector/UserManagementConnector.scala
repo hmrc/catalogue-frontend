@@ -43,10 +43,8 @@ case class UserManagementConnector @Inject() (
 
   def getTeamMembersForTeams(teamNames: Seq[TeamName])(implicit hc: HeaderCarrier): Future[Map[TeamName, Either[UMPError, Seq[TeamMember]]]] =
     Future
-      .sequence(
-        teamNames.map { teamName =>
+      .traverse(teamNames)(teamName =>
           getTeamMembersFromUMP(teamName).map(umpErrorOrTeamMembers => (teamName, umpErrorOrTeamMembers))
-        }
       )
       .map(_.toMap)
 
@@ -54,8 +52,10 @@ case class UserManagementConnector @Inject() (
     val url = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}/members"
     httpClientV2
       .get(url)
-      .replaceHeader("requester" -> "None")
-      .replaceHeader("Token"     -> "None")
+      .setHeader(
+        "requester" -> "None",
+        "Token"     -> "None"
+      )
       .execute[HttpResponse]
       .map { response =>
         response.status match {
@@ -81,8 +81,10 @@ case class UserManagementConnector @Inject() (
     val url = url"$userManagementBaseUrl/v2/organisations/users"
     httpClientV2
       .get(url)
-      .replaceHeader("requester" -> "None")
-      .replaceHeader("Token"     -> "None")
+      .setHeader(
+        "requester" -> "None",
+        "Token"     -> "None"
+      )
       .execute[HttpResponse]
       .map { response =>
         response.status match {
@@ -104,8 +106,10 @@ case class UserManagementConnector @Inject() (
     val url = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}"
     httpClientV2
       .get(url)
-      .replaceHeader("requester" -> "None")
-      .replaceHeader("Token"     -> "None")
+      .setHeader(
+        "requester" -> "None",
+        "Token"     -> "None"
+      )
       .execute[HttpResponse]
       .map { response =>
         response.status match {
@@ -149,12 +153,13 @@ object UserManagementConnector {
     def getUmpLink(umpProfileBaseUrl: String): String =
       username.map(x => url"$umpProfileBaseUrl/$x".toString).getOrElse("USERNAME NOT PROVIDED")
 
-    def getDisplayName: String = this.displayName.getOrElse("DISPLAY NAME NOT PROVIDED")
+    def getDisplayName: String =
+      this.displayName.getOrElse("DISPLAY NAME NOT PROVIDED")
   }
 
   case class SlackInfo(url : String) {
-    val name = url.split("/").lastOption.getOrElse(url)
-    val hasValidUrl = url.startsWith("http://") || url.startsWith("https://")
+    val name         = url.split("/").lastOption.getOrElse(url)
+    val hasValidUrl  = url.startsWith("http://") || url.startsWith("https://")
     val hasValidName = "^[A-Z0-9]+$".r.findFirstIn(name).isEmpty
   }
 

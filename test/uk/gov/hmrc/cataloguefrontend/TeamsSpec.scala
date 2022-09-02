@@ -46,7 +46,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
           ))
       )
 
-      val response = wsClient.url(s"http://localhost:$port/teams").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/teams").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       response.body   should include("""<a  href="/teams/teamA">teamA</a>""")
     }

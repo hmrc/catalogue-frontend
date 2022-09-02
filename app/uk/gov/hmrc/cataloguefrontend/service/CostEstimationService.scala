@@ -31,15 +31,18 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CostEstimationService @Inject() (
-  configConnector: ConfigConnector,
+  configConnector       : ConfigConnector,
   resourceUsageConnector: ResourceUsageConnector
 ) {
 
   def estimateServiceCost(
-    service: String,
-    environments: Seq[Environment],
+    service                  : String,
+    environments             : Seq[Environment],
     serviceCostEstimateConfig: CostEstimateConfig
-  )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[ServiceCostEstimate] =
+  )(implicit
+    ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): Future[ServiceCostEstimate] =
     Future
       .traverse(environments)(environment =>
         configConnector
@@ -52,28 +55,32 @@ class CostEstimationService @Inject() (
       )
 
   def historicResourceUsageForService(
-    serviceName: String,
+    serviceName              : String,
     serviceCostEstimateConfig: CostEstimateConfig
-  )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[List[CostedResourceUsage]] =
+  )(implicit
+    ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): Future[List[CostedResourceUsage]] =
     resourceUsageConnector
       .historicResourceUsageForService(serviceName)
       .map(_.map(CostedResourceUsage.fromResourceUsage(_, serviceCostEstimateConfig.slotCostPerYear)))
 
   def historicResourceUsageChartsForService(
-    serviceName: String,
+    serviceName              : String,
     serviceCostEstimateConfig: CostEstimateConfig
-  )(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[EstimatedCostCharts] =
+  )(implicit
+    ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): Future[EstimatedCostCharts] =
     historicResourceUsageForService(serviceName, serviceCostEstimateConfig)
-      .map(crus => {
-        val totalsChart =
-          CostedResourceUsageTotal
-            .toChartDataTable(CostedResourceUsageTotal.fromCostedResourceUsages(crus))
-
-        val byEnvChart =
-          CostedResourceUsage.toChartDataTable(crus)
-
-        EstimatedCostCharts(historicTotalsChart = totalsChart, historicByEnvChart = byEnvChart)
-      })
+      .map(crus =>
+        EstimatedCostCharts(
+          historicTotalsChart = CostedResourceUsageTotal.toChartDataTable(
+                                  CostedResourceUsageTotal.fromCostedResourceUsages(crus)
+                                ),
+          historicByEnvChart  = CostedResourceUsage.toChartDataTable(crus)
+        )
+      )
 }
 
 object CostEstimationService {
@@ -91,10 +98,10 @@ object CostEstimationService {
   }
 
   final case class CostedResourceUsage(
-    date: Instant,
+    date       : Instant,
     serviceName: String,
     environment: Environment,
-    summary: CostedResourceUsage.Summary
+    summary    : CostedResourceUsage.Summary
   )
 
   object CostedResourceUsage {
@@ -160,7 +167,7 @@ object CostEstimationService {
   }
 
   final case class CostedResourceUsageTotal(
-    date: Instant,
+    date   : Instant,
     summary: CostedResourceUsage.Summary
   )
 
@@ -198,7 +205,7 @@ object CostEstimationService {
 
   final case class EstimatedCostCharts(
     historicTotalsChart: ChartDataTable,
-    historicByEnvChart: ChartDataTable
+    historicByEnvChart : ChartDataTable
   )
 
   final case class ServiceCostEstimate(forEnvironments: List[ServiceCostEstimate.ForEnvironment]) {
@@ -229,8 +236,8 @@ object CostEstimationService {
       }
 
     final case class ForEnvironment(
-      environment: Environment,
-      slots: Int,
+      environment  : Environment,
+      slots        : Int,
       yearlyCostGbp: Double
     ) {
 

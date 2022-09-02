@@ -76,7 +76,7 @@ class ShutterConnector @Inject() (
     implicit val ssf = ShutterStatus.format
     httpClientV2
       .put(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states/$serviceName")
-      .replaceHeader("Authorization" -> token.value)
+      .setHeader("Authorization" -> token.value)
       .withBody(Json.toJson(status))
       .execute[Unit](HttpReads.Implicits.throwOnFailure(implicitly[HttpReads[Either[UpstreamErrorResponse, Unit]]]), implicitly[ExecutionContext])
   }

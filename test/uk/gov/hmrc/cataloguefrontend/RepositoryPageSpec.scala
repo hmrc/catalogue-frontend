@@ -43,7 +43,7 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/module-dependencies/$repoName", willRespondWith = (404, None))
 
-      val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 404
     }
 
@@ -55,7 +55,7 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/module-dependencies/$repoName", willRespondWith = (404, None))
 
-      val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get().futureValue
 
       response.status shouldBe 200
       response.body   should include(s"links on this page are automatically generated")
@@ -75,7 +75,7 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
                                                                                                 dependenciesCompile = dependencies
                                                                                               ))))
 
-      val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get.futureValue
+      val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
 
       val document = Jsoup.parse(response.body)

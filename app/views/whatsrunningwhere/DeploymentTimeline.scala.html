@@ -26,11 +26,14 @@
 @this()
 
 
-@(service: String, start: Instant, end: Instant, events: Seq[DeploymentTimelineEvent], services: Seq[String])(implicit messages: Messages, request: Request[_])
-
+@(service: String,
+  start: Instant,
+  end: Instant,
+  events: Seq[DeploymentTimelineEvent],
+  services: Seq[String]
+)(implicit request: Request[_])
 
 @colorForVersion(version: String) = @{
-
     if(version == DeploymentGraphService.notDeployedMessage) {
       "color: #ccc"
     } else {
@@ -127,4 +130,3 @@
         <div id="history-chart" style="height: 300px;"></div>
     }
 }
-

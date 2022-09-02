@@ -10,7 +10,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
   .settings(publishingSettings: _*)
   .settings(
     majorVersion := 4,
-    scalaVersion := "2.12.15",
+    scalaVersion := "2.13.8",
     scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
@@ -27,17 +27,17 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress unused-imports in twirl and routes files
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
-    scalacOptions += "-Wconf:cat=unused-imports&src=routes/.*:s",
+    scalacOptions += "-Wconf:src=routes/.*:s",
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "6.2.0"
-val hmrcMongoVersion     = "0.68.0"
+val bootstrapPlayVersion = "7.1.0"
+val hmrcMongoVersion     = "0.71.0"
 
 val compile = Seq(
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-28"   % bootstrapPlayVersion,
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-28"           % hmrcMongoVersion,
-  "uk.gov.hmrc"               %% "internal-auth-client-play-28" % "1.1.0",
+  "uk.gov.hmrc"               %% "internal-auth-client-play-28" % "1.2.0",
   "org.typelevel"             %% "cats-core"                    % "2.6.1",
   "org.yaml"                  %  "snakeyaml"                    % "1.27",
   "org.apache.httpcomponents" %  "httpclient"                   % "4.5.13",
@@ -54,4 +54,4 @@ val test = Seq(
   ws
 )
 
-addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
+addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)

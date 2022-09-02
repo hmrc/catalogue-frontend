@@ -200,14 +200,15 @@ object LeakDetectionRepositorySummary {
 }
 
 final case class LeakDetectionBranchSummary(
-  branch: String,
-  reportId: String,
-  scannedAt: LocalDateTime,
-  warningCount: Int,
-  excludedCount: Int,
+  branch         : String,
+  reportId       : String,
+  scannedAt      : LocalDateTime,
+  warningCount   : Int,
+  excludedCount  : Int,
   unresolvedCount: Int
 ) {
-  def totalCount: Int = warningCount + excludedCount + unresolvedCount
+  def totalCount: Int =
+    warningCount + excludedCount + unresolvedCount
 }
 
 object LeakDetectionBranchSummary {

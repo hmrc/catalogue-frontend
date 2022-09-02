@@ -45,43 +45,49 @@ class PlatformInitiativesController @Inject()
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] = BasicAuthAction.async { implicit request =>
-    val boundForm = PlatformInitiativesFilter.form.bindFromRequest()
+  def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      val boundForm = PlatformInitiativesFilter.form.bindFromRequest()
       boundForm.fold(
         formWithErrors =>
           for {
             allTeams <- teamsAndRepositoriesConnector.allTeams
-          } yield BadRequest(platformInitiativesListPage
-            (initiatives  = Seq()
-            , display     = display
-            ,  team       = None
-            ,  allTeams   = allTeams
-            ,  formWithErrors
-            )),
-          query =>
-              for {
-                  allTeams <- teamsAndRepositoriesConnector.allTeams
-                  initiatives <- platformInitiativesConnector.getInitiatives(query.team)
-                } yield Ok(platformInitiativesListPage(
-                  initiatives   = initiatives,
-                  display       = display,
-                  team          = team,
-                  allTeams      = allTeams,
-                boundForm
-                )))
-              }
-    }
-
-  case class PlatformInitiativesFilter(initiativeName: Option[String] = None, team: Option[String]) {
-    def isEmpty: Boolean = initiativeName.isEmpty && team.isEmpty
+          } yield BadRequest(platformInitiativesListPage(
+            initiatives = Seq.empty,
+            display     = display,
+            team        = None,
+            allTeams    = allTeams,
+            formWithErrors
+          )),
+        query =>
+          for {
+            allTeams <- teamsAndRepositoriesConnector.allTeams
+            initiatives <- platformInitiativesConnector.getInitiatives(query.team)
+          } yield Ok(platformInitiativesListPage(
+            initiatives = initiatives,
+            display     = display,
+            team        = team,
+            allTeams    = allTeams,
+            boundForm
+          ))
+      )
   }
+}
 
-  object PlatformInitiativesFilter {
-    lazy val form: Form[PlatformInitiativesFilter] = Form(
-      mapping(
-        "initiativeName"  -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-        )
-      (PlatformInitiativesFilter.apply)(PlatformInitiativesFilter.unapply)
-    )
-  }
+case class PlatformInitiativesFilter(
+  initiativeName: Option[String] = None,
+  team          : Option[String]
+) {
+  def isEmpty: Boolean =
+    initiativeName.isEmpty && team.isEmpty
+}
+
+object PlatformInitiativesFilter {
+  lazy val form: Form[PlatformInitiativesFilter] = Form(
+    mapping(
+      "initiativeName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+      "team"           -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+      )
+    (PlatformInitiativesFilter.apply)(PlatformInitiativesFilter.unapply)
+  )
+}

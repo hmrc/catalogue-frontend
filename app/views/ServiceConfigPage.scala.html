@@ -20,7 +20,11 @@
 @import scala.collection.immutable.ListMap
 
 @this(viewMessages: ViewMessages)
-@(serviceName: String, configByKey: ConfigByKey)(implicit messages: Messages, request: Request[_])
+
+@(serviceName: String,
+  configByKey: ConfigByKey
+)
+
 <html>
     <head>
         <title>Config - @serviceName</title>
@@ -54,7 +58,7 @@
                                 <div class="grid-item column-@env.asString" style="width:510px;">
                                     <ul>
                                       @for(sourceValue: ConfigSourceValue <- envSources.get(env).getOrElse(Seq.empty)) {
-                                        <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env)">
+                                        <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env, Some(key))">
                                             <span class="truncate-content-overflow @if(sourceValue.isSuppressed) {suppressed} else {}">@sourceValue.value</span>
                                             <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env.asString-@sourceValue.source-@key"></a>
                                         </li>

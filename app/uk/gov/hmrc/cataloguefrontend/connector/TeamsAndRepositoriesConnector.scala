@@ -64,12 +64,12 @@ sealed trait ServiceType {
 }
 
 object ServiceType {
-  case object Frontend extends   ServiceType {
-    override val asString = "FrontendService"
+  case object Frontend extends ServiceType {
+    override val asString      = "FrontendService"
     override val displayString = "Service (Frontend)"
   }
 
-  case object Backend  extends   ServiceType {
+  case object Backend extends ServiceType {
     override val asString = "BackendService"
     override val displayString = "Service (Backend)"
   }
@@ -99,8 +99,13 @@ object ServiceType {
   }
 }
 
-case class Link(name: String, displayName: String, url: String) {
-  val id: String = displayName.toLowerCase.replaceAll(" ", "-")
+case class Link(
+  name       : String,
+  displayName: String,
+  url        : String
+) {
+  val id: String =
+    displayName.toLowerCase.replaceAll(" ", "-")
 }
 
 object Link {
@@ -131,9 +136,11 @@ case class GitRepository(
   prototypeUrl        : Option[String]           = None
 ) {
 // Repos with joint ownership of 8+ teams, defines the repo as shared
-  def isShared: Boolean = teamNames.length >= 8
+  def isShared: Boolean =
+    teamNames.length >= 8
 
-  def teamNameDisplay: String = if (isShared) s"Shared by ${teamNames.length} teams" else teamNames.sortBy(_.toLowerCase).mkString(",")
+  def teamNameDisplay: String =
+    if (isShared) s"Shared by ${teamNames.length} teams" else teamNames.sortBy(_.toLowerCase).mkString(",")
 }
 
 object GitRepository {

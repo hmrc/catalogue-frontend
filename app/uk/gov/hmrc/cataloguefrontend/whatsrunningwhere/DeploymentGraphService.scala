@@ -27,19 +27,18 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector)(implicit ec: ExecutionContext) {
 
-  def findEvents(service: String, start: Instant, end: Instant): Future[Seq[DeploymentTimelineEvent]] ={
+  def findEvents(service: String, start: Instant, end: Instant): Future[Seq[DeploymentTimelineEvent]] = {
     import DeploymentGraphService._
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     for {
       data                 <- releasesConnector.deploymentTimeline(service, start, end).recover { case Upstream4xxResponse(_) => Map.empty }
-      dataWithPlaceholders  = data.map {
-        case (env, Nil)  => env -> noEventsPlaceholder(env, start,end)
-        case (env, data) => env -> data
-      }
+      dataWithPlaceholders =  data.toSeq.map {
+                                case (env, Nil)  => env -> noEventsPlaceholder(env, start,end)
+                                case (env, data) => env -> data
+                              }.toMap
     } yield dataWithPlaceholders.values.flatten.toSeq.sortBy(_.env)
   }
-
 }
 
 object DeploymentGraphService {

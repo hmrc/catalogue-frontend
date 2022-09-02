@@ -19,7 +19,11 @@
 
 @this(viewMessages: ViewMessages)
 
-@(repoName: String, branch: String, exemptions: Seq[LeakDetectionLeaksByRule], unusedExemptions: Seq[UnusedExemption])(implicit messages: Messages, request: Request[_])
+@(repoName        : String,
+  branch          : String,
+  exemptions      : Seq[LeakDetectionLeaksByRule],
+  unusedExemptions: Seq[UnusedExemption]
+)(implicit request: Request[_])
 
 @standard_layout(s"Leak detection exemptions") {
     <header>

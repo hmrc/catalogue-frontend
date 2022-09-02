@@ -22,12 +22,12 @@ import play.api.mvc.{PathBindable, QueryStringBindable}
 sealed trait Environment { def asString: String; def displayString: String }
 
 object Environment {
-  case object Integration extends Environment { val asString = "integration"; override def displayString = "Integration" }
-  case object Development extends Environment { val asString = "development"; override def displayString = "Development" }
-  case object QA extends Environment { val asString = "qa"; override def displayString = "QA" }
-  case object Staging extends Environment { val asString = "staging"; override def displayString = "Staging" }
+  case object Integration  extends Environment { val asString = "integration" ; override def displayString = "Integration"   }
+  case object Development  extends Environment { val asString = "development" ; override def displayString = "Development"   }
+  case object QA           extends Environment { val asString = "qa"          ; override def displayString = "QA"            }
+  case object Staging      extends Environment { val asString = "staging"     ; override def displayString = "Staging"       }
   case object ExternalTest extends Environment { val asString = "externaltest"; override def displayString = "External Test" }
-  case object Production extends Environment { val asString = "production"; override def displayString = "Production" }
+  case object Production   extends Environment { val asString = "production"  ; override def displayString = "Production"    }
 
   val values: List[Environment] =
     List(Integration, Development, QA, Staging, ExternalTest, Production)
@@ -75,7 +75,7 @@ object Environment {
 
 trait SlugInfoFlag { def asString: String; def displayString: String }
 object SlugInfoFlag {
-  case object Latest extends SlugInfoFlag { override def asString = "latest"; override def displayString = "Latest" }
+  case object Latest                          extends SlugInfoFlag { override def asString = "latest"    ; override def displayString = "Latest"          }
   case class ForEnvironment(env: Environment) extends SlugInfoFlag { override def asString = env.asString; override def displayString = env.displayString }
 
   val values: List[SlugInfoFlag] =
@@ -87,6 +87,7 @@ object SlugInfoFlag {
   }
 
   def parse(s: String): Option[SlugInfoFlag] =
-    if (s == "external test") Some(SlugInfoFlag.ForEnvironment(Environment.ExternalTest)) // service-dependencies currently represents with a space
+    if (s == "external test")
+      Some(SlugInfoFlag.ForEnvironment(Environment.ExternalTest)) // service-dependencies currently represents with a space
     else values.find(_.asString == s)
 }

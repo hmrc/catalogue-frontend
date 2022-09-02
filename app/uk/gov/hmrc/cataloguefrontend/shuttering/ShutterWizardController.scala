@@ -155,7 +155,7 @@ class ShutterWizardController @Inject() (
                                 }
                             }
          html          <- EitherT.liftF[Future, Result, Result] {
-                            showPage1(step0Out.shutterType, step0Out.env, step1Form.fill(step1f))
+                            showPage1(step0Out.shutterType, step0Out.env, step1Form().fill(step1f))
                               .map(Ok(_))
                           }
        } yield html
@@ -178,7 +178,7 @@ class ShutterWizardController @Inject() (
     ).async { implicit request =>
       (for {
          step0Out      <- getStep0Out
-         boundForm     =  step1Form.bindFromRequest
+         boundForm     =  step1Form().bindFromRequest()
          sf            <- boundForm
                             .fold(
                               hasErrors = formWithErrors => EitherT.left(
@@ -299,7 +299,7 @@ class ShutterWizardController @Inject() (
          serviceAndRouteWarnings <- EitherT.right(frontendRouteWarnings(step0Out.env, step1Out))
          html     <- EitherT.right[Result](
                        if (serviceAndRouteWarnings.flatMap(_.warnings).nonEmpty)
-                         showPage2a(step2aForm.fill(step2af), step0Out.env, step1Out).map(Ok(_))
+                         showPage2a(step2aForm().fill(step2af), step0Out.env, step1Out).map(Ok(_))
                        else
                          //Skip straight to outage-page screen if there are no route warnings
                          cacheRepo
@@ -317,7 +317,7 @@ class ShutterWizardController @Inject() (
       (for {
          step0Out <- getStep0Out
          step1Out <- getStep1Out
-         sf       <- step2aForm.bindFromRequest
+         sf       <- step2aForm().bindFromRequest()
                        .fold(
                          hasErrors = formWithErrors => EitherT.left(
                                        showPage2a(formWithErrors, step0Out.env, step1Out).map(BadRequest(_))
@@ -367,7 +367,7 @@ class ShutterWizardController @Inject() (
                                  appRoutes.ShutterWizardController.step2aGet
                                else
                                  appRoutes.ShutterWizardController.step1Post
-      form2b                =  step2bForm.fill {
+      form2b                =  step2bForm().fill {
                                  val s2f = form.get
                                  if (s2f.outageMessage.isEmpty)
                                    s2f.copy(outageMessage = defaultOutageMessage)
@@ -413,7 +413,7 @@ class ShutterWizardController @Inject() (
                               )
                           }
                       }
-         html      <- showPage2b(step2bForm.fill(step2bf), step1Out, step2aOut)
+         html      <- showPage2b(step2bForm().fill(step2bf), step1Out, step2aOut)
        } yield Ok(html)
       ).merge
     }
@@ -425,7 +425,7 @@ class ShutterWizardController @Inject() (
       (for {
          step1Out  <- getStep1Out
          step2aOut <- EitherT.liftF(cacheRepo.getFromSession(step2aKey))
-         sf        <- step2bForm.bindFromRequest
+         sf        <- step2bForm().bindFromRequest()
                         .fold(
                           hasErrors = formWithErrors => EitherT.left(
                                         showPage2b(formWithErrors, step1Out, step2aOut).map(BadRequest(_)).merge
@@ -473,7 +473,7 @@ class ShutterWizardController @Inject() (
          step1Out  <- OptionT(cacheRepo.getFromSession(step1Key))
          step2bOut <- OptionT(cacheRepo.getFromSession(step2bKey))
          html      =  showPage3(
-                        step3Form.fill(Step3Form(confirm = false)),
+                        step3Form().fill(Step3Form(confirm = false)),
                         step0Out.shutterType,
                         step0Out.env,
                         step1Out,
@@ -494,7 +494,7 @@ class ShutterWizardController @Inject() (
                         cacheRepo.getFromSession(step2bKey),
                         Redirect(appRoutes.ShutterWizardController.step2bGet)
                       )
-         _         <- step3Form.bindFromRequest
+         _         <- step3Form().bindFromRequest()
                         .fold(
                           hasErrors = formWithErrors => EitherT.leftT[Future, Unit](
                                         BadRequest(
@@ -518,7 +518,7 @@ class ShutterWizardController @Inject() (
                           )
                         case ShutterStatusValue.Unshuttered => ShutterStatus.Unshuttered
                       }
-         _         <- step1Out.serviceNames.toList.traverse_[EitherT[Future, Result, ?], Unit] { serviceName =>
+         _         <- step1Out.serviceNames.toList.traverse_[EitherT[Future, Result, *], Unit] { serviceName =>
                         EitherT.right[Result] {
                           shutterService
                             .updateShutterStatus(serviceName, step0Out.shutterType, step0Out.env, status)
