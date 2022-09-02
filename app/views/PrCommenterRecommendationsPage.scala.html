@@ -1,0 +1,167 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import partials.ModulesPartial
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, PrCommenterConnector, Team}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
+@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
+@import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
+@import views.html.helper.select
+
+@this(
+  viewMessages       : ViewMessages,
+  modulesPartial     : ModulesPartial
+)
+
+@(form        : Form[_],
+  teams       : Seq[Team],
+  reports     : Seq[PrCommenterConnector.Report],
+  commentTypes: Set[String]
+)(implicit
+  messages  : Messages,
+  request   : Request[_]
+)
+
+@standard_layout("PR-Commenter Recommendations") {
+  <header>
+    <h1 id="search-service-header">PR-Commenter Recommendations</h1>
+  </header>
+
+  <div id="recommendations-list">
+    <form id="form" method="get">
+      <div class="form-group row">
+        <div class="col-md-6">
+          <label for="search">Name</label>
+          <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
+        </div>
+        <div class="col-md-3">
+          @select(
+            field     =  form("teamName"),
+            options   =  teams.map(t => t.name.asString -> t.name.asString),
+            '_default ->  "All",
+            '_label   -> "Team",
+            'onchange -> "this.form.submit()",
+            'id       -> "team-dropdown",
+            'class    -> "form-control"
+          )
+        </div>
+        <div class="col-md-3">
+          @select(
+            field     =  form("commentType"),
+            options   =  commentTypes.map(x => x -> x).toSeq.sorted,
+            '_default ->  "All",
+            '_label   -> "Comment Type",
+            'onchange -> "this.form.submit()",
+            'id       -> "comment-type-dropdown",
+            'class    -> "form-control"
+          )
+        </div>
+      </div>
+    </form>
+
+    @if(reports.nonEmpty) {
+      <div class="text-right">
+        <a id="expandLink" class="hand-pointer" onclick="toggleExpandAll()">expand all</a>
+        <a id="collapseLink" class="hand-pointer hidden" onclick="toggleExpandAll()">collapse all</a>
+      </div>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="col-lg-8"><button class="sort no-border" data-sort="name">Repo</button></th>
+            <th class="col-lg-2"><button class="sort no-border" data-sort="teams">Teams</button></th>
+            <th class="col-lg-1"><button class="sort no-border" data-sort="recommendations">Recommendations</button></th>
+            <th class="col-lg-1"><button class="sort no-border" data-sort="lastrun">Last run</button></th>
+          </tr>
+        </thead>
+        <tbody class="list">
+          @reports.map { report =>
+            <tr>
+              <td @collapseAttr("accordion-toggle collapsed", report) />
+              <td @collapseAttr("name", report)>@report.name</td>
+              <td @collapseAttr("teams", report)>@displayTeams(report)</td>
+              <td @collapseAttr("recommendations text-center", report)>@report.comments.size</td>
+              <td @collapseAttr("lastrun hide text-nowrap", report)>@report.created</td>
+              <td @collapseAttr("lastrun-display text-nowrap", report)>@report.created.displayFormat</td>
+            </tr>
+            <tr id="collapsible-area-@report.name" class="collapse multi-collapse @if(report.comments.isEmpty) { hide }">
+              <td class="hide name">@report.name</td>
+              <td class="hide teams">@displayTeams(report)</td>
+              <td class="hide recommendations">@report.comments.size<td>
+              <td class="hide lastrun">@report.created</td>
+              <td colspan="5" style="padding: 30px">
+                <ul class="list">
+                  @{report.comments.map {
+                    case x if form("commentType").value == Some(x.commentType) =>
+                      Html(s"""<li class="highlight-dotted">${MarkdownLoader.markdownFromString(x.message).getOrElse(s"Invalid markdown: ${x.message}")}</li>""")
+                    case x =>
+                      Html(s"""<li >${MarkdownLoader.markdownFromString(x.message).getOrElse(s"Invalid markdown: ${x.message}")}</li>""")
+                  }}
+                </ul>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <script>
+        var options = {
+          searchDelay: 350,
+          valueNames: ['name', 'teams', 'recommendations', 'lastrun'],
+          searchColumns: ['name'],
+          indexAsync: true
+        }
+
+        rulesList = new List('recommendations-list', options)
+
+        function toggleExpandAll() {
+          document.getElementById("expandLink").classList.toggle("hidden")
+          document.getElementById("collapseLink").classList.toggle("hidden")
+          Array.from(document.getElementsByClassName("multi-collapse")).forEach(el => el.classList.toggle("collapse"))
+        }
+
+        rulesList.on('updated', function(list) {
+          const arr = Array.from(document.getElementsByClassName("multi-collapse"))
+          if (arr.length == 1 && arr[0].classList.contains("collapse")) {
+            toggleExpandAll()
+          }
+        })
+        // Triggers a search on page load for passed in params
+        document.getElementById('search').dispatchEvent(new Event('keyup'))
+      </script>
+    </div>
+  }
+}
+
+@collapseAttr(cssClasses: String, report: PrCommenterConnector.Report) = {
+  @if(report.comments.nonEmpty) {
+    class="@cssClasses hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@report.name" aria-expanded="false" aria-controls="collapsible-area-@report.name"
+  } else {
+    class="@cssClasses.replaceAll("accordion-toggle collapsed", "")"
+  }
+}
+
+@displayTeams(report: PrCommenterConnector.Report) = {
+  @if(!report.isShared) {
+    @report.teamNameDisplay.split(",").map {tn => <div  class="team" >@tn</div> }
+  } else {
+    <div title="@report.teamNames.take(15).mkString("\n")" class="team" >
+        <em>@report.teamNameDisplay</em>
+    </div>
+  }
+}

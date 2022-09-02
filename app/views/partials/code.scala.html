@@ -14,11 +14,15 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, PrCommenterConnector}
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.{routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 
-@(repo: GitRepository, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation)(implicit request: Request[_])
+@(repo                   : GitRepository,
+  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
+  commenterReport        : Option[PrCommenterConnector.Report]
+)(implicit request: Request[_])
 
 <div id="code">
     <div class="board">
@@ -28,11 +32,20 @@
               @partials.branchProtection(repo, hasBranchProtectionAuth)
               <hr style="margin-top: 0px">
             }
-            <div class="single-item">
-                <a id="link-to-github" href="@{repo.githubUrl}" target="_blank" rel="noreferrer noopener">
-                    Github.com<span class="glyphicon glyphicon-new-window"/>
-                </a>
-            </div>
+            <ul class="list list--minimal">
+                <li class="list-item">
+                    <a id="link-to-github" href="@{repo.githubUrl}" target="_blank" rel="noreferrer noopener">
+                        Github.com<span class="glyphicon glyphicon-new-window"/>
+                    </a>
+                </li>
+                @commenterReport.map { report =>
+                    <li class="list-item">
+                        <a id="link-to-@{repo.name}-comments" href="@prcommenterRoutes.PrCommenterController.recommendations(name = Some(report.name))">
+                            PR-Commenter recommendations (@report.comments.size)
+                        </a>
+                    </li>
+                }
+            </ul>
         </div>
     </div>
 </div>

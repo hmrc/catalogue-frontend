@@ -16,6 +16,7 @@
 
 @import partials.DependenciesByEnvironmentPartial
 @import play.twirl.api.Html
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, PrCommenterConnector}
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
@@ -23,8 +24,8 @@
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import views.partials.githubBadgeType
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import java.time.Instant
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
@@ -45,7 +46,8 @@
   linkToLeakDetection          : Option[String],
   productionEnvironmentRoute   : Option[EnvironmentRoute],
   serviceRoutes                : ServiceRoutes,
-  hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation
+  hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
+  commenterReport              : Option[PrCommenterConnector.Report]
 )(implicit messages: Messages, request: Request[_])
 
 
@@ -107,7 +109,7 @@
             </div>
 
             <div class="col-md-6">
-                @partials.code_and_builds(serviceName, repositoryDetails, hasBranchProtectionAuth)
+                @partials.code_and_builds(serviceName, repositoryDetails, hasBranchProtectionAuth, commenterReport)
             </div>
         </div>
 

@@ -63,6 +63,7 @@ class CatalogueController @Inject() (
   configuration                : Configuration,
   override val mcc             : MessagesControllerComponents,
   whatsRunningWhereService     : WhatsRunningWhereService,
+  prCommenterConnector         : PrCommenterConnector,
   indexPage                    : IndexPage,
   serviceInfoPage              : ServiceInfoPage,
   serviceConfigPage            : ServiceConfigPage,
@@ -140,9 +141,9 @@ class CatalogueController @Inject() (
     }
 
   private def renderServicePage(
-    serviceName      : String,
-    repositoryDetails: GitRepository,
-    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
+    serviceName            : String,
+    repositoryDetails      : GitRepository,
+    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   )(implicit
     messages: Messages,
     request : Request[_]
@@ -189,7 +190,8 @@ class CatalogueController @Inject() (
       routeRulesService.serviceUrl(serviceName),
       routeRulesService.serviceRoutes(serviceName),
       serviceDependenciesConnector.getSlugInfo(repositoryName),
-      costEstimationService.estimateServiceCost(repositoryName, costEstimationEnvironments, serviceCostEstimateConfig)
+      costEstimationService.estimateServiceCost(repositoryName, costEstimationEnvironments, serviceCostEstimateConfig),
+      prCommenterConnector.report(repositoryName)
     ).mapN { (jenkinsLink,
               envDatas,
               latestRepoModules,
@@ -197,7 +199,8 @@ class CatalogueController @Inject() (
               serviceUrl,
               serviceRoutes,
               optLatestServiceInfo,
-              costEstimate
+              costEstimate,
+              commenterReport
              ) =>
       val optLatestData: Option[(SlugInfoFlag, EnvData)] =
         optLatestServiceInfo.map { latestServiceInfo =>
@@ -221,7 +224,8 @@ class CatalogueController @Inject() (
           linkToLeakDetection         = urlIfLeaksFound,
           productionEnvironmentRoute  = serviceUrl,
           serviceRoutes               = serviceRoutes,
-          hasBranchProtectionAuth     = hasBranchProtectionAuth
+          hasBranchProtectionAuth     = hasBranchProtectionAuth,
+          commenterReport             = commenterReport
         )
       )
     }
@@ -240,11 +244,7 @@ class CatalogueController @Inject() (
         result <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
                     .foldF(Future.successful(notFound))(repoDetails =>
                       repoDetails.repoType match {
-                        case RepoType.Service   => renderServicePage(
-                          serviceName       = repoDetails.name,
-                          repositoryDetails = repoDetails,
-                          hasBranchProtectionAuth = hasBranchProtectionAuth
-                        )
+                        case RepoType.Service   => renderServicePage(repoDetails.name, repoDetails, hasBranchProtectionAuth)
                         case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth)
                         case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth)
                         case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth)
@@ -277,17 +277,20 @@ class CatalogueController @Inject() (
   )(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
-      leakDetectionService.urlIfLeaksFound(repoDetails.name)
+      leakDetectionService.urlIfLeaksFound(repoDetails.name),
+      prCommenterConnector.report(repoDetails.name)
     ).mapN { ( jenkinsLink,
                repoModules,
-               urlIfLeaksFound
+               urlIfLeaksFound,
+               commenterReport
              ) =>
       Ok(
         libraryInfoPage(
           repoDetails.copy(jenkinsURL = jenkinsLink.map(_.url)),
           repoModules,
           urlIfLeaksFound,
-          hasBranchProtectionAuth
+          hasBranchProtectionAuth,
+          commenterReport
         )
       )
     }
@@ -298,11 +301,13 @@ class CatalogueController @Inject() (
   )(implicit messages: Messages, request: Request[_]): Future[Result] =
     for {
       urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
+      commenterReport <- prCommenterConnector.report(repoDetails.name)
     } yield
       Ok(prototypeInfoPage(
         repoDetails,
         urlIfLeaksFound,
-        hasBranchProtectionAuth
+        hasBranchProtectionAuth,
+        commenterReport
       ))
 
   private def renderOther(
@@ -311,10 +316,12 @@ class CatalogueController @Inject() (
   )(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
-      leakDetectionService.urlIfLeaksFound(repoDetails.name)
+      leakDetectionService.urlIfLeaksFound(repoDetails.name),
+      prCommenterConnector.report(repoDetails.name)
     ).mapN { ( jenkinsLink,
                repoModules,
-               urlIfLeaksFound
+               urlIfLeaksFound,
+               commenterReport
              ) =>
       Ok(
         repositoryInfoPage(
@@ -326,7 +333,8 @@ class CatalogueController @Inject() (
           ),
           repoModules,
           urlIfLeaksFound,
-          hasBranchProtectionAuth
+          hasBranchProtectionAuth,
+          commenterReport
         )
       )
     }
@@ -382,7 +390,7 @@ class CatalogueController @Inject() (
           serviceCostEstimateConfig,
           estimatedCostCharts
         ))
-        ).getOrElse(notFound)
+      ).getOrElse(notFound)
     }
 }
 

@@ -14,9 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, PrCommenterConnector}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.{routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
@@ -25,7 +26,11 @@
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import views.html.helper.CSRF
 
-@(serviceName: String, repo: GitRepository, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation)(implicit request: Request[_])
+@(serviceName            : String,
+  repo                   : GitRepository,
+  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
+  commenterReport        : Option[PrCommenterConnector.Report]
+)(implicit request: Request[_])
 
 <div id="code-and-build">
     <div class="board">
@@ -49,6 +54,9 @@
                 <li class="list-item"><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, serviceName)}">Frontend Route Warnings</a></li>
             }
                 <li class="list-item"><a id="link-to-@{repo.name}-health" href="@{HealthIndicatorsController.breakdownForRepo(repo.name)}">Health-Indicator</a></li>
+                @commenterReport.map { report =>
+                    <li class="list-item"><a id="link-to-@{repo.name}-comments" href="@prcommenterRoutes.PrCommenterController.recommendations(name = Some(report.name))">PR-Commenter recommendations (@report.comments.size)</a></li>
+                }
             </ul>
         </div>
     </div>
