@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.{routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
 @import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
@@ -120,6 +121,8 @@
                                 <li><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries()">
                                     Vulnerabilities</a></li>
                             }
+                            <li role="separator" class="divider"></li>
+                            <li><a href="@prcommenterRoutes.PrCommenterController.recommendations()">PR-Commenter Recommendations</a></li>
                         </ul>
                     </li>
                     <li class="dropdown">

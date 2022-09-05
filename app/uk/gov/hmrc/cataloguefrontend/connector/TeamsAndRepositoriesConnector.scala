@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import play.api.Logger
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import uk.gov.hmrc.cataloguefrontend.config.Constant
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -135,9 +136,8 @@ case class GitRepository(
   jenkinsURL          : Option[String]           = None,
   prototypeUrl        : Option[String]           = None
 ) {
-// Repos with joint ownership of 8+ teams, defines the repo as shared
   def isShared: Boolean =
-    teamNames.length >= 8
+    teamNames.length >= Constant.sharedRepoTeamsCutOff
 
   def teamNameDisplay: String =
     if (isShared) s"Shared by ${teamNames.length} teams" else teamNames.sortBy(_.toLowerCase).mkString(",")
