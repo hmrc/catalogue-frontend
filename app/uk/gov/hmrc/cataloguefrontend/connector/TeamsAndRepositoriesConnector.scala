@@ -136,7 +136,6 @@ case class GitRepository(
   jenkinsURL          : Option[String]           = None,
   prototypeUrl        : Option[String]           = None
 ) {
-// Repos with joint ownership of 8+ teams, defines the repo as shared
   def isShared: Boolean =
     teamNames.length >= Constant.sharedRepoTeamsCutOff
 

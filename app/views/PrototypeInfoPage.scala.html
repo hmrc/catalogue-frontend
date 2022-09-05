@@ -14,7 +14,8 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, PrCommenterConnector}
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import play.twirl.api.Html
@@ -26,7 +27,7 @@
 @(prototype              : GitRepository,
   linkToLeakDetection    : Option[String],
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-  commenterReport        : Option[PrCommenterConnector.Report]
+  commenterReport        : Option[PrCommenterReport]
 )(implicit
   request: Request[_]
 )

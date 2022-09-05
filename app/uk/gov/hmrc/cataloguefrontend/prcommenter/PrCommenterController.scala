@@ -20,11 +20,11 @@ import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{PrCommenterConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-import views.html.PrCommenterRecommendationsPage
+import views.html.prcommenter.PrCommenterRecommendationsPage
 
 import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName

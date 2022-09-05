@@ -17,11 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 
-import uk.gov.hmrc.cataloguefrontend.connector.{PrCommenterConnector, RepoType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthRoutes}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
-import uk.gov.hmrc.cataloguefrontend.prcommenter.{routes => prcommenterRoutes}
+import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes => prcommenterRoutes}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.{normalizeTerm, optimizeIndex}
 import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}

@@ -17,8 +17,9 @@
 @import partials.ModulesPartial
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, PrCommenterConnector, Team}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Team}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
@@ -31,7 +32,7 @@
 
 @(form        : Form[_],
   teams       : Seq[Team],
-  reports     : Seq[PrCommenterConnector.Report],
+  reports     : Seq[PrCommenterReport],
   commentTypes: Set[String]
 )(implicit
   messages  : Messages,
@@ -148,7 +149,7 @@
   }
 }
 
-@collapseAttr(cssClasses: String, report: PrCommenterConnector.Report) = {
+@collapseAttr(cssClasses: String, report: PrCommenterReport) = {
   @if(report.comments.nonEmpty) {
     class="@cssClasses hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@report.name" aria-expanded="false" aria-controls="collapsible-area-@report.name"
   } else {
@@ -156,7 +157,7 @@
   }
 }
 
-@displayTeams(report: PrCommenterConnector.Report) = {
+@displayTeams(report: PrCommenterReport) = {
   @if(!report.isShared) {
     @report.teamNameDisplay.split(",").map {tn => <div  class="team" >@tn</div> }
   } else {

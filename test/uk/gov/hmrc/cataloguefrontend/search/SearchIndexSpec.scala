@@ -19,10 +19,10 @@ package uk.gov.hmrc.cataloguefrontend.search
 import org.mockito.MockitoSugar.mock
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.{PrCommenterConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.cataloguefrontend.connector.PrCommenterConnector
 
 class SearchIndexSpec extends AnyWordSpec with Matchers {
 

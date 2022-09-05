@@ -14,14 +14,14 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, PrCommenterConnector}
-@import uk.gov.hmrc.cataloguefrontend.prcommenter.{routes => prcommenterRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 
 @(repo                   : GitRepository,
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-  commenterReport        : Option[PrCommenterConnector.Report]
+  commenterReport        : Option[PrCommenterReport]
 )(implicit request: Request[_])
 
 <div id="code">
