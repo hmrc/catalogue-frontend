@@ -115,6 +115,11 @@
                             <li role="separator" class="divider"></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.ruleSummaries">Leak Detection - Rules</a></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(false, false, true)">Leak Detection - Repositories</a></li>
+                            @if(CatalogueFrontendSwitches.surfacingVulnerabilities.isEnabled) {
+                                <li role="separator" class="divider"></li>
+                                <li><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries()">
+                                    Vulnerabilities</a></li>
+                            }
                         </ul>
                     </li>
                     <li class="dropdown">

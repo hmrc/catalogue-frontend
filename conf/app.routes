@@ -83,3 +83,5 @@ GET        /leak-detection/repositories/:repository/:branch/exemptions     uk.go
 
 GET        /quicksearch                                                    uk.gov.hmrc.cataloguefrontend.search.SearchController.search(query: String, limit: Int ?= 20)
 GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.graph(service ?="", start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
+
+GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.distinctVulnerabilitySummaries(vulnerability: Option[String] ?= None, requiresActionOnly: Option[Boolean] ?= None)
