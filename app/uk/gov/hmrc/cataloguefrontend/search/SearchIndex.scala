@@ -21,6 +21,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesCo
 import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthRoutes}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
+import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes => prcommenterRoutes}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.{normalizeTerm, optimizeIndex}
 import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
@@ -46,24 +47,25 @@ case class SearchTerm(
 }
 
 @Singleton
-class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector)(implicit ec: ExecutionContext){
+class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector, prCommenterConnector: PrCommenterConnector)(implicit ec: ExecutionContext){
 
   private[search] val cachedIndex = new AtomicReference[Map[String, Seq[SearchTerm]]](Map.empty)
 
   private val hardcodedLinks = List(
-    SearchTerm("explorer", "dependency",        catalogueRoutes.DependencyExplorerController.landing.url,                    1.0f, Set("depex")),
-    SearchTerm("explorer", "bobby",             catalogueRoutes.BobbyExplorerController.list().url,                          1.0f),
-    SearchTerm("explorer", "jvm",               catalogueRoutes.JDKVersionController.compareAllEnvironments.url,             1.0f, Set("jdk", "jre")),
-    SearchTerm("explorer", "leaks",             leakRoutes.LeakDetectionController.ruleSummaries.url,                        1.0f, Set("lds")),
-    SearchTerm("page",     "whatsrunningwhere", wrwRoutes.WhatsRunningWhereController.releases().url,                        1.0f, Set("wrw")),
-    SearchTerm("page",     "deployment",        wrwRoutes.DeploymentHistoryController.history(Environment.Production).url,   1.0f),
-    SearchTerm("page",     "shutter-overview",  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url, 1.0f),
-    SearchTerm("page",     "shutter-api",       shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,      1.0f),
-    SearchTerm("page",     "shutter-rate",      shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,     1.0f),
-    SearchTerm("page",     "shutter-events",    shutterRoutes.ShutterEventsController.shutterEvents.url,                     1.0f),
-    SearchTerm("page",     "teams",             teamRoutes.TeamsController.allTeams.url,                                     1.0f),
-    SearchTerm("page",     "repositories",      reposRoutes.RepositoriesController.allRepositories().url,                    1.0f),
-    SearchTerm("page",     "defaultbranch",     catalogueRoutes.CatalogueController.allDefaultBranches().url,                1.0f),
+    SearchTerm("explorer", "dependency",                   catalogueRoutes.DependencyExplorerController.landing.url,                    1.0f, Set("depex")),
+    SearchTerm("explorer", "bobby",                        catalogueRoutes.BobbyExplorerController.list().url,                          1.0f),
+    SearchTerm("explorer", "jvm",                          catalogueRoutes.JDKVersionController.compareAllEnvironments.url,             1.0f, Set("jdk", "jre")),
+    SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                        1.0f, Set("lds")),
+    SearchTerm("page",     "whatsrunningwhere",            wrwRoutes.WhatsRunningWhereController.releases().url,                        1.0f, Set("wrw")),
+    SearchTerm("page",     "deployment",                   wrwRoutes.DeploymentHistoryController.history(Environment.Production).url,   1.0f),
+    SearchTerm("page",     "shutter-overview",             shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url, 1.0f),
+    SearchTerm("page",     "shutter-api",                  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,      1.0f),
+    SearchTerm("page",     "shutter-rate",                 shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,     1.0f),
+    SearchTerm("page",     "shutter-events",               shutterRoutes.ShutterEventsController.shutterEvents.url,                     1.0f),
+    SearchTerm("page",     "teams",                        teamRoutes.TeamsController.allTeams.url,                                     1.0f),
+    SearchTerm("page",     "repositories",                 reposRoutes.RepositoriesController.allRepositories().url,                    1.0f),
+    SearchTerm("page",     "defaultbranch",                catalogueRoutes.CatalogueController.allDefaultBranches().url,                1.0f),
+    SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,               1.0f),
   )
 
   def updateIndexes(): Future[Unit] = {
@@ -78,9 +80,11 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
                             .flatMap(r => List(SearchTerm("config",      r.name,          catalogueRoutes.CatalogueController.serviceConfig(r.name).url ),
-                                               SearchTerm("timeline",     r.name,          wrwRoutes.DeploymentHistoryController.graph(r.name).url)
+                                               SearchTerm("timeline",    r.name,          wrwRoutes.DeploymentHistoryController.graph(r.name).url)
                             ))
-      allLinks = hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks
+      comments      <- prCommenterConnector.search(None, None, None)
+      commentLinks  =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
+      allLinks = hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks
     } yield cachedIndex.set(optimizeIndex(allLinks))
   }
 

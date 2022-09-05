@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import play.twirl.api.Html
@@ -25,7 +26,8 @@
 
 @(prototype              : GitRepository,
   linkToLeakDetection    : Option[String],
-  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
+  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
+  commenterReport        : Option[PrCommenterReport]
 )(implicit
   request: Request[_]
 )
@@ -58,7 +60,7 @@
             </div>
 
             <div class="col-md-6">
-                @partials.code(prototype, hasBranchProtectionAuth)
+                @partials.code(prototype, hasBranchProtectionAuth, commenterReport)
             </div>
         </div>
     </section>

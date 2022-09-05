@@ -12135,6 +12135,13 @@ section span.other-teams-message {
   font-weight: bold;
 }
 
+.highlight-dotted {
+  border: 2px dotted red;
+  padding: 0.5em 0.5em 0em 0.5em;
+  margin-bottom: 0.5em;
+  font-weight: bold;
+}
+
 .bobbyrules select {
   width: 100%;
 }

@@ -47,6 +47,8 @@ GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefro
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()
 
+GET        /pr-commenter/recommendations                uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterController.recommendations(name: Option[String] ?= None, teamName: Option[String] ?= None, commentType: Option[String] ?= None)
+
 GET        /shuttering-overview/:shutterType            uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStates(shutterType: ShutterType)
 GET        /shuttering-overview/:shutterType/:env       uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStatesForEnv(shutterType: ShutterType, env: Environment)
 GET        /frontend-route-warnings/:env/:serviceName   uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.frontendRouteWarnings(env: Environment, serviceName: String)
