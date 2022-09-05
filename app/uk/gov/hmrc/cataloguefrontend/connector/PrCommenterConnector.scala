@@ -20,6 +20,7 @@ import play.api.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.cataloguefrontend.config.Constant
 
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
@@ -38,7 +39,7 @@ object PrCommenterConnector {
     created  : Instant
   ) {
     // Repos with joint ownership of 8+ teams, defines the repo as shared
-    def isShared: Boolean = teamNames.length >= 8
+    def isShared: Boolean = teamNames.length >= Constant.sharedRepoTeamsCutOff
 
     def teamNameDisplay: String = if (isShared) s"Shared by ${teamNames.length} teams" else teamNames.sortBy(_.toLowerCase).mkString(",")
   }
@@ -72,15 +73,14 @@ class PrCommenterConnector @Inject()(
 
   private val baseUrl = servicesConfig.baseUrl("pr-commenter")
 
-  implicit private val hc = HeaderCarrier()
   private implicit val rf = PrCommenterConnector.reportReads
 
-  def report(name: String): Future[Option[Report]] =
+  def report(name: String)(implicit hc: HeaderCarrier): Future[Option[Report]] =
     httpClientV2
       .get(url"$baseUrl/pr-commenter/repositories/$name/report")
       .execute[Option[Report]]
 
-  def search(name: Option[String], teamName: Option[String], commentType: Option[String]): Future[Seq[Report]] =
+  def search(name: Option[String], teamName: Option[String], commentType: Option[String])(implicit hc: HeaderCarrier): Future[Seq[Report]] =
     httpClientV2
       .get(url"$baseUrl/pr-commenter/reports?name=$name&teamName=$teamName&commentType=$commentType")
       .execute[Seq[Report]]
