@@ -46,4 +46,7 @@ object CatalogueFrontendSwitches {
   def branchProtectionDisplay: FeatureSwitch =
     FeatureSwitch.forName("branch-protection-display")
 
+  def surfacingVulnerabilities: FeatureSwitch =
+    FeatureSwitch.forName("surfacing-vulnerabilities")
+
 }

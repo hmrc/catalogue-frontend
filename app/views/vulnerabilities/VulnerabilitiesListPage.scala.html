@@ -1,0 +1,102 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilityCountSummary
+    @import uk.gov.hmrc.cataloguefrontend.{ViewMessages}
+    @import views.html.helper.form
+    @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{routes => appRoutes}
+    @import views.html.vulnerabilities.VulnerabilityDetails
+
+
+@this(viewMessages: ViewMessages)
+
+@(summaries:      Seq[VulnerabilityCountSummary],
+  form:           Form[_]
+)(implicit request: Request[_])
+
+    @standard_layout(s"Vulnerabilities") {
+        <header>
+        <h1>Vulnerabilities</h1>
+        </header>
+            <div id="vulnerabilities-list">
+                <form id="vuln-form" action="/vulnerabilities" method="get">
+                    <div class="form-group row">
+                        <div class="col-md-1">
+                            <label for="search">ID search:</label>
+                        </div>
+                        <div class="col-md-4">
+                            <input class="search form-control" id="search" type="text" name="vulnerability" value='@form("vulnerability").value' autofocus>
+                        </div>
+                        <div class="col-md-4">
+                            <label for ="requires-action">Show only vulnerabilities that require action:</label>
+                            <input name="requiresActionOnly" id="requiresActionOnly" type="checkbox" onchange="form.submit()" value="true"
+                            @defining(form("requiresActionOnly").value.getOrElse("none")) {requiresAction =>
+                                @if(requiresAction == "true")  {checked}></input>
+                            }
+
+                        </div>
+                    </div>
+                </form>
+                <table style="word-break: break-word" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability id</button></th>
+                            <th class="col-xs-2"><button class="sort no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
+                            <th class="col-xs-5"><button class="sort no-border" data-sort="assessment">Assessment</button></th>
+                            <th class="col-xs-1"><button class="sort no-border" data-sort="requires-action">Requires Action</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="teams">Teams</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="services">Services</button></th>
+                        </tr>
+                    </thead>
+                    <tbody class="list">
+                        @summaries.map(vulnerabilitiesSummary)
+                    </tbody>
+                </table>
+            </div>
+
+        <script>
+            var options = {valueNames: ['vuln-id', 'vulnerable-component-name', 'assessment', 'requires-action', 'teams', 'services'],
+                searchColumns: ['vuln-id'],
+                indexAsync: true,
+                searchDelay: 350};
+                rulesList = new List('vulnerabilities-list', options);
+        </script>
+}
+
+@vulnerabilitiesSummary(summary: VulnerabilityCountSummary) = {
+        <tr>
+            <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"/>
+            <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
+            <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.vulnerableComponentName</td>
+            <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment</td>
+            <td class="requires-action hand-pointer text-center" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@if(summary.distinctVulnerability.requiresAction) {yes} else {no}</td>
+            <td class="teams text-center"><div>@summary.teams.length</div></td>
+            <td class="services text-center"><div>@summary.services.length</div></td>
+        </tr>
+        <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
+            @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
+            <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
+            <td class="hide vulnerable-component-name">@summary.distinctVulnerability.vulnerableComponentName</td>
+            <td class="hide assessment">@summary.distinctVulnerability.assessment</td>
+            <td class="hide requires-action text-center">@if(summary.distinctVulnerability.requiresAction) {yes} else {no}</td>
+            <td class="teams text-center hide"><div>@summary.teams.length</div></td>
+            <td class="services text-center hide"><div>@summary.services.length</div></td>
+            <td colspan="6">
+            @VulnerabilityDetails(summary.distinctVulnerability)
+            </td>
+        </tr>
+}
