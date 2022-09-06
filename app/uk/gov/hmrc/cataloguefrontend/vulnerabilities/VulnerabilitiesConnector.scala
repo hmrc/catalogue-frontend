@@ -36,7 +36,7 @@ class VulnerabilitiesConnector @Inject() (
   def vulnerabilities()(implicit hc: HeaderCarrier): Future[Seq[Vulnerability]] = {
     implicit val vrs: Reads[Vulnerability] = Vulnerability.reads
     httpClientV2
-      .get(url"$url/vulnerabilities//api/vulnerabilities")
+      .get(url"$url/vulnerabilities/api/vulnerabilities")
       .execute[Seq[Vulnerability]]
   }
 
