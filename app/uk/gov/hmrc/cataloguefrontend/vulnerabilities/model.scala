@@ -97,7 +97,7 @@ object DistinctVulnerability {
 
 case class VulnerabilityCountSummary(
     distinctVulnerability: DistinctVulnerability,
-    services             : Seq[String],
+    servicesCount        : Int,
     teams                : Seq[String]
 )
 
@@ -106,7 +106,7 @@ object VulnerabilityCountSummary {
     implicit val dvf = DistinctVulnerability.apiFormat
 
     ( (__ \ "distinctVulnerability"   ).format[DistinctVulnerability]
-      ~ (__ \ "services"              ).format[Seq[String]]
+      ~ (__ \ "servicesCount"         ).format[Int]
       ~ (__ \ "teams"                 ).format[Seq[String]]
       )(apply, unlift(unapply))
   }
