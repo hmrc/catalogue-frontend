@@ -56,7 +56,8 @@
                             <th></th>
                             <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability id</button></th>
                             <th class="col-xs-2"><button class="sort no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
-                            <th class="col-xs-5"><button class="sort no-border" data-sort="assessment">Assessment</button></th>
+                            <th class="col-xs-4"><button class="sort no-border" data-sort="assessment">Assessment</button></th>
+                            <th class="col-xs-1"><button class="sort no-border" data-sort="score">Score</button></th>
                             <th class="col-xs-1"><button class="sort no-border" data-sort="requires-action">Requires Action</button></th>
                             <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="teams">Teams</button></th>
                             <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="services">Services</button></th>
@@ -69,7 +70,7 @@
             </div>
 
         <script>
-            var options = {valueNames: ['vuln-id', 'vulnerable-component-name', 'assessment', 'requires-action', 'teams', 'services'],
+            var options = {valueNames: ['vuln-id', 'vulnerable-component-name', 'assessment', 'requires-action', 'score', 'teams', 'services'],
                 searchColumns: ['vuln-id'],
                 indexAsync: true,
                 searchDelay: 350};
@@ -83,6 +84,7 @@
             <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
             <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.vulnerableComponentName</td>
             <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment</td>
+            <td class="score hand-pointer text-center" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
             <td class="requires-action hand-pointer text-center" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@if(summary.distinctVulnerability.requiresAction) {yes} else {no}</td>
             <td class="teams text-center"><div>@summary.teams.length</div></td>
             <td class="services text-center"><div>@summary.servicesCount</div></td>
@@ -92,11 +94,12 @@
             <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
             <td class="hide vulnerable-component-name">@summary.distinctVulnerability.vulnerableComponentName</td>
             <td class="hide assessment">@summary.distinctVulnerability.assessment</td>
+            <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
             <td class="hide requires-action text-center">@if(summary.distinctVulnerability.requiresAction) {yes} else {no}</td>
             <td class="teams text-center hide"><div>@summary.teams.length</div></td>
             <td class="services text-center hide"><div>@summary.servicesCount</div></td>
             <td colspan="6">
-            @VulnerabilityDetails(summary.distinctVulnerability)
+            @VulnerabilityDetails(summary)
             </td>
         </tr>
 }
