@@ -27,7 +27,7 @@
   form:           Form[_]
 )(implicit request: Request[_])
 
-    @standard_layout(s"Vulnerabilities") {
+@standard_layout(s"Vulnerabilities") {
         <header>
         <h1>Vulnerabilities</h1>
         </header>
@@ -85,7 +85,7 @@
             <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.vulnerableComponentName</td>
             <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment</td>
             <td class="score hand-pointer text-center" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
-            <td class="requires-action hand-pointer text-center" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@if(summary.distinctVulnerability.requiresAction) {yes} else {no}</td>
+            <td class="requires-action hand-pointer text-center" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@formatRequiresAction(summary.distinctVulnerability.requiresAction)</td>
             <td class="teams text-center"><div>@summary.teams.length</div></td>
             <td class="services text-center"><div>@summary.servicesCount</div></td>
         </tr>
@@ -95,11 +95,19 @@
             <td class="hide vulnerable-component-name">@summary.distinctVulnerability.vulnerableComponentName</td>
             <td class="hide assessment">@summary.distinctVulnerability.assessment</td>
             <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
-            <td class="hide requires-action text-center">@if(summary.distinctVulnerability.requiresAction) {yes} else {no}</td>
+            <td class="hide requires-action text-center">@formatRequiresAction(summary.distinctVulnerability.requiresAction)</td>
             <td class="teams text-center hide"><div>@summary.teams.length</div></td>
             <td class="services text-center hide"><div>@summary.servicesCount</div></td>
             <td colspan="6">
             @VulnerabilityDetails(summary)
             </td>
         </tr>
+}
+
+@formatRequiresAction(requiresAction: Option[Boolean]) = @{
+    requiresAction match {
+        case Some(true) => "yes"
+        case Some(false) => "no"
+        case _           => ""
+    }
 }
