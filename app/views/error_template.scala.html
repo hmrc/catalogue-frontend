@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@(pageTitle: String, heading: String, message: String)(implicit request: Request[_])
+@(pageTitle: String, heading: String, message: String)(implicit request: RequestHeader)
 
 @standard_layout(pageTitle) {
     <section class="section-wrapper">
@@ -24,4 +24,3 @@
         <p>If the problem persists, please get in touch with #team-platops on Slack</p>
     </section>
 }
-
