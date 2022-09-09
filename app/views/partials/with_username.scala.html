@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 
-@(ifLoggedIn: String => Html)(ifNotLoggedIn: => Html)(implicit request: Request[_])
+@(ifLoggedIn: String => Html)(ifNotLoggedIn: => Html)(implicit request: RequestHeader)
 
 @{
   request

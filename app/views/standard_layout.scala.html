@@ -30,7 +30,7 @@
   head       : Html   = Html(""),
   preContent : Html   = Html(""),
   postContent: Html   = Html("")
-)(content: Html)(implicit request: Request[_])
+)(content: Html)(implicit request: RequestHeader)
 <!DOCTYPE html>
 <html>
     <head>
@@ -112,7 +112,7 @@
                             <li><a href="@HealthIndicatorsController.indicatorsForRepoType()">Health-Indicators</a></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
                             <li role="separator" class="divider"></li>
-                            <li><a href="@appRoutes.BobbyExplorerController.list">Bobby Explorer</a></li>
+                            <li><a href="@appRoutes.BobbyExplorerController.list()">Bobby Explorer</a></li>
                             <li role="separator" class="divider"></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.ruleSummaries">Leak Detection - Rules</a></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(false, false, true)">Leak Detection - Repositories</a></li>
