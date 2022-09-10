@@ -118,7 +118,7 @@
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(false, false, true)">Leak Detection - Repositories</a></li>
                             @if(CatalogueFrontendSwitches.surfacingVulnerabilities.isEnabled) {
                                 <li role="separator" class="divider"></li>
-                                <li><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries()">
+                                <li><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, requiresAction = Some(true), None, None)">
                                     Vulnerabilities</a></li>
                             }
                             <li role="separator" class="divider"></li>

@@ -18,97 +18,107 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{OFormat, __}
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.Instant
 import scala.collection.Seq
 
 case class Vulnerability(
-    service: String,
-    serviceVersion: String,
-    vulnerableComponentName: String,
+    service                   : String,
+    serviceVersion            : String,
+    vulnerableComponentName   : String,
     vulnerableComponentVersion: String,
-    componentPathInSlug: String,
-    id: String,
-    score: Option[Double],
-    description: String,
-    teams: Option[Seq[String]],
-    references: Seq[String],
-    publishedDate: Instant,
-    scannedDate: Instant,
-    requiresAction: Option[Boolean],
-    assessment: Option[String],
-    lastReviewed: Option[Instant]
+    componentPathInSlug       : String,
+    id                        : String,
+    score                     : Option[Double],
+    description               : String,
+    teams                     : Option[Seq[String]],
+    references                : Seq[String],
+    publishedDate             : Instant,
+    scannedDate               : Instant,
+    requiresAction            : Option[Boolean],
+    assessment                : Option[String],
+    lastReviewed              : Option[Instant]
 )
 
 object Vulnerability {
 
   val reads: OFormat[Vulnerability] = {
 
-    ((__ \ "service").format[String]
-      ~ (__ \ "serviceVersion").format[String]
-      ~ (__ \ "vulnerableComponentName").format[String]
+    ((__ \ "service"                      ).format[String]
+      ~ (__ \ "serviceVersion"            ).format[String]
+      ~ (__ \ "vulnerableComponentName"   ).format[String]
       ~ (__ \ "vulnerableComponentVersion").format[String]
-      ~ (__ \ "componentPathInSlug").format[String]
-      ~ (__ \ "id").format[String]
-      ~ (__ \ "score").formatNullable[Double]
-      ~ (__ \ "description").format[String]
-      ~ (__ \ "teams").formatNullable[Seq[String]]
-      ~ (__ \ "references").format[Seq[String]]
-      ~ (__ \ "publishedDate").format[Instant]
-      ~ (__ \ "scannedDate").format[Instant]
-      ~ (__ \ "requiresAction").formatNullable[Boolean]
-      ~ (__ \ "assessment").formatNullable[String]
-      ~ (__ \ "lastReviewed").formatNullable[Instant]
+      ~ (__ \ "componentPathInSlug"       ).format[String]
+      ~ (__ \ "id"                        ).format[String]
+      ~ (__ \ "score"                     ).formatNullable[Double]
+      ~ (__ \ "description"               ).format[String]
+      ~ (__ \ "teams"                     ).formatNullable[Seq[String]]
+      ~ (__ \ "references"                ).format[Seq[String]]
+      ~ (__ \ "publishedDate"             ).format[Instant]
+      ~ (__ \ "scannedDate"               ).format[Instant]
+      ~ (__ \ "requiresAction"            ).formatNullable[Boolean]
+      ~ (__ \ "assessment"                ).formatNullable[String]
+      ~ (__ \ "lastReviewed"              ).formatNullable[Instant]
       ) (apply, unlift(unapply))
   }
 }
 
 case class DistinctVulnerability(
-    vulnerableComponentName: String,
-    vulnerableComponentVersion: String,
-    id: String,
-    score: Option[Double],
-    description: String,
-    references: Seq[String],
-    publishedDate: Instant,
-    requiresAction: Option[Boolean],
-    assessment: Option[String],
-    lastReviewed: Option[Instant]
+  vulnerableComponentName   : String,
+  vulnerableComponentVersion: String,
+  id                        : String,
+  score                     : Option[Double],
+  description               : String,
+  references                : Seq[String],
+  publishedDate             : Instant
 )
 
 object DistinctVulnerability {
 
   val apiFormat: OFormat[DistinctVulnerability] = {
 
-    ( (__ \ "vulnerableComponentName"   ).format[String]
+    ( (__ \ "vulnerableComponentName"     ).format[String]
       ~ (__ \ "vulnerableComponentVersion").format[String]
       ~ (__ \ "id"                        ).format[String]
       ~ (__ \ "score"                     ).formatNullable[Double]
       ~ (__ \ "description"               ).format[String]
       ~ (__ \ "references"                ).format[Seq[String]]
       ~ (__ \ "publishedDate"             ).format[Instant]
-      ~ (__ \ "requiresAction"            ).formatNullable[Boolean]
-      ~ (__ \ "assessment"                ).formatNullable[String]
-      ~ (__ \ "lastReviewed"              ).formatNullable[Instant]
       )(apply, unlift(unapply))
   }
 }
 
-case class VulnerabilityCountSummary(
-    distinctVulnerability: DistinctVulnerability,
-    servicesCount        : Int,
-    teams                : Seq[String]
+case class VulnerabilityOccurrence(
+  service       : String,
+  serviceVersion: String,
+  assessment    : Option[String],
+  requiresAction: Option[Boolean]
 )
 
-object VulnerabilityCountSummary {
-  val reads: OFormat[VulnerabilityCountSummary] = {
-    implicit val dvf = DistinctVulnerability.apiFormat
-
-    ( (__ \ "distinctVulnerability"   ).format[DistinctVulnerability]
-      ~ (__ \ "servicesCount"         ).format[Int]
-      ~ (__ \ "teams"                 ).format[Seq[String]]
+object VulnerabilityOccurrence {
+  val reads: OFormat[VulnerabilityOccurrence] = {
+    ( (__ \ "service"         ).format[String]
+      ~ (__ \ "serviceVersion").format[String]
+      ~ (__ \ "assessment"    ).formatNullable[String]
+      ~ (__ \ "requiresAction").formatNullable[Boolean]
       )(apply, unlift(unapply))
   }
+}
 
+case class VulnerabilitySummary(
+   distinctVulnerability: DistinctVulnerability,
+   occurrences          : Seq[VulnerabilityOccurrence],
+   teams                : Seq[String]
+ )
+
+object VulnerabilitySummary {
+  val apiFormat: OFormat[VulnerabilitySummary] = {
+    implicit val dvf = DistinctVulnerability.apiFormat
+    implicit val vof = VulnerabilityOccurrence.reads
+
+    ((__ \ "distinctVulnerability").format[DistinctVulnerability]
+      ~ (__ \ "occurrences"       ).format[Seq[VulnerabilityOccurrence]]
+      ~ (__ \ "teams"             ).format[Seq[String]]
+      ) (apply, unlift(unapply))
+  }
 }
