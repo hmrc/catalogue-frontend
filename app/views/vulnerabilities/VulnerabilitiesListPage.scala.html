@@ -41,8 +41,8 @@
                             <input class="id-search form-control" id="id-search" type="text" name="vulnerability" value='@form("vulnerability").value' autofocus>
                         </div>
                         <div class="col-md-3">
-                            <label for="search">Service:</label>
-                            <input class="search form-control" id="service-search" type="text" name="service" value='@form("service").value' autofocus>
+                            <label for="service-search">Service:</label>
+                            <input class="service-search form-control" id="service-search" type="text" name="service" value='@form("service").value' autofocus>
                         </div>
                         <div class="col-md-3">
                         @select(
@@ -71,7 +71,7 @@
                         </div>
                         @*Hidden submit button required to allow form submission on an enter press,
                          when two search fields exist in the same form*@
-                        <input style="display: none" type="submit" />
+                        <input style="visibility: hidden;" type="submit" />
                     </div>
                 </form>
                 <table style="word-break: break-word" class="table table-striped">
