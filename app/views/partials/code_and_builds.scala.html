@@ -57,6 +57,9 @@
                 @commenterReport.map { report =>
                     <li class="list-item"><a id="link-to-@{repo.name}-comments" href="@prcommenterRoutes.PrCommenterController.recommendations(name = Some(report.name))">PR-Commenter recommendations (@report.comments.size)</a></li>
                 }
+                @if(CatalogueFrontendSwitches.surfacingVulnerabilities.isEnabled) {
+                    <li class="list-item"><a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, requiresAction = Some(true), Some(serviceName), None)">Vulnerabilities</a></li>
+                }
             </ul>
         </div>
     </div>

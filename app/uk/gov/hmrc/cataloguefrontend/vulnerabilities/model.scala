@@ -92,7 +92,8 @@ case class VulnerabilityOccurrence(
   service       : String,
   serviceVersion: String,
   assessment    : Option[String],
-  requiresAction: Option[Boolean]
+  requiresAction: Option[Boolean],
+  componentPathInSlug: String
 )
 
 object VulnerabilityOccurrence {
@@ -101,6 +102,7 @@ object VulnerabilityOccurrence {
       ~ (__ \ "serviceVersion").format[String]
       ~ (__ \ "assessment"    ).formatNullable[String]
       ~ (__ \ "requiresAction").formatNullable[Boolean]
+      ~ (__ \ "componentPathInSlug").format[String]
       )(apply, unlift(unapply))
   }
 }
