@@ -22,6 +22,7 @@ import play.api.libs.json.{Json, OFormat}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.helper.form
@@ -34,38 +35,44 @@ import scala.concurrent.{ExecutionContext, Future}
 class VulnerabilitiesController @Inject() (
     override val mcc             : MessagesControllerComponents,
     override val auth            : FrontendAuthComponents,
-    vulnerabilitiesConnector: VulnerabilitiesConnector,
-    vulnerabilitiesListPage: VulnerabilitiesListPage
+    vulnerabilitiesConnector     : VulnerabilitiesConnector,
+    vulnerabilitiesListPage      : VulnerabilitiesListPage,
+    teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
 ) (implicit
    override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def distinctVulnerabilitySummaries(vulnerability: Option[String], requiresAction: Option[Boolean]): Action[AnyContent] = Action.async { implicit request =>
+  def distinctVulnerabilitySummaries(vulnerability: Option[String], requiresAction: Option[Boolean], service: Option[String], team: Option[String]): Action[AnyContent] = Action.async { implicit request =>
     import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesExplorerFilter.form
-    implicit val vcsr: OFormat[VulnerabilityCountSummary] = VulnerabilityCountSummary.reads
+    implicit val vcsf: OFormat[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
       form
       .bindFromRequest()
       .fold(
-        formWithErrors => Future.successful(BadRequest(vulnerabilitiesListPage(Seq.empty, formWithErrors))),
+        formWithErrors => Future.successful(BadRequest(vulnerabilitiesListPage(Seq.empty, Seq.empty, formWithErrors))),
         validForm =>
           for {
-            summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.requiresActionOnly )
-          } yield Ok(vulnerabilitiesListPage(summaries, form.fill(validForm)))
+            teams     <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
+            summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.requiresAction, validForm.service, validForm.team)
+          } yield Ok(vulnerabilitiesListPage(summaries, teams, form.fill(validForm)))
         )
   }
 }
 
 case class VulnerabilitiesExplorerFilter(
-  vulnerability: Option[String] = None,
-  requiresActionOnly: Option[Boolean] = None
+  vulnerability     : Option[String]   = None,
+  requiresAction    : Option[Boolean]  = None,
+  service           : Option[String]   = None,
+  team              : Option[String]   = None
 )
 
 object VulnerabilitiesExplorerFilter {
   lazy val form: Form[VulnerabilitiesExplorerFilter] = Form(
     mapping(
-      "vulnerability" -> optional(text),
-      "requiresActionOnly" -> optional(boolean)
+      "vulnerability"      -> optional(text),
+      "requiresAction"     -> optional(boolean),
+      "service"            -> optional(text),
+      "team"               -> optional(text)
     )(VulnerabilitiesExplorerFilter.apply)(VulnerabilitiesExplorerFilter.unapply)
   )
 }

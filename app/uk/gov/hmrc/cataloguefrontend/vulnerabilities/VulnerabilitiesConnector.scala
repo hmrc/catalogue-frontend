@@ -40,11 +40,11 @@ class VulnerabilitiesConnector @Inject() (
       .execute[Seq[Vulnerability]]
   }
 
-  def vulnerabilitySummaries(vulnerability: Option[String] = None, requiresActionOnly: Option[Boolean] = None)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilityCountSummary]] = {
-    implicit val vsrs: Reads[VulnerabilityCountSummary] = VulnerabilityCountSummary.reads
+  def vulnerabilitySummaries(vulnerability: Option[String] = None, requiresAction: Option[Boolean] = None, service: Option[String] = None, team: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilitySummary]] = {
+    implicit val vsrs: Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
     httpClientV2
-      .get(url"$url/vulnerabilities/api/vulnerabilities/distinct?vulnerability=${vulnerability}&requiresActionOnly=${requiresActionOnly}")
-      .execute[Seq[VulnerabilityCountSummary]]
+      .get(url"$url/vulnerabilities/api/vulnerabilities/distinct?vulnerability=${vulnerability}&requiresAction=${requiresAction}&service=${service}&team=${team}")
+      .execute[Seq[VulnerabilitySummary]]
   }
 
 
