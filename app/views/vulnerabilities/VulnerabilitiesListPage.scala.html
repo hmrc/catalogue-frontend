@@ -79,8 +79,8 @@
                         <tr>
                             <th></th>
                             <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability id</button></th>
-                            <th class="col-xs-2"><button class="sort no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
-                            <th class="col-xs-5"><button class="sort no-border" data-sort="description">Description</button></th>
+                            <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
+                            <th class="col-xs-5"><button class="no-border" data-sort="description">Description</button></th>
                             <th class="col-xs-1"><button class="sort no-border" data-sort="score">Score</button></th>
                             <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="teams">Teams</button></th>
                             <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="services">Services</button></th>
@@ -93,7 +93,7 @@
             </div>
 
         <script>
-            var options = {valueNames: ['vuln-id', 'vulnerable-component-name', 'description', 'score', 'teams', 'services'],
+            var options = {valueNames: ['vuln-id', 'score', 'teams', 'services'],
                 indexAsync: true};
                 vulnList = new List('vulnerabilities-list', options);
         </script>
