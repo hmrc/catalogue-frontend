@@ -43,7 +43,7 @@ class VulnerabilitiesController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def distinctVulnerabilitySummaries(vulnerability: Option[String], requiresAction: Option[Boolean], service: Option[String], team: Option[String]): Action[AnyContent] = Action.async { implicit request =>
+  def distinctVulnerabilitySummaries(vulnerability: Option[String], curationStatus: Option[String], service: Option[String], team: Option[String]): Action[AnyContent] = Action.async { implicit request =>
     import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesExplorerFilter.form
     implicit val vcsf: OFormat[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
       form
@@ -53,7 +53,7 @@ class VulnerabilitiesController @Inject() (
         validForm =>
           for {
             teams     <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
-            summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.requiresAction, validForm.service, validForm.team)
+            summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.curationStatus, validForm.service, validForm.team)
           } yield Ok(vulnerabilitiesListPage(summaries, teams, form.fill(validForm)))
         )
   }
@@ -61,7 +61,7 @@ class VulnerabilitiesController @Inject() (
 
 case class VulnerabilitiesExplorerFilter(
   vulnerability     : Option[String]   = None,
-  requiresAction    : Option[Boolean]  = None,
+  curationStatus    : Option[String]   = None,
   service           : Option[String]   = None,
   team              : Option[String]   = None
 )
@@ -70,7 +70,7 @@ object VulnerabilitiesExplorerFilter {
   lazy val form: Form[VulnerabilitiesExplorerFilter] = Form(
     mapping(
       "vulnerability"      -> optional(text),
-      "requiresAction"     -> optional(boolean),
+      "curationStatus"     -> optional(text),
       "service"            -> optional(text),
       "team"               -> optional(text)
     )(VulnerabilitiesExplorerFilter.apply)(VulnerabilitiesExplorerFilter.unapply)

@@ -35,7 +35,7 @@ case class Vulnerability(
     references                : Seq[String],
     publishedDate             : Instant,
     scannedDate               : Instant,
-    requiresAction            : Option[Boolean],
+    curationStatus            : Option[CurationStatus],
     assessment                : Option[String],
     evaluatedDate             : Option[Instant],
     ticket                    : Option[String]
@@ -44,6 +44,7 @@ case class Vulnerability(
 object Vulnerability {
 
   val reads: OFormat[Vulnerability] = {
+    implicit val csf = CurationStatus.format
 
     ( (__ \ "service"                     ).format[String]
       ~ (__ \ "serviceVersion"            ).format[String]
@@ -57,7 +58,7 @@ object Vulnerability {
       ~ (__ \ "references"                ).format[Seq[String]]
       ~ (__ \ "publishedDate"             ).format[Instant]
       ~ (__ \ "scannedDate"               ).format[Instant]
-      ~ (__ \ "requiresAction"            ).formatNullable[Boolean]
+      ~ (__ \ "curationStatus"            ).formatNullable[CurationStatus]
       ~ (__ \ "assessment"                ).formatNullable[String]
       ~ (__ \ "evaluatedDate"             ).formatNullable[Instant]
       ~ (__ \ "ticket"                    ).formatNullable[String]
@@ -74,12 +75,15 @@ case class DistinctVulnerability(
     references                : Seq[String],
     publishedDate             : Instant,
     evaluated                 : Option[Instant],
-    ticket                    : Option[String]
+    ticket                    : Option[String],
+    assessment                : Option[String],
+    curationStatus            : Option[CurationStatus],
 )
 
 object DistinctVulnerability {
 
   val apiFormat: OFormat[DistinctVulnerability] = {
+    implicit val csf = CurationStatus.format
 
     ( (__ \ "vulnerableComponentName"     ).format[String]
       ~ (__ \ "vulnerableComponentVersion").format[String]
@@ -90,6 +94,8 @@ object DistinctVulnerability {
       ~ (__ \ "publishedDate"             ).format[Instant]
       ~ (__ \ "evaluated"                 ).formatNullable[Instant]
       ~ (__ \ "ticket"                    ).formatNullable[String]
+      ~ (__ \ "assessment"                ).formatNullable[String]
+      ~ (__ \ "curationStatus"            ).formatNullable[CurationStatus]
       )(apply, unlift(unapply))
   }
 }
@@ -97,8 +103,6 @@ object DistinctVulnerability {
 case class VulnerabilityOccurrence(
   service       : String,
   serviceVersion: String,
-  assessment    : Option[String],
-  requiresAction: Option[Boolean],
   componentPathInSlug: String
 )
 
@@ -106,8 +110,6 @@ object VulnerabilityOccurrence {
   val reads: OFormat[VulnerabilityOccurrence] = {
     ( (__ \ "service"         ).format[String]
       ~ (__ \ "serviceVersion").format[String]
-      ~ (__ \ "assessment"    ).formatNullable[String]
-      ~ (__ \ "requiresAction").formatNullable[Boolean]
       ~ (__ \ "componentPathInSlug").format[String]
       )(apply, unlift(unapply))
   }
