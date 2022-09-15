@@ -117,6 +117,7 @@ object RepoType {
         case "Service"   => JsSuccess(Service)
         case "Library"   => JsSuccess(Library)
         case "Prototype" => JsSuccess(Prototype)
+        case "Test"      => JsSuccess(Test)
         case "Other"     => JsSuccess(Other)
         case "All Types" => JsSuccess(AllTypes)
         case s           => JsError(s"Invalid RepoType: $s")
@@ -127,6 +128,7 @@ object RepoType {
         case Service   => JsString("Service")
         case Library   => JsString("Library")
         case Prototype => JsString("Prototype")
+        case Test      => JsString("Test")
         case Other     => JsString("Other")
         case AllTypes  => JsString("All Types")
         case s         => JsString(s"$s")
@@ -141,6 +143,7 @@ object RepoType {
     Service,
     Library,
     Prototype,
+    Test,
     Other,
     AllTypes
   )
@@ -153,6 +156,9 @@ object RepoType {
   }
   case object Prototype extends RepoType {
     override def asString: String = "Prototype"
+  }
+  case object Test extends RepoType {
+    override def asString: String = "Test"
   }
   case object Other extends RepoType {
     override def asString: String = "Other"

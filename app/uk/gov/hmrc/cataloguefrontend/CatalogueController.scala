@@ -248,6 +248,7 @@ class CatalogueController @Inject() (
                         case RepoType.Service   => renderServicePage(repoDetails.name, repoDetails, hasBranchProtectionAuth)
                         case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth)
                         case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth)
+                        case RepoType.Test      => renderOther(repoDetails, hasBranchProtectionAuth)
                         case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth)
                       }
                     )
