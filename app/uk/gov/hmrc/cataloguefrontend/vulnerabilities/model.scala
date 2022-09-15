@@ -31,6 +31,7 @@ case class Vulnerability(
     id                        : String,
     score                     : Option[Double],
     description               : String,
+    fixedVersions             : Option[Seq[String]],
     teams                     : Option[Seq[String]],
     references                : Seq[String],
     publishedDate             : Instant,
@@ -54,6 +55,7 @@ object Vulnerability {
       ~ (__ \ "id"                        ).format[String]
       ~ (__ \ "score"                     ).formatNullable[Double]
       ~ (__ \ "description"               ).format[String]
+      ~ (__ \ "fixedVersions"             ).formatNullable[Seq[String]]
       ~ (__ \ "teams"                     ).formatNullable[Seq[String]]
       ~ (__ \ "references"                ).format[Seq[String]]
       ~ (__ \ "publishedDate"             ).format[Instant]
@@ -72,6 +74,7 @@ case class DistinctVulnerability(
     id                        : String,
     score                     : Option[Double],
     description               : String,
+    fixedVersions             : Option[Seq[String]],
     references                : Seq[String],
     publishedDate             : Instant,
     evaluated                 : Option[Instant],
@@ -90,6 +93,7 @@ object DistinctVulnerability {
       ~ (__ \ "id"                        ).format[String]
       ~ (__ \ "score"                     ).formatNullable[Double]
       ~ (__ \ "description"               ).format[String]
+      ~ (__ \ "fixedVersions"             ).formatNullable[Seq[String]]
       ~ (__ \ "references"                ).format[Seq[String]]
       ~ (__ \ "publishedDate"             ).format[Instant]
       ~ (__ \ "evaluated"                 ).formatNullable[Instant]
