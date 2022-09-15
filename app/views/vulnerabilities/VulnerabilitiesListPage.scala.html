@@ -21,6 +21,7 @@
     @import views.html.vulnerabilities.VulnerabilityDetails
     @import views.html.helper.select
     @import uk.gov.hmrc.cataloguefrontend.connector.Team
+    @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 
 @this(viewMessages: ViewMessages)
 
@@ -57,15 +58,16 @@
                         </div>
                         <div class="col-md-3">
                         @select(
-                            field       =  form("requiresAction"),
+                            field       =  form("curationStatus"),
                             options     =  Seq(
-                                ""                 ->  "All",
-                                "true"             ->  "Yes",
-                                "false"            ->  "No",
+                                ""                                           -> "All",
+                                CurationStatus.NoActionRequired.asString     -> CurationStatus.NoActionRequired.display,
+                                CurationStatus.InvestigationOngoing.asString -> CurationStatus.InvestigationOngoing.display,
+                                CurationStatus.ActionRequired.asString       -> CurationStatus.ActionRequired.display
                             ),
-                            '_label   -> "Requires action:",
+                            '_label   -> "Curation status:",
                             'onchange -> "this.form.submit()",
-                            'id       -> "requires-action-search",
+                            'id       -> "curation-status-search",
                             'class    -> "form-control"
                         )
                         </div>
@@ -80,9 +82,9 @@
                             <th></th>
                             <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability id</button></th>
                             <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
-                            <th class="col-xs-5"><button class="no-border" data-sort="description">Description</button></th>
-                            <th class="col-xs-1"><button class="sort no-border" data-sort="score">Score</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="teams">Teams</button></th>
+                            <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
+                            <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
+                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="score">Score</button></th>
                             <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="services">Services</button></th>
                         </tr>
                     </thead>
@@ -93,7 +95,7 @@
             </div>
 
         <script>
-            var options = {valueNames: ['vuln-id', 'score', 'teams', 'services'],
+            var options = {valueNames: ['vuln-id', 'score', 'curation-status', 'services'],
                 indexAsync: true};
                 vulnList = new List('vulnerabilities-list', options);
         </script>
@@ -104,18 +106,18 @@
             <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"/>
             <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
             <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.vulnerableComponentName</td>
-            <td class="description hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@if(summary.distinctVulnerability.description.length > 250) {@summary.distinctVulnerability.description.slice(0, 250)...} else {@summary.distinctVulnerability.description}</td>
+            <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment.getOrElse("")>
+            <td class="curation-status text-center"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
             <td class="score hand-pointer text-center" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
-            <td class="teams text-center"><div>@summary.teams.length</div></td>
             <td class="services text-center"><div>@summary.occurrences.groupBy(_.service).size</div></td>
         </tr>
         <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
             @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
             <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
             <td class="hide vulnerable-component-name">@summary.distinctVulnerability.vulnerableComponentName</td>
-            <td class="hide description">@summary.distinctVulnerability.description</td>
+            <td class="hide assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+            <td class="curation-status text-center hide"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
             <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
-            <td class="teams text-center hide"><div>@summary.teams.length</div></td>
             <td class="services text-center hide"><div>@summary.occurrences.groupBy(_.service).size</div></td>
             <td colspan="6">
             @VulnerabilityDetails(summary)

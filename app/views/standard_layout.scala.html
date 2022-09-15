@@ -24,6 +24,7 @@
 @import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 @(
   title      : String = "Home",
   active     : String = "",
@@ -118,7 +119,7 @@
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(false, false, true)">Leak Detection - Repositories</a></li>
                             @if(CatalogueFrontendSwitches.surfacingVulnerabilities.isEnabled) {
                                 <li role="separator" class="divider"></li>
-                                <li><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, requiresAction = Some(true), None, None)">
+                                <li><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), None, None)">
                                     Vulnerabilities</a></li>
                             }
                             <li role="separator" class="divider"></li>
