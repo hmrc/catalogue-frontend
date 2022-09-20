@@ -83,9 +83,9 @@
                             <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability id</button></th>
                             <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
                             <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
-                            <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="score">Score</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="services">Services</button></th>
+                            <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
+                            <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="score">Score</button></th>
+                            <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="services">Services</button></th>
                         </tr>
                     </thead>
                     <tbody class="list">
@@ -107,9 +107,9 @@
             <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
             <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.vulnerableComponentName</td>
             <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-            <td class="curation-status text-center hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
-            <td class="score hand-pointer text-center" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
-            <td class="services text-center hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.occurrences.groupBy(_.service).size</div></td>
+            <td class="curation-status hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+            <td class="score hand-pointer text-right" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
+            <td class="services text-right hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.occurrences.groupBy(_.service).size</div></td>
         </tr>
         <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
             @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
