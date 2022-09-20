@@ -159,6 +159,7 @@
             @showRepositories(repos.getOrElse(RepoType.Service  , Seq.empty), "Services"    , "service")
             @showRepositories(repos.getOrElse(RepoType.Library  , Seq.empty), "Libraries"   , "library")
             @showRepositories(repos.getOrElse(RepoType.Prototype, Seq.empty), "Prototypes"  , "prototype")
+            @showRepositories(repos.getOrElse(RepoType.Test     , Seq.empty), "Tests"       , "test")
             @showRepositories(repos.getOrElse(RepoType.Other    , Seq.empty), "Repositories", "repository")
         </div>
     </section>
@@ -196,7 +197,7 @@
 }
 
 @showRepositories(repos: Seq[GitRepository], headerName: String, typeName: String) = {
-  <div class="col-md-3">
+  <div class="col-md-2 col-md-2-10">
       <div id="@headerName" class="board">
           <h3 class="board__heading">@headerName</h3>
           <div class="board__body">

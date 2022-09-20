@@ -1914,7 +1914,9 @@ pre {
   .col-md-offset-11 {
     margin-left: 91.66667%; }
   .col-md-offset-12 {
-    margin-left: 100%; } }
+    margin-left: 100%; }
+  .col-md-2-10 {
+    width: 20% !important; }}
 
 @media (min-width: 1200px) {
   .col-lg-1, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-lg-10, .col-lg-11, .col-lg-12 {
