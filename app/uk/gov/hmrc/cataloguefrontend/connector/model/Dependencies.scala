@@ -372,15 +372,19 @@ object GroupArtefacts {
 
 sealed trait DependencyScope {
   def asString: String
-  def displayString = asString.capitalize
+  def displayString = asString match {
+    case "it"  => "Integration Test"
+    case other => other.capitalize
+  }
 }
 object DependencyScope {
   case object Compile extends DependencyScope { override val asString = "compile" }
   case object Test    extends DependencyScope { override val asString = "test"    }
+  case object It      extends DependencyScope { override val asString = "it"      }
   case object Build   extends DependencyScope { override val asString = "build"   }
 
   val values: List[DependencyScope] =
-    List(Compile, Test, Build)
+    List(Compile, Test, It, Build)
 
   def parse(s: String): Either[String, DependencyScope] =
     values
