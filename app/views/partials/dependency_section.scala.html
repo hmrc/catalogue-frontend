@@ -22,7 +22,7 @@
 
 @defining(dependencies.groupBy(_.name).map(_._2.head).toSeq) { uniqueDependencies =>
     @defining(uniqueDependencies.filter(_.importBy.isDefined)) { transitiveDependencies =>
-        @for(dependency <- uniqueDependencies.filter(_.importBy.isEmpty).sortBy(_.name)) {
+        @for(dependency <- uniqueDependencies.filter(_.importBy.isEmpty).sortBy(d => d.group + d.name)) {
             <li>
                 <div class="">
                     @dependencyRow(dependency)
