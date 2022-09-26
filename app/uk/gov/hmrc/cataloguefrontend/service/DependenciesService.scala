@@ -141,6 +141,7 @@ case class ServiceDependencies(
   environment         : Option[Environment] = None,
   dependencyDotCompile: Option[String] = None,
   dependencyDotTest   : Option[String] = None,
+  dependencyDotIt     : Option[String] = None,
   dependencyDotBuild  : Option[String] = None
 ) {
   val isEmpty: Boolean = dependencies.isEmpty
@@ -151,6 +152,7 @@ case class ServiceDependencies(
     scope match {
       case DependencyScope.Compile => dependencyDotCompile
       case DependencyScope.Test    => dependencyDotTest
+      case DependencyScope.It      => dependencyDotIt
       case DependencyScope.Build   => dependencyDotBuild
     }
 }
@@ -183,6 +185,7 @@ object ServiceDependencies {
     ~ (__ \ "environment"              ).readNullable[Environment]
     ~ (__ \ "dependencyDot" \ "compile").readNullable[String].map(_.filter(_.nonEmpty))
     ~ (__ \ "dependencyDot" \ "test"   ).readNullable[String].map(_.filter(_.nonEmpty))
+    ~ (__ \ "dependencyDot" \ "it"     ).readNullable[String].map(_.filter(_.nonEmpty))
     ~ (__ \ "dependencyDot" \ "build"  ).readNullable[String].map(_.filter(_.nonEmpty))
     )(ServiceDependencies.apply _)
   }
