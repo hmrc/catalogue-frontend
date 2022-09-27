@@ -14,7 +14,6 @@
  * limitations under the License.
  *@
 
-@import partials.ModulesPartial
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Team}
@@ -26,8 +25,7 @@
 @import views.html.helper.select
 
 @this(
-  viewMessages       : ViewMessages,
-  modulesPartial     : ModulesPartial
+  viewMessages       : ViewMessages
 )
 
 @(form        : Form[_],

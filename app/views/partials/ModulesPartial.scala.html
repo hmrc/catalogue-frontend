@@ -48,7 +48,7 @@
             </div>
           }
 
-          @if((module.dependenciesCompile ++ module.dependenciesTest).isEmpty) {
+          @if((module.dependenciesCompile ++ module.dependenciesTest ++ module.dependenciesIt).isEmpty) {
             <div class="row">
               <div class="col-md-12 sub_row">
                 <ul class="list list--minimal list-group row">
@@ -121,6 +121,21 @@
           module.dependenciesTest
         , s"test-dependencies-${module.name}"
         , "Test Dependencies"
+        , "-"
+        , None // Version - if set, will add graph links (using service-name)
+        , isSub = isSub
+        )
+      </div>
+    </div>
+  }
+
+  @if(module.dependenciesIt.nonEmpty){
+    <div class="row">
+        <div class="col-md-12 @if(isSub){sub_row}">
+        @dependenciesPartial(
+          module.dependenciesIt
+        , s"it-dependencies-${module.name}"
+        , "Integration Test Dependencies"
         , "-"
         , None // Version - if set, will add graph links (using service-name)
         , isSub = isSub
