@@ -61,6 +61,8 @@ trait FakeApplicationBuilder
           "microservice.services.user-management.url"          -> wireMockUrl,
           "microservice.services.pr-commenter.port"            -> wireMockPort,
           "microservice.services.pr-commenter.host"            -> wireMockHost,
+          "microservice.services.vulnerabilities.port"         -> wireMockPort,
+          "microservice.services.vulnerabilities.host"         -> wireMockHost,
           "github.open.api.rawurl"                             -> wireMockUrl,
           "github.open.api.token"                              -> "",
           "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",

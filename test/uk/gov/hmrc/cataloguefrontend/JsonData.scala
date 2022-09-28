@@ -647,4 +647,10 @@ object JsonData {
         "classpath": "",
         "dependencies": []
       }"""
+
+  val vulnerabilitiesCount: String =
+    """{
+        "count": 1
+      }
+      """
 }

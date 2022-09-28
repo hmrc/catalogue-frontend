@@ -27,11 +27,11 @@
 @import views.html.helper.CSRF
 
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
-@(serviceName            : String,
-  repo                   : GitRepository,
-  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-  commenterReport        : Option[PrCommenterReport],
-  distinctVulnerabilitiesCount: Int
+@(serviceName                   : String,
+  repo                          : GitRepository,
+  hasBranchProtectionAuth       : EnableBranchProtection.HasAuthorisation,
+  commenterReport               : Option[PrCommenterReport],
+  distinctVulnerabilitiesCount  : Option[Int]
 )(implicit request: Request[_])
 
 <div id="code-and-build">

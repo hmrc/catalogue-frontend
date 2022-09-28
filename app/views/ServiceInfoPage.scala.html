@@ -49,7 +49,7 @@
   serviceRoutes                : ServiceRoutes,
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
-  distinctVulnerabilitiesCount : Int
+  distinctVulnerabilitiesCount : Option[Int]
 )(implicit messages: Messages, request: Request[_])
 
 

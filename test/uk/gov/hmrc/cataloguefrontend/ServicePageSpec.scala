@@ -32,6 +32,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     setupAuthEndpoint()
     setupEnableBranchProtectionAuthEndpoint()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/vulnerabilities/api/vulnerabilities/count",willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/frontend-route/service-1", willRespondWith = (200, Some(configServiceService1)))
     serviceEndpoint(GET, "/frontend-route/service-name", willRespondWith = (200, Some(configServiceService1)))
     serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(jenkinsData)))
