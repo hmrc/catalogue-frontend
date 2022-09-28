@@ -48,4 +48,31 @@
             </ul>
         </div>
     </div>
+    <div class="board">
+        <h3 class="board__heading">Builds</h3>
+        <div class="board__body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Jenkins Link</th>
+                        <th>Jenkins Job name</th>
+                        <th>Latest Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(ciLink <- repo.jenkinsJobs.jobs) {
+                        <tr>
+                            <td>
+                                <a id="link-to-build" href="@{ciLink.jenkinsURL}" target="_blank" rel="noreferrer noopener">Build<span class="glyphicon glyphicon-new-window"/></a>
+                            </td>
+                            <td>@{ciLink.service}</td>
+                            @if(ciLink.latestBuild.nonEmpty) {
+                                <td>@{ciLink.latestBuild.get.result}</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
