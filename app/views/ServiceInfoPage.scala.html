@@ -48,7 +48,8 @@
   productionEnvironmentRoute   : Option[EnvironmentRoute],
   serviceRoutes                : ServiceRoutes,
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
-  commenterReport              : Option[PrCommenterReport]
+  commenterReport              : Option[PrCommenterReport],
+  distinctVulnerabilitiesCount : Int
 )(implicit messages: Messages, request: Request[_])
 
 
@@ -110,7 +111,7 @@
             </div>
 
             <div class="col-md-6">
-                @partials.code_and_builds(serviceName, repositoryDetails, hasBranchProtectionAuth, commenterReport)
+                @partials.code_and_builds(serviceName, repositoryDetails, hasBranchProtectionAuth, commenterReport, distinctVulnerabilitiesCount)
             </div>
         </div>
 
