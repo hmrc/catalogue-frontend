@@ -27,20 +27,26 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 @Singleton
-class IndexScheduler @Inject()(searchIndex: SearchIndex, searchConfig: SearchConfig)(
-  implicit actorSystem: ActorSystem,
+class IndexScheduler @Inject()(
+  searchIndex : SearchIndex,
+  searchConfig: SearchConfig
+)(implicit
+  actorSystem         : ActorSystem,
   applicationLifecycle: ApplicationLifecycle,
-  ec: ExecutionContext) {
-
+  ec                  : ExecutionContext
+) {
   private val logger = Logger(getClass)
 
-  private val cancellable = actorSystem.scheduler.scheduleAtFixedRate(1.second, searchConfig.indexRebuildInterval) {
-    () => {
-      logger.info("rebuilding search indexes")
-      searchIndex.updateIndexes()
-    }
-  }
+  if (searchConfig.indexRebuildEnabled) {
+    val cancellable =
+      actorSystem.scheduler.scheduleAtFixedRate(1.second, searchConfig.indexRebuildInterval) {
+        () => {
+          logger.info("rebuilding search indexes")
+          searchIndex.updateIndexes()
+        }
+      }
 
-  applicationLifecycle.addStopHook(() => Future(cancellable.cancel()))
-
+    applicationLifecycle.addStopHook(() => Future(cancellable.cancel()))
+  } else
+    logger.warn(s"The IndexScheduler has been disabled.")
 }
