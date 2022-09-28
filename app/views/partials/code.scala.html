@@ -54,8 +54,7 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Jenkins Link</th>
-                        <th>Jenkins Job name</th>
+                        <th>Jenkins Job</th>
                         <th>Latest Result</th>
                     </tr>
                 </thead>
@@ -63,9 +62,8 @@
                     @for(ciLink <- repo.jenkinsJobs.jobs) {
                         <tr>
                             <td>
-                                <a id="link-to-build" href="@{ciLink.jenkinsURL}" target="_blank" rel="noreferrer noopener">Build<span class="glyphicon glyphicon-new-window"/></a>
+                                <a id="link-to-build" href="@{ciLink.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{ciLink.service}<span class="glyphicon glyphicon-new-window"/></a>
                             </td>
-                            <td>@{ciLink.service}</td>
                             @if(ciLink.latestBuild.nonEmpty) {
                                 <td>@{ciLink.latestBuild.get.result}</td>
                             }
