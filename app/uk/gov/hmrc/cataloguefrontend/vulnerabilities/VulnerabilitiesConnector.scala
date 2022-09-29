@@ -47,5 +47,9 @@ class VulnerabilitiesConnector @Inject() (
       .execute[Seq[VulnerabilitySummary]]
   }
 
-
+  def distinctVulnerabilities(service: String)(implicit hc: HeaderCarrier): Future[Option[Int]] = {
+    httpClientV2
+      .get(url"$url/vulnerabilities/api/vulnerabilities/count?service=${service}")
+      .execute[Option[Int]]
+  }
 }

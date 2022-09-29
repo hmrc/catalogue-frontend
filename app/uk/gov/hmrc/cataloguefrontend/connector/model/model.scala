@@ -71,7 +71,7 @@ case class RepositoryModules(
 ) {
   def allDependencies: Seq[Dependency] =
     modules.foldLeft(dependenciesBuild)((acc, module) =>
-      acc ++ module.dependenciesCompile ++ module.dependenciesTest
+      acc ++ module.dependenciesCompile ++ module.dependenciesTest ++ module.dependenciesIt
     )
 }
 
@@ -92,6 +92,7 @@ case class RepositoryModule(
   group              : String,
   dependenciesCompile: Seq[Dependency],
   dependenciesTest   : Seq[Dependency],
+  dependenciesIt     : Seq[Dependency],
   crossScalaVersions : Seq[Version]
 )
 
@@ -103,6 +104,7 @@ object RepositoryModule {
     ~ (__ \ "group"              ).read[String]
     ~ (__ \ "dependenciesCompile").read[Seq[Dependency]]
     ~ (__ \ "dependenciesTest"   ).read[Seq[Dependency]]
+    ~ (__ \ "dependenciesIt"     ).read[Seq[Dependency]]
     ~ (__ \ "crossScalaVersions" ).read[Seq[Version]]
     )(RepositoryModule.apply _)
   }

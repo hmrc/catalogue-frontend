@@ -33,6 +33,7 @@ import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{A
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.{MarkdownLoader, TelemetryLinks}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
@@ -65,6 +66,7 @@ class CatalogueController @Inject() (
   override val mcc             : MessagesControllerComponents,
   whatsRunningWhereService     : WhatsRunningWhereService,
   prCommenterConnector         : PrCommenterConnector,
+  vulnerabilitiesConnector     : VulnerabilitiesConnector,
   indexPage                    : IndexPage,
   serviceInfoPage              : ServiceInfoPage,
   serviceConfigPage            : ServiceConfigPage,
@@ -192,7 +194,8 @@ class CatalogueController @Inject() (
       routeRulesService.serviceRoutes(serviceName),
       serviceDependenciesConnector.getSlugInfo(repositoryName),
       costEstimationService.estimateServiceCost(repositoryName, costEstimationEnvironments, serviceCostEstimateConfig),
-      prCommenterConnector.report(repositoryName)
+      prCommenterConnector.report(repositoryName),
+      vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
     ).mapN { (jenkinsJobs,
               envDatas,
               latestRepoModules,
@@ -201,7 +204,8 @@ class CatalogueController @Inject() (
               serviceRoutes,
               optLatestServiceInfo,
               costEstimate,
-              commenterReport
+              commenterReport,
+              distinctVulnerabilitiesCount
              ) =>
       val optLatestData: Option[(SlugInfoFlag, EnvData)] =
         optLatestServiceInfo.map { latestServiceInfo =>
@@ -226,7 +230,8 @@ class CatalogueController @Inject() (
           productionEnvironmentRoute  = serviceUrl,
           serviceRoutes               = serviceRoutes,
           hasBranchProtectionAuth     = hasBranchProtectionAuth,
-          commenterReport             = commenterReport
+          commenterReport             = commenterReport,
+          distinctVulnerabilitiesCount  = distinctVulnerabilitiesCount
         )
       )
     }

@@ -57,6 +57,12 @@ class VulnerabilitiesController @Inject() (
           } yield Ok(vulnerabilitiesListPage(summaries, teams, form.fill(validForm)))
         )
   }
+
+  def getDistinctVulnerabilities(service: String): Action[AnyContent] = Action.async { implicit request =>
+    vulnerabilitiesConnector.distinctVulnerabilities(service).map {
+      result => Ok(Json.toJson(result))
+    }
+  }
 }
 
 case class VulnerabilitiesExplorerFilter(
