@@ -156,6 +156,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
     "show the teams owning the service with github, ci and environment links and info box" in new Setup {
       serviceEndpoint(GET, s"/api/jenkins-url/$repoName", willRespondWith = (200, Some(serviceJenkinsData)))
+      serviceEndpoint(GET, s"/api/jenkins-jobs/$repoName", willRespondWith = (200, Some(serviceJenkinsBuildData)))
       serviceEndpoint(GET, "/api/module-dependencies/service-1?version=0.0.1",willRespondWith = (404, None))
 
       serviceEndpoint(

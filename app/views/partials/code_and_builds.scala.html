@@ -36,7 +36,7 @@
 
 <div id="code-and-build">
     <div class="board">
-        <h3 class="board__heading">Code and Build</h3>
+        <h3 class="board__heading">Code</h3>
         <div class="board__body">
             @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
               @partials.branchProtection(repo, hasBranchProtectionAuth)
@@ -48,9 +48,6 @@
                     <li class="list-item"><a id="link-to-timeline" href="@DeploymentHistoryController.graph(repo.name)">Deployment Timeline</a></li>
                     <li class="list-item"><a id="link-to-@{repo.name}-config" href="@appRoutes.CatalogueController.serviceConfig(serviceName)" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
                 }
-            @for(ciLink <- repo.jenkinsURL) {
-                <li class="list-item"><a id="link-to-build" href="@{ciLink}" target="_blank" rel="noreferrer noopener">Build<span class="glyphicon glyphicon-new-window"/></a></li>
-            }
             @if(repo.repoType == RepoType.Service) {
                 <li class="list-item"><a id="link-to-dependency-list" href="@appRoutes.DependenciesController.services(repo.name)">Service Dependencies</a></li>
                 <li class="list-item"><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, serviceName)}">Frontend Route Warnings</a></li>
@@ -63,6 +60,31 @@
                     <li class="list-item"><a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${serviceName}\""), None)">Vulnerabilities (@distinctVulnerabilitiesCount)</a></li>
                 }
             </ul>
+        </div>
+    </div>
+    <div class="board">
+        <h3 class="board__heading">Build</h3>
+        <div class="board__body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Jenkins Job</th>
+                        <th>Latest Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(ciLink <- repo.jenkinsJobs.jobs.filterNot(_.service.endsWith("-pr-builder"))) {
+                    <tr>
+                        <td>
+                            <a id="link-to-build" href="@{ciLink.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{ciLink.service}<span class="glyphicon glyphicon-new-window"/></a>
+                        </td>
+                        @if(ciLink.latestBuild.nonEmpty) {
+                            <td>@{ciLink.latestBuild.get.result}</td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

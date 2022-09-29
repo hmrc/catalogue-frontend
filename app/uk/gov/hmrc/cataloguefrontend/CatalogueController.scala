@@ -40,7 +40,6 @@ import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predic
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
-
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -188,6 +187,7 @@ class CatalogueController @Inject() (
     val costEstimationEnvironments = Environment.values
     (
       teamsAndRepositoriesConnector.lookupLink(repositoryName),
+      teamsAndRepositoriesConnector.lookupLatestBuildJobs(repositoryName),
       futEnvDatas,
       serviceDependenciesConnector.getRepositoryModules(repositoryName),
       leakDetectionService.urlIfLeaksFound(repositoryName),
@@ -198,6 +198,7 @@ class CatalogueController @Inject() (
       prCommenterConnector.report(repositoryName),
       vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
     ).mapN { (jenkinsLink,
+              jenkinsJobs,
               envDatas,
               latestRepoModules,
               urlIfLeaksFound,
@@ -221,17 +222,17 @@ class CatalogueController @Inject() (
 
       Ok(
         serviceInfoPage(
-          serviceName                   = serviceName,
-          repositoryDetails             = repositoryDetails.copy(jenkinsURL = jenkinsLink.map(_.url)),
-          costEstimate                  = costEstimate,
-          costEstimateConfig            = serviceCostEstimateConfig,
-          repositoryCreationDate        = repositoryDetails.createdDate,
-          envDatas                      = optLatestData.fold(envDatas)(envDatas + _),
-          linkToLeakDetection           = urlIfLeaksFound,
-          productionEnvironmentRoute    = serviceUrl,
-          serviceRoutes                 = serviceRoutes,
-          hasBranchProtectionAuth       = hasBranchProtectionAuth,
-          commenterReport               = commenterReport,
+          serviceName                 = serviceName,
+          repositoryDetails           = repositoryDetails.copy(jenkinsURL = jenkinsLink.map(_.url), jenkinsJobs = jenkinsJobs),
+          costEstimate                = costEstimate,
+          costEstimateConfig          = serviceCostEstimateConfig,
+          repositoryCreationDate      = repositoryDetails.createdDate,
+          envDatas                    = optLatestData.fold(envDatas)(envDatas + _),
+          linkToLeakDetection         = urlIfLeaksFound,
+          productionEnvironmentRoute  = serviceUrl,
+          serviceRoutes               = serviceRoutes,
+          hasBranchProtectionAuth     = hasBranchProtectionAuth,
+          commenterReport             = commenterReport,
           distinctVulnerabilitiesCount  = distinctVulnerabilitiesCount
         )
       )
@@ -284,17 +285,19 @@ class CatalogueController @Inject() (
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
+      teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
       prCommenterConnector.report(repoDetails.name)
     ).mapN { ( jenkinsLink,
+               jenkinsJobs,
                repoModules,
                urlIfLeaksFound,
                commenterReport
              ) =>
       Ok(
         libraryInfoPage(
-          repoDetails.copy(jenkinsURL = jenkinsLink.map(_.url)),
+          repoDetails.copy(jenkinsURL = jenkinsLink.map(_.url), jenkinsJobs = jenkinsJobs),
           repoModules,
           urlIfLeaksFound,
           hasBranchProtectionAuth,
@@ -323,10 +326,12 @@ class CatalogueController @Inject() (
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit messages: Messages, request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
+      teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
       prCommenterConnector.report(repoDetails.name)
     ).mapN { ( jenkinsLink,
+               jenkinsJobs,
                repoModules,
                urlIfLeaksFound,
                commenterReport
@@ -337,7 +342,8 @@ class CatalogueController @Inject() (
             teamNames  = { val (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
                            owners.sorted ++ writers.sorted
                          },
-              jenkinsURL = jenkinsLink.map(_.url)
+            jenkinsURL = jenkinsLink.map(_.url),
+            jenkinsJobs = jenkinsJobs
           ),
           repoModules,
           urlIfLeaksFound,
