@@ -35,6 +35,7 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
 
       serviceEndpoint(GET, s"/api/v2/repositories/$libName"    , willRespondWith = (200, Some(libraryData)))
       serviceEndpoint(GET, s"/api/jenkins-url/$libName"        , willRespondWith = (200, Some(jenkinsData)))
+      serviceEndpoint(GET, s"/api/jenkins-jobs/$libName"       , willRespondWith = (200, Some(jenkinsBuildData)))
       serviceEndpoint(GET, s"/api/module-dependencies/$libName", willRespondWith = (404, None))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get().futureValue
