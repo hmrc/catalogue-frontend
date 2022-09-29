@@ -115,8 +115,6 @@ object Link {
     Json.format[Link]
 }
 
-case class JenkinsLink(service: String, jenkinsURL: String)
-
 
 case class BuildData(
                       number: Int,
@@ -168,7 +166,6 @@ case class GitRepository(
   branchProtection    : Option[BranchProtection] = None,
   isDeprecated        : Boolean                  = false,
   teamNames           : Seq[String]              = Nil,
-  jenkinsURL          : Option[String]           = None,
   jenkinsJobs         : JenkinsJobs              = JenkinsJobs(Seq()),
   prototypeUrl        : Option[String]           = None
 ) {
@@ -201,7 +198,6 @@ object GitRepository {
     ~ (__ \ "branchProtection"  ).formatNullable(BranchProtection.format)
     ~ (__ \ "isDeprecated"      ).formatWithDefault[Boolean](false)
     ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Nil)
-    ~ (__ \ "jenkinsUrl"        ).formatNullable[String]
     ~ (__ \ "jenkinsJobs"       ).formatWithDefault[JenkinsJobs](JenkinsJobs(Seq()))
     ~ (__ \ "prototypeUrl"      ).formatNullable[String]
     ) (apply, unlift(unapply))
@@ -280,22 +276,9 @@ class TeamsAndRepositoriesConnector @Inject()(
     servicesConfig.baseUrl("teams-and-repositories")
 
   private implicit val tf   = Team.format
-  private implicit val jf   = Json.format[JenkinsLink]
   private implicit val jjf  = JenkinsJob.apiFormat
   private implicit val ghrf = GitRepository.apiFormat // v2 model
 
-  def lookupLink(service: String)(implicit hc: HeaderCarrier): Future[Option[Link]] = {
-    val url = url"$teamsAndServicesBaseUrl/api/jenkins-url/$service"
-    httpClientV2
-      .get(url)
-      .execute[Option[JenkinsLink]]
-      .map(_.map(l => Link(l.service, "Build", l.jenkinsURL)))
-      .recover {
-        case NonFatal(ex) =>
-          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          None
-      }
-  }
 
   def lookupLatestBuildJobs(service: String)(implicit hc: HeaderCarrier): Future[JenkinsJobs] = {
     val url = url"$teamsAndServicesBaseUrl/api/jenkins-jobs/$service"
@@ -356,10 +339,9 @@ class TeamsAndRepositoriesConnector @Inject()(
       repo    <- httpClientV2
                    .get(url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
                    .execute[Option[GitRepository]]
-      jenkins <- lookupLink(name)
       jobs    <- lookupLatestBuildJobs(name)
-      withLink = repo.map(_.copy(jenkinsURL = jenkins.map(_.url), jenkinsJobs = jobs))
-    } yield withLink
+      withJobs = repo.map(_.copy(jenkinsJobs = jobs))
+    } yield withJobs
   }
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =

@@ -53,7 +53,6 @@ class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
     owningTeams   = Nil,
     teamNames     = Nil,
     githubUrl     = "https://github.com/hmrc/name",
-    jenkinsURL    = None,
     repoType      = RepoType.Other,
     isPrivate     = false,
     isArchived    = false,

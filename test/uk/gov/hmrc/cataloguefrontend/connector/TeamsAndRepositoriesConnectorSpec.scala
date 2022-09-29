@@ -61,14 +61,17 @@ class TeamsAndRepositoriesConnectorSpec
   "lookUpLink" should {
     "return a Link if exists" in {
       stubFor(
-        get(urlEqualTo("/api/jenkins-url/serviceA"))
+        get(urlEqualTo("/api/jenkins-jobs/serviceA"))
           .willReturn(
             aResponse()
             .withBody(
               """
-                {
-                  "service": "serviceA",
-                  "jenkinsURL": "http.jenkins/serviceA"
+                { "jobs": [
+                    {
+                      "service": "serviceA",
+                      "jenkinsURL": "http.jenkins/serviceA"
+                    }
+                  ]
                 }
               """
           )
@@ -76,189 +79,11 @@ class TeamsAndRepositoriesConnectorSpec
       )
 
       val response = teamsAndRepositoriesConnector
-        .lookupLink("serviceA")(HeaderCarrierConverter.fromRequest(FakeRequest()))
+        .lookupLatestBuildJobs("serviceA")(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
 
-      response shouldBe Some(Link("serviceA", "Build", "http.jenkins/serviceA"))
-    }
-
-    "return None if Not Found" in {
-      stubFor(
-        get(urlEqualTo("/api/jenkins-url/serviceA"))
-          .willReturn(aResponse().withStatus(404))
-      )
-
-      val response = teamsAndRepositoriesConnector
-        .lookupLink("serviceA")(HeaderCarrierConverter.fromRequest(FakeRequest()))
-        .futureValue
-
-      response shouldBe None
+      response shouldBe JenkinsJobs(List(JenkinsJob("serviceA","http.jenkins/serviceA",None)))
     }
   }
 
-  /*
-  "repositoryDetails" should {
-    "convert the json string to RepositoryDetails" in {
-      stubFor(
-        get(urlEqualTo("/api/repositories/service-1"))
-          .willReturn(aResponse().withBody(JsonData.repositoryData()))
-      )
-      stubFor(
-        post(urlEqualTo("/api/jenkins-url/service01"))
-          .willReturn(aResponse().withBody(JsonData.serviceJenkinsData))
-      )
-
-      val responseData: RepositoryDetails =
-        teamsAndRepositoriesConnector
-          .repositoryDetails("service-1")(HeaderCarrierConverter.fromRequest(FakeRequest()))
-          .futureValue
-          .value
-
-      responseData.name        shouldBe "service-1"
-      responseData.description shouldBe "some description"
-      responseData.createdAt   shouldBe createdAt
-      responseData.lastActive  shouldBe lastActiveAt
-      responseData.teamNames   should ===(Seq(TeamName("teamA"), TeamName("teamB")))
-      responseData.githubUrl   should ===(Link("github", "github.com", "https://github.com/hmrc/service-1"))
-      responseData.jenkinsURL should === (None)
-
-      responseData.repoType shouldBe RepoType.Service
-      responseData.isArchived shouldBe false
-    }
-  }
-
-  "allRepositories" should {
-    "return all the repositories returned by the api" in {
-      stubFor(
-        get(urlEqualTo("/api/repositories"))
-          .willReturn(aResponse().withBody(JsonData.repositoriesData))
-      )
-
-      val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
-        .allRepositories(HeaderCarrierConverter.fromRequest(FakeRequest()))
-        .futureValue
-
-      repositories.headOption.value.name          shouldBe "teamA-serv"
-      repositories.headOption.value.createdAt     shouldBe createdAt
-      repositories.headOption.value.lastUpdatedAt shouldBe lastActiveAt
-      repositories.headOption.value.repoType      shouldBe RepoType.Service
-
-      repositories(1).name          shouldBe "teamB-library"
-      repositories(1).createdAt     shouldBe createdAt
-      repositories(1).lastUpdatedAt shouldBe lastActiveAt
-      repositories(1).repoType      shouldBe RepoType.Library
-
-      repositories(2).name          shouldBe "teamB-other"
-      repositories(2).createdAt     shouldBe createdAt
-      repositories(2).lastUpdatedAt shouldBe lastActiveAt
-      repositories(2).repoType      shouldBe RepoType.Other
-    }
-  }
-
-
-  "archivedRepositories" should {
-    "return all the archived repositories returned by the api" in {
-      stubFor(
-        get(urlEqualTo("/api/repositories?archived=true"))
-          .willReturn(aResponse().withBody(JsonData.repositoriesData))
-      )
-
-      val repositories: Seq[RepositoryDisplayDetails] = teamsAndRepositoriesConnector
-        .archivedRepositories(HeaderCarrierConverter.fromRequest(FakeRequest()))
-        .futureValue
-
-      repositories.headOption.value.name          shouldBe "teamA-serv"
-      repositories.headOption.value.createdAt     shouldBe createdAt
-      repositories.headOption.value.lastUpdatedAt shouldBe lastActiveAt
-      repositories.headOption.value.repoType      shouldBe RepoType.Service
-
-      repositories(1).name          shouldBe "teamB-library"
-      repositories(1).createdAt     shouldBe createdAt
-      repositories(1).lastUpdatedAt shouldBe lastActiveAt
-      repositories(1).repoType      shouldBe RepoType.Library
-
-      repositories(2).name          shouldBe "teamB-other"
-      repositories(2).createdAt     shouldBe createdAt
-      repositories(2).lastUpdatedAt shouldBe lastActiveAt
-      repositories(2).repoType      shouldBe RepoType.Other
-    }
-  }
-
-  "digitalServiceInfo" should {
-    "convert the json string to DigitalServiceDetails" in {
-      stubFor(
-        get(urlEqualTo("/api/digital-services/service-1"))
-          .willReturn(aResponse().withBody(JsonData.digitalServiceData))
-      )
-
-      val responseData =
-        teamsAndRepositoriesConnector
-          .digitalServiceInfo("service-1")(HeaderCarrierConverter.fromRequest(FakeRequest()))
-          .futureValue
-          .value
-
-      responseData.name shouldBe "service-1"
-
-      responseData.repositories.size shouldBe 3
-    }
-  }
-
-  "allDigitalServices" should {
-    "return all the digital service names" in {
-      stubFor(
-        get(urlEqualTo("/api/digital-services"))
-          .willReturn(aResponse().withBody(JsonData.digitalServiceNamesData))
-      )
-
-      val digitalServiceNames: Seq[String] =
-        teamsAndRepositoriesConnector
-          .allDigitalServices(HeaderCarrierConverter.fromRequest(FakeRequest()))
-          .futureValue
-
-      digitalServiceNames shouldBe Seq("digital-service-1", "digital-service-2", "digital-service-3")
-    }
-  }
-
-  "teams" should {
-    "return all the teams and their repositories" in {
-      stubFor(
-        get(urlEqualTo("/api/teams?includeRepos=true"))
-          .willReturn(aResponse().withBody(JsonData.teams))
-      )
-
-      val teams: Seq[Team] =
-        teamsAndRepositoriesConnector
-          .allTeams(HeaderCarrierConverter.fromRequest(FakeRequest()))
-          .futureValue
-
-      teams.size shouldBe 2
-      teams      should contain theSameElementsAs
-        Seq(
-          Team(
-            name           = TeamName("team1"),
-            createdDate    = None,
-            lastActiveDate = None,
-            repos          = Some(Map(
-                              RepoType.Service   -> Seq("service1", "service2"),
-                              RepoType.Library   -> Seq("lib1", "lib2"),
-                              RepoType.Prototype -> Seq(),
-                              RepoType.Other     -> Seq("other1", "other2")
-                             ))
-          ),
-          Team(
-            name           = TeamName("team2"),
-            createdDate    = None,
-            lastActiveDate = None,
-            repos          = Some(Map(
-                               RepoType.Service   -> Seq("service3", "service4"),
-                               RepoType.Library   -> Seq("lib3", "lib4"),
-                               RepoType.Prototype -> Seq("prototype1"),
-                               RepoType.Other     -> Seq("other3", "other4")
-                             ))
-          )
-        )
-    }
-  }
-
-   */
 }
