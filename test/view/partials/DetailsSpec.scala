@@ -34,7 +34,6 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     owningTeams    = Seq(),
     teamNames      = Seq(),
     githubUrl      = "http://url",
-    jenkinsURL     = None,
     language       = None,
     repoType       = RepoType.Other,
     isPrivate      = true,

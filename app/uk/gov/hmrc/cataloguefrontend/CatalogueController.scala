@@ -186,7 +186,6 @@ class CatalogueController @Inject() (
 
     val costEstimationEnvironments = Environment.values
     (
-      teamsAndRepositoriesConnector.lookupLink(repositoryName),
       teamsAndRepositoriesConnector.lookupLatestBuildJobs(repositoryName),
       futEnvDatas,
       serviceDependenciesConnector.getRepositoryModules(repositoryName),
@@ -197,8 +196,7 @@ class CatalogueController @Inject() (
       costEstimationService.estimateServiceCost(repositoryName, costEstimationEnvironments, serviceCostEstimateConfig),
       prCommenterConnector.report(repositoryName),
       vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
-    ).mapN { (jenkinsLink,
-              jenkinsJobs,
+    ).mapN { (jenkinsJobs,
               envDatas,
               latestRepoModules,
               urlIfLeaksFound,
@@ -223,7 +221,7 @@ class CatalogueController @Inject() (
       Ok(
         serviceInfoPage(
           serviceName                 = serviceName,
-          repositoryDetails           = repositoryDetails.copy(jenkinsURL = jenkinsLink.map(_.url), jenkinsJobs = jenkinsJobs),
+          repositoryDetails           = repositoryDetails.copy(jenkinsJobs = jenkinsJobs),
           costEstimate                = costEstimate,
           costEstimateConfig          = serviceCostEstimateConfig,
           repositoryCreationDate      = repositoryDetails.createdDate,
@@ -284,20 +282,18 @@ class CatalogueController @Inject() (
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit messages: Messages, request: Request[_]): Future[Result] =
-    ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
-      teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
+    ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
       prCommenterConnector.report(repoDetails.name)
-    ).mapN { ( jenkinsLink,
-               jenkinsJobs,
+    ).mapN { ( jenkinsJobs,
                repoModules,
                urlIfLeaksFound,
                commenterReport
              ) =>
       Ok(
         libraryInfoPage(
-          repoDetails.copy(jenkinsURL = jenkinsLink.map(_.url), jenkinsJobs = jenkinsJobs),
+          repoDetails.copy(jenkinsJobs = jenkinsJobs),
           repoModules,
           urlIfLeaksFound,
           hasBranchProtectionAuth,
@@ -325,13 +321,11 @@ class CatalogueController @Inject() (
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit messages: Messages, request: Request[_]): Future[Result] =
-    ( teamsAndRepositoriesConnector.lookupLink(repoDetails.name),
-      teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
+    ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
       prCommenterConnector.report(repoDetails.name)
-    ).mapN { ( jenkinsLink,
-               jenkinsJobs,
+    ).mapN { ( jenkinsJobs,
                repoModules,
                urlIfLeaksFound,
                commenterReport
@@ -342,7 +336,6 @@ class CatalogueController @Inject() (
             teamNames  = { val (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
                            owners.sorted ++ writers.sorted
                          },
-            jenkinsURL = jenkinsLink.map(_.url),
             jenkinsJobs = jenkinsJobs
           ),
           repoModules,
