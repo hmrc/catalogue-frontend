@@ -62,7 +62,7 @@
                     @for(ciLink <- repo.jenkinsJobs.jobs.filterNot(_.service.endsWith("-pr-builder"))) {
                         <tr>
                             <td>
-                                <a id="link-to-build" href="@{ciLink.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{ciLink.service}<span class="glyphicon glyphicon-new-window"/></a>
+                                <a id="link-to-build-@{ciLink.service}" href="@{ciLink.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{ciLink.service}<span class="glyphicon glyphicon-new-window"/></a>
                             </td>
                             @if(ciLink.latestBuild.nonEmpty) {
                                 <td>@{ciLink.latestBuild.get.result}</td>
