@@ -57,13 +57,9 @@ class CatalogueMdcFilter @Inject()(
     f(rh).map { res =>
       val mdcData = Mdc.mdcData.toSet
       import scala.collection.JavaConverters._
-      if (rh.uri.contains("shuttering")) {
-        logger.info(s"bootstrap config = ${configuration.get[Configuration]("bootstrap")}")
-        logger.info(s"system.properties = ${System.getProperties.asScala.filter{ case (k, v) => k.startsWith("bootstrap") }.mkString(", ")}")
-        logger.info(s"warnMdcDataLoss=$warnMdcDataLoss, expected: $data, found: $mdcData lost=${!data.forall(mdcData.contains)}: ${rh.uri}")
-      }
       if (warnMdcDataLoss && !data.forall(mdcData.contains)) {
         logger.warn(s"MDC Data has been dropped. endpoint: ${rh.method} ${rh.uri}")
+        logger.info(s"expected: $data, found: $mdcData lost=${!data.forall(mdcData.contains)}: ${rh.uri}")
       }
       res
     }

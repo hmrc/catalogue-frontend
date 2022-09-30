@@ -30,6 +30,4 @@ frontendFilters.filters.map { filter =>
       mdcFilter
     else
       filter
-  }} : _*) {
-    Logger(getClass).warn("Created CatalogueFilters")
-  }
+  }} : _*)
