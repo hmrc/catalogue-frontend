@@ -12582,3 +12582,18 @@ table.shutter-events {
   height: 100%;
 }
 
+.result-success {
+  color: #198754;
+}
+
+.result-warning {
+  color: #ffc107;
+}
+
+.result-danger {
+  color: #dc3545;
+}
+
+.result-muted {
+  color: #6c757d;
+}

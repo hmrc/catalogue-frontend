@@ -120,7 +120,8 @@ case class BuildData(
                       number: Int,
                       url: String,
                       timestamp: Instant,
-                      result: Option[String]
+                      result: Option[String],
+                      description: Option[String]
                     )
 
 object BuildData {
@@ -129,6 +130,7 @@ object BuildData {
     ~ (__ \ "url").format[String]
     ~ (__ \ "timestamp").format[Instant]
     ~ (__ \ "result").formatNullable[String]
+    ~ (__ \ "description").formatNullable[String]
   )(apply, unlift(unapply))
 }
 case class JenkinsJob(service: String, jenkinsURL: String, latestBuild: Option[BuildData])

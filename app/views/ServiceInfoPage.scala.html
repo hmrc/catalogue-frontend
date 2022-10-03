@@ -113,6 +113,10 @@
             <div class="col-md-6">
                 @partials.code_and_builds(serviceName, repositoryDetails, hasBranchProtectionAuth, commenterReport, distinctVulnerabilitiesCount)
             </div>
+
+            <div class="col-md-6">
+            @partials.build(repositoryDetails, hasBranchProtectionAuth, commenterReport, showDescription = false)
+            </div>
         </div>
 
         @dependenciesByEnvironmentPartial(serviceName, envDatas)
