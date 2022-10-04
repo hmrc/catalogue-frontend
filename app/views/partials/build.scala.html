@@ -14,15 +14,13 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
-@import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 
 @(repo                   : GitRepository,
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-  commenterReport        : Option[PrCommenterReport],
-  showDescription        : Boolean
+  commenterReport        : Option[PrCommenterReport]
 )(implicit request: Request[_])
 
 <div id="builds">
@@ -33,7 +31,7 @@
                 <thead>
                     <tr>
                         <th>Jenkins Job</th>
-                        @if(showDescription) {
+                        @if(repo.repoType == RepoType.Test) {
                             <th>Description</th>
                         }
                         <th>Latest Result</th>
@@ -46,7 +44,7 @@
                                 <a id="link-to-build-@{ciLink.service}" href="@{ciLink.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{ciLink.service}<span class="glyphicon glyphicon-new-window"/></a>
                             </td>
                             @if(ciLink.latestBuild.nonEmpty) {
-                                @if(showDescription) {
+                                @if(repo.repoType == RepoType.Test) {
                                     <td>
                                         @{ciLink.latestBuild.get.description}
                                     </td>

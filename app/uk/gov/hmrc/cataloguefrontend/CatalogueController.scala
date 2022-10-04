@@ -72,7 +72,6 @@ class CatalogueController @Inject() (
   serviceConfigPage            : ServiceConfigPage,
   serviceConfigRawPage         : ServiceConfigRawPage,
   libraryInfoPage              : LibraryInfoPage,
-  otherInfoPage                : OtherInfoPage,
   prototypeInfoPage            : PrototypeInfoPage,
   repositoryInfoPage           : RepositoryInfoPage,
   defaultBranchListPage        : DefaultBranchListPage,
@@ -254,7 +253,7 @@ class CatalogueController @Inject() (
                         case RepoType.Service   => renderServicePage(repoDetails.name, repoDetails, hasBranchProtectionAuth)
                         case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth)
                         case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth)
-                        case RepoType.Test      => renderTest(repoDetails, hasBranchProtectionAuth)
+                        case RepoType.Test      => renderOther(repoDetails, hasBranchProtectionAuth)
                         case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth)
                       }
                     )
@@ -332,43 +331,11 @@ class CatalogueController @Inject() (
                commenterReport
              ) =>
       Ok(
-        otherInfoPage(
-          repoDetails.copy(
-            teamNames = {
-              val (owners, writers) = repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
-              owners.sorted ++ writers.sorted
-            },
-            jenkinsJobs = jenkinsJobs
-          ),
-          repoModules,
-          urlIfLeaksFound,
-          hasBranchProtectionAuth,
-          commenterReport
-        )
-      )
-    }
-
-
-  private def renderTest(
-                           repoDetails: GitRepository,
-                           hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-                         )(implicit messages: Messages, request: Request[_]): Future[Result] =
-    (teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
-      serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
-      leakDetectionService.urlIfLeaksFound(repoDetails.name),
-      prCommenterConnector.report(repoDetails.name)
-      ).mapN { (jenkinsJobs,
-                repoModules,
-                urlIfLeaksFound,
-                commenterReport
-               ) =>
-      Ok(
         repositoryInfoPage(
           repoDetails.copy(
-            teamNames = {
-              val (owners, writers) = repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
-              owners.sorted ++ writers.sorted
-            },
+            teamNames  = { val (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
+                           owners.sorted ++ writers.sorted
+                         },
             jenkinsJobs = jenkinsJobs
           ),
           repoModules,
