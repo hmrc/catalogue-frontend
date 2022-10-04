@@ -75,6 +75,10 @@
       <div class="col-md-6">
         @partials.code_and_builds(library.name, library, hasBranchProtectionAuth, commenterReport, None)
       </div>
+
+      <div class="col-md-6">
+        @partials.build(library, hasBranchProtectionAuth, commenterReport)
+      </div>
     </div>
 
     @repositoryModules.map { repositoryModules =>

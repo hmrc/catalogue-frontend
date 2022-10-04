@@ -94,14 +94,6 @@ object JsonData {
        }
     """
 
-  val serviceJenkinsData: String =
-    """
-      {
-         "service": "service-1",
-         "jenkinsURL": "http://jenkins/service-1/"
-      }
-      """
-
   val serviceJenkinsBuildData: String =
     """
         { "jobs": [{

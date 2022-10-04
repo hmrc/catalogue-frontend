@@ -76,6 +76,12 @@
       </div>
     </div>
 
+    <div class="row">
+      <div class="col-md-12">
+        @partials.build(repository, hasBranchProtectionAuth, commenterReport)
+      </div>
+    </div>
+
     @repositoryModules.map { repositoryModules =>
       @modulesPartial(repositoryModules)
     }
