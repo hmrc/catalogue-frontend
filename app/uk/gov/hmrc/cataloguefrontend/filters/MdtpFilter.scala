@@ -50,15 +50,19 @@ trait MdtpFilter extends EssentialFilter {
         val bodyAccumulator = Promise[Accumulator[ByteString, Result]]()
 
         // Invoke the filter
-        play.api.Logger(getClass).info(s"MdtpFilter - calling apply: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+        if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
+          play.api.Logger(getClass).info(s"MdtpFilter - calling apply: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
         val result = self.apply({ (rh: RequestHeader) =>
+          if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
+            play.api.Logger(getClass).info(s"MdtpFilter - in apply: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
           // Invoke the delegate
           bodyAccumulator.success(next(rh))
           Mdc.preservingMdc(promisedResult.future)
         })(rh)
 
         result.onComplete({ resultTry =>
-          play.api.Logger(getClass).info(s"MdtpFilter - calling result.tryComplete: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+          if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
+            play.api.Logger(getClass).info(s"MdtpFilter - calling result.tryComplete: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
           // It is possible that the delegate function (the next filter in the chain) was never invoked by this Filter.
           // Therefore, as a fallback, we try to redeem the bodyAccumulator Promise here with an iteratee that consumes
           // the request body.
@@ -66,7 +70,8 @@ trait MdtpFilter extends EssentialFilter {
         })
 
         Accumulator.flatten(Mdc.preservingMdc(bodyAccumulator.future).map { it =>
-          play.api.Logger(getClass).info(s"MdtpFilter - calling bodyAccumulator.map: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+          if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
+            play.api.Logger(getClass).info(s"MdtpFilter - calling bodyAccumulator.map: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
           it.mapFuture { simpleResult =>
               // When the iteratee is done, we can redeem the promised result that was returned to the filter
               promisedResult.success(simpleResult)
