@@ -14,14 +14,23 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
+@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
+@import views.html.helper.CSRF
 
-@(repo                   : GitRepository,
-  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-  commenterReport        : Option[PrCommenterReport]
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
+@(repo                          : GitRepository,
+        hasBranchProtectionAuth       : EnableBranchProtection.HasAuthorisation,
+        commenterReport               : Option[PrCommenterReport],
+        distinctVulnerabilitiesCount  : Option[Int]
 )(implicit request: Request[_])
 
 <div id="code">
@@ -32,18 +41,22 @@
               @partials.branchProtection(repo, hasBranchProtectionAuth)
               <hr style="margin-top: 0px">
             }
-            <ul class="list list--minimal">
-                <li class="list-item">
-                    <a id="link-to-github" href="@{repo.githubUrl}" target="_blank" rel="noreferrer noopener">
-                        Github.com<span class="glyphicon glyphicon-new-window"/>
-                    </a>
-                </li>
+            <ul class="list list--minimal list-two-columns">
+                <li class="list-item"><a id="link-to-github" href="@{repo.githubUrl}" target="_blank" rel="noreferrer noopener">Github.com<span class="glyphicon glyphicon-new-window"/></a></li>
+                @if(repo.repoType == RepoType.Service) {
+                    <li class="list-item"><a id="link-to-timeline" href="@DeploymentHistoryController.graph(repo.name)">Deployment Timeline</a></li>
+                    <li class="list-item"><a id="link-to-@{repo.name}-config" href="@appRoutes.CatalogueController.serviceConfig(repo.name)" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
+                    <li class="list-item"><a id="link-to-dependency-list" href="@appRoutes.DependenciesController.services(repo.name)">Service Dependencies</a></li>
+                    <li class="list-item"><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, repo.name)}">Frontend Route Warnings</a></li>
+                }
+                @if(repo.repoType == RepoType.Service || repo.repoType == RepoType.Library) {
+                    <li class="list-item"><a id="link-to-@{repo.name}-health" href="@{HealthIndicatorsController.breakdownForRepo(repo.name)}">Health-Indicator</a></li>
+                }
                 @commenterReport.map { report =>
-                    <li class="list-item">
-                        <a id="link-to-@{repo.name}-comments" href="@prcommenterRoutes.PrCommenterController.recommendations(name = Some(report.name))">
-                            PR-Commenter recommendations (@report.comments.size)
-                        </a>
-                    </li>
+                    <li class="list-item"><a id="link-to-@{repo.name}-comments" href="@prcommenterRoutes.PrCommenterController.recommendations(name = Some(report.name))">PR-Commenter recommendations (@report.comments.size)</a></li>
+                }
+                @if(CatalogueFrontendSwitches.surfacingVulnerabilities.isEnabled & repo.repoType == RepoType.Service) {
+                    <li class="list-item"><a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${repo.name}\""), None)">Vulnerabilities (@distinctVulnerabilitiesCount)</a></li>
                 }
             </ul>
         </div>

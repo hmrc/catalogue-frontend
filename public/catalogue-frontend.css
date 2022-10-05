@@ -12583,17 +12583,29 @@ table.shutter-events {
 }
 
 .result-success {
-  color: #198754;
+  color: #005a30;
+  background: #cce2d8;
+  padding: 5px 8px 4px 8px;
+  letter-spacing: 1px;
 }
 
 .result-warning {
-  color: #ffc107;
+  color: #594d00;
+  background: #fff7bf;
+  padding: 5px 8px 4px 8px;
+  letter-spacing: 1px;
 }
 
 .result-danger {
-  color: #dc3545;
+  color: #942514;
+  background: #f6d7d2;
+  padding: 5px 8px 4px 8px;
+  letter-spacing: 1px;
 }
 
 .result-muted {
-  color: #6c757d;
+  color: #383f43;
+  background: #eeefef;
+  padding: 5px 8px 4px 8px;
+  letter-spacing: 1px;
 }
