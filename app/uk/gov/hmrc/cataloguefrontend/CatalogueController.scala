@@ -93,6 +93,12 @@ class CatalogueController @Inject() (
 
   private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
 
+  val ping: Action[AnyContent] =
+    Action { implicit rh =>
+      logger.warn(s"Ping/Ping: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+      Ok
+    }
+
   def index(): Action[AnyContent] =
     BasicAuthAction { implicit request =>
       val whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines).merge
