@@ -32,7 +32,8 @@
 
 @standard_layout(s"Vulnerabilities") {
         <header>
-        <h1>Vulnerabilities</h1>
+        <h1>Vulnerabilities (Production)</h1>
+
         </header>
             <div id="vulnerabilities-list">
                 <form id="vuln-form" action="/vulnerabilities" method="get">
@@ -50,7 +51,7 @@
                             field      = form("team"),
                             options    = teams.map(t => t.name.asString -> t.name.asString),
                             '_default -> "All",
-                            '_label   -> "Team",
+                            '_label   -> "Team:",
                             'onchange -> "this.form.submit()",
                             'id       -> "team-filter",
                             'class   -> "form-control"
