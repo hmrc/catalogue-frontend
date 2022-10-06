@@ -58,8 +58,7 @@ trait MdtpFilter extends EssentialFilter {
           // Invoke the delegate
           bodyAccumulator.success(next(rh))
           val thread = Thread.currentThread.getName
-          //Mdc.preservingMdc(promisedResult.future)
-          promisedResult.future.map { res =>
+          Mdc.preservingMdc(promisedResult.future).map { res =>
             if (Thread.currentThread.getName != thread)
             play.api.Logger(getClass).warn(s"MdtpFilter - Thread changed from $thread to ${Thread.currentThread.getName}: MDC2: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
             res
