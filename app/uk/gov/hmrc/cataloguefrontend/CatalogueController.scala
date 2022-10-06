@@ -95,7 +95,10 @@ class CatalogueController @Inject() (
 
   val ping: Action[AnyContent] =
     Action { implicit rh =>
-      logger.warn(s"Ping/Ping: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+      if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
+        logger.warn(s"Ping/Ping: MDC lost!: ${rh.method} ${rh.uri}")
+      else
+        logger.info(s"Ping/Ping: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
       Ok
     }
 

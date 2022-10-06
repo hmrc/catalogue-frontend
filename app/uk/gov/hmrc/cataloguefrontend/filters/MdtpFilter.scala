@@ -57,7 +57,13 @@ trait MdtpFilter extends EssentialFilter {
             play.api.Logger(getClass).info(s"MdtpFilter - in apply: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
           // Invoke the delegate
           bodyAccumulator.success(next(rh))
-          Mdc.preservingMdc(promisedResult.future)
+          val thread = Thread.currentThread.getName
+          //Mdc.preservingMdc(promisedResult.future)
+          promisedResult.future.map { res =>
+            if (Thread.currentThread.getName != thread)
+            play.api.Logger(getClass).warn(s"MdtpFilter - Thread changed from $thread to ${Thread.currentThread.getName}: MDC2: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+            res
+          }
         })(rh)
 
         result.onComplete({ resultTry =>

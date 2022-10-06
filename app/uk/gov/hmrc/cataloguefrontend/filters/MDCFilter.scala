@@ -40,6 +40,7 @@ trait MDCFilter extends MdtpFilter {
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
     val headerCarrier = hc(rh)
 
+    // TODO make this extensible
     val data = Set(
       headerCarrier.requestId.map(HeaderNames.xRequestId    -> _.value),
       headerCarrier.sessionId.map(HeaderNames.xSessionId    -> _.value),
@@ -53,10 +54,14 @@ trait MDCFilter extends MdtpFilter {
 
     f(rh).map { res =>
       val mdcData = Mdc.mdcData.toSet
-      if (warnMdcDataLoss && !data.forall(mdcData.contains)) {
+      /*if (warnMdcDataLoss && !data.forall(mdcData.contains)) {
         logger.warn(s"MDC Data has been dropped. endpoint: ${rh.method} ${rh.uri}")
-      }
+      }*/
       res
     }
   }
+}
+
+object MDCFilter {
+  val cache = new java.util.concurrent.ConcurrentHashMap[String,String]
 }

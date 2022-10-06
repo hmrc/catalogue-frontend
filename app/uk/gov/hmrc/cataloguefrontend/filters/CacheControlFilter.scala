@@ -56,7 +56,7 @@ class CacheControlFilter @Inject()(
   override def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
     logger.info(s"CacheControlFilter: MDC In: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
     f(rh).map { result =>
-      logger.info(s"CacheControlFilter: MDC Out: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+      //logger.info(s"CacheControlFilter: MDC Out: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
       def status = result.header.status
 
       def existingHeader = result.header.headers.get(CACHE_CONTROL)
