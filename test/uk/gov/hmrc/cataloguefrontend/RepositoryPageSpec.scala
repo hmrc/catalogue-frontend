@@ -61,7 +61,7 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       response.body   should include(s"links on this page are automatically generated")
       response.body   should include(s"teamA")
       response.body   should include(s"teamB")
-      response.body   should include(s"Github.com")
+      response.body   should include(s"GitHub")
     }
 
     "render dependencies" in {

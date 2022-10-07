@@ -43,7 +43,7 @@ class PrototypePageSpec
       response.body   should include("links on this page are automatically generated")
       response.body   should include("Designers")
       response.body   should include("CATO")
-      response.body   should include("Github.com")
+      response.body   should include("GitHub")
       response.body   should include("https://github.com/HMRC/2fa-prototype")
       response.body   should include("some description")
 
