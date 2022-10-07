@@ -24,9 +24,10 @@ import scala.concurrent.{ExecutionContextExecutor, ExecutionContext}
 
 sealed class ExecCtxUtils {
   final def prepare(ec: ExecutionContext): ExecutionContext = {
-    //ec.prepare()
-    val mdcContext = MDC.getCopyOfContextMap
-    new MdcExecutionContext(ec, mdcContext)
+    ec.prepare()
+    /*val mdcContext = MDC.getCopyOfContextMap
+    println(s"${Thread.currentThread} - adding $mdcContext")
+    new MdcExecutionContext(ec, mdcContext)*/
   }
 }
 
