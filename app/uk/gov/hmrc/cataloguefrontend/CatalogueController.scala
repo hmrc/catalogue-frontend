@@ -96,12 +96,12 @@ class CatalogueController @Inject() (
   private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
 
   /*val ping: Action[Unit] =
-    Action.async(parse.empty) { implicit rh =>
+    Action(parse.empty) { implicit rh =>
       if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
         logger.warn(s"Ping/Ping: MDC lost!: ${rh.method} ${rh.uri}")
       else
         logger.info(s"Ping/Ping: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
-      Future.successful(Ok)
+      Ok
     }*/
 
   /*val ping: Action[Unit] =
@@ -123,11 +123,15 @@ class CatalogueController @Inject() (
       override def parser           = ???
       override def apply(rh: RequestHeader): Accumulator[ByteString, Result] = {
         play.api.Logger(getClass).info(s"CatalogueController - MDC1: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
-        parse.empty(rh).mapFuture {
+        val thread = Thread.currentThread.getName
+        val acc = parse.empty(rh)
+        acc.mapFuture {
           case Left(r) =>
             logger.trace("Got direct result from the BodyParser: " + r)
             Future.successful(r)
           case Right(a) =>
+            if (Thread.currentThread.getName != thread)
+              play.api.Logger(getClass).warn(s"CatalogueController - Thread changed from $thread to ${Thread.currentThread.getName}: MDC2: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
             play.api.Logger(getClass).info(s"CatalogueController - MDC2: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
             val request = Request(rh, a)
             logger.trace("Invoking action with request: " + request)

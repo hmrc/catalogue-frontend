@@ -26,14 +26,21 @@ sealed class ExecCtxUtils {
   final def prepare(ec: ExecutionContext): ExecutionContext = {
     ec.prepare()
     /*val mdcContext = MDC.getCopyOfContextMap
+    val java.lang.ThreadLocal.get
     println(s"${Thread.currentThread} - adding $mdcContext")
     new MdcExecutionContext(ec, mdcContext)*/
   }
+
+  /*final def prepare2(ec: ExecutionContext): ExecutionContext = {
+    val mdcContext = MDC.getCopyOfContextMap
+    println(s"${Thread.currentThread} - adding $mdcContext")
+    new MdcExecutionContext(ec, mdcContext)
+  }*/
 }
 
 object ExecCtxUtils extends ExecCtxUtils
 
-
+/*
 class MdcExecutionContext(delegate: ExecutionContext, mdcContext: java.util.Map[String, String]) extends ExecutionContextExecutor {
   def execute(runnable: Runnable) = {
     delegate.execute { () =>
@@ -56,3 +63,4 @@ class MdcExecutionContext(delegate: ExecutionContext, mdcContext: java.util.Map[
   def reportFailure(t: Throwable) =
     delegate.reportFailure(t)
 }
+*/
