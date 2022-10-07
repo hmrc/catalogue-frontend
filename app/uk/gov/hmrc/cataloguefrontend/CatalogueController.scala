@@ -42,6 +42,8 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import play.api.libs.streams.Accumulator
+import akka.util.ByteString
 
 case class EnvData(
   version          : Version,
@@ -93,15 +95,65 @@ class CatalogueController @Inject() (
 
   private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
 
-  val ping: Action[Unit] =
+  /*val ping: Action[Unit] =
     Action.async(parse.empty) { implicit rh =>
       if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
         logger.warn(s"Ping/Ping: MDC lost!: ${rh.method} ${rh.uri}")
       else
         logger.info(s"Ping/Ping: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
       Future.successful(Ok)
-    }
+    }*/
 
+  /*val ping: Action[Unit] =
+    new Action[Unit] {
+      override def executionContext = ec
+      override def parser           = parse.empty
+      override def apply(rh: Request[Unit]) = {
+        if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
+          logger.warn(s"Ping/Ping: MDC lost!: ${rh.method} ${rh.uri}")
+        else
+          logger.info(s"Ping/Ping: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+        Future.successful(Ok)
+      }
+  }*/
+
+  val ping: Action[Unit] =
+    new Action[Unit] {
+      override def executionContext = ???
+      override def parser           = ???
+      override def apply(rh: RequestHeader): Accumulator[ByteString, Result] = {
+        play.api.Logger(getClass).info(s"CatalogueController - MDC1: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+        parse.empty(rh).mapFuture {
+          case Left(r) =>
+            logger.trace("Got direct result from the BodyParser: " + r)
+            Future.successful(r)
+          case Right(a) =>
+            play.api.Logger(getClass).info(s"CatalogueController - MDC2: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+            val request = Request(rh, a)
+            logger.trace("Invoking action with request: " + request)
+            apply(request)
+        }(uk.gov.hmrc.cataloguefrontend.filters.ExecCtxUtils.prepare(ec)) // prepare execution context as body parser object may cross thread boundary
+      }
+
+      override def apply(rh: Request[Unit]) = {
+        if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
+          logger.warn(s"Ping/Ping: MDC lost!: ${rh.method} ${rh.uri}")
+        else
+          logger.info(s"Ping/Ping: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+        Future.successful(Ok)
+      }
+  }
+/*
+  parser(rh).mapFuture {
+      case Left(r) =>
+        logger.trace("Got direct result from the BodyParser: " + r)
+        Future.successful(r)
+      case Right(a) =>
+        val request = Request(rh, a)
+        logger.trace("Invoking action with request: " + request)
+        apply(request)
+    }(ExecCtxUtils.prepare(executionContext))
+*/
   def index(): Action[AnyContent] =
     BasicAuthAction { implicit request =>
       val whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines).merge
