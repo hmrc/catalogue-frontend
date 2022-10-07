@@ -18,11 +18,40 @@ package uk.gov.hmrc.cataloguefrontend.filters
 
 // copied from play.utils.ExecCtxUtils
 
-import scala.concurrent.ExecutionContext
+import org.slf4j.MDC
+import java.util.concurrent.{Executor, Executors}
+import scala.concurrent.{ExecutionContextExecutor, ExecutionContext}
 
 sealed class ExecCtxUtils {
-  final def prepare(ec: ExecutionContext): ExecutionContext =
-    ec.prepare()
+  final def prepare(ec: ExecutionContext): ExecutionContext = {
+    //ec.prepare()
+    val mdcContext = MDC.getCopyOfContextMap
+    new MdcExecutionContext(ec, mdcContext)
+  }
 }
 
 object ExecCtxUtils extends ExecCtxUtils
+
+
+class MdcExecutionContext(delegate: ExecutionContext, mdcContext: java.util.Map[String, String]) extends ExecutionContextExecutor {
+  def execute(runnable: Runnable) = {
+    delegate.execute { () =>
+      val oldMDCContext = MDC.getCopyOfContextMap
+      setContextMap(mdcContext)
+      try {
+        runnable.run()
+      } finally {
+        setContextMap(oldMDCContext)
+      }
+    }
+  }
+
+  private[this] def setContextMap(context: java.util.Map[String, String]): Unit =
+    if (context == null)
+      MDC.clear()
+    else
+      MDC.setContextMap(context)
+
+  def reportFailure(t: Throwable) =
+    delegate.reportFailure(t)
+}

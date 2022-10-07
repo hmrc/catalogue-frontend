@@ -58,11 +58,11 @@ trait MdtpFilter extends EssentialFilter {
           // Invoke the delegate
           bodyAccumulator.success(next(rh))
           val thread = Thread.currentThread.getName
-          Mdc.preservingMdc(promisedResult.future).map { res =>
+          promisedResult.future.map { res =>
             if (Thread.currentThread.getName != thread)
-            play.api.Logger(getClass).warn(s"MdtpFilter - Thread changed from $thread to ${Thread.currentThread.getName}: MDC2: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
+              play.api.Logger(getClass).warn(s"MdtpFilter - Thread changed from $thread to ${Thread.currentThread.getName}: MDC2: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
             res
-          }
+          }(ExecCtxUtils.prepare(ec))
         })(rh)
 
         result.onComplete({ resultTry =>
@@ -74,7 +74,10 @@ trait MdtpFilter extends EssentialFilter {
           bodyAccumulator.tryComplete(resultTry.map(simpleResult => Accumulator.done(simpleResult)))
         })
 
-        Accumulator.flatten(Mdc.preservingMdc(bodyAccumulator.future).map { it =>
+        val thread = Thread.currentThread.getName
+        Accumulator.flatten(bodyAccumulator.future.map { it =>
+            if (Thread.currentThread.getName != thread)
+              play.api.Logger(getClass).warn(s"MdtpFilter - Thread changed from $thread to ${Thread.currentThread.getName}: MDC2: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
           if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
             play.api.Logger(getClass).info(s"MdtpFilter - calling bodyAccumulator.map: MDC: ${uk.gov.hmrc.play.http.logging.Mdc.mdcData}: ${rh.method} ${rh.uri}")
           it.mapFuture { simpleResult =>
@@ -91,7 +94,7 @@ trait MdtpFilter extends EssentialFilter {
                 promisedResult.tryFailure(t)
                 result
             }
-        })
+        }(ExecCtxUtils.prepare(ec)))
       }
     }
   }
