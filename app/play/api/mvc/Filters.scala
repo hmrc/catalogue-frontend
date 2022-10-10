@@ -60,11 +60,10 @@ trait Filter extends EssentialFilter {
   def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result]
 
   def apply(next: EssentialAction): EssentialAction = {
-    // prepare execution context as body parser object may cross thread boundary
-    // this must be a def - it does not work unless each application is provided it's own
-    implicit def ec = mat.executionContext.prepare()
     new EssentialAction {
       def apply(rh: RequestHeader): Accumulator[ByteString, Result] = {
+        // prepare execution context as body parser object may cross thread boundary
+        implicit val ec = mat.executionContext.prepare()
         // Promised result returned to this filter when it invokes the delegate function (the next filter in the chain)
         val promisedResult = Promise[Result]()
         // Promised accumulator returned to the framework
