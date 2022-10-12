@@ -26,6 +26,13 @@ import akka.dispatch.Dispatcher
 import akka.dispatch.MessageDispatcher
 import akka.dispatch.MessageDispatcherConfigurator
 import scala.concurrent.duration._
+import akka.dispatch.ExecutorServiceConfigurator
+import java.util.concurrent.ThreadFactory
+import akka.dispatch.ExecutorServiceFactory
+import java.util.concurrent.ExecutorService
+import akka.dispatch.ThreadPoolExecutorConfigurator
+import java.util.concurrent.Callable
+import java.util.Collection
 
 // based on http://yanns.github.io/blog/2014/05/04/slf4j-mapped-diagnostic-context-mdc-with-play-framework/
 
@@ -43,6 +50,7 @@ class MDCPropagatingDispatcherConfigurator(
       configureExecutor(),
       config.getDuration("shutdown-timeout", TimeUnit.MILLISECONDS).millis
     ) with MDCPropagatorExecutionContext
+
 }
 
 /**
@@ -53,26 +61,28 @@ trait MDCPropagatorExecutionContext extends ExecutionContext {
 
   override def prepare(): ExecutionContext = new ExecutionContext {
     // capture the MDC
-    val mdcContext = MDC.getCopyOfContextMap
+    private val mdcContext = MDC.getCopyOfContextMap
+
     val thread = Thread.currentThread.getName
-    println(s"In prepare - captured $mdcContext on $thread")
+    //println(s">>>> prepare $thread: $mdcContext, ${Thread.currentThread.getStackTrace.mkString("\n  ")}")
 
-    def execute(r: Runnable) = self.execute { () =>
-      println(s"Copying $mdcContext from $thread to ${Thread.currentThread.getName}")
-      // backup the callee MDC context
-      val oldMDCContext = MDC.getCopyOfContextMap
+    override def execute(r: Runnable) =
+      self.execute { () =>
+        //println(s">>>> Copying $mdcContext from $thread into ${Thread.currentThread.getName}")
+        // backup the callee MDC context
+        val oldMDCContext = MDC.getCopyOfContextMap
 
-      // Run the runnable with the captured context
-      setContextMap(mdcContext)
-      try {
-        r.run()
-      } finally {
-        // restore the callee MDC context
-        setContextMap(oldMDCContext)
+        // Run the runnable with the captured context
+        setContextMap(mdcContext)
+        try {
+          r.run()
+        } finally {
+          // restore the callee MDC context
+          setContextMap(oldMDCContext)
+        }
       }
-    }
 
-    def reportFailure(t: Throwable) =
+    override def reportFailure(t: Throwable) =
       self.reportFailure(t)
   }
 
@@ -81,12 +91,4 @@ trait MDCPropagatorExecutionContext extends ExecutionContext {
       MDC.clear()
     else
       MDC.setContextMap(context)
-}
-
-object MDCPropagatorExecutionContext {
-  def apply(delegate: ExecutionContext): MDCPropagatorExecutionContext =
-    new ExecutionContext with MDCPropagatorExecutionContext {
-      override def reportFailure(cause: Throwable): Unit = delegate.reportFailure(cause)
-      override def execute(runnable: Runnable): Unit = delegate.execute(runnable)
-    }
 }

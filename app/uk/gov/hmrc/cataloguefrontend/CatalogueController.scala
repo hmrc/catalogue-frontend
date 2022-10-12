@@ -95,8 +95,8 @@ class CatalogueController @Inject() (
 
   private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
 
-  val ping: Action[Unit] =
-    Action(parse.empty) { implicit rh =>
+  val ping: Action[AnyContent] =
+    Action { implicit rh =>
       if (uk.gov.hmrc.play.http.logging.Mdc.mdcData.isEmpty)
         logger.warn(s"Ping/Ping: MDC lost!: ${rh.method} ${rh.uri}")
       else
