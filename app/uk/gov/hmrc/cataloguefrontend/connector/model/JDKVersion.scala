@@ -26,16 +26,8 @@ trait JDKVersionFormats {
 
   import play.api.libs.json._
 
-  val versionFormat: Format[Version] = new Format[Version] {
-    override def reads(json: JsValue) =
-      json match {
-        case JsString(s) => JsSuccess(Version(s))
-        case _ => JsError("Not a string")
-      }
-
-    override def writes(v: Version) =
-      JsString(v.original)
-  }
+  val versionFormat: Format[Version] =
+    Format.of[String].inmap(Version.apply, _.toString)
 
   val vendorRead: Reads[Vendor] = JsPath
     .read[String]
