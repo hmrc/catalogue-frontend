@@ -19,11 +19,23 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 import play.api.libs.functional.syntax._
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
-case class JDKVersion(name: String, version: String, vendor: Vendor, kind: Kind)
+//@TODO Move Version Model to it's own file
+case class JDKVersion(name: String, version: Version, vendor: Vendor, kind: Kind)
 
 trait JDKVersionFormats {
 
   import play.api.libs.json._
+
+  val versionFormat: Format[Version] = new Format[Version] {
+    override def reads(json: JsValue) =
+      json match {
+        case JsString(s) => JsSuccess(Version(s))
+        case _ => JsError("Not a string")
+      }
+
+    override def writes(v: Version) =
+      JsString(v.original)
+  }
 
   val vendorRead: Reads[Vendor] = JsPath
     .read[String]
@@ -41,11 +53,13 @@ trait JDKVersionFormats {
       case _     => JDK // default to JDK
     })
 
-  val jdkFormat: Reads[JDKVersion] =
+  val jdkFormat: Reads[JDKVersion] = {
+    implicit val vf  = Version.format
     ((__ \ "name").read[String]
-      ~ (__ \ "version").read[String]
+      ~ (__ \ "version").read[Version]
       ~ (__ \ "vendor").read[Vendor](vendorRead)
       ~ (__ \ "kind").read[Kind](kindRead))(JDKVersion)
+  }
 }
 
 object JDKVersionFormats extends JDKVersionFormats

@@ -81,7 +81,6 @@ class DependenciesService @Inject() (
   def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] =
     serviceDependenciesConnector
       .getJDKVersions(flag)
-      .map(_.sortBy(_.version))
 
   def getJDKCountsForEnv(env: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[JDKUsageByEnv] =
     for {

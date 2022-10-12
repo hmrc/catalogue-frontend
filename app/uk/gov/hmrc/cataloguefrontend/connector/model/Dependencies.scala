@@ -286,8 +286,9 @@ case class Version(
 object Version {
 
   implicit val ordering = new Ordering[Version] {
-    def compare(x: Version, y: Version): Int =
+    def compare(x: Version, y: Version): Int = {
       x.compare(y)
+    }
   }
 
   def isNewVersionAvailable(currentVersion: Version, latestVersion: Version): Option[Boolean] =
