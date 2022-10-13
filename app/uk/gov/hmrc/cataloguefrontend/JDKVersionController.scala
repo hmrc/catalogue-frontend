@@ -17,9 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.MessagesControllerComponents
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -45,17 +43,14 @@ class JDKVersionController @Inject() (
       for {
         flag        <- Future.successful(SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest))
         jdkVersions <- dependenciesService.getJDKVersions(flag)
-      } yield Ok(jdkPage(jdkVersions.sortBy(byJDKVersion), SlugInfoFlag.values, flag))
+      } yield Ok(jdkPage(jdkVersions.sortBy(_.version), SlugInfoFlag.values, flag))
     }
 
   def compareAllEnvironments() =
     BasicAuthAction.async { implicit request =>
       for {
         envs <- Future.sequence(SlugInfoFlag.values.map(dependenciesService.getJDKCountsForEnv))
-        jdks = envs.flatMap(_.usage.keys).distinct.sortBy(byJDKVersion)
+        jdks = envs.flatMap(_.usage.keys).distinct.sortBy(_.version)
       } yield Ok(jdkCountsPage(envs, jdks))
     }
-
-  private def byJDKVersion(v: JDKVersion) =
-    v.version.replaceAll("\\D", "").toInt
 }

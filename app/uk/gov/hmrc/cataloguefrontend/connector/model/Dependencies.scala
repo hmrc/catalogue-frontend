@@ -277,7 +277,7 @@ case class Version(
 
   override def compare(other: Version): Int = {
     import Ordered._
-    (major, minor, patch).compare((other.major, other.minor, other.patch))
+    (major, minor, patch, original).compare((other.major, other.minor, other.patch, other.original))
   }
 
   override def toString: String = original

@@ -36,8 +36,8 @@ class JDKVersionPageSpec extends AnyWordSpec with MockitoSugar with Matchers {
       implicit val request = FakeRequest()
 
       val versions = List(
-          JDKVersion(name = "test-slug",     version = "1.181.0", vendor = OpenJDK, kind = JDK)
-        , JDKVersion(name = "thing-service", version = "1.171.0", vendor = Oracle , kind = JRE)
+          JDKVersion(name = "test-slug",     version = Version("1.181.0"), vendor = OpenJDK, kind = JDK)
+        , JDKVersion(name = "thing-service", version = Version("1.171.0"), vendor = Oracle , kind = JRE)
         )
 
       val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, SlugInfoFlag.Latest))
@@ -55,7 +55,7 @@ class JDKVersionPageSpec extends AnyWordSpec with MockitoSugar with Matchers {
     "include a link to the repository" in {
       implicit val request = FakeRequest()
 
-      val versions = List(JDKVersion(name= "thing-service", version = "1.171.0", vendor = Oracle, kind = JDK))
+      val versions = List(JDKVersion(name= "thing-service", version = Version("1.171.0"), vendor = Oracle, kind = JDK))
       val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, SlugInfoFlag.Latest))
 
       val slug = document.select("#jdk-slug-thing-service")
@@ -67,4 +67,6 @@ class JDKVersionPageSpec extends AnyWordSpec with MockitoSugar with Matchers {
 
 
   private def asDocument(html: Html) = Jsoup.parse(html.toString())
+
+
 }
