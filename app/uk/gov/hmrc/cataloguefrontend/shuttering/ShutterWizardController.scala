@@ -37,7 +37,6 @@ import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.play.http.logging.Mdc
 import views.html.shuttering.shutterService._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -566,14 +565,10 @@ class ShutterWizardController @Inject() (
     )
 
   private def getFromSession[A : Reads](dataKey: DataKey[A])(implicit request: Request[_]): Future[Option[A]] =
-    Mdc.preservingMdc(
-      cacheRepo.getFromSession(dataKey)
-    )
+    cacheRepo.getFromSession(dataKey)
 
   private def putSession[A : Writes](dataKey: DataKey[A], data: A)(implicit request: Request[_]): Future[(String, String)] =
-    Mdc.preservingMdc(
-      cacheRepo.putSession(dataKey, data)
-    )
+    cacheRepo.putSession(dataKey, data)
 }
 
 object ShutterWizardController {
