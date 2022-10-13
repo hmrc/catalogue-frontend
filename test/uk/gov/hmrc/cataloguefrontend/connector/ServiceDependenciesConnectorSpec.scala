@@ -75,12 +75,12 @@ class ServiceDependenciesConnectorSpec
       val response = serviceDependenciesConnector.getJDKVersions(SlugInfoFlag.ForEnvironment(Environment.Production)).futureValue
 
       response.head.name    shouldBe "something-api"
-      response.head.version shouldBe "1.8.0_181"
+      response.head.version shouldBe Version("1.8.0_181")
       response.head.vendor  shouldBe Oracle
       response.head.kind    shouldBe JDK
 
       response(1).name    shouldBe "service-backend"
-      response(1).version shouldBe "1.8.0_191"
+      response(1).version shouldBe Version("1.8.0_191")
       response(1).vendor  shouldBe OpenJDK
       response(1).kind    shouldBe JRE
     }

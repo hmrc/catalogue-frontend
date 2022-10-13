@@ -19,7 +19,6 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 import play.api.libs.functional.syntax._
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
-//@TODO Move Version Model to it's own file
 case class JDKVersion(name: String, version: Version, vendor: Vendor, kind: Kind)
 
 trait JDKVersionFormats {
