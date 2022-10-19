@@ -17,28 +17,55 @@
 package uk.gov.hmrc.cataloguefrontend
 package connector
 
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
+import play.api.cache.AsyncCacheApi
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import uk.gov.hmrc.cataloguefrontend.config.{UserManagementAuthConfig, UserManagementPortalConfig}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOps}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 case class UserManagementConnector @Inject() (
   httpClientV2              : HttpClientV2,
-  userManagementPortalConfig: UserManagementPortalConfig
+  userManagementPortalConfig: UserManagementPortalConfig,
+  userManagementAuthConfig  : UserManagementAuthConfig,
+  tokenCache                : AsyncCacheApi
 )(implicit val ec: ExecutionContext) {
 
   import UserManagementConnector._
+  import userManagementAuthConfig._
   import userManagementPortalConfig._
 
   private val logger = Logger(getClass)
 
   private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
     override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
+  }
+
+  def login(): Future[UmpToken] = {
+    implicit val lrf: OFormat[UmpLoginRequest] = UmpLoginRequest.format
+    implicit val atf: OFormat[UmpAuthToken]    = UmpAuthToken.format
+    implicit val hc: HeaderCarrier             = HeaderCarrier()
+
+    val url   = url"$userManagementLoginUrl"
+    val login = UmpLoginRequest(username, password)
+
+    for {
+      token <- httpClientV2.post(url).withBody(Json.toJson(login)).execute[UmpAuthToken]
+      _      = logger.info("logged into UMP")
+    } yield token
+  }
+
+  def retrieveToken() : Future[UmpToken] = {
+    if (authEnabled)
+      tokenCache.getOrElseUpdate[UmpToken]("token", tokenTTL)(login())
+    else
+      Future.successful(NoTokenRequired)
   }
 
   def getTeamMembersForTeams(teamNames: Seq[TeamName])(implicit hc: HeaderCarrier): Future[Map[TeamName, Either[UMPError, Seq[TeamMember]]]] =
@@ -50,86 +77,85 @@ case class UserManagementConnector @Inject() (
 
   def getTeamMembersFromUMP(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
     val url = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}/members"
-    httpClientV2
-      .get(url)
-      .setHeader(
-        "requester" -> "None",
-        "Token"     -> "None"
-      )
-      .execute[HttpResponse]
-      .map { response =>
-        response.status match {
-          case 200 =>
-            (response.json \ "members")
-              .validate[List[TeamMember]]
-              .fold(
-                errors => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors")),
-                Right.apply
-              )
-          case 404      => Left(UMPError.UnknownTeam)
-          case httpCode => Left(UMPError.HTTPError(httpCode))
+    for {
+      token <- retrieveToken()
+      resp <- httpClientV2
+        .get(url)
+        .setHeader(token.asHeaders():_*)
+        .execute[HttpResponse]
+        .map { response =>
+          response.status match {
+            case 200 =>
+              (response.json \ "members")
+                .validate[List[TeamMember]]
+                .fold(
+                  errors => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors")),
+                  Right.apply
+                )
+            case 404 => Left(UMPError.UnknownTeam)
+            case httpCode => Left(UMPError.HTTPError(httpCode))
+          }
         }
-      }
-      .recover {
-        case ex =>
-          logger.error(s"An error occurred when connecting to $url", ex)
-          Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
-      }
-  }
+        .recover {
+          case ex =>
+            logger.error(s"An error occurred when connecting to $url", ex)
+            Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
+        }
+    } yield resp
+  }.recover { case _ => Left(UMPError.ConnectionError("Failed to login to UMP"))}
 
   def getAllUsersFromUMP(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
     val url = url"$userManagementBaseUrl/v2/organisations/users"
-    httpClientV2
-      .get(url)
-      .setHeader(
-        "requester" -> "None",
-        "Token"     -> "None"
-      )
-      .execute[HttpResponse]
-      .map { response =>
-        response.status match {
-          case 200 =>
-            (response.json \\ "users").headOption
-              .map(_.as[Seq[TeamMember]])
-              .fold[Either[UMPError, Seq[TeamMember]]](ifEmpty = Left(UMPError.ConnectionError(s"Could not parse response from $url")))(Right.apply)
-          case httpCode => Left(UMPError.HTTPError(httpCode))
+    for {
+      token <- retrieveToken()
+      resp  <- httpClientV2
+        .get(url)
+        .setHeader(token.asHeaders():_*)
+        .execute[HttpResponse]
+        .map { response =>
+          response.status match {
+            case 200 =>
+              (response.json \\ "users").headOption
+                .map(_.as[Seq[TeamMember]])
+                .fold[Either[UMPError, Seq[TeamMember]]](ifEmpty = Left(UMPError.ConnectionError(s"Could not parse response from $url")))(Right.apply)
+            case httpCode => Left(UMPError.HTTPError(httpCode))
+          }
         }
-      }
-      .recover {
-        case ex =>
-          logger.error(s"An error occurred when connecting to $url", ex)
-          Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
-      }
-  }
+        .recover {
+          case ex =>
+            logger.error(s"An error occurred when connecting to $url", ex)
+            Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
+        }
+    } yield resp
+  }.recover { case _ => Left(UMPError.ConnectionError("Failed to login to UMP"))}
 
   def getTeamDetails(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Either[UMPError, TeamDetails]] = {
     val url = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}"
-    httpClientV2
-      .get(url)
-      .setHeader(
-        "requester" -> "None",
-        "Token"     -> "None"
-      )
-      .execute[HttpResponse]
-      .map { response =>
-        response.status match {
-          case 200 =>
-            response.json
-              .validate[TeamDetails]
-              .fold(
-                errors => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors")),
-                Right.apply
-              )
-          case 404      => Left(UMPError.UnknownTeam)
-          case httpCode => Left(UMPError.HTTPError(httpCode))
+    for {
+      token <- retrieveToken()
+      resp <- httpClientV2.get(url)
+                .setHeader(token.asHeaders():_*)
+                .execute[HttpResponse]
+                .map {response =>
+                  response.status match {
+                    case 200 =>
+                      response.json
+                        .validate[TeamDetails]
+                        .fold (
+                          errors => Left (UMPError.ConnectionError (s"Could not parse response from $url: $errors")),
+                          Right.apply
+                        )
+                    case 404 => Left (UMPError.UnknownTeam)
+                    case httpCode => Left (UMPError.HTTPError (httpCode))
+                  }
+                }
+        .recover {
+          case ex =>
+            logger.error (s"An error occurred when connecting to $url", ex)
+            Left (UMPError.ConnectionError (s"Could not connect to $url: ${ex.getMessage}"))
         }
-      }
-      .recover {
-        case ex =>
-          logger.error(s"An error occurred when connecting to $url", ex)
-          Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
-      }
-  }
+    } yield resp
+  }.recover { case _ => Left(UMPError.ConnectionError("Failed to login to UMP"))}
 }
 
 object UserManagementConnector {
@@ -181,5 +207,35 @@ object UserManagementConnector {
     require(value.nonEmpty)
 
     override def toString: String = value
+  }
+
+  sealed trait UmpToken {
+    def asHeaders(): Seq[(String, String)]
+  }
+
+  case class UmpAuthToken(uid: String, token: String) extends UmpToken {
+    def asHeaders(): Seq[(String, String)] = {
+      Seq( "Token" -> token, "requester" -> uid)
+    }
+  }
+
+  case object NoTokenRequired extends UmpToken {
+    override def asHeaders(): Seq[(String, String)] = Seq.empty
+  }
+
+  object UmpAuthToken {
+    val format: OFormat[UmpAuthToken] = (
+      (__ \ "Token").format[String]
+        ~ (__ \ "uid").format[String]
+      )(UmpAuthToken.apply, unlift(UmpAuthToken.unapply))
+  }
+
+  case class UmpLoginRequest(username: String, password:String)
+
+  object UmpLoginRequest {
+    val format: OFormat[UmpLoginRequest] = (
+      (__ \ "username").format[String]
+        ~ (__ \ "password").format[String]
+      )(UmpLoginRequest.apply, unlift(UmpLoginRequest.unapply))
   }
 }

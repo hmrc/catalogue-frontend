@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.config
+
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 @Singleton
 class UserManagementPortalConfig @Inject() (servicesConfig: ServicesConfig) {
@@ -34,4 +35,8 @@ class UserManagementPortalConfig @Inject() (servicesConfig: ServicesConfig) {
 
   lazy val userManagementProfileBaseUrl: String =
     getConfString("user-management.profileBaseUrl")
+
+  lazy val userManagementLoginUrl: String =
+    getConfString("user-management.loginUrl")
+
 }

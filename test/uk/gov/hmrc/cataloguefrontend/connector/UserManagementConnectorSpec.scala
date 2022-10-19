@@ -47,10 +47,11 @@ class UserManagementConnectorSpec
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .configure(
-        "microservice.services.user-management.url"        -> wireMockUrl,
+        "microservice.services.user-management.url"  -> wireMockUrl,
         "microservice.services.user-management.myTeamsUrl" -> "http://some.ump.com/myTeams",
         "play.http.requestHandler"                         -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                                      -> false
+        "metrics.jvm"                                      -> false,
+        "ump.auth.enabled"                                 -> false
       )
       .build()
 
