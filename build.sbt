@@ -35,7 +35,7 @@ val bootstrapPlayVersion = "7.8.0"
 val hmrcMongoVersion     = "0.73.0"
 
 val compile = Seq(
-  caffeine,
+  ehcache,
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-28"   % bootstrapPlayVersion,
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-28"           % hmrcMongoVersion,
   "uk.gov.hmrc"               %% "internal-auth-client-play-28" % "1.2.0",
