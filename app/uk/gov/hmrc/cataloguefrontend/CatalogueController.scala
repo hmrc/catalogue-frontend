@@ -69,6 +69,7 @@ class CatalogueController @Inject() (
   whatsRunningWhereService     : WhatsRunningWhereService,
   prCommenterConnector         : PrCommenterConnector,
   vulnerabilitiesConnector     : VulnerabilitiesConnector,
+  confluenceConnector          : ConfluenceConnector,
   indexPage                    : IndexPage,
   serviceInfoPage              : ServiceInfoPage,
   serviceConfigPage            : ServiceConfigPage,
@@ -96,10 +97,12 @@ class CatalogueController @Inject() (
   private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
 
   def index(): Action[AnyContent] =
-    BasicAuthAction { implicit request =>
-      val whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines).merge
-      val blogPosts = MarkdownLoader.markdownFromFile("BLOG_POSTS.md", blogPostsDisplayLines).merge
-      Ok(indexPage(whatsNew, blogPosts))
+    BasicAuthAction.async { implicit request =>
+      for {
+        blogs    <- confluenceConnector.getBlogs()
+        whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines).merge
+        blogPosts = MarkdownLoader.markdownFromFile("BLOG_POSTS.md"     , blogPostsDisplayLines).merge
+      } yield Ok(indexPage(whatsNew, blogPosts, blogs))
     }
 
   def serviceConfig(serviceName: String): Action[AnyContent] =
