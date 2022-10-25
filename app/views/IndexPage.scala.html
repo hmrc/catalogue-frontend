@@ -14,10 +14,13 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.ConfluenceConnector
+
 
 @this(viewMessages: ViewMessages)
-@(whatsNew: String, blogPosts: String)(implicit request: Request[_])
+@(whatsNew: String, blogPosts: String, blogs: List[ConfluenceConnector.Blog])(implicit request: Request[_])
 
 @standard_layout() {
 
@@ -54,7 +57,18 @@
         <div id="blog-posts" class="recent-box">
             <div class="recent-box-grow">
                 <div class='recent-box-collapse'>
-                    @Html(blogPosts)
+                    @if(blogs.nonEmpty) {
+                        <table>
+                            @blogs.map { blog =>
+                                <tr>
+                                    <td>@{blog.createdDate.displayFormat}</td>
+                                    <td><a href="@{blog.url}">@{blog.title}</a></td>
+                                </tr>
+                            }
+                        </table>
+                    } else {
+                        @Html(blogPosts)
+                    }
                 </div>
             </div>
             <a href="#" class="recent-box-expand-link">See all...</a>
