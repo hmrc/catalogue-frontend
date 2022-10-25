@@ -69,7 +69,7 @@ class ConfluenceConnector @Inject()(
                         history(auth, result.history).map { history =>
                           xs :+ ConfluenceConnector.Blog(
                             title       = result.title
-                          , url         = url"$confluenceUrl${result.tinyUi}"
+                          , url         = url"${confluenceUrl + result.tinyUi}"
                           , createdDate = history.createdDate
                           )
                         }
