@@ -100,6 +100,7 @@ class CatalogueController @Inject() (
     BasicAuthAction.async { implicit request =>
       for {
         blogs    <- confluenceConnector.getBlogs()
+                      .recover(_ => Nil) // Temp fix till platops-live can call confluence
         whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines).merge
         blogPosts = MarkdownLoader.markdownFromFile("BLOG_POSTS.md"     , blogPostsDisplayLines).merge
       } yield Ok(indexPage(whatsNew, blogPosts, blogs))
