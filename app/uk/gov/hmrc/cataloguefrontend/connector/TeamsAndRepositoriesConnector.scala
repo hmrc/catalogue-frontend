@@ -133,12 +133,12 @@ object BuildData {
     ~ (__ \ "description").formatNullable[String]
   )(apply, unlift(unapply))
 }
-case class JenkinsJob(service: String, jenkinsURL: String, latestBuild: Option[BuildData])
+case class JenkinsJob(name: String, jenkinsURL: String, latestBuild: Option[BuildData])
 
 object JenkinsJob {
   implicit val bdf: OFormat[BuildData] = BuildData.apiFormat
   val apiFormat: OFormat[JenkinsJob] = (
-    (__ \ "service").format[String]
+    (__ \ "name").format[String]
     ~ (__ \ "jenkinsURL").format[String]
     ~ (__ \ "latestBuild").formatNullable[BuildData]
   )(apply, unlift(unapply))
