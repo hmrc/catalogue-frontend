@@ -1,0 +1,46 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@(outboundServices: Seq[(String, Boolean)])
+<div id="outbound_services">
+    <div class="board">
+        <h3 class="board__heading">
+            Outbound Services
+            @if(outboundServices.size > 3) {
+                <a href="#" class="pull-right board-expand-link">See all</a>
+            }
+        </h3>
+        <div class="board-grow">
+            <div class="board__body board-collapse">
+                @if(outboundServices.isEmpty) {
+                    <p> No outbound services detected in <code>application.conf</code></a>
+                } else {
+                    <ul class="list list--minimal">
+                        @for((name, isRepo) <- outboundServices) {
+                            <li class="list-item">
+                                @if(isRepo) {
+                                    <a id="link-to-outbound-@name" href="/repositories/@name">@name</a>
+                                } else {
+                                    <span id="label-for-outbound-@name">@name</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

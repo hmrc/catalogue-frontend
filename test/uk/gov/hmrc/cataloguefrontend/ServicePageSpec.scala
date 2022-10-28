@@ -37,6 +37,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(jenkinsData)))
     serviceEndpoint(GET, "/api/module-dependencies/service-1",willRespondWith = (404, None))
     serviceEndpoint(GET, "/api/module-dependencies/service-1?version=0.0.1",willRespondWith = (404, None))
+    serviceEndpoint(GET, "/app-config/service-1", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/app-config/service-name", willRespondWith = (200, Some("[]")))
   }
 
   implicit val wrwf = JsonCodecs.whatsRunningWhereReads

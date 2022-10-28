@@ -77,7 +77,7 @@ class ConfluenceConnector @Inject()(
       } yield blog
     }.recover {
       case UpstreamErrorResponse.Upstream4xxResponse(ex) =>
-        logger.error("Could not get a list of Confluence Blogs", ex)
+        logger.warn(s"Could not get a list of Confluence Blogs: ${ex.getMessage}")
         cache.remove("confluence-token")
         cache.remove("bobby-rules")
         List.empty

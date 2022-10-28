@@ -157,90 +157,73 @@ class CatalogueController @Inject() (
     messages: Messages,
     request : Request[_]
   ): Future[Result] = {
-    val repositoryName = repositoryDetails.name
-    val futEnvDatas: Future[Map[SlugInfoFlag, EnvData]] =
-      for {
-        deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
-        res <- Environment.values.traverse { env =>
-                 val slugInfoFlag     = SlugInfoFlag.ForEnvironment(env)
-                 val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
-                 // a single environment may have multiple versions during a deployment
-                 // return the lowest
-                 deployedVersions.sorted.headOption match {
-                   case Some(version) =>
-                     (
-                       serviceDependenciesConnector.getRepositoryModules(repositoryName, version),
-                       shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
-                     ).mapN { (repoModules, optShutterState) =>
-                       Some(
-                         slugInfoFlag ->
-                           EnvData(
-                             version           = version,
-                             repoModules       = repoModules,
-                             optShutterState   = optShutterState,
-                             optTelemetryLinks = Some(Seq(
-                               TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, env, serviceName),
-                               TelemetryLinks.create("Kibana", telemetryLogsLinkTemplate, env, serviceName),
-                             ))
-                           )
-                       )
-                     }
-                   case None => Future.successful(None)
-                 }
-               }
-      } yield res.collect { case Some(v) => v }.toMap
-
-    val costEstimationEnvironments = Environment.values
-    (
-      teamsAndRepositoriesConnector.lookupLatestBuildJobs(repositoryName),
-      futEnvDatas,
-      serviceDependenciesConnector.getRepositoryModules(repositoryName),
-      leakDetectionService.urlIfLeaksFound(repositoryName),
-      routeRulesService.serviceUrl(serviceName),
-      routeRulesService.serviceRoutes(serviceName),
-      serviceDependenciesConnector.getSlugInfo(repositoryName),
-      costEstimationService.estimateServiceCost(repositoryName, costEstimationEnvironments, serviceCostEstimateConfig),
-      prCommenterConnector.report(repositoryName),
-      vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
-    ).mapN { (jenkinsJobs,
-              envDatas,
-              latestRepoModules,
-              urlIfLeaksFound,
-              serviceUrl,
-              serviceRoutes,
-              optLatestServiceInfo,
-              costEstimate,
-              commenterReport,
-              distinctVulnerabilitiesCount
-             ) =>
-      val optLatestData: Option[(SlugInfoFlag, EnvData)] =
-        optLatestServiceInfo.map { latestServiceInfo =>
-          SlugInfoFlag.Latest ->
-            EnvData(
-              version           = latestServiceInfo.version,
-              repoModules       = latestRepoModules,
-              optShutterState   = None,
-              optTelemetryLinks = None
-            )
-        }
-
-      Ok(
-        serviceInfoPage(
-          serviceName                 = serviceName,
-          repositoryDetails           = repositoryDetails.copy(jenkinsJobs = jenkinsJobs),
-          costEstimate                = costEstimate,
-          costEstimateConfig          = serviceCostEstimateConfig,
-          repositoryCreationDate      = repositoryDetails.createdDate,
-          envDatas                    = optLatestData.fold(envDatas)(envDatas + _),
-          linkToLeakDetection         = urlIfLeaksFound,
-          productionEnvironmentRoute  = serviceUrl,
-          serviceRoutes               = serviceRoutes,
-          hasBranchProtectionAuth     = hasBranchProtectionAuth,
-          commenterReport             = commenterReport,
-          distinctVulnerabilitiesCount  = distinctVulnerabilitiesCount
-        )
-      )
-    }
+    for {
+      deployments          <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
+      repositoryName       =  repositoryDetails.name
+      jenkinsJobs          <- teamsAndRepositoriesConnector.lookupLatestBuildJobs(repositoryName)
+      envDatas             <- Environment.values.traverse { env =>
+                                val slugInfoFlag: SlugInfoFlag = SlugInfoFlag.ForEnvironment(env)
+                                val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
+                                // a single environment may have multiple versions during a deployment
+                                // return the lowest
+                                deployedVersions.sorted.headOption match {
+                                  case Some(version) =>
+                                    for {
+                                      repoModules     <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
+                                      optShutterState <- shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
+                                      data            =  EnvData(
+                                                           version           = version,
+                                                           repoModules       = repoModules,
+                                                           optShutterState   = optShutterState,
+                                                           optTelemetryLinks = Some(Seq(
+                                                             TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, env, serviceName),
+                                                             TelemetryLinks.create("Kibana", telemetryLogsLinkTemplate, env, serviceName),
+                                                           ))
+                                                         )
+                                    } yield Some(slugInfoFlag -> data)
+                                  case None => Future.successful(None)
+                                }
+                              }.map(_.collect { case Some(v) => v }.toMap)
+      latestRepoModules    <- serviceDependenciesConnector.getRepositoryModules(repositoryName)
+      urlIfLeaksFound      <- leakDetectionService.urlIfLeaksFound(repositoryName)
+      serviceUrl           <- routeRulesService.serviceUrl(serviceName)
+      serviceRoutes        <- routeRulesService.serviceRoutes(serviceName)
+      optLatestServiceInfo <- serviceDependenciesConnector.getSlugInfo(repositoryName)
+      costEstimate         <- costEstimationService.estimateServiceCost(repositoryName, Environment.values, serviceCostEstimateConfig)
+      commenterReport      <- prCommenterConnector.report(repositoryName)
+      vulnerabilitiesCount <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
+      outboundServicesRaw  <- configService.outboundServices(serviceName)
+      outboundServices     <- outboundServicesRaw.foldLeftM[Future, Seq[(String, Boolean)]](Seq.empty){
+                                case (acc, outboundService) =>
+                                  teamsAndRepositoriesConnector
+                                    .repositoryDetails(outboundService)
+                                    .map(_.fold((outboundService, false))(_ => (outboundService, true)))
+                                    .map(acc :+ _)
+                              }
+      optLatestData        =  optLatestServiceInfo.map { latestServiceInfo =>
+                                SlugInfoFlag.Latest ->
+                                  EnvData(
+                                    version           = latestServiceInfo.version,
+                                    repoModules       = latestRepoModules,
+                                    optShutterState   = None,
+                                    optTelemetryLinks = None
+                                  )
+                              }
+    } yield Ok(serviceInfoPage(
+      serviceName                  = serviceName,
+      repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs),
+      costEstimate                 = costEstimate,
+      costEstimateConfig           = serviceCostEstimateConfig,
+      repositoryCreationDate       = repositoryDetails.createdDate,
+      envDatas                     = optLatestData.fold(envDatas)(envDatas + _),
+      linkToLeakDetection          = urlIfLeaksFound,
+      productionEnvironmentRoute   = serviceUrl,
+      serviceRoutes                = serviceRoutes,
+      hasBranchProtectionAuth      = hasBranchProtectionAuth,
+      commenterReport              = commenterReport,
+      distinctVulnerabilitiesCount = vulnerabilitiesCount,
+      outboundServices             = outboundServices
+    ))
   }
 
   def library(name: String): Action[AnyContent] =

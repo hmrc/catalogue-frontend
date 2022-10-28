@@ -11916,6 +11916,9 @@ section span.other-teams-message {
   background-color: #f5f5f5;
   border-bottom: 1px solid #dddddd;
   color: #191717;}
+  .board__heading a {
+    font-weight: normal;
+  }
 
 .sub__heading {
   margin-left: 1em;
@@ -11927,6 +11930,16 @@ section span.other-teams-message {
   .board__body p {
     margin: 0 1.2em 1.2em;
     color: #434343; }
+
+.board-grow {
+  -moz-transition: height .5s;
+  -ms-transition: height .5s;
+  -o-transition: height .5s;
+  -webkit-transition: height .5s;
+  transition: height .5s;
+  overflow: hidden;
+  height:120px; /* If you change this, change the corresponding smallHeight value in catalogue-frontend.css too */
+}
 
 .indicator__title {
   margin-left: 1.0em;
