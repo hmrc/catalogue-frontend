@@ -21,7 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
-@import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
+@import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, ConfigService}
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
@@ -49,7 +49,8 @@
   serviceRoutes                : ServiceRoutes,
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
-  distinctVulnerabilitiesCount : Option[Int]
+  distinctVulnerabilitiesCount : Option[Int],
+  outboundServices             : Seq[(String, Boolean)]
 )(implicit messages: Messages, request: Request[_])
 
 
@@ -113,9 +114,11 @@
             <div class="col-md-6">
                 @partials.code(repositoryDetails, hasBranchProtectionAuth, commenterReport, distinctVulnerabilitiesCount)
             </div>
-
             <div class="col-md-6">
-            @partials.build(repositoryDetails, hasBranchProtectionAuth, commenterReport)
+                @partials.outbound_services(outboundServices)
+            </div>
+            <div class="col-md-6">
+                @partials.build(repositoryDetails, hasBranchProtectionAuth, commenterReport)
             </div>
         </div>
 

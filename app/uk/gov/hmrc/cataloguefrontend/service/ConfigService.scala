@@ -52,6 +52,23 @@ class ConfigService @Inject() (configConnector: ConfigConnector)(implicit ec: Ex
         case list                =>
           ArtifactNameError(s"Different artifact names found for service in different environments - [${list.mkString(",")}]")
       }
+
+  def appConfig(serviceName: String)(implicit hc: HeaderCarrier): Future[Seq[ConfigSourceEntries]]  =
+    configConnector.appConfig(serviceName)
+
+  def outboundServices(serviceName: String)(implicit hc: HeaderCarrier): Future[Seq[String]]  =
+    appConfig(serviceName).map(
+       _.flatMap(_.entries)
+        .filter  { case (k, _) => k.startsWith("microservice.services") }
+        .groupBy { case (k, _) => k.split('.').lift(2).getOrElse("") }
+        .toSeq
+        .flatMap { case (k, v) =>
+          for {
+            host <- v.collect { case (k2, v2) if k2.endsWith("host") => v2 }
+            port <- v.collect { case (k2, v2) if k2.endsWith("port") => v2 }
+          } yield k
+        }.sorted
+    )
 }
 
 @Singleton
