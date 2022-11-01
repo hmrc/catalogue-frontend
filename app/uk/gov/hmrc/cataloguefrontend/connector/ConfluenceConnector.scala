@@ -60,7 +60,7 @@ class ConfluenceConnector @Inject()(
 
   private val blogCacheExpiration = config.get[Duration]("confluence.blogCacheExpiration")
   def getBlogs(): Future[List[ConfluenceConnector.Blog]] =
-    cache.getOrElseUpdate("bobby-rules", blogCacheExpiration) {
+    cache.getOrElseUpdate("blog-cache", blogCacheExpiration) {
       for {
         results <- search(cql = s"""(label="$searchLabel" and type=blogpost) order by created desc""")
         blog    <- results.foldLeftM[Future, List[ConfluenceConnector.Blog]](List.empty){

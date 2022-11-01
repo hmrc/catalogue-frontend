@@ -20,7 +20,7 @@
 
 
 @this(viewMessages: ViewMessages)
-@(whatsNew: String, blogPosts: String, blogs: List[ConfluenceConnector.Blog])(implicit request: Request[_])
+@(whatsNew: String, blogs: List[ConfluenceConnector.Blog])(implicit request: Request[_])
 
 @standard_layout() {
 
@@ -51,29 +51,26 @@
             <a href="#" class="recent-box-expand-link">See all...</a>
         </div>
 
-        <h2>Blog Posts</h2>
-        These are all the recent blog posts published by PlatOps, right here for your convenience!
+        @if(blogs.nonEmpty) {
+            <h2>Blog Posts</h2>
+            These are all the recent blog posts published by PlatOps, right here for your convenience!
 
-        <div id="blog-posts" class="recent-box">
-            <div class="recent-box-grow">
-                <div class='recent-box-collapse'>
-                    @if(blogs.nonEmpty) {
-                        <table>
-                            @blogs.map { blog =>
-                                <tr>
-                                    <td>@{blog.createdDate.displayFormat}</td>
-                                    <td><a href="@{blog.url}">@{blog.title}</a></td>
-                                </tr>
-                            }
-                        </table>
-                    } else {
-                        @Html(blogPosts)
-                    }
+            <div id="blog-posts" class="recent-box">
+                <div class="recent-box-grow">
+                    <div class='recent-box-collapse'>
+                    <table>
+                        @blogs.map { blog =>
+                            <tr>
+                                <td>@{blog.createdDate.displayFormat}</td>
+                                <td><a href="@{blog.url}">@{blog.title}</a></td>
+                            </tr>
+                        }
+                    </table>
+                    </div>
                 </div>
+                <a href="#" class="recent-box-expand-link">See all...</a>
             </div>
-            <a href="#" class="recent-box-expand-link">See all...</a>
-        </div>
-
+        }
     </section>
 
     <section class="section-wrapper">

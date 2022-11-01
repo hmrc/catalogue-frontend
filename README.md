@@ -15,21 +15,20 @@ for service-dependency to work properly.
 
 The front page of the Catalogue has two sections for displaying the most recent significant changes and blog posts.
 
-These are manually curated lists, rendered from two markdown files in this repo:
+Version history is a manually curated lists, rendered from two markdown files in this repo:
   - [`VERSION_HISTORY.md`](conf/VERSION_HISTORY.md)
-  - [`BLOG_POSTS.md`](conf/BLOG_POSTS.md)
 
 They support Github flavour markdown.
 
-Two config variables define how many lines of the file to render:
-
+A config variable defines how many lines of the file to render:
 ```
 whats-new.display.lines = 30 #How many lines of the VERSION_HISTORY.md to render on the front page
-blog-posts.display.lines = 80 #How many lines of the BLOG_POSTS.md to render on the front page
 ```
 
-> Note that these control how many lines are rendered in total (which includes the table header), in the expanded view.
+> Note that this controls how many lines are rendered in total (which includes the table header), in the expanded view.
 > This has no bearing on how many are shown when the box is collapsed, which is controlled by the height of the div via css.
+
+Blog posts are populated via a call to Confluence which searches by the configured label `confluence.search.label`.
 
 ### Tests
 Please run tests with any work changes
