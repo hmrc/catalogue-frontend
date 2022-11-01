@@ -62,11 +62,10 @@ class ConfluenceConnector @Inject()(
   def getBlogs(): Future[List[ConfluenceConnector.Blog]] =
     cache.getOrElseUpdate("bobby-rules", blogCacheExpiration) {
       for {
-        auth    <- authenticate()
-        results <- search(auth, cql = s"""(label="$searchLabel" and type=blogpost) order by created desc""")
+        results <- search(cql = s"""(label="$searchLabel" and type=blogpost) order by created desc""")
         blog    <- results.foldLeftM[Future, List[ConfluenceConnector.Blog]](List.empty){
                     case (xs, result) =>
-                      history(auth, result.history).map { history =>
+                      history(result.history).map { history =>
                         xs :+ ConfluenceConnector.Blog(
                           title       = result.title
                         , url         = url"${confluenceUrl + result.tinyUi}"
@@ -78,26 +77,7 @@ class ConfluenceConnector @Inject()(
     }.recover {
       case UpstreamErrorResponse.Upstream4xxResponse(ex) =>
         logger.warn(s"Could not get a list of Confluence Blogs: ${ex.getMessage}")
-        cache.remove("confluence-token")
-        cache.remove("bobby-rules")
         List.empty
-    }
-
-  case class Auth(token: String)
-
-  private val readsAuth: Reads[Auth] =
-    (__ \ "rawToken").read[String].map(Auth)
-
-  private val tokenCacheExpiration = config.get[Duration]("confluence.tokenCacheExpiration")
-  private def authenticate(): Future[Auth] =
-    cache.getOrElseUpdate("confluence-token", tokenCacheExpiration.minus(1.day)) {
-      implicit val rd = readsAuth
-      httpClientV2
-        .post(url"$confluenceUrl/rest/pat/latest/tokens")
-        .setHeader("Authorization" -> authHeaderValue)
-        .withBody(Json.obj("name" -> JsString("catalogueToken"), "expirationDuration" -> JsNumber(tokenCacheExpiration.toDays)))
-        .withProxy
-        .execute[Auth]
     }
 
   case class Result(title: String, tinyUi: String, history: String)
@@ -112,11 +92,11 @@ class ConfluenceConnector @Inject()(
     (__ \ "results").read[List[Result]]
   }
 
-  private def search(auth: Auth, cql: String): Future[List[Result]] = {
+  private def search(cql: String): Future[List[Result]] = {
     implicit val rd = readsResults
     httpClientV2
       .get(url"$confluenceUrl/rest/api/content/search?limit=$searchLimit&cql=$cql")
-      .setHeader("Authorization" -> s"Bearer ${auth.token}")
+      .setHeader("Authorization" -> authHeaderValue)
       .withProxy
       .execute[List[Result]]
   }
@@ -126,11 +106,11 @@ class ConfluenceConnector @Inject()(
   private val readsHistory: Reads[History] =
     (__ \ "createdDate").read[Instant].map(History)
 
-  private def history(auth: Auth, path: String): Future[History] = {
+  private def history(path: String): Future[History] = {
     implicit val rd = readsHistory
     httpClientV2
       .get(url"${confluenceUrl + path}")
-      .setHeader("Authorization" -> s"Bearer ${auth.token}")
+      .setHeader("Authorization" -> authHeaderValue)
       .withProxy
       .execute[History]
   }
