@@ -87,7 +87,6 @@ class CatalogueController @Inject() (
      with CatalogueAuthBuilders {
 
   private lazy val whatsNewDisplayLines  = configuration.get[Int]("whats-new.display.lines")
-  private lazy val blogPostsDisplayLines = configuration.get[Int]("blog-posts.display.lines")
 
   private lazy val telemetryLogsLinkTemplate = configuration.get[String]("telemetry.templates.logs")
   private lazy val telemetryMetricsLinkTemplate = configuration.get[String]("telemetry.templates.metrics")
@@ -102,8 +101,7 @@ class CatalogueController @Inject() (
         blogs    <- confluenceConnector.getBlogs()
                       .recover(_ => Nil) // Temp fix till platops-live can call confluence
         whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines).merge
-        blogPosts = MarkdownLoader.markdownFromFile("BLOG_POSTS.md"     , blogPostsDisplayLines).merge
-      } yield Ok(indexPage(whatsNew, blogPosts, blogs))
+      } yield Ok(indexPage(whatsNew, blogs))
     }
 
   def serviceConfig(serviceName: String): Action[AnyContent] =
