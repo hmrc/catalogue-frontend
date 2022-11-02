@@ -77,10 +77,9 @@ case class DistinctVulnerability(
     fixedVersions             : Option[Seq[String]],
     references                : Seq[String],
     publishedDate             : Instant,
-    evaluated                 : Option[Instant],
-    ticket                    : Option[String],
     assessment                : Option[String],
     curationStatus            : Option[CurationStatus],
+    ticket                    : Option[String]
 )
 
 object DistinctVulnerability {
@@ -96,18 +95,17 @@ object DistinctVulnerability {
       ~ (__ \ "fixedVersions"             ).formatNullable[Seq[String]]
       ~ (__ \ "references"                ).format[Seq[String]]
       ~ (__ \ "publishedDate"             ).format[Instant]
-      ~ (__ \ "evaluated"                 ).formatNullable[Instant]
-      ~ (__ \ "ticket"                    ).formatNullable[String]
       ~ (__ \ "assessment"                ).formatNullable[String]
       ~ (__ \ "curationStatus"            ).formatNullable[CurationStatus]
+      ~ (__ \ "ticket"                    ).formatNullable[String]
       )(apply, unlift(unapply))
   }
 }
 
 case class VulnerabilityOccurrence(
-  service       : String,
-  serviceVersion: String,
-  componentPathInSlug: String
+  service            : String,
+  serviceVersion     : String,
+  componentPathInSlug: String,
 )
 
 object VulnerabilityOccurrence {
