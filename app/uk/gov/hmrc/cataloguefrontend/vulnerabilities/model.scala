@@ -68,9 +68,30 @@ object Vulnerability {
   }
 }
 
+case class VulnerableComponent(
+  component: String,
+  version: String
+) {
+//  Note two edge cases which would otherwise break the depdendency explorer links are handled below:
+//  1. A vulnerable version may have another `.` after the patch version.
+//  2. An artefact may have a trailing `_someVersionNumber`.
+  def cleansedVersion = version.split("\\.").take(3).mkString(".")
+  def group = component.stripPrefix("gav://").split(":")(0)
+  def artefact = component.stripPrefix("gav://").split(":")(1).split("_")(0)
+}
+
+object VulnerableComponent {
+  val format: OFormat[VulnerableComponent] = {
+    ( (__ \ "component").format[String]
+      ~ (__ \ "version").format[String]
+      )(apply, unlift(unapply))
+  }
+}
+
 case class DistinctVulnerability(
     vulnerableComponentName   : String,
     vulnerableComponentVersion: String,
+    vulnerableComponents      : Seq[VulnerableComponent],
     id                        : String,
     score                     : Option[Double],
     description               : String,
@@ -86,9 +107,11 @@ object DistinctVulnerability {
 
   val apiFormat: OFormat[DistinctVulnerability] = {
     implicit val csf = CurationStatus.format
+    implicit val vcf = VulnerableComponent.format
 
     ( (__ \ "vulnerableComponentName"     ).format[String]
       ~ (__ \ "vulnerableComponentVersion").format[String]
+      ~ (__ \ "vulnerableComponents"      ).format[Seq[VulnerableComponent]]
       ~ (__ \ "id"                        ).format[String]
       ~ (__ \ "score"                     ).formatNullable[Double]
       ~ (__ \ "description"               ).format[String]
