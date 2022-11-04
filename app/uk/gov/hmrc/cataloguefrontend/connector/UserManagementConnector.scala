@@ -102,7 +102,11 @@ case class UserManagementConnector @Inject() (
             Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
         }
     } yield resp
-  }.recover { case _ => Left(UMPError.ConnectionError("Failed to login to UMP"))}
+  }.recover {
+    case ex =>
+      logger.error(s"Failed to login to UMP", ex)
+      Left(UMPError.ConnectionError(s"Failed to login to UMP: ${ex.getMessage}"))
+  }
 
   def getAllUsersFromUMP(implicit hc: HeaderCarrier): Future[Either[UMPError, Seq[TeamMember]]] = {
     val url = url"$userManagementBaseUrl/v2/organisations/users"
@@ -127,7 +131,11 @@ case class UserManagementConnector @Inject() (
             Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
         }
     } yield resp
-  }.recover { case _ => Left(UMPError.ConnectionError("Failed to login to UMP"))}
+  }.recover {
+    case ex =>
+      logger.error(s"Failed to login to UMP", ex)
+      Left(UMPError.ConnectionError(s"Failed to login to UMP: ${ex.getMessage}"))
+  }
 
   def getTeamDetails(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Either[UMPError, TeamDetails]] = {
     val url = url"$userManagementBaseUrl/v2/organisations/teams/${teamName.asString}"
@@ -155,7 +163,11 @@ case class UserManagementConnector @Inject() (
             Left (UMPError.ConnectionError (s"Could not connect to $url: ${ex.getMessage}"))
         }
     } yield resp
-  }.recover { case _ => Left(UMPError.ConnectionError("Failed to login to UMP"))}
+  }.recover {
+    case ex =>
+      logger.error(s"Failed to login to UMP", ex)
+      Left(UMPError.ConnectionError(s"Failed to login to UMP: ${ex.getMessage}"))
+  }
 }
 
 object UserManagementConnector {
