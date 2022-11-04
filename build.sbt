@@ -10,7 +10,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
   .settings(publishingSettings: _*)
   .settings(
     majorVersion := 4,
-    scalaVersion := "2.13.9",
+    scalaVersion := "2.13.10",
     scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
@@ -31,7 +31,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "7.10.0"
+val bootstrapPlayVersion = "7.11.0"
 val hmrcMongoVersion     = "0.73.0"
 
 val compile = Seq(
