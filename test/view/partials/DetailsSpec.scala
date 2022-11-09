@@ -18,9 +18,7 @@ package view.partials
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
-import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
-import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, RouteRulesConnector}
 
 import java.time.Instant
 
@@ -41,10 +39,10 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     defaultBranch  = "main"
   )
 
-  val environmentRoute = EnvironmentRoute(
+  val environmentRoute = RouteRulesConnector.EnvironmentRoute(
     environment = "EnvName",
-    routes      = Seq(RouteRulesService.Route("TestUrl0", "TestUrl0", "ruleConfigurationUrl0"),
-                      RouteRulesService.Route("TestUrl1", "TestUrl1", "ruleConfigurationUrl1"))
+    routes      = Seq(RouteRulesConnector.Route("TestUrl0", "ruleConfigurationUrl0"),
+                      RouteRulesConnector.Route("TestUrl1", "ruleConfigurationUrl1"))
   )
 
   "details" should {

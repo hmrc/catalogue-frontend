@@ -18,30 +18,30 @@ package view.partials
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
-import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{EnvironmentRoute, Route}
+import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 
 class ServiceRouteRuleViolationsSpec extends AnyWordSpec with Matchers {
 
   val misMatchedServiceRoutes = ServiceRoutes(Seq(
     EnvironmentRoute(
       environment = "EnvName0",
-      routes      = Seq(RouteRulesService.Route("TestUrl0", "TestUrl0", "ruleConfigurationUrl0"))
+      routes      = Seq(Route("TestUrl0", "ruleConfigurationUrl0"))
     ),
     EnvironmentRoute(
       environment = "EnvName1",
-      routes      = Seq(RouteRulesService.Route("TestUrl1", "TestUrl1", "ruleConfigurationUrl1"))
+      routes      = Seq(Route("TestUrl1", "ruleConfigurationUrl1"))
     )
   ))
 
   val matchingServiceRoutes = ServiceRoutes(Seq(
     EnvironmentRoute(
       environment = "EnvName0",
-      routes      = Seq(RouteRulesService.Route("TestUrl0", "TestUrl0", "ruleConfigurationUrl0"))
+      routes      = Seq(Route("TestUrl0", "ruleConfigurationUrl0"))
     ),
     EnvironmentRoute(
       environment = "EnvName1",
-      routes      = Seq(RouteRulesService.Route("TestUrl0", "TestUrl0", "ruleConfigurationUrl1"))
+      routes      = Seq(Route("TestUrl0", "ruleConfigurationUrl1"))
     )
   ))
 

@@ -14,14 +14,14 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.EnvironmentRoute
+ @import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.EnvironmentRoute
 
-@(environmentRoute: EnvironmentRoute)
+@(environmentRoute: EnvironmentRoute, isAdmin: Boolean)
 @defining(environmentRoute.routes.size > 3) { collapsable =>
     <div id="service-urls-section" class="board">
         <h3 class="board__heading" id="headingRSU">
             <div class="@if(collapsable){accordion-toggle collapsed}" data-toggle="@if(collapsable) {collapse}" data-target="#collapseRSU" aria-expanded="@if(collapsable) {false} else {true}" aria-controls="collapseRSU">
-                Frontend Routing Configuration
+                @if(isAdmin) { Admin } Frontend Routing Configuration
             </div>
         </h3>
         <div class="board__body">

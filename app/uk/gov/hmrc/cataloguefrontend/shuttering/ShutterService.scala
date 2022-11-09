@@ -148,7 +148,7 @@ class ShutterService @Inject() (
 
   def lookupShutterRoute(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[String]] =
     for {
-      baseRoutes      <- routeRulesConnector.serviceRoutes(serviceName)
+      baseRoutes      <- routeRulesConnector.frontendRoutes(serviceName)
       optFrontendPath =  for {
                            envRoute      <- baseRoutes.find(_.environment == env.asString).map(_.routes)
                            frontendRoute <- envRoute.find(_.isRegex == false)
