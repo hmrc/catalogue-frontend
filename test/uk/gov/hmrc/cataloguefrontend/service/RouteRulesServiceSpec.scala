@@ -18,7 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, ServiceRoutes}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{EnvironmentRoute, Route}
+import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 
 class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
@@ -30,10 +31,10 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
     "determine if there is inconsistency in the public URL rules" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", Seq(RouteRulesService.Route("frontendPath", "backendPath", "ruleConfigurationUrl"))),
+        EnvironmentRoute("production", Seq(Route("frontendPath", "ruleConfigurationUrl"))),
         EnvironmentRoute("qa",
-          Seq(RouteRulesService.Route("frontendPath", "backendPathQa", "ruleConfigurationUrlQa"),
-          RouteRulesService.Route("inconsistent", "backendPathQa", "ruleConfigurationUrlQa")))
+          Seq(Route("frontendPath", "ruleConfigurationUrlQa"),
+          Route("inconsistent", "ruleConfigurationUrlQa")))
       )
 
       val inconsistentRoutes = ServiceRoutes(environmentRoutes).inconsistentRoutes
@@ -46,13 +47,13 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
     "determine if there is inconsistency with public URL rules when duplicates exist" in {
       val environmentRoutes = Seq(
         EnvironmentRoute("production", Seq(
-          RouteRulesService.Route("frontendPathOne", "backendPathOne", "ruleConfigurationUrlOne"),
-          RouteRulesService.Route("frontendPathTwo", "backendPathTwo", "ruleConfigurationUrlTwo")
+          Route("frontendPathOne", "ruleConfigurationUrlOne"),
+          Route("frontendPathTwo", "ruleConfigurationUrlTwo")
         )),
         EnvironmentRoute("qa", Seq(
-          RouteRulesService.Route("frontendPathOne", "backendPathOne", "ruleConfigurationUrlOne"),
-          RouteRulesService.Route("frontendPathTwo", "backendPathTwo", "ruleConfigurationUrlTwo"),
-          RouteRulesService.Route("frontendPathTwo", "backendPathTwo", "ruleConfigurationUrlTwo")
+          Route("frontendPathOne", "ruleConfigurationUrlOne"),
+          Route("frontendPathTwo", "ruleConfigurationUrlTwo"),
+          Route("frontendPathTwo", "ruleConfigurationUrlTwo")
         ))
       )
 
@@ -64,12 +65,12 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
     "determine if there is consistency with public URL rules" in {
       val environmentRoutes = Seq(
         EnvironmentRoute("production", Seq(
-          RouteRulesService.Route("frontendPathOne", "backendPathOne", "ruleConfigurationUrlOne"),
-          RouteRulesService.Route("frontendPathTwo", "backendPathTwo", "ruleConfigurationUrlTwo")
+          Route("frontendPathOne", "ruleConfigurationUrlOne"),
+          Route("frontendPathTwo", "ruleConfigurationUrlTwo")
         )),
         EnvironmentRoute("qa", Seq(
-          RouteRulesService.Route("frontendPathOne", "backendPathOne", "ruleConfigurationUrlOne"),
-          RouteRulesService.Route("frontendPathTwo", "backendPathTwo", "ruleConfigurationUrlTwo")
+          Route("frontendPathOne", "ruleConfigurationUrlOne"),
+          Route("frontendPathTwo", "ruleConfigurationUrlTwo")
         ))
       )
 
@@ -87,8 +88,8 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
     "Production environment route is default reference route" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", Seq(RouteRulesService.Route("frontendPath", "backendPath", "ruleConfigurationUrl"))),
-        EnvironmentRoute("qa", Seq(RouteRulesService.Route("inconsistent", "backendPath", "ruleConfigurationUrl")))
+        EnvironmentRoute("production", Seq(Route("frontendPath", "ruleConfigurationUrl"))),
+        EnvironmentRoute("qa", Seq(Route("inconsistent", "ruleConfigurationUrl")))
       )
 
       ServiceRoutes(environmentRoutes).referenceEnvironmentRoutes.isDefined shouldBe true
@@ -96,8 +97,8 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
     "Next environment route is reference when no production" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("development", Seq(RouteRulesService.Route("frontendPath", "backendPath", "ruleConfigurationUrl"))),
-        EnvironmentRoute("qa", Seq(RouteRulesService.Route("inconsistent", "backendPath", "ruleConfigurationUrl")))
+        EnvironmentRoute("development", Seq(Route("frontendPath", "ruleConfigurationUrl"))),
+        EnvironmentRoute("qa", Seq(Route("inconsistent", "ruleConfigurationUrl")))
       )
 
       ServiceRoutes(environmentRoutes).referenceEnvironmentRoutes.isDefined shouldBe true

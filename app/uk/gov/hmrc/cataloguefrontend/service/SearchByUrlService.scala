@@ -76,7 +76,6 @@ class SearchByUrlService @Inject() (
 object SearchByUrlService {
   case class FrontendRoute(
     frontendPath        : String,
-    backendPath         : String,
     ruleConfigurationUrl: String = "",
     isRegex             : Boolean = false
   )

@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.EnvironmentRoute
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,15 +29,10 @@ class RouteRulesService @Inject() (
   import RouteRulesService._
 
   def serviceRoutes(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRoutes] =
-    routeRulesConnector.serviceRoutes(serviceName).map(environmentRoutes => ServiceRoutes(environmentRoutes))
-
-  def serviceUrl(serviceName: String, environment: String = "production")(implicit hc: HeaderCarrier): Future[Option[EnvironmentRoute]] =
-    routeRulesConnector
-      .serviceRoutes(serviceName)
-      .map(environmentRoutes =>
-        environmentRoutes
-          .find(environmentRoute => environmentRoute.environment == environment)
-      )
+    for {
+      a <- routeRulesConnector.frontendRoutes(serviceName)
+      b <- routeRulesConnector.adminFrontendRoutes(serviceName)
+    } yield ServiceRoutes(a ++ b)
 }
 
 @Singleton
@@ -77,21 +73,4 @@ object RouteRulesService {
 
     val isDefined: Boolean = environmentRoutes.nonEmpty
   }
-
-  case class EnvironmentRoute(
-    environment: String,
-    routes     : Seq[Route]
-  )
-
-  case class Route(
-    frontendPath        : String,
-    backendPath         : String,
-    ruleConfigurationUrl: String,
-    isRegex             : Boolean = false
-  )
-
-  case class EnvironmentUrl(
-    environment: String,
-    url        : String
-  )
 }

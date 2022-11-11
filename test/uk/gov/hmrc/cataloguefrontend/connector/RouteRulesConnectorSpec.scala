@@ -21,7 +21,6 @@ import org.mockito.MockitoSugar
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.{EnvironmentRoute, Route}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -52,24 +51,23 @@ class RouteRulesConnectorSpec
           .willReturn(aResponse().withBody("""[
             { "environment": "prod",
               "routes": [
-                {"frontendPath": "fp", "backendPath": "bp", "ruleConfigurationUrl": "rcu", "isRegex": false}
+                {"frontendPath": "fp", "ruleConfigurationUrl": "rcu", "isRegex": false}
               ]
             }
           ]"""))
       )
 
-      connector.serviceRoutes("service1").futureValue shouldBe Seq(
+      import RouteRulesConnector.{EnvironmentRoute, Route}
+      connector.frontendRoutes("service1").futureValue shouldBe Seq(
         EnvironmentRoute(
-          environment = "prod",
-          routes      = Seq(
-            Route(
-              frontendPath         = "fp",
-              backendPath          = "bp",
-              ruleConfigurationUrl = "rcu",
-              isRegex              = false
-            )
-          ))
-      )
+          environment = "prod"
+        , routes      = Route(
+                          frontendPath         = "fp"
+                        , ruleConfigurationUrl = "rcu"
+                        , isRegex              = false
+                        ) :: Nil
+        , isAdmin = false
+      ))
 
       wireMockServer.verify(
         getRequestedFor(urlPathEqualTo("/frontend-route/service1"))

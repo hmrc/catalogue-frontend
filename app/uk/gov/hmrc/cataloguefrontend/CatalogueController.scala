@@ -184,7 +184,6 @@ class CatalogueController @Inject() (
                               }.map(_.collect { case Some(v) => v }.toMap)
       latestRepoModules    <- serviceDependenciesConnector.getRepositoryModules(repositoryName)
       urlIfLeaksFound      <- leakDetectionService.urlIfLeaksFound(repositoryName)
-      serviceUrl           <- routeRulesService.serviceUrl(serviceName)
       serviceRoutes        <- routeRulesService.serviceRoutes(serviceName)
       optLatestServiceInfo <- serviceDependenciesConnector.getSlugInfo(repositoryName)
       costEstimate         <- costEstimationService.estimateServiceCost(repositoryName, Environment.values, serviceCostEstimateConfig)
@@ -215,7 +214,6 @@ class CatalogueController @Inject() (
       repositoryCreationDate       = repositoryDetails.createdDate,
       envDatas                     = optLatestData.fold(envDatas)(envDatas + _),
       linkToLeakDetection          = urlIfLeaksFound,
-      productionEnvironmentRoute   = serviceUrl,
       serviceRoutes                = serviceRoutes,
       hasBranchProtectionAuth      = hasBranchProtectionAuth,
       commenterReport              = commenterReport,
