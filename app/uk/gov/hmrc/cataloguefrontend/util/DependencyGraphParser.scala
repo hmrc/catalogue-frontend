@@ -23,8 +23,8 @@ import scala.annotation.tailrec
 object DependencyGraphParser {
 
   def parse(input: String): DependencyGraph = {
-    val graph = lexer(input.split("\n"))
-      .foldLeft(DependencyGraph.empty) { (graph, t)  =>
+    val graph = lexer(input.split("\n").toIndexedSeq)
+      .foldLeft(DependencyGraphWithEvictions.empty) { (graph, t)  =>
         t match {
           case n: Node     => graph.copy(nodes     = graph.nodes      + n)
           case a: Arrow    => graph.copy(arrows    = graph.arrows     + a)
@@ -35,20 +35,18 @@ object DependencyGraphParser {
     // maven generated digraphs don't add nodes, but the main dependency is named the same as the digraph
     if (graph.nodes.isEmpty) {
       val nodesFromRoot = graph.arrows.map(_.to) ++ graph.arrows.map(_.from)
-      graph.copy(nodes = nodesFromRoot)
-    } else {
-      graph
-    }
+      graph.copy(nodes = nodesFromRoot).applyEvictions
+    } else
+      graph.applyEvictions
   }
 
   private val eviction     = """\s*"(.+)" -> "(.+)" \[(.+)\]\s*""".r
   private val arrow        = """\s*"(.+)" -> "(.+)"\s*;?\s*""".r
   private val node         = """\s*"(.+)"\[(.+)\]\s*""".r
-  private val styleEvicted = "stroke-dasharray"
 
   private def lexer(lines: Seq[String]): Seq[Token] =
     lines.flatMap {
-      case node(n, style) if !style.contains(styleEvicted) => Some(Node(n)) // drops evicted nodes
+      case node(n, _)        => Some(Node(n))
       case arrow(a, b)       => Some(Arrow(Node(a), Node(b)))
       case eviction(a, b, r) => Some(Eviction(Node(a), Node(b), r))
       case _                 => None
@@ -78,12 +76,35 @@ object DependencyGraphParser {
 
   case class Eviction(old: Node, by: Node, reason: String) extends Token
 
-  case class DependencyGraph(
+  // This is the uninterpretted graph data
+  // call `applyEvictions` to filter evicted nodes out
+  case class DependencyGraphWithEvictions(
     nodes    : Set[Node],
     arrows   : Set[Arrow],
     evictions: Set[Eviction]
   ) {
+    def applyEvictions: DependencyGraph = {
+      val evictedNodes = evictions.map(_.old)
+      DependencyGraph(
+        nodes  = nodes.filterNot(n => evictedNodes.contains(n)),
+        arrows = arrows.filterNot(a => evictedNodes.contains(a.from) || evictedNodes.contains(a.to))
+      )
+    }
+  }
 
+  object DependencyGraphWithEvictions {
+    def empty: DependencyGraphWithEvictions =
+      DependencyGraphWithEvictions(
+        nodes     = Set.empty,
+        arrows    = Set.empty,
+        evictions = Set.empty
+      )
+  }
+
+  case class DependencyGraph(
+    nodes : Set[Node],
+    arrows: Set[Arrow]
+  ) {
     def dependencies: Seq[ServiceDependency] =
       nodes.toSeq.map(_.asServiceDependency)
 
@@ -112,9 +133,8 @@ object DependencyGraphParser {
   object DependencyGraph {
     def empty: DependencyGraph =
       DependencyGraph(
-        nodes     = Set.empty,
-        arrows    = Set.empty,
-        evictions = Set.empty
+        nodes  = Set.empty,
+        arrows = Set.empty
       )
   }
 }
