@@ -423,6 +423,17 @@ object EnableBranchProtection {
     )
 }
 
+object ChangePrototypePassword {
+
+  final case class HasAuthorisation(value: Boolean) extends AnyVal
+
+  def permission(repoName: String): Permission =
+    Predicate.Permission(
+      Resource.from("catalogue-repository", repoName),
+      IAAction("CHANGE_PROTOTYPE_PASSWORD")
+    )
+}
+
 case class DefaultBranchesFilter(
    name           : Option[String] = None,
    teamNames      : Option[String] = None,

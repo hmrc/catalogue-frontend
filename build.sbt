@@ -43,7 +43,8 @@ val compile = Seq(
   "org.yaml"                  %  "snakeyaml"                    % "1.27",
   "org.apache.httpcomponents" %  "httpclient"                   % "4.5.13",
   "com.github.tototoshi"      %% "scala-csv"                    % "1.3.6",
-  "org.planet42"              %% "laika-core"                   % "0.15.0"
+  "org.planet42"              %% "laika-core"                   % "0.15.0",
+  "software.amazon.awssdk"    %  "auth"                         % "2.18.21"
 )
 
 val test = Seq(
