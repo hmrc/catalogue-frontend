@@ -48,19 +48,11 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
           |    "io.methvin:directory-watcher:0.10.1" -> "net.java.dev.jna:jna:5.6.0"""".stripMargin
       ).arrows shouldBe Set(
         Arrow(Node("uk.gov.hmrc:sbt-auto-build:2.13.0"), Node("org.yaml:snakeyaml:1.25")),
-        Arrow(Node("io.methvin:directory-watcher:0.10.1"), Node("net.java.dev.jna:jna:5.6.0")))
-    }
-
-    "Drops nodes with a style tag indicating they've been evicted" in {
-      DependencyGraphParser
-        .parse(
-          """"com.typesafe:config:1.4.1"[label=<com.typesafe<BR/><B>config</B><BR/>1.4.1> style="stroke-dasharray: 5,5"]
-            |"org.yaml:snakeyaml:1.25"[label=<org.yaml<BR/><B>snakeyaml</B><BR/>1.25> style=""]""".stripMargin)
-        .nodes shouldBe Set(Node("org.yaml:snakeyaml:1.25"))
+        Arrow(Node("io.methvin:directory-watcher:0.10.1"), Node("net.java.dev.jna:jna:5.6.0"))
+      )
     }
 
     "Separates direct dependencies from transitive ones" in {
-
       val root = ServiceDependency("foo", "root", "1.0.0")
       val bar = ServiceDependency("foo", "bar", "1.0.0")
       val baz = ServiceDependency("foo", "baz", "0.1.1")
@@ -160,7 +152,6 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
     }
 
     "Should be able to separate maven generated transitive dependencies from direct ones" in {
-
       val emcs = ServiceDependency("uk.gov.hmrc.jdc", "emcs", "3.226.0")
       val reauthenticationClientApp = ServiceDependency("uk.gov.hmrc.portal", "reauthentication-client-app", "2.2.0")
       val reauthdecrypt = ServiceDependency("uk.gov.hmrc.portal", "reauthdecrypt", "3.3.0")
@@ -207,6 +198,5 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
         ServiceDependency("uk.gov.hmrc.jdc", "platops-example-classic-service-business", "0.53.0"),
       )
     }
-
   }
 }
