@@ -17,21 +17,54 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Format, __}
+import play.api.libs.json.{Format, Json, __}
 import com.google.inject.{Inject, Singleton}
 import play.api.Logging
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{ChangePrototypePasswordRequest, ChangePrototypePasswordResponse}
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
+import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 
+import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 @Singleton
-class BuildDeployApiConnector @Inject() (httpClientV2: HttpClientV2, awsCredentialsProvider: AwsCredentialsProvider, config: BuildDeployApiConfig)(implicit ec: ExecutionContext)
-    extends Logging {
+class BuildDeployApiConnector @Inject() (
+                                          httpClientV2: HttpClientV2,
+                                          awsCredentialsProvider: AwsCredentialsProvider,
+                                          config: BuildDeployApiConfig
+                                        )(implicit ec: ExecutionContext) extends Logging {
 
-  def changePrototypePassword(payload: ChangePrototypePasswordRequest): Future[ChangePrototypePasswordResponse] = ???
+  private implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  def changePrototypePassword(payload: ChangePrototypePasswordRequest): Future[ChangePrototypePasswordResponse] = {
+    val url = url"${config.baseUrl}/v1/SetHerokuPrototypePassword"
+
+    val body = Json.toJson(payload)
+
+    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
+      .getSignedHeaders(
+        uri = url.getPath,
+        method = "POST",
+        queryParams = Map.empty[String, String],
+        headers = Map[String, String]("host" -> config.host),
+        payload = Some(Json.toBytes(body))
+      )
+
+    httpClientV2
+      .post(url)
+      .withBody(body)
+      .setHeader(headers.toSeq: _*)
+      .execute[ChangePrototypePasswordResponse]
+      .recoverWith {
+        case NonFatal(e) =>
+          logger.error("Unexpected response from Build & Deploy.", e)
+          Future.successful(ChangePrototypePasswordResponse(success = false, e.getMessage))
+      }
+  }
 
 }
 
@@ -39,7 +72,7 @@ object BuildDeployApiConnector {
   final case class ChangePrototypePasswordRequest(appName: String, password: String)
 
   object ChangePrototypePasswordRequest {
-    val format: Format[ChangePrototypePasswordRequest] =
+    implicit val format: Format[ChangePrototypePasswordRequest] =
       ( (__ \ "app_name").format[String]
       ~ (__ \ "password").format[String]
       ) (ChangePrototypePasswordRequest.apply, unlift(ChangePrototypePasswordRequest.unapply))
@@ -48,9 +81,10 @@ object BuildDeployApiConnector {
   final case class ChangePrototypePasswordResponse(success: Boolean, message: String)
 
   object ChangePrototypePasswordResponse {
-    val format: Format[ChangePrototypePasswordResponse] =
+    implicit val format: Format[ChangePrototypePasswordResponse] =
       ( (__ \ "success").format[Boolean]
       ~ (__ \ "message").format[String]
       ) (ChangePrototypePasswordResponse.apply, unlift(ChangePrototypePasswordResponse.unapply))
   }
+
 }
