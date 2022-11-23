@@ -18,6 +18,7 @@ GET        /service/:name/config/raw                    uk.gov.hmrc.cataloguefro
 GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.CatalogueController.costEstimation(name)
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
+POST       /prototype/:name/change-password             uk.gov.hmrc.cataloguefrontend.CatalogueController.changePrototypePassword(name)
 GET        /dependency-repository                       uk.gov.hmrc.cataloguefrontend.CatalogueController.dependencyRepository(group, artefact, version)
 
 GET        /defaultbranch                               uk.gov.hmrc.cataloguefrontend.CatalogueController.allDefaultBranches(singleOwnership: Boolean ?= false, includeArchived: Boolean ?= false)

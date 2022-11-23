@@ -18,13 +18,15 @@ package uk.gov.hmrc.cataloguefrontend
 
 import cats.data.OptionT
 import cats.implicits._
-import play.api.data.Form
+import play.api.data.{Form, Forms}
 import play.api.data.Forms._
+import play.api.data.validation.Constraints
 import play.api.i18n.Messages
 import play.api.mvc._
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.ChangePrototypePasswordRequest
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
@@ -70,6 +72,7 @@ class CatalogueController @Inject() (
   prCommenterConnector         : PrCommenterConnector,
   vulnerabilitiesConnector     : VulnerabilitiesConnector,
   confluenceConnector          : ConfluenceConnector,
+  buildDeployApiConnector      : BuildDeployApiConnector,
   indexPage                    : IndexPage,
   serviceInfoPage              : ServiceInfoPage,
   serviceConfigPage            : ServiceConfigPage,
@@ -263,6 +266,37 @@ class CatalogueController @Inject() (
       .verify(Retrieval.hasPredicate(EnableBranchProtection.permission(repoName)))
       .map(r => EnableBranchProtection.HasAuthorisation(r.getOrElse(false)))
 
+  def changePrototypePassword(repoName: String) =
+    auth
+      .authorizedAction(
+        continueUrl = routes.CatalogueController.repository(repoName),
+        predicate = ChangePrototypePassword.permission(repoName)
+      ).async { implicit request =>
+      for {
+        hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(repoName)
+        result <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(repoName))
+//          .foldF(Future.successful(notFound)) { repoDetails => // requires implicit messages for notFound
+          .foldF(Future.successful(Redirect(routes.CatalogueController.repository(repoName)))) { repoDetails =>
+            ChangePrototypePassword
+              .form()
+              .bindFromRequest()
+              .fold(
+                formWithErrors => renderPrototype(repoDetails, hasBranchProtectionAuth, formWithErrors),
+                password => buildDeployApiConnector
+                  .changePrototypePassword(ChangePrototypePasswordRequest(repoName, password.value))
+                  .flatMap( _ => renderPrototype(repoDetails, hasBranchProtectionAuth))
+              )
+          }
+      } yield result
+    }
+
+  private def hasChangePrototypePasswordAuthorisation(repoName: String)(
+    implicit hc: HeaderCarrier
+  ): Future[ChangePrototypePassword.HasAuthorisation] =
+    auth
+      .verify(Retrieval.hasPredicate(ChangePrototypePassword.permission(repoName)))
+      .map(r => ChangePrototypePassword.HasAuthorisation(r.getOrElse(false)))
+
   def renderLibrary(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
@@ -289,16 +323,20 @@ class CatalogueController @Inject() (
 
   private def renderPrototype(
     repoDetails            : GitRepository,
-    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
+    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
+    form: Form[_] = ChangePrototypePassword.form()
   )(implicit request: Request[_]): Future[Result] =
     for {
       urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
       commenterReport <- prCommenterConnector.report(repoDetails.name)
+      hasPasswordChangeAuth <- hasChangePrototypePasswordAuthorisation(repoDetails.name)
     } yield
       Ok(prototypeInfoPage(
         repoDetails,
         urlIfLeaksFound,
         hasBranchProtectionAuth,
+        hasPasswordChangeAuth,
+        form,
         commenterReport
       ))
 
@@ -427,10 +465,19 @@ object ChangePrototypePassword {
 
   final case class HasAuthorisation(value: Boolean) extends AnyVal
 
+  final case class PrototypePassword(value: String) extends AnyVal
+
   def permission(repoName: String): Permission =
     Predicate.Permission(
       Resource.from("catalogue-repository", repoName),
       IAAction("CHANGE_PROTOTYPE_PASSWORD")
+    )
+
+  def form(): Form[PrototypePassword] =
+    Form(
+      Forms.mapping(
+        "password" -> Forms.nonEmptyText.verifying(Constraints.pattern("^[A-Za-z0-9_]+$".r))
+      )(PrototypePassword.apply)(PrototypePassword.unapply)
     )
 }
 

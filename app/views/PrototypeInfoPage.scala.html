@@ -21,12 +21,15 @@
 @import play.twirl.api.Html
 @import views.partials.githubBadgeType
 @import partials.PrototypeDetailsPartial
+@import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword
 
 @this(prototypeDetailsPartial: PrototypeDetailsPartial, viewMessages: ViewMessages)
 
 @(prototype              : GitRepository,
   linkToLeakDetection    : Option[String],
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
+  hasPasswordChangeAuth  : ChangePrototypePassword.HasAuthorisation,
+  form                   : Form[_],
   commenterReport        : Option[PrCommenterReport]
 )(implicit
   request: Request[_]
@@ -63,6 +66,14 @@
                 @partials.code(prototype, hasBranchProtectionAuth, commenterReport, None)
             </div>
         </div>
+
+        @if(hasPasswordChangeAuth.value) {
+            <div class="row">
+                <div class="col-md-6">
+                    @partials.change_prototype_password(prototype, form)
+                </div>
+            </div>
+        }
     </section>
 
     <div class="alert alert-success" role="alert" id="@prototype.name">
