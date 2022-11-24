@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// Inspired by: https://github.com/ticofab/aws-request-signer
+
 package uk.gov.hmrc.cataloguefrontend.connector.signer
 
 import software.amazon.awssdk.auth.credentials.{AwsCredentials, AwsCredentialsProvider, AwsSessionCredentials}

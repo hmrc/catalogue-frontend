@@ -41,7 +41,12 @@ class BuildDeployApiConnector @Inject() (
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   def changePrototypePassword(payload: ChangePrototypePasswordRequest): Future[ChangePrototypePasswordResponse] = {
-    val url = url"${config.baseUrl}/v1/SetHerokuPrototypePassword"
+    implicit val requestFormat: Format[ChangePrototypePasswordRequest] = ChangePrototypePasswordRequest.format
+    implicit val responseFormat: Format[ChangePrototypePasswordResponse] = ChangePrototypePasswordResponse.format
+
+    val queryParams = Map.empty[String, String]
+
+    val url = url"${config.baseUrl}/v1/SetHerokuPrototypePassword?$queryParams"
 
     val body = Json.toJson(payload)
 
@@ -49,7 +54,7 @@ class BuildDeployApiConnector @Inject() (
       .getSignedHeaders(
         uri = url.getPath,
         method = "POST",
-        queryParams = Map.empty[String, String],
+        queryParams = queryParams,
         headers = Map[String, String]("host" -> config.host),
         payload = Some(Json.toBytes(body))
       )
@@ -72,7 +77,7 @@ object BuildDeployApiConnector {
   final case class ChangePrototypePasswordRequest(appName: String, password: String)
 
   object ChangePrototypePasswordRequest {
-    implicit val format: Format[ChangePrototypePasswordRequest] =
+    val format: Format[ChangePrototypePasswordRequest] =
       ( (__ \ "app_name").format[String]
       ~ (__ \ "password").format[String]
       ) (ChangePrototypePasswordRequest.apply, unlift(ChangePrototypePasswordRequest.unapply))
@@ -81,7 +86,7 @@ object BuildDeployApiConnector {
   final case class ChangePrototypePasswordResponse(success: Boolean, message: String)
 
   object ChangePrototypePasswordResponse {
-    implicit val format: Format[ChangePrototypePasswordResponse] =
+    val format: Format[ChangePrototypePasswordResponse] =
       ( (__ \ "success").format[Boolean]
       ~ (__ \ "message").format[String]
       ) (ChangePrototypePasswordResponse.apply, unlift(ChangePrototypePasswordResponse.unapply))

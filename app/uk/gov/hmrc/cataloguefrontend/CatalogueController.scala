@@ -21,7 +21,7 @@ import cats.implicits._
 import play.api.data.{Form, Forms}
 import play.api.data.Forms._
 import play.api.data.validation.Constraints
-import play.api.i18n.Messages
+import play.api.i18n.{I18nSupport, Messages}
 import play.api.mvc._
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -87,7 +87,8 @@ class CatalogueController @Inject() (
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders
+     with I18nSupport {
 
   private lazy val whatsNewDisplayLines  = configuration.get[Int]("whats-new.display.lines")
 
@@ -96,7 +97,7 @@ class CatalogueController @Inject() (
 
   private val logger = Logger(getClass)
 
-  private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
+  private def notFound(implicit request: Request[_]) = NotFound(error_404_template())
 
   def index(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
@@ -155,7 +156,6 @@ class CatalogueController @Inject() (
     repositoryDetails      : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   )(implicit
-    messages: Messages,
     request : Request[_]
   ): Future[Result] = {
     for {
@@ -275,8 +275,7 @@ class CatalogueController @Inject() (
       for {
         hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(repoName)
         result <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(repoName))
-//          .foldF(Future.successful(notFound)) { repoDetails => // requires implicit messages for notFound
-          .foldF(Future.successful(Redirect(routes.CatalogueController.repository(repoName)))) { repoDetails =>
+          .foldF(Future.successful(notFound)) { repoDetails =>
             ChangePrototypePassword
               .form()
               .bindFromRequest()
@@ -284,7 +283,7 @@ class CatalogueController @Inject() (
                 formWithErrors => renderPrototype(repoDetails, hasBranchProtectionAuth, formWithErrors),
                 password => buildDeployApiConnector
                   .changePrototypePassword(ChangePrototypePasswordRequest(repoName, password.value))
-                  .flatMap( _ => renderPrototype(repoDetails, hasBranchProtectionAuth))
+                  .flatMap( _ => renderPrototype(repoDetails, hasBranchProtectionAuth)) //TODO propagate result to the view to display success/failure msg
               )
           }
       } yield result
@@ -300,7 +299,7 @@ class CatalogueController @Inject() (
   def renderLibrary(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit messages: Messages, request: Request[_]): Future[Result] =
+  )(implicit request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
@@ -343,7 +342,7 @@ class CatalogueController @Inject() (
   private def renderOther(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit messages: Messages, request: Request[_]): Future[Result] =
+  )(implicit request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),

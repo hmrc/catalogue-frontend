@@ -32,7 +32,8 @@
   form                   : Form[_],
   commenterReport        : Option[PrCommenterReport]
 )(implicit
-  request: Request[_]
+  request: Request[_],
+  messages: Messages
 )
 
 @standard_layout(prototype.name, "prototypes") {

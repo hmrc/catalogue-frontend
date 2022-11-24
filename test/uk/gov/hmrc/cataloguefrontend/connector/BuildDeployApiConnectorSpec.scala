@@ -46,7 +46,8 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
   "changePrototypePassword" should {
     "return success=true when Build & Deploy respond with 200" in {
       val payload = ChangePrototypePasswordRequest("test", "newpassword")
-      val requestJson = Json.toJson(payload).toString()
+
+      val requestJson = """{ "app_name": "test", "password": "newpassword" }"""
 
       stubFor(
         post("/v1/SetHerokuPrototypePassword")
@@ -64,7 +65,8 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
     "return success=false when Build & Deploy respond with 400" in {
       val payload = ChangePrototypePasswordRequest("test", "p4$$w02d")
-      val requestJson = Json.toJson(payload).toString()
+
+      val requestJson = """{ "app_name": "test", "password": "p4$$w02d" }"""
 
       stubFor(
         post("/v1/SetHerokuPrototypePassword")
