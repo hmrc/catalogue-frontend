@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import com.github.tomakehurst.wiremock.client.WireMock.{postRequestedFor, urlPathEqualTo}
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
@@ -106,11 +107,10 @@ class PrototypePageSpec
         .post(Map("password" -> Seq("password")))
         .futureValue
 
-      wireMockServer.findAllUnmatchedRequests().forEach(u => println(s">>>> $u"))
-
-
       response.status shouldBe 200
       response.body should include("password-change-success-msg")
+
+      wireMockServer.verify(1, postRequestedFor(urlPathEqualTo("/v1/SetHerokuPrototypePassword")))
     }
 
     "display error message when password change failed downstream" in {
@@ -133,9 +133,6 @@ class PrototypePageSpec
         .withHttpHeaders("Csrf-Token" -> "nocheck", "Content-Type" -> "application/x-www-form-urlencoded")
         .post(Map("password" -> Seq("password")))
         .futureValue
-
-      wireMockServer.findAllUnmatchedRequests().forEach(u => println(s">>>> $u"))
-
 
       response.status shouldBe 400
       response.body should include("password-change-error-msg")
