@@ -286,8 +286,9 @@ class CatalogueController @Inject() (
                          )
         response    <- EitherT.liftF[Future, Result, ChangePrototypePasswordResponse](buildDeployApiConnector.changePrototypePassword(ChangePrototypePasswordRequest(repoName, newPassword)))
         form         = if(response.success) ChangePrototypePassword.form() else ChangePrototypePassword.form().withGlobalError(response.message)
-        result      <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, form ,Some(response.message)))
-       } yield Ok(result)
+        successMsg   = if(response.success) Some(response.message) else None
+        result      <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, form , successMsg))
+       } yield if(response.success) Ok(result) else BadRequest(result)
       ).merge
     }
 

@@ -75,7 +75,9 @@ trait FakeApplicationBuilder
           "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
           "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",
           "team.hideArchivedRepositories"                      -> true,
-          "metrics.jvm"                                        -> false
+          "metrics.jvm"                                        -> false,
+          "play.filters.csrf.header.bypassHeaders.X-Requested-With" -> "*",
+          "play.filters.csrf.header.bypassHeaders.Csrf-Token"  -> "nocheck"
         ))
       .build()
 
