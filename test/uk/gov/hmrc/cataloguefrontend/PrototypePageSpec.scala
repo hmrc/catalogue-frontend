@@ -50,5 +50,39 @@ class PrototypePageSpec
       response.body should include(createdAt.displayFormat)
       response.body should include(lastActiveAt.displayFormat)
     }
+
+    "show the reset password form when logged in user has permission" in {
+      setupChangePrototypePasswordAuthEndpoint(hasAuth = true)
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
+      serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(jenkinsBuildData)))
+      serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
+
+      val response = wsClient
+        .url(s"http://localhost:$port/repositories/2fa-prototype")
+        .withAuthToken("Token token")
+        .get()
+        .futureValue
+
+      response.status shouldBe 200
+      response.body   should include("password-reset")
+    }
+
+    "not show the reset password form when user does not have permission" in {
+      setupChangePrototypePasswordAuthEndpoint(hasAuth = false)
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
+      serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(jenkinsBuildData)))
+      serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
+
+      val response = wsClient
+        .url(s"http://localhost:$port/repositories/2fa-prototype")
+        .withAuthToken("Token token")
+        .get()
+        .futureValue
+
+      response.status shouldBe 200
+      response.body should not contain("password-reset")
+    }
   }
 }
