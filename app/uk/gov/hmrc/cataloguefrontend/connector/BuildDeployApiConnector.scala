@@ -27,6 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpReadsInstances, HttpResponse, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
