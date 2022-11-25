@@ -22,7 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import com.github.tomakehurst.wiremock.client.WireMock._
-import play.api.libs.json.Json
+import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{ChangePrototypePasswordRequest, ChangePrototypePasswordResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,7 +45,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
   "changePrototypePassword" should {
     "return success=true when Build & Deploy respond with 200" in {
-      val payload = ChangePrototypePasswordRequest("test", "newpassword")
+      val payload = ChangePrototypePasswordRequest("test", PrototypePassword("newpassword"))
 
       val requestJson = """{ "app_name": "test", "password": "newpassword" }"""
 
@@ -64,7 +64,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     }
 
     "return success=false when Build & Deploy respond with 400" in {
-      val payload = ChangePrototypePasswordRequest("test", "p4$$w02d")
+      val payload = ChangePrototypePasswordRequest("test", PrototypePassword("p4$$w02d"))
 
       val requestJson = """{ "app_name": "test", "password": "p4$$w02d" }"""
 

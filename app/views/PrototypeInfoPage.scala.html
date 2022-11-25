@@ -30,6 +30,7 @@
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   hasPasswordChangeAuth  : ChangePrototypePassword.HasAuthorisation,
   form                   : Form[_],
+  successMessage         : Option[String],
   commenterReport        : Option[PrCommenterReport]
 )(implicit
   request: Request[_],
@@ -71,7 +72,7 @@
         @if(hasPasswordChangeAuth.value) {
             <div class="row">
                 <div class="col-md-6">
-                    @partials.change_prototype_password(prototype, form)
+                    @partials.change_prototype_password(prototype, form, successMessage)
                 </div>
             </div>
         }

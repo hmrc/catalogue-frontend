@@ -17,19 +17,19 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Format, Json, __}
+import play.api.libs.json.{Json, Reads, Writes, __}
 import com.google.inject.{Inject, Singleton}
 import play.api.Logging
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpReadsInstances, HttpResponse, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
 
 @Singleton
 class BuildDeployApiConnector @Inject() (
@@ -41,8 +41,8 @@ class BuildDeployApiConnector @Inject() (
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   def changePrototypePassword(payload: ChangePrototypePasswordRequest): Future[ChangePrototypePasswordResponse] = {
-    implicit val requestFormat: Format[ChangePrototypePasswordRequest] = ChangePrototypePasswordRequest.format
-    implicit val responseFormat: Format[ChangePrototypePasswordResponse] = ChangePrototypePasswordResponse.format
+    implicit val rwr: Writes[ChangePrototypePasswordRequest] = ChangePrototypePasswordRequest.writes
+    implicit val rhr: HttpReads[ChangePrototypePasswordResponse] = ChangePrototypePasswordResponse.httpReads
 
     val queryParams = Map.empty[String, String]
 
@@ -64,32 +64,40 @@ class BuildDeployApiConnector @Inject() (
       .withBody(body)
       .setHeader(headers.toSeq: _*)
       .execute[ChangePrototypePasswordResponse]
-      .recoverWith {
-        case NonFatal(e) =>
-          logger.error("Unexpected response from Build & Deploy.", e)
-          Future.successful(ChangePrototypePasswordResponse(success = false, e.getMessage))
-      }
   }
 
 }
 
 object BuildDeployApiConnector {
-  final case class ChangePrototypePasswordRequest(appName: String, password: String)
+  final case class ChangePrototypePasswordRequest(appName: String, password: PrototypePassword)
 
   object ChangePrototypePasswordRequest {
-    val format: Format[ChangePrototypePasswordRequest] =
-      ( (__ \ "app_name").format[String]
-      ~ (__ \ "password").format[String]
-      ) (ChangePrototypePasswordRequest.apply, unlift(ChangePrototypePasswordRequest.unapply))
+    val writes: Writes[ChangePrototypePasswordRequest] =
+      ( (__ \ "app_name").write[String]
+      ~ (__ \ "password").write[String].contramap[PrototypePassword](_.value)
+      ) (unlift(ChangePrototypePasswordRequest.unapply))
   }
 
   final case class ChangePrototypePasswordResponse(success: Boolean, message: String)
 
   object ChangePrototypePasswordResponse {
-    val format: Format[ChangePrototypePasswordResponse] =
-      ( (__ \ "success").format[Boolean]
-      ~ (__ \ "message").format[String]
-      ) (ChangePrototypePasswordResponse.apply, unlift(ChangePrototypePasswordResponse.unapply))
+    private val reads: Reads[ChangePrototypePasswordResponse] =
+      ( (__ \ "success").read[Boolean]
+      ~ (__ \ "message").read[String]
+      ) (ChangePrototypePasswordResponse.apply _)
+
+    val httpReads: HttpReads[ChangePrototypePasswordResponse] =
+      implicitly[HttpReads[HttpResponse]]
+        .flatMap { response =>
+          response.status match {
+            case 400 =>
+              val msg: String = (response.json \ "message").as[String]
+              HttpReads.pure(ChangePrototypePasswordResponse(success = false, msg))
+            case _ =>
+              implicit val r: Reads[ChangePrototypePasswordResponse] = reads
+              HttpReadsInstances.readFromJson[ChangePrototypePasswordResponse]
+          }
+        }
   }
 
 }
