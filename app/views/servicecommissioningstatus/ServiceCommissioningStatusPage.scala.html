@@ -33,8 +33,6 @@
             <h1>Service Commissioning Status</h1>
         </header>
 
-
-
         @if(form.hasErrors) {
             <div class="alert alert-danger" role="alert">
                 <ul class="list">
@@ -56,280 +54,42 @@
             </form>
         </div>
 
+            @statusChecks.map { statusCheck =>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Status Check</th>
+                                    <th colspan="6">Service Commissioning Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>@simpleStatusCheck("Github Repo", statusCheck.hasRepo.evidence)</tr>
 
+                                <tr>@simpleStatusCheck("App Config Base", statusCheck.hasAppConfigBase.evidence)</tr>
 
-        <div class="row">
-            <div class="col-sm-8">
-                <table class="table table-striped table-condensed">
-                    <thead>
-                        <tr>
-                            <th class="col-lg-3">Commissioning Check</th>
-                            <th class="col-lg-2">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="list">
-                        @statusChecks.map { checks =>
-                            <tr>
-                                <td>Github Repository exists</td>
-                                <td>
-                                    @if(checks.hasRepo.status) {
-                                        <span class="glyphicon glyphicon-ok low"></span>
-                                        <a href="@checks.hasRepo.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                    } else {<span class="glyphicon glyphicon-minus high"></span>}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Service Manager Config is setup</td>
-                                <td>
-                                @if(checks.hasSMConfig.status) {
-                                    <span class="glyphicon glyphicon-ok low"></span>
-                                    <a href="@checks.hasSMConfig.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                } else {<span class="glyphicon glyphicon-minus high"></span>}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>App Config Base is setup</td>
-                                <td style="text-align: ">
-                                @if(checks.hasAppConfigBase.status) {
-                                    <span class="glyphicon glyphicon-ok low"></span>
-                                    <a href="@checks.hasAppConfigBase.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                } else {<span class="glyphicon glyphicon-minus high"></span>}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Frontend Routes are setup</td>
-                                <td>
-                                    <table>
-                                        <thead style="font-size: 85%">
-                                           <tr>
-                                           @checks.hasFrontendRoutes.asMap.map{ env =>
-                                                    <th class="col-xs-1" style="text-align: center">@env._1</th>
-                                                }
-                                            </tr>
-                                        </thead>
-                                        <tr>
-                                            @checks.hasAppConfigEnv.asMap.map { statusCheck =>
-                                                <td style="text-align: center">
-                                                    @if(statusCheck._2.status) {
-                                                        <span class="glyphicon glyphicon-ok low"></span>
-                                                        <a href="@statusCheck._2.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                                    } else {
-                                                        <span class="glyphicon glyphicon-minus high"></span>
-                                                </td>
-                                            }
-                                            }
-                                        </tr>
-                                    </table>
-                                    <!-- <ul class="list-unstyled">
-                                    @checks.hasFrontendRoutes.asMap.map { statusCheck =>
-                                            <li>
-                                                @if(statusCheck._2.status) {
-                                                    <span class="glyphicon glyphicon-ok low"></span>
-                                                    @statusCheck._1
-                                                    <a href="@statusCheck._2.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                                } else {
-                                                    <span class="glyphicon glyphicon-remove high"></span> @statusCheck._1
-                                                </li>
-                                            }
-                                    } -->
-                                </ul>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>App Config for Environment is setup</td>
-                                <td>
-                                    <table>
-                                        <thead style="font-size: 85%">
-                                            <tr>
-                                            @checks.hasAppConfigEnv.asMap.map{ env =>
-                                                <th class="col-xs-1" style="text-align: center">@env._1</th>
-                                            }
-                                            </tr>
-                                        </thead>
-                                        <tr>
-                                        @checks.hasAppConfigEnv.asMap.map { statusCheck =>
-                                            <td style="text-align: center">
-                                                @if(statusCheck._2.status) {
-                                                    <span class="glyphicon glyphicon-ok low"></span>
-                                                    <a href="@statusCheck._2.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                                } else {
-                                                    <span class="glyphicon glyphicon-minus high"></span>
-                                                </td>
-                                        }
-                                        }
-                                        </tr>
-                                    </table>
-                                    <!-- @checks.hasAppConfigEnv.asMap.map { statusCheck =>
-                                        <ul class="list-unstyled">
-                                            <li>
-                                                @if(statusCheck._2.status) {
-                                                    <span class="glyphicon glyphicon-ok low"></span> <a href="@statusCheck._2.evidence" target="_blank" rel="noopener noreferrer"> @statusCheck._1</a>
-                                                } else {
-                                                    <span class="glyphicon glyphicon-remove high"></span> @statusCheck._1
-                                                }
-                                    }</li>
-                                </ul> -->
+                                <tr>@environmentStatusCheck("App Config Environment", statusCheck.hasAppConfigEnv.asMap)</tr>
 
-                                </td>
-                            </tr>
-                        <tr>
-                            <td>Deployed in Environment</td>
-                            <td>
-                                <table>
-                                    <thead style="font-size: 85%">
-                                        <tr>
-                                        @checks.isDeployed.asMap.map{ env =>
-                                            <th class="col-xs-1" style="text-align: center">@env._1</th>
-                                        }
-                                        </tr>
-                                    </thead>
-                                    <tr>
-                                    @checks.isDeployed.asMap.map { statusCheck =>
-                                        <td style="text-align: center">
-                                            @if(statusCheck._2.status) {
-                                                <span class="glyphicon glyphicon-ok low"></span>
-                                                <a href="@statusCheck._2.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                            } else {
-                                                <span class="glyphicon glyphicon-minus high"></span>
-                                            </td>
-                                    }
-                                    }
-                                    </tr>
-                                </table>
+                                <tr>@environmentStatusCheck("Frontend Routes", statusCheck.hasFrontendRoutes.asMap)</tr>
 
+                                <tr>@simpleStatusCheck("Build Jobs", statusCheck.hasBuildJobs.evidence)</tr>
 
-                                <!-- <td>Deployed in Environment</td>
-                                <td>
-                                    @checks.isDeployed.asMap.map { statusCheck =>
-                                        <ul class="list-unstyled">
-                                            <li>
-                                                @if(statusCheck._2.status) {
-                                                    <span class="glyphicon glyphicon-ok low"></span><a href="@statusCheck._2.evidence" target="_blank" rel="noopener noreferrer"> @statusCheck._1</a>
-                                                } else {
-                                                    <span class="glyphicon glyphicon-remove high"></span> @statusCheck._1
-                                                }
-                                    }</li>
-                                </ul>
+                                <tr>@simpleStatusCheck("Service Manager Config", statusCheck.hasSMConfig.evidence)</tr>
 
-                                </td> -->
-                            </tr>
-                            <td>Dashboards are setup</td>
-                            <td>
-                                <table>
-                                    <thead style="font-size: 85%">
-                                        <th class="col-xs-1" style="text-align: center">Kibana</th>
-                                        <th class="col-xs-1" style="text-align: center">Grafana</th>
-                                    </thead>
-                                    <tr>
-                                        <td style="text-align: center">
-                                        @if(checks.hasDashboards.kibana.status) {
-                                            <span class="glyphicon glyphicon-ok low"></span><a href="@checks.hasDashboards.kibana.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                        } else {
-                                            <span class="glyphicon glyphicon-minus high"></span>
-                                        }
-                                        </td>
-                                        <td style="text-align: center">
-                                        @if(checks.hasDashboards.grafana.status) {
-                                            <span class="glyphicon glyphicon-ok low"></span><a href="@checks.hasDashboards.grafana.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                        } else {
-                                            <span class="glyphicon glyphicon-minus high"></span>
-                                        }
-                                        </td>
-                                    </tr>
-                                </table>
-                                <!-- <ul class="list-unstyled" style="margin-bottom: 0">
-                                    <li>
-                                    @if(checks.hasDashboards.kibana.status) {
-                                        <span class="glyphicon glyphicon-ok low"></span>Kibana<a href="@checks.hasDashboards.kibana.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                    } else {
-                                        <span class="glyphicon glyphicon-minus high"></span> Kibana
-                                    }
-                                    </li>
-                                    <li>
-                                    @if(checks.hasDashboards.grafana.status) {
-                                        <span class="glyphicon glyphicon-ok low"></span><a href="@checks.hasDashboards.grafana.evidence" target="_blank" rel="noopener noreferrer"> Grafana</a>
-                                    } else {
-                                        <span class="glyphicon glyphicon-minus high"></span> Grafana
-                                    }
-                                    </li>
-                                </ul> -->
-                            </td>
-                            <tr>
-                                <td>Build Jobs are setup</td>
-                                <td>
-                                @if(checks.hasBuildJobs.status) {
-                                    <span class="glyphicon glyphicon-ok low"></span>
-                                    <a href="@checks.hasBuildJobs.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                } else {
-                                    <span class="glyphicon glyphicon-minus high"></span>
-                                }
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Alerts are setup</td>
-                                <td>
-                                @if(checks.hasAlerts.status) {
-                                    <span class="glyphicon glyphicon-ok low"></span>
-                                    <a href="@checks.hasAlerts.evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
-                                } else {
-                                    <span class="glyphicon glyphicon-minus high"></span>
-                                }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-                }
-            </div>
-        </div>
+                                <tr>@environmentStatusCheck("Deployed", statusCheck.isDeployed.asMap)</tr>
 
-    @statusChecks.map { statusCheck =>
-        <div class="row">
-            <div class="col-sm-8">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Check</th>
-                            <th colspan="6" style="text-align: center">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            @simpleStatusCheck("Github Repo", statusCheck.hasRepo.evidence)
-                        </tr>
-                        <tr>
-                            @simpleStatusCheck("App Config Base", statusCheck.hasAppConfigBase.evidence)
-                        </tr>
-                        <tr>
-                            @environmentStatusCheck("App Config Environment", statusCheck.hasAppConfigEnv.asMap)
-                        </tr>
-                        <tr>
-                            <td>
-                                Environments
-                            </td>
+                                <tr>@simpleStatusCheck("Kibana", statusCheck.hasDashboards.grafana.evidence)</tr>
 
-                            @statusCheck.hasFrontendRoutes.asMap.map { env =>
-                            <td style="text-align: center">
-                                @if(env._2.status) {
-                                    <ul class="list-unstyled">
-                                        <li>@env._1</li>
-                                        <li><span class="glyphicon glyphicon-ok low"></span> <a href="@env._2.evidence" target="_blank" rel="noopener noreferrer"> [view]</a></li>
-                                    </ul>
-                                } else {
-                                    <ul class="list-unstyled">
-                                        <li>@env._1</li>
-                                        <li><span class="glyphicon glyphicon-minus archived"></span></li>
-                                    </ul>
-                                }
-                            }
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    }
+                                <tr>@simpleStatusCheck("Grafana", statusCheck.hasDashboards.grafana.evidence)</tr>
 
+                                <tr>@simpleStatusCheck("Alerts", statusCheck.hasAlerts.evidence)</tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+}
 
 @simpleStatusCheck(statusCheck: String, evidence: Option[String]) = {
     <td>@statusCheck</td>
@@ -337,14 +97,19 @@
     <td style="text-align: center">
         @evidence match {
             case Some(evidence) => {
-                <span class="glyphicon glyphicon-ok low"></span>
-                <a href="@evidence" target="_blank" rel="noopener noreferrer"> [view]</a>
+                <ul class="list-unstyled" style="margin-bottom: 0">
+                    <li><span class="glyphicon glyphicon-ok low"></span></li>
+                    <li><a href="@evidence" target="_blank" rel="noopener noreferrer">[view]</a></li>
+                </ul>
             }
             case None => {
                 <span class="glyphicon glyphicon-minus archived"></span>
             }
         }
     </td>
+    @for(x <- 1 to 5) {
+        <td></td>
+    }
 }
 
 @environmentStatusCheck(statusCheck: String, statusCheckMap: Map[Environment, StatusCheck]) = {
@@ -354,9 +119,9 @@
         <td style="text-align: center">
             @pair._2.evidence match {
                 case Some(evidence) => {
-                    <ul class="list-unstyled">
-                        <li>@pair._1</li>
-                        <li><span class="glyphicon glyphicon-ok low"></span> <a href="@evidence" target="_blank" rel="noopener noreferrer"> [view]</a></li>
+                    <ul class="list-unstyled" style="margin-bottom: 0">
+                        <li style="font-size: 85%">@pair._1</li>
+                        <li><span class="glyphicon glyphicon-ok low"></span> <a href="@evidence" target="_blank" rel="noopener noreferrer">[view]</a></li>
                     </ul>
                 }
                 case None => {
