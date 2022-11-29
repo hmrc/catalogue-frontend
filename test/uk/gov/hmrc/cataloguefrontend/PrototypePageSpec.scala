@@ -66,7 +66,7 @@ class PrototypePageSpec
         .futureValue
 
       response.status shouldBe 200
-      response.body   should include("password-reset")
+      response.body   should include("reset-password-enabled")
     }
 
     "not show the reset password form when user does not have permission" in {
@@ -83,7 +83,7 @@ class PrototypePageSpec
         .futureValue
 
       response.status shouldBe 200
-      response.body should not include("password-reset")
+      response.body should include("reset-password-disabled")
     }
 
     "display success message when password changed successfully" in {
@@ -93,10 +93,12 @@ class PrototypePageSpec
       serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
 
+      val expectedMsg: String = "password change success"
+
       serviceEndpoint(
         POST,
         "/v1/SetHerokuPrototypePassword",
-        willRespondWith = (200, Some("""{ "success": true, "message": "ok" }""")),
+        willRespondWith = (200, Some(s"""{ "success": true, "message": "$expectedMsg" }""")),
         givenJsonBody = Some("""{ "app_name": "2fa-prototype", "password": "password" }""")
       )
 
@@ -109,6 +111,7 @@ class PrototypePageSpec
 
       response.status shouldBe 200
       response.body should include("password-change-success-msg")
+      response.body should include(expectedMsg)
 
       wireMockServer.verify(1, postRequestedFor(urlPathEqualTo("/v1/SetHerokuPrototypePassword")))
     }
@@ -120,10 +123,12 @@ class PrototypePageSpec
       serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
 
+      val expectedError: String = "generic password change error"
+
       serviceEndpoint(
         POST,
         "/v1/SetHerokuPrototypePassword",
-        willRespondWith = (400, Some("""{ "code": "INVALID_PASSWORD", "message": "error" }""")),
+        willRespondWith = (400, Some(s"""{ "code": "INVALID_PASSWORD", "message": "$expectedError" }""")),
         givenJsonBody = Some("""{ "app_name": "2fa-prototype", "password": "password" }""")
       )
 
@@ -136,6 +141,7 @@ class PrototypePageSpec
 
       response.status shouldBe 400
       response.body should include("password-change-error-msg")
+      response.body should include(expectedError)
     }
   }
 }

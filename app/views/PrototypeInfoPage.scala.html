@@ -83,9 +83,9 @@
             <div class="col-md-6">
                 <div style="margin-bottom: 1em">
                     @if(hasPasswordChangeAuth.value) {
-                        <button type="button" class="btn btn-primary" onclick="togglePasswordResetVisibility()">Reset Password</button>
+                        <button id="reset-password-enabled" type="button" class="btn btn-primary" onclick="togglePasswordResetVisibility()">Reset Password</button>
                     } else {
-                        <button type="button" class="btn btn-primary" disabled>Reset Password</button>
+                        <button id="reset-password-disabled" type="button" class="btn btn-primary" disabled>Reset Password</button>
                         <span class="text-muted" style="margin-left: 0.8em">
                             <i class="glyphicon glyphicon-info-sign"></i>
                             @messages("prototype.password.forbidden")
