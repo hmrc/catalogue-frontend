@@ -16,15 +16,18 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import cats.data.OptionT
+import cats.data.{EitherT, OptionT}
 import cats.implicits._
-import play.api.data.Form
+import play.api.data.{Form, Forms}
 import play.api.data.Forms._
-import play.api.i18n.Messages
+import play.api.data.validation.Constraints
+import play.api.i18n.{I18nSupport, Messages}
 import play.api.mvc._
 import play.api.{Configuration, Logger}
+import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{ChangePrototypePasswordRequest, ChangePrototypePasswordResponse}
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
@@ -70,6 +73,7 @@ class CatalogueController @Inject() (
   prCommenterConnector         : PrCommenterConnector,
   vulnerabilitiesConnector     : VulnerabilitiesConnector,
   confluenceConnector          : ConfluenceConnector,
+  buildDeployApiConnector      : BuildDeployApiConnector,
   indexPage                    : IndexPage,
   serviceInfoPage              : ServiceInfoPage,
   serviceConfigPage            : ServiceConfigPage,
@@ -84,7 +88,8 @@ class CatalogueController @Inject() (
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders
+     with I18nSupport {
 
   private lazy val whatsNewDisplayLines  = configuration.get[Int]("whats-new.display.lines")
 
@@ -93,7 +98,7 @@ class CatalogueController @Inject() (
 
   private val logger = Logger(getClass)
 
-  private def notFound(implicit request: Request[_], messages: Messages) = NotFound(error_404_template())
+  private def notFound(implicit request: Request[_]) = NotFound(error_404_template())
 
   def index(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
@@ -152,7 +157,6 @@ class CatalogueController @Inject() (
     repositoryDetails      : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   )(implicit
-    messages: Messages,
     request : Request[_]
   ): Future[Result] = {
     for {
@@ -237,7 +241,7 @@ class CatalogueController @Inject() (
                       repoDetails.repoType match {
                         case RepoType.Service   => renderServicePage(repoDetails.name, repoDetails, hasBranchProtectionAuth)
                         case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth)
-                        case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth)
+                        case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth).map(Ok(_))
                         case RepoType.Test      => renderOther(repoDetails, hasBranchProtectionAuth)
                         case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth)
                       }
@@ -263,10 +267,42 @@ class CatalogueController @Inject() (
       .verify(Retrieval.hasPredicate(EnableBranchProtection.permission(repoName)))
       .map(r => EnableBranchProtection.HasAuthorisation(r.getOrElse(false)))
 
+  def changePrototypePassword(repoName: String) =
+    auth
+      .authorizedAction(
+        continueUrl = routes.CatalogueController.repository(repoName),
+        predicate = ChangePrototypePassword.permission(repoName)
+      ).async { implicit request =>
+
+      (for {
+        hasBranchProtectionAuth <- EitherT.liftF[Future, Result, EnableBranchProtection.HasAuthorisation](hasEnableBranchProtectionAuthorisation(repoName))
+        repoDetails <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
+        newPassword <- ChangePrototypePassword
+                         .form()
+                         .bindFromRequest()
+                         .fold[EitherT[Future, Result, ChangePrototypePassword.PrototypePassword]](
+                           formWithErrors => EitherT.left(renderPrototype(repoDetails, hasBranchProtectionAuth, formWithErrors).map(BadRequest(_))),
+                           password => EitherT.rightT(password)
+                         )
+        response    <- EitherT.liftF[Future, Result, ChangePrototypePasswordResponse](buildDeployApiConnector.changePrototypePassword(ChangePrototypePasswordRequest(repoName, newPassword)))
+        form         = if(response.success) ChangePrototypePassword.form() else ChangePrototypePassword.form().withGlobalError(response.message)
+        successMsg   = if(response.success) Some(response.message) else None
+        result      <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, form , successMsg))
+       } yield if(response.success) Ok(result) else BadRequest(result)
+      ).merge
+    }
+
+  private def hasChangePrototypePasswordAuthorisation(repoName: String)(
+    implicit hc: HeaderCarrier
+  ): Future[ChangePrototypePassword.HasAuthorisation] =
+    auth
+      .verify(Retrieval.hasPredicate(ChangePrototypePassword.permission(repoName)))
+      .map(r => ChangePrototypePassword.HasAuthorisation(r.getOrElse(false)))
+
   def renderLibrary(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit messages: Messages, request: Request[_]): Future[Result] =
+  )(implicit request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
@@ -289,23 +325,29 @@ class CatalogueController @Inject() (
 
   private def renderPrototype(
     repoDetails            : GitRepository,
-    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit request: Request[_]): Future[Result] =
+    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
+    form                   : Form[_]        = ChangePrototypePassword.form(),
+    successMessage         : Option[String] = None
+  )(implicit request: Request[_]): Future[Html] =
     for {
       urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
       commenterReport <- prCommenterConnector.report(repoDetails.name)
+      hasPasswordChangeAuth <- hasChangePrototypePasswordAuthorisation(repoDetails.name)
     } yield
-      Ok(prototypeInfoPage(
+      prototypeInfoPage(
         repoDetails,
         urlIfLeaksFound,
         hasBranchProtectionAuth,
+        hasPasswordChangeAuth,
+        form,
+        successMessage,
         commenterReport
-      ))
+      )
 
   private def renderOther(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit messages: Messages, request: Request[_]): Future[Result] =
+  )(implicit request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
@@ -420,6 +462,28 @@ object EnableBranchProtection {
     Predicate.Permission(
       Resource.from("catalogue-repository", repoName),
       IAAction("WRITE_BRANCH_PROTECTION")
+    )
+}
+
+object ChangePrototypePassword {
+
+  final case class HasAuthorisation(value: Boolean) extends AnyVal
+
+  final case class PrototypePassword(value: String) extends AnyVal {
+    override def toString: String = "PrototypePassword(...)"
+  }
+
+  def permission(repoName: String): Permission =
+    Predicate.Permission(
+      Resource.from("catalogue-repository", repoName),
+      IAAction("CHANGE_PROTOTYPE_PASSWORD")
+    )
+
+  def form(): Form[PrototypePassword] =
+    Form(
+      Forms.mapping(
+        "password" -> Forms.nonEmptyText
+      )(PrototypePassword.apply)(PrototypePassword.unapply)
     )
 }
 

@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.config
+import com.google.inject.{Inject, Singleton}
+import play.api.Configuration
 
-import java.time.Clock
-import com.google.inject.AbstractModule
-import software.amazon.awssdk.auth.credentials.{AwsCredentialsProvider, DefaultCredentialsProvider}
-import uk.gov.hmrc.cataloguefrontend.search.IndexScheduler
+@Singleton
+class BuildDeployApiConfig @Inject()(configuration: Configuration) {
+  val baseUrl: String =
+    configuration.get[String]("build-deploy-api.url")
 
-class CatalogueFrontendModule extends AbstractModule {
+  val host: String =
+    configuration.get[String]("build-deploy-api.host")
 
-  override def configure(): Unit = {
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    bind(classOf[IndexScheduler]).asEagerSingleton()
-    bind(classOf[AwsCredentialsProvider]).toInstance(DefaultCredentialsProvider.create())
-  }
+  val awsRegion: String =
+    configuration.get[String]("build-deploy-api.aws-region")
 }

@@ -63,6 +63,9 @@ trait FakeApplicationBuilder
           "microservice.services.pr-commenter.host"            -> wireMockHost,
           "microservice.services.vulnerabilities.port"         -> wireMockPort,
           "microservice.services.vulnerabilities.host"         -> wireMockHost,
+          "build-deploy-api.url"                               -> wireMockUrl,
+          "build-deploy-api.host"                              -> wireMockHost,
+          "build-deploy-api.aws-region"                        -> "eu-west-2",
           "github.open.api.rawurl"                             -> wireMockUrl,
           "github.open.api.token"                              -> "",
           "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",
@@ -72,7 +75,9 @@ trait FakeApplicationBuilder
           "play.ws.ssl.loose.acceptAnyCertificate"             -> true,
           "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",
           "team.hideArchivedRepositories"                      -> true,
-          "metrics.jvm"                                        -> false
+          "metrics.jvm"                                        -> false,
+          "play.filters.csrf.header.bypassHeaders.X-Requested-With" -> "*",
+          "play.filters.csrf.header.bypassHeaders.Csrf-Token"  -> "nocheck"
         ))
       .build()
 

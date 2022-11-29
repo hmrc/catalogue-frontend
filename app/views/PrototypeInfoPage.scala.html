@@ -21,15 +21,20 @@
 @import play.twirl.api.Html
 @import views.partials.githubBadgeType
 @import partials.PrototypeDetailsPartial
+@import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword
 
 @this(prototypeDetailsPartial: PrototypeDetailsPartial, viewMessages: ViewMessages)
 
 @(prototype              : GitRepository,
   linkToLeakDetection    : Option[String],
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
+  hasPasswordChangeAuth  : ChangePrototypePassword.HasAuthorisation,
+  form                   : Form[_],
+  successMessage         : Option[String],
   commenterReport        : Option[PrCommenterReport]
 )(implicit
-  request: Request[_]
+  request: Request[_],
+  messages: Messages
 )
 
 @standard_layout(prototype.name, "prototypes") {
@@ -42,7 +47,17 @@
               @if(prototype.isArchived) { <span>Archived</span> }
             </h1>
         </div>
-        <script typr="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script type="text/javascript">
+            function togglePasswordResetVisibility() {
+                var elem = document.getElementById("password-reset");
+                if (elem.style.display === "none") {
+                    elem.style.display = "block";
+                } else {
+                    elem.style.display = "none";
+                }
+            }
+        </script>
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
@@ -61,6 +76,31 @@
 
             <div class="col-md-6">
                 @partials.code(prototype, hasBranchProtectionAuth, commenterReport, None)
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div style="margin-bottom: 1em">
+                    @if(hasPasswordChangeAuth.value) {
+                        <button id="reset-password-enabled" type="button" class="btn btn-primary" onclick="togglePasswordResetVisibility()">Reset Password</button>
+                    } else {
+                        <button id="reset-password-disabled" type="button" class="btn btn-primary" disabled>Reset Password</button>
+                        <span class="text-muted" style="margin-left: 0.8em">
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            @messages("prototype.password.forbidden")
+                        </span>
+                    }
+                </div>
+
+                @partials.change_prototype_password(prototype, form, successMessage)
+
+                <p>
+                    For additional support please
+                    <a href="https://confluence.tools.tax.service.gov.uk/display/PROT/Prototyping+User+Guide" target="_blank">check the prototyping space on confluence</a>
+                    or reach out in
+                    <a href="https://hmrcdigital.slack.com/archives/C19R6A9L7" target="_blank">#community-prototype</a>.
+                </p>
             </div>
         </div>
     </section>
