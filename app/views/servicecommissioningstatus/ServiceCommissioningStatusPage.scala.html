@@ -17,79 +17,54 @@
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatus
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.StatusCheck
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.model.Environment.Integration
 
 @this()
 
-
-@(statusChecks: Option[ServiceCommissioningStatus]
-        , form: Form[_]
+@(serviceCommissioningStatus: ServiceCommissioningStatus
 )(implicit
-        messages: Messages,
-        request: Request[_]
+  messages: Messages,
+  request: Request[_]
 )
-
     @standard_layout("Service-Commissioning-Status") {
         <header>
-            <h1>Service Commissioning Status</h1>
+            <h1>Service Commissioning Status: @serviceCommissioningStatus.serviceName</h1>
         </header>
 
-        @if(form.hasErrors) {
-            <div class="alert alert-danger" role="alert">
-                <ul class="list">
-                @form.errors.map { error =>
-                    <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
-                }
-                </ul>
+        <div class="row">
+            <div class="col-sm-6">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Status Check</th>
+                            <th colspan="6">Service Commissioning Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>@simpleStatusCheck("Github Repo", serviceCommissioningStatus.hasRepo.evidence)</tr>
+
+                        <tr>@simpleStatusCheck("App Config Base", serviceCommissioningStatus.hasAppConfigBase.evidence)</tr>
+
+                        <tr>@environmentStatusCheck("App Config Environment", serviceCommissioningStatus.hasAppConfigEnv.asMap)</tr>
+
+                        <tr>@environmentStatusCheck("Frontend Routes", serviceCommissioningStatus.hasFrontendRoutes.asMap)</tr>
+
+                        <tr>@simpleStatusCheck("Build Jobs", serviceCommissioningStatus.hasBuildJobs.evidence)</tr>
+
+                        <tr>@simpleStatusCheck("Service Manager Config", serviceCommissioningStatus.hasSMConfig.evidence)</tr>
+
+                        <tr>@environmentStatusCheck("Deployed", serviceCommissioningStatus.isDeployed.asMap)</tr>
+
+                        <tr>@simpleStatusCheck("Kibana", serviceCommissioningStatus.hasDashboards.grafana.evidence)</tr>
+
+                        <tr>@simpleStatusCheck("Grafana", serviceCommissioningStatus.hasDashboards.grafana.evidence)</tr>
+
+                        <tr>@simpleStatusCheck("Alerts", serviceCommissioningStatus.hasAlerts.evidence)</tr>
+                    </tbody>
+                </table>
             </div>
-        }
-
-        <div id="service-commissioning-status">
-            <form id="service-name" action="/service-status" method="get">
-                <div id="form-row" class="form-group row">
-                    <div class="col-xs-3">
-                        <label for="search">Service Name</label>
-                        <input class="search form-control" id="search" type="text" name="service" value="@form("service").value" autofocus>
-                    </div>
-                </div>
-            </form>
         </div>
-
-            @statusChecks.map { statusCheck =>
-                <div class="row">
-                    <div class="col-sm-8">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Status Check</th>
-                                    <th colspan="6">Service Commissioning Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>@simpleStatusCheck("Github Repo", statusCheck.hasRepo.evidence)</tr>
-
-                                <tr>@simpleStatusCheck("App Config Base", statusCheck.hasAppConfigBase.evidence)</tr>
-
-                                <tr>@environmentStatusCheck("App Config Environment", statusCheck.hasAppConfigEnv.asMap)</tr>
-
-                                <tr>@environmentStatusCheck("Frontend Routes", statusCheck.hasFrontendRoutes.asMap)</tr>
-
-                                <tr>@simpleStatusCheck("Build Jobs", statusCheck.hasBuildJobs.evidence)</tr>
-
-                                <tr>@simpleStatusCheck("Service Manager Config", statusCheck.hasSMConfig.evidence)</tr>
-
-                                <tr>@environmentStatusCheck("Deployed", statusCheck.isDeployed.asMap)</tr>
-
-                                <tr>@simpleStatusCheck("Kibana", statusCheck.hasDashboards.grafana.evidence)</tr>
-
-                                <tr>@simpleStatusCheck("Grafana", statusCheck.hasDashboards.grafana.evidence)</tr>
-
-                                <tr>@simpleStatusCheck("Alerts", statusCheck.hasAlerts.evidence)</tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            }
-}
+    }
 
 @simpleStatusCheck(statusCheck: String, evidence: Option[String]) = {
     <td>@statusCheck</td>
@@ -97,17 +72,15 @@
     <td style="text-align: center">
         @evidence match {
             case Some(evidence) => {
-                <ul class="list-unstyled" style="margin-bottom: 0">
-                    <li><span class="glyphicon glyphicon-ok low"></span></li>
-                    <li><a href="@evidence" target="_blank" rel="noopener noreferrer">[view]</a></li>
-                </ul>
+                <span class="glyphicon glyphicon-ok low"></span>
+                <a href="@evidence" target="_blank" rel="noopener noreferrer">[view]</a>
             }
             case None => {
                 <span class="glyphicon glyphicon-minus archived"></span>
             }
         }
     </td>
-    @for(x <- 1 to 5) {
+    @for(x <- 1 until Environment.values.length) {
         <td></td>
     }
 }
@@ -115,18 +88,24 @@
 @environmentStatusCheck(statusCheck: String, statusCheckMap: Map[Environment, StatusCheck]) = {
     <td>@statusCheck</td>
 
-    @statusCheckMap.map{ pair =>
+     @statusCheckMap.toSeq.sortBy(_._1).reverse.map { kvp =>
         <td style="text-align: center">
-            @pair._2.evidence match {
-                case Some(evidence) => {
-                    <ul class="list-unstyled" style="margin-bottom: 0">
-                        <li style="font-size: 85%">@pair._1</li>
+            @kvp match {
+                case (Integration, StatusCheck(None))  => {
+                    <ul class="list-unstyled list-compact">
+                        <li>@Integration</li>
+                        <li><span class="glyphicon glyphicon-remove archived"></span>[default off]</li>
+                    </ul>
+                }
+                case (env, StatusCheck(Some(evidence))) => {
+                    <ul class="list-unstyled list-compact">
+                        <li>@env</li>
                         <li><span class="glyphicon glyphicon-ok low"></span> <a href="@evidence" target="_blank" rel="noopener noreferrer">[view]</a></li>
                     </ul>
                 }
-                case None => {
-                    <ul class="list-unstyled">
-                        <li>@pair._1</li>
+                case (env, StatusCheck(None)) => {
+                    <ul class="list-unstyled list-compact">
+                        <li>@env</li>
                         <li><span class="glyphicon glyphicon-minus archived"></span></li>
                     </ul>
                 }

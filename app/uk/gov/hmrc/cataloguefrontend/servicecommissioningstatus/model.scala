@@ -23,16 +23,12 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 case class StatusCheck(
   evidence: Option[String]
-, status  : Boolean
 )
 
 object StatusCheck {
   val reads: Reads[StatusCheck] =
-    ( (__ \ "evidence"  ).readNullable[String]
-      ~ (__ \ "status"  ).read[Boolean]
-      ) (StatusCheck.apply _)
+    (__ \ "evidence").readNullable[String].map(StatusCheck(_))
 }
-
 
 case class FrontendRoutes(asMap: Map[Environment, StatusCheck])
 
@@ -86,7 +82,6 @@ object ServiceCommissioningStatus {
 
   private implicit val acReads: Reads[AppConfigEnvironment] =
     mapFormat.map(AppConfigEnvironment.apply)
-
 
   val reads: Reads[ServiceCommissioningStatus] =
     ( (__ \ "serviceName"        ).read[String]

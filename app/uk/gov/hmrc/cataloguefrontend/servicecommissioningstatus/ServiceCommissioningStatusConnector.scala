@@ -26,15 +26,15 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ServiceCommissioningStatusConnector @Inject() (
   httpClientV2  : HttpClientV2
-//, servicesConfig: ServicesConfig
+, servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
 
-  //private val baseUrl = servicesConfig.baseUrl("service-commissioning-status")
+  private val serviceCommissioningStatusBaseUrl = servicesConfig.baseUrl("service-commissioning-status")
 
   private implicit val scsReads = ServiceCommissioningStatus.reads
 
-  def commissioningStatus(serviceName: Option[String])(implicit hc: HeaderCarrier): Future[Option[ServiceCommissioningStatus]] =
+  def commissioningStatus(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ServiceCommissioningStatus]] =
     httpClientV2
-      .get(url"http://localhost:9000/service-commissioning-status/status/$serviceName")
+      .get(url"$serviceCommissioningStatusBaseUrl/service-commissioning-status/status/$serviceName")
       .execute[Option[ServiceCommissioningStatus]]
 }
