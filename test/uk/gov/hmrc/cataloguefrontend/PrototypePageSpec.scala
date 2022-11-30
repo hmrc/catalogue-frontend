@@ -99,7 +99,7 @@ class PrototypePageSpec
         POST,
         "/v1/SetHerokuPrototypePassword",
         willRespondWith = (200, Some(s"""{ "success": true, "message": "$expectedMsg" }""")),
-        givenJsonBody = Some("""{ "app_name": "2fa-prototype", "password": "password" }""")
+        givenJsonBody = Some("""{ "repository_name": "2fa-prototype", "password": "password" }""")
       )
 
       val response = wsClient
@@ -129,7 +129,7 @@ class PrototypePageSpec
         POST,
         "/v1/SetHerokuPrototypePassword",
         willRespondWith = (400, Some(s"""{ "code": "INVALID_PASSWORD", "message": "$expectedError" }""")),
-        givenJsonBody = Some("""{ "app_name": "2fa-prototype", "password": "password" }""")
+        givenJsonBody = Some("""{ "repository_name": "2fa-prototype", "password": "password" }""")
       )
 
       val response = wsClient
