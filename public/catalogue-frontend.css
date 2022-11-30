@@ -1355,6 +1355,8 @@ ol {
   list-style: none; }
 
 .list-compact {
+  padding-left: 0;
+  list-style: none;
   margin-bottom: 0;
   font-size: 85%;
 }

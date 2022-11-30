@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 

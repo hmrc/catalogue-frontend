@@ -20,6 +20,7 @@ import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import views.html.error_404_template
 import views.html.servicecommissioningstatus.ServiceCommissioningStatusPage
 
 import javax.inject.{Inject, Singleton}
@@ -41,6 +42,6 @@ class ServiceCommissioningStatusController @Inject() (
     BasicAuthAction.async { implicit request =>
       serviceCommissioningStatusConnector
         .commissioningStatus(serviceName)
-        .map(_.fold(BadRequest(s"Invalid $serviceName"))(result => Ok(serviceCommissioningStatusPage(result))))
+        .map(_.fold(NotFound(error_404_template()))(result => Ok(serviceCommissioningStatusPage(result))))
     }
 }

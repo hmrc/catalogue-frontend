@@ -80,7 +80,7 @@
             }
         }
     </td>
-    @for(x <- 1 until Environment.values.length) {
+    @for(x <- 1 until Environment.values.length){
         <td></td>
     }
 }
@@ -88,23 +88,23 @@
 @environmentStatusCheck(statusCheck: String, statusCheckMap: Map[Environment, StatusCheck]) = {
     <td>@statusCheck</td>
 
-     @statusCheckMap.toSeq.sortBy(_._1).reverse.map { kvp =>
+    @statusCheckMap.toSeq.sortBy(_._1).map { kvp =>
         <td style="text-align: center">
             @kvp match {
                 case (Integration, StatusCheck(None))  => {
-                    <ul class="list-unstyled list-compact">
+                    <ul class="list-compact">
                         <li>@Integration</li>
                         <li><span class="glyphicon glyphicon-remove archived"></span>[default off]</li>
                     </ul>
                 }
                 case (env, StatusCheck(Some(evidence))) => {
-                    <ul class="list-unstyled list-compact">
+                    <ul class="list-compact">
                         <li>@env</li>
                         <li><span class="glyphicon glyphicon-ok low"></span> <a href="@evidence" target="_blank" rel="noopener noreferrer">[view]</a></li>
                     </ul>
                 }
                 case (env, StatusCheck(None)) => {
-                    <ul class="list-unstyled list-compact">
+                    <ul class="list-compact">
                         <li>@env</li>
                         <li><span class="glyphicon glyphicon-minus archived"></span></li>
                     </ul>
