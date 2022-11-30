@@ -70,11 +70,11 @@ class BuildDeployApiConnector @Inject() (
 }
 
 object BuildDeployApiConnector {
-  final case class ChangePrototypePasswordRequest(appName: String, password: PrototypePassword)
+  final case class ChangePrototypePasswordRequest(repoName: String, password: PrototypePassword)
 
   object ChangePrototypePasswordRequest {
     val writes: Writes[ChangePrototypePasswordRequest] =
-      ( (__ \ "app_name").write[String]
+      ( (__ \ "repository_name").write[String]
       ~ (__ \ "password").write[String].contramap[PrototypePassword](_.value)
       ) (unlift(ChangePrototypePasswordRequest.unapply))
   }
