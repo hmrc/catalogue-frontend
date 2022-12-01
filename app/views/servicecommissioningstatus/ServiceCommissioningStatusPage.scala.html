@@ -21,92 +21,86 @@
 
 @this()
 
-@(serviceCommissioningStatus: ServiceCommissioningStatus
+@(status: ServiceCommissioningStatus
 )(implicit
   messages: Messages,
   request: Request[_]
 )
     @standard_layout("Service-Commissioning-Status") {
         <header>
-            <h1>Service Commissioning Status: @serviceCommissioningStatus.serviceName</h1>
+            <h1>Service Commissioning Status</h1>
         </header>
 
-        <div class="row">
-            <div class="col-sm-6">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Status Check</th>
-                            <th colspan="6">Service Commissioning Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>@simpleStatusCheck("Github Repo", serviceCommissioningStatus.hasRepo.evidence)</tr>
+        <h2>@status.serviceName</h2>
 
-                        <tr>@simpleStatusCheck("App Config Base", serviceCommissioningStatus.hasAppConfigBase.evidence)</tr>
-
-                        <tr>@environmentStatusCheck("App Config Environment", serviceCommissioningStatus.hasAppConfigEnv.asMap)</tr>
-
-                        <tr>@environmentStatusCheck("Frontend Routes", serviceCommissioningStatus.hasFrontendRoutes.asMap)</tr>
-
-                        <tr>@simpleStatusCheck("Build Jobs", serviceCommissioningStatus.hasBuildJobs.evidence)</tr>
-
-                        <tr>@simpleStatusCheck("Service Manager Config", serviceCommissioningStatus.hasSMConfig.evidence)</tr>
-
-                        <tr>@environmentStatusCheck("Deployed", serviceCommissioningStatus.isDeployed.asMap)</tr>
-
-                        <tr>@simpleStatusCheck("Kibana", serviceCommissioningStatus.hasDashboards.grafana.evidence)</tr>
-
-                        <tr>@simpleStatusCheck("Grafana", serviceCommissioningStatus.hasDashboards.grafana.evidence)</tr>
-
-                        <tr>@simpleStatusCheck("Alerts", serviceCommissioningStatus.hasAlerts.evidence)</tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="col-lg-3">Check</th>
+                    <th colspan="6">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>@check("Github Repo",               "https://github.com/hmrc/@status.serviceName",                                 status.hasRepo.evidence)</tr>
+                <tr>@check("App Config Base",           "https://github.com/hmrc/app-config-base",                                     status.hasAppConfigBase.evidence)</tr>
+                <tr>@envCheck("App Config Environment", "https://github.com/hmrc/app-config-$env",                                     status.hasAppConfigEnv)</tr>
+                <tr>@envCheck("Frontend Routes",        "https://github.com/hmrc/mdtp-frontend-routes/$env",                           status.hasFrontendRoutes)</tr>
+                <tr>@check("Build Jobs",                "https://github.com/hmrc/build-jobs",                                          status.hasBuildJobs.evidence)</tr>
+                <tr>@check("Service Manager Config",    "https://github.com/hmrc/service-manager-config",                              status.hasSMConfig.evidence)</tr>
+                <tr>@envCheck("Deployed",               "https://orchestrator.tools.$env.tax.service.gov.uk/job/deploy-microservice/", status.isDeployed)</tr>
+                <tr>@check("Kibana",                    "https://github.com/hmrc/kibana-dashboards",                                   status.hasDashboards.grafana.evidence)</tr>
+                <tr>@check("Grafana",                   "https://github.com/hmrc/grafana-dashboards",                                  status.hasDashboards.grafana.evidence)</tr>
+                <tr>@check("Alerts",                    "https://github.com/hmrc/alert-config",                                        status.hasAlerts.evidence)</tr>
+            </tbody>
+        </table>
     }
 
-@simpleStatusCheck(statusCheck: String, evidence: Option[String]) = {
+@check(statusCheck: String, addHereUrl: String, evidence: Option[String]) = {
     <td>@statusCheck</td>
-
-    <td style="text-align: center">
+    <td>
         @evidence match {
             case Some(evidence) => {
-                <span class="glyphicon glyphicon-ok low"></span>
-                <a href="@evidence" target="_blank" rel="noopener noreferrer">[view]</a>
+                <a href="@evidence" target="_blank" rel="noopener noreferrer">
+                    <span style="width: 32px" class="glyphicon glyphicon-ok low"></span>
+                    view
+                </a>
             }
             case None => {
-                <span class="glyphicon glyphicon-minus archived"></span>
+                <a href="@addHereUrl" target="_blank" rel="noopener noreferrer">
+                    <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
+                    add
+                </a>
             }
         }
     </td>
-    @for(x <- 1 until Environment.values.length){
-        <td></td>
-    }
+    @Environment.values.drop(1).map(_ => <td></td>)
 }
 
-@environmentStatusCheck(statusCheck: String, statusCheckMap: Map[Environment, StatusCheck]) = {
+@envCheck(statusCheck: String, addHereUrl: String, statusCheckMap: Map[Environment, StatusCheck]) = {
     <td>@statusCheck</td>
 
     @statusCheckMap.toSeq.sortBy(_._1).map { kvp =>
-        <td style="text-align: center">
+        <td>
             @kvp match {
-                case (Integration, StatusCheck(None))  => {
-                    <ul class="list-compact">
-                        <li>@Integration</li>
-                        <li><span class="glyphicon glyphicon-remove archived"></span>[default off]</li>
-                    </ul>
-                }
                 case (env, StatusCheck(Some(evidence))) => {
                     <ul class="list-compact">
                         <li>@env</li>
-                        <li><span class="glyphicon glyphicon-ok low"></span> <a href="@evidence" target="_blank" rel="noopener noreferrer">[view]</a></li>
+                        <li>
+                            <a href="@evidence" target="_blank" rel="noopener noreferrer">
+                                <span style="width: 32px" class="glyphicon glyphicon-ok low"></span>
+                                view
+                            </a>
+                        </li>
                     </ul>
                 }
                 case (env, StatusCheck(None)) => {
                     <ul class="list-compact">
                         <li>@env</li>
-                        <li><span class="glyphicon glyphicon-minus archived"></span></li>
+                        <li>
+                            <a href="@addHereUrl.replaceAll("\\$env", env.toString.toLowerCase)" target="_blank" rel="noopener noreferrer">
+                                <span style="display: inline-block; width: 32px" class="glyphicon glyphicon-minus archived"></span>
+                                add
+                            </a>
                     </ul>
                 }
             }
