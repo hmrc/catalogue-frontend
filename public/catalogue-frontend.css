@@ -1354,6 +1354,12 @@ ol {
   padding-left: 0;
   list-style: none; }
 
+.list-compact {
+  padding-left: 0;
+  list-style: none;
+  margin-bottom: 0;
+}
+
 .list-inline {
   padding-left: 0;
   list-style: none;
