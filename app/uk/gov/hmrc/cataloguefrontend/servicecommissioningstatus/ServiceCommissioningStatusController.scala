@@ -38,7 +38,7 @@ class ServiceCommissioningStatusController @Inject() (
      with CatalogueAuthBuilders {
 
 
-  def getCommissioningStatus(serviceName: String) =
+  def getCommissioningState(serviceName: String) =
     BasicAuthAction.async { implicit request =>
       serviceCommissioningStatusConnector
         .commissioningStatus(serviceName)

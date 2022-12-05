@@ -16,7 +16,7 @@ GET        /service/:name                               uk.gov.hmrc.cataloguefro
 GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceConfig(name)
 GET        /service/:name/config/raw                    uk.gov.hmrc.cataloguefrontend.CatalogueController.serviceConfigRaw(name)
 GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.CatalogueController.costEstimation(name)
-GET        /service/:name/status                        uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningStatus(name)
+GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name)
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
 GET        /prototype/:name/change-password             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
