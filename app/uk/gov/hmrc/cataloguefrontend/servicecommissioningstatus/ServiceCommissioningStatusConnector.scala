@@ -37,5 +37,4 @@ class ServiceCommissioningStatusConnector @Inject() (
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/status/$serviceName")
       .execute[Option[ServiceCommissioningStatus]]
-
 }

@@ -41,16 +41,16 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>@check("Github Repo",               "https://github.com/hmrc/@status.serviceName",                                 status.hasRepo.evidence)</tr>
-                <tr>@check("App Config Base",           "https://github.com/hmrc/app-config-base",                                     status.hasAppConfigBase.evidence)</tr>
-                <tr>@envCheck("App Config Environment", "https://github.com/hmrc/app-config-$env",                                     status.hasAppConfigEnv)</tr>
-                <tr>@envCheck("Frontend Routes",        "https://github.com/hmrc/mdtp-frontend-routes/$env",                           status.hasFrontendRoutes)</tr>
-                <tr>@check("Build Jobs",                "https://github.com/hmrc/build-jobs",                                          status.hasBuildJobs.evidence)</tr>
-                <tr>@check("Service Manager Config",    "https://github.com/hmrc/service-manager-config",                              status.hasSMConfig.evidence)</tr>
-                <tr>@envCheck("Deployed",               "https://orchestrator.tools.$env.tax.service.gov.uk/job/deploy-microservice/", status.isDeployed)</tr>
-                <tr>@check("Kibana",                    "https://github.com/hmrc/kibana-dashboards",                                   status.hasDashboards.grafana.evidence)</tr>
-                <tr>@check("Grafana",                   "https://github.com/hmrc/grafana-dashboards",                                  status.hasDashboards.grafana.evidence)</tr>
-                <tr>@check("Alerts",                    "https://github.com/hmrc/alert-config",                                        status.hasAlerts.evidence)</tr>
+                <tr>@check("Github Repo",               "https://build.tax.service.gov.uk/job/PlatOps/job/Tools/job/create-a-repository/build", status.hasRepo.evidence)</tr>
+                <tr>@check("App Config Base",           "https://github.com/hmrc/app-config-base",                                              status.hasAppConfigBase.evidence)</tr>
+                <tr>@envCheck("App Config Environment", "https://github.com/hmrc/app-config-$env",                                              status.hasAppConfigEnv)</tr>
+                <tr>@envCheck("Frontend Routes",        "https://github.com/hmrc/mdtp-frontend-routes/$env",                                    status.hasFrontendRoutes)</tr>
+                <tr>@check("Build Jobs",                "https://github.com/hmrc/build-jobs",                                                   status.hasBuildJobs.evidence)</tr>
+                <tr>@check("Service Manager Config",    "https://github.com/hmrc/service-manager-config",                                       status.hasSMConfig.evidence)</tr>
+                <tr>@envCheck("Deployed",               "https://orchestrator.tools.$env.tax.service.gov.uk/job/deploy-microservice/",          status.isDeployed)</tr>
+                <tr>@check("Kibana",                    "https://github.com/hmrc/kibana-dashboards",                                            status.hasDashboards.grafana.evidence)</tr>
+                <tr>@check("Grafana",                   "https://github.com/hmrc/grafana-dashboards",                                           status.hasDashboards.grafana.evidence)</tr>
+                <tr>@check("Alerts",                    "https://github.com/hmrc/alert-config",                                                 status.hasAlerts.evidence)</tr>
             </tbody>
         </table>
     }
