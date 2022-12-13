@@ -31,10 +31,10 @@ class ServiceCommissioningStatusConnector @Inject() (
 
   private val serviceCommissioningBaseUrl = servicesConfig.baseUrl("service-commissioning-status")
 
-  private implicit val scsReads = ServiceCommissioningStatus.reads
+  private implicit val cReads = Check.reads
 
-  def commissioningStatus(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ServiceCommissioningStatus]] =
+  def commissioningStatus(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[List[Check]]] =
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/status/$serviceName")
-      .execute[Option[ServiceCommissioningStatus]]
+      .execute[Option[List[Check]]]
 }

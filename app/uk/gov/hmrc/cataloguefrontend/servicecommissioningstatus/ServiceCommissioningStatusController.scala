@@ -37,11 +37,10 @@ class ServiceCommissioningStatusController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-
   def getCommissioningState(serviceName: String) =
     BasicAuthAction.async { implicit request =>
       serviceCommissioningStatusConnector
         .commissioningStatus(serviceName)
-        .map(_.fold(NotFound(error_404_template()))(result => Ok(serviceCommissioningStatusPage(result))))
+        .map(_.fold(NotFound(error_404_template()))(result => Ok(serviceCommissioningStatusPage(serviceName, result))))
     }
 }

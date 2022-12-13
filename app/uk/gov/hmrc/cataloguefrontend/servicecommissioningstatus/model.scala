@@ -16,67 +16,61 @@
 
 package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import play.api.libs.json.JsSuccess
+import play.api.libs.json.JsError
 
+sealed trait Check
 
-case class StatusCheck(
-  evidence: Option[String]
-)
+object Check {
+  case class Missing(addLink: String)
+  case class Present(evidenceLink: String)
 
-object StatusCheck {
-  val reads: Reads[StatusCheck] =
-    (__ \ "evidence").readNullable[String].map(StatusCheck(_))
-}
+  type Result = Either[Missing, Present]
 
-case class Dashboard(
-  kibana  : StatusCheck
-, grafana : StatusCheck
-)
+  sealed case class SimpleCheck(
+    title       : String
+  , checkResult : Result
+  ) extends Check
 
-object Dashboard {
-  val reads: Reads[Dashboard] = {
-    implicit val scReads: Reads[StatusCheck] = StatusCheck.reads
-    ( (__ \ "kibana").read[StatusCheck]
-    ~ (__ \ "grafana").read[StatusCheck]
-    ) (Dashboard.apply _)
+  sealed case class EnvCheck(
+    title        : String
+  , checkResults : Map[Environment, Result]
+  ) extends Check
+
+  import play.api.libs.functional.syntax.toFunctionalBuilderOps
+  import play.api.libs.json.{JsValue, Reads, __}
+  val reads: Reads[Check] = new Reads[Check] {
+
+    implicit val writesResult: Reads[Result] = new Reads[Result] {
+      def reads(json: JsValue) =
+        ( (json \ "evidence").asOpt[String], (json \ "add").asOpt[String] ) match {
+          case (Some(str), _) => JsSuccess(Right(Present(str)): Result)
+          case (_, Some(str)) => JsSuccess(Left( Missing(str)): Result)
+          case _              => JsError("Could not find either field 'evidence' or 'add'")
+        }
+    }
+
+    implicit val readsSimpleCheck: Reads[SimpleCheck] =
+      ( (__ \ "title"      ).read[String]
+      ~ (__ \ "simpleCheck").read[Result]
+      ) (SimpleCheck.apply _)
+
+    implicit val mapFormat: Reads[Map[Environment, Result]] =
+      Reads
+        .of[Map[String, Check.Result]]
+        .map(
+          _.map { case (k, v) => (Environment.parse(k).getOrElse(sys.error("Invalid Environment")), v) }
+        )
+
+    implicit val readsEnvCheck: Reads[EnvCheck] =
+      ( (__ \ "title"           ).read[String]
+      ~ (__ \ "environmentCheck").read[Map[Environment, Result]]
+      ) (EnvCheck.apply _)
+
+    def reads(json: JsValue) =
+      json
+        .validate[SimpleCheck]
+        .orElse(json.validate[EnvCheck])
   }
-}
-
-case class ServiceCommissioningStatus(
-  serviceName      : String
-, hasRepo          : StatusCheck
-, hasSMConfig      : StatusCheck
-, hasFrontendRoutes: Map[Environment, StatusCheck]
-, hasAppConfigBase : StatusCheck
-, hasAppConfigEnv  : Map[Environment, StatusCheck]
-, isDeployed       : Map[Environment, StatusCheck]
-, hasDashboards    : Dashboard
-, hasBuildJobs     : StatusCheck
-, hasAlerts        : StatusCheck
-)
-
-object ServiceCommissioningStatus {
-  private implicit val scReads : Reads[StatusCheck]                   = StatusCheck.reads
-  private implicit val dsReads : Reads[Dashboard]                     = Dashboard.reads
-  private implicit val mapReads: Reads[Map[Environment, StatusCheck]] =
-    Reads
-      .of[Map[String, StatusCheck]]
-      .map(
-        _.map { case (k, v) => (Environment.parse(k).getOrElse(sys.error("Invalid Environment")), v) }
-      )
-
-  val reads: Reads[ServiceCommissioningStatus] =
-    ( (__ \ "serviceName"      ).read[String]
-    ~ (__ \ "hasRepo"          ).read[StatusCheck]
-    ~ (__ \ "hasSMConfig"      ).read[StatusCheck]
-    ~ (__ \ "hasFrontendRoutes").read[Map[Environment, StatusCheck]]
-    ~ (__ \ "hasAppConfigBase" ).read[StatusCheck]
-    ~ (__ \ "hasAppConfigEnv"  ).read[Map[Environment, StatusCheck]]
-    ~ (__ \ "isDeployedIn"     ).read[Map[Environment, StatusCheck]]
-    ~ (__ \ "hasDashboards"    ).read[Dashboard]
-    ~ (__ \ "hasBuildJobs"     ).read[StatusCheck]
-    ~ (__ \ "hasAlerts"        ).read[StatusCheck]
-    ) (ServiceCommissioningStatus.apply _)
 }
