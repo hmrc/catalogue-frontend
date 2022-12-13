@@ -45,4 +45,24 @@ class VulnerabilitiesConnector @Inject() (
       .get(url"$url/vulnerabilities/api/vulnerabilities/count?service=${service}")
       .execute[Option[Int]]
   }
+
+  def vulnerabilitiesPerEnvironment: Future[Seq[VulnerabilitiesPerEnvironment]] =
+    Future.successful(
+      Seq(
+        VulnerabilitiesPerEnvironment(
+          "service-one",
+          qa            = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
+          staging       = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
+          externalTest  = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
+          production    = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3)
+        ),
+        VulnerabilitiesPerEnvironment(
+          "service-two",
+          qa            = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
+          staging       = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
+          externalTest  = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
+          production    = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3)
+        )
+      )
+    )
 }

@@ -1,0 +1,57 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{VulnerabilitiesPerEnvironment, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesPerEnvironment
+
+@this()
+
+@(vulnerabilities: Seq[VulnerabilitiesPerEnvironment])(implicit
+        messages : Messages,
+        request: Request[_]
+)
+
+@standard_layout(s"service vulnerabilities") {
+    <header>
+        <h1>Service Vulnerabilities</h1>
+    </header>
+
+    <div id="service-list">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="col-xs-6"><button class="sort no-border" data-sort="repository">Service</button></th>
+                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="repo-status">Action Required</button></th>
+                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="first-scanned">Under Investigation</button></th>
+                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="last-scanned">No Action Required</button></th>
+                </tr>
+            </thead>
+            <tbody class="list">
+            @vulnerabilities.map(test)
+            </tbody>
+        </table>
+    </div>
+}
+
+@test(vuln: VulnerabilitiesPerEnvironment) = {
+    <tr>
+        <td>@vuln.service</td>
+        <td class="text-center">@vuln.staging.actionRequired</td>
+        <td class="text-center">@vuln.staging.investigation</td>
+        <td class="text-center">@vuln.staging.noActionRequired</td>
+    </tr>
+
+}

@@ -24,17 +24,19 @@ import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.vulnerabilities.VulnerabilitiesListPage
+import views.html.vulnerabilities.VulnerabilitiesForServicesPage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class VulnerabilitiesController @Inject() (
-    override val mcc             : MessagesControllerComponents,
-    override val auth            : FrontendAuthComponents,
-    vulnerabilitiesConnector     : VulnerabilitiesConnector,
-    vulnerabilitiesListPage      : VulnerabilitiesListPage,
-    teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
+    override val mcc              : MessagesControllerComponents,
+    override val auth             : FrontendAuthComponents,
+    vulnerabilitiesConnector      : VulnerabilitiesConnector,
+    vulnerabilitiesListPage       : VulnerabilitiesListPage,
+    vulnerabilitiesForServicesPage: VulnerabilitiesForServicesPage,
+    teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
 ) (implicit
    override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -59,6 +61,12 @@ class VulnerabilitiesController @Inject() (
             } yield Ok(vulnerabilitiesListPage(summaries, teams, VulnerabilitiesExplorerFilter.form.fill(validForm)))
           )
     }
+
+  def getVulnerabilitiesPerService: Action[AnyContent] = Action.async { implicit request =>
+    vulnerabilitiesConnector.vulnerabilitiesPerEnvironment.map {
+      result => Ok(vulnerabilitiesForServicesPage(result))
+    }
+  }
 
   def getDistinctVulnerabilities(service: String): Action[AnyContent] = Action.async { implicit request =>
     vulnerabilitiesConnector.distinctVulnerabilities(service).map {
