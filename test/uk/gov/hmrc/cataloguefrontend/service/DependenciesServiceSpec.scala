@@ -43,7 +43,8 @@ class SlugInfoServiceSpec
       teams              = List(TeamName("T1")),
       depGroup           = group,
       depArtefact        = artefact,
-      depVersion         = Version("1.0.0")
+      depVersion         = Version("1.0.0"),
+      scopes             = Set(DependencyScope.Compile)
     )
 
   val v200 =
@@ -53,7 +54,8 @@ class SlugInfoServiceSpec
       teams              = List(TeamName("T1"), TeamName("T2")),
       depGroup           = group,
       depArtefact        = artefact,
-      depVersion         = Version("2.0.0")
+      depVersion         = Version("2.0.0"),
+      scopes             = Set(DependencyScope.Compile)
     )
 
   val v205 =
@@ -63,21 +65,22 @@ class SlugInfoServiceSpec
       teams              = List(TeamName("T2")),
       depGroup           = group,
       depArtefact        = artefact,
-      depVersion         = Version("2.0.5")
+      depVersion         = Version("2.0.5"),
+      scopes             = Set(DependencyScope.Compile)
     )
 
-  val scope = DependencyScope.Compile
+  val scopes = List(DependencyScope.Compile)
 
   "DependenciesService.getServicesWithDependency" should {
     "filter results by team" in {
 
       val boot = Boot.init
 
-      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact, versionRange, scope))
+      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact, versionRange, scopes))
         .thenReturn(Future(Seq(v100, v200, v205)))
 
-      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T1")), SlugInfoFlag.Latest, group, artefact, versionRange, scope).futureValue shouldBe Seq(v200, v100)
-      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T2")), SlugInfoFlag.Latest, group, artefact, versionRange, scope).futureValue shouldBe Seq(v205, v200)
+      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T1")), SlugInfoFlag.Latest, group, artefact, versionRange, scopes).futureValue shouldBe Seq(v200, v100)
+      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T2")), SlugInfoFlag.Latest, group, artefact, versionRange, scopes).futureValue shouldBe Seq(v205, v200)
     }
   }
 

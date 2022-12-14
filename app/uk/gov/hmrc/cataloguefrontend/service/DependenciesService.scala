@@ -56,7 +56,7 @@ class DependenciesService @Inject() (
     group       : String,
     artefact    : String,
     versionRange: BobbyVersionRange,
-    scope       : DependencyScope
+    scope       : List[DependencyScope]
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[ServiceWithDependency]] =

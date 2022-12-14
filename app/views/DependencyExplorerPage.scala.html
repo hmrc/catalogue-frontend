@@ -57,9 +57,9 @@
             <div class="board__body">
                 @helper.form(
                     action =  appRoutes.DependencyExplorerController.search,
-                    'class -> "form-inline",
-                    'id    -> "search-by-dependency-form",
-                    'onsubmit -> "updateVersionRange();"
+                    Symbol("class") -> "form-inline",
+                    Symbol("id")    -> "search-by-dependency-form",
+                    Symbol("onsubmit") -> "updateVersionRange();"
                 ) {
                     <table class="padded-table">
                         <tr>
@@ -68,16 +68,16 @@
                                     form("group"),
                                     helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
                                                    groupArtefacts.map(_.group).map(g => (g, g)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group",
-                                    'class -> "form-control"
+                                    Symbol("_label") -> "",
+                                    Symbol("_class") -> "form-group",
+                                    Symbol("class") -> "form-control"
                                 )
                                 @helper.select(
                                     form("artefact"),
                                     helper.options(List()),
-                                    '_label -> "",
-                                    '_class -> "form-group",
-                                    'class -> "form-control"
+                                    Symbol("_label") -> "",
+                                    Symbol("_class") -> "form-group",
+                                    Symbol("class") -> "form-control"
                                 )
                             </td>
                         </tr>
@@ -102,23 +102,24 @@
                                     form("team"),
                                     helper.options(Seq("" -> Messages("dependencyexplorer.select.teams.all")) ++
                                                    teams.map(_.asString).map(t => (t, t)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group",
-                                    'class  -> "form-control"
+                                    Symbol("_label") -> "",
+                                    Symbol("_class") -> "form-group",
+                                    Symbol("class")  -> "form-control"
                                 )
                                 @helper.select(
                                     form("flag"),
                                     helper.options(flags.map(t => (t.asString, t.displayString)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group",
-                                    'class  -> "form-control"
+                                    Symbol("_label") -> "",
+                                    Symbol("_class") -> "form-group",
+                                    Symbol("class")  -> "form-control"
                                 )
                                 @helper.select(
                                     form("scope"),
                                     helper.options(scopes.map(t => (t.asString, t.displayString)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group",
-                                    'class  -> "form-control"
+                                    Symbol("_label") -> "",
+                                    Symbol("_class") -> "form-group",
+                                    Symbol("class")  -> "form-control",
+                                    Symbol("multiple") -> None
                                 )
                             </td>
                             <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value">
@@ -151,12 +152,13 @@
                                 <th rowspan="2"><button class="sort no-border" data-sort="service">Service</button></th>
                                 <th rowspan="2">Version</th>
                                 <th rowspan="2"><button class="sort no-border" data-sort="teams">Team</button></th>
-                                <th colspan="3" class="text-center">Dependency</th>
+                                <th colspan="4" class="text-center">Dependency</th>
                             </tr>
                             <tr>
                                 <th>Group ID</th>
                                 <th>Artefact ID</th>
                                 <th><button class="sort no-border" data-sort="dep-version">Version</button></th>
+                                <th>Scope</th>
                             </tr>
                             </thead>
                             <tbody class="list">
@@ -168,6 +170,9 @@
                                     <td>@result.depGroup</td>
                                     <td>@result.depArtefact</td>
                                     <td class="dep-version">@result.depVersion</td>
+                                    <td>
+                                        @result.scopes.map(_.displayString).mkString(", ")
+                                    </td>
                                 </tr>
                             }
                             </tbody>

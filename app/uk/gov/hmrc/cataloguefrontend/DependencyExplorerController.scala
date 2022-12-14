@@ -20,6 +20,7 @@ import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import cats.data.EitherT
 import cats.instances.all._
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
@@ -64,7 +65,7 @@ class DependencyExplorerController @Inject() (
                              SearchForm(
                                team         = "",
                                flag         = SlugInfoFlag.Latest.asString,
-                               scope        = DependencyScope.Compile.asString,
+                               scope        = List(DependencyScope.Compile.asString),
                                group        = "",
                                artefact     = "",
                                versionRange = ""
@@ -147,7 +148,10 @@ class DependencyExplorerController @Inject() (
                   versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
                   team         =  if (query.team.isEmpty) None else Some(TeamName(query.team))
                   flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
-                  scope        <- EitherT.fromEither[Future](DependencyScope.parse(query.scope)).leftMap(msg => BadRequest(pageWithError(msg)))
+                  scope        <- query.scope.traverse { s =>
+                                    EitherT.fromEither[Future](DependencyScope.parse(s))
+                                      .leftMap(msg => BadRequest(pageWithError(msg)))
+                                  }
                   results      <- EitherT.right[Result] {
                                     dependenciesService
                                       .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
@@ -192,7 +196,7 @@ class DependencyExplorerController @Inject() (
   case class SearchForm(
     team        : String,
     flag        : String,
-    scope       : String,
+    scope       : List[String],
     group       : String,
     artefact    : String,
     versionRange: String,
@@ -205,7 +209,7 @@ class DependencyExplorerController @Inject() (
       Forms.mapping(
         "team"         -> Forms.text,
         "flag"         -> Forms.text.verifying(notEmpty),
-        "scope"        -> Forms.default(Forms.text, DependencyScope.Compile.asString),
+        "scope"        -> Forms.list(Forms.text).verifying(_.nonEmpty),
         "group"        -> Forms.text.verifying(notEmpty),
         "artefact"     -> Forms.text.verifying(notEmpty),
         "versionRange" -> Forms.default(Forms.text, ""),
