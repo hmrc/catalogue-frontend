@@ -57,9 +57,9 @@
             <div class="board__body">
                 @helper.form(
                     action =  appRoutes.DependencyExplorerController.search,
-                    'class -> "form-inline",
-                    'id    -> "search-by-dependency-form",
-                    'onsubmit -> "updateVersionRange();"
+                    Symbol("class") -> "form-inline",
+                    Symbol("id")    -> "search-by-dependency-form",
+                    Symbol("onsubmit") -> "updateVersionRange();"
                 ) {
                     <table class="padded-table">
                         <tr>
@@ -68,16 +68,16 @@
                                     form("group"),
                                     helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
                                                    groupArtefacts.map(_.group).map(g => (g, g)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group",
-                                    'class -> "form-control"
+                                    Symbol("_label") -> "",
+                                    Symbol("_class") -> "form-group",
+                                    Symbol("class") -> "form-control"
                                 )
                                 @helper.select(
                                     form("artefact"),
                                     helper.options(List()),
-                                    '_label -> "",
-                                    '_class -> "form-group",
-                                    'class -> "form-control"
+                                    Symbol("_label") -> "",
+                                    Symbol("_class") -> "form-group",
+                                    Symbol("class") -> "form-control"
                                 )
                             </td>
                         </tr>
