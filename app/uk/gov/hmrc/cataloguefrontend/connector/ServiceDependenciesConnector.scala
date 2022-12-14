@@ -88,10 +88,8 @@ class ServiceDependenciesConnector @Inject() (
       "versionRange" -> versionRange.range
     )
 
-    val scopeParams = scopes.map( scope => s"scope=${scope.asString}" ).mkString("&")
-
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams&$scopeParams")
+      .get(url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams&scope=${scopes.map(_.asString)}")
       .execute[Seq[ServiceWithDependency]]
   }
 

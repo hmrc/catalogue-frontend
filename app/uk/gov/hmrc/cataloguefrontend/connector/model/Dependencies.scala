@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import java.time.LocalDate
-
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -338,7 +337,8 @@ case class ServiceWithDependency(
   teams             : List[TeamName],
   depGroup          : String,
   depArtefact       : String,
-  depVersion        : Version
+  depVersion        : Version,
+  scopes            : Set[DependencyScope]
 )
 
 object ServiceWithDependency {
@@ -348,12 +348,14 @@ object ServiceWithDependency {
   val reads: Reads[ServiceWithDependency] = {
     implicit val tnf = TeamName.format
     implicit val vf  = Version.format
+    implicit val dsf = DependencyScope.format
     ( (__ \ "slugName"   ).read[String]
     ~ (__ \ "slugVersion").read[Version]
     ~ (__ \ "teams"      ).read[List[TeamName]]
     ~ (__ \ "depGroup"   ).read[String]
     ~ (__ \ "depArtefact").read[String]
     ~ (__ \ "depVersion" ).read[Version]
+    ~ (__ \ "scopes").read[Set[DependencyScope]]
     )(ServiceWithDependency.apply _)
   }
 }
