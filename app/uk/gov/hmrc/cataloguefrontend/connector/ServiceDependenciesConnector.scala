@@ -76,7 +76,7 @@ class ServiceDependenciesConnector @Inject() (
     group       : String,
     artefact    : String,
     versionRange: BobbyVersionRange,
-    scope       : DependencyScope
+    scopes      : List[DependencyScope]
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[ServiceWithDependency]] = {
@@ -87,8 +87,11 @@ class ServiceDependenciesConnector @Inject() (
       "artefact"     -> artefact,
       "versionRange" -> versionRange.range
     )
+
+    val scopeParams = scopes.map( scope => s"scope=${scope.asString}" ).mkString("&")
+
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams&scope=${scope.asString}")
+      .get(url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams&$scopeParams")
       .execute[Seq[ServiceWithDependency]]
   }
 

@@ -102,23 +102,24 @@
                                     form("team"),
                                     helper.options(Seq("" -> Messages("dependencyexplorer.select.teams.all")) ++
                                                    teams.map(_.asString).map(t => (t, t)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group",
-                                    'class  -> "form-control"
+                                    Symbol("_label") -> "",
+                                    Symbol("_class") -> "form-group",
+                                    Symbol("class")  -> "form-control"
                                 )
                                 @helper.select(
                                     form("flag"),
                                     helper.options(flags.map(t => (t.asString, t.displayString)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group",
-                                    'class  -> "form-control"
+                                    Symbol("_label") -> "",
+                                    Symbol("_class") -> "form-group",
+                                    Symbol("class")  -> "form-control"
                                 )
                                 @helper.select(
                                     form("scope"),
                                     helper.options(scopes.map(t => (t.asString, t.displayString)) :_*),
-                                    '_label -> "",
-                                    '_class -> "form-group",
-                                    'class  -> "form-control"
+                                    Symbol("_label") -> "",
+                                    Symbol("_class") -> "form-group",
+                                    Symbol("class")  -> "form-control",
+                                    Symbol("multiple") -> None
                                 )
                             </td>
                             <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value">
