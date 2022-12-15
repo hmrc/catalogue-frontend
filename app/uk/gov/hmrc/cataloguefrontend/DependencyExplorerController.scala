@@ -204,12 +204,12 @@ class DependencyExplorerController @Inject() (
   )
 
   def form() = {
-    import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmpty
+    import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmpty, notEmptySeq}
     Form(
       Forms.mapping(
         "team"         -> Forms.text,
         "flag"         -> Forms.text.verifying(notEmpty),
-        "scope"        -> Forms.list(Forms.text).verifying(_.nonEmpty),
+        "scope"        -> Forms.list(Forms.text).verifying(notEmptySeq),
         "group"        -> Forms.text.verifying(notEmpty),
         "artefact"     -> Forms.text.verifying(notEmpty),
         "versionRange" -> Forms.default(Forms.text, ""),
