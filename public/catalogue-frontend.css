@@ -12149,6 +12149,14 @@ section span.other-teams-message {
   padding-right: 2px;
 }
 
+.padded-table #team_field, #flag_field, #scope_field {
+  vertical-align: top;
+}
+
+.input-no-label dt {
+  display: none;
+}
+
 .highlight {
   border: 2px solid red;
   padding-top: 0.5em;
