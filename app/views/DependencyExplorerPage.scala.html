@@ -68,21 +68,21 @@
                                     form("group"),
                                     helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
                                                    groupArtefacts.map(_.group).map(g => (g, g)) :_*),
-                                    Symbol("_label") -> "",
-                                    Symbol("_class") -> "form-group",
+                                    Symbol("_label") -> None,
+                                    Symbol("_class") -> "form-group input-no-label",
                                     Symbol("class") -> "form-control"
                                 )
                                 @helper.select(
                                     form("artefact"),
                                     helper.options(List()),
-                                    Symbol("_label") -> "",
-                                    Symbol("_class") -> "form-group",
+                                    Symbol("_label") -> None,
+                                    Symbol("_class") -> "form-group input-no-label",
                                     Symbol("class") -> "form-control"
                                 )
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding-top: 1em;">
+                            <td style="padding-top: 1em; vertical-align: top;">
                                 <input class="form-control" type="text" id="lbValue" value="@versionRange.lowerBound.map(_.version)" size="20" placeholder="0.0.0">
                                 <select id="lbInclusive" class="form-control">
                                      <option value="false">&lt;</option>
@@ -97,34 +97,34 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>
+                            <td style="padding-top: 1em; vertical-align: top;">
                                 @helper.select(
                                     form("team"),
                                     helper.options(Seq("" -> Messages("dependencyexplorer.select.teams.all")) ++
                                                    teams.map(_.asString).map(t => (t, t)) :_*),
-                                    Symbol("_label") -> "",
-                                    Symbol("_class") -> "form-group",
+                                    Symbol("_label") -> None,
+                                    Symbol("_class") -> "form-group input-no-label",
                                     Symbol("class")  -> "form-control"
                                 )
                                 @helper.select(
                                     form("flag"),
                                     helper.options(flags.map(t => (t.asString, t.displayString)) :_*),
-                                    Symbol("_label") -> "",
-                                    Symbol("_class") -> "form-group",
+                                    Symbol("_label") -> None,
+                                    Symbol("_class") -> "form-group input-no-label",
                                     Symbol("class")  -> "form-control"
                                 )
                                 @helper.select(
                                     form("scope"),
                                     helper.options(scopes.map(t => (t.asString, t.displayString)) :_*),
-                                    Symbol("_label") -> "",
-                                    Symbol("_class") -> "form-group",
+                                    Symbol("_label") -> None,
+                                    Symbol("_class") -> "form-group input-no-label",
                                     Symbol("class")  -> "form-control",
                                     Symbol("multiple") -> None
                                 )
                             </td>
                             <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value">
                             <input type="hidden" id="asCsv" name="asCsv" value="false">
-                            <td valign="bottom">
+                            <td style="padding-top: 1em; vertical-align: top;">
                                 <button id="search-button" class="btn btn-primary" type="submit">Search</button>
                                 <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV" onclick="exportAsCsv()"/>
                             </td>
