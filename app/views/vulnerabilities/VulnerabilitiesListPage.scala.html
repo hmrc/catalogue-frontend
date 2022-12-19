@@ -64,7 +64,8 @@
                                 ""                                           -> "All",
                                 CurationStatus.NoActionRequired.asString     -> CurationStatus.NoActionRequired.display,
                                 CurationStatus.InvestigationOngoing.asString -> CurationStatus.InvestigationOngoing.display,
-                                CurationStatus.ActionRequired.asString       -> CurationStatus.ActionRequired.display
+                                CurationStatus.ActionRequired.asString       -> CurationStatus.ActionRequired.display,
+                                CurationStatus.Uncurated.asString            -> CurationStatus.Uncurated.display
                             ),
                             '_label   -> "Curation status:",
                             'onchange -> "this.form.submit()",
