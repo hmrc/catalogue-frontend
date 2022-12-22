@@ -62,7 +62,6 @@ object TeamName {
 }
 
 
-// TODO can we return scala versions too?
 case class RepositoryModules(
   name             : String,
   version          : Option[Version],

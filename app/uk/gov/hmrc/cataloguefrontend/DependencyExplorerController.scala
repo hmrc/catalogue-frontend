@@ -19,7 +19,6 @@ package uk.gov.hmrc.cataloguefrontend
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import cats.data.EitherT
-import cats.instances.all._
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
@@ -27,13 +26,11 @@ import play.api.http.HttpEntity
 import play.api.mvc._
 
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
-import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
-import uk.gov.hmrc.cataloguefrontend.util.UrlUtils.encodeQueryParam
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependencyExplorerPage
@@ -82,40 +79,7 @@ class DependencyExplorerController @Inject() (
       )
     }
 
-  def search =
-    BasicAuthAction.async { implicit request =>
-      // first preserve old API
-      if (request.queryString.contains("versionOp"))
-        (for {
-          version      <- EitherT.fromOption[Future](
-                            request.queryString.get("version").flatMap(_.headOption).map(Version.apply),
-                            Redirect(appRoutes.DependencyExplorerController.landing)
-                          )
-          versionRange <- EitherT.fromOption[Future](
-                            request.queryString.get("versionOp").flatMap(_.headOption).flatMap { versionOp =>
-                              PartialFunction.condOpt(versionOp) {
-                                case ">=" => s"[$version,)"
-                                case "<=" => s"(,$version]"
-                                case "==" => s"[$version]"
-                              }
-                            },
-                            Redirect(appRoutes.DependencyExplorerController.landing)
-                          )
-          queryString  =  request.queryString - "version" - "versionOp" + ("versionRange" -> Seq(versionRange))
-
-          // updating request with new querystring does not update uri!? - build uri manually...
-          queryStr     =  queryString
-                            .flatMap {
-                              case (k, vs) =>
-                                vs.map(v => encodeQueryParam(k) + "=" + encodeQueryParam(v))
-                            }
-                            .mkString("?", "&", "")
-        } yield Redirect(request.path + queryStr)).merge
-      // else continue to new API
-      else search2(request)
-    }
-
-  def search2 =
+  val search =
     BasicAuthAction.async { implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
@@ -239,7 +203,7 @@ object DependencyExplorerController {
       else serviceWithDependency.teams.map(team => m + ("team" -> team.asString))
     }
 
-  def search(team: String = "", flag: SlugInfoFlag, group: String, artefact: String, versionRange: BobbyVersionRange): String =
+  def search(team: String = "", flag: SlugInfoFlag, scopes: Seq[DependencyScope], group: String, artefact: String, versionRange: BobbyVersionRange): String =
     uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search.toString +
-      s"?team=$team&flag=${flag.asString}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
+      s"?team=$team&flag=${flag.asString}&scope=${scopes.mkString(",")}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
 }
