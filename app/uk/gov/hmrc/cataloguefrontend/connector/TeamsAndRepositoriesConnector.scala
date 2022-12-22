@@ -182,7 +182,6 @@ object GitRepository {
   val apiFormat: OFormat[GitRepository] = {
     implicit val rtf = RepoType.format
     implicit val stf = ServiceType.stFormat
-    implicit val jjsf = Format(Reads.seq[JenkinsJob](JenkinsJob.apiFormat), Writes.seq[JenkinsJob](JenkinsJob.apiFormat))
 
     ( (__ \ "name"              ).format[String]
     ~ (__ \ "description"       ).format[String]
@@ -278,7 +277,6 @@ class TeamsAndRepositoriesConnector @Inject()(
     servicesConfig.baseUrl("teams-and-repositories")
 
   private implicit val tf   = Team.format
-  private implicit val jjf  = JenkinsJob.apiFormat
   private implicit val ghrf = GitRepository.apiFormat // v2 model
 
 

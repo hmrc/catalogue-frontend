@@ -271,8 +271,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
     private val configuration =
       Configuration(
-        "lds.integrationEnabled" -> "true",
-        "lds.noWarningsOn.0"     -> "a-repo-to-ignore"
+        "lds.integrationEnabled" -> "true"
       )
 
     val service = new LeakDetectionService(connector, configuration)

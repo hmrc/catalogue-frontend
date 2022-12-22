@@ -19,7 +19,12 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 import play.api.libs.functional.syntax._
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
-case class JDKVersion(name: String, version: Version, vendor: Vendor, kind: Kind)
+case class JDKVersion(
+  name   : String,
+  version: Version,
+  vendor : Vendor,
+  kind   : Kind
+)
 
 trait JDKVersionFormats {
 
@@ -46,10 +51,11 @@ trait JDKVersionFormats {
 
   val jdkFormat: Reads[JDKVersion] = {
     implicit val vf  = Version.format
-    ((__ \ "name").read[String]
-      ~ (__ \ "version").read[Version]
-      ~ (__ \ "vendor").read[Vendor](vendorRead)
-      ~ (__ \ "kind").read[Kind](kindRead))(JDKVersion)
+    ( (__ \ "name"   ).read[String]
+    ~ (__ \ "version").read[Version]
+    ~ (__ \ "vendor" ).read[Vendor](vendorRead)
+    ~ (__ \ "kind"   ).read[Kind](kindRead)
+    )(JDKVersion)
   }
 }
 

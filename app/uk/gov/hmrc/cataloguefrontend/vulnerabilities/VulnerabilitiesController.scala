@@ -17,15 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.data.Form
-import play.api.data.Forms.{boolean, mapping, optional, text}
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.helper.form
 import views.html.vulnerabilities.VulnerabilitiesListPage
 
 import javax.inject.{Inject, Singleton}
@@ -43,20 +40,24 @@ class VulnerabilitiesController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def distinctVulnerabilitySummaries(vulnerability: Option[String], curationStatus: Option[String], service: Option[String], team: Option[String]): Action[AnyContent] = Action.async { implicit request =>
-    import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesExplorerFilter.form
-    implicit val vcsf: OFormat[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
-      form
-      .bindFromRequest()
-      .fold(
-        formWithErrors => Future.successful(BadRequest(vulnerabilitiesListPage(Seq.empty, Seq.empty, formWithErrors))),
-        validForm =>
-          for {
-            teams     <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
-            summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.curationStatus, validForm.service, validForm.team)
-          } yield Ok(vulnerabilitiesListPage(summaries, teams, form.fill(validForm)))
-        )
-  }
+  def distinctVulnerabilitySummaries(
+    vulnerability : Option[String],
+    curationStatus: Option[String],
+    service       : Option[String],
+    team          : Option[String]
+  ): Action[AnyContent] =
+    Action.async { implicit request =>
+      VulnerabilitiesExplorerFilter.form
+        .bindFromRequest()
+        .fold(
+          formWithErrors => Future.successful(BadRequest(vulnerabilitiesListPage(Seq.empty, Seq.empty, formWithErrors))),
+          validForm =>
+            for {
+              teams     <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
+              summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.curationStatus, validForm.service, validForm.team)
+            } yield Ok(vulnerabilitiesListPage(summaries, teams, VulnerabilitiesExplorerFilter.form.fill(validForm)))
+          )
+    }
 
   def getDistinctVulnerabilities(service: String): Action[AnyContent] = Action.async { implicit request =>
     vulnerabilitiesConnector.distinctVulnerabilities(service).map {
@@ -66,19 +67,21 @@ class VulnerabilitiesController @Inject() (
 }
 
 case class VulnerabilitiesExplorerFilter(
-  vulnerability     : Option[String]   = None,
-  curationStatus    : Option[String]   = None,
-  service           : Option[String]   = None,
-  team              : Option[String]   = None
+  vulnerability : Option[String] = None,
+  curationStatus: Option[String] = None,
+  service       : Option[String] = None,
+  team          : Option[String] = None
 )
 
 object VulnerabilitiesExplorerFilter {
-  lazy val form: Form[VulnerabilitiesExplorerFilter] = Form(
-    mapping(
-      "vulnerability"      -> optional(text),
-      "curationStatus"     -> optional(text),
-      "service"            -> optional(text),
-      "team"               -> optional(text)
-    )(VulnerabilitiesExplorerFilter.apply)(VulnerabilitiesExplorerFilter.unapply)
-  )
+  import play.api.data.Forms.{mapping, optional, text}
+  lazy val form: Form[VulnerabilitiesExplorerFilter] =
+    Form(
+      mapping(
+        "vulnerability"  -> optional(text),
+        "curationStatus" -> optional(text),
+        "service"        -> optional(text),
+        "team"           -> optional(text)
+      )(VulnerabilitiesExplorerFilter.apply)(VulnerabilitiesExplorerFilter.unapply)
+    )
 }

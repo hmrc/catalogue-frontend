@@ -85,7 +85,7 @@ class DependenciesService @Inject() (
   def getJDKCountsForEnv(env: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[JDKUsageByEnv] =
     for {
       versions <- serviceDependenciesConnector.getJDKVersions(env)
-      counts = versions.groupBy(_.copy(name = "", kind = JDK)).mapValues(_.length).toMap
+      counts   =  versions.groupBy(_.copy(name = "", kind = JDK)).view.mapValues(_.length).toMap
     } yield JDKUsageByEnv(env, counts)
 
 }
