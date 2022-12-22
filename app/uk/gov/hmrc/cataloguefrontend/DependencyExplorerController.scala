@@ -205,5 +205,5 @@ object DependencyExplorerController {
 
   def search(team: String = "", flag: SlugInfoFlag, scopes: Seq[DependencyScope], group: String, artefact: String, versionRange: BobbyVersionRange): String =
     uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search.toString +
-      s"?team=$team&flag=${flag.asString}&scope=${scopes.mkString(",")}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
+      s"?team=$team&flag=${flag.asString}&scope=${scopes.map(_.asString).mkString(",")}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
 }
