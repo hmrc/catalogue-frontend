@@ -35,15 +35,14 @@ class ResourceUsageConnector @Inject() (
   servicesConfig: ServicesConfig
 )(implicit ec: ExecutionContext) {
 
-  private val baseUrl =
-    s"${servicesConfig.baseUrl("service-configs")}/resource-usage"
+  private val baseUrl = servicesConfig.baseUrl("service-configs")
 
   implicit val resourceUsageFormat: Format[ResourceUsage] =
     ResourceUsage.format
 
   def historicResourceUsageForService(serviceName: String)(implicit hc: HeaderCarrier): Future[List[ResourceUsage]] =
     httpClientV2
-      .get(url"$baseUrl/services/$serviceName/snapshots")
+      .get(url"$baseUrl/service-configs/resource-usage/services/$serviceName/snapshots")
       .execute[List[ResourceUsage]]
 }
 

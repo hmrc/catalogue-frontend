@@ -47,7 +47,7 @@ class RouteRulesConnectorSpec
   "RouteRulesConnector.serviceRoutes" should {
     "return service routes" in new Fixture {
       stubFor(
-        get(urlPathEqualTo("/frontend-route/service1"))
+        get(urlPathEqualTo("/service-configs/frontend-route/service1"))
           .willReturn(aResponse().withBody("""[
             { "environment": "prod",
               "routes": [
@@ -70,7 +70,7 @@ class RouteRulesConnectorSpec
       ))
 
       wireMockServer.verify(
-        getRequestedFor(urlPathEqualTo("/frontend-route/service1"))
+        getRequestedFor(urlPathEqualTo("/service-configs/frontend-route/service1"))
       )
     }
   }

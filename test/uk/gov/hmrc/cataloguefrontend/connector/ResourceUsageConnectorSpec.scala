@@ -51,7 +51,7 @@ final class ResourceUsageConnectorSpec
     "fetch and deserialise historic `ResourceUsage` for a service" in {
 
       stubFor(
-        get(urlEqualTo("/resource-usage/services/some-service/snapshots"))
+        get(urlEqualTo("/service-configs/resource-usage/services/some-service/snapshots"))
           .willReturn(
             aResponse()
               .withBody(
@@ -100,7 +100,7 @@ final class ResourceUsageConnectorSpec
       actualResourceUsages shouldBe expectedResourceUsages
 
       wireMockServer.verify(
-        getRequestedFor(urlPathEqualTo("/resource-usage/services/some-service/snapshots"))
+        getRequestedFor(urlPathEqualTo("/service-configs/resource-usage/services/some-service/snapshots"))
       )
     }
   }
