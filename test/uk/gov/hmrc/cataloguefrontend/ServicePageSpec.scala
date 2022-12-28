@@ -32,13 +32,13 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     setupAuthEndpoint()
     setupEnableBranchProtectionAuthEndpoint()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/frontend-route/service-1", willRespondWith = (200, Some(configServiceService1)))
-    serviceEndpoint(GET, "/frontend-route/service-name", willRespondWith = (200, Some(configServiceService1)))
+    serviceEndpoint(GET, "/service-configs/frontend-route/service-1", willRespondWith = (200, Some(configServiceService1)))
+    serviceEndpoint(GET, "/service-configs/frontend-route/service-name", willRespondWith = (200, Some(configServiceService1)))
     serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(jenkinsData)))
     serviceEndpoint(GET, "/api/module-dependencies/service-1",willRespondWith = (404, None))
     serviceEndpoint(GET, "/api/module-dependencies/service-1?version=0.0.1",willRespondWith = (404, None))
-    serviceEndpoint(GET, "/app-config/service-1", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/app-config/service-name", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/service-configs/app-config/service-1", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/service-configs/app-config/service-name", willRespondWith = (200, Some("[]")))
   }
 
   implicit val wrwf = JsonCodecs.whatsRunningWhereReads
@@ -53,7 +53,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
     "return a 404 when no repo exist with that name and the service does not have config" in {
       serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (404, None))
-      serviceEndpoint(GET, "/config-by-key/serv", willRespondWith = (200, Some("""{}""")))
+      serviceEndpoint(GET, "/service-configs/config-by-key/serv", willRespondWith = (200, Some("""{}""")))
 
       val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get().futureValue
       response.status shouldBe 404
@@ -63,7 +63,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (404, None))
       serviceEndpoint(
         GET,
-        "/config-by-key/serv",
+        "/service-configs/config-by-key/serv",
         willRespondWith = (200, Some(
           """{
             "key1": {
@@ -87,7 +87,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (404, None))
       serviceEndpoint(
         GET,
-        "/config-by-key/serv",
+        "/service-configs/config-by-key/serv",
         willRespondWith = (200, Some(
           """{
             "artifact_name": {
@@ -129,7 +129,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         serviceEndpoint(GET, s"/api/v2/repositories/$serviceName", willRespondWith = (404, None))
         serviceEndpoint(
           GET,
-          s"/config-by-key/$serviceName",
+          s"/service-configs/config-by-key/$serviceName",
           willRespondWith = (200, Some(
             s"""{
               "artifact_name": {

@@ -43,23 +43,23 @@ class ConfigConnector @Inject() (
 
   def configByEnv(service: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/config-by-env/$service")
+      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/$service")
       .execute[ConfigByEnvironment]
 
   def configByKey(service: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/config-by-key/$service")
+      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-key/$service")
       .execute[ConfigByKey]
 
   def appConfig(service: String)(implicit hc: HeaderCarrier): Future[Seq[ConfigSourceEntries]] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/app-config/$service")
+      .get(url"$serviceConfigsBaseUrl/service-configs/app-config/$service")
       .execute[Seq[ConfigSourceEntries]]
 
   def bobbyRules()(implicit hc: HeaderCarrier): Future[BobbyRuleSet] = {
     implicit val brsr = BobbyRuleSet.reads
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/bobby/rules")
+      .get(url"$serviceConfigsBaseUrl/service-configs/bobby/rules")
       .execute[BobbyRuleSet]
   }
 
@@ -69,14 +69,14 @@ class ConfigConnector @Inject() (
   )(implicit hc: HeaderCarrier): Future[Option[DeploymentConfig]] = {
     implicit val dcr = DeploymentConfig.reads
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/deployment-config/${environment.asString}/$service")
+      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config/${environment.asString}/$service")
       .execute[Option[DeploymentConfig]]
   }
 
   def allDeploymentConfig(implicit hc: HeaderCarrier): Future[Seq[ServiceDeploymentConfig]] = {
     implicit val adsr = ServiceDeploymentConfig.reads
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/deployment-config")
+      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config")
       .execute[Seq[ServiceDeploymentConfig]]
   }
 }

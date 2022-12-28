@@ -48,7 +48,7 @@ final class ConfigConnectorSpec
   "deploymentConfig" should {
     "return the deployment configuration for a service in an environment" in {
       stubFor(
-        get(urlEqualTo("/deployment-config/production/some-service"))
+        get(urlEqualTo("/service-configs/deployment-config/production/some-service"))
           .willReturn(aResponse().withBody("""{ "slots": 11, "instances": 3 }"""))
       )
 

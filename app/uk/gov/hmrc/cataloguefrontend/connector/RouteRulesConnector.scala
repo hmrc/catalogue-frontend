@@ -64,7 +64,7 @@ class RouteRulesConnector @Inject() (
   private val baseUrl: String = servicesConfig.baseUrl("service-configs")
 
   def frontendServices()(implicit hc: HeaderCarrier): Future[Seq[String]] = {
-    val url = url"$baseUrl/frontend-services"
+    val url = url"$baseUrl/service-configs/frontend-services"
     httpClientV2.get(url)
       .execute[Seq[String]]
       .recover {
@@ -76,7 +76,7 @@ class RouteRulesConnector @Inject() (
   }
 
   def frontendRoutes(service: String)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
-    val url = url"$baseUrl/frontend-route/$service"
+    val url = url"$baseUrl/service-configs/frontend-route/$service"
     httpClientV2
       .get(url)
       .execute[Seq[EnvironmentRoute]]
@@ -88,7 +88,7 @@ class RouteRulesConnector @Inject() (
     }
 
   def adminFrontendRoutes(service: String)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
-    val url = url"$baseUrl/admin-frontend-route/$service"
+    val url = url"$baseUrl/service-configs/admin-frontend-route/$service"
     httpClientV2
       .get(url)
       .execute[Seq[AdminFrontendRoute]]
