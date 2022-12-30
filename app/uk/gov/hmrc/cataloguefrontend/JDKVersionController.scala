@@ -18,11 +18,14 @@ package uk.gov.hmrc.cataloguefrontend
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
+
+import cats.implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -30,6 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class JDKVersionController @Inject() (
   override val mcc   : MessagesControllerComponents,
   dependenciesService: DependenciesService,
+  teamsReposConnector: TeamsAndRepositoriesConnector,
   jdkPage            : JdkVersionPage,
   jdkCountsPage      : JdkAcrossEnvironmentsPage,
   override val auth  : FrontendAuthComponents
@@ -38,19 +42,23 @@ class JDKVersionController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def findLatestVersions(flag: String) =
+  def findLatestVersions(flag: String, teamName: Option[String]) =
     BasicAuthAction.async { implicit request =>
       for {
-        flag        <- Future.successful(SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest))
-        jdkVersions <- dependenciesService.getJDKVersions(flag)
-      } yield Ok(jdkPage(jdkVersions.sortBy(_.version), SlugInfoFlag.values, flag))
+        teams       <- teamsReposConnector.allTeams
+        selectedFlag = SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
+        selectedTeam = teamName.flatMap(n => teams.find(_.name.asString == n))
+        jdkVersions <- dependenciesService.getJDKVersions(selectedFlag, selectedTeam.map(_.name))
+      } yield Ok(jdkPage(jdkVersions.sortBy(_.version), SlugInfoFlag.values, teams, selectedFlag, selectedTeam))
     }
 
-  def compareAllEnvironments() =
+  def compareAllEnvironments(teamName: Option[String]) =
     BasicAuthAction.async { implicit request =>
       for {
-        envs <- Future.sequence(SlugInfoFlag.values.map(dependenciesService.getJDKCountsForEnv))
-        jdks = envs.flatMap(_.usage.keys).distinct.sortBy(_.version)
-      } yield Ok(jdkCountsPage(envs, jdks))
+        teams       <- teamsReposConnector.allTeams
+        selectedTeam = teamName.flatMap(n => teams.find(_.name.asString == n))
+        envs        <- SlugInfoFlag.values.traverse(env => dependenciesService.getJDKCountsForEnv(env, selectedTeam.map(_.name)))
+        jdks         = envs.flatMap(_.usage.keys).distinct.sortBy(_.version)
+      } yield Ok(jdkCountsPage(envs, jdks, teams, selectedTeam))
     }
 }

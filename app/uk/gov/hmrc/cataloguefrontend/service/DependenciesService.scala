@@ -78,13 +78,13 @@ class DependenciesService @Inject() (
       .map(_.map(g => g.copy(artefacts = g.artefacts.sorted)))
       .map(_.sortBy(_.group))
 
-  def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] =
+  def getJDKVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[JDKVersion]] =
     serviceDependenciesConnector
-      .getJDKVersions(flag)
+      .getJDKVersions(teamName, flag)
 
-  def getJDKCountsForEnv(env: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[JDKUsageByEnv] =
+  def getJDKCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[JDKUsageByEnv] =
     for {
-      versions <- serviceDependenciesConnector.getJDKVersions(env)
+      versions <- serviceDependenciesConnector.getJDKVersions(teamName, env)
       counts   =  versions.groupBy(_.copy(name = "", kind = JDK)).view.mapValues(_.length).toMap
     } yield JDKUsageByEnv(env, counts)
 
