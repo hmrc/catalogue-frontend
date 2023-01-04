@@ -100,10 +100,10 @@ class ServiceDependenciesConnector @Inject() (
       .execute[List[GroupArtefacts]]
   }
 
-  def getJDKVersions(flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] = {
+  def getJDKVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] = {
     implicit val r = JDKVersionFormats.jdkFormat
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/jdkVersions?flag=${flag.asString}")
+      .get(url"$servicesDependenciesBaseUrl/api/jdkVersions?team=${teamName.map(_.asString)}&flag=${flag.asString}")
       .execute[List[JDKVersion]]
   }
 

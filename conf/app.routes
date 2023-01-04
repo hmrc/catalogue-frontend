@@ -45,8 +45,8 @@ GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefro
 
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController.display
 
-GET        /jdkexplorer/:env                            uk.gov.hmrc.cataloguefrontend.JDKVersionController.findLatestVersions(env: String)
-GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JDKVersionController.compareAllEnvironments
+GET        /jdkexplorer/:env                            uk.gov.hmrc.cataloguefrontend.JDKVersionController.findLatestVersions(env: String, teamName: Option[String] ?= None)
+GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JDKVersionController.compareAllEnvironments(teamName: Option[String] ?= None)
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()
 

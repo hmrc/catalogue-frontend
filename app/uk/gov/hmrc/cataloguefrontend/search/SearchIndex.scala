@@ -54,7 +54,7 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
   private val hardcodedLinks = List(
     SearchTerm("explorer", "dependency",                   catalogueRoutes.DependencyExplorerController.landing.url,                    1.0f, Set("depex")),
     SearchTerm("explorer", "bobby",                        catalogueRoutes.BobbyExplorerController.list().url,                          1.0f),
-    SearchTerm("explorer", "jvm",                          catalogueRoutes.JDKVersionController.compareAllEnvironments.url,             1.0f, Set("jdk", "jre")),
+    SearchTerm("explorer", "jvm",                          catalogueRoutes.JDKVersionController.compareAllEnvironments().url,           1.0f, Set("jdk", "jre")),
     SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                        1.0f, Set("lds")),
     SearchTerm("page",     "whatsrunningwhere",            wrwRoutes.WhatsRunningWhereController.releases().url,                        1.0f, Set("wrw")),
     SearchTerm("page",     "deployment",                   wrwRoutes.DeploymentHistoryController.history(Environment.Production).url,   1.0f),

@@ -24,6 +24,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.cataloguefrontend.connector.Team
 import views.html.JdkVersionPage
 
 
@@ -36,11 +37,13 @@ class JDKVersionPageSpec extends AnyWordSpec with MockitoSugar with Matchers {
       implicit val request = FakeRequest()
 
       val versions = List(
-          JDKVersion(name = "test-slug",     version = Version("1.181.0"), vendor = OpenJDK, kind = JDK)
-        , JDKVersion(name = "thing-service", version = Version("1.171.0"), vendor = Oracle , kind = JRE)
-        )
+        JDKVersion(name = "test-slug",     version = Version("1.181.0"), vendor = OpenJDK, kind = JDK)
+      , JDKVersion(name = "thing-service", version = Version("1.171.0"), vendor = Oracle , kind = JRE)
+      )
 
-      val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, SlugInfoFlag.Latest))
+      val teams = List(Team(name = TeamName.apply("Team 1"), createdDate = None, lastActiveDate = None, repos = 2))
+
+      val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 
       val slug1 = document.select("#jdk-slug-test-slug")
       val slug2 = document.select("#jdk-slug-thing-service")
@@ -56,7 +59,8 @@ class JDKVersionPageSpec extends AnyWordSpec with MockitoSugar with Matchers {
       implicit val request = FakeRequest()
 
       val versions = List(JDKVersion(name= "thing-service", version = Version("1.171.0"), vendor = Oracle, kind = JDK))
-      val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, SlugInfoFlag.Latest))
+      val teams    = List(Team(name = TeamName.apply("Team 1"), createdDate = None, lastActiveDate = None, repos = 1))
+      val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 
       val slug = document.select("#jdk-slug-thing-service")
       val link = slug.select("a[href*='/repositories/thing-service']")
@@ -65,8 +69,6 @@ class JDKVersionPageSpec extends AnyWordSpec with MockitoSugar with Matchers {
     }
   }
 
-
   private def asDocument(html: Html) = Jsoup.parse(html.toString())
-
 
 }

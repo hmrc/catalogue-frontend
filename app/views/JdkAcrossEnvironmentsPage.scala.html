@@ -19,14 +19,18 @@
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
 @import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, Vendor, Oracle, OpenJDK}
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(viewMessages: ViewMessages)
 
-@(envdata: List[JDKUsageByEnv],
-  jdks: List[JDKVersion])(implicit request: Request[_])
+@(envdata     : List[JDKUsageByEnv],
+  jdks        : List[JDKVersion],
+  teams       : Seq[Team],
+  selectedTeam: Option[Team]
+)(implicit request: Request[_])
 
 @standard_layout(s"JDK Versions", "dependencies") {
     <header>
@@ -37,7 +41,26 @@
 
     <div id="chart_div"></div>
 
-    <button id="chart-toggle" class="btn btn-default" onclick="toggle()">show absolute</button>
+    <form id="form" method="get">
+        <div class="form-group row">
+            <div class="col-md-3">
+                <label for="teamName">Team:</label>
+                <select class="form-control" name="teamName" onchange="this.form.submit()">
+                    <option value="" @{if(selectedTeam.isEmpty) "selected"}>All</option>
+                    @teams.map { team =>
+                        <option value="@{team.name.asString}" @{if(Some(team) == selectedTeam) "selected"}>
+                            @team.name.asString
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label>Graph Mode:</label>
+                <div><button type="button" id="chart-toggle" class="btn btn-default" onclick="toggle()">show absolute</button></div>
+            </div>
+        </div>
+    </form>
+
     <hr/>
 
     <table class="table table-striped">
@@ -57,17 +80,13 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@appRoutes.JDKVersionController.findLatestVersions(d.env.asString)">@d.env.displayString</a></td>
+              <td><a href="@appRoutes.JDKVersionController.findLatestVersions(d.env.asString, selectedTeam.map(_.name.asString))">@d.env.displayString</a></td>
               @for(jdk <- jdks) { <td>@{d.usage.getOrElse(jdk, 0)}</td>}
           </tr>
 
         }
         </tbody>
     </table>
-
-    <div>
-
-    </div>
 
     <script type="text/javascript">
             google.charts.load('current', {'packages': ['corechart']});
