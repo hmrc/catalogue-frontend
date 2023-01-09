@@ -44,7 +44,8 @@ class VulnerabilitiesController @Inject() (
     vulnerability : Option[String],
     curationStatus: Option[String],
     service       : Option[String],
-    team          : Option[String]
+    team          : Option[String],
+    component     : Option[String]
   ): Action[AnyContent] =
     Action.async { implicit request =>
       VulnerabilitiesExplorerFilter.form
@@ -54,7 +55,7 @@ class VulnerabilitiesController @Inject() (
           validForm =>
             for {
               teams     <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
-              summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.curationStatus, validForm.service, validForm.team)
+              summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.curationStatus, validForm.service, validForm.team, validForm.component)
             } yield Ok(vulnerabilitiesListPage(summaries, teams, VulnerabilitiesExplorerFilter.form.fill(validForm)))
           )
     }
@@ -70,7 +71,8 @@ case class VulnerabilitiesExplorerFilter(
   vulnerability : Option[String] = None,
   curationStatus: Option[String] = None,
   service       : Option[String] = None,
-  team          : Option[String] = None
+  team          : Option[String] = None,
+  component     : Option[String] = None
 )
 
 object VulnerabilitiesExplorerFilter {
@@ -81,7 +83,8 @@ object VulnerabilitiesExplorerFilter {
         "vulnerability"  -> optional(text),
         "curationStatus" -> optional(text),
         "service"        -> optional(text),
-        "team"           -> optional(text)
+        "team"           -> optional(text),
+        "component"      -> optional(text)
       )(VulnerabilitiesExplorerFilter.apply)(VulnerabilitiesExplorerFilter.unapply)
     )
 }

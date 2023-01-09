@@ -33,10 +33,10 @@ class VulnerabilitiesConnector @Inject() (
 
   private val url: String = servicesConfig.baseUrl("vulnerabilities")
 
-  def vulnerabilitySummaries(vulnerability: Option[String] = None, curationStatus: Option[String] = None, service: Option[String] = None, team: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilitySummary]] = {
+  def vulnerabilitySummaries(vulnerability: Option[String] = None, curationStatus: Option[String] = None, service: Option[String] = None, team: Option[String] = None, component: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilitySummary]] = {
     implicit val vsrs: Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
     httpClientV2
-      .get(url"$url/vulnerabilities/api/vulnerabilities/distinct?vulnerability=${vulnerability}&curationStatus=${curationStatus}&service=${service}&team=${team}")
+      .get(url"$url/vulnerabilities/api/vulnerabilities/distinct?vulnerability=$vulnerability&curationStatus=$curationStatus&service=$service&team=$team&component=$component")
       .execute[Seq[VulnerabilitySummary]]
   }
 
