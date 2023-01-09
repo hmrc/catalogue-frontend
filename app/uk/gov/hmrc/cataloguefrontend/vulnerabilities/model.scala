@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{OFormat, __}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersion, BobbyVersionRange, Version}
 
 import java.time.Instant
 import scala.collection.Seq
@@ -29,9 +30,14 @@ case class VulnerableComponent(
 //  Note two edge cases which would otherwise break the dependency explorer links are handled below:
 //  1. A vulnerable version may have another `.` after the patch version.
 //  2. An artefact may have a trailing `_someVersionNumber`.
-  def cleansedVersion = version.split("\\.").take(3).mkString(".")
-  def group = component.stripPrefix("gav://").split(":")(0)
-  def artefact = component.stripPrefix("gav://").split(":")(1).split("_")(0)
+  def cleansedVersion: String = version.split("\\.").take(3).mkString(".")
+  def group: String = component.stripPrefix("gav://").split(":")(0)
+  def artefact: String = component.stripPrefix("gav://").split(":")(1).split("_")(0)
+  def bobbyRange: BobbyVersionRange = {
+    val v = Version(cleansedVersion)
+    val vString = s"${v.major}.${v.minor}.${v.patch}"
+    BobbyVersionRange(s"[$vString]")
+  }
 }
 
 object VulnerableComponent {
