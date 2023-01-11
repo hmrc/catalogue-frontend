@@ -203,6 +203,12 @@ object DependencyExplorerController {
       else serviceWithDependency.teams.map(team => m + ("team" -> team.asString))
     }
 
+  def groupArtefactFromForm(form: Form[_]): Option[String] =
+    for {
+      g <- form("group").value.filter(_.nonEmpty)
+      a <- form("artefact").value.filter(_.nonEmpty)
+    } yield s"$g:$a"
+
   def search(team: String = "", flag: SlugInfoFlag, scopes: Seq[DependencyScope], group: String, artefact: String, versionRange: BobbyVersionRange): String =
     uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search.toString +
       s"?team=$team&flag=${flag.asString}${scopes.map(s => s"&scope[]=${s.asString}").mkString}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
