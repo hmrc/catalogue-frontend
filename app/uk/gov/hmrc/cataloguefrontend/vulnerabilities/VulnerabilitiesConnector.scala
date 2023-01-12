@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
-import play.api.libs.json.Reads
+import play.api.libs.json.{Reads, __}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus.{ActionRequired, InvestigationOngoing, NoActionRequired}
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -46,23 +48,11 @@ class VulnerabilitiesConnector @Inject() (
       .execute[Option[Int]]
   }
 
-  def vulnerabilitiesPerEnvironment: Future[Seq[VulnerabilitiesPerEnvironment]] =
-    Future.successful(
-      Seq(
-        VulnerabilitiesPerEnvironment(
-          "service-one",
-          qa            = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
-          staging       = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
-          externalTest  = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
-          production    = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3)
-        ),
-        VulnerabilitiesPerEnvironment(
-          "service-two",
-          qa            = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
-          staging       = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
-          externalTest  = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3),
-          production    = VulnerabilitiesCount(actionRequired = 1, investigation = 2, noActionRequired = 3)
-        )
-      )
-    )
+
+  def vulnerabilityCounts(service: Option[String], environments: Seq[Environment])(implicit hc: HeaderCarrier): Future[Seq[VulnerabilityCount]] = {
+    implicit val vcrs: Reads[VulnerabilityCount] = VulnerabilityCount.apiFormat
+    httpClientV2
+      .get(url"$url/vulnerabilities/api/vulnerabilities/counts?service=$service&environment=${environments.map(_.asString)}")
+      .execute[Seq[VulnerabilityCount]]
+  }
 }

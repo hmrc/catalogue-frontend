@@ -17,11 +17,57 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
-import play.api.libs.json.{OFormat, __}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersion, BobbyVersionRange, Version}
+import play.api.libs.json.{OFormat, Writes, __}
 
 import java.time.Instant
 import scala.collection.Seq
+
+case class Vulnerability(
+    service                   : String,
+    serviceVersion            : String,
+    vulnerableComponentName   : String,
+    vulnerableComponentVersion: String,
+    componentPathInSlug       : String,
+    id                        : String,
+    score                     : Option[Double],
+    description               : String,
+    fixedVersions             : Option[Seq[String]],
+    teams                     : Option[Seq[String]],
+    references                : Seq[String],
+    publishedDate             : Instant,
+    scannedDate               : Instant,
+    curationStatus            : Option[CurationStatus],
+    assessment                : Option[String],
+    evaluatedDate             : Option[Instant],
+    ticket                    : Option[String]
+)
+
+object Vulnerability {
+
+  val reads: OFormat[Vulnerability] = {
+    implicit val csf = CurationStatus.format
+
+    ( (__ \ "service"                     ).format[String]
+      ~ (__ \ "serviceVersion"            ).format[String]
+      ~ (__ \ "vulnerableComponentName"   ).format[String]
+      ~ (__ \ "vulnerableComponentVersion").format[String]
+      ~ (__ \ "componentPathInSlug"       ).format[String]
+      ~ (__ \ "id"                        ).format[String]
+      ~ (__ \ "score"                     ).formatNullable[Double]
+      ~ (__ \ "description"               ).format[String]
+      ~ (__ \ "fixedVersions"             ).formatNullable[Seq[String]]
+      ~ (__ \ "teams"                     ).formatNullable[Seq[String]]
+      ~ (__ \ "references"                ).format[Seq[String]]
+      ~ (__ \ "publishedDate"             ).format[Instant]
+      ~ (__ \ "scannedDate"               ).format[Instant]
+      ~ (__ \ "curationStatus"            ).formatNullable[CurationStatus]
+      ~ (__ \ "assessment"                ).formatNullable[String]
+      ~ (__ \ "evaluatedDate"             ).formatNullable[Instant]
+      ~ (__ \ "ticket"                    ).formatNullable[String]
+      ) (apply, unlift(unapply))
+  }
+}
 
 case class VulnerableComponent(
   component: String,
@@ -115,5 +161,41 @@ object VulnerabilitySummary {
       ~ (__ \ "occurrences"       ).format[Seq[VulnerabilityOccurrence]]
       ~ (__ \ "teams"             ).format[Seq[String]]
       ) (apply, unlift(unapply))
+  }
+}
+
+case class VulnerabilityCount(
+  service       : String
+, environment   : String
+, curationStatus: CurationStatus
+, count         : Int
+)
+
+object VulnerabilityCount {
+  val apiFormat: OFormat[VulnerabilityCount] = {
+    implicit val csf = CurationStatus.format
+    ((__ \ "service"          ).format[String]
+      ~ (__ \ "environment"   ).format[String]
+      ~ (__ \ "curationStatus").format[CurationStatus]
+      ~ (__ \ "count"         ).format[Int]
+      )(apply, unlift(unapply))
+  }
+}
+
+case class TotalVulnerabilityCount(
+  service             : String
+, actionRequired      : Int
+, noActionRequired    : Int
+, investigationOngoing: Int
+)
+
+object TotalVulnerabilityCount {
+  val writes: Writes[TotalVulnerabilityCount] = {
+    implicit val csf = CurationStatus.format
+    ((__ \ "service"                ).write[String]
+      ~ (__ \ "actionRequired"      ).write[Int]
+      ~ (__ \ "noActionRequired"    ).write[Int]
+      ~ (__ \ "investigationOngoing").write[Int]
+      )(unlift(unapply))
   }
 }
