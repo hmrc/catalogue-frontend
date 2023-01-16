@@ -16,8 +16,9 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{ViewMessages, routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersion, BobbyVersionRange, DependencyScope, GroupArtefacts, ServiceWithDependency, TeamName}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, GroupArtefacts, ServiceWithDependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
 
 @this(viewMessages: ViewMessages)
 
@@ -53,134 +54,127 @@
             </div>
         }
 
-        <div class="board container">
-            <div class="board__body">
-                @helper.form(
-                    action =  appRoutes.DependencyExplorerController.search,
-                    Symbol("class") -> "form-inline",
-                    Symbol("id")    -> "search-by-dependency-form",
-                    Symbol("onsubmit") -> "updateVersionRange();"
-                ) {
-                    <table class="padded-table">
-                        <tr>
-                            <td style="vertical-align: top;">
-                                @helper.select(
-                                    form("group"),
-                                    helper.options(Seq("" -> Messages("dependencyexplorer.select.group")) ++
-                                                   groupArtefacts.map(_.group).map(g => (g, g)) :_*),
-                                    Symbol("_label") -> None,
-                                    Symbol("_class") -> "form-group input-no-label",
-                                    Symbol("class") -> "form-control"
-                                )
-                                @helper.select(
-                                    form("artefact"),
-                                    helper.options(List()),
-                                    Symbol("_label") -> None,
-                                    Symbol("_class") -> "form-group input-no-label",
-                                    Symbol("class") -> "form-control"
-                                )
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding-top: 1em; vertical-align: top;">
-                                <input class="form-control" type="text" id="lbValue" value="@versionRange.lowerBound.map(_.version)" size="20" placeholder="0.0.0">
-                                <select id="lbInclusive" class="form-control">
-                                     <option value="false">&lt;</option>
-                                     <option value="true" @selected(versionRange.lowerBound)>&lt;=</option>
-                               </select>
-                               version
-                                <select id="ubInclusive" class="form-control">
-                                     <option value="false">&lt;</option>
-                                     <option value="true" @selected(versionRange.upperBound)>&lt;=</option>
-                               </select>
-                                <input class="form-control" type="text" id="ubValue" value="@versionRange.upperBound.map(_.version)" size="20" placeholder="">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding-top: 1em; vertical-align: top;">
-                                @helper.select(
-                                    form("team"),
-                                    helper.options(Seq("" -> Messages("dependencyexplorer.select.teams.all")) ++
-                                                   teams.map(_.asString).map(t => (t, t)) :_*),
-                                    Symbol("_label") -> None,
-                                    Symbol("_class") -> "form-group input-no-label",
-                                    Symbol("class")  -> "form-control"
-                                )
-                                @helper.select(
-                                    form("flag"),
-                                    helper.options(flags.map(t => (t.asString, t.displayString)) :_*),
-                                    Symbol("_label") -> None,
-                                    Symbol("_class") -> "form-group input-no-label",
-                                    Symbol("class")  -> "form-control"
-                                )
-                                @helper.select(
-                                    form("scope"),
-                                    helper.options(scopes.map(t => (t.asString, t.displayString)) :_*),
-                                    Symbol("_label") -> None,
-                                    Symbol("_class") -> "form-group input-no-label",
-                                    Symbol("class")  -> "form-control",
-                                    Symbol("multiple") -> None
-                                )
-                            </td>
-                            <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value">
-                            <input type="hidden" id="asCsv" name="asCsv" value="false">
-                            <td style="padding-top: 1em; vertical-align: top;">
-                                <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-                                <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV" onclick="exportAsCsv()"/>
-                            </td>
-                        </tr>
-
-                        </table>
-                     </div>
-                }
-                @searchResults match {
-                    case None                => {
-                        <ul class="list"/>
-                    }
-                    case Some(Nil)           => {
-                        <p id="search-results-empty">This search did not return any results.</p>
-                        <ul class="list"/>
-                    }
-                    case Some(searchResults) => {
-                        <p>Found @searchResults.size results</p>
-
-                        <div id="chart_div" align="center"></div>
-
-                        <table id="search-results" class="table table-striped">
-                            <thead>
-                            <tr>
-                                <th rowspan="2"><button class="sort no-border" data-sort="service">Service</button></th>
-                                <th rowspan="2">Version</th>
-                                <th rowspan="2"><button class="sort no-border" data-sort="teams">Team</button></th>
-                                <th colspan="4" class="text-center">Dependency</th>
-                            </tr>
-                            <tr>
-                                <th>Group ID</th>
-                                <th>Artefact ID</th>
-                                <th><button class="sort no-border" data-sort="dep-version">Version</button></th>
-                                <th>Scope</th>
-                            </tr>
-                            </thead>
-                            <tbody class="list">
-                            @for(result <- searchResults) {
-                                <tr>
-                                    <td class="service"><a href="@appRoutes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
-                                    <td>@result.slugVersion</td>
-                                    <td class="teams">@result.teams.map(_.asString).mkString(", ")</td>
-                                    <td>@result.depGroup</td>
-                                    <td>@result.depArtefact</td>
-                                    <td class="dep-version">@result.depVersion</td>
-                                    <td>
-                                        @result.scopes.map(_.displayString).mkString(", ")
-                                    </td>
-                                </tr>
-                            }
-                            </tbody>
-                        </table>
-                    }
-                }
+        <form id="search-by-dependency-form" action="@appRoutes.DependencyExplorerController.search.url" method="get" onsubmit="updateVersionRange()">
+            <div class="form-group">
+                <div class="row" style="margin-bottom: 20px;">
+                    <div class="col-md-4">
+                        <label for="group-artefact-search">Group:Artefact</label>
+                        <input id="group-artefact-search" class="form-control" type="text" value="@DependencyExplorerController.groupArtefactFromForm(form)" onfocus="clearSearch()" autocomplete="off">
+                        <div id="group-artefact-matches" class="dependency-search-dropdown hide" style="padding-right: 30px"></div>
+                        <input id="group" name="group" value='@form("group").value' type="hidden">
+                        <input id="artefact" name="artefact" value='@form("artefact").value' type="hidden">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="lbValue">Version Range</label>
+                        <div class="input-group input-group-multi">
+                            <div class="col-md-3">
+                                <input class="form-control input-group-start" id="lbValue" type="text" placeholder="0.0.0" value="@versionRange.lowerBound.map(_.version)">
+                            </div>
+                            <div class="col-md-2">
+                                <select id="lbInclusive" class="form-control input-group-end">
+                                    <option value="false" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
+                                    <option value="true" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input class="form-control undecorated-text" type="text" value="version" tabindex="-1" onfocus="this.blur()" readonly>
+                            </div>
+                            <div class="col-md-2">
+                                <select id="ubInclusive" class="form-control input-group-start">
+                                    <option value="false" @if(versionRange.upperBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
+                                    <option value="true" @if(versionRange.upperBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input class="form-control input-group-end" id="ubValue" type="text" value="@versionRange.upperBound.map(_.version)">
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value">
+                    <input type="hidden" id="asCsv" name="asCsv" value="false">
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        @helper.select(
+                            field               = form("team"),
+                            options             = teams.map(t => (t.asString, t.asString)),
+                            Symbol("_default") -> "All teams",
+                            Symbol("_label")   -> "Team",
+                            Symbol("class")    -> "form-control"
+                        )
+                    </div>
+                    <div class="col-md-1">
+                        @helper.select(
+                            field             = form("flag"),
+                            options           = flags.map(f => (f.asString, f.displayString)),
+                            Symbol("_label") -> "Flag",
+                            Symbol("class")  -> "form-control"
+                        )
+                    </div>
+                    <div class="col-md-2">
+                        @helper.select(
+                            field               = form("scope"),
+                            options             = scopes.map(s => (s.asString, s.displayString)),
+                            Symbol("_label")   -> "Scope",
+                            Symbol("class")    -> "form-control",
+                            Symbol("style")    -> "width: 60%;",
+                            Symbol("multiple") -> None
+                        )
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                        <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV" onclick="exportAsCsv()"/>
+                    </div>
+                </div>
             </div>
-        </div>
+        </form>
+
+        @searchResults match {
+            case None                => {
+                <ul class="list"/>
+            }
+            case Some(Nil)           => {
+                <p id="search-results-empty">This search did not return any results.</p>
+                <ul class="list"/>
+            }
+            case Some(searchResults) => {
+                <p>Found @searchResults.size results</p>
+
+                <div id="chart_div" align="center"></div>
+
+                <table id="search-results" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th rowspan="2"><button class="sort no-border" data-sort="service">Service</button></th>
+                            <th rowspan="2">Version</th>
+                            <th rowspan="2"><button class="sort no-border" data-sort="teams">Team</button></th>
+                            <th colspan="4" class="text-center">Dependency</th>
+                        </tr>
+                        <tr>
+                            <th>Group ID</th>
+                            <th>Artefact ID</th>
+                            <th><button class="sort no-border" data-sort="dep-version">Version</button></th>
+                            <th>Scope</th>
+                        </tr>
+                    </thead>
+                    <tbody class="list">
+                        @for(result <- searchResults) {
+                            <tr>
+                                <td class="service"><a href="@appRoutes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
+                                <td>@result.slugVersion</td>
+                                <td class="teams">@result.teams.map(_.asString).mkString(", ")</td>
+                                <td>@result.depGroup</td>
+                                <td>@result.depArtefact</td>
+                                <td class="dep-version">@result.depVersion</td>
+                                <td>@result.scopes.map(_.displayString).mkString(", ")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        }
     </div>
 
     <script>
@@ -190,52 +184,20 @@
             document.addEventListener('DOMContentLoaded', ready);
         }
 
-        function ready() {
-            document.getElementById("group").onchange = updateArtefacts;
-            updateArtefacts();
-            updateSortOrder();
-        }
-
-        var options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
-        var serviceList = null;
+        let options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
+        let serviceList = null;
 
         function updateSortOrder() {
             serviceList = new List('service-list', options);
         }
 
-        function updateArtefacts() {
-            var group = document.getElementById("group").value;
-
-            var groupArtefacts = {
-                @groupArtefacts.map { res =>
-                '@{res.group}': [@for(a <- res.artefacts){
-                    '@a',
-                    }]
-                ,
+        const allGroupArtefacts = [
+            @for(ga <- groupArtefacts) {
+                @for(artefact <- ga.artefacts) {
+                    '@ga.group:@artefact',
                 }
             }
-
-            var artefactSelect = document.getElementById("artefact")
-            while (artefactSelect.options.length > 0) {
-                artefactSelect.remove(artefactSelect.options.length - 1);
-            }
-
-            var artefacts = groupArtefacts[group];
-            if (artefacts) {
-                var opt = document.createElement('option');
-                opt.text = "@Messages("dependencyexplorer.select.artefact")";
-                opt.value = "";
-                artefactSelect.add(opt, null);
-                for (i = 0; i < artefacts.length; i++)
-                {
-                    var opt = document.createElement('option');
-                    opt.text = artefacts[i];
-                    opt.value = artefacts[i];
-                    opt.selected = artefacts[i] == '@{form("artefact").value}';
-                    artefactSelect.add(opt, null);
-                }
-            }
-        }
+        ]
 
         function exportAsCsv() {
             document.getElementById('asCsv').value = true;
@@ -243,15 +205,168 @@
             document.getElementById('asCsv').value = false;
         }
 
+        function updateGroupArtefact(groupArtefact) {
+            let parts = groupArtefact.split(':');
+            document.getElementById('group').value = parts[0];
+            document.getElementById('artefact').value = parts[1];
+        }
+
         function updateVersionRange() {
-            var lbValue      = document.getElementById('lbValue').value;
-            var lbInclusive  = document.getElementById('lbInclusive').value;
-            var ubInclusive  = document.getElementById('ubInclusive').value;
-            var ubValue      = document.getElementById('ubValue').value;
-            var versionRange = (lbInclusive == "true" ? "[" : "(") + (lbValue ? lbValue : "0.0.0") +
-                               "," +
-                               ubValue + (ubInclusive == "true" && ubValue ? "]" : ")");
-            document.getElementById('versionRange').value = versionRange;
+            const lbValue      = document.getElementById('lbValue').value;
+            const lbInclusive  = document.getElementById('lbInclusive').value;
+            const ubInclusive  = document.getElementById('ubInclusive').value;
+            const ubValue      = document.getElementById('ubValue').value;
+
+            let rangeStart = lbInclusive == 'true' ? '[' : '(';
+            let rangeFrom  = lbValue ? lbValue : '0.0.0';
+            let rangeEnd   = ubInclusive == 'true' ? ']' : ')';
+
+            document.getElementById('versionRange').value = rangeStart + rangeFrom + ',' + ubValue + rangeEnd;
+        }
+
+        let gaSearch = document.getElementById('group-artefact-search');
+        let matchesDiv = document.getElementById("group-artefact-matches")
+
+        function clearMatches() {
+            matchesDiv.innerHTML = '';
+            matchesDiv.classList.add('hide');
+        }
+
+        function clearSearch() {
+            gaSearch.value = '';
+            document.getElementById('group').value = '';
+            document.getElementById('artefact').value = '';
+            clearMatches()
+        }
+
+        function highlightMatch(idx, toggle) {
+            let match = document.getElementById('dependency-match-' + idx)
+            if(match != null) {
+                if(toggle) {
+                    match.classList.add('dependency-match-selected');
+                } else {
+                    match.classList.remove('dependency-match-selected');
+                }
+            }
+        }
+
+        function matchesInBold(query, match) {
+            let bolded = match;
+            query.split(' ').forEach(function (term) {
+                bolded = bolded.replaceAll(term, '<strong>' + term + '</strong>');
+            });
+
+            return bolded;
+        }
+
+        const minSearch = 3;
+        let gaSelectedIdx = 0;
+        let gaMatchesLen = 0;
+        let gaScrollPos = 0;
+
+        function gaSearchInputListener(e) {
+            if(e.target.value.length >= minSearch) {
+                if(e.keyCode > 46 || e.keyCode === 32 || e.keyCode === 8) { // alphanum, space and backspace
+                    clearMatches();
+                    groupArtefactSearch(e.target.value);
+                } else if (e.keyCode === 13) { //enter
+                    let selected = document.getElementById('dependency-match-' + gaSelectedIdx);
+                    if(selected != null) {
+                        selected.click();
+                    }
+                } else if (e.keyCode === 40) { //down arrow
+                    if(gaSelectedIdx < gaMatchesLen - 1) {
+                        highlightMatch(gaSelectedIdx, false);
+                        gaSelectedIdx++;
+                        highlightMatch(gaSelectedIdx, true);
+                        updateScroll();
+                    }
+                } else if (e.keyCode === 38) { //up arrow
+                    if(gaSelectedIdx > 0) {
+                        highlightMatch(gaSelectedIdx, false);
+                        gaSelectedIdx--;
+                        highlightMatch(gaSelectedIdx, true);
+                        updateScroll();
+                    }
+                }
+            } else {
+                matchesDiv.innerHTML = '';
+                matchesDiv.classList.add('hide');
+            }
+        }
+
+        function updateScroll() {
+            if(gaSelectedIdx > 5) {
+                const height = parseInt(window.getComputedStyle(document.getElementById('dependency-match-0')).height.replace('px', ''));
+                matchesDiv.scrollTop = (gaSelectedIdx - 5) * height;
+            } else {
+                matchesDiv.scrollTop = 0;
+            }
+        }
+
+        function gaDisableDefaults(e) {
+            if(e.keyCode === 38 || e.keyCode === 40 || e.keyCode === 13) {
+                e.preventDefault();
+            }
+        }
+
+        function groupArtefactSearch(raw) {
+            let query = raw.trim();
+            let matches = [];
+
+            let terms = query.split(' ');
+            let first = terms.shift();
+
+            matches = allGroupArtefacts.filter(function (el) {
+                return el.includes(first);
+            });
+
+            if(terms.length > 0) {
+                terms.forEach(function(term) {
+                    matches = matches.filter(function (el) {
+                        return el.includes(term);
+                    });
+                });
+            }
+
+            let matchesList = document.createElement('div')
+            matchesList.classList.add('list-group', 'dependency-match-list');
+
+            if(matches.length == 0) {
+                let node = document.createElement('button');
+                node.classList.add('list-group-item', 'disabled');
+                node.innerHTML = 'No matches found'
+                matchesList.appendChild(node);
+            } else {
+                let idx = 0
+                gaMatchesLen = matches.length;
+                matches.forEach(function (match) {
+                    let btn = document.createElement('a');
+                    btn.id = 'dependency-match-' + idx;
+                    btn.classList.add('list-group-item');
+                    btn.innerHTML = matchesInBold(query, match);
+                    btn.onclick = function() {
+                        clearMatches();
+                        gaSearch.value = match;
+                        updateGroupArtefact(match);
+                    }
+                    matchesList.appendChild(btn);
+                    idx++;
+                });
+            }
+
+            matchesDiv.appendChild(matchesList);
+            gaSelectedIdx = 0;
+            updateScroll();
+            highlightMatch(gaSelectedIdx, true);
+            matchesDiv.classList.remove('hide');
+        }
+
+        gaSearch.addEventListener('keyup', gaSearchInputListener, false);
+        gaSearch.addEventListener('keydown', gaDisableDefaults, false);
+
+        function ready() {
+            updateSortOrder();
         }
     </script>
 
@@ -285,8 +400,4 @@
             }
         }
     </script>
-}
-
-@selected(optVersion: Option[BobbyVersion]) = {
-    @optVersion.map(v => if (v.inclusive) "selected" else "").getOrElse("selected")
 }

@@ -12589,6 +12589,25 @@ table.shutter-events {
   padding-left: 6px;
 }
 
+.dependency-search-dropdown {
+  position: absolute;
+  overflow-y: scroll;
+  height: 17em;
+  z-index: 1000000;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.dependency-match-list {
+  margin-bottom: 0;
+}
+
+.dependency-match-selected {
+  text-decoration: none;
+  color: #555;
+  background-color: #f5f5f5;
+}
+
 .search-item-selected {
   background: #ccc !important;
 }
@@ -12635,4 +12654,32 @@ table.shutter-events {
   background: #eeefef;
   padding: 5px 8px 4px 8px;
   letter-spacing: 1px;
+}
+
+.input-group-multi [class*='col-'] {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.input-group-multi [class*='col-'] .form-control {
+  border-right: 0;
+  border-radius: 0;
+}
+
+.input-group-multi [class*='col-'] .form-control.input-group-end {
+  border-radius: 0 4px 4px 0;
+  border-right: 1px solid #ccc;
+}
+
+.input-group-multi [class*='col-'] .form-control.input-group-start {
+  border-radius: 4px 0 0 4px;
+  border-left: 1px solid #ccc;
+}
+
+.input-group-multi [class*='col-'] .form-control.undecorated-text {
+  border: 0;
+  box-shadow: none;
+  text-align: center;
+  background-color: #fff;
+  padding: 6px 0px;
 }
