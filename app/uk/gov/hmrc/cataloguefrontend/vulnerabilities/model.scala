@@ -23,52 +23,6 @@ import play.api.libs.json.{OFormat, Writes, __}
 import java.time.Instant
 import scala.collection.Seq
 
-case class Vulnerability(
-    service                   : String,
-    serviceVersion            : String,
-    vulnerableComponentName   : String,
-    vulnerableComponentVersion: String,
-    componentPathInSlug       : String,
-    id                        : String,
-    score                     : Option[Double],
-    description               : String,
-    fixedVersions             : Option[Seq[String]],
-    teams                     : Option[Seq[String]],
-    references                : Seq[String],
-    publishedDate             : Instant,
-    scannedDate               : Instant,
-    curationStatus            : Option[CurationStatus],
-    assessment                : Option[String],
-    evaluatedDate             : Option[Instant],
-    ticket                    : Option[String]
-)
-
-object Vulnerability {
-
-  val reads: OFormat[Vulnerability] = {
-    implicit val csf = CurationStatus.format
-
-    ( (__ \ "service"                     ).format[String]
-      ~ (__ \ "serviceVersion"            ).format[String]
-      ~ (__ \ "vulnerableComponentName"   ).format[String]
-      ~ (__ \ "vulnerableComponentVersion").format[String]
-      ~ (__ \ "componentPathInSlug"       ).format[String]
-      ~ (__ \ "id"                        ).format[String]
-      ~ (__ \ "score"                     ).formatNullable[Double]
-      ~ (__ \ "description"               ).format[String]
-      ~ (__ \ "fixedVersions"             ).formatNullable[Seq[String]]
-      ~ (__ \ "teams"                     ).formatNullable[Seq[String]]
-      ~ (__ \ "references"                ).format[Seq[String]]
-      ~ (__ \ "publishedDate"             ).format[Instant]
-      ~ (__ \ "scannedDate"               ).format[Instant]
-      ~ (__ \ "curationStatus"            ).formatNullable[CurationStatus]
-      ~ (__ \ "assessment"                ).formatNullable[String]
-      ~ (__ \ "evaluatedDate"             ).formatNullable[Instant]
-      ~ (__ \ "ticket"                    ).formatNullable[String]
-      ) (apply, unlift(unapply))
-  }
-}
-
 case class VulnerableComponent(
   component: String,
   version: String
