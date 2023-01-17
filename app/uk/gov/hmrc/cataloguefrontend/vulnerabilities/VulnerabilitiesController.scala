@@ -70,27 +70,18 @@ class VulnerabilitiesController @Inject() (
           )
     }
 
-
-  def toEnvironment(filter: VulnerabilitiesCountFilter): Seq[Environment] =
-    Seq(
-      (filter.production, Production),
-      (filter.staging, Staging),
-      (filter.qa, QA),
-      (filter.externalTest, ExternalTest)
-    ).filter{ case (f, _) => f}.map(_._2)
-
-
   def vulnerabilitiesCountForServices: Action[AnyContent] = Action.async { implicit request =>
     import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
     implicit val vWrites: Writes[TotalVulnerabilityCount] = TotalVulnerabilityCount.writes
     form
       .bindFromRequest()
       .fold(
-        formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, formWithErrors))),
+        formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
         validForm =>
          for {
-           vulnCounts <- vulnerabilitiesService.getVulnerabilityCounts(validForm.service, toEnvironment(validForm))
-         } yield Ok(vulnerabilitiesForServicesPage(vulnCounts, form.fill(validForm)))
+           teams      <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
+           counts     <- vulnerabilitiesService.getVulnerabilityCounts(validForm.service, validForm.team, validForm.environment)
+         } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
       )
   }
 
@@ -124,28 +115,40 @@ object VulnerabilitiesExplorerFilter {
 }
 
 
-
-
 case class VulnerabilitiesCountFilter(
-                                       service     : Option[String] = None,
-                                       production: Boolean,
-                                       staging: Boolean,
-                                       qa: Boolean,
-                                       externalTest: Boolean
-                                     )
+  service     : Option[String]      = None,
+  team:         Option[String]      = None,
+  environment : Option[Environment] = None
+)
 
 object VulnerabilitiesCountFilter {
   lazy val form: Form[VulnerabilitiesCountFilter] = Form(
     mapping(
-      "service"      -> optional(text),
-      "production"   -> boolean,
-      "staging"      -> boolean,
-      "qa"           -> boolean,
-      "externalTest" -> boolean
-    ) (VulnerabilitiesCountFilter.apply)(VulnerabilitiesCountFilter.unapply)
+      "service"     -> optional(text),
+      "team"        -> optional(text),
+      "environment" -> optional(text)
+        .transform[Option[Environment]](
+          o => Environment.parse(o.getOrElse(Environment.Production.asString)),
+          _.map(_.asString))
+    )(VulnerabilitiesCountFilter.apply)(VulnerabilitiesCountFilter.unapply)
   )
-
 }
+
+
+
+//val form = Form(single("environment" -> default(of[String], Environment.Production.asString)))
+
+//object VulnerabilitiesCountFilter {
+//  lazy val form: Form[VulnerabilitiesCountFilter] = Form(
+//    mapping(
+//      "service"      -> optional(text),
+//      "production"   -> boolean,
+//      "staging"      -> boolean,
+//      "qa"           -> boolean,
+//      "externalTest" -> boolean
+//    ) (VulnerabilitiesCountFilter.apply)(VulnerabilitiesCountFilter.unapply)
+//  )
+//}
 
 
 //object VulnerabilitiesCountFilter {

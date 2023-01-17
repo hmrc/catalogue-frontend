@@ -29,10 +29,10 @@ class VulnerabilitiesService @Inject() (
   ec: ExecutionContext
 ) {
 
-
-  def getVulnerabilityCounts(service: Option[String], environments: Seq[Environment])(implicit hc: HeaderCarrier): Future[Seq[TotalVulnerabilityCount]] = {
+  def getVulnerabilityCounts(service: Option[String], team: Option[String], environment: Option[Environment])(implicit hc: HeaderCarrier): Future[Seq[TotalVulnerabilityCount]] = {
     for {
-      filteredCounts <- vulnerabilitiesConnector.vulnerabilityCounts(service, environments)
+      filteredCounts <- vulnerabilitiesConnector.vulnerabilityCounts(service, team, environment)
+
       countsByService = filteredCounts.foldLeft(Map.empty[String, TotalVulnerabilityCount])((acc, cur) => {
         val record = acc.getOrElse(cur.service, TotalVulnerabilityCount(cur.service, 0, 0, 0))
         val updatedRecord = cur.curationStatus match {
