@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
-import play.api.libs.json.{Reads, __}
+import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus.{ActionRequired, InvestigationOngoing, NoActionRequired}
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}

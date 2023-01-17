@@ -31,6 +31,7 @@ class VulnerabilitiesService @Inject() (
 
   def getVulnerabilityCounts(service: Option[String], team: Option[String], environment: Option[Environment])(implicit hc: HeaderCarrier): Future[Seq[TotalVulnerabilityCount]] = {
     for {
+
       filteredCounts <- vulnerabilitiesConnector.vulnerabilityCounts(service, team, environment)
 
       countsByService = filteredCounts.foldLeft(Map.empty[String, TotalVulnerabilityCount])((acc, cur) => {

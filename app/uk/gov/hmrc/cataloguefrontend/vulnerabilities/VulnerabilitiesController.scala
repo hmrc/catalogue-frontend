@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,15 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.data.Form
-import play.api.libs.json.Json
-import play.api.data.{Form, FormError, Forms}
-import play.api.data.Forms.{boolean, mapping, optional, seq, text}
-import play.api.data.format.Formats.parsing
-import play.api.data.format.Formatter
-import play.api.libs.json.{Json, OFormat, Writes}
+import play.api.data.Forms.{mapping, optional, text}
+import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.model.Environment.{ExternalTest, Production, QA, Staging}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.vulnerabilities.VulnerabilitiesListPage
-import views.html.vulnerabilities.VulnerabilitiesForServicesPage
+import views.html.vulnerabilities.{VulnerabilitiesForServicesPage, VulnerabilitiesListPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -114,7 +108,6 @@ object VulnerabilitiesExplorerFilter {
     )
 }
 
-
 case class VulnerabilitiesCountFilter(
   service     : Option[String]      = None,
   team:         Option[String]      = None,
@@ -133,31 +126,3 @@ object VulnerabilitiesCountFilter {
     )(VulnerabilitiesCountFilter.apply)(VulnerabilitiesCountFilter.unapply)
   )
 }
-
-
-
-//val form = Form(single("environment" -> default(of[String], Environment.Production.asString)))
-
-//object VulnerabilitiesCountFilter {
-//  lazy val form: Form[VulnerabilitiesCountFilter] = Form(
-//    mapping(
-//      "service"      -> optional(text),
-//      "production"   -> boolean,
-//      "staging"      -> boolean,
-//      "qa"           -> boolean,
-//      "externalTest" -> boolean
-//    ) (VulnerabilitiesCountFilter.apply)(VulnerabilitiesCountFilter.unapply)
-//  )
-//}
-
-
-//object VulnerabilitiesCountFilter {
-//  lazy val form: Form[VulnerabilitiesCountFilter] = Form(
-//    mapping(
-//      "service"      -> optional(text),
-//      "environments" -> seq(text).transform[Seq[Environment]](
-//        _.flatMap(s => Environment.parse(s)),
-//        _.map(_.asString))
-//    ) (VulnerabilitiesCountFilter.apply)(VulnerabilitiesCountFilter.unapply)
-//  )
-//}
