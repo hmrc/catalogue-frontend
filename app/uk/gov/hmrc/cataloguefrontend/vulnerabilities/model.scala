@@ -141,6 +141,7 @@ case class TotalVulnerabilityCount(
 , actionRequired      : Int
 , noActionRequired    : Int
 , investigationOngoing: Int
+, uncurated           : Int
 )
 
 object TotalVulnerabilityCount {
@@ -150,6 +151,7 @@ object TotalVulnerabilityCount {
       ~ (__ \ "actionRequired"      ).write[Int]
       ~ (__ \ "noActionRequired"    ).write[Int]
       ~ (__ \ "investigationOngoing").write[Int]
+      ~ (__ \ "uncurated").write[Int]
       )(unlift(unapply))
   }
 }
