@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus.{ActionRequired, InvestigationOngoing, NoActionRequired}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus.{ActionRequired, InvestigationOngoing, NoActionRequired, Uncurated}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesService.totalCountsPerService
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -41,11 +41,12 @@ class VulnerabilitiesService @Inject() (
 object VulnerabilitiesService {
   def totalCountsPerService(filteredCounts: Seq[VulnerabilityCount]): Seq[TotalVulnerabilityCount] = {
     filteredCounts.foldLeft(Map.empty[String, TotalVulnerabilityCount])((acc, cur) => {
-      val record = acc.getOrElse(cur.service, TotalVulnerabilityCount(cur.service, 0, 0, 0))
+      val record = acc.getOrElse(cur.service, TotalVulnerabilityCount(cur.service, 0, 0, 0, 0))
       val updatedRecord = cur.curationStatus match {
         case ActionRequired       => record.copy(actionRequired = record.actionRequired + cur.count)
         case NoActionRequired     => record.copy(noActionRequired = record.noActionRequired + cur.count)
         case InvestigationOngoing => record.copy(investigationOngoing = record.investigationOngoing + cur.count)
+        case Uncurated            => record.copy(uncurated = record.investigationOngoing + cur.count)
       }
       acc + (cur.service -> updatedRecord)
     }).values.toSeq.sortBy(_.service)

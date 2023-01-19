@@ -27,8 +27,8 @@ class VulnerabilitiesServiceSpec extends AnyWordSpec with Matchers {
     "sum the number of vulnerabilities for each curation status and return TotalVulnerabilityCount objects" in {
 
       val totalVulnerabilityCounts = Seq(
-        TotalVulnerabilityCount("service-one", actionRequired = 40, noActionRequired = 20, investigationOngoing = 4),
-        TotalVulnerabilityCount("service-two", actionRequired = 40, noActionRequired = 20, investigationOngoing = 0),
+        TotalVulnerabilityCount("service-one", actionRequired = 40, noActionRequired = 20, investigationOngoing = 4, uncurated = 0),
+        TotalVulnerabilityCount("service-two", actionRequired = 40, noActionRequired = 20, investigationOngoing = 0, uncurated = 0),
       )
       VulnerabilitiesService.totalCountsPerService(vulnerabilityCounts) shouldBe totalVulnerabilityCounts
     }
