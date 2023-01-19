@@ -17,24 +17,28 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.data.Form
-import play.api.libs.json.Json
+import play.api.data.Forms.{mapping, optional, text}
+import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.vulnerabilities.VulnerabilitiesListPage
+import views.html.vulnerabilities.{VulnerabilitiesForServicesPage, VulnerabilitiesListPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class VulnerabilitiesController @Inject() (
-    override val mcc             : MessagesControllerComponents,
-    override val auth            : FrontendAuthComponents,
-    vulnerabilitiesConnector     : VulnerabilitiesConnector,
-    vulnerabilitiesListPage      : VulnerabilitiesListPage,
-    teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
+    override val mcc              : MessagesControllerComponents,
+    override val auth             : FrontendAuthComponents,
+    vulnerabilitiesConnector      : VulnerabilitiesConnector,
+    vulnerabilitiesListPage       : VulnerabilitiesListPage,
+    vulnerabilitiesService        : VulnerabilitiesService,
+    vulnerabilitiesForServicesPage: VulnerabilitiesForServicesPage,
+    teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
 ) (implicit
    override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -59,6 +63,21 @@ class VulnerabilitiesController @Inject() (
             } yield Ok(vulnerabilitiesListPage(summaries, teams, VulnerabilitiesExplorerFilter.form.fill(validForm)))
           )
     }
+
+  def vulnerabilitiesCountForServices: Action[AnyContent] = Action.async { implicit request =>
+    import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
+    implicit val vWrites: Writes[TotalVulnerabilityCount] = TotalVulnerabilityCount.writes
+    form
+      .bindFromRequest()
+      .fold(
+        formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
+        validForm =>
+         for {
+           teams      <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
+           counts     <- vulnerabilitiesService.getVulnerabilityCounts(validForm.service, validForm.team, validForm.environment)
+         } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
+      )
+  }
 
   def getDistinctVulnerabilities(service: String): Action[AnyContent] = Action.async { implicit request =>
     vulnerabilitiesConnector.distinctVulnerabilities(service).map {
@@ -87,4 +106,23 @@ object VulnerabilitiesExplorerFilter {
         "component"      -> optional(text)
       )(VulnerabilitiesExplorerFilter.apply)(VulnerabilitiesExplorerFilter.unapply)
     )
+}
+
+case class VulnerabilitiesCountFilter(
+  service     : Option[String]      = None,
+  team:         Option[String]      = None,
+  environment : Option[Environment] = None
+)
+
+object VulnerabilitiesCountFilter {
+  lazy val form: Form[VulnerabilitiesCountFilter] = Form(
+    mapping(
+      "service"     -> optional(text),
+      "team"        -> optional(text),
+      "environment" -> optional(text)
+        .transform[Option[Environment]](
+          o => Environment.parse(o.getOrElse(Environment.Production.asString)),
+          _.map(_.asString))
+    )(VulnerabilitiesCountFilter.apply)(VulnerabilitiesCountFilter.unapply)
+  )
 }

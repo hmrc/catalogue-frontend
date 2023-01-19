@@ -1,0 +1,106 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.model.Environment.{Development, Integration}
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter
+@import views.html.helper.select
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
+
+@this()
+
+
+@(vulnerabilities: Seq[TotalVulnerabilityCount],
+  teams          : Seq[Team],
+  form           : Form[VulnerabilitiesCountFilter]
+)(implicit
+  messages: Messages,
+  request: Request[_]
+)
+
+@standard_layout(s"service vulnerabilities") {
+    <header>
+        <h1>Service Vulnerabilities</h1>
+    </header>
+    <div id="service-list">
+        <form id="form" method="get">
+            <div class="form-row">
+                <div class="col-md-5">
+                    <label for="service-search">Service</label>
+                    <input class="service-search form-control" type="text" id="service" name="service" value="@form("service").value">
+                </div>
+            </div>
+            <div class="col-md-3">
+            @select(
+                field   = form("team"),
+                options = teams.map(t => t.name.asString -> t.name.asString),
+                Symbol("_default") -> "All",
+                Symbol("_label")   -> "Team",
+                Symbol("onchange") -> "this.form.submit()",
+                Symbol("id")       -> "team-filter",
+                Symbol("class")    -> "form-control"
+            )
+            </div>
+
+            <div class="col-md-3">
+                <div>
+                @select(
+                    field   = form("environment"),
+                    options = Environment.values.filterNot(Set(Integration, Development)).map(env => env.asString -> env.displayString),
+                    Symbol("_label")    -> "Environment",
+                    Symbol("onchange")  -> "this.form.submit()",
+                    Symbol("id")        -> "environment-filter",
+                    Symbol("class")     -> "form-control"
+                )
+                </div>
+            </div>
+        </form>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="col-xs-6"><button class="sort no-border" data-sort="service">Service</button></th>
+                    <th class="col-xs-2 text-center"><button class="no-border" data-sort="action-required">Action Required</button></th>
+                    <th class="col-xs-2 text-center"><button class="no-border" data-sort="investigation-ongoing">Investigation Ongoing</button></th>
+                    <th class="col-xs-2 text-center"><button class="no-border" data-sort="no-action-required">No Action Required</button></th>
+                </tr>
+            </thead>
+            <tbody class="list">
+            @vulnerabilities.map(vulnerabilitiesCountForService)
+            </tbody>
+        </table>
+    </div>
+}
+
+
+@vulnerabilitiesCountForService(totalVulnerabilityCount: TotalVulnerabilityCount) = {
+    <tr>
+        <td class="service"><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(totalVulnerabilityCount.service)">@totalVulnerabilityCount.service</a></td>
+        <td class="action-required text-center"><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.actionRequired</a></td>
+        <td class="investigation-ongoing text-center"><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.InvestigationOngoing.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.investigationOngoing</a></td>
+        <td class="no-action-required text-center"><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.NoActionRequired.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.noActionRequired</a></td>
+    </tr>
+}
+
+<!-- listjs configuration -->
+<script>
+    var options = {
+        valueNames: [ 'service' ],
+        indexAsync: true
+    };
+    serviceList = new List('service-list', options);
+</script>

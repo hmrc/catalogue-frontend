@@ -45,5 +45,4 @@ object CurationStatus {
     override def writes(cs: CurationStatus): JsValue =
       JsString(cs.asString)
   }
-
 }

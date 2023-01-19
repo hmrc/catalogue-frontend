@@ -17,8 +17,9 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.json.Reads
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
@@ -44,5 +45,13 @@ class VulnerabilitiesConnector @Inject() (
     httpClientV2
       .get(url"$url/vulnerabilities/api/vulnerabilities/count?service=${service}")
       .execute[Option[Int]]
+  }
+
+
+  def vulnerabilityCounts(service: Option[String], team: Option[String], environment: Option[Environment])(implicit hc: HeaderCarrier): Future[Seq[VulnerabilityCount]] = {
+    implicit val vcrs: Reads[VulnerabilityCount] = VulnerabilityCount.apiFormat
+    httpClientV2
+      .get(url"$url/vulnerabilities/api/vulnerabilities/counts?service=$service&team=$team&environment=${environment.map(_.asString)}")
+      .execute[Seq[VulnerabilityCount]]
   }
 }
