@@ -1,0 +1,71 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ServiceRelationshipsWithHasRepo
+
+@(serviceRelationships: ServiceRelationshipsWithHasRepo)
+<div id="service_relationships">
+    <div class="board">
+        <h3 class="board__heading">
+            Service Relationships
+            @if(serviceRelationships.size > 3) {
+                <a href="#" class="pull-right board-expand-link">See all</a>
+            }
+        </h3>
+        <div class="board-grow">
+            <div class="board__body board-collapse">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 class="board__sub-heading">Inbound Services:</h4>
+                        @if(serviceRelationships.inboundServices.isEmpty) {
+                            <p>No services are <abbr title="Derived from application.conf">configured</abbr> to call this service</p>
+                        } else {
+                            <ul class="list list--minimal">
+                            @for((name, hasRepo) <- serviceRelationships.inboundServices) {
+                                <li class="list-item-compact">
+                                @if(hasRepo) {
+                                    <a id="link-to-inbound-@name" href="/repositories/@name">@name</a>
+                                } else {
+                                    <span id="label-for-inbound-@name">@name</span>
+                                }
+                                </li>
+                            }
+                            </ul>
+                        }
+                    </div>
+                    <div class="col-md-6">
+                        <h4 class="board__sub-heading">Outbound Services:</h4>
+                        @if(serviceRelationships.inboundServices.isEmpty) {
+                            <p>This service is not <abbr title="Derived from application.conf">configured</abbr> to make calls to any other services</p>
+                        } else {
+                            <ul class="list list--minimal">
+                            @for((name, hasRepo) <- serviceRelationships.outboundServices) {
+                                <li class="list-item-compact">
+                                @if(hasRepo) {
+                                    <a id="link-to-outbound-@name" href="/repositories/@name">@name</a>
+                                } else {
+                                    <span id="label-for-outbound-@name">@name</span>
+                                }
+                                </li>
+                            }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -192,14 +192,7 @@ class CatalogueController @Inject() (
       costEstimate         <- costEstimationService.estimateServiceCost(repositoryName, Environment.values, serviceCostEstimateConfig)
       commenterReport      <- prCommenterConnector.report(repositoryName)
       vulnerabilitiesCount <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
-      outboundServicesRaw  <- configService.outboundServices(serviceName)
-      outboundServices     <- outboundServicesRaw.foldLeftM[Future, Seq[(String, Boolean)]](Seq.empty){
-                                case (acc, outboundService) =>
-                                  teamsAndRepositoriesConnector
-                                    .repositoryDetails(outboundService)
-                                    .map(_.fold((outboundService, false))(_ => (outboundService, true)))
-                                    .map(acc :+ _)
-                              }
+      serviceRelationships <- configService.serviceRelationships(serviceName)
       optLatestData        =  optLatestServiceInfo.map { latestServiceInfo =>
                                 SlugInfoFlag.Latest ->
                                   EnvData(
@@ -221,7 +214,7 @@ class CatalogueController @Inject() (
       hasBranchProtectionAuth      = hasBranchProtectionAuth,
       commenterReport              = commenterReport,
       distinctVulnerabilitiesCount = vulnerabilitiesCount,
-      outboundServices             = outboundServices
+      serviceRelationships         = serviceRelationships
     ))
   }
 
