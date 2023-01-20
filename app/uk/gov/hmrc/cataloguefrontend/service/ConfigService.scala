@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -26,7 +26,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-class ConfigService @Inject() (configConnector: ConfigConnector)(implicit ec: ExecutionContext) {
+class ConfigService @Inject()(
+  configConnector: ConfigConnector,
+  teamsAndReposConnector: TeamsAndRepositoriesConnector
+)(implicit
+  ec: ExecutionContext
+) {
   import ConfigService._
 
   def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
@@ -53,22 +58,13 @@ class ConfigService @Inject() (configConnector: ConfigConnector)(implicit ec: Ex
           ArtifactNameError(s"Different artifact names found for service in different environments - [${list.mkString(",")}]")
       }
 
-  def appConfig(serviceName: String)(implicit hc: HeaderCarrier): Future[Seq[ConfigSourceEntries]]  =
-    configConnector.appConfig(serviceName)
-
-  def outboundServices(serviceName: String)(implicit hc: HeaderCarrier): Future[Seq[String]]  =
-    appConfig(serviceName).map(
-       _.flatMap(_.entries)
-        .filter  { case (k, _) => k.startsWith("microservice.services") }
-        .groupBy { case (k, _) => k.split('.').lift(2).getOrElse("") }
-        .toSeq
-        .flatMap { case (k, v) =>
-          for {
-            host <- v.collect { case (k2, v2) if k2.endsWith("host") => v2 }
-            port <- v.collect { case (k2, v2) if k2.endsWith("port") => v2 }
-          } yield k
-        }.sorted
-    )
+  def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsWithHasRepo] =
+    for {
+      repos    <- teamsAndReposConnector.allRepositories()
+      srs      <- configConnector.serviceRelationships(serviceName)
+      inbound  =  srs.inboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
+      outbound =  srs.outboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
+    } yield ServiceRelationshipsWithHasRepo(inbound, outbound)
 }
 
 @Singleton
@@ -148,6 +144,25 @@ object ConfigService {
       ( (__ \ "source").read[String]
       ~ (__ \ "value" ).read[String]
       )(ConfigSourceValue.apply _)
+  }
+
+  case class ServiceRelationships(
+    inboundServices : Seq[String],
+    outboundServices: Seq[String]
+  )
+
+  object ServiceRelationships {
+    val reads =
+      ( (__ \ "inboundServices" ).read[Seq[String]]
+      ~ (__ \ "outboundServices").read[Seq[String]]
+    )(ServiceRelationships.apply _)
+  }
+
+  case class ServiceRelationshipsWithHasRepo(
+    inboundServices : Seq[(String, Boolean)],
+    outboundServices: Seq[(String, Boolean)]
+  ) {
+    def size: Int = Seq(inboundServices.size, outboundServices.size).max
   }
 
   def friendlySourceName(

@@ -653,5 +653,12 @@ object JsonData {
         "dependencies": []
       }"""
 
+  val serviceRelationships: String =
+    """{
+      |  "inboundServices": ["service-a", "service-b"],
+      |  "outboundServices": ["service-c", "service-d"]
+      |}
+      |""".stripMargin
+
 
 }

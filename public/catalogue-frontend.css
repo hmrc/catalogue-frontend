@@ -11892,6 +11892,9 @@ section span.other-teams-message {
 .list-item {
   margin-bottom: .6em; }
 
+.list-item-compact {
+  margin-bottom: 0; }
+
 .list--minimal {
   list-style: none; }
 
@@ -11936,6 +11939,11 @@ section span.other-teams-message {
   .board__body p {
     margin: 0 1.2em 1.2em;
     color: #434343; }
+
+.board__sub-heading {
+  margin-top: 0;
+  padding-left: 0.8em;
+}
 
 .board-grow {
   -moz-transition: height .5s;
