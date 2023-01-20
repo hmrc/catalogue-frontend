@@ -62,8 +62,8 @@ class ConfigService @Inject()(
     for {
       repos    <- teamsAndReposConnector.allRepositories()
       srs      <- configConnector.serviceRelationships(serviceName)
-      inbound  =  srs.inboundServices.sorted.map(s => if(repos.exists(_.name == s)) (s, true) else (s, false))
-      outbound =  srs.outboundServices.sorted.map(s => if(repos.exists(_.name == s)) (s, true) else (s, false))
+      inbound  =  srs.inboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
+      outbound =  srs.outboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
     } yield ServiceRelationshipsWithHasRepo(inbound, outbound)
 }
 

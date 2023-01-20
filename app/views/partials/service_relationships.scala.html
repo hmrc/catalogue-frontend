@@ -33,17 +33,7 @@
                         @if(serviceRelationships.inboundServices.isEmpty) {
                             <p>No services are <abbr title="Derived from application.conf">configured</abbr> to call this service</p>
                         } else {
-                            <ul class="list list--minimal">
-                            @for((name, hasRepo) <- serviceRelationships.inboundServices) {
-                                <li class="list-item-compact">
-                                @if(hasRepo) {
-                                    <a id="link-to-inbound-@name" href="/repositories/@name">@name</a>
-                                } else {
-                                    <span id="label-for-inbound-@name">@name</span>
-                                }
-                                </li>
-                            }
-                            </ul>
+                            @listServices(serviceRelationships.inboundServices, "inbound")
                         }
                     </div>
                     <div class="col-md-6">
@@ -51,17 +41,7 @@
                         @if(serviceRelationships.inboundServices.isEmpty) {
                             <p>This service is not <abbr title="Derived from application.conf">configured</abbr> to make calls to any other services</p>
                         } else {
-                            <ul class="list list--minimal">
-                            @for((name, hasRepo) <- serviceRelationships.outboundServices) {
-                                <li class="list-item-compact">
-                                @if(hasRepo) {
-                                    <a id="link-to-outbound-@name" href="/repositories/@name">@name</a>
-                                } else {
-                                    <span id="label-for-outbound-@name">@name</span>
-                                }
-                                </li>
-                            }
-                            </ul>
+                            @listServices(serviceRelationships.outboundServices, "outbound")
                         }
                     </div>
                 </div>
@@ -69,3 +49,17 @@
         </div>
     </div>
 </div>
+
+@listServices(services: Seq[(String, Boolean)], idSnippet: String) = {
+    <ul class="list list--minimal">
+    @for((name, hasRepo) <- services) {
+        <li class="list-item-compact">
+        @if(hasRepo) {
+            <a id="link-to-@idSnippet-@name" href="/repositories/@name">@name</a>
+        } else {
+            <span id="label-for-@idSnippet-@name">@name</span>
+        }
+        </li>
+    }
+    </ul>
+}
