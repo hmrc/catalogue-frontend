@@ -21,6 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import views.html.helper.CSRF
@@ -56,6 +57,9 @@
                 }
                 @if(CatalogueFrontendSwitches.surfacingVulnerabilities.isEnabled & repo.repoType == RepoType.Service) {
                     <li class="list-item"><a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${repo.name}\""), None)">Vulnerabilities (@distinctVulnerabilitiesCount)</a></li>
+                }
+                @if(repo.repoType == RepoType.Service) {
+                    <li class="list-item"><a id="link-to-@{repo.name}-commissioning" href="@{ServiceCommissioningStatusController.getCommissioningState(repo.name)}">Commissioning State</a></li>
                 }
             </ul>
         </div>

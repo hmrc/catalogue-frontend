@@ -25,9 +25,9 @@
   request: Request[_]
 )
 
-@standard_layout("Service-Commissioning-Status") {
+@standard_layout("Commissioning-State") {
     <header>
-        <h1>Service Commissioning Status</h1>
+        <h1>Commissioning State</h1>
     </header>
 
     <h2>@serviceName</h2>
@@ -35,8 +35,8 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th class="col-lg-3">Check</th>
-                <th colspan="6">Status</th>
+                <th class="col-lg-3">Step</th>
+                <th colspan="6">State</th>
             </tr>
         </thead>
         <tbody>
