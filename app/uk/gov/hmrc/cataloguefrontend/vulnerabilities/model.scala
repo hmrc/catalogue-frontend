@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersion, BobbyVersionRange, Version}
-import play.api.libs.json.{OFormat, Writes, __}
+import play.api.libs.json.{OFormat, Reads, __}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, Version}
 
 import java.time.Instant
 import scala.collection.Seq
@@ -118,24 +118,6 @@ object VulnerabilitySummary {
   }
 }
 
-case class VulnerabilityCount(
-  service       : String
-, environment   : String
-, curationStatus: CurationStatus
-, count         : Int
-)
-
-object VulnerabilityCount {
-  val apiFormat: OFormat[VulnerabilityCount] = {
-    implicit val csf = CurationStatus.format
-    ((__ \ "service"          ).format[String]
-      ~ (__ \ "environment"   ).format[String]
-      ~ (__ \ "curationStatus").format[CurationStatus]
-      ~ (__ \ "count"         ).format[Int]
-      )(apply, unlift(unapply))
-  }
-}
-
 case class TotalVulnerabilityCount(
   service             : String
 , actionRequired      : Int
@@ -145,13 +127,12 @@ case class TotalVulnerabilityCount(
 )
 
 object TotalVulnerabilityCount {
-  val writes: Writes[TotalVulnerabilityCount] = {
-    implicit val csf = CurationStatus.format
-    ((__ \ "service"                ).write[String]
-      ~ (__ \ "actionRequired"      ).write[Int]
-      ~ (__ \ "noActionRequired"    ).write[Int]
-      ~ (__ \ "investigationOngoing").write[Int]
-      ~ (__ \ "uncurated").write[Int]
-      )(unlift(unapply))
+  val reads: Reads[TotalVulnerabilityCount] = {
+    ((__ \ "service"                ).read[String]
+      ~ (__ \ "actionRequired"      ).read[Int]
+      ~ (__ \ "noActionRequired"    ).read[Int]
+      ~ (__ \ "investigationOngoing").read[Int]
+      ~ (__ \ "uncurated"           ).read[Int]
+      )(apply _)
   }
 }

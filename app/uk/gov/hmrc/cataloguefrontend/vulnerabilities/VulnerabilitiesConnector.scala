@@ -48,10 +48,10 @@ class VulnerabilitiesConnector @Inject() (
   }
 
 
-  def vulnerabilityCounts(service: Option[String], team: Option[String], environment: Option[Environment])(implicit hc: HeaderCarrier): Future[Seq[VulnerabilityCount]] = {
-    implicit val vcrs: Reads[VulnerabilityCount] = VulnerabilityCount.apiFormat
+  def vulnerabilityCounts(service: Option[String], team: Option[String], environment: Option[Environment])(implicit hc: HeaderCarrier): Future[Seq[TotalVulnerabilityCount]] = {
+    implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
     httpClientV2
       .get(url"$url/vulnerabilities/api/vulnerabilities/counts?service=$service&team=$team&environment=${environment.map(_.asString)}")
-      .execute[Seq[VulnerabilityCount]]
+      .execute[Seq[TotalVulnerabilityCount]]
   }
 }
