@@ -36,7 +36,6 @@ class VulnerabilitiesController @Inject() (
     override val auth             : FrontendAuthComponents,
     vulnerabilitiesConnector      : VulnerabilitiesConnector,
     vulnerabilitiesListPage       : VulnerabilitiesListPage,
-    vulnerabilitiesService        : VulnerabilitiesService,
     vulnerabilitiesForServicesPage: VulnerabilitiesForServicesPage,
     teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
 ) (implicit
@@ -66,7 +65,6 @@ class VulnerabilitiesController @Inject() (
 
   def vulnerabilitiesCountForServices: Action[AnyContent] = Action.async { implicit request =>
     import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
-    implicit val vWrites: Writes[TotalVulnerabilityCount] = TotalVulnerabilityCount.writes
     form
       .bindFromRequest()
       .fold(
@@ -74,7 +72,7 @@ class VulnerabilitiesController @Inject() (
         validForm =>
          for {
            teams      <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
-           counts     <- vulnerabilitiesService.getVulnerabilityCounts(validForm.service, validForm.team, validForm.environment)
+           counts     <- vulnerabilitiesConnector.vulnerabilityCounts(validForm.service, validForm.team, validForm.environment)
          } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
       )
   }
