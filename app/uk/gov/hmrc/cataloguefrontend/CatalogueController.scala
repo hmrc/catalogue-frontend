@@ -35,7 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
 import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
-import uk.gov.hmrc.cataloguefrontend.util.{MarkdownLoader, TelemetryLinks}
+import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -90,8 +90,6 @@ class CatalogueController @Inject() (
      with CatalogueAuthBuilders
      with I18nSupport {
 
-  private lazy val whatsNewDisplayLines  = configuration.get[Int]("whats-new.display.lines")
-
   private lazy val telemetryLogsLinkTemplate = configuration.get[String]("telemetry.templates.logs")
   private lazy val telemetryMetricsLinkTemplate = configuration.get[String]("telemetry.templates.metrics")
 
@@ -104,8 +102,7 @@ class CatalogueController @Inject() (
       for {
         blogs    <- confluenceConnector.getBlogs()
                       .recover(_ => Nil) // Temp fix till platops-live can call confluence
-        whatsNew  = MarkdownLoader.markdownFromFile("VERSION_HISTORY.md", whatsNewDisplayLines).merge
-      } yield Ok(indexPage(whatsNew, blogs))
+      } yield Ok(indexPage(blogs))
     }
 
   def serviceConfig(serviceName: String): Action[AnyContent] =

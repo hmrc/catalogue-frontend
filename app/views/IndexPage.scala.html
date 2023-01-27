@@ -20,7 +20,7 @@
 
 
 @this(viewMessages: ViewMessages)
-@(whatsNew: String, blogs: List[ConfluenceConnector.Blog])(implicit request: Request[_])
+@(blogs: List[ConfluenceConnector.Blog])(implicit request: Request[_])
 
 @standard_layout() {
 
@@ -37,19 +37,6 @@
             <a href="./bobbyrules">view bobby rules</a>, see what
             <a href="./jdkexplorer">JDK versions are in use</a>, discover
             <a href="./search#">which service corresponds to a given URL</a>, and more to come!
-
-        <h2>What's new?</h2>
-        We're adding new features all the time and will highlight key ones here. If you have any ideas for something you would like to see, contact
-        us in <a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"/></a>.
-
-        <div id="whats-new" class="recent-box">
-            <div class="recent-box-grow">
-                <div class='recent-box-collapse'>
-                    @Html(whatsNew)
-                </div>
-            </div>
-            <a href="#" class="recent-box-expand-link">See all...</a>
-        </div>
 
         @if(blogs.nonEmpty) {
             <h2>Blog Posts</h2>
