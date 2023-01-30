@@ -38,7 +38,7 @@
                     </div>
                     <div class="col-md-6">
                         <h4 class="board__sub-heading">Outbound Services:</h4>
-                        @if(serviceRelationships.inboundServices.isEmpty) {
+                        @if(serviceRelationships.outboundServices.isEmpty) {
                             <p>This service is not <abbr title="Derived from application.conf">configured</abbr> to make calls to any other services</p>
                         } else {
                             @listServices(serviceRelationships.outboundServices, "outbound")
