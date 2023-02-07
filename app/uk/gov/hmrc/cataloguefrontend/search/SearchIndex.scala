@@ -22,6 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthRoutes}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes => prcommenterRoutes}
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.{normalizeTerm, optimizeIndex}
 import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
@@ -79,8 +80,9 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
-                            .flatMap(r => List(SearchTerm("config",      r.name,          catalogueRoutes.CatalogueController.serviceConfig(r.name).url ),
-                                               SearchTerm("timeline",    r.name,          wrwRoutes.DeploymentHistoryController.graph(r.name).url)
+                            .flatMap(r => List(SearchTerm("config",              r.name, catalogueRoutes.CatalogueController.serviceConfig(r.name).url ),
+                                               SearchTerm("timeline",            r.name, wrwRoutes.DeploymentHistoryController.graph(r.name).url),
+                                               SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(r.name).url),
                             ))
       comments      <- prCommenterConnector.search(None, None, None)
       commentLinks  =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
