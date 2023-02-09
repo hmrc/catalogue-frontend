@@ -225,7 +225,7 @@ object UserManagementConnector {
     def asHeaders(): Seq[(String, String)]
   }
 
-  case class UmpAuthToken(uid: String, token: String) extends UmpToken {
+  case class UmpAuthToken(token: String, uid: String) extends UmpToken {
     def asHeaders(): Seq[(String, String)] = {
       Seq( "Token" -> token, "requester" -> uid)
     }
