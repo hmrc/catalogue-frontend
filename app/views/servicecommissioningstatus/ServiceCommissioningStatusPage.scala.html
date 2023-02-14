@@ -78,6 +78,9 @@
                 view
             </a>
         }
+        case Left(missing) if missing.addLink.isEmpty => {
+            <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
+        }
         case Left(missing) => {
             <a href="@missing.addLink" target="_blank" rel="noopener noreferrer">
                 <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
