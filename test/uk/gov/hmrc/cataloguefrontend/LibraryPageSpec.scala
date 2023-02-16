@@ -33,10 +33,10 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
     "show the teams owning the service with github and ci links and info box" in {
       val libName = "lib"
 
-      serviceEndpoint(GET, s"/api/v2/repositories/$libName"    , willRespondWith = (200, Some(libraryData)))
-      serviceEndpoint(GET, s"/api/jenkins-url/$libName"        , willRespondWith = (200, Some(jenkinsData)))
-      serviceEndpoint(GET, s"/api/jenkins-jobs/$libName"       , willRespondWith = (200, Some(jenkinsBuildData)))
-      serviceEndpoint(GET, s"/api/module-dependencies/$libName", willRespondWith = (404, None))
+      serviceEndpoint(GET, s"/api/v2/repositories/$libName"                , willRespondWith = (200, Some(libraryData)))
+      serviceEndpoint(GET, s"/api/jenkins-url/$libName"                    , willRespondWith = (200, Some(jenkinsData)))
+      serviceEndpoint(GET, s"/api/jenkins-jobs/$libName"                   , willRespondWith = (200, Some(jenkinsBuildData)))
+      serviceEndpoint(GET, s"/api/module-dependencies/$libName/allVersions", willRespondWith = (200, Some(repositoryModulesAllVersions(libName, "[]"))))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -55,7 +55,7 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
     "render dependencies" in {
       val libName = "lib"
       serviceEndpoint(GET, s"/api/v2/repositories/$libName"    , willRespondWith = (200, Some(libraryData)))
-      serviceEndpoint(GET, s"/api/module-dependencies/$libName", willRespondWith = (200, Some(repositoryModules(
+      serviceEndpoint(GET, s"/api/module-dependencies/$libName/allVersions", willRespondWith = (200, Some(repositoryModulesAllVersions(
                                                                                                 libName,
                                                                                                 dependenciesCompile = dependencies
                                                                                               ))))

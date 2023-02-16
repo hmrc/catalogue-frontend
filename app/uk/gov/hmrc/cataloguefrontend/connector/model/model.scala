@@ -63,10 +63,10 @@ object TeamName {
 
 
 case class RepositoryModules(
-  name             : String,
-  version          : Option[Version],
-  dependenciesBuild: Seq[Dependency],
-  modules          : Seq[RepositoryModule]
+  name                 : String,
+  version              : Option[Version],
+  dependenciesBuild    : Seq[Dependency],
+  modules              : Seq[RepositoryModule]
 ) {
   def allDependencies: Seq[Dependency] =
     modules.foldLeft(dependenciesBuild)((acc, module) =>
@@ -92,11 +92,14 @@ case class RepositoryModule(
   dependenciesCompile: Seq[Dependency],
   dependenciesTest   : Seq[Dependency],
   dependenciesIt     : Seq[Dependency],
-  crossScalaVersions : Seq[Version]
+  crossScalaVersions : Seq[Version],
+  activeBobbyRules   : Seq[BobbyRuleViolation],
+  pendingBobbyRules  : Seq[BobbyRuleViolation]
 )
 
 object RepositoryModule {
   val reads: Reads[RepositoryModule] = {
+    implicit val bf = BobbyRuleViolation.format
     implicit val dr = Dependency.reads
     implicit val vf  = Version.format
     ( (__ \ "name"               ).read[String]
@@ -105,6 +108,8 @@ object RepositoryModule {
     ~ (__ \ "dependenciesTest"   ).read[Seq[Dependency]]
     ~ (__ \ "dependenciesIt"     ).read[Seq[Dependency]]
     ~ (__ \ "crossScalaVersions" ).read[Seq[Version]]
+    ~ (__ \ "activeBobbyRules"    ).read[Seq[BobbyRuleViolation]]
+    ~ (__ \ "pendingBobbyRules"   ).read[Seq[BobbyRuleViolation]]
     )(RepositoryModule.apply _)
   }
 }
