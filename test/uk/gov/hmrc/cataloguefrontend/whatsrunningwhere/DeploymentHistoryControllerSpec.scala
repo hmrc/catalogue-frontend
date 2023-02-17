@@ -45,6 +45,7 @@ class DeploymentHistoryControllerSpec
 
     implicit val mcc                             = stubMessagesControllerComponents()
     lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
+    lazy val mockedServiceDependenciesConnector  = mock[ServiceDependenciesConnector]
     lazy val mockedReleasesConnector             = mock[ReleasesConnector]
     lazy val authStubBehaviour                   = mock[StubBehaviour]
     lazy val mockedDeploymentGraphService        = mock[DeploymentGraphService]
@@ -55,6 +56,7 @@ class DeploymentHistoryControllerSpec
     lazy val controller = new DeploymentHistoryController(
       mockedReleasesConnector,
       mockedTeamsAndRepositoriesConnector,
+      mockedServiceDependenciesConnector,
       mockedDeploymentGraphService,
       page,
       timelinePage,

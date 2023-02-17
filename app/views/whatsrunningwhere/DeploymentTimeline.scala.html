@@ -20,16 +20,19 @@
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
 @import uk.gov.hmrc.cataloguefrontend.routes.CatalogueController
 @import java.time.Instant
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentGraphService
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.TimelinePalette
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
 @this()
 
 
 @(service: String,
-  start: Instant,
-  end: Instant,
-  events: Seq[DeploymentTimelineEvent],
+  start   : Instant,
+  end     : Instant,
+  events  : Seq[DeploymentTimelineEvent],
+  slugInfo: Seq[ServiceDependencies],
   services: Seq[String]
 )(implicit request: Request[_])
 
@@ -57,14 +60,20 @@
             function drawChart() {
 
                 let data = [
-                    @events.map{ e =>
+                    @events.map { e =>
                         ['@e.env',
-                        '@{e.version}',
-                         makeToolTip('@{e.version}', '@{e.userName}', '@{e.displayStart.getOrElse(e.start).asPattern(`yyyy-MM-dd HH:mm z`)}' ,'@{e.displayEnd.getOrElse(e.end).asPattern(`yyyy-MM-dd HH:mm z`)}', @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays}),
-                        '@colorForVersion(e.version)',
+                        '@{e.version.toString}',
+                        makeToolTip(
+                            '@{e.version}',
+                            '@{e.userName}',
+                            '@{e.displayStart.getOrElse(e.start).displayFormat}',
+                            '@{e.displayEnd.getOrElse(e.end).displayFormat}',
+                            @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays},
+                            '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor}")}',
+                        ),
+                        '@colorForVersion(e.version.toString)',
                         new Date(@{e.start.toEpochMilli}),
                         new Date(@{e.end.toEpochMilli}),
-
                     ], }
 
                 ]
@@ -81,15 +90,23 @@
                 dataTable.addColumn({ type: 'date', id: 'Start' });
                 dataTable.addColumn({ type: 'date', id: 'End' });
 
-                dataTable.addRows(data)
+                dataTable.addRows(data);
                 chart.draw(dataTable, options);
             }
 
-            function makeToolTip(ver, user, start, end, days) {
+            function makeToolTip(ver, user, start, end, days, java) {
                 if(ver === "@DeploymentGraphService.notDeployedMessage") {
                     return `<div class="timeline-tooltip">No deployment events found in this date range</div>`
                 }
-                return `<div class="timeline-tooltip"><b> ${ver} deployed by ${user} </b><br>From ${start} To  ${end}<br><em>Deployed for ${days} days</em> </div>`
+                return `<div class="timeline-tooltip" style="width:250px">
+                            <table class="table table-striped" style="margin-bottom:0px">
+                                <tr><th>${ver}</th><td>Deployed for ${days} days</td></tr>
+                                <tr><th>By</th><td>${user}</td></tr>
+                                <tr><th>From</th><td>${start} UTC</td></tr>
+                                <tr><th>To</th><td>${end} UTC</td></tr>
+                                <tr><th>Java</th><td>${java}</td></tr>
+                            </table>
+                        </div>`
             }
     </script>
     <header>
@@ -97,7 +114,7 @@
     </header>
     <form action="" method="get">
         <div class="form-group row">
-            <div class="col-md-3">
+            <div class="col-md-6">
                 <label for="service" title="Search by service name" data-toggle="tooltip">Service</label>
                 <select name="service" id="service" class="form-control" onchange="this.form.submit()">
                     <option value=""></option>
