@@ -20,23 +20,24 @@ import play.api.Configuration
 import play.api.data.{Form, Forms}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DeploymentHistoryPage
 import views.html.whatsrunningwhere.DeploymentTimeline
 
+import cats.implicits._
 import java.time.{LocalDate, ZoneOffset}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-
 @Singleton
 class DeploymentHistoryController @Inject() (
   releasesConnector            : ReleasesConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  serviceDependenciesConnector : ServiceDependenciesConnector,
   deploymentGraphService       : DeploymentGraphService,
   page                         : DeploymentHistoryPage,
   timelinePage                 : DeploymentTimeline,
@@ -54,8 +55,6 @@ class DeploymentHistoryController @Inject() (
 
   def history(env: Environment = Production): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-
       form
         .bindFromRequest()
         .fold(
@@ -87,8 +86,6 @@ class DeploymentHistoryController @Inject() (
     }
 
   def graph(service: String, to: LocalDate, from: LocalDate) = BasicAuthAction.async { implicit request =>
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-
     val start  = to.atStartOfDay().toInstant(ZoneOffset.UTC)
     val end    = from.atTime(23,59,59).toInstant(ZoneOffset.UTC)
 
@@ -96,7 +93,17 @@ class DeploymentHistoryController @Inject() (
       services    <- teamsAndRepositoriesConnector.allServices
       serviceNames = services.map(_.name.toLowerCase).sorted
       data        <- deploymentGraphService.findEvents(service, start, end)
-      view         = timelinePage(service, start, end, data, serviceNames)
+      slugInfo    <- data
+                      .groupBy(_.version)
+                      .keys
+                      .toList
+                      .foldLeftM[Future, List[ServiceDependencies]](List.empty){
+                        case (xs, v) => serviceDependenciesConnector.getSlugInfo(service, Some(v)).map {
+                          case Some(x) => xs :+ x
+                          case None    => xs
+                        }
+                      }
+      view         = timelinePage(service, start, end, data, slugInfo, serviceNames)
     } yield Ok(view)
   }
 }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector

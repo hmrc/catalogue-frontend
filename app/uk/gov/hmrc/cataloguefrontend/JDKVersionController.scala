@@ -27,7 +27,7 @@ import views.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
 
 import cats.implicits._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class JDKVersionController @Inject() (

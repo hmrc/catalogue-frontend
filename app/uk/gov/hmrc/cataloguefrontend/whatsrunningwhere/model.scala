@@ -150,7 +150,7 @@ object JsonCodecs {
   val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] = {
     implicit val ef  = environmentFormat
     ( (__ \ "environment" ).read[Environment]
-    ~ (__ \ "version"     ).read[String]
+    ~ (__ \ "version"     ).read[Version](Version.format)
     ~ (__ \ "username"    ).read[String]
     ~ (__ \ "start"       ).read[Instant]
     ~ (__ \ "end"         ).read[Instant]
@@ -283,7 +283,7 @@ object Pagination {
 
 case class DeploymentTimelineEvent(
   env         : Environment,
-  version     : String,
+  version     : Version,
   userName    : String,
   start       : Instant,
   end         : Instant,
