@@ -585,7 +585,7 @@ object JsonData {
   }]"""
 
   def repositoryModules(name: String, dependenciesCompile: String) =
-    s"""{
+    s"""[{
       "name"             : "$name",
       "version"          : "v1",
       "dependenciesBuild": [],
@@ -599,7 +599,7 @@ object JsonData {
         "activeBobbyRules"   : [],
         "pendingBobbyRules"  : []
       }]
-    }"""
+    }]"""
 
   def dependencies =
     """[{

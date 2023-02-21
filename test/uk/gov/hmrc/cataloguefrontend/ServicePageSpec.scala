@@ -35,8 +35,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/service-configs/frontend-route/service-1", willRespondWith = (200, Some(configServiceService1)))
     serviceEndpoint(GET, "/service-configs/frontend-route/service-name", willRespondWith = (200, Some(configServiceService1)))
     serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(jenkinsData)))
-    serviceEndpoint(GET, "/api/module-dependencies/service-1",willRespondWith = (404, None))
-    serviceEndpoint(GET, "/api/module-dependencies/service-1?version=0.0.1",willRespondWith = (404, None))
+    serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=latest",willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=0.0.1",willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/service-configs/service-relationships/service-1", willRespondWith = (200, Some(serviceRelationships)))
     serviceEndpoint(GET, "/service-configs/service-relationships/service-name", willRespondWith = (200, Some(serviceRelationships)))
     serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some("[]")))
@@ -154,12 +154,13 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         )
 
         serviceEndpoint(GET, s"/api/v2/repositories/$repoName", willRespondWith = (200, Some(repositoryData(repoName))))
+        serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=0.0.1", willRespondWith = (200, Some("[]")))
+        serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some("[]")))
       }
     }
 
     "show the teams owning the service with github, ci and environment links and info box" in new Setup {
       serviceEndpoint(GET, s"/api/jenkins-jobs/$repoName", willRespondWith = (200, Some(serviceJenkinsBuildData)))
-      serviceEndpoint(GET, "/api/module-dependencies/service-1?version=0.0.1",willRespondWith = (404, None))
 
       serviceEndpoint(
         GET,

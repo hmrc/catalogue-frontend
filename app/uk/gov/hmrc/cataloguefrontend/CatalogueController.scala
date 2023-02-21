@@ -173,7 +173,7 @@ class CatalogueController @Inject() (
                                       optShutterState <- shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
                                       data            =  EnvData(
                                                            version           = version,
-                                                           repoModules       = repoModules,
+                                                           repoModules       = repoModules.headOption,
                                                            optShutterState   = optShutterState,
                                                            optTelemetryLinks = Some(Seq(
                                                              TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, env, serviceName),
@@ -184,7 +184,7 @@ class CatalogueController @Inject() (
                                   case None => Future.successful(None)
                                 }
                               }.map(_.collect { case Some(v) => v }.toMap)
-      latestRepoModules    <- serviceDependenciesConnector.getRepositoryModules(repositoryName)
+      latestRepoModules    <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
       urlIfLeaksFound      <- leakDetectionService.urlIfLeaksFound(repositoryName)
       serviceRoutes        <- routeRulesService.serviceRoutes(serviceName)
       optLatestServiceInfo <- serviceDependenciesConnector.getSlugInfo(repositoryName)
@@ -196,7 +196,7 @@ class CatalogueController @Inject() (
                                 SlugInfoFlag.Latest ->
                                   EnvData(
                                     version           = latestServiceInfo.version,
-                                    repoModules       = latestRepoModules,
+                                    repoModules       = latestRepoModules.headOption,
                                     optShutterState   = None,
                                     optTelemetryLinks = None
                                   )
@@ -340,7 +340,7 @@ class CatalogueController @Inject() (
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
-      serviceDependenciesConnector.getRepositoryModules(repoDetails.name),
+      serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
       prCommenterConnector.report(repoDetails.name)
     ).mapN { ( jenkinsJobs,
@@ -356,7 +356,7 @@ class CatalogueController @Inject() (
                          },
             jenkinsJobs = jenkinsJobs
           ),
-          repoModules,
+          repoModules.headOption,
           urlIfLeaksFound,
           hasBranchProtectionAuth,
           commenterReport
