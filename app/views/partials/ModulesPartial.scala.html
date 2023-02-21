@@ -22,7 +22,8 @@
 
 @(
   repositoryModules : RepositoryModules,
-  isLatest          : Boolean         = false
+  isLatest          : Boolean         = false,
+  showLegend        : Boolean         = true
 )
 
 @repositoryModules.modules match {
@@ -95,7 +96,7 @@
         , "Sbt Plugins"
         , "-"
         , None // Version - if set, will add graph links (using service-name)
-        , isLatest = isLatest
+        , showLegend = showLegend
         )
       </div>
     </div>
@@ -112,7 +113,7 @@
       , "-"
       , None // Version - if set, will add graph links (using service-name)
       , isSub = isSub
-      , isLatest = isLatest
+      , showLegend = showLegend
       )
     </div>
   </div>
@@ -127,7 +128,7 @@
         , "-"
         , None // Version - if set, will add graph links (using service-name)
         , isSub = isSub
-        , isLatest = isLatest
+        , showLegend = showLegend
         )
       </div>
     </div>
@@ -143,7 +144,7 @@
         , "-"
         , None // Version - if set, will add graph links (using service-name)
         , isSub = isSub
-        , isLatest = isLatest
+        , showLegend = showLegend
         )
       </div>
     </div>

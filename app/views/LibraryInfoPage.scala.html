@@ -78,8 +78,11 @@
       <div class="col-md-6">
         @partials.build(library, hasBranchProtectionAuth, commenterReport)
       </div>
-    </div>
 
+        <div class="col-md-6">
+        @partials.dependency_legend(true)
+        </div>
+    </div>
 
     @metaInfo.sorted(Ordering.by((_: RepositoryModules).version).reverse).zipWithIndex.map { case (modules, idx) =>
         <details closed>
@@ -106,7 +109,7 @@
                 "></div>
             }
             </summary>
-            @modulesPartial(modules, isLatest = idx == 0)
+            @modulesPartial(modules, isLatest = idx == 0, showLegend = false)
         </details>
     }
   </section>
