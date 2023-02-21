@@ -25,7 +25,8 @@
   title       : String,
   serviceName : String,
   version     : Option[Version],
-  isSub       : Boolean         = false
+  isSub       : Boolean         = false,
+  showLegend  : Boolean         = true
 )
 
 <div id="@rootId" class="board">
@@ -48,7 +49,7 @@
         }
       </ul>
     </div>
-    @if(dependencies.nonEmpty) {
+    @if(dependencies.nonEmpty && showLegend) {
       <div class="col-xs-3">
         @partials.dependency_legend(showNewVersionAvailable = true)
       </div>

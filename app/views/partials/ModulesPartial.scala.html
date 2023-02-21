@@ -21,7 +21,9 @@
 )
 
 @(
-  repositoryModules: RepositoryModules
+  repositoryModules : RepositoryModules,
+  isLatest          : Boolean         = false,
+  showLegend        : Boolean         = true
 )
 
 @repositoryModules.modules match {
@@ -85,7 +87,7 @@
 }
 
 @buildDependencies() = {
-  @if(repositoryModules.dependenciesBuild.nonEmpty) {
+  @if(repositoryModules.dependenciesBuild.nonEmpty && isLatest) {
     <div class="row">
       <div class="col-md-12">
         @dependenciesPartial(
@@ -94,6 +96,7 @@
         , "Sbt Plugins"
         , "-"
         , None // Version - if set, will add graph links (using service-name)
+        , showLegend = showLegend
         )
       </div>
     </div>
@@ -110,6 +113,7 @@
       , "-"
       , None // Version - if set, will add graph links (using service-name)
       , isSub = isSub
+      , showLegend = showLegend
       )
     </div>
   </div>
@@ -124,6 +128,7 @@
         , "-"
         , None // Version - if set, will add graph links (using service-name)
         , isSub = isSub
+        , showLegend = showLegend
         )
       </div>
     </div>
@@ -139,6 +144,7 @@
         , "-"
         , None // Version - if set, will add graph links (using service-name)
         , isSub = isSub
+        , showLegend = showLegend
         )
       </div>
     </div>

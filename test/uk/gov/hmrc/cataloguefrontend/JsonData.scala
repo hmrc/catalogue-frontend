@@ -567,6 +567,23 @@ object JsonData {
     """
   }
 
+  def repositoryModulesAllVersions(name: String, dependenciesCompile: String) =
+    s"""[{
+    "name"             : "$name",
+    "version"          : "v1",
+    "dependenciesBuild": [],
+    "modules"          : [{
+      "name"               : "m1",
+      "group"              : "g1",
+      "dependenciesCompile": $dependenciesCompile,
+      "dependenciesTest"   : [],
+      "dependenciesIt"     : [],
+      "crossScalaVersions" : [],
+      "activeBobbyRules"   : [],
+      "pendingBobbyRules"  : []
+    }]
+  }]"""
+
   def repositoryModules(name: String, dependenciesCompile: String) =
     s"""{
       "name"             : "$name",
@@ -578,7 +595,9 @@ object JsonData {
         "dependenciesCompile": $dependenciesCompile,
         "dependenciesTest"   : [],
         "dependenciesIt"     : [],
-        "crossScalaVersions" : []
+        "crossScalaVersions" : [],
+        "activeBobbyRules"   : [],
+        "pendingBobbyRules"  : []
       }]
     }"""
 
