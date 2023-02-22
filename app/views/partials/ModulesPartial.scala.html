@@ -22,7 +22,7 @@
 
 @(
   repositoryModules : RepositoryModules,
-  isLatest          : Boolean         = false,
+  displayBuildInfo  : Boolean         = false,
   showLegend        : Boolean         = true
 )
 
@@ -87,7 +87,7 @@
 }
 
 @buildDependencies() = {
-  @if(repositoryModules.dependenciesBuild.nonEmpty && isLatest) {
+  @if(repositoryModules.dependenciesBuild.nonEmpty && displayBuildInfo) {
     <div class="row">
       <div class="col-md-12">
         @dependenciesPartial(

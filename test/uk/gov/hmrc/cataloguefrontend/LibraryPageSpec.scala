@@ -36,7 +36,7 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
       serviceEndpoint(GET, s"/api/v2/repositories/$libName"                , willRespondWith = (200, Some(libraryData)))
       serviceEndpoint(GET, s"/api/jenkins-url/$libName"                    , willRespondWith = (200, Some(jenkinsData)))
       serviceEndpoint(GET, s"/api/jenkins-jobs/$libName"                   , willRespondWith = (200, Some(jenkinsBuildData)))
-      serviceEndpoint(GET, s"/api/module-dependencies/$libName/allVersions", willRespondWith = (200, Some(repositoryModulesAllVersions(libName, "[]"))))
+      serviceEndpoint(GET, s"/api/repositories/$libName/module-dependencies", willRespondWith = (200, Some(repositoryModulesAllVersions(libName, "[]"))))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -55,7 +55,7 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
     "render dependencies" in {
       val libName = "lib"
       serviceEndpoint(GET, s"/api/v2/repositories/$libName"    , willRespondWith = (200, Some(libraryData)))
-      serviceEndpoint(GET, s"/api/module-dependencies/$libName/allVersions", willRespondWith = (200, Some(repositoryModulesAllVersions(
+      serviceEndpoint(GET, s"/api/repositories/$libName/module-dependencies", willRespondWith = (200, Some(repositoryModulesAllVersions(
                                                                                                 libName,
                                                                                                 dependenciesCompile = dependencies
                                                                                               ))))

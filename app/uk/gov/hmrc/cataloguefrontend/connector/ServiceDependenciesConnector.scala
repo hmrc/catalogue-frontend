@@ -127,24 +127,26 @@ class ServiceDependenciesConnector @Inject() (
       .get(url"$servicesDependenciesBaseUrl/api/repository-name?group=$group&artefact=$artefact&version=${version.toString}")
       .execute[Option[String]]
 
-  def getRepositoryModules(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryModules]] = {
+  def getRepositoryModulesLatestVersion(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryModules]] = {
     implicit val dr = RepositoryModules.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/module-dependencies/$repositoryName")
-      .execute[Option[RepositoryModules]]
+      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=latest")
+      .execute[Seq[RepositoryModules]]
+      .map(_.headOption)
   }
 
   def getRepositoryModules(repositoryName: String, version: Version)(implicit hc: HeaderCarrier): Future[Option[RepositoryModules]] = {
     implicit val dr = RepositoryModules.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/module-dependencies/$repositoryName?version=${version.toString}")
-      .execute[Option[RepositoryModules]]
+      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=${version.toString}")
+      .execute[Seq[RepositoryModules]]
+      .map(_.headOption)
   }
 
   def getRepositoryModulesAllVersions(repositoryName: String)(implicit hc: HeaderCarrier): Future[Seq[RepositoryModules]] = {
     implicit val dr = RepositoryModules.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/module-dependencies/$repositoryName/allVersions")
+      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies")
       .execute[Seq[RepositoryModules]]
   }
 }

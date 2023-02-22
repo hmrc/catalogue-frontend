@@ -29,7 +29,7 @@
 )
 
 @(library                : GitRepository,
-  metaInfo               : Seq[RepositoryModules],
+  repositoryModules      : Seq[RepositoryModules],
   linkToLeakDetection    : Option[String],
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   commenterReport        : Option[PrCommenterReport]
@@ -51,69 +51,70 @@
   </header>
 
   @partials.leak_detection_banner(linkToLeakDetection)
-  @defining(metaInfo.headOption.fold(Seq.empty[Dependency])(_.allDependencies)){ dependencies =>
-    @partials.bobby_violations_banner(environment = None, dependencies, pending = false)
-    @partials.bobby_violations_banner(environment = None, dependencies, pending = true )
-  }
+  @defining(repositoryModules.headOption) { latestRepositoryModules =>
+      @defining(latestRepositoryModules.fold(Seq.empty[Dependency])(_.allDependencies)){ dependencies =>
+        @partials.bobby_violations_banner(environment = None, dependencies, pending = false)
+        @partials.bobby_violations_banner(environment = None, dependencies, pending = true )
+      }
 
-  <section class="section-wrapper">
-    <div class="row">
-      <div class="col-md-12">
-        @partials.details(
-          repositoryDetails = library,
-          version           = metaInfo.headOption.flatMap(_.version)
-        )
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-6">
-        @partials.repo_owning_teams(library)
-      </div>
-
-      <div class="col-md-6">
-        @partials.code(library, hasBranchProtectionAuth, commenterReport, None)
-      </div>
-
-      <div class="col-md-6">
-        @partials.build(library, hasBranchProtectionAuth, commenterReport)
-      </div>
-
-        <div class="col-md-6">
-        @partials.dependency_legend(true)
+      <section class="section-wrapper">
+        <div class="row">
+          <div class="col-md-12">
+            @partials.details(
+              repositoryDetails = library,
+              version           = latestRepositoryModules.flatMap(_.version)
+            )
+          </div>
         </div>
-    </div>
 
-    @metaInfo.sorted(Ordering.by((_: RepositoryModules).version).reverse).zipWithIndex.map { case (modules, idx) =>
-        <details closed>
-            <summary>Version @modules.version.get
+        <div class="row">
+          <div class="col-md-6">
+            @partials.repo_owning_teams(library)
+          </div>
 
-            @if(
-                        modules.modules.exists(_.pendingBobbyRules.nonEmpty) ||
-                        modules.allDependencies
-                        .flatMap { dependency => dependency.pendingBobbyRuleViolations }
-                        .toSet.nonEmpty
-            ) {
-                <div id="bobby-violation-pending-badge" class="environment-badge bobby-violation-pending-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule pending" style="
-                    float: right;
-                "></div>
-            }
-            @if(
-                modules.modules.exists(_.activeBobbyRules.nonEmpty) ||
-                modules.allDependencies
-                        .flatMap { dependency => dependency.activeBobbyRuleViolations }
-                        .toSet.nonEmpty
-            ) {
-                <div id="bobby-violation-active-badge" class="environment-badge bobby-violation-active-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule violated" style="
-                    float: right;
-                "></div>
-            }
-            </summary>
-            @modulesPartial(modules, isLatest = idx == 0, showLegend = false)
-        </details>
-    }
-  </section>
+          <div class="col-md-6">
+            @partials.code(library, hasBranchProtectionAuth, commenterReport, None)
+          </div>
 
+          <div class="col-md-6">
+            @partials.build(library, hasBranchProtectionAuth, commenterReport)
+          </div>
+
+            <div class="col-md-6">
+            @partials.dependency_legend(showNewVersionAvailable = true)
+            </div>
+        </div>
+
+        @repositoryModules.sorted(Ordering.by((_: RepositoryModules).version).reverse).zipWithIndex.map { case (modules, idx) =>
+            <details closed>
+                <summary>Version @modules.version.get
+
+                @if(
+                            modules.modules.exists(_.pendingBobbyRules.nonEmpty) ||
+                            modules.allDependencies
+                            .flatMap { dependency => dependency.pendingBobbyRuleViolations }
+                            .toSet.nonEmpty
+                ) {
+                    <div id="bobby-violation-pending-badge" class="environment-badge bobby-violation-pending-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule pending" style="
+                        float: right;
+                    "></div>
+                }
+                @if(
+                    modules.modules.exists(_.activeBobbyRules.nonEmpty) ||
+                    modules.allDependencies
+                            .flatMap { dependency => dependency.activeBobbyRuleViolations }
+                            .toSet.nonEmpty
+                ) {
+                    <div id="bobby-violation-active-badge" class="environment-badge bobby-violation-active-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule violated" style="
+                        float: right;
+                    "></div>
+                }
+                </summary>
+                @modulesPartial(modules, displayBuildInfo = idx == 0, showLegend = false)
+            </details>
+        }
+      </section>
+  }
   <div class="alert alert-success" role="alert" id="@library.name">
     <p>
       @Html(viewMessages.informationalText)
