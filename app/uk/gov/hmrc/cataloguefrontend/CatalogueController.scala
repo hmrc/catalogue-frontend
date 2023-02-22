@@ -196,7 +196,7 @@ class CatalogueController @Inject() (
                                 SlugInfoFlag.Latest ->
                                   EnvData(
                                     version           = latestServiceInfo.version,
-                                    repoModules       = latestRepoModules.headOption,
+                                    repoModules       = latestRepoModules,
                                     optShutterState   = None,
                                     optTelemetryLinks = None
                                   )
@@ -356,7 +356,7 @@ class CatalogueController @Inject() (
                          },
             jenkinsJobs = jenkinsJobs
           ),
-          repoModules.headOption,
+          repoModules,
           urlIfLeaksFound,
           hasBranchProtectionAuth,
           commenterReport

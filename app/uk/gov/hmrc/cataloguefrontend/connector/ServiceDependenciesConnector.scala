@@ -127,11 +127,12 @@ class ServiceDependenciesConnector @Inject() (
       .get(url"$servicesDependenciesBaseUrl/api/repository-name?group=$group&artefact=$artefact&version=${version.toString}")
       .execute[Option[String]]
 
-  def getRepositoryModulesLatestVersion(repositoryName: String)(implicit hc: HeaderCarrier): Future[Seq[RepositoryModules]] = {
+  def getRepositoryModulesLatestVersion(repositoryName: String)(implicit hc: HeaderCarrier): Future[Option[RepositoryModules]] = {
     implicit val dr = RepositoryModules.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=latest")
       .execute[Seq[RepositoryModules]]
+      .map(_.headOption)
   }
 
   def getRepositoryModules(repositoryName: String, version: Version)(implicit hc: HeaderCarrier): Future[Seq[RepositoryModules]] = {
