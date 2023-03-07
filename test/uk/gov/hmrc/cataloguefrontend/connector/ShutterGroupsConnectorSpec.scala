@@ -41,9 +41,9 @@ class ShutterGroupsConnectorSpec
       .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(
         Map(
-          "github.open.api.rawurl" -> wireMockUrl,
-          "github.open.api.key"    -> "t",
-          "metrics.jvm"            -> false
+          "microservice.services.platops-github-proxy.port" -> wireMockPort,
+          "microservice.services.platops-github-proxy.host" -> wireMockHost,
+          "metrics.jvm"                                     -> false
         ))
       .build()
 
@@ -52,7 +52,7 @@ class ShutterGroupsConnectorSpec
   "shutterGroups" should {
     "return all shutter groups if the file is valid" in {
       stubFor(
-        get(urlEqualTo("/hmrc/outage-pages/HEAD/conf/shutter-groups.json"))
+        get(urlEqualTo("/platops-github-proxy/github-raw/outage-pages/HEAD/conf/shutter-groups.json"))
           .willReturn(
             aResponse()
             .withBody(
@@ -77,14 +77,13 @@ class ShutterGroupsConnectorSpec
       )
 
       verify(
-        getRequestedFor(urlEqualTo("/hmrc/outage-pages/HEAD/conf/shutter-groups.json"))
-          .withHeader("Authorization", equalTo("token t"))
+        getRequestedFor(urlEqualTo("/platops-github-proxy/github-raw/outage-pages/HEAD/conf/shutter-groups.json"))
       )
     }
 
     "return an empty list of shutter groups if there is a problem parsing the file (invalid json)" in {
       stubFor(
-        get(urlEqualTo("/hmrc/outage-pages/HEAD/conf/shutter-groups.json"))
+        get(urlEqualTo("/platops-github-proxy/github-raw/outage-pages/HEAD/conf/shutter-groups.json"))
           .willReturn(
             aResponse()
             .withBody(
@@ -105,7 +104,7 @@ class ShutterGroupsConnectorSpec
 
     "return an empty list of shutter groups if the file is not found" in {
       stubFor(
-        get(urlEqualTo("/hmrc/outage-pages/HEAD/conf/shutter-groups.json"))
+        get(urlEqualTo("/platops-github-proxy/github-raw/outage-pages/HEAD/conf/shutter-groups.json"))
           .willReturn(aResponse().withStatus(404))
       )
 

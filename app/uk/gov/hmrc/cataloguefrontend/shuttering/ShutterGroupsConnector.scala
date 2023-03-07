@@ -18,17 +18,17 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import cats.instances.all._
 import cats.syntax.all._
+
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.MessagesControllerComponents
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.config.GithubConfig
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -37,7 +37,7 @@ import scala.util.control.NonFatal
 class ShutterGroupsConnector @Inject() (
   override val mcc : MessagesControllerComponents,
   httpClientV2     : HttpClientV2,
-  githubConf       : GithubConfig,
+  servicesConfig   : ServicesConfig,
   override val auth: FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
@@ -46,16 +46,16 @@ class ShutterGroupsConnector @Inject() (
 
   import HttpReads.Implicits._
 
+  private val gitHubProxyBaseURL: String = servicesConfig.baseUrl("platops-github-proxy")
+
   val logger = Logger(this.getClass)
 
   def shutterGroups: Future[List[ShutterGroup]] = {
-    val url = url"${githubConf.rawUrl}/hmrc/outage-pages/HEAD/conf/shutter-groups.json"
+    val url = url"$gitHubProxyBaseURL/platops-github-proxy/github-raw/outage-pages/HEAD/conf/shutter-groups.json"
     implicit val hc: HeaderCarrier = HeaderCarrier()
     implicit val gr = ShutterGroup.reads
     httpClientV2
       .get(url)
-      .setHeader("Authorization" -> s"token ${githubConf.token}")
-      .withProxy
       .execute[Option[List[ShutterGroup]]]
       .map(_.getOrElse {
         logger.info(s"No shutter groups found at $url, defaulting to an empty list")
