@@ -306,7 +306,7 @@ class CatalogueController @Inject() (
       Ok(
         libraryInfoPage(
           repoDetails.copy(jenkinsJobs = jenkinsJobs),
-          repoModulesAllVersions,
+          repoModulesAllVersions.sorted(Ordering.by((_: RepositoryModules).version).reverse),
           urlIfLeaksFound,
           hasBranchProtectionAuth,
           commenterReport
