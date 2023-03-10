@@ -82,22 +82,26 @@
                         <input style="visibility: hidden;" type="submit" />
                     </div>
                 </form>
-                <table style="word-break: break-word" class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability ID</button></th>
-                            <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
-                            <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
-                            <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
-                            <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="score">Score</button></th>
-                            <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="services">Services</button></th>
-                        </tr>
-                    </thead>
-                    <tbody class="list">
-                        @summaries.map(vulnerabilitiesSummary)
-                    </tbody>
-                </table>
+                @if(summaries.isEmpty) {
+                    No results found matching the search criteria.
+                } else {
+                    <table style="word-break: break-word" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability ID</button></th>
+                                <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
+                                <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
+                                <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
+                                <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="score">Score</button></th>
+                                <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="services">Services</button></th>
+                            </tr>
+                        </thead>
+                        <tbody class="list">
+                            @summaries.map(vulnerabilitiesSummary)
+                        </tbody>
+                    </table>
+                }
             </div>
 
         <script>
