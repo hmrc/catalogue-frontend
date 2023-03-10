@@ -29,8 +29,8 @@
   teams          : Seq[Team],
   form           : Form[VulnerabilitiesCountFilter]
 )(implicit
-  messages: Messages,
-  request: Request[_]
+  messages       : Messages,
+  request        : RequestHeader
 )
 
 @standard_layout(s"service vulnerabilities") {
@@ -51,7 +51,6 @@
                 options = teams.map(t => t.name.asString -> t.name.asString),
                 Symbol("_default") -> "All",
                 Symbol("_label")   -> "Team",
-                Symbol("onchange") -> "this.form.submit()",
                 Symbol("id")       -> "team-filter",
                 Symbol("class")    -> "form-control"
             )
@@ -63,7 +62,6 @@
                     field   = form("environment"),
                     options = Environment.values.filterNot(Set(Integration)).map(env => env.asString -> env.displayString),
                     Symbol("_label")    -> "Environment",
-                    Symbol("onchange")  -> "this.form.submit()",
                     Symbol("id")        -> "environment-filter",
                     Symbol("class")     -> "form-control"
                 )
@@ -99,10 +97,18 @@
 }
 
 <!-- listjs configuration -->
-<script>
+<script @CSPNonce.attr>
     var options = {
         valueNames: [ 'service' ],
         indexAsync: true
     };
     serviceList = new List('service-list', options);
+</script>
+<script @CSPNonce.attr>
+  ["team-filter", "environment-filter"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
 </script>

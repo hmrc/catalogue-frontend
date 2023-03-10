@@ -29,14 +29,16 @@
   costEstimate                     : ServiceCostEstimate,
   costEstimateConfig               : CostEstimateConfig,
   estimatedCostCharts              : EstimatedCostCharts
-)(implicit request: Request[_])
+)(implicit
+  request: RequestHeader
+)
 
 @standard_layout(serviceName, "services") {
     <header class="header-with-github-badge">
         <div>
             <h1 id="service-header">Cost Estimation: @serviceName</h1>
         </div>
-        <script type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
     <section class="section-wrapper">
@@ -78,8 +80,8 @@
     </section>
 
 
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
+    <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script @CSPNonce.attr type="text/javascript">
         google.charts.load('current', {'packages':['corechart'], 'language': 'en-GB'});
         google.charts.setOnLoadCallback(drawCharts);
 

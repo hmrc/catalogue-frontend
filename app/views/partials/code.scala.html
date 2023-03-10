@@ -14,24 +14,24 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, EnableBranchProtection, routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
-@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
+@import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController
 @import views.html.helper.CSRF
 
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 @(repo                          : GitRepository,
-        hasBranchProtectionAuth       : EnableBranchProtection.HasAuthorisation,
-        commenterReport               : Option[PrCommenterReport],
-        distinctVulnerabilitiesCount  : Option[Int]
-)(implicit request: Request[_])
+  hasBranchProtectionAuth       : EnableBranchProtection.HasAuthorisation,
+  commenterReport               : Option[PrCommenterReport],
+  distinctVulnerabilitiesCount  : Option[Int]
+)(implicit
+  request                       : RequestHeader
+)
 
 <div id="code">
     <div class="board">

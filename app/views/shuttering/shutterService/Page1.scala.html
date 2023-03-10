@@ -30,9 +30,10 @@
  , statusValues : Seq[ShutterStatusValue]
  , shutterGroups: Seq[ShutterGroup]
  , back         : Call
- )(implicit request         : Request[_]
-          , messagesProvider: MessagesProvider
-          )
+ )(implicit
+   request         : RequestHeader
+ , messagesProvider: MessagesProvider
+ )
 
 @standard_layout(s"Shutter ${shutterType.asString.capitalize}") {
 
@@ -137,7 +138,7 @@
 
   </div>
 
-  <script type="text/javascript">
+  <script @CSPNonce.attr type="text/javascript">
     function onChangeGroup(selectElmt) {
       var group = selectElmt.options[selectElmt.selectedIndex].value;
 

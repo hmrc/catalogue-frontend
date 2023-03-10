@@ -28,8 +28,9 @@
  , step1Out             : Step1Out
  , frontendRouteWarnings: Seq[ServiceAndRouteWarnings]
  , back                 : Call
- )(implicit request     : Request[_]
- , messagesProvider: MessagesProvider
+ )(implicit
+   request              : RequestHeader
+ , messagesProvider     : MessagesProvider
  )
 
 @standard_layout(s"Shutter Frontend") {

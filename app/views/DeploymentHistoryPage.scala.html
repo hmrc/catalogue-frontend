@@ -22,14 +22,16 @@
 
 @this()
 
-@(
-  selectedEnv       : Environment,
+@(selectedEnv       : Environment,
   deployments       : Seq[DeploymentHistory],
   teams             : Seq[Team],
   userProfileBaseUrl: Option[String],
   pagination        : Pagination,
   form              : Form[_]
-)(implicit messages: Messages, request: Request[_])
+)(implicit
+  messages          : Messages,
+  request           : RequestHeader
+)
 
 @standard_layout("Deployments", "deployments") {
     <header>
@@ -60,7 +62,6 @@
                         options   =  teams.map(t => t.name.asString -> t.name.asString),
                         '_default -> "All",
                         '_label   -> "Team",
-                        'onchange -> "this.form.submit()",
                         'id       -> "team-search",
                         'class    -> "form-control"
                     )
@@ -117,29 +118,38 @@
     </div>
 }
 
-<script>
-function dateFilterChange(e) {
+<script @CSPNonce.attr>
+  function dateFilterChange(e) {
     // Reload the form with the new date when entered. Designed to be entered
     // via the date picker, not typed manually
     $('#form').submit();
-}
+  }
 
-function selectEnvironment(e, environment) {
-  // Stop the default link action. Instead we will fire the form to change page
-  e.preventDefault();
+  function selectEnvironment(e, environment) {
+    // Stop the default link action. Instead we will fire the form to change page
+    e.preventDefault();
 
-  // Update the hidden environment field with what was selected
-  $('#selected-environment').value = environment;
+    // Update the hidden environment field with what was selected
+    $('#selected-environment').value = environment;
 
-  // Post the form back to the the chosen environment endpoint
-  $('#form').attr('action', "/deployments/" + environment).submit();
-};
+    // Post the form back to the the chosen environment endpoint
+    $('#form').attr('action', "/deployments/" + environment).submit();
+  };
+
+  document.getElementById("team-search").addEventListener("change", function() {
+    document.getElementById("form").submit();
+  });
 </script>
 
 @envOption(env: Environment) = {
-<li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-    <a href="/deployments/@{env.asString}" class="navbar-link" id="@{env.asString}-tab" onclick="javascript:selectEnvironment(event, '@{env.asString}')" role="tab">@env.displayString</a>
-</li>
+  <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
+    <a href="/deployments/@{env.asString}" class="navbar-link" id="@{env.asString}-tab" role="tab">@env.displayString</a>
+  </li>
+  <script @CSPNonce.attr>
+    document.getElementById("@{env.asString}-tab").addEventListener("click", function() {
+      selectEnvironment(event, '@{env.asString}')
+    });
+  </script>
 }
 
 @pageNavigation() = {

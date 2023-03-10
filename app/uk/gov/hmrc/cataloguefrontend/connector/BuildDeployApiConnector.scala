@@ -34,10 +34,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class BuildDeployApiConnector @Inject() (
-                                          httpClientV2: HttpClientV2,
-                                          awsCredentialsProvider: AwsCredentialsProvider,
-                                          config: BuildDeployApiConfig
-                                        )(implicit ec: ExecutionContext) extends Logging {
+  httpClientV2          : HttpClientV2,
+  awsCredentialsProvider: AwsCredentialsProvider,
+  config                : BuildDeployApiConfig
+)(implicit
+  ec                    : ExecutionContext
+) extends Logging {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -66,16 +68,18 @@ class BuildDeployApiConnector @Inject() (
       .setHeader(headers.toSeq: _*)
       .execute[ChangePrototypePasswordResponse]
   }
-
 }
 
 object BuildDeployApiConnector {
-  final case class ChangePrototypePasswordRequest(repoName: String, password: PrototypePassword)
+  final case class ChangePrototypePasswordRequest(
+    repoName: String,
+    password: PrototypePassword
+  )
 
   object ChangePrototypePasswordRequest {
     val writes: Writes[ChangePrototypePasswordRequest] =
       ( (__ \ "repository_name").write[String]
-      ~ (__ \ "password").write[String].contramap[PrototypePassword](_.value)
+      ~ (__ \ "password"       ).write[String].contramap[PrototypePassword](_.value)
       ) (unlift(ChangePrototypePasswordRequest.unapply))
   }
 

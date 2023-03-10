@@ -31,9 +31,10 @@
  , defaultOutageMessage  : String
  , outagePages           : Seq[OutagePageStatus]
  , back                  : Call
- )(implicit request         : Request[_]
-          , messagesProvider: MessagesProvider
-          )
+ )(implicit
+   request               : RequestHeader
+ , messagesProvider      : MessagesProvider
+ )
 
 @standard_layout(s"Shutter Frontend") {
 
@@ -200,7 +201,7 @@
 
   </div>
 
-  <script type="text/javascript">
+  <script @CSPNonce.attr type="text/javascript">
     function revertTemplate() {
       $('#outageMessage').val('@defaultOutageMessage')
     }

@@ -31,13 +31,15 @@
   teams       : Seq[Team],
   selectedFlag: SlugInfoFlag,
   selectedTeam: Option[Team]
-)(implicit request: Request[_])
+)(implicit
+  request: RequestHeader
+)
 
 @standard_layout(s"JDK Versions", "dependencies") {
     <header>
         <h1 id="jdk-header">JDK Versions: @selectedFlag.asString</h1>
 
-        <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
     <div class="row">
@@ -57,7 +59,7 @@
             <div class="form-group row">
                 <div class="col-md-3">
                     <label for="flag">Environment:</label>
-                    <select class="form-control" name="flag" onchange="this.form.action = this.options[this.selectedIndex].value; this.form.submit()">
+                    <select class="form-control" id="flag" name="flag">
                         @flags.map { flag =>
                             <option value="@{flag.asString}" @{if(flag == selectedFlag) "selected"}>
                                 @flag.displayString
@@ -67,7 +69,7 @@
                 </div>
                 <div class="col-md-3">
                     <label for="teamName">Team:</label>
-                    <select class="form-control" name="teamName" onchange="this.form.submit()">
+                    <select class="form-control" id="teamName" name="teamName">
                         <option value="" @{if(selectedTeam.isEmpty) "selected"}>All</option>
                         @teams.map { team =>
                             <option value="@{team.name.asString}" @{if(Some(team) == selectedTeam) "selected"}>
@@ -96,62 +98,68 @@
 
     </div>
 
-    <script type="text/javascript">
-            google.charts.load('current', {'packages': ['corechart']});
-            google.charts.setOnLoadCallback(drawAll);
+    <script @CSPNonce.attr type="text/javascript">
+        google.charts.load('current', {'packages': ['corechart']});
+        google.charts.setOnLoadCallback(drawAll);
 
-            function drawAll() {
-                drawChart();
-                drawVendorChart()
-            }
+        function drawAll() {
+            drawChart();
+            drawVendorChart()
+        }
 
-            // draw jdk version chart
-            function drawChart() {
+        // draw jdk version chart
+        function drawChart() {
 
-                var data = new google.visualization.DataTable();
-                data.addColumn('string', 'Version');
-                data.addColumn('number', 'Count');
-                data.addRows([
-                    @for(r <- jdkVersions.groupBy(v => s"${v.version} ${v.vendor}").mapValues(_.length).toList.sortBy( _._1.replaceAll("\\D", "").toInt)) {
-                    ['@r._1', @r._2],
-                    }
-                ]);
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Version');
+            data.addColumn('number', 'Count');
+            data.addRows([
+                @for(r <- jdkVersions.groupBy(v => s"${v.version} ${v.vendor}").mapValues(_.length).toList.sortBy( _._1.replaceAll("\\D", "").toInt)) {
+                ['@r._1', @r._2],
+                }
+            ]);
 
-                var options = {
-                    'width'    : "40%",
-                    'height'   : 200,
-                    'chartArea': {
-                        'width': '100%',
-                        'height': '95%'
-                    }
-                };
-                var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
-                chart.draw(data, options);
-            }
+            var options = {
+                'width'    : "40%",
+                'height'   : 200,
+                'chartArea': {
+                    'width': '100%',
+                    'height': '95%'
+                }
+            };
+            var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        }
 
-            function drawVendorChart() {
-                var data = new google.visualization.DataTable();
-                data.addColumn('string', 'Version');
-                data.addColumn('number', 'Count');
-                data.addRows([
-                    @for(r <- jdkVersions.groupBy(j => j.vendor.toString + "(" + j.kind + ")").mapValues(_.length)) {
-                    ['@r._1', @r._2],
-                    }
-                ].sort());
+        function drawVendorChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Version');
+            data.addColumn('number', 'Count');
+            data.addRows([
+                @for(r <- jdkVersions.groupBy(j => j.vendor.toString + "(" + j.kind + ")").mapValues(_.length)) {
+                ['@r._1', @r._2],
+                }
+            ].sort());
 
-                var options = {
-                    'width'    : "40%",
-                    'height'   : 200,
-                    'chartArea': {
-                        'width': '100%',
-                        'height': '95%'
-                    }
-                };
-                var chart = new google.visualization.PieChart(document.getElementById('chart_vendor_div'));
-                chart.draw(data, options);
-            }
-
-
+            var options = {
+                'width'    : "40%",
+                'height'   : 200,
+                'chartArea': {
+                    'width': '100%',
+                    'height': '95%'
+                }
+            };
+            var chart = new google.visualization.PieChart(document.getElementById('chart_vendor_div'));
+            chart.draw(data, options);
+        }
+    </script>
+    <script @CSPNonce.attr>
+      ["teamName", "flag"]
+        .forEach(function(id) {
+          document.getElementById(id).addEventListener("change", function() {
+            document.getElementById("form").submit();
+          });
+        });
     </script>
 }
 

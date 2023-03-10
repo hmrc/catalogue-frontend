@@ -26,14 +26,15 @@
  , allRules: Seq[BobbyRule]
  , flags   : List[SlugInfoFlag]
  , data    : Option[Map[SlugInfoFlag, BobbyRulesTrendController.GraphData]]
- )(
-  implicit request         : Request[_],
-           messagesProvider: MessagesProvider)
+ )(implicit
+   request         : RequestHeader,
+   messagesProvider: MessagesProvider
+)
 
 @standard_layout("Bobby Rules Trend", "search") {
     <header>
         <h1 id="search-service-header">Bobby Rules Trend</h1>
-        <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
     <div id="service-list">
@@ -86,7 +87,7 @@
     @data match {
         case None => {}
         case Some(graphData) => {
-            <script type="text/javascript">
+            <script @CSPNonce.attr type="text/javascript">
                 function drawCharts() {
                     @for(flag <- flags) {
                         @defining(graphData.get(flag)){

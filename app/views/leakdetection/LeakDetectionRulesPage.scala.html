@@ -20,7 +20,10 @@
 
 @this(viewMessages: ViewMessages)
 
-@(summaries: Seq[LeakDetectionRulesWithCounts])(implicit request: Request[_])
+@(summaries: Seq[LeakDetectionRulesWithCounts]
+)(implicit
+  request  : RequestHeader
+)
 
     @standard_layout(s"Leak detection rules") {
         <header>
@@ -46,9 +49,9 @@
                 </table>
             </div>
 
-            <script>
-                    var options = {valueNames: ['rule-id', 'description', 'first-scanned', 'last-scanned', 'repo-count', 'excluded', 'unresolved']};
-                    rulesList = new List('rules-list', options);
+            <script @CSPNonce.attr>
+                var options = {valueNames: ['rule-id', 'description', 'first-scanned', 'last-scanned', 'repo-count', 'excluded', 'unresolved']};
+                rulesList = new List('rules-list', options);
             </script>
         }
     }

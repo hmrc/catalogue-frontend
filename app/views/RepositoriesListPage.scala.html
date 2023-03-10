@@ -23,14 +23,18 @@
 @import views.html.partials.RepoSearchResultsPage
 @import views.html.helper.select
 
-@this(viewMessages: ViewMessages,
-      repoSearchResultsPage: RepoSearchResultsPage
+@this(
+  viewMessages         : ViewMessages,
+  repoSearchResultsPage: RepoSearchResultsPage
 )
 
 @(repositories: Seq[GitRepository],
-  teams: Seq[Team],
-  form: Form[_]
-)(implicit messages: Messages, request: Request[_])
+  teams       : Seq[Team],
+  form        : Form[_]
+)(implicit
+  messages: Messages,
+  request : RequestHeader
+)
 
 @standard_layout("Repositories", "repositories") {
     <header>
@@ -60,28 +64,26 @@
                     options    = teams.map(t => t.name.asString -> t.name.asString),
                     '_default -> "All",
                     '_label   -> "Team",
-                    'onchange -> "this.form.submit()",
                     'id       -> "team-filter",
-                    'class   -> "form-control"
+                    'class    -> "form-control"
                 )
                 </div>
                 <div class="col-md-3">
                 @select(
-                    field       =  form("repoType"),
-                    options     =  Seq(
-                        "Library"           -> "Library",
-                        "Prototype"         -> "Prototype",
-                        "Service"           -> "Service (All)",
-                        "FrontendService"   -> "Service (Frontend)",
-                        "BackendService"    -> "Service (Backend)",
-                        "Test"              -> "Test",
-                        "Other"             -> "Other"
-                    ),
+                    field     =  form("repoType"),
+                    options   =  Seq(
+                                    "Library"           -> "Library",
+                                    "Prototype"         -> "Prototype",
+                                    "Service"           -> "Service (All)",
+                                    "FrontendService"   -> "Service (Frontend)",
+                                    "BackendService"    -> "Service (Backend)",
+                                    "Test"              -> "Test",
+                                    "Other"             -> "Other"
+                                 ),
                     '_default -> "All",
                     '_label   -> "Type",
-                    'onchange -> "this.form.submit()",
                     'id       -> "type-search",
-                    'class   -> "form-control"
+                    'class    -> "form-control"
                 )
                 </div>
             </div>
@@ -106,12 +108,20 @@
     </div>
 }
 <!-- listjs configuration -->
-<script>
-var options = {
-    searchDelay: 350,
-    valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
-    searchColumns: ['repo-name'],
-    indexAsync: true};
+<script @CSPNonce.attr>
+  var options = {
+      searchDelay: 350,
+      valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
+      searchColumns: ['repo-name'],
+      indexAsync: true};
 
-var serviceList = new List('service-list', options);
+  var serviceList = new List('service-list', options);
+</script>
+<script @CSPNonce.attr>
+  ["team-filter", "type-search"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("repos-form").submit();
+      });
+    });
 </script>

@@ -18,7 +18,10 @@
 
 @(digitalServices: Seq[String],
   form           : Form[_]
-)(implicit messages: Messages, request: Request[_])
+)(implicit
+  messages: Messages,
+  request: RequestHeader
+)
 
     @standard_layout("Digital Service list", "digital-services") {
         <header>
@@ -70,7 +73,7 @@
         </div>
     }
 
-    <script>
+    <script @CSPNonce.attr>
        var options = { valueNames: ['service-name'] };
 
        var serviceList = new List('digital-service-list', options);

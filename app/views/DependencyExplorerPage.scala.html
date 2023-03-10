@@ -31,14 +31,14 @@
   searchResults   : Option[Seq[ServiceWithDependency]],
   pieData         : Option[PieData]
 )(implicit
-  request         : Request[_],
+  request         : RequestHeader,
   messagesProvider: MessagesProvider
 )
 
 @standard_layout("Dependency Explorer", "search") {
     <header>
         <h1 id="search-service-header">Dependency Explorer</h1>
-        <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
     <div id="service-list">
@@ -54,7 +54,7 @@
             </div>
         }
 
-        <form id="search-by-dependency-form" action="@appRoutes.DependencyExplorerController.search.url" method="get" onsubmit="updateVersionRange()">
+        <form id="search-by-dependency-form" action="@appRoutes.DependencyExplorerController.search.url" method="get">
             <div class="form-group">
                 <div class="row" style="margin-bottom: 20px;">
                     <div class="col-md-4">
@@ -77,7 +77,7 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <input class="form-control undecorated-text" type="text" value="version" tabindex="-1" onfocus="this.blur()" readonly>
+                                <input class="form-control undecorated-text" type="text" value="version" tabindex="-1" readonly>
                             </div>
                             <div class="col-md-2">
                                 <select id="ubInclusive" class="form-control input-group-start">
@@ -125,7 +125,7 @@
                 <div class="row">
                     <div class="col-md-2">
                         <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-                        <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV" onclick="exportAsCsv()"/>
+                        <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV"/>
                     </div>
                 </div>
             </div>
@@ -177,7 +177,7 @@
         }
     </div>
 
-    <script>
+    <script @CSPNonce.attr>
         if (document.readyState != 'loading'){
             ready();
         } else {
@@ -205,6 +205,10 @@
             document.getElementById('asCsv').value = false;
         }
 
+        document.getElementById("export-button-1").addEventListener("click", function() {
+            exportAsCsv()
+        });
+
         function updateGroupArtefact(groupArtefact) {
             let parts = groupArtefact.split(':');
             document.getElementById('group').value = parts[0];
@@ -223,6 +227,10 @@
 
             document.getElementById('versionRange').value = rangeStart + rangeFrom + ',' + ubValue + rangeEnd;
         }
+
+        document.getElementById("search-by-dependency-form").addEventListener("submit", function() {
+            updateVersionRange()
+        });
 
         let gaSearch = document.getElementById('group-artefact-search');
         let matchesDiv = document.getElementById("group-artefact-matches")
@@ -370,7 +378,7 @@
         }
     </script>
 
-    <script type="text/javascript">
+    <script @CSPNonce.attr type="text/javascript">
         google.charts.load('current', {'packages': ['corechart']});
         google.charts.setOnLoadCallback(drawChart);
         function drawChart() {

@@ -30,13 +30,15 @@
   jdks        : List[JDKVersion],
   teams       : Seq[Team],
   selectedTeam: Option[Team]
-)(implicit request: Request[_])
+)(implicit
+  request     : RequestHeader
+)
 
 @standard_layout(s"JDK Versions", "dependencies") {
     <header>
         <h1 id="jdk-header">JDK Versions Across Environments</h1>
 
-        <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
     <div id="chart_div"></div>
@@ -45,7 +47,7 @@
         <div class="form-group row">
             <div class="col-md-3">
                 <label for="teamName">Team:</label>
-                <select class="form-control" name="teamName" onchange="this.form.submit()">
+                <select class="form-control" id="teamName" name="teamName">
                     <option value="" @{if(selectedTeam.isEmpty) "selected"}>All</option>
                     @teams.map { team =>
                         <option value="@{team.name.asString}" @{if(Some(team) == selectedTeam) "selected"}>
@@ -56,7 +58,7 @@
             </div>
             <div class="col-md-1">
                 <label>Graph Mode:</label>
-                <div><button type="button" id="chart-toggle" class="btn btn-default" onclick="toggle()">show absolute</button></div>
+                <div><button type="button" id="chart-toggle" class="btn btn-default">show absolute</button></div>
             </div>
         </div>
     </form>
@@ -88,54 +90,61 @@
         </tbody>
     </table>
 
-    <script type="text/javascript">
-            google.charts.load('current', {'packages': ['corechart']});
-            google.charts.setOnLoadCallback(drawChart);
+    <script @CSPNonce.attr type="text/javascript">
+        google.charts.load('current', {'packages': ['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
 
-            // either true or "percent"
-            var drawMode = "percent";
+        // either true or "percent"
+        var drawMode = "percent";
 
-            function toggle() {
-                if(drawMode == "percent") {
-                    document.getElementById("chart-toggle").textContent = "show percent"
-                    drawMode = "absolute"
-                }else {
-                    document.getElementById("chart-toggle").textContent = "show absolute"
-                    drawMode = "percent"
+        function toggle() {
+            if (drawMode == "percent") {
+                document.getElementById("chart-toggle").textContent = "show percent"
+                drawMode = "absolute"
+            } else {
+                document.getElementById("chart-toggle").textContent = "show absolute"
+                drawMode = "percent"
+            }
+
+            drawChart()
+        }
+
+        function drawChart() {
+            drawStackedChart(drawMode)
+        }
+
+        function drawStackedChart(stack) {
+
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Environment');
+            @for(jdk <- jdks) {
+                data.addColumn('number','@{jdk.version} @{jdk.vendor}');
+            }
+
+            data.addRows([
+                @for(d <- envdata) {
+                    ['@d.env.displayString' @for(jdk <- jdks) {,@{d.usage.getOrElse(jdk, 0)}}],
                 }
+            ]);
 
-                drawChart()
-            }
+            var options = { 'title'    : 'JDK Usage',
+                'width'    : "100%",
+                'height'   : 400,
+                'isStacked': stack,
+                'legend': { 'position': 'top', 'maxLines': 3 }
+            };
 
-            function drawChart() {
-                drawStackedChart(drawMode)
-            }
+            var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        }
 
-          function drawStackedChart(stack) {
-
-                var data = new google.visualization.DataTable();
-                data.addColumn('string', 'Environment');
-                @for(jdk <- jdks) {
-                  data.addColumn('number','@{jdk.version} @{jdk.vendor}');
-                }
-
-                data.addRows([
-                    @for(d <- envdata) {
-                        ['@d.env.displayString' @for(jdk <- jdks) {,@{d.usage.getOrElse(jdk, 0)}}],
-                    }
-                ]);
-
-                var options = { 'title'    : 'JDK Usage',
-                    'width'    : "100%",
-                    'height'   : 400,
-                    'isStacked': stack,
-                    'legend': { 'position': 'top', 'maxLines': 3 }
-                };
-
-                var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
-                chart.draw(data, options);
-            }
-
-
+        document.getElementById("chart-toggle").addEventListener("click", function () {
+          toggle();
+        });
+    </script>
+    <script @CSPNonce.attr>
+      document.getElementById("teamName").addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
     </script>
 }

@@ -14,21 +14,21 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
-    @import uk.gov.hmrc.cataloguefrontend.{ViewMessages}
-    @import views.html.helper.form
-    @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{routes => appRoutes}
-    @import views.html.vulnerabilities.VulnerabilityDetails
-    @import views.html.helper.select
-    @import uk.gov.hmrc.cataloguefrontend.connector.Team
-    @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitySummary, routes => appRoutes}
+@import views.html.vulnerabilities.VulnerabilityDetails
+@import views.html.helper.{form, select}
 
 @this(viewMessages: ViewMessages)
 
-@(summaries:      Seq[VulnerabilitySummary],
-  teams:          Seq[Team],
-  form:           Form[_]
-)(implicit messages: Messages, request: Request[_])
+@(summaries: Seq[VulnerabilitySummary],
+  teams    : Seq[Team],
+  form     : Form[_]
+)(implicit
+  messages : Messages,
+  request  : RequestHeader
+)
 
 @standard_layout(s"Vulnerabilities") {
         <header>
@@ -56,23 +56,21 @@
                             options    = teams.map(t => t.name.asString -> t.name.asString),
                             '_default -> "All",
                             '_label   -> "Team:",
-                            'onchange -> "this.form.submit()",
                             'id       -> "team-filter",
-                            'class   -> "form-control"
+                            'class    -> "form-control"
                         )
                         </div>
                         <div class="col-md-2">
                         @select(
-                            field       =  form("curationStatus"),
-                            options     =  Seq(
-                                ""                                           -> "All",
-                                CurationStatus.NoActionRequired.asString     -> CurationStatus.NoActionRequired.display,
-                                CurationStatus.InvestigationOngoing.asString -> CurationStatus.InvestigationOngoing.display,
-                                CurationStatus.ActionRequired.asString       -> CurationStatus.ActionRequired.display,
-                                CurationStatus.Uncurated.asString            -> CurationStatus.Uncurated.display
-                            ),
+                            field     =  form("curationStatus"),
+                            options   =  Seq(
+                                           ""                                           -> "All",
+                                           CurationStatus.NoActionRequired.asString     -> CurationStatus.NoActionRequired.display,
+                                           CurationStatus.InvestigationOngoing.asString -> CurationStatus.InvestigationOngoing.display,
+                                           CurationStatus.ActionRequired.asString       -> CurationStatus.ActionRequired.display,
+                                           CurationStatus.Uncurated.asString            -> CurationStatus.Uncurated.display
+                                         ),
                             '_label   -> "Curation status:",
-                            'onchange -> "this.form.submit()",
                             'id       -> "curation-status-search",
                             'class    -> "form-control"
                         )
@@ -100,7 +98,7 @@
                 </table>
             </div>
 
-        <script>
+        <script @CSPNonce.attr>
             var options = {valueNames: ['vuln-id', 'score', 'curation-status', 'services'],
                 indexAsync: true};
                 vulnList = new List('vulnerabilities-list', options);
@@ -130,3 +128,12 @@
             </td>
         </tr>
 }
+
+<script @CSPNonce.attr>
+  ["team-filter", "curation-status-search"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("vuln-form").submit();
+      });
+    });
+</script>

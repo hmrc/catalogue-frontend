@@ -25,14 +25,14 @@
 
 @this(viewMessages: ViewMessages)
 
-@(initiatives : Seq[PlatformInitiative],
-  display     : DisplayType            ,
-  team        : Option[TeamName]       ,
-  allTeams    : Seq[Team]              ,
-  form        : Form[_]
+@( initiatives : Seq[PlatformInitiative]
+,  display     : DisplayType
+,  team        : Option[TeamName]
+,  allTeams    : Seq[Team]
+,  form        : Form[_]
 )(implicit
-  messages    : Messages               ,
-  request     : Request[_]
+   messages    : Messages
+,  request     : RequestHeader
 )
 
 @standard_layout(s"Platform Initiatives", "platforminitiatives") {
@@ -41,21 +41,21 @@
         case None       => {Platform Initiatives}
         case Some(team) => {Platform Initiatives: @team.asString}
     }</h1>
-    <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+    <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 </header>
 
 @if(form.hasErrors) {
   <div class="alert alert-danger" role="alert">
     <ul class="list">
-        @form.errors.map { error =>
+      @form.errors.map { error =>
         <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
-        }
+      }
     </ul>
   </div>
 }
 
 <div id="platform-initiatives">
-    <form action="/platform-initiatives" method="get">
+    <form id="form" action="/platform-initiatives" method="get">
         <div class="col-xs-1 padding-reset-right">
             <label for="search">Search:</label>
         </div>
@@ -70,18 +70,18 @@
                 </a>
             }
             <div style="float:right; margin-top:-1em;">
-            @select(field      = form("team")                                                   ,
-                    options    = allTeams
-                                    .map(_.name.asString)
-                                    .map(t => t -> t)
-                                    .distinct
-                                    .sorted                                                     ,
-                    '_default -> "All"                                                          ,
-                    '_label   -> None                                                           ,
-                    '_value   -> form("team").value                                             ,
-                    '_id      -> "teamName"                                                     ,
-                    'onchange -> "this.form.submit();"
-                )
+            @select(
+                field      = form("team")
+            ,   options    = allTeams
+                               .map(_.name.asString)
+                               .map(t => t -> t)
+                               .distinct
+                               .sorted
+            ,   '_default -> "All"
+            ,   '_label   -> None
+            ,   '_value   -> form("team").value
+            ,   '_id      -> "teamName"
+            )
             </div>
         </div>
         <br>
@@ -151,11 +151,11 @@
 </div>
 }
 
-<script type="text/javascript">
+<script @CSPNonce.attr type="text/javascript">
   google.charts.load('current', {'packages': ['corechart']});
   google.charts.setOnLoadCallback(drawChart);
   function drawChart() {
-    @initiatives.zipWithIndex.map{case (initiative, i) =>
+    @initiatives.zipWithIndex.map { case (initiative, i) =>
       var data = new google.visualization.DataTable();
       data.addColumn('string', 'InitiativeName');
       data.addColumn('number', 'Count');
@@ -174,8 +174,13 @@
     }
   }
 </script>
-<script>
+<script @CSPNonce.attr>
     var options = { valueNames:     ['initiativeName'],
                     searchColumns:  ['initiativeName'] };
     var serviceList = new List('platform-initiatives', options);
+</script>
+<script @CSPNonce.attr>
+  document.getElementById("teamName").addEventListener("change", function() {
+    document.getElementById("form").submit();
+  });
 </script>

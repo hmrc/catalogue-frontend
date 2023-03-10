@@ -28,9 +28,8 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{ChangePrototypePasswordRequest, ChangePrototypePasswordResponse}
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, RepositoryModules, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag.Latest
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
@@ -46,7 +45,6 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html._
 
 import javax.inject.{Inject, Singleton}
-import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
 case class EnvData(

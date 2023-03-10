@@ -14,12 +14,12 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMember
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(viewMessages: ViewMessages)
 
@@ -27,12 +27,14 @@
   teamMembersLookUp  : Map[TeamName, Either[UMPError, Seq[DisplayableTeamMember]]],
   repos              : Map[RepoType, Seq[String]],
   digitalServiceOwner: Option[DisplayableTeamMember]
-)(implicit request: Request[_])
+)(implicit
+  request: RequestHeader
+)
 
 @standard_layout(digitalServiceName, "digital-services") {
     <header>
         <h1>Digital Service: @{digitalServiceName}</h1>
-        <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
     <div class="row">

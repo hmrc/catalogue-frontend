@@ -23,7 +23,9 @@
 @(form            : Form[_],
   searchResults   : Seq[FrontendRoutes],
   serviceNameToUrl: String => Call
-)(implicit request: Request[_])
+)(implicit
+  request: RequestHeader
+)
 
 @standard_layout("Service Search", "search") {
     <header>

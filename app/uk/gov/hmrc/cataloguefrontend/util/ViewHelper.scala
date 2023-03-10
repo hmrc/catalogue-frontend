@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-import play.api.mvc.Request
+import play.api.mvc.RequestHeader
 
 object ViewHelper {
-  def csrfFormField(implicit request: Request[_]) =
+  def csrfFormField(implicit request: RequestHeader) =
     play.filters.csrf.CSRF.getToken(request)
       .map(_ => views.html.helper.CSRF.formField(request))
 }

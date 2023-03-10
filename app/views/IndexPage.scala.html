@@ -18,9 +18,12 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.ConfluenceConnector
 
-
 @this(viewMessages: ViewMessages)
-@(blogs: List[ConfluenceConnector.Blog])(implicit request: Request[_])
+
+@(blogs : List[ConfluenceConnector.Blog]
+)(implicit
+ request: RequestHeader
+)
 
 @standard_layout() {
 
@@ -89,5 +92,5 @@
 }
 
 <!-- :) -->
-<script src="@routes.Assets.versioned("egg.js")"></script>
+<script @CSPNonce.attr src="@routes.Assets.versioned("egg.js")"></script>
 <link rel="stylesheet" href="@routes.Assets.versioned("egg.css")" />

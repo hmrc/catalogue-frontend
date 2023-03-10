@@ -25,7 +25,10 @@
  , shutterType   : ShutterType
  , selectedEnv   : Environment
  , killSwitchLink: Option[String]
- )(implicit request: Request[_], messages: Messages)
+ )(implicit
+   request       : RequestHeader
+, messages       : Messages
+)
 
 @standard_layout(s"Shutter Overview - ${shutterType.asString.capitalize}") {
 
@@ -50,7 +53,10 @@
     <ul id="environment" class="nav nav-tabs">
         @Environment.values.map(envOption)
     </ul>
-    <div class="shuttered-checkbox"><input id="shuttered-only" type="checkbox" name="shuttered-only" value="false" onclick="filterUnshuttered()"> Only Show Shuttered @{shutterType}s</div>
+    <div class="shuttered-checkbox">
+      <input id="shuttered-only" type="checkbox" name="shuttered-only" value="false">
+      Only Show Shuttered @{shutterType}s
+    </div>
 
     <p class="shutter-info-link">
       Select a service from the list below or <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None)">
@@ -78,7 +84,7 @@
     </div>
   </section>
 
-  <script>
+  <script @CSPNonce.attr>
     function filterUnshuttered() {
         var checkBox = document.getElementById("shuttered-only");
         var unshutteredServices = document.querySelectorAll("tr.unshuttered");
@@ -93,6 +99,10 @@
             });
         }
     }
+
+    document.getElementById("shuttered-only").addEventListener("click", function() {
+        filterUnshuttered()
+    });
 
     var options = { valueNames: [ 'shutter-service', 'shutter-state', 'shutter-user', 'shutter-date' ] };
     var serviceList = new List('service-list', options);
