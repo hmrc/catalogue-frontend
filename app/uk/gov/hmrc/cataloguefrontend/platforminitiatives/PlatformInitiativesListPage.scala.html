@@ -151,34 +151,40 @@
 </div>
 }
 
-<script @CSPNonce.attr type="text/javascript">
-  google.charts.load('current', {'packages': ['corechart']});
-  google.charts.setOnLoadCallback(drawChart);
-  function drawChart() {
-    @initiatives.zipWithIndex.map { case (initiative, i) =>
-      var data = new google.visualization.DataTable();
-      data.addColumn('string', 'InitiativeName');
-      data.addColumn('number', 'Count');
-      data.addRows([
-        ['@initiative.completedLegend', @initiative.progress.current],
-        ['@initiative.inProgressLegend', @initiative.progress.target-@initiative.progress.current]
-      ]);
-      var options = { 'title'       : ''        ,
-                      'width'       : "100%"    ,
-                      'height'      : 200       ,
-                      'chartArea'   : {'width' : '80%',
-                                       'height': '80%'}
-                    };
-      var chart = new google.visualization.PieChart(document.getElementById('chart_div_@initiative.initiativeName'));
-      chart.draw(data, options);
+@if(display == DisplayType.Chart) {
+  <script @CSPNonce.attr type="text/javascript">
+    google.charts.load('current', {'packages': ['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+      @initiatives.zipWithIndex.map { case (initiative, i) =>
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'InitiativeName');
+        data.addColumn('number', 'Count');
+        data.addRows([
+          ['@initiative.completedLegend', @initiative.progress.current],
+          ['@initiative.inProgressLegend', @initiative.progress.target-@initiative.progress.current]
+        ]);
+        var options = { 'title'       : ''        ,
+                        'width'       : "100%"    ,
+                        'height'      : 200       ,
+                        'chartArea'   : {'width' : '80%',
+                                         'height': '80%'}
+                      };
+        var chart = new google.visualization.PieChart(document.getElementById('chart_div_@initiative.initiativeName'));
+        chart.draw(data, options);
+      }
     }
-  }
-</script>
-<script @CSPNonce.attr>
+  </script>
+}
+
+@if(initiatives.nonEmpty) {
+  <script @CSPNonce.attr>
     var options = { valueNames:     ['initiativeName'],
                     searchColumns:  ['initiativeName'] };
-    var serviceList = new List('platform-initiatives', options);
-</script>
+    new List('platform-initiatives', options);
+  </script>
+}
+
 <script @CSPNonce.attr>
   document.getElementById("teamName").addEventListener("change", function() {
     document.getElementById("form").submit();

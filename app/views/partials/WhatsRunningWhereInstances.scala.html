@@ -14,32 +14,32 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 
-@(serviceDeployments         : Seq[ServiceDeploymentConfigSummary]
-        , environments       : Seq[Environment]
-        , maxMemory          : Double
+@(serviceDeployments: Seq[ServiceDeploymentConfigSummary]
+, environments      : Seq[Environment]
+, maxMemory         : Double
 )
 <tbody class="list list-darker-text">
 @serviceDeployments.zipWithIndex.map { case (sdcSummary, i) =>
-<tr role="row" id="row@i">
+  <tr role="row" id="row@i">
     <td class="application-name" id="row@{i}_application">
         <a href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName}</a>
     </td>
     @environments.map { env =>
-        @sdcSummary.environments.find(_.environment == env.asString).map { sdc =>
+      @sdcSummary.environments.find(_.environment == env.asString).map { sdc =>
         <td id="row@{i}_version_@{env.asString}" style="background: rgba(246, 124, 27, @{sdc.slotsAndInstancesToMemory/maxMemory});">
             <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@sdc.instances slots:@sdc.slots">
                 <span class="@env.asString hidden">@sdc.slotsAndInstancesToMemory</span>
                 @sdc.instances x @{sdc.slotsToMemory}mb
             </abbr>
         </td>
-        }.getOrElse {
-            <td id="row@{i}_version_@{env.asString}"></td>
-        }
+      }.getOrElse {
+        <td id="row@{i}_version_@{env.asString}"></td>
+      }
     }
-</tr>
+  </tr>
 }
 </tbody>
