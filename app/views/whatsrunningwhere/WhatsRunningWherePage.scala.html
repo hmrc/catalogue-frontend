@@ -108,12 +108,15 @@
     </div>
 }
 <script @CSPNonce.attr>
-    var options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
-    var serviceList = new List('whats-running-where-list', options);
-
-    // re-search the list upon page load.
     var searchBox = document.getElementById("search");
-    serviceList.search(searchBox.value);
+
+    @if((viewMode.asString == "versions" && whatsRunning.nonEmpty) || serviceDeployments.nonEmpty) {
+      var options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
+      var serviceList = new List('whats-running-where-list', options);
+      // re-search the list upon page load.
+      serviceList.search(searchBox.value);
+    }
+
 
     // set autofocus cursor to right of text in search box
     var length = searchBox.value.length;

@@ -31,100 +31,103 @@
 )
 
 @standard_layout(s"Vulnerabilities") {
-        <header>
+    <header>
         <h1>Vulnerabilities</h1>
-
-        </header>
-            <div id="vulnerabilities-list">
-                <form id="vuln-form" action="/vulnerabilities" method="get">
-                    <div class="form-group row">
-                        <div class="col-md-2">
-                            <label for="id-search">Vulnerability ID:</label>
-                            <input class="form-control" id="id-search" type="text" name="vulnerability" value='@form("vulnerability").value' autofocus>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="component-search">Vulnerable Component:</label>
-                            <input class="form-control" id="component-search" type="text" name="component" value='@form("component").value' autofocus>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="service-search">Service:</label>
-                            <input class="form-control" id="service-search" type="text" name="service" value='@form("service").value' autofocus>
-                        </div>
-                        <div class="col-md-3">
-                        @select(
-                            field      = form("team"),
-                            options    = teams.map(t => t.name.asString -> t.name.asString),
-                            '_default -> "All",
-                            '_label   -> "Team:",
-                            'id       -> "team-filter",
-                            'class    -> "form-control"
-                        )
-                        </div>
-                        <div class="col-md-2">
-                        @select(
-                            field     =  form("curationStatus"),
-                            options   =  (""->"All") :: CurationStatus.values.map(cs => cs.asString -> cs.display),
-                            '_label   -> "Curation status:",
-                            'id       -> "curation-status-search",
-                            'class    -> "form-control"
-                        )
-                        </div>
-                        @*Hidden submit button required to allow form submission on an enter press,
-                         when two search fields exist in the same form*@
-                        <input style="visibility: hidden;" type="submit" />
-                    </div>
-                </form>
-                @if(summaries.isEmpty) {
-                    No results found matching the search criteria.
-                } else {
-                    <table style="word-break: break-word" class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability ID</button></th>
-                                <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
-                                <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
-                                <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
-                                <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="score">Score</button></th>
-                                <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="services">Services</button></th>
-                            </tr>
-                        </thead>
-                        <tbody class="list">
-                            @summaries.map(vulnerabilitiesSummary)
-                        </tbody>
-                    </table>
-                }
+    </header>
+    <div id="vulnerabilities-list">
+        <form id="vuln-form" action="/vulnerabilities" method="get">
+            <div class="form-group row">
+                <div class="col-md-2">
+                    <label for="id-search">Vulnerability ID:</label>
+                    <input class="form-control" id="id-search" type="text" name="vulnerability" value='@form("vulnerability").value' autofocus>
+                </div>
+                <div class="col-md-2">
+                    <label for="component-search">Vulnerable Component:</label>
+                    <input class="form-control" id="component-search" type="text" name="component" value='@form("component").value' autofocus>
+                </div>
+                <div class="col-md-3">
+                    <label for="service-search">Service:</label>
+                    <input class="form-control" id="service-search" type="text" name="service" value='@form("service").value' autofocus>
+                </div>
+                <div class="col-md-3">
+                @select(
+                    field      = form("team"),
+                    options    = teams.map(t => t.name.asString -> t.name.asString),
+                    '_default -> "All",
+                    '_label   -> "Team:",
+                    'id       -> "team-filter",
+                    'class    -> "form-control"
+                )
+                </div>
+                <div class="col-md-2">
+                @select(
+                    field     =  form("curationStatus"),
+                    options   =  (""->"All") :: CurationStatus.values.map(cs => cs.asString -> cs.display),
+                    '_label   -> "Curation status:",
+                    'id       -> "curation-status-search",
+                    'class    -> "form-control"
+                )
+                </div>
+                @*Hidden submit button required to allow form submission on an enter press,
+                    when two search fields exist in the same form*@
+                <input style="visibility: hidden;" type="submit" />
             </div>
+        </form>
+        @if(summaries.isEmpty) {
+            No results found matching the search criteria.
+        } else {
+            <table style="word-break: break-word" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability ID</button></th>
+                        <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
+                        <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
+                        <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
+                        <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="score">Score</button></th>
+                        <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="services">Services</button></th>
+                    </tr>
+                </thead>
+                <tbody class="list">
+                    @summaries.map(vulnerabilitiesSummary)
+                </tbody>
+            </table>
+        }
+    </div>
 
-        <script @CSPNonce.attr>
-            var options = {valueNames: ['vuln-id', 'score', 'curation-status', 'services'],
-                indexAsync: true};
-                vulnList = new List('vulnerabilities-list', options);
-        </script>
+    @if(summaries.nonEmpty) {
+      <script @CSPNonce.attr>
+        var options = {
+            valueNames: ['vuln-id', 'score', 'curation-status', 'services'],
+            indexAsync: true
+        };
+        new List('vulnerabilities-list', options);
+      </script>
+    }
 }
 
 @vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
-        <tr>
-            <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"/>
-            <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
-            <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.vulnerableComponentName</td>
-            <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-            <td class="curation-status hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
-            <td class="score hand-pointer text-right" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
-            <td class="services text-right hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.occurrences.groupBy(_.service).size</div></td>
-        </tr>
-        <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
-            @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
-            <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
-            <td class="hide vulnerable-component-name">@summary.distinctVulnerability.vulnerableComponentName</td>
-            <td class="hide assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-            <td class="curation-status text-center hide"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
-            <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
-            <td class="services text-center hide"><div>@summary.occurrences.groupBy(_.service).size</div></td>
-            <td colspan="6">
-            @VulnerabilityDetails(summary)
-            </td>
-        </tr>
+    <tr>
+        <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"/>
+        <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
+        <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.vulnerableComponentName</td>
+        <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+        <td class="curation-status hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+        <td class="score hand-pointer text-right" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
+        <td class="services text-right hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.occurrences.groupBy(_.service).size</div></td>
+    </tr>
+    <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
+        @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
+        <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
+        <td class="hide vulnerable-component-name">@summary.distinctVulnerability.vulnerableComponentName</td>
+        <td class="hide assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+        <td class="curation-status text-center hide"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+        <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
+        <td class="services text-center hide"><div>@summary.occurrences.groupBy(_.service).size</div></td>
+        <td colspan="6">
+        @VulnerabilityDetails(summary)
+        </td>
+    </tr>
 }
 
 <script @CSPNonce.attr>

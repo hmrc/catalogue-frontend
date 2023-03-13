@@ -14,40 +14,39 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 
-@(whatsRunning       : Seq[WhatsRunningWhere]
-        , environments       : Seq[Environment]
-        , showDiff           : Boolean
+@(whatsRunning: Seq[WhatsRunningWhere]
+, environments: Seq[Environment]
+, showDiff    : Boolean
 )
 
 <tbody class="list">
 @whatsRunning.zipWithIndex.map { case (wrw, i) =>
-<tr role="row" id="row@i">
+  <tr role="row" id="row@i">
     <td class="application-name" id="row@{i}_application">
         <a href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
     </td>
     @environments.map { env =>
-        @wrw.versions.find(_.environment == env).map { envVersion =>
+      @wrw.versions.find(_.environment == env).map { envVersion =>
         <td id="row@{i}_version_@{env.asString}"
             @if(showDiff && env == Environment.Production) {
                 @if(!WhatsRunningWhereController.matchesProduction(wrw, envVersion, Environment.Staging)){
                     class="env-version-difference"
-                    }
+                }
             }
         >@envVersion.versionNumber.asString</td>
-        }.getOrElse {
-            <td id="row@{i}_version_@{env.asString}"></td>
-        }
+      }.getOrElse {
+        <td id="row@{i}_version_@{env.asString}"></td>
+      }
     }
     <td>
         <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.applicationName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
-</td>
-</tr>
+    </td>
+  </tr>
 }
 </tbody>
-

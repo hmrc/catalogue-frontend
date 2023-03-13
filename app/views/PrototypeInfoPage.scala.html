@@ -60,9 +60,11 @@
                     elem.style.display = "none";
                 }
             }
-            document.getElementById("reset-password-enabled").addEventListener("click", function() {
-              togglePasswordResetVisibility();
-            });
+            @if(hasPasswordChangeAuth.value) {
+              document.getElementById("reset-password-enabled").addEventListener("click", function() {
+                togglePasswordResetVisibility();
+              });
+            }
         </script>
     </header>
 
