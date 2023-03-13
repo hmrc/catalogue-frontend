@@ -178,7 +178,7 @@
     </div>
 
     <script @CSPNonce.attr>
-        @if(searchResults.nonEmpty) {
+        @if(searchResults.exists(_.nonEmpty)) {
           let options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
           new List('service-list', options);
         }
