@@ -39,7 +39,18 @@
         <link rel="shortcut icon" href="@routes.Assets.versioned("favicon.ico")" type="image/x-icon">
         <script @CSPNonce.attr src="@routes.Assets.versioned("jquery.3.5.1.min.js")"></script>
         <script @CSPNonce.attr src="@routes.Assets.versioned("jquery-ui.1.13.2.min.js")"></script>
-        @* https://listjs.com/docs/ https://github.com/javve/list.js *@
+        @* https://listjs.com/docs/ https://github.com/javve/list.js
+
+        We've patched the list.js source code to allow searching by punctuation.
+        This bug was introduced in List.js:2.3.0, and a fix has been proposed
+        which has not yet been merged: https://github.com/javve/list.js/pull/721
+
+        Prior to v2.3.0, the search used regexp, so special chars had to be escaped.
+        However version 2.3.0 implemented a new, faster search which didn't use regexp.
+        Therefore by continuing to escape special chars, it's not possible to search for them.
+        This defunct 'replace' function has therefore been removed in our patched version.
+
+        *@
         <script @CSPNonce.attr src="@routes.Assets.versioned("list-2.3.0-patched.min.js")"></script>
         <script @CSPNonce.attr src="@routes.Assets.versioned("popper.1.12.9.min.js")"></script>
         <script @CSPNonce.attr src="@routes.Assets.versioned("bootstrap.3.4.1.min.js")"></script>
