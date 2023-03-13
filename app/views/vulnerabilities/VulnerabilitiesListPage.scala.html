@@ -64,13 +64,7 @@
                         <div class="col-md-2">
                         @select(
                             field       =  form("curationStatus"),
-                            options     =  Seq(
-                                ""                                           -> "All",
-                                CurationStatus.NoActionRequired.asString     -> CurationStatus.NoActionRequired.display,
-                                CurationStatus.InvestigationOngoing.asString -> CurationStatus.InvestigationOngoing.display,
-                                CurationStatus.ActionRequired.asString       -> CurationStatus.ActionRequired.display,
-                                CurationStatus.Uncurated.asString            -> CurationStatus.Uncurated.display
-                            ),
+                            options     =  (""->"All") :: CurationStatus.values.map(cs => cs.asString -> cs.display),
                             '_label   -> "Curation status:",
                             'onchange -> "this.form.submit()",
                             'id       -> "curation-status-search",
