@@ -81,7 +81,7 @@
                     field     =  form("shutterGroup")
                   , options   =  Seq("" -> "Add from Group") ++ shutterGroups.map(s => (s.name, s.name))
                   , '_label   -> ""
-                  , 'onChange -> "onChangeGroup(this)"
+                  , 'id       -> "shutter-group"
                   )
               }
             </div>
@@ -175,6 +175,12 @@
       if (missingServices.length > 0) {
         addGroupWarning(group, missingServices);
       }
+    }
+
+    @if(shutterGroups.nonEmpty) {
+      document.getElementById("shutter-group").addEventListener("change", function() {
+        onChangeGroup(document.getElementById("shutter-group"));
+      });
     }
 
     $('#btnRight').click(function (e) {

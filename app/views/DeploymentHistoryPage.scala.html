@@ -68,11 +68,11 @@
                 </div>
                 <div class="col-md-2">
                     <label for="from-search-input" title="From the start of this day" data-toggle="tooltip">Date From</label>
-                    <input id="from-search-input" class="form-control" type="date" name="from" onchange="dateFilterChange(event)" value='@form("from").value' style="line-height: 20px">
+                    <input id="from-search-input" class="form-control" type="date" name="from" value='@form("from").value' style="line-height: 20px">
                 </div>
                 <div class="col-md-2">
                     <label for="to-search-input" title="To the end of this day" data-toggle="tooltip" >Date To</label>
-                    <input id="to-search-input" class="form-control" type="date" name="to" onchange="dateFilterChange(event)" value='@form("to").value' style="line-height: 20px">
+                    <input id="to-search-input" class="form-control" type="date" name="to" value='@form("to").value' style="line-height: 20px">
                 </div>
             </div>
         </form>
@@ -119,11 +119,14 @@
 }
 
 <script @CSPNonce.attr>
-  function dateFilterChange(e) {
-    // Reload the form with the new date when entered. Designed to be entered
-    // via the date picker, not typed manually
-    $('#form').submit();
-  }
+  // Reload the form with the new date when entered. Designed to be entered
+  // via the date picker, not typed manually
+  ["from-search-input", "to-search-input"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        $('#form').submit();
+      });
+    });
 
   function selectEnvironment(e, environment) {
     // Stop the default link action. Instead we will fire the form to change page

@@ -178,18 +178,8 @@
     </div>
 
     <script @CSPNonce.attr>
-        if (document.readyState != 'loading'){
-            ready();
-        } else {
-            document.addEventListener('DOMContentLoaded', ready);
-        }
-
         let options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
-        let serviceList = null;
-
-        function updateSortOrder() {
-            serviceList = new List('service-list', options);
-        }
+        var serviceList = new List('service-list', options);
 
         const allGroupArtefacts = [
             @for(ga <- groupArtefacts) {
@@ -372,10 +362,6 @@
 
         gaSearch.addEventListener('keyup', gaSearchInputListener, false);
         gaSearch.addEventListener('keydown', gaDisableDefaults, false);
-
-        function ready() {
-            updateSortOrder();
-        }
     </script>
 
     <script @CSPNonce.attr type="text/javascript">
