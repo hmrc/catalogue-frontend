@@ -18,7 +18,11 @@
 @import java.time.format.DateTimeFormatter
 @import java.time.ZoneId
 
-@(history: HistoricIndicatorAPI, optAverage: Option[Int])
+@( history: HistoricIndicatorAPI,
+  optAverage: Option[Int]
+)(implicit
+  request: RequestHeader
+)
 
     <header>
         <h2>History:</h2>
@@ -26,36 +30,36 @@
 
     <div id="chart"></div>
 
-    <script type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
-            <script>
-                    google.charts.load('current', {packages: ['corechart']});
-                    google.charts.setOnLoadCallback(drawChart);
+    <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+    <script @CSPNonce.attr>
+        google.charts.load('current', {packages: ['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
 
-                    function drawChart() {
-                        var data = new google.visualization.DataTable();
-                        data.addColumn('date', 'Date');
-                        data.addColumn('number', 'Score')
-                        data.addColumn('number', 'Average')
-                        data.addRows([ @history.dataPoints.reverse.map { d =>
-                            [new Date("@DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.of("UTC")).format(d.timestamp)"), @d.overallScore, @optAverage.getOrElse(0)],
-                            }])
+        function drawChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('date', 'Date');
+            data.addColumn('number', 'Score')
+            data.addColumn('number', 'Average')
+            data.addRows([ @history.dataPoints.reverse.map { d =>
+                [new Date("@DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.of("UTC")).format(d.timestamp)"), @d.overallScore, @optAverage.getOrElse(0)],
+                }])
 
-                        var options = {
-                            series: {
-                                0: {targetAxisIndex: 0}
-                            },
-                            vAxes : {
-                            0: {title: 'Overall Score'}
-                            },
-                            hAxis: {
-                                title: 'Date',
-                                format: 'MMM, d',
-                                showTextEvery:  @{history.dataPoints.length / 20}
-                            },
-                            focusTarget: 'category'
-                        };
+            var options = {
+                series: {
+                    0: {targetAxisIndex: 0}
+                },
+                vAxes : {
+                0: {title: 'Overall Score'}
+                },
+                hAxis: {
+                    title: 'Date',
+                    format: 'MMM, d',
+                    showTextEvery:  @{history.dataPoints.length / 20}
+                },
+                focusTarget: 'category'
+            };
 
-                        var chart = new google.visualization.LineChart(document.getElementById('chart'));
-                        chart.draw(data, options);
-                    }
-            </script>
+            var chart = new google.visualization.LineChart(document.getElementById('chart'));
+            chart.draw(data, options);
+        }
+    </script>

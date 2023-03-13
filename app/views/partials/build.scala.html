@@ -21,7 +21,9 @@
 @(repo                   : GitRepository,
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   commenterReport        : Option[PrCommenterReport]
-)(implicit request: Request[_])
+)(implicit
+  request                : RequestHeader
+)
 
 <div id="builds">
     <div class="board">

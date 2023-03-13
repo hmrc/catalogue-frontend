@@ -27,7 +27,7 @@
   form           : Form[_]
 )(implicit
   messages       : Messages,
-  request        : Request[_]
+  request        : RequestHeader
 )
 
 @standard_layout(s"Default Branches", "defaultbranch") {
@@ -124,7 +124,7 @@
 </div>
 }
 
-<script>
+<script @CSPNonce.attr>
     var options = { valueNames: [ 'service-name', 'repo-name', 'teamNames', 'defaultBranch', 'isArchived'],
                     searchColumns: ['repo-name', 'teamNames', 'defaultBranch', 'isArchived'] };
 

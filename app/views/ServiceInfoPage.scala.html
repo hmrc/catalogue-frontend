@@ -34,8 +34,7 @@
   viewMessages                    : ViewMessages
 )
 
-@(
-  serviceName                  : String,
+@(serviceName                  : String,
   repositoryDetails            : GitRepository,
   costEstimate                 : ServiceCostEstimate,
   costEstimateConfig           : CostEstimateConfig,
@@ -47,7 +46,10 @@
   commenterReport              : Option[PrCommenterReport],
   distinctVulnerabilitiesCount : Option[Int],
   serviceRelationships         : ServiceRelationshipsWithHasRepo
-)(implicit messages: Messages, request: Request[_])
+)(implicit
+  messages                     : Messages,
+  request                      : RequestHeader
+)
 
 
 @standard_layout(serviceName, "services") {
@@ -61,7 +63,7 @@
             </h1>
         </div>
 
-        <script type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)

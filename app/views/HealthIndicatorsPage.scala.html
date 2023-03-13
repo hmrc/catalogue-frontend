@@ -24,7 +24,7 @@
   optHistory: Option[HistoricIndicatorAPI],
   optAverage: Option[Int]
 )(implicit
-  request   : Request[_]
+  request   : RequestHeader
 )
 
 @standard_layout("Service Health Indicators", "health-indicators"){

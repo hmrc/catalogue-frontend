@@ -20,10 +20,12 @@
 
 @this(viewMessages: ViewMessages)
 
-@( warningsMap: Map[Environment, Seq[FrontendRouteWarning]]
- , selectedEnv  : Environment
- , selectedService : String
- )(implicit request: Request[_])
+@( warningsMap    : Map[Environment, Seq[FrontendRouteWarning]]
+ , selectedEnv    : Environment
+ , selectedService: String
+ )(implicit
+   request        : RequestHeader
+)
 
 @standard_layout(s"Frontend Route Warnings: ${selectedEnv.asString}") {
 

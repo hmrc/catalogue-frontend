@@ -27,7 +27,7 @@
   form      : Form[_]
 )(implicit
   messages : Messages,
-  request  : Request[_]
+  request  : RequestHeader
 )
 
 @standard_layout(s"Leak detection draft results") {
@@ -43,10 +43,8 @@
                 options   =  rules.map(_.id).map(r => r -> r),
                 '_default -> "All",
                 '_label   -> "Draft rule",
-                'onchange -> "this.form.submit()",
                 'id       -> "rule-dropdown",
                 'class    -> "form-control"
-
             )
             </div>
         </div>
@@ -96,8 +94,13 @@
         </table>
     </div>
 
-    <script>
-            var options = {valueNames: ['repository', 'scanned', 'exemptions', 'violations']};
-            repoList = new List('repo-list', options);
+    <script @CSPNonce.attr>
+        var options = {valueNames: ['repository', 'scanned', 'exemptions', 'violations']};
+        repoList = new List('repo-list', options);
+    </script>
+    <script @CSPNonce.attr>
+        document.getElementById("rule-dropdown").addEventListener("change", function() {
+          document.getElementById("form").submit();
+        });
     </script>
 }

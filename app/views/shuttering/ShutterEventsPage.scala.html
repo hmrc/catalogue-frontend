@@ -24,7 +24,7 @@
   form        : Form[_],
   environments: List[Environment]
 )(implicit
-  request : Request[_]
+  request : RequestHeader
 )
 
 @standard_layout("Shutter Events", "shuttering") {
@@ -113,7 +113,7 @@
   @uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, None)
 }
 
-<script>
+<script @CSPNonce.attr>
   let options = {
       valueNames: ['service', 'status', 'reason', 'cause', 'username', 'timestamp'],
       searchDelay: 350,

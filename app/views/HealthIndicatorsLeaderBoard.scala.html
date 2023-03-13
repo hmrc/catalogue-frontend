@@ -15,14 +15,17 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.{IndicatorsWithTeams, RepoType}
-@import views.html.helper.select
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import views.html.helper.select
 
 @(indicatorsWithTeams: Seq[IndicatorsWithTeams]
 , repoTypes          : Seq[RepoType]
 , teams              : Seq[Team]
 , form               : Form[_]
-)(implicit messages: Messages, request: Request[_])
+)(implicit
+  messages           : Messages
+, request            : RequestHeader
+)
 
 @standard_layout("Service Health Indicators", "health-indicators") {
     <header>
@@ -42,7 +45,6 @@
                         options   =  teams.map(t => t.name.asString -> t.name.asString),
                         '_default -> "All",
                         '_label   -> "Owning Team",
-                        'onchange -> "this.form.submit()",
                         'id       -> "team-search",
                         'class    -> "form-control"
                     )
@@ -52,7 +54,6 @@
                         field     =  form("repoType"),
                         options   =  repoTypes.map(r => r.asString -> r.asString),
                         '_label   -> "Repository Type",
-                        'onchange -> "this.form.submit()",
                         'id       -> "repo-type-search",
                         'class    -> "form-control"
                     )
@@ -94,7 +95,7 @@
     </div>
 
 @*List.js configuration below >>>>> *@
-    <script>
+    <script @CSPNonce.attr>
         var options = {valueNames: ['overallScore', 'repo-name'],
                       searchColumns: ['repo-name'],
                       searchDelay: 350,
@@ -120,3 +121,12 @@
         searchBox.setSelectionRange(length, length);
     </script>
 }
+
+<script @CSPNonce.attr>
+  ["team-search", "repo-type-search"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
+</script>

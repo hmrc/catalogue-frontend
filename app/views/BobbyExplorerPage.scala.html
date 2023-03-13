@@ -22,7 +22,11 @@
 
 @this(viewMessages: ViewMessages)
 
-@(rules: BobbyRulesView, counts: Map[(BobbyRule, SlugInfoFlag), Int])(implicit request: Request[_])
+@(rules: BobbyRulesView,
+  counts: Map[(BobbyRule, SlugInfoFlag), Int]
+)(implicit
+  request: RequestHeader
+)
 
 @standard_layout(s"Bobby rules") {
     <header>
@@ -122,7 +126,7 @@
     </tr>
 }
 
-<script type="text/javascript">
+<script @CSPNonce.attr type="text/javascript">
     if (document.readyState != 'loading'){
         ready();
     } else {

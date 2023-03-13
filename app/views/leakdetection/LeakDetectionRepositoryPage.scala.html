@@ -25,7 +25,7 @@
   summaries       : Seq[LeakDetectionBranchSummary],
   canRescan       : Boolean
 )(implicit
-  request : Request[_]
+  request         : RequestHeader
 )
 
 @standard_layout(s"Leak detection: $repoName") {
@@ -36,7 +36,7 @@
     <form id="form" method="GET">
         <div class="form-group row">
             <div class="col-xs-12">
-                <input name="includeNonIssues" id="includeNonIssues" type="checkbox" onchange="form.submit()" value="true"
+                <input name="includeNonIssues" id="includeNonIssues" type="checkbox" value="true"
                 @if(includeNonIssues) {checked}/>
                 <label>Show all branch reports</label>
             </div>
@@ -69,7 +69,7 @@
           </form>
         </div>
 
-        <script>
+        <script @CSPNonce.attr>
             var options = {valueNames: ['branch', 'scanned', 'warnings', 'exemptions', 'violations']};
             branchList = new List('branch-list', options);
         </script>
@@ -102,3 +102,8 @@
         }
     </td>
 }
+<script @CSPNonce.attr>
+  document.getElementById("includeNonIssues").addEventListener("change", function() {
+    document.getElementById("form").submit();
+  });
+</script>

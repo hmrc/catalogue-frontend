@@ -61,12 +61,11 @@ case class UserManagementConnector @Inject() (
     } yield token
   }
 
-  def retrieveToken() : Future[UmpToken] = {
+  def retrieveToken() : Future[UmpToken] =
     if (authEnabled)
       tokenCache.getOrElseUpdate[UmpToken]("token", tokenTTL)(login())
     else
       Future.successful(NoTokenRequired)
-  }
 
   def getTeamMembersForTeams(teamNames: Seq[TeamName])(implicit hc: HeaderCarrier): Future[Map[TeamName, Either[UMPError, Seq[TeamMember]]]] =
     Future

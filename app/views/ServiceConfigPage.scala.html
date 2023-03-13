@@ -23,14 +23,16 @@
 
 @(serviceName: String,
   configByKey: ConfigByKey
+)(implicit
+  request: RequestHeader
 )
 
 <html>
     <head>
         <title>Config - @serviceName</title>
         <link rel="stylesheet" href="@routes.Assets.versioned("config-explorer.css")" />
-        <script src="@routes.Assets.versioned("split.js")"></script>
-        <script src="@routes.Assets.versioned("config-explorer.js")"></script>
+        <script @CSPNonce.attr src="@routes.Assets.versioned("split.js")"></script>
+        <script @CSPNonce.attr src="@routes.Assets.versioned("config-explorer.js")"></script>
     </head>
     <body class="hide-refconf-only">
         <header class="opaque">
@@ -52,7 +54,7 @@
                     @defining(envSources.forall(_._2.map(_.source) == List("referenceConf"))) { isRefconfOnly =>
                         <div id="config-row-@key" class="grid-row @if(isRefconfOnly) {refconf-only} else {}">
                             <div id="config-key-@key" class="grid-item sticky-column truncate-content" style="width:310px;">
-                                <a id="config-url-@key" href="#@key" class="glyphicon glyphicon-link" onclick='copyHref("config-url-@key")'></a>@key
+                                <a id="config-url-@key" href="#@key" class="glyphicon glyphicon-link"></a>@key
                             </div>
                             @for(env <- ConfigEnvironment.values) {
                                 <div class="grid-item column-@env.asString" style="width:510px;">
@@ -67,6 +69,11 @@
                                 </div>
                             }
                         </div>
+                        <script @CSPNonce.attr>
+                          document.getElementById("config-url-@key").addEventListener("click", function() {
+                            copyHref("config-url-@key")
+                          });
+                        </script>
                     }
                 }
             </div>
@@ -117,7 +124,7 @@
                 <li>Ctrl-f to search for a key or value (uses browser find)</li>
             </ul>
         </aside>
-        <script type="text/javascript">
+        <script @CSPNonce.attr type="text/javascript">
             ready(function() {
                 (window.onhashchange = function () {
                     const el = document.getElementById(location.hash.replace("#", "config-row-"));

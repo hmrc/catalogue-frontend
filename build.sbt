@@ -1,13 +1,11 @@
 import play.core.PlayVersion
 import play.sbt.PlayImport.PlayKeys.playDefaultPort
 import play.sbt.routes.RoutesKeys
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
 
 lazy val microservice = Project("catalogue-frontend", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
-  .settings(publishingSettings: _*)
   .settings(
     majorVersion := 4,
     scalaVersion := "2.13.10",
@@ -23,7 +21,10 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.cataloguefrontend.binders.Binders._",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
     ),
-    TwirlKeys.templateImports += "uk.gov.hmrc.cataloguefrontend.util.ViewHelper.csrfFormField",
+    TwirlKeys.templateImports ++= Seq(
+      "uk.gov.hmrc.cataloguefrontend.util.ViewHelper.csrfFormField",
+      "views.html.helper.CSPNonce"
+    ),
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress unused-imports in twirl and routes files
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",

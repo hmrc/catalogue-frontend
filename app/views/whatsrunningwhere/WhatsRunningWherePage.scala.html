@@ -23,15 +23,18 @@
 @this(viewMessages: ViewMessages)
 
 @( environments       : Seq[Environment]
-        , whatsRunning       : Seq[WhatsRunningWhere]
-        , selectedProfileType: ProfileType
-        , profileNames       : Seq[ProfileName]
-        , form               : Form[_]
-        , showDiff           : Boolean
-        , serviceDeployments : Seq[ServiceDeploymentConfigSummary]
-        , maxMemory          : Double
-        , viewMode           : ViewMode
-)(implicit messages: Messages, request: Request[_])
+ , whatsRunning       : Seq[WhatsRunningWhere]
+ , selectedProfileType: ProfileType
+ , profileNames       : Seq[ProfileName]
+ , form               : Form[_]
+ , showDiff           : Boolean
+ , serviceDeployments : Seq[ServiceDeploymentConfigSummary]
+ , maxMemory          : Double
+ , viewMode           : ViewMode
+)(implicit
+  messages            : Messages
+, request             : RequestHeader
+)
 
 @standard_layout("What's Running Where?", "whats-running-where") {
     <header>
@@ -69,7 +72,7 @@
                 <div class="tab-pane show active in" role="tabpanel">
                     <div class="form-group row">
                         <div class="col-md-2">
-                            <select class="form-control" id="profile_name" name="profile_name" onchange="this.form.submit();">
+                            <select class="form-control" id="profile_name" name="profile_name">
                             @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
                                 @options.map(selectOption(form("profile_name").value))
                             }
@@ -78,7 +81,7 @@
                     </div>
                 </div>
             </div>
-            <select class="form-control" id="view_mode" name="view_mode" style="float: right; width: 120px;" onchange="this.form.submit();">
+            <select class="form-control" id="view_mode" name="view_mode" style="float: right; width: 120px;">
                 <option @if(viewMode.asString == "versions") {selected="selected"} value="versions">versions</option>
                 <option @if(viewMode.asString == "instances"){selected="selected"} value="instances">instances</option>
             </select>
@@ -104,24 +107,31 @@
         </table>
     </div>
 }
-<script>
-        var options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
-        var serviceList = new List('whats-running-where-list', options);
+<script @CSPNonce.attr>
+    var options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
+    var serviceList = new List('whats-running-where-list', options);
 
-        // re-search the list upon page load.
-        var searchBox = document.getElementById("search");
-        serviceList.search(searchBox.value);
+    // re-search the list upon page load.
+    var searchBox = document.getElementById("search");
+    serviceList.search(searchBox.value);
 
-        // set autofocus cursor to right of text in search box
-        var length = searchBox.value.length;
-        searchBox.focus();
-        searchBox.setSelectionRange(length, length);
+    // set autofocus cursor to right of text in search box
+    var length = searchBox.value.length;
+    searchBox.focus();
+    searchBox.setSelectionRange(length, length);
 
-        function selectProfileType(profileType) {
-            document.getElementById('profile_type').value = profileType;
-            document.getElementById('profile_name').value = '';
-            document.getElementById('form').submit();
-        };
+    function selectProfileType(profileType) {
+        document.getElementById('profile_type').value = profileType;
+        document.getElementById('profile_name').value = '';
+        document.getElementById('form').submit();
+    };
+
+    ["profile_name", "view_mode"]
+      .forEach(function(id) {
+        document.getElementById(id).addEventListener("change", function() {
+          document.getElementById("form").submit();
+        });
+      });
 </script>
 
 @selectOption(selected: Option[String])(option: (String, String)) = {
@@ -131,11 +141,16 @@
 }
 
 @profileTypeTab(profileType: ProfileType) = {
-@defining(profileType == selectedProfileType){ active =>
-    <li id="tab-@profileType.asString" class="nav-item @if(active){active}">
-        <a class="nav-link @if(active){active}" id="@profileType.asString-tab" onclick="javascript:selectProfileType('@profileType.asString')" role="tab">
-            @profileType Profile
-        </a>
-    </li>
-}
+    @defining(profileType == selectedProfileType){ active =>
+        <li id="tab-@profileType.asString" class="nav-item @if(active){active}">
+            <a class="nav-link @if(active){active}" id="@profileType.asString-tab" role="tab">
+                @profileType Profile
+            </a>
+            <script @CSPNonce.attr>
+              document.getElementById("@profileType.asString-tab").addEventListener("click", function() {
+                selectProfileType('@profileType.asString')
+              });
+            </script>
+        </li>
+    }
 }

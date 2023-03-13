@@ -14,15 +14,18 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeaksByRule
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeakDetails
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionLeaksByRule, LeakDetectionLeakDetails}
 
-@(leaks: Seq[LeakDetectionLeaksByRule], countHeader: String)
+@( leaks      : Seq[LeakDetectionLeaksByRule],
+   countHeader: String
+)(implicit
+  request: RequestHeader
+)
 
 <div id="leaks-list">
     <div class="text-right">
-        <a id="expandLink" class="hand-pointer" onclick="expandAll()">expand all</a>
-        <a id="collapseLink" class="hand-pointer hidden" onclick="collapseAll()">collapse all</a>
+        <a id="expandLink" class="hand-pointer">expand all</a>
+        <a id="collapseLink" class="hand-pointer hidden">collapse all</a>
     </div>
 
     <table class="table table-striped">
@@ -40,21 +43,28 @@
         </tbody>
     </table>
 </div>
-<script>
-        var options = {valueNames: ['rule', 'scope', 'priority', 'total']};
-        leaksList = new List('leaks-list', options);
+<script @CSPNonce.attr>
+    var options = {valueNames: ['rule', 'scope', 'priority', 'total']};
+    leaksList = new List('leaks-list', options);
 
-        function expandAll() {
-            $("#expandLink").addClass('hidden')
-            $("#collapseLink").removeClass('hidden')
-            $(".multi-collapse").collapse('show')
-        }
+    function expandAll() {
+        $("#expandLink").addClass('hidden')
+        $("#collapseLink").removeClass('hidden')
+        $(".multi-collapse").collapse('show')
+    }
 
-        function collapseAll() {
-            $("#expandLink").removeClass('hidden')
-            $("#collapseLink").addClass('hidden')
-            $(".multi-collapse").collapse('hide')
-        }
+    function collapseAll() {
+        $("#expandLink").removeClass('hidden')
+        $("#collapseLink").addClass('hidden')
+        $(".multi-collapse").collapse('hide')
+    }
+
+    document.getElementById("expandLink").addEventListener("click", function() {
+        expandAll()
+    });
+    document.getElementById("collapseLink").addEventListener("click", function() {
+        collapseAll()
+    });
 </script>
 
 

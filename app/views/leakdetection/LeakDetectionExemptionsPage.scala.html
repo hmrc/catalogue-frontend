@@ -23,7 +23,9 @@
   branch          : String,
   exemptions      : Seq[LeakDetectionLeaksByRule],
   unusedExemptions: Seq[UnusedExemption]
-)(implicit request: Request[_])
+)(implicit
+  request         : RequestHeader
+)
 
 @standard_layout(s"Leak detection exemptions") {
     <header>
@@ -69,8 +71,8 @@
       </div>
     }
 
-    <script>
-            var unusedOptions = {valueNames: ['rule', 'filePath', 'text']};
-            unusedList = new List('unused-list', unusedOptions);
+    <script @CSPNonce.attr>
+        var unusedOptions = {valueNames: ['rule', 'filePath', 'text']};
+        unusedList = new List('unused-list', unusedOptions);
     </script>
 }

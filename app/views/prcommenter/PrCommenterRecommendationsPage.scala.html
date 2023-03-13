@@ -32,8 +32,8 @@
   reports     : Seq[PrCommenterReport],
   commentTypes: Set[String]
 )(implicit
-  messages  : Messages,
-  request   : Request[_]
+  messages    : Messages,
+  request     : RequestHeader
 )
 
 @standard_layout("PR-Commenter Recommendations") {
@@ -54,7 +54,6 @@
             options   =  teams.map(t => t.name.asString -> t.name.asString),
             '_default ->  "All",
             '_label   -> "Team",
-            'onchange -> "this.form.submit()",
             'id       -> "team-dropdown",
             'class    -> "form-control"
           )
@@ -65,7 +64,6 @@
             options   =  commentTypes.map(x => x -> x).toSeq.sorted,
             '_default ->  "All",
             '_label   -> "Comment Type",
-            'onchange -> "this.form.submit()",
             'id       -> "comment-type-dropdown",
             'class    -> "form-control"
           )
@@ -75,8 +73,8 @@
 
     @if(reports.nonEmpty) {
       <div class="text-right">
-        <a id="expandLink" class="hand-pointer" onclick="toggleExpandAll()">expand all</a>
-        <a id="collapseLink" class="hand-pointer hidden" onclick="toggleExpandAll()">collapse all</a>
+        <a id="expandLink" class="hand-pointer">expand all</a>
+        <a id="collapseLink" class="hand-pointer hidden">collapse all</a>
       </div>
       <table class="table table-striped">
         <thead>
@@ -117,7 +115,7 @@
           }
         </tbody>
       </table>
-      <script>
+      <script @CSPNonce.attr>
         var options = {
           searchDelay: 350,
           valueNames: ['name', 'teams', 'recommendations', 'lastrun'],
@@ -141,10 +139,26 @@
         })
         // Triggers a search on page load for passed in params
         document.getElementById('search').dispatchEvent(new Event('keyup'))
+
+        ["expandLink", "collapseLink"]
+          .forEach(function() {
+            document.getElementById(id).addEventListener("click", function() {
+              toggleExpandAll();
+            });
+          });
       </script>
     </div>
   }
 }
+<script @CSPNonce.attr>
+  ["team-dropdown", "comment-type-dropdown"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        console.log("AS");
+        document.getElementById("form").submit();
+      });
+    });
+</script>
 
 @collapseAttr(cssClasses: String, report: PrCommenterReport) = {
   @if(report.comments.nonEmpty) {

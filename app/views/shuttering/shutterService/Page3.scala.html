@@ -29,9 +29,10 @@
  , step1Out             : Step1Out
  , step2Out             : Step2bOut
  , back                 : Call
- )(implicit request         : Request[_]
-          , messagesProvider: MessagesProvider
-          )
+ )(implicit
+   request              : RequestHeader
+ , messagesProvider     : MessagesProvider
+ )
 
 @standard_layout(s"Shutter ${shutterType.asString.capitalize}") {
 

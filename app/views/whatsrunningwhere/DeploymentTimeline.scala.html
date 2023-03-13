@@ -34,7 +34,9 @@
   events  : Seq[DeploymentTimelineEvent],
   slugInfo: Seq[ServiceDependencies],
   services: Seq[String]
-)(implicit request: Request[_])
+)(implicit
+  request: RequestHeader
+)
 
 @colorForVersion(version: String) = @{
     if(version == DeploymentGraphService.notDeployedMessage) {
@@ -51,72 +53,72 @@
             padding: 6px;
         }
     </style>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
-    <script type="text/javascript">
-            google.charts.load("current", {packages:["timeline"]});
-            google.charts.setOnLoadCallback(drawChart);
+    <script @CSPNonce.attr type="text/javascript">
+        google.charts.load("current", {packages:["timeline"]});
+        google.charts.setOnLoadCallback(drawChart);
 
-            function drawChart() {
+        function drawChart() {
 
-                let data = [
-                    @events.map { e =>
-                        ['@e.env',
-                        '@{e.version.toString}',
-                        makeToolTip(
-                            '@{e.version}',
-                            '@{e.userName}',
-                            '@{e.displayStart.getOrElse(e.start).displayFormat}',
-                            '@{e.displayEnd.getOrElse(e.end).displayFormat}',
-                            @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays},
-                            '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor}")}',
-                        ),
-                        '@colorForVersion(e.version.toString)',
-                        new Date(@{e.start.toEpochMilli}),
-                        new Date(@{e.end.toEpochMilli}),
-                    ], }
+            let data = [
+                @events.map { e =>
+                    ['@e.env',
+                    '@{e.version.toString}',
+                    makeToolTip(
+                        '@{e.version}',
+                        '@{e.userName}',
+                        '@{e.displayStart.getOrElse(e.start).displayFormat}',
+                        '@{e.displayEnd.getOrElse(e.end).displayFormat}',
+                        @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays},
+                        '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor}")}',
+                    ),
+                    '@colorForVersion(e.version.toString)',
+                    new Date(@{e.start.toEpochMilli}),
+                    new Date(@{e.end.toEpochMilli}),
+                ], }
 
-                ]
+            ]
 
-                let options = {tooltip: { isHtml: true }, enableInteractivity: true};
-                let container = document.getElementById('history-chart');
-                if(container == null) return
-                let chart = new google.visualization.Timeline(container);
-                let dataTable = new google.visualization.DataTable();
-                dataTable.addColumn({ type: 'string', id: 'Position' });
-                dataTable.addColumn({ type: 'string', id: 'Name' });
-                dataTable.addColumn({ type: 'string', role: 'tooltip' });
-                dataTable.addColumn({ type: 'string', role: 'style'});
-                dataTable.addColumn({ type: 'date', id: 'Start' });
-                dataTable.addColumn({ type: 'date', id: 'End' });
+            let options = {tooltip: { isHtml: true }, enableInteractivity: true};
+            let container = document.getElementById('history-chart');
+            if (container == null) return
+            let chart = new google.visualization.Timeline(container);
+            let dataTable = new google.visualization.DataTable();
+            dataTable.addColumn({ type: 'string', id: 'Position' });
+            dataTable.addColumn({ type: 'string', id: 'Name' });
+            dataTable.addColumn({ type: 'string', role: 'tooltip' });
+            dataTable.addColumn({ type: 'string', role: 'style'});
+            dataTable.addColumn({ type: 'date', id: 'Start' });
+            dataTable.addColumn({ type: 'date', id: 'End' });
 
-                dataTable.addRows(data);
-                chart.draw(dataTable, options);
+            dataTable.addRows(data);
+            chart.draw(dataTable, options);
+        }
+
+        function makeToolTip(ver, user, start, end, days, java) {
+            if (ver === "@DeploymentGraphService.notDeployedMessage") {
+                return `<div class="timeline-tooltip">No deployment events found in this date range</div>`
             }
-
-            function makeToolTip(ver, user, start, end, days, java) {
-                if(ver === "@DeploymentGraphService.notDeployedMessage") {
-                    return `<div class="timeline-tooltip">No deployment events found in this date range</div>`
-                }
-                return `<div class="timeline-tooltip" style="width:250px">
-                            <table class="table table-striped" style="margin-bottom:0px">
-                                <tr><th>${ver}</th><td>Deployed for ${days} days</td></tr>
-                                <tr><th>By</th><td>${user}</td></tr>
-                                <tr><th>From</th><td>${start} UTC</td></tr>
-                                <tr><th>To</th><td>${end} UTC</td></tr>
-                                <tr><th>Java</th><td>${java}</td></tr>
-                            </table>
-                        </div>`
-            }
+            return `<div class="timeline-tooltip" style="width:250px">
+                        <table class="table table-striped" style="margin-bottom:0px">
+                            <tr><th>${ver}</th><td>Deployed for ${days} days</td></tr>
+                            <tr><th>By</th><td>${user}</td></tr>
+                            <tr><th>From</th><td>${start} UTC</td></tr>
+                            <tr><th>To</th><td>${end} UTC</td></tr>
+                            <tr><th>Java</th><td>${java}</td></tr>
+                        </table>
+                    </div>`
+        }
     </script>
     <header>
         <h1>Deployment Timeline @if(service != ""){<a id="link-to-service-info-page" href="@CatalogueController.service(service)">- @service</a>}</h1>
     </header>
-    <form action="" method="get">
+    <form id="form" action="" method="get">
         <div class="form-group row">
             <div class="col-md-6">
                 <label for="service" title="Search by service name" data-toggle="tooltip">Service</label>
-                <select name="service" id="service" class="form-control" onchange="this.form.submit()">
+                <select name="service" id="service" class="form-control">
                     <option value=""></option>
                     @services.map { s => <option value="@s" @if(service.equalsIgnoreCase(s)) { selected="true" } >@s</option> }
                 </select>
@@ -124,11 +126,11 @@
 
             <div class="col-md-2">
                 <label for="start" title="From the start of this day" data-toggle="tooltip">Date From</label>
-                <input type="date" id="start" name="start" value="@start.asPattern("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()" style="line-height: 20px">
+                <input type="date" id="start" name="start" value="@start.asPattern("yyyy-MM-dd")" class="form-control" style="line-height: 20px">
             </div>
             <div class="col-md-2">
                 <label for="end" title="To the end of this day" data-toggle="tooltip" >Date To</label>
-                <input type="date" id="end" name="end" value="@end.asPattern("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()" style="line-height: 20px">
+                <input type="date" id="end" name="end" value="@end.asPattern("yyyy-MM-dd")" class="form-control" style="line-height: 20px">
             </div>
             <div class="col-md-2" style="padding-top: 40px;">
                 <input type="submit" value="Submit" class="form-control btn btn-primary">
@@ -147,3 +149,12 @@
         <div id="history-chart" style="height: 300px;"></div>
     }
 }
+
+<script @CSPNonce.attr>
+  ["start", "end", "service"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
+</script>

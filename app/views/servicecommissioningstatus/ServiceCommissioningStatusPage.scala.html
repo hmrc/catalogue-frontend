@@ -19,11 +19,10 @@
 
 @this()
 
-@(
-  serviceName: String,
+@(serviceName: String,
   checks     : List[Check]
 )(implicit
-  request: Request[_]
+  request    : RequestHeader
 )
 
 @standard_layout("Commissioning-State") {

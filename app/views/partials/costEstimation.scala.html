@@ -14,17 +14,19 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
 @import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter.formatGbp
-@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 
-@(
-        serviceCostEstimate: ServiceCostEstimate,
-        serviceCostEstimateConfig: CostEstimateConfig,
-        serviceName: String,
-        linkToCostsPage: Boolean
+@(serviceCostEstimate      : ServiceCostEstimate,
+  serviceCostEstimateConfig: CostEstimateConfig,
+  serviceName              : String,
+  linkToCostsPage          : Boolean
+)(implicit
+  request: RequestHeader
 )
+
 <div id="cost-estimation">
     <div class="board">
         <h3 class="board__heading">Estimated Cost</h3>
@@ -52,25 +54,25 @@
     </div>
 </div>
 
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-<script type="text/javascript">
-      google.charts.load("current", {packages: ["corechart"], 'language': 'en-GB'});
-      google.charts.setOnLoadCallback(drawChart);
+<script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script @CSPNonce.attr type="text/javascript">
+    google.charts.load("current", {packages: ["corechart"], 'language': 'en-GB'});
+    google.charts.setOnLoadCallback(drawChart);
 
-      function drawChart() {
-          var data = google.visualization.arrayToDataTable([
-              ['Environment', 'Estimated Cost'],
-              @for(e <- serviceCostEstimate.forEnvironments) {
+    function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+            ['Environment', 'Estimated Cost'],
+            @for(e <- serviceCostEstimate.forEnvironments) {
               ['@e.environment.displayString', {
-                  v: @e.yearlyCostGbp,
-                  f: "@formatGbp(e.yearlyCostGbp) (slots = @e.slots)"
+                v: @e.yearlyCostGbp,
+                f: "@formatGbp(e.yearlyCostGbp) (slots = @e.slots)"
               }],
-              }
-          ]);
+            }
+        ]);
 
-          var options = {};
+        var options = {};
 
-          var chart = new google.visualization.PieChart(document.getElementById('chart'));
-          chart.draw(data, options);
+        var chart = new google.visualization.PieChart(document.getElementById('chart'));
+        chart.draw(data, options);
       }
 </script>

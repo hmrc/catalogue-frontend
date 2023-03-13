@@ -29,7 +29,9 @@
 @( teamName              : TeamName
  , masterTeamDependencies: Seq[RepoAndDependencies]
  , prodDependencies      : Map[String, Seq[Dependency]]
- )(implicit request: Request[_])
+ )(implicit
+   request               : RequestHeader
+)
 
 @standard_layout(teamName.asString, "teams") {
     @partials.bobby_violations_banner(environment = None, dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true)

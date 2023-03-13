@@ -37,13 +37,13 @@
   masterTeamDependencies: Seq[RepoAndDependencies],
   prodDependencies      : Map[String, Seq[Dependency]]
 )(implicit
-  request: Request[_]
+  request: RequestHeader
 )
 
 @standard_layout(teamName.asString, "teams") {
     <header>
         <h1>@teamName.asString</h1>
-        <script type="text/javascript" src="@controllers.routes.Assets.versioned("../../../public/charts-loader-51.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
     @partials.team_leak_detection_banner(leaksFoundForTeam)

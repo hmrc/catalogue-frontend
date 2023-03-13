@@ -31,8 +31,8 @@
   includeViolations: Boolean,
   includeNonIssues : Boolean
 )(implicit
-  messages : Messages,
-  request: Request[_]
+  messages         : Messages,
+  request          : RequestHeader
 )
 
 @standard_layout(s"Leak detection repositories") {
@@ -48,10 +48,8 @@
                 options   =  rules.map(r => r -> r),
                 '_default -> "All",
                 '_label   -> "Rule",
-                'onchange -> "this.form.submit()",
                 'id       -> "rule-dropdown",
                 'class    -> "form-control"
-
             )
             </div>
             <div class="col-md-3">
@@ -60,7 +58,6 @@
                 options   =  teams.map(t => t.name.asString -> t.name.asString),
                 '_default -> "All",
                 '_label   -> "Team",
-                'onchange -> "this.form.submit()",
                 'id       -> "team-dropdown",
                 'class    -> "form-control"
             )
@@ -68,19 +65,19 @@
             <div class="col-md-3">
                 <label>Show repositories with:</label>
                 <div>
-                    <input name="includeWarnings" id="includeWarnings" type="checkbox" onchange="form.submit()" value="true"
+                    <input name="includeWarnings" id="includeWarnings" type="checkbox" value="true"
                     @if(includeWarnings) {checked}> Warnings</input>
                 </div>
                 <div>
-                    <input name="includeExemptions" id="includeExemptions" type="checkbox" onchange="form.submit()" value="true"
+                    <input name="includeExemptions" id="includeExemptions" type="checkbox" value="true"
                     @if(includeExemptions) {checked}> Exemptions</input>
                 </div>
                 <div>
-                    <input name="includeViolations" id="includeViolations" type="checkbox" onchange="form.submit()" value="true"
+                    <input name="includeViolations" id="includeViolations" type="checkbox" value="true"
                     @if(includeViolations) {checked}> Violations</input>
                 </div>
                 <div>
-                    <input name="includeNonIssues" id="includeNonIssues" type="checkbox" onchange="form.submit()" value="true"
+                    <input name="includeNonIssues" id="includeNonIssues" type="checkbox" value="true"
                     @if(includeNonIssues) {checked}> No issues</input>
                 </div>
             </div>
@@ -108,9 +105,9 @@
         </table>
     </div>
 
-    <script>
-            var options = {valueNames: ['repository', 'repo-status', 'first-scanned', 'last-scanned', 'warnings', 'exemptions', 'violations']};
-            repoList = new List('repo-list', options);
+    <script @CSPNonce.attr>
+        var options = {valueNames: ['repository', 'repo-status', 'first-scanned', 'last-scanned', 'warnings', 'exemptions', 'violations']};
+        repoList = new List('repo-list', options);
     </script>
 }
 
@@ -140,3 +137,11 @@
             <span>0</span>
         }</td>
 }
+<script @CSPNonce.attr>
+  ["rule-dropdown", "team-dropdown", "includeWarnings", "includeExemptions", "includeViolations", "includeNonIssues"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
+</script>

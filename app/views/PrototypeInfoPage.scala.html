@@ -23,7 +23,10 @@
 @import partials.PrototypeDetailsPartial
 @import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword
 
-@this(prototypeDetailsPartial: PrototypeDetailsPartial, viewMessages: ViewMessages)
+@this(
+  prototypeDetailsPartial: PrototypeDetailsPartial,
+  viewMessages           : ViewMessages
+)
 
 @(prototype              : GitRepository,
   linkToLeakDetection    : Option[String],
@@ -33,8 +36,8 @@
   successMessage         : Option[String],
   commenterReport        : Option[PrCommenterReport]
 )(implicit
-  request: Request[_],
-  messages: Messages
+  request                : RequestHeader,
+  messages               : Messages
 )
 
 @standard_layout(prototype.name, "prototypes") {
@@ -47,8 +50,8 @@
               @if(prototype.isArchived) { <span>Archived</span> }
             </h1>
         </div>
-        <script type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
-        <script type="text/javascript">
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
+        <script @CSPNonce.attr type="text/javascript">
             function togglePasswordResetVisibility() {
                 var elem = document.getElementById("password-reset");
                 if (elem.style.display === "none") {
@@ -57,6 +60,9 @@
                     elem.style.display = "none";
                 }
             }
+            document.getElementById("reset-password-enabled").addEventListener("click", function() {
+              togglePasswordResetVisibility();
+            });
         </script>
     </header>
 
@@ -83,7 +89,7 @@
             <div class="col-md-6">
                 <div style="margin-bottom: 1em">
                     @if(hasPasswordChangeAuth.value) {
-                        <button id="reset-password-enabled" type="button" class="btn btn-primary" onclick="togglePasswordResetVisibility()">Reset Password</button>
+                        <button id="reset-password-enabled" type="button" class="btn btn-primary">Reset Password</button>
                     } else {
                         <button id="reset-password-disabled" type="button" class="btn btn-primary" disabled>Reset Password</button>
                         <span class="text-muted" style="margin-left: 0.8em">
