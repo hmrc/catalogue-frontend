@@ -96,6 +96,7 @@
 
 @*List.js configuration below >>>>> *@
     <script @CSPNonce.attr>
+      @if(indicatorsWithTeams.nonEmpty) {
         var options = {valueNames: ['overallScore', 'repo-name'],
                       searchColumns: ['repo-name'],
                       searchDelay: 350,
@@ -114,7 +115,8 @@
                     return a - b;
                 }
             })
-        })
+        });
+      }
 
         var searchBox = document.getElementById("repo-name-search");
         var length = searchBox.value.length;
