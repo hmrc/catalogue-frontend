@@ -178,8 +178,10 @@
     </div>
 
     <script @CSPNonce.attr>
-        let options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
-        var serviceList = new List('service-list', options);
+        @if(searchResults.nonEmpty) {
+          let options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
+          new List('service-list', options);
+        }
 
         const allGroupArtefacts = [
             @for(ga <- groupArtefacts) {

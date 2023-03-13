@@ -105,10 +105,12 @@
         </table>
     </div>
 
-    <script @CSPNonce.attr>
+    @if(summaries.nonEmpty) {
+      <script @CSPNonce.attr>
         var options = {valueNames: ['repository', 'repo-status', 'first-scanned', 'last-scanned', 'warnings', 'exemptions', 'violations']};
-        repoList = new List('repo-list', options);
-    </script>
+        new List('repo-list', options);
+      </script>
+    }
 }
 
 @leakDetectionRuleSummary(summary: LeakDetectionRepositorySummary) = {

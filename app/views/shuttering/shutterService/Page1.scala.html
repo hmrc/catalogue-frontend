@@ -52,7 +52,6 @@
           , 'class -> "form-inline"
           , 'id    -> "shutter-service-form"
           , 'style -> "padding-left: 20px; padding-right: 20px"
-          , 'onsubmit -> "selectAllOptions();"
           ) {
 
             @csrfFormField
@@ -182,6 +181,10 @@
         onChangeGroup(document.getElementById("shutter-group"));
       });
     }
+
+    document.getElementById("shutter-service-form").addEventListener("submit", function() {
+      selectAllOptions();
+    });
 
     $('#btnRight').click(function (e) {
       move(e, 'allServices', 'serviceName');
