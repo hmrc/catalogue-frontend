@@ -88,9 +88,9 @@
             <div class="col-sm-12">
               <label for="useDefaultOutagePage">Select outage page</label><br/>
               @defining(form("useDefaultOutagePage").value.map(_.toBoolean).getOrElse(false)) { useDefaultOutagePage =>
-                <input type="radio" id="useDefaultOutagePageFalse" name="useDefaultOutagePage" value="false" @if(!useDefaultOutagePage){checked} onChange="syncUseDefaultOutagePage()">
+                <input type="radio" id="useDefaultOutagePageFalse" name="useDefaultOutagePage" value="false" @if(!useDefaultOutagePage){checked}>
                 <label for="useDefaultOutagePageFalse" style="font-weight: normal;">Service outage page</label><br/>
-                <input type="radio" id="useDefaultOutagePageTrue"  name="useDefaultOutagePage" value="true"  @if(useDefaultOutagePage){checked} onChange="syncUseDefaultOutagePage()">
+                <input type="radio" id="useDefaultOutagePageTrue"  name="useDefaultOutagePage" value="true"  @if(useDefaultOutagePage){checked}>
                 <label for="useDefaultOutagePageTrue" style="font-weight: normal;">None</label>
               }
               <br/><br/>
@@ -216,6 +216,13 @@
         $("#defaultOutagePagePanel").hide();
       }
     }
+
+    ["useDefaultOutagePageFalse", "useDefaultOutagePageTrue"]
+      .forEach(function(id) {
+        document.getElementById(id).addEventListener("change", function() {
+          syncUseDefaultOutagePage();
+        });
+      });
 
     $(document).ready(function() {
       syncUseDefaultOutagePage();
