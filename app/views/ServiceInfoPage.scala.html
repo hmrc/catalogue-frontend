@@ -25,7 +25,6 @@
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ServiceRelationshipsWithHasRepo
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import views.partials.githubBadgeType
 @import java.time.Instant
 
@@ -75,18 +74,12 @@
     <section class="section-wrapper">
 
         <div class="row">
-            @if(CatalogueFrontendSwitches.costEstimates.isEnabled) {
-              <div class="col-md-6">
-                  @partials.details(repositoryDetails)
-              </div>
-              <div class="col-md-6">
-                  @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
-              </div>
-            } else {
-              <div class="col-md-12">
-                  @partials.details(repositoryDetails)
-              </div>
-            }
+            <div class="col-md-6">
+                @partials.details(repositoryDetails)
+            </div>
+            <div class="col-md-6">
+                @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
+            </div>
         </div>
 
         @serviceRoutes.environmentRoutes.find(er => er.environment == "production" && !er.isAdmin).map { envRoute =>

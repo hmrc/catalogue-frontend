@@ -15,9 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 
 @this()
 
@@ -55,23 +53,21 @@
     }
     </td>
 
-    @if(CatalogueFrontendSwitches.branchProtectionDisplay.isEnabled) {
-        <td class="repo-bp monospaced" id="row@{i}_branch-protection">
-        @if(repo.branchProtection.exists(_.isProtected)) {
-            <span class="glyphicon glyphicon-ok text-success"></span>
-            <span class="sr-only">Branch protection is enabled</span>
-        } else {
-            <abbr style="text-decoration: none; border-bottom: none;" title="@List(
-                s"Requires approving reviews = ${repo.branchProtection.exists(_.requiresApprovingReviews)}",
-                s"Dismisses stale reviews = ${repo.branchProtection.exists(_.dismissesStaleReviews)}",
-                s"Requires commit signatures = ${repo.branchProtection.exists(_.requiresCommitSignatures)}"
-            ).mkString("\n")">
-                <span class="glyphicon glyphicon-remove text-danger"></span>
-            </abbr>
-            <span class="sr-only">Branch protection is not enabled</span>
-        }
-        </td>
+    <td class="repo-bp monospaced" id="row@{i}_branch-protection">
+    @if(repo.branchProtection.exists(_.isProtected)) {
+        <span class="glyphicon glyphicon-ok text-success"></span>
+        <span class="sr-only">Branch protection is enabled</span>
+    } else {
+        <abbr style="text-decoration: none; border-bottom: none;" title="@List(
+            s"Requires approving reviews = ${repo.branchProtection.exists(_.requiresApprovingReviews)}",
+            s"Dismisses stale reviews = ${repo.branchProtection.exists(_.dismissesStaleReviews)}",
+            s"Requires commit signatures = ${repo.branchProtection.exists(_.requiresCommitSignatures)}"
+        ).mkString("\n")">
+            <span class="glyphicon glyphicon-remove text-danger"></span>
+        </abbr>
+        <span class="sr-only">Branch protection is not enabled</span>
     }
+    </td>
     <td class="created monospaced" id="row@{i}_created">
     @repo.createdDate.asPattern(`yyyy-MM-dd`)
     </td>

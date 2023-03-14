@@ -37,16 +37,6 @@ object FeatureSwitch {
 
 object CatalogueFrontendSwitches {
 
-  def costEstimates: FeatureSwitch =
-    FeatureSwitch.forName("cost-estimates")
-
   def requiresLogin: FeatureSwitch =
     FeatureSwitch.forName("requires-login")
-
-  def branchProtectionDisplay: FeatureSwitch =
-    FeatureSwitch.forName("branch-protection-display")
-
-  def surfacingVulnerabilities: FeatureSwitch =
-    FeatureSwitch.forName("surfacing-vulnerabilities")
-
 }
