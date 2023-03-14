@@ -51,21 +51,6 @@
             </h1>
         </div>
         <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
-        <script @CSPNonce.attr type="text/javascript">
-            function togglePasswordResetVisibility() {
-                var elem = document.getElementById("password-reset");
-                if (elem.style.display === "none") {
-                    elem.style.display = "block";
-                } else {
-                    elem.style.display = "none";
-                }
-            }
-            @if(hasPasswordChangeAuth.value) {
-              document.getElementById("reset-password-enabled").addEventListener("click", function() {
-                togglePasswordResetVisibility();
-              });
-            }
-        </script>
     </header>
 
     @partials.leak_detection_banner(linkToLeakDetection)
@@ -118,4 +103,20 @@
         @Html(viewMessages.informationalText)
       </p>
     </div>
+
+    @if(hasPasswordChangeAuth.value) {
+      <script @CSPNonce.attr type="text/javascript">
+        function togglePasswordResetVisibility() {
+            var elem = document.getElementById("password-reset");
+            if (elem.style.display === "none") {
+                elem.style.display = "block";
+            } else {
+                elem.style.display = "none";
+            }
+        }
+        document.getElementById("reset-password-enabled").addEventListener("click", function() {
+          togglePasswordResetVisibility();
+        });
+      </script>
+    }
 }
