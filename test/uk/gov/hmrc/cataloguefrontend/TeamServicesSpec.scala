@@ -99,7 +99,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       val document = asDocument(response.body)
       verifyTeamMemberElementsText(document)
       verifyTeamMemberHrefLinks(document)
-      verifyTeamOwnerIndicatorLabel(document)
     }
 
     "show error message if UMP is not available" in {
@@ -137,12 +136,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     }
   }
 
-  def verifyTeamOwnerIndicatorLabel(document: Document): Unit = {
-    val serviceOwnersLiLabels = document.select("#team_members li .label-success")
-    serviceOwnersLiLabels.size()                                 shouldBe 2
-    serviceOwnersLiLabels.iterator().asScala.toSeq.map(_.text()) shouldBe Seq("Service Owner", "Service Owner")
-  }
-
   def verifyTeamMemberHrefLinks(document: Document): Boolean = {
     val hrefs = document.select("#team_members [href]").iterator().asScala.toList
     hrefs.size shouldBe 5
@@ -156,11 +149,11 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
   def verifyTeamMemberElementsText(document: Document): Unit = {
     val teamMembersLiElements = document.select("#team_members li").iterator().asScala.toList
     teamMembersLiElements.length shouldBe 5
-    teamMembersLiElements(0).text() should include("M Q Service Owner")
-    teamMembersLiElements(1).text() should include("S M Service Owner")
-    teamMembersLiElements(2).text() should include("K S")
-    teamMembersLiElements(3).text() should include("Ma B")
-    teamMembersLiElements(4).text() should include("Mx P")
+    teamMembersLiElements(0).text() should include("K S")
+    teamMembersLiElements(1).text() should include("M Q")
+    teamMembersLiElements(2).text() should include("Ma B")
+    teamMembersLiElements(3).text() should include("Mx P")
+    teamMembersLiElements(4).text() should include("S M")
   }
 
   def readFile(jsonFilePath: String): String = {

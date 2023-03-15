@@ -7,7 +7,6 @@
       "familyName": "Willman",
       "givenName": "Jim",
       "primaryEmail": "jim.willman@digital.hmrc.gov.uk",
-      "serviceOwnerFor":["MATO"],
       "username": "jim.willman",
       "role": "user"
     },
@@ -16,7 +15,6 @@
       "familyName": "GoJarvis",
       "givenName": "Karl",
       "primaryEmail": "karl.gojarvis@hmrc.gsi.gov.uk",
-      "serviceOwnerFor":["CATO", "SOME-SERVICE"],
       "username": "karl.gojarvis",
       "role": "user"
     }

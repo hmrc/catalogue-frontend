@@ -72,7 +72,6 @@ class UserManagementConnectorSpec
         familyName      = Some("Willman"),
         givenName       = Some("Jim"),
         primaryEmail    = Some("jim.willman@digital.hmrc.gov.uk"),
-        serviceOwnerFor = Some(Seq("MATO")),
         username        = Some("jim.willman"),
         role            = Some("user")
       )
@@ -82,7 +81,6 @@ class UserManagementConnectorSpec
         familyName      = Some("GoJarvis"),
         givenName       = Some("Karl"),
         primaryEmail    = Some("karl.gojarvis@hmrc.gsi.gov.uk"),
-        serviceOwnerFor = Some(Seq("CATO", "SOME-SERVICE")),
         username        = Some("karl.gojarvis"),
         role            = Some("user")
       )

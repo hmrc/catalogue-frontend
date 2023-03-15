@@ -15,8 +15,7 @@
       "familyName": "P",
       "givenName": "Mx",
       "primaryEmail": "Mx.P@xyzgov.uk",
-      "username": "mx.p",
-      "serviceOwnerFor": ["CHICKEN"]
+      "username": "mx.p"
 
     },
     {
@@ -31,16 +30,14 @@
       "familyName": "Q",
       "givenName": "M",
       "primaryEmail": "m.q@xyzgov.uk",
-      "username": "m.q",
-      "serviceOwnerFor": ["CATO", "CHICKEN"]
+      "username": "m.q"
     },
     {
       "displayName": "S M",
       "familyName": "M",
       "givenName": "S",
       "primaryEmail": "s.m@xyzgov.uk",
-      "username": "s.m",
-      "serviceOwnerFor": ["CATO", "CHICKEN"]
+      "username": "s.m"
     }
   ],
   "organisation": "HMRC",

@@ -176,7 +176,6 @@ object UserManagementConnector {
     familyName     : Option[String],
     givenName      : Option[String],
     primaryEmail   : Option[String],
-    serviceOwnerFor: Option[Seq[String]],
     username       : Option[String],
     role           : Option[String]
   ) {

@@ -134,7 +134,6 @@
                                         @teamMember.displayName
                                         <span class="glyphicon glyphicon-new-window"/>
                                       </a>
-                                      @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
                                       @teamMember.role match {
                                         case Some("user") => {}
                                         case Some(other)  => { <span class="badge">@other</span> }
