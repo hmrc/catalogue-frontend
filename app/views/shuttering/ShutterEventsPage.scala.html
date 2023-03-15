@@ -35,12 +35,11 @@
   <div id="events">
 
     <form id="shutter-events-form" action="/shutter-events/list" method="get">
+      <input id="environment" name="environment" type="hidden" value="@form("environment").value">
 
       <datalist id="servicenames">
           @services.map { s: String => <option>@s</option> }
       </datalist>
-
-      <input id="environment" name="environment" type="text" value="@form("environment").value" hidden>
 
       <div class="form-group row">
         <div class="col-md-1">
@@ -105,8 +104,18 @@
 
 @makeTab(env: Environment) = {
   <li id="tab-@env.asString" class="nav-item @if(form("environment").value.contains(env.asString)) {active}">
-    <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, form("serviceName").value)" class="nav-link">@env.displayString</a>
+    <a href="" class="navbar-link" id="@{env.asString}-tab" role="tab">@env.displayString</a>
   </li>
+  <script @CSPNonce.attr>
+    document.getElementById("@{env.asString}-tab").addEventListener("click", function() {
+      // Stop the default link action. Instead we will fire the form to change page
+      event.preventDefault();
+      // Update the hidden environment field with what was selected
+      document.getElementById('environment').value = '@{env.asString}';
+      // Post the form back to the the chosen environment endpoint
+      document.getElementById('shutter-events-form').submit();
+    });
+  </script>
 }
 
 @clearTargetFor(env: Environment) = {
@@ -116,6 +125,7 @@
 <script @CSPNonce.attr>
   let options = {
       valueNames: ['service', 'status', 'reason', 'cause', 'username', 'timestamp'],
+      searchColumns: ['service'],
       searchDelay: 350,
       indexAsync: true
   };
@@ -123,9 +133,11 @@
   let eventsList = new List('events', options);
 
   // force search after picking an auto-complete option
-  var searchbox = document.getElementById("serviceName")
-  searchbox.onblur = e => {
-      eventsList.search(searchbox.value, ['service'])
-  }
-
+  var searchBox = document.getElementById("serviceName")
+  // set autofocus cursor to right of text in search box
+  var length = searchBox.value.length;
+  searchBox.focus();
+  searchBox.setSelectionRange(length, length);
+  // re-search the list upon page load.
+  eventsList.search(searchBox.value);
 </script>

@@ -39,32 +39,29 @@
     </header>
     <div id="service-list">
         <form id="form" method="get">
-            <div class="form-row">
-                <div class="col-md-5">
-                    <label for="service-search">Service</label>
-                    <input class="service-search form-control" type="text" id="service" name="service" value="@form("service").value">
+            <div class="form-group row">
+                <div class="col-md-6">
+                    <label for="search">Service</label>
+                    <input class="search form-control" type="text" id="search" name="service" value="@form("service").value">
                 </div>
-            </div>
-            <div class="col-md-3">
-            @select(
-                field   = form("team"),
-                options = teams.map(t => t.name.asString -> t.name.asString),
-                Symbol("_default") -> "All",
-                Symbol("_label")   -> "Team",
-                Symbol("id")       -> "team-filter",
-                Symbol("class")    -> "form-control"
-            )
-            </div>
-
-            <div class="col-md-3">
-                <div>
-                @select(
-                    field   = form("environment"),
-                    options = Environment.values.filterNot(Set(Integration)).map(env => env.asString -> env.displayString),
-                    Symbol("_label")    -> "Environment",
-                    Symbol("id")        -> "environment-filter",
-                    Symbol("class")     -> "form-control"
-                )
+                <div class="col-md-3">
+                    @select(
+                        field   = form("team"),
+                        options = teams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default") -> "All",
+                        Symbol("_label")   -> "Team",
+                        Symbol("id")       -> "team-filter",
+                        Symbol("class")    -> "form-control"
+                    )
+                </div>
+                <div class="col-md-3">
+                    @select(
+                        field   = form("environment"),
+                        options = Environment.values.filterNot(Set(Integration)).map(env => env.asString -> env.displayString),
+                        Symbol("_label")    -> "Environment",
+                        Symbol("id")        -> "environment-filter",
+                        Symbol("class")     -> "form-control"
+                    )
                 </div>
             </div>
         </form>
@@ -99,10 +96,20 @@
 <!-- listjs configuration -->
 <script @CSPNonce.attr>
     var options = {
-        valueNames: [ 'service' ],
+        valueNames: [ 'service', 'action-required', 'investigation-ongoing', 'no-action-required', 'uncurated' ],
+        searchColumns: ['service'],
+        searchDelay: 350,
         indexAsync: true
     };
     serviceList = new List('service-list', options);
+
+    var searchBox = document.getElementById("search");
+    // set autofocus cursor to right of text in search box
+    var length = searchBox.value.length;
+    searchBox.focus();
+    searchBox.setSelectionRange(length, length);
+    // re-search the list upon page load.
+    serviceList.search(searchBox.value);
 </script>
 <script @CSPNonce.attr>
   ["team-filter", "environment-filter"]

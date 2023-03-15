@@ -50,7 +50,7 @@
     <div id="service-list">
         <form id="repos-form" action="/repositories" method="get">
             <div id="repos-form-row" class="form-group row">
-                <div class="col-md-5">
+                <div class="col-md-6">
                     <label for="search">Name</label>
                     <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
                 </div>
@@ -104,12 +104,21 @@
 <!-- listjs configuration -->
 <script @CSPNonce.attr>
   var options = {
-      searchDelay: 350,
       valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
       searchColumns: ['repo-name'],
-      indexAsync: true};
+      searchDelay: 350,
+      indexAsync: true
+  };
 
   var serviceList = new List('service-list', options);
+
+  var searchBox = document.getElementById('search');
+  // set autofocus cursor to right of text in search box
+  var length = searchBox.value.length;
+  searchBox.focus();
+  searchBox.setSelectionRange(length, length);
+  // re-search the list upon page load.
+  serviceList.search(searchBox.value);
 </script>
 <script @CSPNonce.attr>
   ["team-filter", "type-search"]

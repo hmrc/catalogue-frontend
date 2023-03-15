@@ -72,7 +72,11 @@ class VulnerabilitiesController @Inject() (
         validForm =>
          for {
            teams      <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
-           counts     <- vulnerabilitiesConnector.vulnerabilityCounts(validForm.service, validForm.team, validForm.environment)
+           counts     <- vulnerabilitiesConnector.vulnerabilityCounts(
+                            service     = None // Use listjs filtering
+                          , team        = validForm.team
+                          , environment = validForm.environment
+                          )
          } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
       )
   }

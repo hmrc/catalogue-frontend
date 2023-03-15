@@ -60,11 +60,12 @@ class RepositoriesController @Inject() (
       val allRepositories =
         teamsAndRepositoriesConnector
           .allRepositories(
-            name.filterNot(_.isEmpty),
-            team.filterNot(_.isEmpty).map(TeamName.apply),
-            archived,
-            repoType,
-            serviceType).map(_.sortBy(_.name.toLowerCase))
+            name        = None, // Use listjs filtering
+            team        = team.filterNot(_.isEmpty).map(TeamName.apply),
+            archived    = archived,
+            repoType    = repoType,
+            serviceType = serviceType
+          ).map(_.sortBy(_.name.toLowerCase))
 
       for {
         teams        <- allTeams
