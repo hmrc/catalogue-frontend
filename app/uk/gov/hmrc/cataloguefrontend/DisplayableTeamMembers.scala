@@ -32,7 +32,8 @@ object DisplayableTeamMembers {
       DisplayableTeamMember(
         displayName    = tm.getDisplayName,
         isServiceOwner = tm.serviceOwnerFor.map(_.map(_.toLowerCase)).exists(_.contains(teamName.asString.toLowerCase)),
-        umpLink        = tm.getUmpLink(umpProfileBaseUrl)
+        umpLink        = tm.getUmpLink(umpProfileBaseUrl),
+        role           = tm.role
       )
     )
 
@@ -44,7 +45,8 @@ object DisplayableTeamMembers {
 case class DisplayableTeamMember(
   displayName   : String,
   isServiceOwner: Boolean = false,
-  umpLink       : String
+  umpLink       : String,
+  role          : Option[String]
 )
 
 object DisplayableTeamMember {
@@ -54,6 +56,7 @@ object DisplayableTeamMember {
   def apply(tm: TeamMember, umpProfileBaseUrl: String): DisplayableTeamMember =
     DisplayableTeamMember(
       displayName = tm.getDisplayName,
-      umpLink = tm.getUmpLink(umpProfileBaseUrl)
+      umpLink     = tm.getUmpLink(umpProfileBaseUrl),
+      role        = tm.role
     )
 }

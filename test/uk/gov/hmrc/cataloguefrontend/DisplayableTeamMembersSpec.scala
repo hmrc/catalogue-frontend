@@ -35,7 +35,8 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
         givenName       = Some("E"),
         primaryEmail    = Some("e.federer@digital.hmrc.gov.uk"),
         username        = Some("e.federer"),
-        serviceOwnerFor = Some(Seq("teamC"))
+        serviceOwnerFor = Some(Seq("teamC")),
+        role            = Some("user")
       ),
       TeamMember(
         displayName     = Some("B Olapade"),
@@ -43,7 +44,8 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
         givenName       = Some("B"),
         primaryEmail    = Some("b.olapade@digital.hmrc.gov.uk"),
         username        = Some("b.olapade"),
-        serviceOwnerFor = Some(Seq("teamA", "teamB"))
+        serviceOwnerFor = Some(Seq("teamA", "teamB")),
+        role            = Some("user")
       ),
       TeamMember(
         displayName     = Some("D Doe"),
@@ -51,7 +53,8 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
         givenName       = Some("D"),
         primaryEmail    = Some("d.doe@digital.hmrc.gov.uk"),
         username        = Some("d.doe"),
-        serviceOwnerFor = None
+        serviceOwnerFor = None,
+        role            = Some("user")
       ),
       TeamMember(
         displayName     = Some("A Mouse"),
@@ -59,7 +62,8 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
         givenName       = Some("A"),
         primaryEmail    = Some("a.mouse@digital.hmrc.gov.uk"),
         username        = Some("a.mouse"),
-        serviceOwnerFor = Some(Seq("teamA"))
+        serviceOwnerFor = Some(Seq("teamA")),
+        role            = Some("user")
       ),
       TeamMember(
         displayName     = Some("C Bourne"),
@@ -67,7 +71,8 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
         givenName       = Some("C"),
         primaryEmail    = Some("c.bourne@digital.hmrc.gov.uk"),
         username        = Some("c.bourne"),
-        serviceOwnerFor = None
+        serviceOwnerFor = None,
+        role            = Some("user")
       )
     )
 
@@ -75,27 +80,32 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
       DisplayableTeamMember(
         displayName    = "A Mouse",
         isServiceOwner = true,
-        umpLink        = "http://example.com/profile/a.mouse"
+        umpLink        = "http://example.com/profile/a.mouse",
+        role           = Some("user")
       ),
       DisplayableTeamMember(
         displayName    = "B Olapade",
         isServiceOwner = true,
-        umpLink        = "http://example.com/profile/b.olapade"
+        umpLink        = "http://example.com/profile/b.olapade",
+        role           = Some("user")
       ),
       DisplayableTeamMember(
         displayName    = "C Bourne",
         isServiceOwner = false,
-        umpLink        = "http://example.com/profile/c.bourne"
+        umpLink        = "http://example.com/profile/c.bourne",
+        role           = Some("user")
       ),
       DisplayableTeamMember(
         displayName    = "D Doe",
         isServiceOwner = false,
-        umpLink        = "http://example.com/profile/d.doe"
+        umpLink        = "http://example.com/profile/d.doe",
+        role           = Some("user")
       ),
       DisplayableTeamMember(
         displayName    = "E Federer",
         isServiceOwner = false,
-        umpLink        = "http://example.com/profile/e.federer"
+        umpLink        = "http://example.com/profile/e.federer",
+        role           = Some("user")
       )
     )
 
@@ -119,7 +129,8 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
           givenName       = Some("E"),
           primaryEmail    = Some("e.federer@digital.hmrc.gov.uk"),
           username        = Some("e.federer"),
-          serviceOwnerFor = Some(Seq("TEAMa"))
+          serviceOwnerFor = Some(Seq("TEAMa")),
+          role            = Some("user")
         )
       )
       val displatableServiceOwners =
