@@ -58,7 +58,7 @@ class ShutterEventsController @Inject() (
 
       for {
         services <- routeRulesConnector.frontendServices()
-        events   <- connector.shutterEventsByTimestampDesc(filter, limit, offset)
+        events   <- connector.shutterEventsByTimestampDesc(filterFor(env, None /* Use listjs filtering */), limit, offset)
                               .recover {
                                 case NonFatal(ex) =>
                                   logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)

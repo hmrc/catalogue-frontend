@@ -35,11 +35,11 @@
     <div id="leaderboard-display">
         <form id="form" method="get">
             <div class="form-group row">
-                <div class="col-md-5">
+                <div class="col-md-6">
                     <label for="repo-name-search">Repository</label>
                     <input class="search form-control" id="repo-name-search" type="text" name="repoName" value='@form("repoName").value' autofocus/>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     @select(
                         field     = form("team"),
                         options   =  teams.map(t => t.name.asString -> t.name.asString),
@@ -97,10 +97,12 @@
 @*List.js configuration below >>>>> *@
     <script @CSPNonce.attr>
       @if(indicatorsWithTeams.nonEmpty) {
-        var options = {valueNames: ['overallScore', 'repo-name'],
-                      searchColumns: ['repo-name'],
-                      searchDelay: 350,
-                      indexAsync: true};
+        var options = {
+            valueNames: ['overallScore', 'repo-name'],
+            searchColumns: ['repo-name'],
+            searchDelay: 350,
+            indexAsync: true
+        };
 
         var indicatorsList = new List('leaderboard-display', options);
 
@@ -118,10 +120,13 @@
         });
       }
 
-        var searchBox = document.getElementById("repo-name-search");
-        var length = searchBox.value.length;
-        searchBox.focus();
-        searchBox.setSelectionRange(length, length);
+      var searchBox = document.getElementById("repo-name-search");
+      // set autofocus cursor to right of text in search box
+      var length = searchBox.value.length;
+      searchBox.focus();
+      searchBox.setSelectionRange(length, length);
+      // re-search the list upon page load.
+      indicatorsList.search(searchBox.value);
     </script>
 }
 

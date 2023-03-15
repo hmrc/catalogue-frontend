@@ -17,7 +17,8 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 
-@(teams  : Seq[Team]
+@(teams: Seq[Team],
+  name : Option[String]
 )(implicit
   request: RequestHeader
 )
@@ -34,8 +35,7 @@
                         <label for="search">Team:</label>
                     </div>
                     <div class="col-md-4">
-                        <input class="search form-control" id="search" type="text" name="name"
-                        value="" autofocus>
+                        <input class="search form-control" id="search" type="text" name="name" value="@name.getOrElse("")" autofocus>
                     </div>
                 </div>
             </form>
@@ -80,8 +80,19 @@
     }
 
     <script @CSPNonce.attr>
-       var options = { valueNames: ['team-name', 'created', 'last-active', 'repo-count' ],
-                       searchColumns: ['team-name'] };
+        var options = {
+          valueNames: ['team-name', 'created', 'last-active', 'repo-count' ],
+          searchColumns: ['team-name'],
+          indexAsync: true
+        }
 
-       var serviceList = new List('teams-list', options);
+        var teamList = new List('teams-list', options);
+
+        var searchBox = document.getElementById('search');
+        // set autofocus cursor to right of text in search box
+        var length = searchBox.value.length;
+        searchBox.focus();
+        searchBox.setSelectionRange(length, length);
+        // re-search the list upon page load.
+        teamList.search(searchBox.value);
     </script>

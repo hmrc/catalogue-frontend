@@ -123,7 +123,7 @@
           indexAsync: true
         }
 
-        rulesList = new List('recommendations-list', options)
+        var rulesList = new List('recommendations-list', options)
 
         function toggleExpandAll() {
           document.getElementById("expandLink").classList.toggle("hidden")
@@ -137,8 +137,16 @@
             toggleExpandAll()
           }
         })
+
+        var searchBox = document.getElementById('search');
+        // set autofocus cursor to right of text in search box
+        var length = searchBox.value.length;
+        searchBox.focus();
+        searchBox.setSelectionRange(length, length);
+        // re-search the list upon page load.
+        rulesList.search(searchBox.value);
         // Triggers a search on page load for passed in params
-        document.getElementById('search').dispatchEvent(new Event('keyup'));
+        searchBox.dispatchEvent(new Event('keyup'));
 
         ["expandLink", "collapseLink"]
           .forEach(function(id) {

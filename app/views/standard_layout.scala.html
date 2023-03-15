@@ -95,10 +95,10 @@
                 </header>
                 <ul id="main-menu-bar" class="nav navbar-nav">
                     <li>
-                        <a id="link-to-teams" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams" class="@if(active=="teams") {active}">Teams</a>
+                        <a id="link-to-teams" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams()" class="@if(active=="teams") {active}">Teams</a>
                     </li>
                     <li>
-                        <a id="link-to-repositories" href="@reposRoutes.RepositoriesController.allRepositories(repoType = Some("Service"))" class="@if(active=="repositories") {active}">Repositories</a>
+                        <a id="link-to-repositories" href="@reposRoutes.RepositoriesController.allRepositories()" class="@if(active=="repositories") {active}">Repositories</a>
                     </li>
 
                     <li>
