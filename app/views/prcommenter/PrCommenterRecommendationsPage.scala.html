@@ -119,8 +119,7 @@
         var options = {
           searchDelay: 350,
           valueNames: ['name', 'teams', 'recommendations', 'lastrun'],
-          searchColumns: ['name'],
-          indexAsync: true
+          searchColumns: ['name']
         }
 
         var rulesList = new List('recommendations-list', options)
@@ -145,8 +144,6 @@
         searchBox.setSelectionRange(length, length);
         // re-search the list upon page load.
         rulesList.search(searchBox.value);
-        // Triggers a search on page load for passed in params
-        searchBox.dispatchEvent(new Event('keyup'));
 
         ["expandLink", "collapseLink"]
           .forEach(function(id) {
