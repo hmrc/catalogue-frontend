@@ -98,8 +98,7 @@
     @if(summaries.nonEmpty) {
       <script @CSPNonce.attr>
         var options = {
-            valueNames: ['vuln-id', 'score', 'curation-status', 'services'],
-            indexAsync: true
+            valueNames: ['vuln-id', 'score', 'curation-status', 'services']
         };
         new List('vulnerabilities-list', options);
       </script>

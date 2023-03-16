@@ -61,7 +61,7 @@
                 @teams.zipWithIndex.map { case (team, i) =>
                 <tr id="row@i">
                     <td class="team-name" id="row@{i}_name">
-                        <a  href="/teams/@team.name.asString">@team.name.asString</a>
+                        <a href="/teams/@team.name.asString">@team.name.asString</a>
                     </td>
                     <td class="created monospaced" id="row@{i}_created">
                       @team.createdDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")
@@ -82,8 +82,7 @@
     <script @CSPNonce.attr>
         var options = {
           valueNames: ['team-name', 'created', 'last-active', 'repo-count' ],
-          searchColumns: ['team-name'],
-          indexAsync: true
+          searchColumns: ['team-name']
         };
 
         var teamList = new List('teams-list', options);
