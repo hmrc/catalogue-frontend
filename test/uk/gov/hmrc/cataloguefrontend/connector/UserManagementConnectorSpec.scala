@@ -72,8 +72,8 @@ class UserManagementConnectorSpec
         familyName      = Some("Willman"),
         givenName       = Some("Jim"),
         primaryEmail    = Some("jim.willman@digital.hmrc.gov.uk"),
-        serviceOwnerFor = Some(Seq("MATO")),
-        username        = Some("jim.willman")
+        username        = Some("jim.willman"),
+        role            = Some("user")
       )
 
       teamMembers(1) shouldBe TeamMember(
@@ -81,8 +81,8 @@ class UserManagementConnectorSpec
         familyName      = Some("GoJarvis"),
         givenName       = Some("Karl"),
         primaryEmail    = Some("karl.gojarvis@hmrc.gsi.gov.uk"),
-        serviceOwnerFor = Some(Seq("CATO", "SOME-SERVICE")),
-        username        = Some("karl.gojarvis")
+        username        = Some("karl.gojarvis"),
+        role            = Some("user")
       )
     }
 
@@ -173,108 +173,6 @@ class UserManagementConnectorSpec
         .value
 
       teamDetails shouldBe UMPError.HTTPError(500)
-    }
-
-    "getTeamMembersForTeams" should {
-      "should get the team members for multiple teams" in {
-        val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
-
-        stubFor(
-          get(urlEqualTo("/v2/organisations/teams/Team1/members"))
-            .willReturn(aResponse().withBodyFile("user-management-response-team1.json"))
-        )
-
-        stubFor(
-          get(urlEqualTo("/v2/organisations/teams/Team2/members"))
-            .willReturn(aResponse().withBodyFile("user-management-response-team2.json"))
-        )
-
-        val teamsAndMembers = userManagementConnector
-          .getTeamMembersForTeams(teamNames)
-          .futureValue
-
-        teamsAndMembers.keys should contain theSameElementsAs teamNames
-
-        def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
-          teamsAndMembers.values.flatMap(_.right.value).map(extractor)
-
-        getMembersDetails(_.displayName.value)  shouldBe Seq("Joe Black", "James Roger", "Casey Binge", "Marc Palazzo")
-        getMembersDetails(_.username.value)     shouldBe Seq("joe.black", "james.roger", "casey.binge", "marc.palazzo")
-        getMembersDetails(_.primaryEmail.value) shouldBe Seq(
-          "joe.black@digital.hmrc.gov.uk",
-          "james.roger@hmrc.gsi.gov.uk",
-          "casey.binge@digital.hmrc.gov.uk",
-          "marc.palazzo@hmrc.gsi.gov.uk"
-        )
-      }
-
-      "should return an Http error for calls with non-200 status codes" in {
-        val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
-
-        stubFor(
-          get(urlEqualTo("/v2/organisations/teams/Team1/members"))
-            .willReturn(aResponse().withBodyFile("user-management-response-team1.json"))
-        )
-
-        stubFor(
-          get(urlEqualTo("/v2/organisations/teams/Team2/members"))
-            .willReturn(aResponse().withStatus(404))
-        )
-
-        val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
-          .getTeamMembersForTeams(teamNames)
-          .futureValue
-
-        teamsAndMembers.keys should contain theSameElementsAs teamNames
-
-        val team1Result = teamsAndMembers.get(TeamName("Team1")).value
-        val team2Result = teamsAndMembers.get(TeamName("Team2")).value
-
-        team2Result shouldBe Left(UMPError.UnknownTeam)
-
-        def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
-          team1Result.right.value.map(extractor)
-
-        getMembersDetails(_.displayName.value)  shouldBe Seq("Joe Black", "James Roger")
-        getMembersDetails(_.username.value)     shouldBe Seq("joe.black", "james.roger")
-        getMembersDetails(_.primaryEmail.value) shouldBe Seq(
-          "joe.black@digital.hmrc.gov.uk",
-          "james.roger@hmrc.gsi.gov.uk")
-      }
-
-      "should return a no data error if the json from UMP doesn't conform to the expected shape" in {
-        val teamNames = Seq(TeamName("Team1"), TeamName("Team2"))
-
-        stubFor(
-          get(urlEqualTo("/v2/organisations/teams/Team1/members"))
-            .willReturn(aResponse().withBodyFile("user-management-response-team1.json"))
-        )
-
-        stubFor(
-          get(urlEqualTo("/v2/organisations/teams/Team2/members"))
-            .willReturn(aResponse().withBodyFile("user-management-team-details-nodata-response.json"))
-        )
-
-        val teamsAndMembers: Map[TeamName, Either[UMPError, Seq[TeamMember]]] = userManagementConnector
-          .getTeamMembersForTeams(teamNames)
-          .futureValue
-
-        teamsAndMembers.keys should contain theSameElementsAs teamNames
-
-        val team1Result = teamsAndMembers.get(TeamName("Team1")).value
-        val team2Result = teamsAndMembers.get(TeamName("Team2")).value
-
-        team2Result.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
-
-        def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
-          team1Result.right.value.map(extractor)
-
-        getMembersDetails(_.displayName.value)  shouldBe Seq("Joe Black", "James Roger")
-        getMembersDetails(_.username.value)     shouldBe Seq("joe.black", "james.roger")
-        getMembersDetails(_.primaryEmail.value) shouldBe Seq(
-          "joe.black@digital.hmrc.gov.uk",
-          "james.roger@hmrc.gsi.gov.uk")
-      }
     }
 
     "getAllUsersFromUMP" should {

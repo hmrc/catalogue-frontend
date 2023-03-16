@@ -130,7 +130,15 @@
                                 case Right(teamMembers) => {
                                   @for(teamMember <- teamMembers) {
                                     <li class="col-xs-6">
-                                      <a href="@teamMember.umpLink" target="_blank" rel="noreferrer noopener">@teamMember.displayName<span class="glyphicon glyphicon-new-window"/></a> @if(teamMember.isServiceOwner) { <span class="label label-success">Service Owner</span>}
+                                      <a href="@teamMember.umpLink" target="_blank" rel="noreferrer noopener">
+                                        @teamMember.displayName
+                                        <span class="glyphicon glyphicon-new-window"/>
+                                      </a>
+                                      @teamMember.role match {
+                                        case Some("user") => {}
+                                        case Some(other)  => { <span class="badge">@other</span> }
+                                        case None         => {}
+                                      }
                                     </li>
                                   }
                                 }

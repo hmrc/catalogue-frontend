@@ -35,7 +35,7 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
         givenName       = Some("E"),
         primaryEmail    = Some("e.federer@digital.hmrc.gov.uk"),
         username        = Some("e.federer"),
-        serviceOwnerFor = Some(Seq("teamC"))
+        role            = Some("user")
       ),
       TeamMember(
         displayName     = Some("B Olapade"),
@@ -43,7 +43,7 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
         givenName       = Some("B"),
         primaryEmail    = Some("b.olapade@digital.hmrc.gov.uk"),
         username        = Some("b.olapade"),
-        serviceOwnerFor = Some(Seq("teamA", "teamB"))
+        role            = Some("user")
       ),
       TeamMember(
         displayName     = Some("D Doe"),
@@ -51,7 +51,7 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
         givenName       = Some("D"),
         primaryEmail    = Some("d.doe@digital.hmrc.gov.uk"),
         username        = Some("d.doe"),
-        serviceOwnerFor = None
+        role            = Some("user")
       ),
       TeamMember(
         displayName     = Some("A Mouse"),
@@ -59,7 +59,7 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
         givenName       = Some("A"),
         primaryEmail    = Some("a.mouse@digital.hmrc.gov.uk"),
         username        = Some("a.mouse"),
-        serviceOwnerFor = Some(Seq("teamA"))
+        role            = Some("user")
       ),
       TeamMember(
         displayName     = Some("C Bourne"),
@@ -67,39 +67,37 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
         givenName       = Some("C"),
         primaryEmail    = Some("c.bourne@digital.hmrc.gov.uk"),
         username        = Some("c.bourne"),
-        serviceOwnerFor = None
+        role            = Some("user")
       )
     )
 
     val expectedDisplayTeamMembers = Seq(
       DisplayableTeamMember(
         displayName    = "A Mouse",
-        isServiceOwner = true,
-        umpLink        = "http://example.com/profile/a.mouse"
+        umpLink        = "http://example.com/profile/a.mouse",
+        role           = Some("user")
       ),
       DisplayableTeamMember(
         displayName    = "B Olapade",
-        isServiceOwner = true,
-        umpLink        = "http://example.com/profile/b.olapade"
+        umpLink        = "http://example.com/profile/b.olapade",
+        role           = Some("user")
       ),
       DisplayableTeamMember(
         displayName    = "C Bourne",
-        isServiceOwner = false,
-        umpLink        = "http://example.com/profile/c.bourne"
+        umpLink        = "http://example.com/profile/c.bourne",
+        role           = Some("user")
       ),
       DisplayableTeamMember(
         displayName    = "D Doe",
-        isServiceOwner = false,
-        umpLink        = "http://example.com/profile/d.doe"
+        umpLink        = "http://example.com/profile/d.doe",
+        role           = Some("user")
       ),
       DisplayableTeamMember(
         displayName    = "E Federer",
-        isServiceOwner = false,
-        umpLink        = "http://example.com/profile/e.federer"
+        umpLink        = "http://example.com/profile/e.federer",
+        role           = Some("user")
       )
     )
-
-    val (expectedServiceOwners, expectedOthers) = expectedDisplayTeamMembers.partition(_.isServiceOwner)
 
     it("transforms TeamMembers into DisplayableTeamMembers correctly") {
       val displayableTeamMembers: Seq[DisplayableTeamMember] =
@@ -110,42 +108,5 @@ class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheck
       }
 
     }
-
-    it("finds service owners based on service name (non-casesensetive)") {
-      val differentCasedOwnerTeamMembers = Seq(
-        TeamMember(
-          displayName     = Some("E Federer"),
-          familyName      = Some("Federer"),
-          givenName       = Some("E"),
-          primaryEmail    = Some("e.federer@digital.hmrc.gov.uk"),
-          username        = Some("e.federer"),
-          serviceOwnerFor = Some(Seq("TEAMa"))
-        )
-      )
-      val displatableServiceOwners =
-        DisplayableTeamMembers(teamName, "http://example.com/profile", differentCasedOwnerTeamMembers)
-
-      displatableServiceOwners.size              shouldBe 1
-      displatableServiceOwners(0).isServiceOwner shouldBe true
-
-    }
-
-    it("displays service owners and then non service owners") {
-      val (serviceOwners, others) =
-        DisplayableTeamMembers(teamName, "http://example.com/profile", teamMembers).splitAt(2)
-
-      serviceOwners should contain only (expectedServiceOwners: _*)
-      others        should contain only (expectedOthers: _*)
-    }
-
-    it("sorts service owners and non-service owners by display name") {
-      val (serviceOwners, others) =
-        DisplayableTeamMembers(teamName, "http://example.com/profile", teamMembers).splitAt(2)
-
-      serviceOwners should ===(expectedServiceOwners)
-      others        should ===(expectedOthers)
-    }
-
   }
-
 }
