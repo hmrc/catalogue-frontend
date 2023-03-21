@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check
-@import uk.gov.hmrc.cataloguefrontend.routes.CatalogueController
+@import uk.gov.hmrc.cataloguefrontend.routes
 
 @this()
 
@@ -30,11 +30,14 @@
         <h1>Commissioning State</h1>
     </header>
 
-    <h2><a href="@CatalogueController.service(serviceName)">@serviceName</a></h2>
+    <h2><a href="@routes.CatalogueController.service(serviceName)">@serviceName</a></h2>
+
+    <p>Guidance for creating a microservice can be found in the <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a></p>
 
     <table class="table table-striped">
         <thead>
             <tr>
+                <th style="width: 40px"></th>
                 <th class="col-lg-3">Step</th>
                 <th colspan="6">State</th>
             </tr>
@@ -46,10 +49,45 @@
             })
         </tbody>
     </table>
+
+    <script @CSPNonce.attr>
+            $("[data-toggle=popover]")
+                    .popover({ html: true})
+                    .on("focus", function () {
+                        $(this).popover("show");
+                    }).on("focusout", function () {
+                let _this = this;
+                if (!$(".popover:hover").length) {
+                    $(this).popover("hide");
+                }
+                else {
+                    $('.popover').mouseleave(function() {
+                        $(_this).popover("hide");
+                        $(this).off('mouseleave');
+                    });
+                }
+            });
+    </script>
+}
+
+@popoverContent(check: Check) = {
+    @check.helpText
+
+    @check.linkToDocs.map { link =>
+      <br><br>
+      <a href="@link" target="_blank" rel="noreferrer noopener">Find out more<span class="glyphicon glyphicon-new-window"/></a>
+    }
+}
+
+@popover(check: Check) = {
+    <a tabindex="0" class="scs-popover" role="button" data-toggle="popover" data-trigger="manual" data-content='@popoverContent(check)'>
+        <span class="glyphicon glyphicon-question-sign"/>
+    </a>
 }
 
 @simpleCheck(check: Check.SimpleCheck) = {
     <tr>
+        <td class="text-center">@popover(check)</td>
         <td>@check.title</td>
         <td colspan="6">@displayResult(check.checkResult)</td>
     </tr>
@@ -57,6 +95,7 @@
 
 @envCheck(check: Check.EnvCheck) = {
     <tr>
+        <td class="text-center">@popover(check)</td>
         <td>@check.title</td>
         @check.checkResults.toSeq.sortBy(_._1).map { case (env, result) =>
             <td>

@@ -12725,3 +12725,11 @@ details[open] summary {
 details main {
   padding: 1em 2.2em;
 }
+
+a.scs-popover a.scs-popover:hover a.scs-popover:visited {
+  color: black;
+}
+
+a.scs-popover:focus {
+  outline: none;
+}

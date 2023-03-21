@@ -20,7 +20,11 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsError
 
-sealed trait Check
+sealed trait Check {
+  val title     : String
+  val helpText  : String
+  val linkToDocs: Option[String]
+}
 
 object Check {
   case class Missing(addLink: String)
@@ -31,11 +35,15 @@ object Check {
   sealed case class SimpleCheck(
     title       : String
   , checkResult : Result
+  , helpText    : String
+  , linkToDocs  : Option[String]
   ) extends Check
 
   sealed case class EnvCheck(
     title        : String
   , checkResults : Map[Environment, Result]
+  , helpText: String
+  , linkToDocs: Option[String]
   ) extends Check
 
   import play.api.libs.functional.syntax.toFunctionalBuilderOps
@@ -54,6 +62,8 @@ object Check {
     implicit val readsSimpleCheck: Reads[SimpleCheck] =
       ( (__ \ "title"      ).read[String]
       ~ (__ \ "simpleCheck").read[Result]
+      ~ (__ \ "helpText"   ).read[String]
+      ~ (__ \ "linkToDocs" ).readNullable[String]
       ) (SimpleCheck.apply _)
 
     implicit val mapFormat: Reads[Map[Environment, Result]] =
@@ -66,6 +76,8 @@ object Check {
     implicit val readsEnvCheck: Reads[EnvCheck] =
       ( (__ \ "title"           ).read[String]
       ~ (__ \ "environmentCheck").read[Map[Environment, Result]]
+      ~ (__ \ "helpText"        ).read[String]
+      ~ (__ \ "linkToDocs"      ).readNullable[String]
       ) (EnvCheck.apply _)
 
     def reads(json: JsValue) =
