@@ -90,6 +90,7 @@ class BobbyRulesTrendController @Inject() (
                          Some(
                            countData
                              .groupBy { case ((_, e), _) => e }
+                             .view
                              .mapValues(cd =>
                                BobbyRulesTrendController.GraphData(
                                  columns = List(("string", "Date")) ++

@@ -36,6 +36,7 @@ class SearchController @Inject()(
       query.trim.split("\\s+") // query is space delimited
         .take(5)               // cap number of searchable terms at 5
         .filter(_.length > 2)  // ignore search terms less than 3 chars
+        .toIndexedSeq
     Ok(view(
         matches   = searchIndex.search(searchTerms).take(limit),
         highlight = if (config.highlight) new BoldHighlighter(searchTerms) else NoHighlighter

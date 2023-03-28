@@ -36,16 +36,12 @@ case class UserManagementConnector @Inject() (
   userManagementAuthConfig  : UserManagementAuthConfig,
   tokenCache                : AsyncCacheApi
 )(implicit val ec: ExecutionContext) {
-
   import UserManagementConnector._
   import userManagementAuthConfig._
   import userManagementPortalConfig._
+  import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
-
-  private implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
-    override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
-  }
 
   def login(): Future[UmpToken] = {
     implicit val lrf: OFormat[UmpLoginRequest] = UmpLoginRequest.format
@@ -72,27 +68,27 @@ case class UserManagementConnector @Inject() (
     for {
       token <- retrieveToken()
       resp <- httpClientV2
-        .get(url)
-        .setHeader(token.asHeaders():_*)
-        .execute[HttpResponse]
-        .map { response =>
-          response.status match {
-            case 200 =>
-              (response.json \ "members")
-                .validate[List[TeamMember]]
-                .fold(
-                  errors  => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors")),
-                  members => Right(members.filterNot(m => List("service", "platops").exists(m.getDisplayName.toLowerCase.contains(_))))
-                )
-            case 404 => Left(UMPError.UnknownTeam)
-            case httpCode => Left(UMPError.HTTPError(httpCode))
-          }
-        }
-        .recover {
-          case ex =>
-            logger.error(s"An error occurred when connecting to $url", ex)
-            Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
-        }
+                .get(url)
+                .setHeader(token.asHeaders():_*)
+                .execute[HttpResponse]
+                .map { response =>
+                  response.status match {
+                    case 200 =>
+                      (response.json \ "members")
+                        .validate[List[TeamMember]]
+                        .fold(
+                          errors  => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors")),
+                          members => Right(members.filterNot(m => List("service", "platops").exists(m.getDisplayName.toLowerCase.contains(_))))
+                        )
+                    case 404 => Left(UMPError.UnknownTeam)
+                    case httpCode => Left(UMPError.HTTPError(httpCode))
+                  }
+                }
+                .recover {
+                  case ex =>
+                    logger.error(s"An error occurred when connecting to $url", ex)
+                    Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
+                }
     } yield resp
   }.recover {
     case ex =>
@@ -105,23 +101,23 @@ case class UserManagementConnector @Inject() (
     for {
       token <- retrieveToken()
       resp  <- httpClientV2
-        .get(url)
-        .setHeader(token.asHeaders():_*)
-        .execute[HttpResponse]
-        .map { response =>
-          response.status match {
-            case 200 =>
-              (response.json \\ "users").headOption
-                .map(_.as[Seq[TeamMember]])
-                .fold[Either[UMPError, Seq[TeamMember]]](ifEmpty = Left(UMPError.ConnectionError(s"Could not parse response from $url")))(Right.apply)
-            case httpCode => Left(UMPError.HTTPError(httpCode))
-          }
-        }
-        .recover {
-          case ex =>
-            logger.error(s"An error occurred when connecting to $url", ex)
-            Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
-        }
+                 .get(url)
+                 .setHeader(token.asHeaders():_*)
+                 .execute[HttpResponse]
+                 .map { response =>
+                   response.status match {
+                     case 200 =>
+                       (response.json \\ "users").headOption
+                         .map(_.as[Seq[TeamMember]])
+                         .fold[Either[UMPError, Seq[TeamMember]]](ifEmpty = Left(UMPError.ConnectionError(s"Could not parse response from $url")))(Right.apply)
+                     case httpCode => Left(UMPError.HTTPError(httpCode))
+                   }
+                 }
+                 .recover {
+                   case ex =>
+                     logger.error(s"An error occurred when connecting to $url", ex)
+                     Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
+                 }
     } yield resp
   }.recover {
     case ex =>

@@ -44,6 +44,7 @@ class ConfigService @Inject()(
     configByKey(serviceName)
       .map(
         _.getOrElse("artifact_name", Map.empty)
+          .view
           .mapValues(_.headOption.map(_.value))
           .values
           .flatten
@@ -115,7 +116,7 @@ object ConfigService {
       implicit val csvf = ConfigSourceValue.reads
       Reads
         .of[Map[KeyName, Map[String, Seq[ConfigSourceValue]]]]
-        .map(_.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) }).toMap)
+        .map(_.view.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) }).toMap)
     }
   }
 
