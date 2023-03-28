@@ -148,6 +148,7 @@ object CostEstimationService {
         val resourceUsageByDateAndEnvironment =
           costedResourceUsages
             .groupBy(_.date)
+            .view
             .mapValues(rus => rus.map(ru => ru.environment -> ru).toMap)
 
         val headerRow =

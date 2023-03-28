@@ -114,9 +114,9 @@
             data.addColumn('string', 'Version');
             data.addColumn('number', 'Count');
             data.addRows([
-                @for(r <- jdkVersions.groupBy(v => s"${v.version} ${v.vendor}").mapValues(_.length).toList.sortBy( _._1.replaceAll("\\D", "").toInt)) {
+              @for(r <- jdkVersions.groupBy(v => s"${v.version} ${v.vendor}").view.mapValues(_.length).toList.sortBy( _._1.replaceAll("\\D", "").toInt)) {
                 ['@r._1', @r._2],
-                }
+              }
             ]);
 
             var options = {
@@ -136,9 +136,9 @@
             data.addColumn('string', 'Version');
             data.addColumn('number', 'Count');
             data.addRows([
-                @for(r <- jdkVersions.groupBy(j => j.vendor.toString + "(" + j.kind + ")").mapValues(_.length)) {
+              @for(r <- jdkVersions.groupBy(j => j.vendor.toString + "(" + j.kind + ")").view.mapValues(_.length)) {
                 ['@r._1', @r._2],
-                }
+              }
             ].sort());
 
             var options = {

@@ -115,6 +115,7 @@ object SearchIndex {
     index.flatMap(st => (st.linkType.sliding(3,1) ++ st.name.sliding(3,1) ++ st.hints.mkString.sliding(3,1))
       .map(_.toLowerCase() -> st))
       .groupBy(_._1)
+      .view
       .mapValues(_.map(_._2))
       .toMap
 }
