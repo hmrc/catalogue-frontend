@@ -29,6 +29,9 @@ object DateHelper {
   val `yyyy-MM-dd HH:mm z`: DateTimeFormatter    = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z")
   val `yyyy-MM-dd HH:mm:ss z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
 
+  val `dd MMM uuuu`: DateTimeFormatter     = DateTimeFormatter.ofPattern("dd MMM uuuu")
+
+
   implicit class JavaDateToLocalDateTime(d: Date) {
     def toLocalDate: LocalDateTime =
       LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault())
@@ -51,6 +54,7 @@ object DateHelper {
 
     def displayFormat: String =
       d.format(`dd MMM uuuu HH:mm`)
+
   }
 
   implicit class InstantImplicits(d: Instant) {
@@ -63,6 +67,9 @@ object DateHelper {
 
     def displayFormat: String =
       d.atZone(utc).format(`dd MMM uuuu HH:mm`)
+
+    def dateOnlyFormat: String =
+      d.atZone(utc).toLocalDate.format(`dd MMM uuuu`)
   }
 
   def longToLocalDate(l: Long): LocalDate =

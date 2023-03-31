@@ -1,0 +1,194 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.model._
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+
+@import views.html.vulnerabilities.VulnerabilityDetails
+@import views.html.helper._
+
+@this(viewMessages: ViewMessages)
+
+@(teams: Seq[String],
+result : Seq[VulnerabilitiesTimelineCount],
+form   : Form[_]
+)(implicit
+ messages          : Messages,
+ request           : RequestHeader
+)
+
+@standard_layout("Vulnerabilities Timeline", "vulnerabilities-timeline") {
+    <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script @CSPNonce.attr type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+
+
+        function drawChart() {
+            let data = [
+                @result.map { d =>
+                [
+                    new Date(@{d.weekBeginning.toEpochMilli}),
+                    @{d.actionRequired},
+                    createHTMLTooltip('@{d.weekBeginning.dateOnlyFormat}', '@{d.total}', '@{d.actionRequired}','@{d.investigationOngoing}','@{d.noActionRequired}','@{d.uncurated}'),
+                    @{d.investigationOngoing},
+                    createHTMLTooltip('@{d.weekBeginning.dateOnlyFormat}', '@{d.total}', '@{d.actionRequired}','@{d.investigationOngoing}','@{d.noActionRequired}','@{d.uncurated}'),
+                    @{d.noActionRequired},
+                    createHTMLTooltip('@{d.weekBeginning.dateOnlyFormat}', '@{d.total}', '@{d.actionRequired}','@{d.investigationOngoing}','@{d.noActionRequired}','@{d.uncurated}'),
+                    @{d.uncurated},
+                    createHTMLTooltip('@{d.weekBeginning.dateOnlyFormat}', '@{d.total}', '@{d.actionRequired}','@{d.investigationOngoing}','@{d.noActionRequired}','@{d.uncurated}'),
+                    @{d.total},
+                    createHTMLTooltip('@{d.weekBeginning.dateOnlyFormat}', '@{d.total}', '@{d.actionRequired}','@{d.investigationOngoing}','@{d.noActionRequired}','@{d.uncurated}'),
+                ],
+                }
+            ];
+
+            let container = document.getElementById('service-chart');
+
+
+            let dataTable = new google.visualization.DataTable();
+            dataTable.addColumn({ type: 'date', id: 'week', label: 'week' });
+            dataTable.addColumn({ type: 'number', id: 'ActionRequired', label: 'Action Required'});
+            dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true } });
+            dataTable.addColumn({ type: 'number', id: 'InvestigationOngoing', label: 'Investigation Ongoing' });
+            dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true } });
+            dataTable.addColumn({ type: 'number', id: 'NoActionRequired', label: 'No Action Required' });
+            dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true } });
+            dataTable.addColumn({ type: 'number', id: 'Uncurated', label: 'Uncurated' });
+            dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true } });
+            dataTable.addColumn({ type: 'number', id: 'Total', label: 'Total' });
+            dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true } });
+            dataTable.addRows(data);
+
+            var lineOptions = {
+                tooltip: {isHtml: true},
+                pointSize: 5,
+                lineWidth: 3,
+                height: 400,
+                legend: { position: 'bottom', maxLines: 3 },
+                colors: ['#F7696b', '#A0ccd2', '#Afd2a0', '#Cbc2c2', '#000000'],
+                vAxis: { title: 'Vulnerabilities Count' },
+                hAxis: {
+                    gridlines: {
+                        count: -1,
+                        units: {
+                            months: {format: ['dd MMM yyyy'] },
+                            days: {format: ['dd MMM'] },
+                        }
+                    },
+                    minorGridlines: {
+                        units: {
+                            months: {format: ['dd MMM'] },
+                            days: {format: ['dd MMM'] },
+                            hours: {format: ['HH a']}
+                        }
+                    },
+                    maxAlternation: 2
+                }
+            };
+
+            var lineChart = new google.visualization.LineChart(container);
+            lineChart.draw(dataTable, lineOptions);
+
+            function createHTMLTooltip(weekBeginning, total, actionRequired, investigationOngoing, noActionRequired, uncurated) {
+                return `<div class="timeline-tooltip" style="width:250px">
+                        <table class="table table-striped" style="margin-bottom:0px">
+                            <tr><th>Week Beginning: </th><td>${weekBeginning}</td></tr>
+                            <tr><th>Total: </th><td>${total}</td></tr>
+                            <tr><th>Action Required: </th><td>${actionRequired}</td></tr>
+                            <tr><th>Investigation Ongoing: </th><td>${investigationOngoing}</td></tr>
+                            <tr><th>No Action Required: </th><td>${noActionRequired}</td></tr>
+                            <tr><th>Uncurated: </th><td>${uncurated}</td></tr>
+                        </table>
+                    </div>`
+            }
+
+
+
+        }
+    </script>
+
+
+    <header>
+        <h1>Vulnerabilities Timeline</h1>
+    </header>
+
+    @if(form.hasErrors) {
+    <div class="alert alert-danger" role="alert">
+        <ul class="list">
+            @form.errors.map { error =>
+            <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+            }
+        </ul>
+    </div>
+    }
+
+    <form id="form" action="" method="get">
+        <div class="form-group row">
+            <div class="col-md-4">
+                <label for="id-search">Vulnerability ID:</label>
+                <input class="form-control" id="id-search" type="text" name="vulnerability" value='@form("vulnerability").value' autofocus>
+            </div>
+            <div class="col-md-4">
+                <label for="service-search">Service:</label>
+                <input class="form-control" id="service-search" type="text" name="service" value='@form("service").value' autofocus>
+            </div>
+            <div class="col-md-4">
+                @select(
+                field      = form("team"),
+                options    = teams.map(t => t -> t),
+                '_default -> "All",
+                '_label   -> "Team:",
+                'id       -> "team-filter",
+                'class    -> "form-control"
+                )
+            </div>
+            <div class="col-md-2 col-md-offset-3">
+                <label for="from" title="From the start of this day" data-toggle="tooltip">Date From</label>
+                <input type="date" id="from" name="from" value='@form("from").value' class="form-control" style="line-height: 20px">
+            </div>
+            <div class="col-md-2">
+                <label for="to" title="To the end of this day" data-toggle="tooltip" >Date To</label>
+                <input type="date" id="to" name="to" value='@form("to").value' class="form-control" style="line-height: 20px">
+            </div>
+            <div class="col-md-2" style="padding-top: 40px;">
+                <input type="submit" value="Submit" class="form-control btn btn-primary">
+            </div>
+        </div>
+    </form>
+
+
+    @if(result.isEmpty) {
+        <p>No data was returned based on the provided filters</p>
+    } else if(result.size == 1) {
+        <p>Only one data point was returned - so unable to draw timeline. </p>
+        <p>Please expand the date filter criteria.</p>
+    } else {
+        <div id="service-chart" style="height: 300px"></div>
+    }
+
+}
+
+<script @CSPNonce.attr>
+      document.getElementById("team-filter").addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+</script>
+

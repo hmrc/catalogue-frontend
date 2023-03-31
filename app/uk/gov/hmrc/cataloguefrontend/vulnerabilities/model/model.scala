@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.vulnerabilities
+package uk.gov.hmrc.cataloguefrontend.vulnerabilities.model
 
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{OFormat, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, Version}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 
 import java.time.Instant
 import scala.collection.Seq
