@@ -32,7 +32,7 @@
 
     <h2><a href="@routes.CatalogueController.service(serviceName)">@serviceName</a></h2>
 
-    <p>Guidance for creating a microservice can be found in the <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a></p>
+    <p>Guidance for creating a microservice can be found in the <a class="external-link-audit" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a></p>
 
     <table class="table table-striped">
         <thead>
@@ -75,7 +75,7 @@
 
     @check.linkToDocs.map { link =>
       <br><br>
-      <a href="@link" target="_blank" rel="noreferrer noopener">Find out more<span class="glyphicon glyphicon-new-window"/></a>
+      <a class="external-link-audit" href="@link" target="_blank" rel="noreferrer noopener">Find out more<span class="glyphicon glyphicon-new-window"/></a>
     }
 }
 
@@ -111,7 +111,7 @@
 @displayResult(result: Check.Result) = {
     @result match {
         case Right(present) => {
-            <a href="@present.evidenceLink" target="_blank" rel="noopener noreferrer">
+            <a class="external-link-audit" href="@present.evidenceLink" target="_blank" rel="noopener noreferrer">
                 <span style="width: 32px" class="glyphicon glyphicon-ok low"></span>
                 view
             </a>
@@ -120,7 +120,7 @@
             <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
         }
         case Left(missing) => {
-            <a href="@missing.addLink" target="_blank" rel="noopener noreferrer">
+            <a class="external-link-audit" href="@missing.addLink" target="_blank" rel="noopener noreferrer">
                 <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
                 <span class="archived">add</span>
             </a>

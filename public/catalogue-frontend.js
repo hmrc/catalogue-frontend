@@ -31,4 +31,22 @@ $(function() { //document ready event
       $(this).text('Collapse');
     }
   });
+
+  const externalLinkAudit = (target) => {
+    const body = {
+      "target"  : target
+    };
+
+    const auditData = new Blob([JSON.stringify(body)]);
+    navigator.sendBeacon("/external-link-audit", auditData);
+    return true;
+  }
+
+  const addExternalLinkAuditEvent = function() {
+    document.querySelectorAll("a.external-link-audit").forEach(function(current) {
+      current.addEventListener("click", function(e) { return externalLinkAudit(this.href); });
+    });
+  };
+
+  addExternalLinkAuditEvent();
 });

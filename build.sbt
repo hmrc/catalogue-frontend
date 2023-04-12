@@ -41,6 +41,7 @@ val compile = Seq(
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-28"           % hmrcMongoVersion,
   "uk.gov.hmrc"               %% "internal-auth-client-play-28" % "1.2.0",
   "org.typelevel"             %% "cats-core"                    % "2.6.1",
+  "uk.gov.hmrc"               %% "play-auditing-play-28"        % "8.6.0",
   "org.yaml"                  %  "snakeyaml"                    % "1.27",
   "org.apache.httpcomponents" %  "httpclient"                   % "4.5.13",
   "com.github.tototoshi"      %% "scala-csv"                    % "1.3.6",
