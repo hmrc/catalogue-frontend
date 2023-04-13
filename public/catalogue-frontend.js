@@ -38,7 +38,7 @@ $(function() { //document ready event
     };
 
     const auditData = new Blob([JSON.stringify(body)]);
-    navigator.sendBeacon("/external-link-audit", auditData);
+    navigator.sendBeacon("/audit", auditData);
     return true;
   }
 

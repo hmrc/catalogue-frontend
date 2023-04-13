@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.externallinkauditing
+package uk.gov.hmrc.cataloguefrontend.auditing
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -25,7 +25,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ExternalLinkAuditingController @Inject()(
+class BrowserSideAuditingController @Inject()(
   override val mcc : MessagesControllerComponents,
   override val auth: FrontendAuthComponents
 )(implicit
@@ -33,6 +33,7 @@ class ExternalLinkAuditingController @Inject()(
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {
 
+  // This endpoint exists for implicit auditing
   def sendAudit(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       Future.successful(NoContent)
