@@ -44,37 +44,34 @@ form   : Form[_]
         function drawChart() {
             let data = [
                 @result.map { d =>
-                [
-                    new Date(@{d.weekBeginning.toEpochMilli}),
-                    @{d.actionRequired},
-                    createHTMLTooltip('@{d.weekBeginning.dateOnlyFormat}', '@{d.total}', '@{d.actionRequired}','@{d.investigationOngoing}','@{d.noActionRequired}','@{d.uncurated}'),
-                    @{d.investigationOngoing},
-                    createHTMLTooltip('@{d.weekBeginning.dateOnlyFormat}', '@{d.total}', '@{d.actionRequired}','@{d.investigationOngoing}','@{d.noActionRequired}','@{d.uncurated}'),
-                    @{d.noActionRequired},
-                    createHTMLTooltip('@{d.weekBeginning.dateOnlyFormat}', '@{d.total}', '@{d.actionRequired}','@{d.investigationOngoing}','@{d.noActionRequired}','@{d.uncurated}'),
-                    @{d.uncurated},
-                    createHTMLTooltip('@{d.weekBeginning.dateOnlyFormat}', '@{d.total}', '@{d.actionRequired}','@{d.investigationOngoing}','@{d.noActionRequired}','@{d.uncurated}'),
-                    @{d.total},
-                    createHTMLTooltip('@{d.weekBeginning.dateOnlyFormat}', '@{d.total}', '@{d.actionRequired}','@{d.investigationOngoing}','@{d.noActionRequired}','@{d.uncurated}'),
-                ],
+                        [
+                            new Date(@{d.weekBeginning.toEpochMilli}),
+                            @{d.count}
+                        ],
                 }
             ];
 
             let container = document.getElementById('service-chart');
 
-
             let dataTable = new google.visualization.DataTable();
             dataTable.addColumn({ type: 'date', id: 'week', label: 'week' });
-            dataTable.addColumn({ type: 'number', id: 'ActionRequired', label: 'Action Required'});
-            dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true } });
-            dataTable.addColumn({ type: 'number', id: 'InvestigationOngoing', label: 'Investigation Ongoing' });
-            dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true } });
-            dataTable.addColumn({ type: 'number', id: 'NoActionRequired', label: 'No Action Required' });
-            dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true } });
-            dataTable.addColumn({ type: 'number', id: 'Uncurated', label: 'Uncurated' });
-            dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true } });
-            dataTable.addColumn({ type: 'number', id: 'Total', label: 'Total' });
-            dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true } });
+            @form("curationStatus").value match {
+                    case Some("ACTION_REQUIRED") => {
+                        dataTable.addColumn({ type: 'number', id: 'ActionRequired', label: 'Action Required'});
+                    }
+                    case Some("NO_ACTION_REQUIRED") => {
+                        dataTable.addColumn({ type: 'number', id: 'NoActionRequired', label: 'No Action Required' });
+                    }
+                    case Some("INVESTIGATION_ONGOING") => {
+                        dataTable.addColumn({ type: 'number', id: 'InvestigationOngoing', label: 'Investigation Ongoing' });
+                    }
+                    case Some("UNCURATED") => {
+                        dataTable.addColumn({ type: 'number', id: 'Uncurated', label: 'Uncurated' });
+                    }
+                    case _ => {
+                        dataTable.addColumn({ type: 'number', id: 'Total', label: 'Total' });
+                    }
+                  }
             dataTable.addRows(data);
 
             var lineOptions = {
@@ -106,21 +103,6 @@ form   : Form[_]
 
             var lineChart = new google.visualization.LineChart(container);
             lineChart.draw(dataTable, lineOptions);
-
-            function createHTMLTooltip(weekBeginning, total, actionRequired, investigationOngoing, noActionRequired, uncurated) {
-                return `<div class="timeline-tooltip" style="width:250px">
-                        <table class="table table-striped" style="margin-bottom:0px">
-                            <tr><th>Week Beginning: </th><td>${weekBeginning}</td></tr>
-                            <tr><th>Total: </th><td>${total}</td></tr>
-                            <tr><th>Action Required: </th><td>${actionRequired}</td></tr>
-                            <tr><th>Investigation Ongoing: </th><td>${investigationOngoing}</td></tr>
-                            <tr><th>No Action Required: </th><td>${noActionRequired}</td></tr>
-                            <tr><th>Uncurated: </th><td>${uncurated}</td></tr>
-                        </table>
-                    </div>`
-            }
-
-
 
         }
     </script>
@@ -160,15 +142,24 @@ form   : Form[_]
                 'class    -> "form-control"
                 )
             </div>
-            <div class="col-md-2 col-md-offset-3">
-                <label for="from" title="From the start of this day" data-toggle="tooltip">Date From</label>
+            <div class="col-md-3">
+                @select(
+                field     =  form("curationStatus"),
+                options   =  (""->"All") :: CurationStatus.values.map(cs => cs.asString -> cs.display),
+                '_label   -> "Curation status:",
+                'id       -> "curation-status-filter",
+                'class    -> "form-control"
+                )
+            </div>
+            <div class="col-md-3">
+                <label for="from" title="From the start of this day" data-toggle="tooltip">Date From: </label>
                 <input type="date" id="from" name="from" value='@form("from").value' class="form-control" style="line-height: 20px">
             </div>
-            <div class="col-md-2">
-                <label for="to" title="To the end of this day" data-toggle="tooltip" >Date To</label>
+            <div class="col-md-3">
+                <label for="to" title="To the end of this day" data-toggle="tooltip" >Date To: </label>
                 <input type="date" id="to" name="to" value='@form("to").value' class="form-control" style="line-height: 20px">
             </div>
-            <div class="col-md-2" style="padding-top: 40px;">
+            <div class="col-md-3" style="padding-top: 40px;">
                 <input type="submit" value="Submit" class="form-control btn btn-primary">
             </div>
         </div>
@@ -186,9 +177,12 @@ form   : Form[_]
 
 }
 
+
 <script @CSPNonce.attr>
-      document.getElementById("team-filter").addEventListener("change", function() {
+  ["team-filter", "curation-status-filter"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
         document.getElementById("form").submit();
       });
+    });
 </script>
-

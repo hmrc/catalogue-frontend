@@ -58,12 +58,13 @@ class VulnerabilitiesConnector @Inject() (
       .execute[Seq[TotalVulnerabilityCount]]
   }
 
-  def timelineCounts(service: Option[String], team: Option[String], vulnerability: Option[String], from: LocalDate, to: LocalDate)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilitiesTimelineCount]] = {
+  def timelineCounts(service: Option[String], team: Option[String], vulnerability: Option[String], curationStatus: Option[String], from: LocalDate, to: LocalDate)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilitiesTimelineCount]] = {
     implicit val stcr: Reads[VulnerabilitiesTimelineCount] = VulnerabilitiesTimelineCount.reads
     val fromInstant = DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))
     val toInstant   = DateTimeFormatter.ISO_INSTANT.format(to.atStartOfDay().toInstant(ZoneOffset.UTC))
+
     httpClientV2
-      .get(url"$url/vulnerabilities/api/vulnerabilities/timeline?service=$service&team=$team&vulnerability=$vulnerability&from=$fromInstant&to=$toInstant")
+      .get(url"$url/vulnerabilities/api/vulnerabilities/timeline?service=$service&team=$team&vulnerability=$vulnerability&curationStatus=$curationStatus&from=$fromInstant&to=$toInstant")
       .execute[Seq[VulnerabilitiesTimelineCount]]
   }
 

@@ -23,22 +23,14 @@ import java.time.Instant
 
 
 case class VulnerabilitiesTimelineCount(
-  weekBeginning: Instant,
-  actionRequired: Int,
-  investigationOngoing: Int,
-  noActionRequired: Int,
-  uncurated: Int,
-  total: Int
+  weekBeginning : Instant,
+  count         : Int
 )
 
 object VulnerabilitiesTimelineCount {
   val reads: Reads[VulnerabilitiesTimelineCount] = {
-    ( (__ \ "weekBeginning"       ).read[Instant]
-      ~ (__ \ "actionNeeded"        ).read[Int]
-      ~ (__ \ "investigationOngoing").read[Int]
-      ~ (__ \ "noActionRequired"    ).read[Int]
-      ~ (__ \ "uncurated"           ).read[Int]
-      ~ (__ \ "total"               ).read[Int]
+    ( (__ \ "weekBeginning").read[Instant]
+      ~ (__ \ "count"      ).read[Int]
       )(VulnerabilitiesTimelineCount.apply _)
   }
 }

@@ -89,7 +89,14 @@ class VulnerabilitiesController @Inject() (
     }
   }
 
-  def vulnerabilitiesTimeline(): Action[AnyContent] = Action.async { implicit request =>
+  def vulnerabilitiesTimeline(
+     service       : Option[String],
+     team          : Option[String],
+     vulnerability : Option[String],
+     curationStatus: Option[String],
+     from          : LocalDate,
+     to            : LocalDate
+ ): Action[AnyContent] = Action.async { implicit request =>
     import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesTimelineFilter.form
 
     form
@@ -101,11 +108,12 @@ class VulnerabilitiesController @Inject() (
             sortedTeams  <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
             teamNames     = sortedTeams.map(_.name.asString)
             counts       <- vulnerabilitiesConnector.timelineCounts(
-              service       = validForm.service,
-              team          = validForm.team,
-              vulnerability = validForm.vulnerability,
-              from          = validForm.from,
-              to            = validForm.to
+              service        = validForm.service,
+              team           = validForm.team,
+              vulnerability  = validForm.vulnerability,
+              curationStatus = validForm.curationStatus,
+              from           = validForm.from,
+              to             = validForm.to
             )
             sortedCounts  = counts.sortBy(_.weekBeginning)
           } yield Ok(vulnerabilitiesTimelinePage(teams = teamNames, result = sortedCounts, form.fill(validForm)))
@@ -115,12 +123,12 @@ class VulnerabilitiesController @Inject() (
 
 
   case class VulnerabilitiesExplorerFilter(
-                                            vulnerability: Option[String] = None,
-                                            curationStatus: Option[String] = None,
-                                            service: Option[String] = None,
-                                            team: Option[String] = None,
-                                            component: Option[String] = None
-                                          )
+    vulnerability : Option[String] = None,
+    curationStatus: Option[String] = None,
+    service       : Option[String] = None,
+    team          : Option[String] = None,
+    component     : Option[String] = None
+  )
 
 object VulnerabilitiesExplorerFilter {
 
@@ -139,8 +147,8 @@ object VulnerabilitiesExplorerFilter {
 }
 
 case class VulnerabilitiesCountFilter(
- service: Option[String] = None,
- team: Option[String] = None,
+ service    : Option[String] = None,
+ team       : Option[String] = None,
  environment: Option[Environment] = None
 )
 
@@ -161,8 +169,9 @@ case class VulnerabilitiesTimelineFilter(
   service       : Option[String],
   team          : Option[String],
   vulnerability : Option[String],
+  curationStatus: Option[String],
   from          : LocalDate,
-  to            : LocalDate
+  to            : LocalDate,
 )
 
 object VulnerabilitiesTimelineFilter {
@@ -179,6 +188,7 @@ object VulnerabilitiesTimelineFilter {
         "service"       -> optional(text),
         "team"          -> optional(text),
         "vulnerability" -> optional(text),
+        "curationStatus"-> optional(text),
         "from"          -> optional(Forms.localDate(dateFormat))
                                 .transform[LocalDate](opt => opt.getOrElse(defaultFromTime()), date => Some(date)),
                                 //Default to 6 months ago if loading initial page/value not set
