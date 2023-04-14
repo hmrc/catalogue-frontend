@@ -115,7 +115,7 @@
             <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest                                )</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.QA        ))</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.Production))</td>
-            <td><a href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See trend</a></td>
+            <td><a id="see-trend-@rule.group-@rule.artefact-@rule.range" href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See trend</a></td>
         } else {
           <td></td>
           <td></td>

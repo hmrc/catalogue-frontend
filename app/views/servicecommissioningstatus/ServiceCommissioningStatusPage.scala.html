@@ -32,7 +32,7 @@
 
     <h2><a href="@routes.CatalogueController.service(serviceName)">@serviceName</a></h2>
 
-    <p>Guidance for creating a microservice can be found in the <a class="external-link-audit" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a></p>
+    <p>Guidance for creating a microservice can be found in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a></p>
 
     <table class="table table-striped">
         <thead>
@@ -70,17 +70,22 @@
     </script>
 }
 
+
+@createID(s: String) = @{
+    s.toLowerCase.replaceAll("\\s+", "-").replaceAll("-+", "-")
+}
+
 @popoverContent(check: Check) = {
     @check.helpText
 
     @check.linkToDocs.map { link =>
       <br><br>
-      <a class="external-link-audit" href="@link" target="_blank" rel="noreferrer noopener">Find out more<span class="glyphicon glyphicon-new-window"/></a>
+      <a id="link-to-@createID(check.title)-docs" href="@link" target="_blank" rel="noreferrer noopener">Find out more<span class="glyphicon glyphicon-new-window"/></a>
     }
 }
 
 @popover(check: Check) = {
-    <a tabindex="0" class="scs-popover" role="button" data-toggle="popover" data-trigger="manual" data-content='@popoverContent(check)'>
+    <a id="@createID(check.title)-scs-popover" tabindex="0" class="scs-popover" role="button" data-toggle="popover" data-trigger="manual" data-content='@popoverContent(check)'>
         <span class="glyphicon glyphicon-question-sign"/>
     </a>
 }
@@ -89,7 +94,7 @@
     <tr>
         <td class="text-center">@popover(check)</td>
         <td>@check.title</td>
-        <td colspan="6">@displayResult(check.checkResult)</td>
+        <td colspan="6">@displayResult(createID(check.title), check.checkResult)</td>
     </tr>
 }
 
@@ -101,17 +106,17 @@
             <td>
                 <ul class="list-compact">
                     <li>@env.displayString</li>
-                    <li>@displayResult(result)</li>
+                    <li>@displayResult(createID(s"${check.title}-${env.displayString}"), result)</li>
                 </ul>
             </td>
         }
     </tr>
 }
 
-@displayResult(result: Check.Result) = {
+@displayResult(id: String, result: Check.Result) = {
     @result match {
         case Right(present) => {
-            <a class="external-link-audit" href="@present.evidenceLink" target="_blank" rel="noopener noreferrer">
+            <a id="@id-evidence-link" href="@present.evidenceLink" target="_blank" rel="noopener noreferrer">
                 <span style="width: 32px" class="glyphicon glyphicon-ok low"></span>
                 view
             </a>
@@ -120,7 +125,7 @@
             <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
         }
         case Left(missing) => {
-            <a class="external-link-audit" href="@missing.addLink" target="_blank" rel="noopener noreferrer">
+            <a id="@id-add-link" href="@missing.addLink" target="_blank" rel="noopener noreferrer">
                 <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
                 <span class="archived">add</span>
             </a>

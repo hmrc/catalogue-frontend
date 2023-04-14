@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.auditing
 
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.Logger
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.{Action, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -33,9 +35,14 @@ class BrowserSideAuditingController @Inject()(
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {
 
+  private val logger = Logger(getClass)
+
   // This endpoint exists for implicit auditing
-  def sendAudit(): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      Future.successful(NoContent)
+  def sendAudit(): Action[JsValue] =
+    BasicAuthAction(parse.tolerantJson) { implicit request =>
+      val target = (request.body \ "target").asOpt[String]
+      val referrer = request.headers.get(REFERER)
+      if ((request.body \ "id").asOpt[String].isEmpty) logger.warn(s"HTML element for the link to $target from $referrer, has no id attribute")
+      NoContent
     }
 }
