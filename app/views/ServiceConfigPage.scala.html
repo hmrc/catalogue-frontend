@@ -18,11 +18,13 @@
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{ConfigByKey, ConfigEnvironment, ConfigSourceValue}
 @import scala.collection.immutable.ListMap
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 
 @this(viewMessages: ViewMessages)
 
 @(serviceName: String,
-  configByKey: ConfigByKey
+  configByKey: ConfigByKey,
+  deployments: List[WhatsRunningWhereVersion]
 )(implicit
   request: RequestHeader
 )
@@ -46,7 +48,7 @@
                     <div id="header-0" class="grid-item sticky-column truncate-content" style="width:300px; text-indent: 1.2em">Key</div>
                     <div class="gutter gutter-horizontal"></div>
                     @for((env, index) <- ConfigEnvironment.values.zipWithIndex) {
-                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString" style="width:500px;">@env.asString</div>
+                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @if(!deployments.exists(_.environment.asString == env.asString) && env.asString != "local") {hidden} else{}" style="width:500px;">@env.asString</div>
                         <div class="gutter gutter-horizontal column-@env.asString"></div>
                     }
                 </div>
@@ -84,7 +86,7 @@
                 @for(env <- ConfigEnvironment.values) {
                     <li>
                         <!-- Without turning autocomplete off, some browsers (e.g. chrome) will set the checkbox state inconsistent with the viewed data when returning to the page -->
-                        <input class="column-filter" type="checkbox" id="show-@env.asString" checked="checked" autocomplete="off" />
+                        <input class="column-filter" type="checkbox" id="show-@env.asString" @if(deployments.exists(_.environment.asString == env.asString) || env.asString == "local") {checked="checked"} else{} autocomplete="off" />
                         <label for="show-@env.asString">@env.asString</label>
                     </li>
                 }

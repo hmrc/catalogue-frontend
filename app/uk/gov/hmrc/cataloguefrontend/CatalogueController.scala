@@ -108,8 +108,9 @@ class CatalogueController @Inject() (
   def serviceConfig(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
+        deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey <- configService.configByKey(serviceName)
-      } yield Ok(serviceConfigPage(serviceName, configByKey))
+      } yield Ok(serviceConfigPage(serviceName, configByKey, deployments))
     }
 
   def serviceConfigRaw(serviceName: String): Action[AnyContent] =
