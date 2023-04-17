@@ -30,7 +30,7 @@
 )
 
 @hasDeployment(env: ConfigEnvironment, textIfTrue: String, textIfFalse: String) = @{
-    if ((deployments.map(_.environment.asString) :+ "local").contains(env.asString)) {
+    if ((deployments.map(e => ConfigEnvironment.ForEnvironment.apply(e.environment)) :+ ConfigEnvironment.Local ).contains(env)) {
        textIfTrue
     } else {
       textIfFalse
