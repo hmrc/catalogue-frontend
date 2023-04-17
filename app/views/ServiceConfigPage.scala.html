@@ -29,6 +29,14 @@
   request: RequestHeader
 )
 
+@hasDeployment(env: ConfigEnvironment, textIfTrue: String, textIfFalse: String) = @{
+    if ((deployments.map(e => ConfigEnvironment.ForEnvironment.apply(e.environment)) :+ ConfigEnvironment.Local ).contains(env)) {
+       textIfTrue
+    } else {
+      textIfFalse
+    }
+}
+
 <html>
     <head>
         <title>Config - @serviceName</title>
@@ -48,8 +56,8 @@
                     <div id="header-0" class="grid-item sticky-column truncate-content" style="width:300px; text-indent: 1.2em">Key</div>
                     <div class="gutter gutter-horizontal"></div>
                     @for((env, index) <- ConfigEnvironment.values.zipWithIndex) {
-                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @if(!deployments.exists(_.environment.asString == env.asString) && env.asString != "local") {hidden} else{}" style="width:500px;">@env.asString</div>
-                        <div class="gutter gutter-horizontal column-@env.asString"></div>
+                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @hasDeployment(env, textIfTrue = "", textIfFalse = "hidden") " style="width:500px;"> @env.asString</div>
+                        <div class="gutter gutter-horizontal column-@env.asString @hasDeployment(env,textIfTrue = "", textIfFalse = "hidden")"></div>
                     }
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1)) {
@@ -59,7 +67,7 @@
                                 <a id="config-url-@key" href="#@key" class="glyphicon glyphicon-link"></a>@key
                             </div>
                             @for(env <- ConfigEnvironment.values) {
-                                <div class="grid-item column-@env.asString" style="width:510px;">
+                                <div class="grid-item column-@env.asString @hasDeployment(env, textIfTrue = "", textIfFalse = "hidden")"  style="width:510px;">
                                     <ul>
                                       @for(sourceValue: ConfigSourceValue <- envSources.get(env).getOrElse(Seq.empty)) {
                                         <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env, Some(key))">
@@ -86,7 +94,7 @@
                 @for(env <- ConfigEnvironment.values) {
                     <li>
                         <!-- Without turning autocomplete off, some browsers (e.g. chrome) will set the checkbox state inconsistent with the viewed data when returning to the page -->
-                        <input class="column-filter" type="checkbox" id="show-@env.asString" @if(deployments.exists(_.environment.asString == env.asString) || env.asString == "local") {checked="checked"} else{} autocomplete="off" />
+                        <input class="column-filter" type="checkbox" id="show-@env.asString" @hasDeployment(env, textIfTrue = "checked=\"checked\"", textIfFalse = "") autocomplete="off" />
                         <label for="show-@env.asString">@env.asString</label>
                     </li>
                 }
