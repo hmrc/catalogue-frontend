@@ -18,13 +18,13 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.model.{VulnerabilitiesTimelineCount, TotalVulnerabilityCount, VulnerabilitySummary}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.model.{TotalVulnerabilityCount, VulnerabilitiesTimelineCount, VulnerabilitySummary}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.format.DateTimeFormatter
-import java.time.{Instant, LocalDate, ZoneOffset}
+import java.time.{Instant, LocalDate, LocalTime, ZoneOffset}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -61,7 +61,7 @@ class VulnerabilitiesConnector @Inject() (
   def timelineCounts(service: Option[String], team: Option[String], vulnerability: Option[String], curationStatus: Option[String], from: LocalDate, to: LocalDate)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilitiesTimelineCount]] = {
     implicit val stcr: Reads[VulnerabilitiesTimelineCount] = VulnerabilitiesTimelineCount.reads
     val fromInstant = DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))
-    val toInstant   = DateTimeFormatter.ISO_INSTANT.format(to.atStartOfDay().toInstant(ZoneOffset.UTC))
+    val toInstant   = DateTimeFormatter.ISO_INSTANT.format(to.atTime(23,59,59).toInstant(ZoneOffset.UTC))
 
     httpClientV2
       .get(url"$url/vulnerabilities/api/vulnerabilities/timeline?service=$service&team=$team&vulnerability=$vulnerability&curationStatus=$curationStatus&from=$fromInstant&to=$toInstant")

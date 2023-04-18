@@ -51,7 +51,7 @@ form   : Form[_]
                 }
             ];
 
-            let container = document.getElementById('service-chart');
+            let container = document.getElementById('timeline-chart');
 
             let dataTable = new google.visualization.DataTable();
             dataTable.addColumn({ type: 'date', id: 'week', label: 'week' });
@@ -172,7 +172,7 @@ form   : Form[_]
         <p>Only one data point was returned - so unable to draw timeline. </p>
         <p>Please expand the date filter criteria.</p>
     } else {
-        <div id="service-chart" style="height: 300px"></div>
+        <div id="timeline-chart" style="height: 300px"></div>
     }
 
 }
