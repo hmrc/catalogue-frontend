@@ -11955,6 +11955,15 @@ section span.other-teams-message {
   height:120px; /* If you change this, change the corresponding smallHeight value in catalogue-frontend.css too */
 }
 
+.board-expand-link {
+  text-decoration: none !important;
+}
+
+.board-gradient {
+  mask: linear-gradient(#000 66%, #0000 100%);
+  -webkit-mask: linear-gradient(#000 66%, #0000 100%);
+}
+
 .indicator__title {
   margin-left: 1.0em;
   margin-bottom: 0;

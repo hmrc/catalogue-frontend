@@ -17,15 +17,19 @@
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ServiceRelationshipsWithHasRepo
 
 @(serviceRelationships: ServiceRelationshipsWithHasRepo)
+@hasTooManyRelationships = @{
+    serviceRelationships.size > 3
+}
 <div id="service_relationships">
     <div class="board">
         <h3 class="board__heading">
             Service Relationships
-            @if(serviceRelationships.size > 3) {
-                <a href="#" class="pull-right board-expand-link">See all</a>
+            @if(hasTooManyRelationships) {
+                <a href="#" title="See all" class="pull-right board-expand-link glyphicon glyphicon-chevron-down">
+                </a>
             }
         </h3>
-        <div class="board-grow">
+        <div class="board-grow @if(hasTooManyRelationships){ board-gradient }">
             <div class="board__body board-collapse">
                 <div class="row">
                     <div class="col-md-6">
