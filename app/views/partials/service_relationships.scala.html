@@ -24,10 +24,6 @@
     <div class="board">
         <h3 class="board__heading">
             Service Relationships
-            @if(hasTooManyRelationships) {
-                <a href="#" title="See all" class="pull-right board-expand-link glyphicon glyphicon-chevron-down">
-                </a>
-            }
         </h3>
         <div class="board-grow @if(hasTooManyRelationships){ board-gradient }">
             <div class="board__body board-collapse">
@@ -51,6 +47,12 @@
                 </div>
             </div>
         </div>
+        @if(hasTooManyRelationships) {
+            <footer class="text-center">
+                <a href="#" title="See all" class="board-expand-link glyphicon glyphicon-chevron-down">
+                </a>
+            </footer>
+        }
     </div>
 </div>
 
