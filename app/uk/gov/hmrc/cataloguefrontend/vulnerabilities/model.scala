@@ -136,3 +136,16 @@ object TotalVulnerabilityCount {
       )(apply _)
   }
 }
+
+case class VulnerabilitiesTimelineCount(
+ weekBeginning : Instant,
+ count         : Int
+)
+
+object VulnerabilitiesTimelineCount {
+  val reads: Reads[VulnerabilitiesTimelineCount] = {
+    ( (__ \ "weekBeginning").read[Instant]
+      ~ (__ \ "count"      ).read[Int]
+      )(VulnerabilitiesTimelineCount.apply _)
+  }
+}

@@ -12743,3 +12743,7 @@ a.scs-popover a.scs-popover:hover a.scs-popover:visited {
 a.scs-popover:focus {
   outline: none;
 }
+
+.google-visualization-tooltip-item {
+  white-space: nowrap;
+}
