@@ -79,24 +79,24 @@ form   : Form[_]
                 lineWidth: 3,
                 height: 400,
                 legend: { position: 'bottom', maxLines: 3 },
-                colors: ['#F7696b', '#A0ccd2', '#Afd2a0', '#Cbc2c2', '#000000'],
-                vAxis: { title: 'Vulnerabilities Count' },
+                colors: ['#F7696b'],
+                vAxis: { title: 'Vulnerabilities Count', color: '#FF0000', baselineColor: 'black'},
                 hAxis: {
                     gridlines: {
                         count: -1,
                         units: {
-                            months: {format: ['dd MMM yyyy'] },
-                            days: {format: ['dd MMM'] },
+                            months: {format: ['MMM yyyy'] },
                         }
                     },
+                    maxTextLines: 1,
+                    baselineColor: 'black',
                     minorGridlines: {
+                        minSpacing: 80,
                         units: {
                             months: {format: ['dd MMM'] },
                             days: {format: ['dd MMM'] },
-                            hours: {format: ['HH a']}
                         }
                     },
-                    maxAlternation: 2
                 }
             };
 
