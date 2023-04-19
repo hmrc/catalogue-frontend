@@ -99,10 +99,9 @@ class CatalogueController @Inject() (
 
   def index(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
-        blogs    <- confluenceConnector.getBlogs()
-                      .recover(_ => Nil) // Temp fix till platops-live can call confluence
-      } yield Ok(indexPage(blogs))
+      confluenceConnector
+        .getBlogs()
+        .map(blogs => Ok(indexPage(blogs)))
     }
 
   def serviceConfig(serviceName: String): Action[AnyContent] =

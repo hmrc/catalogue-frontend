@@ -97,7 +97,6 @@ class ConfluenceConnector @Inject()(
     httpClientV2
       .get(url"$confluenceUrl/rest/api/content/search?limit=$searchLimit&cql=$cql")
       .setHeader("Authorization" -> authHeaderValue)
-      .withProxy
       .execute[List[Result]]
   }
 
@@ -111,7 +110,6 @@ class ConfluenceConnector @Inject()(
     httpClientV2
       .get(url"${confluenceUrl + path}")
       .setHeader("Authorization" -> authHeaderValue)
-      .withProxy
       .execute[History]
   }
 }
