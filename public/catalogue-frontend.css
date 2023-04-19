@@ -11955,6 +11955,15 @@ section span.other-teams-message {
   height:120px; /* If you change this, change the corresponding smallHeight value in catalogue-frontend.css too */
 }
 
+.board-expand-link, .recent-box-expand-link {
+  text-decoration: none !important;
+}
+
+.board-gradient {
+  mask: linear-gradient(#000 66%, #0000 100%);
+  -webkit-mask: linear-gradient(#000 66%, #0000 100%);
+}
+
 .indicator__title {
   margin-left: 1.0em;
   margin-bottom: 0;
@@ -12460,6 +12469,7 @@ table.shutter-events {
 .recent-box {
     margin: 20px;
     padding: 20px;
+    padding-bottom: 0;
     background-color: #02877021;
 }
 
@@ -12732,4 +12742,8 @@ a.scs-popover a.scs-popover:hover a.scs-popover:visited {
 
 a.scs-popover:focus {
   outline: none;
+}
+
+.google-visualization-tooltip-item {
+  white-space: nowrap;
 }

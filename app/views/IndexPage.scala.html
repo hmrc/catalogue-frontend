@@ -46,7 +46,7 @@
             These are all the recent blog posts published by PlatOps, right here for your convenience!
 
             <div id="blog-posts" class="recent-box">
-                <div class="recent-box-grow">
+                <div class="recent-box-grow board-gradient">
                     <div class='recent-box-collapse'>
                     <table>
                         @blogs.map { blog =>
@@ -58,7 +58,10 @@
                     </table>
                     </div>
                 </div>
-                <a id="see-all-expand-box" href="#" class="recent-box-expand-link">See all...</a>
+                <div class="text-center">
+                    <a id="see-all-expand-box" href="#" title="See all" class="recent-box-expand-link glyphicon glyphicon-chevron-down">
+                    </a>
+                </div>
             </div>
         }
     </section>

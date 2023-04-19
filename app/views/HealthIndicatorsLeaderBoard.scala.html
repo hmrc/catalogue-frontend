@@ -72,7 +72,7 @@
                 @indicatorsWithTeams.zipWithIndex.map { case (indicator, i) =>
                     <tr role="row" id="row_@{i}">
                         <td class="repo-name" id="row_@{i}_column_0">
-                            <a id="link-to-@{indicator.repoName}" href="/health-indicators/@{indicator.repoName}"><span class="repoName">@indicator.repoName</span></a>
+                            <a href="/health-indicators/@{indicator.repoName}"><span class="repoName">@indicator.repoName</span></a>
                         </td>
                         <td id="row_@{i}_column_1">
                             <ul class="list-group">

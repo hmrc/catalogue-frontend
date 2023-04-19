@@ -14,8 +14,9 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.model.Environment.{Development, Integration}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
+@import uk.gov.hmrc.cataloguefrontend.model.Environment.Integration
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter
 @import views.html.helper.select
@@ -69,10 +70,10 @@
             <thead>
                 <tr>
                     <th class="col-xs-6"><button class="sort no-border" data-sort="service">Service</button></th>
-                    <th class="col-xs-2 text-center"><button class="no-border" data-sort="action-required">Action Required</button></th>
-                    <th class="col-xs-2 text-center"><button class="no-border" data-sort="investigation-ongoing">Investigation Ongoing</button></th>
-                    <th class="col-xs-2 text-center"><button class="no-border" data-sort="no-action-required">No Action Required</button></th>
-                    <th class="col-xs-2 text-center"><button class="no-border" data-sort="no-action-required">Uncurated</button></th>
+                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="action-required">Action Required</button></th>
+                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="investigation-ongoing">Investigation Ongoing</button></th>
+                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="no-action-required">No Action Required</button></th>
+                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="uncurated">Uncurated</button></th>
                 </tr>
             </thead>
             <tbody class="list">
@@ -85,11 +86,11 @@
 
 @vulnerabilitiesCountForService(totalVulnerabilityCount: TotalVulnerabilityCount) = {
     <tr>
-        <td class="service"><a id="link-to-@{totalVulnerabilityCount.service}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(totalVulnerabilityCount.service)">@totalVulnerabilityCount.service</a></td>
-        <td class="action-required text-center"><a id="action-required-vulnerabilities-for-@{totalVulnerabilityCount.service}" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.actionRequired</a></td>
-        <td class="investigation-ongoing text-center"><a id="investigation-ongoing-vulnerabilities-for-@{totalVulnerabilityCount.service} href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.InvestigationOngoing.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.investigationOngoing</a></td>
-        <td class="no-action-required text-center"><a id="no-action-required-vulnerabilities-for-@{totalVulnerabilityCount.service} href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.NoActionRequired.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.noActionRequired</a></td>
-        <td class="uncurated text-center"><a id="uncurated-vulnerabilities-for-@{totalVulnerabilityCount.service}" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.Uncurated.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.uncurated</a></td>
+        <td><a class="service" id="link-to-@totalVulnerabilityCount.service" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(totalVulnerabilityCount.service)">@totalVulnerabilityCount.service</a></td>
+        <td class="text-center"><a class="action-required" id="@totalVulnerabilityCount.service-action-required-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.actionRequired</a></td>
+        <td class="text-center"><a class="investigation-ongoing" id="@totalVulnerabilityCount.service-investigation-ongoing-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.InvestigationOngoing.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.investigationOngoing</a></td>
+        <td class="text-center"><a class="no-action-required" id="@totalVulnerabilityCount.service-no-action-required-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.NoActionRequired.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.noActionRequired</a></td>
+        <td class="text-center"><a class="uncurated" id="@totalVulnerabilityCount.service-uncurated-required-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.Uncurated.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.uncurated</a></td>
     </tr>
 }
 
