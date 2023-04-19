@@ -11955,7 +11955,7 @@ section span.other-teams-message {
   height:120px; /* If you change this, change the corresponding smallHeight value in catalogue-frontend.css too */
 }
 
-.board-expand-link {
+.board-expand-link, .recent-box-expand-link {
   text-decoration: none !important;
 }
 
@@ -12469,6 +12469,7 @@ table.shutter-events {
 .recent-box {
     margin: 20px;
     padding: 20px;
+    padding-bottom: 0;
     background-color: #02877021;
 }
 
