@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.vulnerabilities.model
+package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{OFormat, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, Version}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 
 import java.time.Instant
 import scala.collection.Seq
@@ -135,5 +134,18 @@ object TotalVulnerabilityCount {
       ~ (__ \ "investigationOngoing").read[Int]
       ~ (__ \ "uncurated"           ).read[Int]
       )(apply _)
+  }
+}
+
+case class VulnerabilitiesTimelineCount(
+ weekBeginning : Instant,
+ count         : Int
+)
+
+object VulnerabilitiesTimelineCount {
+  val reads: Reads[VulnerabilitiesTimelineCount] = {
+    ( (__ \ "weekBeginning").read[Instant]
+      ~ (__ \ "count"      ).read[Int]
+      )(VulnerabilitiesTimelineCount.apply _)
   }
 }

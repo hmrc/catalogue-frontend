@@ -22,7 +22,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus.ActionRequired
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.model.{DistinctVulnerability, TotalVulnerabilityCount, VulnerabilitiesTimelineCount, VulnerabilityOccurrence, VulnerabilitySummary, VulnerableComponent}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
