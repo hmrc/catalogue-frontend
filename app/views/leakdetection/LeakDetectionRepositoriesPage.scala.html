@@ -115,7 +115,7 @@
 
 @leakDetectionRuleSummary(summary: LeakDetectionRepositorySummary) = {
     <tr>
-        <td class="repository"><a href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository, includeNonIssues = true)">@summary.repository</a></td>
+        <td class="repository"><a id="branch-summary-@{summary.repository}" href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository, includeNonIssues = true)">@summary.repository</a></td>
         <td class="">
             @if(summary.isArchived) {
             <span class="repo-status badge">archived</span>
@@ -134,7 +134,7 @@
 @countWithLinkCell(repository: String, name: String, count: Int) = {
     <td class="@name text-center"><div class="hide">@count</div>
         @if(count > 0) {
-            <a href="@appRoutes.LeakDetectionController.branchSummaries(repository)">@count</a>
+            <a id="@repository-@name-count" href="@appRoutes.LeakDetectionController.branchSummaries(repository)">@count</a>
         } else {
             <span>0</span>
         }</td>

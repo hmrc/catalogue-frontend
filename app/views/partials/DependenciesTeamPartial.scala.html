@@ -38,7 +38,7 @@
         <p>Feel free to go and treat yourselves to a coffee and a biscuit.</p>
       } else {
         @if(showLink) {
-          <p>Click <a href="/teams/@teamName.asString/out-of-date-dependencies">here</a> to open in dedicated window. (Useful for build monitors)</p>
+          <p>Click <a id="link-to-out-of-date-team-dependencies" href="/teams/@teamName.asString/out-of-date-dependencies">here</a> to open in dedicated window. (Useful for build monitors)</p>
         }
         <div class="col-xs-9">
              @for(dependency <- masterTeamDependencies) {

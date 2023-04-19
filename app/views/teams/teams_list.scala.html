@@ -61,7 +61,7 @@
                 @teams.zipWithIndex.map { case (team, i) =>
                 <tr id="row@i">
                     <td class="team-name" id="row@{i}_name">
-                        <a href="/teams/@team.name.asString">@team.name.asString</a>
+                        <a id="link-to-team-page-for-@{team.name.asString}" href="/teams/@team.name.asString">@team.name.asString</a>
                     </td>
                     <td class="created monospaced" id="row@{i}_created">
                       @team.createdDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")

@@ -26,7 +26,7 @@
 @serviceDeployments.zipWithIndex.map { case (sdcSummary, i) =>
   <tr role="row" id="row@i">
     <td class="application-name" id="row@{i}_application">
-        <a href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName}</a>
+        <a id="link-to-info-page-for-@{sdcSummary.serviceName}" href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName}</a>
     </td>
     @environments.map { env =>
       @sdcSummary.environments.find(_.environment == env.asString).map { sdc =>

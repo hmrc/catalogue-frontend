@@ -165,7 +165,7 @@
 
 @jdkVersion(version: JDKVersion) = {
     <tr id="jdk-slug-@version.name">
-        <td><a href="@appRoutes.CatalogueController.repository(version.name)">@version.name</a></td>
+        <td><a id="link-to-@{version.name}" href="@appRoutes.CatalogueController.repository(version.name)">@version.name</a></td>
         <td>
           @version.vendor match {
             case Oracle  => { <img src="@routes.Assets.versioned("img/oracle2.gif")" width="70px" alt="Oracle" /> }

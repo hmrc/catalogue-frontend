@@ -78,7 +78,7 @@
 
 @leakDetectionBranchSummary(repoName: String, summary: LeakDetectionBranchSummary) = {
     <tr>
-        <td class="branch"><a href="@appRoutes.LeakDetectionController.report(repoName, summary.branch)">@summary.branch</a></td>
+        <td class="branch"><a id="branch-link-@{summary.branch}" href="@appRoutes.LeakDetectionController.report(repoName, summary.branch)">@summary.branch</a></td>
         <td class="scanned">@summary.scannedAt.displayFormat</td>
         @countWithLinkCell(repoName, summary.branch, "warnings", summary.warningCount)
         @countWithLinkCell(repoName, summary.branch, "exemptions", summary.excludedCount)
@@ -90,7 +90,7 @@
 @countWithLinkCell(repoName: String, branch: String, name: String, count: Int) = {
     <td class="@name text-center"><div class="hide">@count</div>
         @if(count > 0) {
-            <a href="
+            <a id="@branch-@name-count" href="
                 @if(name == "exemptions") {
                     @appRoutes.LeakDetectionController.reportExemptions(repoName, branch)
                 } else {
