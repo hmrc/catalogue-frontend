@@ -103,7 +103,7 @@
                   <td id="row@{i}_team" class="team">
                     <ul class="list-group">
                     @for(team <- d.teams) {
-                      <li><a id="link-to-@{team.asString}" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(team)">@{team.asString}</a></li>
+                      <li><a id="link-to-team-page-for-@{team.asString.replace(" ", "-")}" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(team)">@{team.asString}</a></li>
                     }
                     </ul>
                   </td>
