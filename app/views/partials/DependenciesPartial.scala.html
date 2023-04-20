@@ -70,9 +70,9 @@
 </div>
 
 @graphLink(v: Version, scope: Option[DependencyScope]) = {
-  <a href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, v.toString, scope.map(_.asString).getOrElse(DependencyScope.Compile.asString))">View Dependency Graph</a>
+  <a id="@rootId-view-dependency-graph" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, v.toString, scope.map(_.asString).getOrElse(DependencyScope.Compile.asString))">View Dependency Graph</a>
 }
 
 @dependenciesLink(v: Version) = {
-  <a href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.service(serviceName, v.toString)">View Dependency List</a>
+  <a id="@rootId-view-dependency-list" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.service(serviceName, v.toString)">View Dependency List</a>
 }

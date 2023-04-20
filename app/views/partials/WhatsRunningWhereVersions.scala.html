@@ -29,7 +29,7 @@
 @whatsRunning.zipWithIndex.map { case (wrw, i) =>
   <tr role="row" id="row@i">
     <td class="application-name" id="row@{i}_application">
-        <a href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
+        <a id="link-to-info-page-for-@{wrw.applicationName.asString}" href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
     </td>
     @environments.map { env =>
       @wrw.versions.find(_.environment == env).map { envVersion =>
@@ -45,7 +45,7 @@
       }
     }
     <td>
-        <a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.applicationName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
+        <a id="link-to-deployment-timeline-for-@{wrw.applicationName.asString}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.applicationName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
     </td>
   </tr>
 }

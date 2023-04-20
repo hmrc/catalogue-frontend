@@ -65,7 +65,7 @@
                         @for(result <- searchResults) {
                             @for(route <- result.routes) {
                                 <tr>
-                                    <td><a href="@{
+                                    <td><a id="link-to-@{result.service}" href="@{
                                         serviceNameToUrl(result.service)
                                     }">@result.service</a>
                                     </td>

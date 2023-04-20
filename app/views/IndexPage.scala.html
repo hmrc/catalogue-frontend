@@ -30,16 +30,16 @@
     <section class="section-wrapper">
         <h1>Welcome to the Catalogue</h1>
         <p>Here you can explore information about all the
-            <a href="./repositories?name=&type=Service">different services</a>
-            and <a href="./repositories?name=&type=Library">libraries</a> in use on the platform,
-            <a href="./whats-running-where">where they are running</a> and
-            their <a href="./deployments/production">recent deployments</a>,
-            what <a href="./dependencyexplorer">dependencies</a>
-            and config they use, and <a href="./teams">who</a> maintains them.
-            You can also <a href="./shuttering-overview/frontend">shutter your service</a> to the outside world,
-            <a href="./bobbyrules">view bobby rules</a>, see what
-            <a href="./jdkexplorer">JDK versions are in use</a>, discover
-            <a href="./search#">which service corresponds to a given URL</a>, and more to come!
+            <a id="link-to-services-list" href="./repositories?name=&type=Service">different services</a>
+            and <a id="link-to-libraries-list" href="./repositories?name=&type=Library">libraries</a> in use on the platform,
+            <a id="link-to-wrw-page" href="./whats-running-where">where they are running</a> and
+            their <a id="link-to-deployments-page" href="./deployments/production">recent deployments</a>,
+            what <a id="link-to-dependency-explorer" href="./dependencyexplorer">dependencies</a>
+            and config they use, and <a id="link-to-teams-page" href="./teams">who</a> maintains them.
+            You can also <a id="link-to-shuttering-overview-page" href="./shuttering-overview/frontend">shutter your service</a> to the outside world,
+            <a id="link-to-bobby-rules" href="./bobbyrules">view bobby rules</a>, see what
+            <a id="link-to-jdk-explorer" href="./jdkexplorer">JDK versions are in use</a>, discover
+            <a id="link-to-search-by-url" href="./search#">which service corresponds to a given URL</a>, and more to come!
 
         @if(blogs.nonEmpty) {
             <h2>Blog Posts</h2>
@@ -52,14 +52,14 @@
                         @blogs.map { blog =>
                             <tr>
                                 <td>@{blog.createdDate.displayFormat}</td>
-                                <td><a href="@{blog.url}">@{blog.title}</a></td>
+                                <td><a id="link-to-@{blog.title.toLowerCase.replace(" ", "-")}-blog-post" href="@{blog.url}">@{blog.title}</a></td>
                             </tr>
                         }
                     </table>
                     </div>
                 </div>
                 <div class="text-center">
-                    <a href="#" title="See all" class="recent-box-expand-link glyphicon glyphicon-chevron-down">
+                    <a id="see-all-expand-box" href="#" title="See all" class="recent-box-expand-link glyphicon glyphicon-chevron-down">
                     </a>
                 </div>
             </div>
@@ -73,7 +73,7 @@
             If you <span id="egg">notice something</span> is not quite right you can usually fix it by updating those directly, and when we next refresh
             the data you will see it change here.
 
-            If you have any queries, feel free to reach out to <a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"/></a>
+            If you have any queries, feel free to reach out to <a id="link-to-platops-slack" href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"/></a>
         </p>
 
         <div class="platops" id="platops">

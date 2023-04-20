@@ -37,7 +37,7 @@
               @if(value == scope) {
                   <u>@value.displayString</u>
               } else {
-                  <a href='?scope=@{
+                  <a id="@scope.displayString-graph" href='?scope=@{
                       value.asString
                   }'>@value.displayString</a>
               }

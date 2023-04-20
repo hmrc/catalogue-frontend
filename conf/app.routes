@@ -89,6 +89,9 @@ GET        /leak-detection/repositories/:repository/:branch/exemptions     uk.go
 GET        /quicksearch                                                    uk.gov.hmrc.cataloguefrontend.search.SearchController.search(query: String, limit: Int ?= 20)
 GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.graph(service ?="", start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
 
++nocsrf
+POST       /audit                                                          uk.gov.hmrc.cataloguefrontend.auditing.BrowserSideAuditingController.sendAudit()
+
 GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.distinctVulnerabilitySummaries(vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, service: Option[String] ?= None, team: Option[String] ?= None, component: Option[String] ?= None)
 GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesCountForServices
 GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesTimeline(service: Option[String] ?= None, team: Option[String] ?= None, vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())

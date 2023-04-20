@@ -89,7 +89,7 @@
         <nav class="navbar navbar-default">
             <div class="container" id="navbar">
                 <header class="navbar-header">
-                    <a href="/" class="navbar-brand">
+                    <a id="mdtp-navbar-brand" href="/" class="navbar-brand">
                         MDTP
                     </a>
                 </header>
@@ -112,41 +112,41 @@
                     <li class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" href="#">Shuttering<span class="caret"></span></a>
                         <ul class="dropdown-menu">
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Frontend)">Shutter Overview - Frontend</a></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Api)">Shutter Overview - Api</a></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Rate)">Shutter Overview - Rate</a></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEvents">Shutter Events</a></li>
+                            <li><a id="link-to-shutter-overview-frontend" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Frontend)">Shutter Overview - Frontend</a></li>
+                            <li><a id="link-to-shutter-overview-api" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Api)">Shutter Overview - Api</a></li>
+                            <li><a id="link-to-shutter-overview-rate" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Rate)">Shutter Overview - Rate</a></li>
+                            <li><a id="link-to-shutter-events" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEvents">Shutter Events</a></li>
                         </ul>
                     </li>
                     <li class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" href="#">Health<span class="caret"></span></a>
                         <ul class="dropdown-menu">
-                            <li><a href="@HealthIndicatorsController.indicatorsForRepoType()">Health-Indicators</a></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
+                            <li><a id="link-to-health-indicators" href="@HealthIndicatorsController.indicatorsForRepoType()">Health-Indicators</a></li>
+                            <li><a id="link-to-platform-initiatives" href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
                             <li role="separator" class="divider"></li>
-                            <li><a href="@appRoutes.BobbyExplorerController.list()">Bobby Explorer</a></li>
+                            <li><a id="link-to-bobby-explorer" href="@appRoutes.BobbyExplorerController.list()">Bobby Explorer</a></li>
                             <li role="separator" class="divider"></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.ruleSummaries">Leak Detection - Rules</a></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(false, false, true)">Leak Detection - Repositories</a></li>
+                            <li><a id="link-to-leak-detection-rules" href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.ruleSummaries">Leak Detection - Rules</a></li>
+                            <li><a id="link-to-leak-detection-repositories" href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(false, false, true)">Leak Detection - Repositories</a></li>
                             <li role="separator" class="divider"></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), None, None)">
+                            <li><a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), None, None)">
                                 Vulnerabilities</a></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesCountForServices">
+                            <li><a id="link-to-vulnerabilities-services" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesCountForServices">
                                 Vulnerabilities - Services</a></li>
                             <li><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesTimeline(None, None, None, curationStatus = Some(CurationStatus.ActionRequired.asString))">
                                 Vulnerabilities - Timeline</a></li>
                             <li role="separator" class="divider"></li>
-                            <li><a href="@prcommenterRoutes.PrCommenterController.recommendations()">PR-Commenter Recommendations</a></li>
+                            <li><a id="link-to-pr-commenter-recommendations" href="@prcommenterRoutes.PrCommenterController.recommendations()">PR-Commenter Recommendations</a></li>
                         </ul>
                     </li>
                     <li class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" href="#">Explore<span class="caret"></span></a>
                         <ul class="dropdown-menu">
-                            <li><a href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
-                            <li><a href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
-                            <li><a href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
-                            <li><a href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Deployment Timelines</a></li>
+                            <li><a id="link-to-dependency-explorer" href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
+                            <li><a id="link-to-jdk-explorer" href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
+                            <li><a id="link-to-default-branch-names" href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
+                            <li><a id="link-to-search-by-url" href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
+                            <li><a id="link-to-deployment-timelines" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Deployment Timelines</a></li>
 
                         </ul>
                     </li>
@@ -160,7 +160,7 @@
                                 @username <span class="caret"></span>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signOut">Sign out</a></li>
+                                <li><a id="sign-out" href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signOut">Sign out</a></li>
                             </ul>
                         }{
                           <a id="sign-in" href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signIn(targetUrl = if (request.target.uriString == "/") None else Some(RedirectUrl(request.target.uriString)))" class="@if(active=="sign-in") {active}">
@@ -208,4 +208,5 @@
     </body>
 
     <script @CSPNonce.attr src="@routes.Assets.versioned("search.js")" defer></script>
+    <script @CSPNonce.attr src="@routes.Assets.versioned("auditing.js")"></script>
 </html>
