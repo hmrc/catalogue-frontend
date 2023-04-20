@@ -24,7 +24,7 @@
           <ul class="list list--minimal">
             @for(teamName <- repo.teamNames) {
                 <li class="list-item">
-                    <a id="link-to-@{teamName.toLowerCase.replaceAll(" ", "-")}" href="/teams/@teamName">
+                    <a id="link-to-team-page-for-@{teamName.replaceAll(" ", "-")}" href="/teams/@teamName">
                         @if(repo.owningTeams.contains(teamName)) {
                             <strong>
                                 @teamName <span class="repo-owner">Owner</span>
