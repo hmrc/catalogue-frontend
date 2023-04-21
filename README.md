@@ -4,7 +4,6 @@
 
 * [Setup](#setup)
   * [GitHub Token](#github-token)
-  * [AWS Credentials](#aws-credentials)
 * [Tests](#tests)
 * [License](#license)
 
