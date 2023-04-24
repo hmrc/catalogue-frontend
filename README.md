@@ -3,18 +3,13 @@
 ![](https://img.shields.io/github/v/release/hmrc/catalogue-frontend)
 
 * [Setup](#setup)
-  * [GitHub Token](#github-token)
+* [Updating the front page](#updating-the-front-page)
 * [Tests](#tests)
 * [License](#license)
 
 ## Setup
 
-### GitHub Token
-
-Make sure your GitHub token are set up [properly](https://github.com/hmrc/service-configs#setting-up-github-tokens-locally-required-for-viewing-bobby-rules)
-for service-dependency to work properly.
-
-
+See [catalogue-acceptance-tests]("https://github.com/hmrc/catalogue-acceptance-tests") for help setting up dependent services.
 
 ## Updating the front page
 
