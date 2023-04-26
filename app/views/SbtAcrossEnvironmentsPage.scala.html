@@ -1,0 +1,141 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{SBTUsageByEnv, SBTVersion}
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+
+@this(viewMessages: ViewMessages)
+
+@(envdata     : List[SBTUsageByEnv],
+  sbts        : List[SBTVersion],
+  teams       : Seq[Team],
+  selectedTeam: Option[Team]
+)(implicit
+  request     : RequestHeader
+)
+
+@standard_layout("SBT Versions") {
+    <header>
+        <h1 id="sbt-header">SBT Versions Across Environments</h1>
+
+        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+    </header>
+
+    <div id="chart_div"></div>
+
+    <hr>
+    <form id="form" method="get">
+        <div class="form-group row">
+            <div class="col-md-3">
+                <label for="teamName">Team:</label>
+                <select class="form-control" id="teamName" name="teamName">
+                    <option value="" @{if(selectedTeam.isEmpty) "selected"}>All</option>
+                    @teams.map { team =>
+                        <option value="@{team.name.asString}" @{if(selectedTeam.contains(team)) "selected"}>
+                            @team.name.asString
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>Graph Mode:</label>
+                <div><button type="button" id="chart-toggle" class="btn btn-default">show absolute</button></div>
+            </div>
+        </div>
+    </form>
+
+    <hr/>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Environment</th>
+                @for(sbt <- sbts) {
+                    <th>@sbt.version</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+
+        @for(d <- envdata) {
+          <tr>
+              <td><a href="@appRoutes.SBTVersionController.findLatestVersions(d.env.asString, selectedTeam.map(_.name.asString))">@d.env.displayString</a></td>
+              @for(sbt <- sbts) { <td>@{d.usage.getOrElse(sbt, 0)}</td>}
+          </tr>
+
+        }
+        </tbody>
+    </table>
+
+    <script @CSPNonce.attr type="text/javascript">
+        google.charts.load('current', {'packages': ['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        let drawMode = "percent";
+
+        function toggle() {
+            if (drawMode === "percent") {
+                document.getElementById("chart-toggle").textContent = "show percent"
+                drawMode = "absolute"
+            } else {
+                document.getElementById("chart-toggle").textContent = "show absolute"
+                drawMode = "percent"
+            }
+
+            drawChart()
+        }
+
+        function drawChart() {
+            drawStackedChart(drawMode)
+        }
+
+        function drawStackedChart(stack) {
+
+            let data = new google.visualization.DataTable();
+            data.addColumn('string', 'Environment');
+            @for(sbt <- sbts) {
+                data.addColumn('number','@{sbt.version}');
+            }
+
+            data.addRows([
+                @for(d <- envdata) {
+                    ['@d.env.displayString' @for(sbt <- sbts) {,@{d.usage.getOrElse(sbt, 0)}}],
+                }
+            ]);
+
+            let options = { 'title'    : 'SBT Usage',
+                'width'    : "100%",
+                'height'   : 400,
+                'isStacked': stack,
+                'legend': { 'position': 'top', 'maxLines': 3 }
+            };
+
+            let chart = new google.visualization.BarChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        }
+
+        document.getElementById("chart-toggle").addEventListener("click", function () {
+          toggle();
+        });
+    </script>
+    <script @CSPNonce.attr>
+      document.getElementById("teamName").addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    </script>
+}
