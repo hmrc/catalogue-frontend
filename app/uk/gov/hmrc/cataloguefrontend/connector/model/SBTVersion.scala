@@ -21,16 +21,16 @@ import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
 case class SBTVersion(
-  name   : String,
-  version: Version
+  serviceName : String,
+  version     : Version
 )
 
 trait SBTVersionFormats {
 
   val sbtVersionReads: Reads[SBTVersion] = {
     implicit val vf  = Version.format
-    ( (__ \ "name"   ).read[String]
-    ~ (__ \ "version").read[Version]
+    ( (__ \ "serviceName").read[String]
+    ~ (__ \ "version"    ).read[Version]
     )(SBTVersion)
   }
 }

@@ -95,7 +95,7 @@ class DependenciesService @Inject() (
   def getSBTCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[SBTUsageByEnv] =
     for {
       versions <- serviceDependenciesConnector.getSBTVersions(teamName, env)
-      counts   =  versions.groupBy(_.copy(name = "")).view.mapValues(_.length).toMap
+      counts   =  versions.groupBy(_.copy(serviceName = "")).view.mapValues(_.length).toMap
     } yield SBTUsageByEnv(env, counts)
 }
 
