@@ -58,12 +58,12 @@
                 </div>
                 <div class="col-md-3">
                     @select(
-                        field     =  form("team"),
-                        options   =  teams.map(t => t.name.asString -> t.name.asString),
-                        '_default -> "All",
-                        '_label   -> "Team",
-                        'id       -> "team-search",
-                        'class    -> "form-control"
+                        field              =  form("team"),
+                        options            =  teams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default") -> "All",
+                        Symbol("_label")   -> "Team",
+                        Symbol("id")       -> "team-search",
+                        Symbol("class")    -> "form-control"
                     )
                 </div>
                 <div class="col-md-2">

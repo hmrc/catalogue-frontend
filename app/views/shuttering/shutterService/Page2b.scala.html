@@ -50,10 +50,10 @@
       <div class="board__body">
 
         @helper.form(
-            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step2bPost
-          , 'class -> "form-inline"
-          , 'id    -> "shutter-service-form"
-          , 'style -> "padding-left: 20px; padding-right: 20px"
+            action          =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step2bPost
+          , Symbol("class") -> "form-inline"
+          , Symbol("id")    -> "shutter-service-form"
+          , Symbol("style") -> "padding-left: 20px; padding-right: 20px"
           ) {
 
             @csrfFormField
@@ -75,11 +75,11 @@
           <div class="row">
             <div class="col-sm-12">
               @textarea(
-                  field        =  form("reason")
-                , '_label      -> "Reason (internal use only)"
-                , 'placeholder -> "You may optionally provide a reason for auditing purposes."
-                , 'rows        -> 2
-                , 'cols        -> 60
+                  field                 =  form("reason")
+                , Symbol("_label")      -> "Reason (internal use only)"
+                , Symbol("placeholder") -> "You may optionally provide a reason for auditing purposes."
+                , Symbol("rows")        -> 2
+                , Symbol("cols")        -> 60
                 )
             </div>
           </div>
@@ -156,11 +156,11 @@
                 <div class="row" style="display: table;">
                   <div class="col-sm-8" style="display:table-cell; float:none;">
                     @textarea(
-                        field   =  form("outageMessage")
-                      , '_label -> "Outage Message"
-                      , '_help  -> "The outage message will replace any 'templatedMessage' placeholder found in the outage-page(s)."
-                      , 'rows   -> 2
-                      , 'cols   -> 60
+                        field            =  form("outageMessage")
+                      , Symbol("_label") -> "Outage Message"
+                      , Symbol("_help")  -> "The outage message will replace any 'templatedMessage' placeholder found in the outage-page(s)."
+                      , Symbol("rows")   -> 2
+                      , Symbol("cols")   -> 60
                       )
                       <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the ${src.serviceName} outage page for ${env.asString}.").getOrElse(""))</p>
                   </div>

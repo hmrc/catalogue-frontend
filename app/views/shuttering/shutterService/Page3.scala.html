@@ -47,9 +47,9 @@
     <div class="board">
       <div class="board__body">
         @helper.form(
-            action =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step3Post
-          , 'id    -> "shutter-service-form"
-          , 'style -> "padding-left: 20px; padding-right: 20px"
+            action          =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step3Post
+          , Symbol("id")    -> "shutter-service-form"
+          , Symbol("style") -> "padding-left: 20px; padding-right: 20px"
           ) {
 
             @csrfFormField
