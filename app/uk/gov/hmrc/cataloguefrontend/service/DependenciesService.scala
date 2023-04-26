@@ -88,6 +88,15 @@ class DependenciesService @Inject() (
       counts   =  versions.groupBy(_.copy(name = "", kind = JDK)).view.mapValues(_.length).toMap
     } yield JDKUsageByEnv(env, counts)
 
+  def getSBTVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[SBTVersion]] =
+    serviceDependenciesConnector
+      .getSBTVersions(teamName, flag)
+
+  def getSBTCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[SBTUsageByEnv] =
+    for {
+      versions <- serviceDependenciesConnector.getSBTVersions(teamName, env)
+      counts   =  versions.groupBy(_.copy(serviceName = "")).view.mapValues(_.length).toMap
+    } yield SBTUsageByEnv(env, counts)
 }
 
 object DependenciesService {
