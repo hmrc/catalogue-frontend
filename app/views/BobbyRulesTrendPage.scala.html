@@ -53,23 +53,23 @@
         <div class="board">
             <div class="board__body">
                 @helper.form(
-                    action =  appRoutes.BobbyRulesTrendController.display,
-                    'class -> "form-inline",
-                    'id    -> "bobby-rules-trend-form"
+                    action          =  appRoutes.BobbyRulesTrendController.display,
+                    Symbol("class") -> "form-inline",
+                    Symbol("id")    -> "bobby-rules-trend-form"
                 ) {
                     <table class="padded-table">
                         <tr>
                             <td style="vertical-align: top;">
                                 @select(
-                                    field     =  form("rules"),
-                                    options   =  allRules.map(r => (s"${r.group}:${r.artefact}:${r.range.range}", s"${r.group}:${r.artefact}:${r.range.range} ${r.reason}")),
-                                    '_class   -> "bobbyrules",
-                                    '_label   -> "",
-                                    'multiple -> "multiple"
+                                    field              =  form("rules"),
+                                    options            =  allRules.map(r => (s"${r.group}:${r.artefact}:${r.range.range}", s"${r.group}:${r.artefact}:${r.range.range} ${r.reason}")),
+                                    Symbol("_class")   -> "bobbyrules",
+                                    Symbol("_label")   -> "",
+                                    Symbol("multiple") -> "multiple"
                                 )
                             </td>
 
-                            <td valign="bottom">
+                            <td style="vertical-align: bottom">
                                 <button id="search-button" class="btn btn-primary" type="submit">Display</button>
                             </td>
                         </tr>

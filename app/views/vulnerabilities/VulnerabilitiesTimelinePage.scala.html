@@ -133,21 +133,21 @@ form   : Form[_]
             </div>
             <div class="col-md-4">
                 @select(
-                field      = form("team"),
-                options    = teams.map(t => t -> t),
-                '_default -> "All",
-                '_label   -> "Team:",
-                'id       -> "team-filter",
-                'class    -> "form-control"
+                field              =  form("team"),
+                options            =  teams.map(t => t -> t),
+                Symbol("_default") -> "All",
+                Symbol("_label")   -> "Team:",
+                Symbol("id")       -> "team-filter",
+                Symbol("class")    -> "form-control"
                 )
             </div>
             <div class="col-md-3">
                 @select(
-                field     =  form("curationStatus"),
-                options   =  (""->"All") :: CurationStatus.values.map(cs => cs.asString -> cs.display),
-                '_label   -> "Curation status:",
-                'id       -> "curation-status-filter",
-                'class    -> "form-control"
+                field              =  form("curationStatus"),
+                options            =  (""->"All") :: CurationStatus.values.map(cs => cs.asString -> cs.display),
+                Symbol("_label")   -> "Curation status:",
+                Symbol("id")       -> "curation-status-filter",
+                Symbol("class")    -> "form-control"
                 )
             </div>
             <div class="col-md-3">

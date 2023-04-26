@@ -56,14 +56,14 @@
             </div>
             <div class="col-md-3" style="padding-left: 15px; padding-right: 15px;">
                 @select(
-                    field     =  form("teamNames"),
-                    options   =  teams.map(t => t -> t),
-                    '_default -> "All",
-                    '_label   -> "Teams: ",
-                    'name     -> "teamNames",
-                    'value    -> "form('teamNames').value",
-                    'id       -> "teamNames",
-                    'class    -> "form-control"
+                    field              =  form("teamNames"),
+                    options            =  teams.map(t => t -> t),
+                    Symbol("_default") -> "All",
+                    Symbol("_label")   -> "Teams: ",
+                    Symbol("name")     -> "teamNames",
+                    Symbol("value")    -> "form('teamNames').value",
+                    Symbol("id")       -> "teamNames",
+                    Symbol("class")    -> "form-control"
                 )
                 <div>
                     Single ownership

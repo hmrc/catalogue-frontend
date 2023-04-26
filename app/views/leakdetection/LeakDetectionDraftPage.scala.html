@@ -39,12 +39,12 @@
         <div class="form-group row">
             <div class="col-md-3">
             @select(
-                field     =  form("rule"),
-                options   =  rules.map(_.id).map(r => r -> r),
-                '_default -> "All",
-                '_label   -> "Draft rule",
-                'id       -> "rule-dropdown",
-                'class    -> "form-control"
+                field              =  form("rule"),
+                options            =  rules.map(_.id).map(r => r -> r),
+                Symbol("_default") -> "All",
+                Symbol("_label")   -> "Draft rule",
+                Symbol("id")       -> "rule-dropdown",
+                Symbol("class")    -> "form-control"
             )
             </div>
         </div>

@@ -41,21 +41,21 @@
                 </div>
                 <div class="col-md-3">
                     @select(
-                        field     = form("team"),
-                        options   =  teams.map(t => t.name.asString -> t.name.asString),
-                        '_default -> "All",
-                        '_label   -> "Owning Team",
-                        'id       -> "team-search",
-                        'class    -> "form-control"
+                        field              = form("team"),
+                        options            =  teams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default") -> "All",
+                        Symbol("_label")   -> "Owning Team",
+                        Symbol("id")       -> "team-search",
+                        Symbol("class")    -> "form-control"
                     )
                 </div>
                 <div class="col-md-3">
                     @select(
-                        field     =  form("repoType"),
-                        options   =  repoTypes.map(r => r.asString -> r.asString),
-                        '_label   -> "Repository Type",
-                        'id       -> "repo-type-search",
-                        'class    -> "form-control"
+                        field              =  form("repoType"),
+                        options            =  repoTypes.map(r => r.asString -> r.asString),
+                        Symbol("_label")   -> "Repository Type",
+                        Symbol("id")       -> "repo-type-search",
+                        Symbol("class")    -> "form-control"
                     )
                 </div>
             </div>

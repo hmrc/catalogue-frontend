@@ -50,22 +50,22 @@
         </div>
         <div class="col-md-3">
           @select(
-            field     =  form("teamName"),
-            options   =  teams.map(t => t.name.asString -> t.name.asString),
-            '_default ->  "All",
-            '_label   -> "Team",
-            'id       -> "team-dropdown",
-            'class    -> "form-control"
+            field              =  form("teamName"),
+            options            =  teams.map(t => t.name.asString -> t.name.asString),
+            Symbol("_default") ->  "All",
+            Symbol("_label")   -> "Team",
+            Symbol("id")       -> "team-dropdown",
+            Symbol("class")    -> "form-control"
           )
         </div>
         <div class="col-md-3">
           @select(
-            field     =  form("commentType"),
-            options   =  commentTypes.map(x => x -> x).toSeq.sorted,
-            '_default ->  "All",
-            '_label   -> "Comment Type",
-            'id       -> "comment-type-dropdown",
-            'class    -> "form-control"
+            field              =  form("commentType"),
+            options            =  commentTypes.map(x => x -> x).toSeq.sorted,
+            Symbol("_default") ->  "All",
+            Symbol("_label")   -> "Comment Type",
+            Symbol("id")       -> "comment-type-dropdown",
+            Symbol("class")    -> "form-control"
           )
         </div>
       </div>

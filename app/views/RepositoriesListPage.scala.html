@@ -56,30 +56,30 @@
                 </div>
                 <div class="col-md-3">
                 @select(
-                    field      = form("team"),
-                    options    = teams.map(t => t.name.asString -> t.name.asString),
-                    '_default -> "All",
-                    '_label   -> "Team",
-                    'id       -> "team-filter",
-                    'class    -> "form-control"
+                    field              = form("team"),
+                    options            = teams.map(t => t.name.asString -> t.name.asString),
+                    Symbol("_default") -> "All",
+                    Symbol("_label")   -> "Team",
+                    Symbol("id")       -> "team-filter",
+                    Symbol("class")    -> "form-control"
                 )
                 </div>
                 <div class="col-md-3">
                 @select(
-                    field     =  form("repoType"),
-                    options   =  Seq(
-                                    "Library"           -> "Library",
-                                    "Prototype"         -> "Prototype",
-                                    "Service"           -> "Service (All)",
-                                    "FrontendService"   -> "Service (Frontend)",
-                                    "BackendService"    -> "Service (Backend)",
-                                    "Test"              -> "Test",
-                                    "Other"             -> "Other"
-                                 ),
-                    '_default -> "All",
-                    '_label   -> "Type",
-                    'id       -> "type-search",
-                    'class    -> "form-control"
+                    field              =  form("repoType"),
+                    options            =  Seq(
+                                             "Library"           -> "Library",
+                                             "Prototype"         -> "Prototype",
+                                             "Service"           -> "Service (All)",
+                                             "FrontendService"   -> "Service (Frontend)",
+                                             "BackendService"    -> "Service (Backend)",
+                                             "Test"              -> "Test",
+                                             "Other"             -> "Other"
+                                          ),
+                    Symbol("_default") -> "All",
+                    Symbol("_label")   -> "Type",
+                    Symbol("id")       -> "type-search",
+                    Symbol("class")    -> "form-control"
                 )
                 </div>
             </div>
