@@ -52,22 +52,22 @@
                     <div id="header-0" class="grid-item sticky-column truncate-content" style="width:300px; text-indent: 1.2em">Key</div>
                     <div class="gutter gutter-horizontal"></div>
                     @for((env, index) <- ConfigEnvironment.values.zipWithIndex) {
-                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @if(!hasDeployment(env)){hidden} " style="width:500px;"> @env.asString</div>
+                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @if(!hasDeployment(env)){hidden}" style="width:500px;">@env.asString</div>
                         <div class="gutter gutter-horizontal column-@env.asString @if(!hasDeployment(env)){hidden} "></div>
                     }
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1)) {
                     @defining(envSources.forall(_._2.map(_.source) == List("referenceConf"))) { isRefconfOnly =>
-                        <div id="config-row-@key" class="grid-row @if(isRefconfOnly) {refconf-only} else {}">
+                        <div id="config-row-@key" class="grid-row @if(isRefconfOnly) {refconf-only}">
                             <div id="config-key-@key" class="grid-item sticky-column truncate-content" style="width:310px;">
                                 <a id="config-url-@key" href="#@key" class="glyphicon glyphicon-link"></a>@key
                             </div>
                             @for(env <- ConfigEnvironment.values) {
-                                <div class="grid-item column-@env.asString @if(!hasDeployment(env)){hidden} "  style="width:510px;">
+                                <div class="grid-item column-@env.asString @if(!hasDeployment(env)){hidden}" style="width:510px;">
                                     <ul>
                                       @for(sourceValue: ConfigSourceValue <- envSources.get(env).getOrElse(Seq.empty)) {
                                         <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env, Some(key))">
-                                            <span class="truncate-content-overflow @if(sourceValue.isSuppressed) {suppressed} else {}">@sourceValue.value</span>
+                                            <span class="truncate-content-overflow @if(sourceValue.isSuppressed) {suppressed}">@sourceValue.value</span>
                                             <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="config/raw#@env.asString-@sourceValue.source-@key"></a>
                                         </li>
                                       }
