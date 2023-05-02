@@ -76,7 +76,6 @@ class CatalogueController @Inject() (
   indexPage                    : IndexPage,
   serviceInfoPage              : ServiceInfoPage,
   serviceConfigPage            : ServiceConfigPage,
-  serviceConfigRawPage         : ServiceConfigRawPage,
   libraryInfoPage              : LibraryInfoPage,
   prototypeInfoPage            : PrototypeInfoPage,
   repositoryInfoPage           : RepositoryInfoPage,
@@ -110,13 +109,6 @@ class CatalogueController @Inject() (
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey <- configService.configByKey(serviceName)
       } yield Ok(serviceConfigPage(serviceName, configByKey, deployments))
-    }
-
-  def serviceConfigRaw(serviceName: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      for {
-        configByEnvironment <- configService.configByEnvironment(serviceName)
-      } yield Ok(serviceConfigRawPage(serviceName, configByEnvironment))
     }
 
   /** Renders the service page by either the repository name, or the artefact name (if configured).
