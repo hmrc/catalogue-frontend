@@ -43,7 +43,12 @@ class RepositoriesController @Inject() (
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {
 
-  def allRepositories(name: Option[String] = None, team: Option[String] = None, archived: Option[Boolean] = None, repoTypeString: Option[String] = None): Action[AnyContent] =
+  def allRepositories(
+    name          : Option[String]  = None,
+    team          : Option[String]  = None,
+    archived      : Option[Boolean] = None,
+    repoTypeString: Option[String]  = None
+  ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val allTeams =
         teamsAndRepositoriesConnector

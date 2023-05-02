@@ -43,7 +43,7 @@ class ConfigService @Inject()(
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
     configByKey(serviceName)
       .map(
-        _.getOrElse("artifact_name", Map.empty)
+        _.getOrElse(KeyName("artifact_name"), Map.empty)
           .view
           .mapValues(_.headOption.map(_.value))
           .values
@@ -71,7 +71,7 @@ class ConfigService @Inject()(
 @Singleton
 object ConfigService {
 
-  type KeyName = String
+  case class KeyName(asString: String) extends AnyVal
 
   trait ConfigEnvironment { def asString: String }
   object ConfigEnvironment {
@@ -115,8 +115,8 @@ object ConfigService {
       implicit val cer  = ConfigEnvironment.reads
       implicit val csvf = ConfigSourceValue.reads
       Reads
-        .of[Map[KeyName, Map[String, Seq[ConfigSourceValue]]]]
-        .map(_.view.mapValues(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) }).toMap)
+        .of[Map[String, Map[String, Seq[ConfigSourceValue]]]]
+        .map(_.map { case (keyName, values) => (KeyName(keyName), values.map { case (k, v) => JsString(k).as[ConfigEnvironment] -> v })})
     }
   }
 
@@ -128,13 +128,14 @@ object ConfigService {
   object ConfigSourceEntries {
     val reads =
       ( (__ \ "source" ).read[String]
-      ~ (__ \ "entries").read[Map[KeyName, String]]
+      ~ (__ \ "entries").read[Map[String, String]].map(_.map { case (k, v) => KeyName(k) -> v }.toMap)
       )(ConfigSourceEntries.apply _)
   }
 
   case class ConfigSourceValue(
-    source: String,
-    value : String
+    source   : String,
+    sourceUrl: Option[String],
+    value    : String
   ){
     def isSuppressed: Boolean =
       value == "<<SUPPRESSED>>"
@@ -142,8 +143,9 @@ object ConfigService {
 
   object ConfigSourceValue {
     val reads =
-      ( (__ \ "source").read[String]
-      ~ (__ \ "value" ).read[String]
+      ( (__ \ "source"   ).read[String]
+      ~ (__ \ "sourceUrl").readNullable[String]
+      ~ (__ \ "value"    ).read[String]
       )(ConfigSourceValue.apply _)
   }
 
@@ -156,7 +158,7 @@ object ConfigService {
     val reads =
       ( (__ \ "inboundServices" ).read[Seq[String]]
       ~ (__ \ "outboundServices").read[Seq[String]]
-    )(ServiceRelationships.apply _)
+      )(ServiceRelationships.apply _)
   }
 
   case class ServiceRelationshipsWithHasRepo(
@@ -169,7 +171,7 @@ object ConfigService {
   def friendlySourceName(
     source     : String,
     environment: ConfigEnvironment,
-    key        : Option[String]
+    key        : Option[KeyName]
   ): String =
     source match {
       case "loggerConf"                 => "Microservice application-json-logger.xml file"
@@ -181,7 +183,7 @@ object ConfigService {
       case "appConfigEnvironment"       => s"App-config-${environment.asString}"
       case "appConfigCommonFixed"       => "App-config-common fixed settings"
       case "appConfigCommonOverridable" => "App-config-common overridable settings"
-      case "base64"                     => s"Base64 (decoded from config ${key.getOrElse("'key'")}.base64)"
+      case "base64"                     => s"Base64 (decoded from config ${key.fold("'key'")(_.asString)}.base64)"
       case _                            => source
     }
 
