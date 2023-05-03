@@ -29,25 +29,81 @@ object JsonData {
   val createdAt    = Instant.parse("2016-04-23T16:45:30.00Z")
   val lastActiveAt = Instant.parse("2016-10-12T10:30:12.00Z")
 
-  val teams =
+  val teams = {
     s"""
-      |[
-      |  {
-      |    "name": "team1",
-      |    "createdDate": "$createdAt",
-      |    "lastActiveDate": "$lastActiveAt",
-      |    "repos": 7
-      |  },
-      |  {
-      |    "name": "team2",
-      |    "createdDate": "$createdAt",
-      |    "lastActiveDate": "$lastActiveAt",
-      |    "repos": 9
-      |  }
-      |]
-    """.stripMargin
+      [
+        {
+          "name": "teamA",
+          "createdDate": "$createdAt",
+          "lastActiveDate": "$lastActiveAt",
+          "repos": 7
+        },
+        {
+          "name": "teamB",
+          "createdDate": "$createdAt",
+          "lastActiveDate": "$lastActiveAt",
+          "repos": 9
+        },
+        {
+          "name": "teamC",
+          "createdDate": "$createdAt",
+          "lastActiveDate": "$lastActiveAt",
+          "repos": 5
+        },
+        {
+          "name": "teamD",
+          "createdDate": "$createdAt",
+          "lastActiveDate": "$lastActiveAt",
+          "repos": 6
+        },
+        {
+          "name": "teamE",
+          "createdDate": "$createdAt",
+          "lastActiveDate": "$lastActiveAt",
+          "repos": 7
+        },
+        {
+          "name": "teamF",
+          "createdDate": "$createdAt",
+          "lastActiveDate": "$lastActiveAt",
+          "repos": 8
+        },
+        {
+          "name": "teamG",
+          "createdDate": "$createdAt",
+          "lastActiveDate": "$lastActiveAt",
+          "repos": 4
+        },
+        {
+          "name": "teamH",
+          "createdDate": "$createdAt",
+          "lastActiveDate": "$lastActiveAt",
+          "repos": 4
+        },
+        {
+          "name": "teamI",
+          "createdDate": "$createdAt",
+          "lastActiveDate": "$lastActiveAt",
+          "repos": 4
+        },
+        {
+          "name": "teamJ",
+          "createdDate": "$createdAt",
+          "lastActiveDate": "$lastActiveAt",
+          "repos": 4
+        }
+      ]
+    """
+  }
 
-
+  val repositoriesDataSharedRepo = {
+    s"""[
+     {"name":"1-one-team"   ,"description": "", "teamNames":["teamB"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
+     {"name":"5-five-teams","description": "", "teamNames":["teamB", "teamC", "teamD", "teamE", "teamF"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
+     {"name":"11-seven-teams"  ,"description": "", "teamNames":["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
+     ]
+   """"
+  }
 
   val repositoriesData = {
     s"""[

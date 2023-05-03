@@ -81,13 +81,35 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
       val document = Jsoup.parse(response.body)
       document.select("tbody.list").select("tr").size() shouldBe 1
-      document.select("#row0_name"      ).select("td a").text()      shouldBe "teamA-library"
-      document.select("#row0_name"      ).select("td a[href]").attr("href") shouldBe "/repositories/teamA-library"
+      document.select("#row0_name").select("td a").text()      shouldBe "teamA-library"
+      document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-library"
       document.select("#row0_team").select("td a").text() shouldBe "teamA"
       document.select("#row0_team").select("td a[href]").attr("href") shouldBe "/teams/teamA"
       document.select("#row0_created"   ).text()                            shouldBe JsonData.createdAt.asPattern("yyyy-MM-dd")
       document.select("#row0_repotype"  ).text()                            shouldBe "Library"
       document.select("#row0_lastActive").text()                            shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
+    }
+
+    "show shared by repositories shared by more than five teams" in {
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams)))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoriesDataSharedRepo)))
+
+      val response = wsClient.url(s"http://localhost:$port/repositories?repoType=").withAuthToken("Token token").get().futureValue
+      response.status shouldBe 200
+      response.body should include("<h1>Repositories</h1>")
+
+      val document = Jsoup.parse(response.body)
+      document.select("#row0_team").select("td a").text() shouldBe "teamB"
+
+      document.select("#row1_team").select("div.repo-team").get(0).select("div a").text() shouldBe "teamA"
+      document.select("#row1_team").select("div.repo-team").get(1).select("div a").text() shouldBe "teamB"
+      document.select("#row1_team").select("div.repo-team").get(2).select("div a").text() shouldBe "teamC"
+      document.select("#row1_team").select("div.repo-team").get(3).select("div a").text() shouldBe "teamD"
+      document.select("#row1_team").select("div.repo-team").get(4).select("div a").text() shouldBe "teamE"
+      document.select("#row1_team").select("div.repo-team").get(5).select("div a").text() shouldBe "teamF"
+
+      document.select("#row2_team").select("td a").text() shouldBe "Shared by 6 teams"
+
     }
   }
 }
