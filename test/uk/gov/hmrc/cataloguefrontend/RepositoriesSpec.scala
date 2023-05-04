@@ -101,14 +101,13 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       val document = Jsoup.parse(response.body)
       document.select("#row0_team").select("td a").text() shouldBe "teamB"
 
-      document.select("#row1_team").select("div.repo-team").get(0).select("div a").text() shouldBe "teamA"
-      document.select("#row1_team").select("div.repo-team").get(1).select("div a").text() shouldBe "teamB"
-      document.select("#row1_team").select("div.repo-team").get(2).select("div a").text() shouldBe "teamC"
-      document.select("#row1_team").select("div.repo-team").get(3).select("div a").text() shouldBe "teamD"
-      document.select("#row1_team").select("div.repo-team").get(4).select("div a").text() shouldBe "teamE"
-      document.select("#row1_team").select("div.repo-team").get(5).select("div a").text() shouldBe "teamF"
+      document.select("#row1_team").select("div.repo-team").get(0).select("div a").text() shouldBe "teamB"
+      document.select("#row1_team").select("div.repo-team").get(1).select("div a").text() shouldBe "teamC"
+      document.select("#row1_team").select("div.repo-team").get(2).select("div a").text() shouldBe "teamD"
+      document.select("#row1_team").select("div.repo-team").get(3).select("div a").text() shouldBe "teamE"
+      document.select("#row1_team").select("div.repo-team").get(4).select("div a").text() shouldBe "teamF"
 
-      document.select("#row2_team").select("td a").text() shouldBe "Shared by 6 teams"
+      document.select("#row2_team").select("td a").text() shouldBe "Shared by 9 teams"
 
     }
   }

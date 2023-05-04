@@ -98,9 +98,9 @@ object JsonData {
 
   val repositoriesDataSharedRepo = {
     s"""[
-     {"name":"1-one-team"   ,"description": "", "teamNames":["teamB"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
-     {"name":"5-five-teams","description": "", "teamNames":["teamB", "teamC", "teamD", "teamE", "teamF"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
-     {"name":"11-seven-teams"  ,"description": "", "teamNames":["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
+     {"name":"01-one-team"   ,"description": "", "teamNames":["teamB"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
+     {"name":"05-five-teams","description": "", "teamNames":["teamB", "teamC", "teamD", "teamE", "teamF"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
+     {"name":"11-seven-teams"  ,"description": "", "teamNames":["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG", "teamH", "teamI"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
      ]
    """"
   }
