@@ -16,9 +16,11 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import views.html.partials.RepoTeam
 
-@this()
+@this(
+    repoTeam: RepoTeam
+)
 
 
 @(
@@ -45,13 +47,7 @@
     </td>
 
     <td id="row@{i}_team">
-        @if(!repo.isShared) {
-            @repo.teamNames.map {tn => <div  class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(tn))">@tn</a></div> }
-        } else {
-            <div title="@repo.teamNames.take(15).mkString("\n")" class="repo-team" >
-                <em><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)#teams">Shared by @repo.teamNames.length teams</a></em>
-            </div>
-        }
+        @repoTeam(repo)
     </td>
 
     <td class="repo-bp monospaced" id="row@{i}_branch-protection">
