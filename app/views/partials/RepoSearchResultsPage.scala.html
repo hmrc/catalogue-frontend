@@ -49,7 +49,7 @@
             @repo.teamNames.map {tn => <div  class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(tn))">@tn</a></div> }
         } else {
             <div title="@repo.teamNames.take(15).mkString("\n")" class="repo-team" >
-                <em><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">Shared by @repo.teamNames.length teams</a></em>
+                <em><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)#teams">Shared by @repo.teamNames.length teams</a></em>
             </div>
         }
     </td>
