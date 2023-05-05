@@ -173,9 +173,6 @@ case class GitRepository(
 ) {
   def isShared: Boolean =
     teamNames.length >= Constant.sharedRepoTeamsCutOff
-
-  def teamNameDisplay: String =
-    if (isShared) s"Shared by ${teamNames.length} teams" else teamNames.sortBy(_.toLowerCase).mkString(",")
 }
 
 object GitRepository {

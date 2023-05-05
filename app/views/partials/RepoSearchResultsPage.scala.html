@@ -46,12 +46,12 @@
 
     <td id="row@{i}_team">
         @if(!repo.isShared) {
-            @repo.teamNameDisplay.split(",").map {tn => <div  class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(tn))">@tn</a></div> }
+            @repo.teamNames.map {tn => <div  class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(tn))">@tn</a></div> }
         } else {
             <div title="@repo.teamNames.take(15).mkString("\n")" class="repo-team" >
-                <em><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(repo.teamNameDisplay))">@repo.teamNameDisplay</a></em>
+                <em><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">Shared by @repo.teamNames.length teams</a></em>
             </div>
-    }
+        }
     </td>
 
     <td class="repo-bp monospaced" id="row@{i}_branch-protection">
