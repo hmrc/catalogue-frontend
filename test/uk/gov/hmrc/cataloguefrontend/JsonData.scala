@@ -26,6 +26,8 @@ import java.time.Instant
   */
 object JsonData {
 
+  val emptyList = "[]"
+
   val createdAt    = Instant.parse("2016-04-23T16:45:30.00Z")
   val lastActiveAt = Instant.parse("2016-10-12T10:30:12.00Z")
 

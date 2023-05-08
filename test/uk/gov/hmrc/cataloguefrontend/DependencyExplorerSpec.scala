@@ -33,9 +33,8 @@ class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeAppli
 
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams)))
       serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoriesTeamAData)))
-
-      // TODO: Add this into JsonData for completeness
-      serviceEndpoint(GET, "/api/groupArtefacts", willRespondWith = (200, Some("[]")))
+      serviceEndpoint(GET, "/api/groupArtefacts", willRespondWith = (200, Some(JsonData.emptyList)))
+      serviceEndpoint(GET, "/pr-commenter/reports", willRespondWith = (200, Some(JsonData.emptyList)))
 
       val response = wsClient.url(s"http://localhost:$port/dependencyexplorer").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
