@@ -33,12 +33,17 @@ class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeAppli
 
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams)))
       serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoriesTeamAData)))
-      serviceEndpoint(GET, "/api/groupArtefacts", willRespondWith = (200, Some(JsonData.teams)))
+
+      // TODO: Add this into JsonData for completeness
+      serviceEndpoint(GET, "/api/groupArtefacts", willRespondWith = (200, Some("[]")))
 
       val response = wsClient.url(s"http://localhost:$port/dependencyexplorer").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
-      response.body should include("<h1>Dependency Explorer</h1>")
+      response.body should include("Dependency Explorer")
+
       val document = Jsoup.parse(response.body)
+      document.select("h1").attr("id") shouldBe "search-service-header"
+      document.select("h1").text() shouldBe "Dependency Explorer"
       document.select("#search-by-dependency-form").select("#group-artefact-search").attr("value") shouldBe ""
     }
   }
