@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.scalatest.BeforeAndAfter
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
+import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositories
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
@@ -31,8 +32,8 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
   "Repositories list" should {
     "show a list of all repositories when 'All' is selected" in {
-      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams )))
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoriesTeamAData)))
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositories.teams )))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesTeamAData)))
 
       val response = wsClient.url(s"http://localhost:$port/repositories?repoType=").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -72,8 +73,8 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     }
 
     "show a list of all libraries when 'Library' is selected" in {
-      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams)))
-      serviceEndpoint(GET, "/api/v2/repositories?repoType=Library", willRespondWith = (200, Some(JsonData.repositoriesTeamADataLibrary)))
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositories.teams)))
+      serviceEndpoint(GET, "/api/v2/repositories?repoType=Library", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesTeamADataLibrary)))
 
       val response = wsClient.url(s"http://localhost:$port/repositories?repoType=Library").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -91,8 +92,8 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     }
 
     "show shared by repositories shared by more than five teams" in {
-      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(JsonData.teams)))
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoriesDataSharedRepo)))
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositories.teams)))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesDataSharedRepo)))
 
       val response = wsClient.url(s"http://localhost:$port/repositories?repoType=").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -108,7 +109,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       document.select("#row1_team").select("div.repo-team").get(4).select("div a").text() shouldBe "teamF"
 
       document.select("#row2_team").select("td a").text() shouldBe "Shared by 9 teams"
-      document.select("#row2_team").select("td a[href]").attr("href") shouldBe "/repositories/11-seven-teams#teams"
+      document.select("#row2_team").select("td a[href]").attr("href") shouldBe "/repositories/11-seven-teams-repo#teams"
     }
   }
 }

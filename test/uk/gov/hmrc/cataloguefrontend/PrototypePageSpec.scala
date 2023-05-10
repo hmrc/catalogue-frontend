@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.{postRequestedFor, urlPat
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
+import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositories
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class PrototypePageSpec
@@ -54,7 +55,7 @@ class PrototypePageSpec
 
     "show the reset password form when logged in user has permission" in {
       setupChangePrototypePasswordAuthEndpoint(hasAuth = true)
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoryData("2fa-prototype"))))
       serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
       serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
@@ -71,7 +72,7 @@ class PrototypePageSpec
 
     "not show the reset password form when user does not have permission" in {
       setupChangePrototypePasswordAuthEndpoint(hasAuth = false)
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoryData("2fa-prototype"))))
       serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
       serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
@@ -88,7 +89,7 @@ class PrototypePageSpec
 
     "display success message when password changed successfully" in {
       setupChangePrototypePasswordAuthEndpoint(hasAuth = true)
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoryData("2fa-prototype"))))
       serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
       serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
@@ -118,7 +119,7 @@ class PrototypePageSpec
 
     "display error message when password change failed downstream" in {
       setupChangePrototypePasswordAuthEndpoint(hasAuth = true)
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(JsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoryData("2fa-prototype"))))
       serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(prototypeDetailsData)))
       serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))

@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
+import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositories._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs
 
@@ -186,8 +187,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       response.body     should include("Grafana")
       response.body     should include("some description")
 
-      response.body should include(createdAt.displayFormat)
-      response.body should include(lastActiveAt.displayFormat)
+      response.body should include(JsonData.createdAt.displayFormat)
+      response.body should include(JsonData.lastActiveAt.displayFormat)
     }
 
     "show shuttered environments when they are shuttered" in new Setup {

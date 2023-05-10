@@ -11,6 +11,20 @@
 
 See [catalogue-acceptance-tests]("https://github.com/hmrc/catalogue-acceptance-tests") for help setting up dependent services.
 
+Run docker with the following command 
+
+``` 
+docker run --restart unless-stopped -d -p 27017-27019:27017-27019 --name mongodb mongo:4.4 mongod --replSet rs0
+```
+
+Followed by 
+
+``` 
+docker exec -it mongodb mongo
+```
+
+At the Mongo prompt run `rs.initiate()`
+
 ## Updating the front page
 
 Blog posts are populated via a call to Confluence which searches by the configured label `confluence.search.label`.

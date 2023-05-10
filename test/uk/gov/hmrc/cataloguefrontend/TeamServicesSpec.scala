@@ -23,6 +23,7 @@ import org.scalatest.BeforeAndAfter
 import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositories
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 import scala.io.Source
@@ -51,7 +52,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
   "Team services page" should {
     "show a list of libraries, services, prototypes and repositories" in {
-      serviceEndpoint(GET, "/api/v2/repositories?team=teamA&archived=false", willRespondWith = (200, Some(JsonData.repositoriesTeamAData)))
+      serviceEndpoint(GET, "/api/v2/repositories?team=teamA&archived=false", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesTeamAData)))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (200, Some(readFile("user-management-response.json"))))
 
@@ -102,7 +103,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     }
 
     "show error message if UMP is not available" in {
-      serviceEndpoint(GET, "/api/v2/repositories?team=teamA", willRespondWith = (200, Some(JsonData.repositoriesData)))
+      serviceEndpoint(GET, "/api/v2/repositories?team=teamA", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesData)))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName/members", willRespondWith = (404, Some(readFile("user-management-response.json"))))
 
       val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
@@ -112,7 +113,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
     "show team details correctly" in {
       val teamName = "teamA"
-      serviceEndpoint(GET, s"/api/v2/repositories?team=$teamName", willRespondWith = (200, Some(repositoriesData)))
+      serviceEndpoint(GET, s"/api/v2/repositories?team=$teamName", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesData)))
       serviceEndpoint(GET, s"/v2/organisations/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
 
       val response = wsClient.url(s"http://localhost:$port/teams/$teamName").withAuthToken("Token token").get().futureValue
