@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import uk.gov.hmrc.cataloguefrontend.JsonData._
+import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositories
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
@@ -34,8 +35,8 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
       val libName = "lib"
 
       serviceEndpoint(GET, s"/api/v2/repositories/$libName"                , willRespondWith = (200, Some(libraryData)))
-      serviceEndpoint(GET, s"/api/jenkins-url/$libName"                    , willRespondWith = (200, Some(jenkinsData)))
-      serviceEndpoint(GET, s"/api/jenkins-jobs/$libName"                   , willRespondWith = (200, Some(jenkinsBuildData)))
+      serviceEndpoint(GET, s"/api/jenkins-url/$libName"                    , willRespondWith = (200, Some(TeamsAndRepositories.jenkinsData)))
+      serviceEndpoint(GET, s"/api/jenkins-jobs/$libName"                   , willRespondWith = (200, Some(TeamsAndRepositories.jenkinsBuildData)))
       serviceEndpoint(GET, s"/api/repositories/$libName/module-dependencies", willRespondWith = (200, Some(repositoryModulesAllVersions(libName, "[]"))))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get().futureValue

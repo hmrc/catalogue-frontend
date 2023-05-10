@@ -126,6 +126,21 @@ object TeamsAndRepositories {
      """"
   }
 
+  val jenkinsData: String =
+    """{
+          "name": "lib",
+          "jenkinsURL": "http://jenkins/lib/"
+        }
+        """
+
+  val jenkinsBuildData: String =
+    """{ "jobs": [{
+            "name": "lib",
+            "jenkinsURL": "http://jenkins/lib/"
+          }]
+        }
+        """
+
   def repositoryData(repoName: String = "service-1") =
     s"""
        {
