@@ -16,12 +16,11 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import views.html.partials.RepoTeam
+@import views.html.partials.GitRepositoryTeamNames
 
 @this(
-    repoTeam: RepoTeam
+    repoTeamNames: GitRepositoryTeamNames
 )
-
 
 @(
     repositories: Seq[GitRepository]
@@ -47,7 +46,7 @@
     </td>
 
     <td id="row@{i}_team">
-        @repoTeam(repo)
+        @repoTeamNames(repo)
     </td>
 
     <td class="repo-bp monospaced" id="row@{i}_branch-protection">

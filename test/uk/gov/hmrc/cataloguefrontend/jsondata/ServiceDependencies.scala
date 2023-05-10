@@ -28,7 +28,7 @@ object ServiceDependencies {
   // SlugName is
   val serviceDepsForBootstrapBackendPlay: String =
     """[
-         {"slugName":"personal-details-validation-frontend","slugVersion":"0.30.0","teams":["Verification"],"depGroup":"org.slf4j","depArtefact":"slf4j-api","depVersion":"1.7.22","scopes":["compile"]},
-         {"slugName":"mobile-auth-stub","slugVersion":"0.12.0","teams":["NGC"],"depGroup":"org.slf4j","depArtefact":"slf4j-api","depVersion":"1.7.25","scopes":["compile"]}
+         {"slugName":"ankh-morpork-the-shades","slugVersion":"0.30.0","teams":["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG", "teamH", "teamI"],"depGroup":"uk.gov.hmrc","depArtefact":"bootstrap-frontend-play-28","depVersion":"1.7.22","scopes":["compile"]},
+         {"slugName":"lancre-castle","slugVersion":"0.12.0","teams":["teamA"],"depGroup":"am.gov.vetinari","depArtefact":"wuffles-dog","depVersion":"1.7.25","scopes":["compile"]}
        ]"""
 }

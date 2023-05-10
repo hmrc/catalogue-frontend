@@ -22,8 +22,14 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType
 import java.time.Instant
 
 /**
-  * Created by armin.
-  */
+ * Created by armin.
+ *
+ * TODO: Refactor the data here into files under the
+ * TODO: uk.gov.hmrc.cataloguefrontend.jsondata package so that
+ * TODO: a) This files doesn't get too big
+ * TODO:  b) Data is split by service/source
+ * TODO: Eventually move this file (common code) to that package as well
+ */
 object JsonData {
 
   val emptyList = "[]"

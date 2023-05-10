@@ -63,6 +63,11 @@ class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeAppli
       document.select("h1").attr("id") shouldBe "search-service-header"
       document.select("h1").text() shouldBe "Dependency Explorer"
       document.select("#search-by-dependency-form").select("#group-artefact-search").get(0).attr("value") shouldBe "uk.gov.hmrc:bootstrap-backend-play-28"
+
+      document.select("#search-results").select("tbody tr").get(0).select("td.teams a").text() shouldBe "teamA"
+      document.select("#search-results").select("tbody tr").get(0).select("td.teams a").attr("href") shouldBe "/teams/teamA"
+      document.select("#search-results").select("tbody tr").get(1).select("td.teams a").text() shouldBe "Shared by 9 teams"
+      document.select("#search-results").select("tbody tr").get(1).select("td.teams a").attr("href") shouldBe "/service/ankh-morpork-the-shades#teams"
     }
   }
 }
