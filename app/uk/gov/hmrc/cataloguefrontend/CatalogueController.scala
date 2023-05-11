@@ -106,50 +106,9 @@ class CatalogueController @Inject() (
   def serviceConfig(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        deployments            <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
-        latestConfigByKey      <- configService.configByKey(serviceName, latest = true )
-        deployedConfigByKey1   <- configService.configByKey(serviceName, latest = false)
-        envWithDeployedConfig  =  // only required until all services have been redeployed
-                                  deployedConfigByKey1.foldLeft(Set.empty[ConfigService.ConfigEnvironment]) { case (acc, (_, m)) =>
-                                    m.foldLeft(acc) { case (acc2, (e, m)) =>
-                                      if (m.exists(_.source == "appConfigEnvironment"))
-                                        acc2 + e
-                                      else acc2
-                                    }
-                                  }
-        deployedConfigByKey    =  // this is simpler if we make the deployed config the same as latest when it is disabled/no-data
-                                  deployedConfigByKey1.map { case (k, m) =>
-                                    k ->
-                                      ConfigService.ConfigEnvironment.values.map { e =>
-                                        e ->
-                                          (if (CatalogueFrontendSwitches.showDeployedConfig.isEnabled && envWithDeployedConfig.contains(e))
-                                             m.getOrElse(e, Seq.empty)
-                                           else
-                                             latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty)
-                                          )
-                                      }.toMap
-                                  }
-        configByKey            =  deployedConfigByKey.map {
-                                    case (k, m) => k -> m.map {
-                                      case (e, vs) =>
-                                        latestConfigByKey.getOrElse(k, m).getOrElse(e, vs).lastOption match {
-                                          case Some(n) if (vs.last.value != n.value) => e -> (vs :+ n.copy(source = "nextDeployment", sourceUrl = None))
-                                          case _                                     => e -> vs
-                                        }
-                                    }
-                                  }
-        newConfig              =  if (CatalogueFrontendSwitches.showDeployedConfig.isEnabled) {
-                                    val newKeys = latestConfigByKey.keySet.diff(deployedConfigByKey.keySet)
-                                    latestConfigByKey
-                                      .filter { case (k, _) => newKeys.contains(k) }
-                                      .map {
-                                        case (k, m) => k -> m.map {
-                                          case (e, vs) if !envWithDeployedConfig.contains(e) => e -> vs
-                                          case (e, vs)                                       => e -> List(vs.last.copy(source = "nextDeployment", sourceUrl = None))
-                                        }
-                                      }
-                                  } else Map.empty
-      } yield Ok(serviceConfigPage(serviceName, configByKey ++ newConfig, deployments))
+        deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
+        configByKey <- configService.configByKey(serviceName)
+      } yield Ok(serviceConfigPage(serviceName, configByKey, deployments))
     }
 
   /** Renders the service page by either the repository name, or the artefact name (if configured).
