@@ -3,27 +3,19 @@
 ![](https://img.shields.io/github/v/release/hmrc/catalogue-frontend)
 
 * [Setup](#setup)
+* [Development](#development)
 * [Updating the front page](#updating-the-front-page)
 * [Tests](#tests)
 * [License](#license)
 
 ## Setup
 
-See [catalogue-acceptance-tests]("https://github.com/hmrc/catalogue-acceptance-tests") for help setting up dependent services.
+For help setting up dependent services see [catalogue-acceptance-tests]("https://github.com/hmrc/catalogue-acceptance-tests")
 
-Run docker with the following command 
+## Development
 
-``` 
-docker run --restart unless-stopped -d -p 27017-27019:27017-27019 --name mongodb mongo:4.4 mongod --replSet rs0
-```
-
-Followed by 
-
-``` 
-docker exec -it mongodb mongo
-```
-
-At the Mongo prompt run `rs.initiate()`
+In order to run unit tests against any changes to views or partials you need to execute
+`sbt compile` 
 
 ## Updating the front page
 
