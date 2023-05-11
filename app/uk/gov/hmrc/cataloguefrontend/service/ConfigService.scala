@@ -37,11 +37,11 @@ class ConfigService @Inject()(
   def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
     configConnector.configByEnv(serviceName)
 
-  def configByKey(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
-    configConnector.configByKey(serviceName)
+  def configByKey(serviceName: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
+    configConnector.configByKey(serviceName, latest)
 
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
-    configByKey(serviceName)
+    configByKey(serviceName, latest = true)
       .map(
         _.getOrElse(KeyName("artifact_name"), Map.empty)
           .view
@@ -73,10 +73,16 @@ object ConfigService {
 
   case class KeyName(asString: String) extends AnyVal
 
-  trait ConfigEnvironment { def asString: String }
+  trait ConfigEnvironment { def asString: String; def displayString: String }
   object ConfigEnvironment {
-    case object Local                           extends ConfigEnvironment { override def asString = "local"      }
-    case class ForEnvironment(env: Environment) extends ConfigEnvironment { override def asString = env.asString }
+    case object Local                           extends ConfigEnvironment {
+      override def asString      = "local"
+      override def displayString = "Local"
+    }
+    case class ForEnvironment(env: Environment) extends ConfigEnvironment {
+      override def asString      = env.asString
+      override def displayString = env.displayString
+    }
 
     val values: List[ConfigEnvironment] =
       Local :: Environment.values.map(ForEnvironment.apply)
@@ -135,10 +141,13 @@ object ConfigService {
   case class ConfigSourceValue(
     source   : String,
     sourceUrl: Option[String],
-    value    : String
+    value    : String,
   ){
     def isSuppressed: Boolean =
       value == "<<SUPPRESSED>>"
+
+    def isDeployed: Boolean =
+      source != "nextDeployment"
   }
 
   object ConfigSourceValue {
@@ -184,6 +193,7 @@ object ConfigService {
       case "appConfigCommonFixed"       => "App-config-common fixed settings"
       case "appConfigCommonOverridable" => "App-config-common overridable settings"
       case "base64"                     => s"Base64 (decoded from config ${key.fold("'key'")(_.asString)}.base64)"
+      case "nextDeployment"             => "Used on next deployment"
       case _                            => source
     }
 

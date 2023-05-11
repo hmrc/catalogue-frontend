@@ -29,8 +29,12 @@
   request: RequestHeader
 )
 
-@hasDeployment(env: ConfigEnvironment) = @{
-    (deployments.map(e => ConfigEnvironment.ForEnvironment.apply(e.environment)) :+ ConfigEnvironment.Local).contains(env)
+@findDeployment(env: ConfigEnvironment) = @{
+    deployments.find(e => ConfigEnvironment.ForEnvironment.apply(e.environment) == env)
+}
+
+@show(env: ConfigEnvironment) = @{
+    env == ConfigEnvironment.Local || findDeployment(env).isDefined
 }
 
 <html>
@@ -52,8 +56,16 @@
                     <div id="header-0" class="grid-item sticky-column truncate-content" style="width:300px; text-indent: 1.2em">Key</div>
                     <div class="gutter gutter-horizontal"></div>
                     @for((env, index) <- ConfigEnvironment.values.zipWithIndex) {
-                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @if(!hasDeployment(env)){hidden}" style="width:500px;">@env.asString</div>
-                        <div class="gutter gutter-horizontal column-@env.asString @if(!hasDeployment(env)){hidden} "></div>
+                        <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @if(!show(env)){hidden}" style="width:500px;">
+                            @env.displayString @findDeployment(env).map(_.versionNumber.asString).getOrElse("")
+                            @(configByKey.filter(_._2.get(env).exists(_.exists(!_.isDeployed))).size match {
+                                case _ if env == ConfigEnvironment.Local => <span></span>
+                                case 0 => <span></span>
+                                case 1 => <span class="undeployed small-text">Has 1 undeployed change</span>
+                                case x => <span class="undeployed small-text">Has {x} undeployed changes</span>
+                            })
+                        </div>
+                        <div class="gutter gutter-horizontal column-@env.asString @if(!show(env)){hidden} "></div>
                     }
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1.asString)) {
@@ -63,11 +75,19 @@
                                 <a id="config-url-@key.asString" href="#@key.asString" class="glyphicon glyphicon-link"></a>@key.asString
                             </div>
                             @for(env <- ConfigEnvironment.values) {
-                                <div class="grid-item column-@env.asString @if(!hasDeployment(env)){hidden}" style="width:510px;">
+                                <div class="grid-item column-@env.asString @if(!show(env)){hidden}" style="width:510px;">
                                     <ul>
-                                      @for(sourceValue: ConfigSourceValue <- envSources.get(env).getOrElse(Seq.empty)) {
+                                      @for((sourceValue: ConfigSourceValue, idx) <- envSources.getOrElse(env, Seq.empty).zipWithIndex) {
                                         <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env, Some(key))">
-                                            <span class="truncate-content-overflow @if(sourceValue.isSuppressed) {suppressed}">@sourceValue.value</span>
+                                            <span class="truncate-content-overflow
+                                                         @if(sourceValue.isSuppressed) {suppressed}
+                                                         @if(env != ConfigEnvironment.Local && !sourceValue.isDeployed) {
+                                                            undeployed
+                                                         } else {
+                                                            @if(envSources.getOrElse(env, Seq.empty).filter(_.isDeployed).size != idx+1) {strikethrough}
+                                                         }">
+                                                @sourceValue.value
+                                            </span>
                                             @sourceValue.sourceUrl.map { url =>
                                               <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="@url"></a>
                                             }
@@ -91,7 +111,7 @@
             <ul>
                 @for(env <- ConfigEnvironment.values) {
                     <li>
-                        <input class="column-filter" type="checkbox" id="show-@env.asString" @if(hasDeployment(env)){checked="checked"} />
+                        <input class="column-filter" type="checkbox" id="show-@env.asString" @if(show(env)){checked="checked"} />
                         <label for="show-@env.asString">@env.asString</label>
                     </li>
                 }
@@ -115,7 +135,7 @@
         <aside id="help">
             <h2>What am I seeing?</h2>
             <ul class="bullets">
-                <li>The Microservice reference.conf files, application.conf files and the App-config-base are extracted from the latest slug build. They <i>might</i> not correspond to what is actually deployed in the environment, and actually represent what the resulting configuration would be if the latest slug is deployed into that environment.</li>
+                <li>The Microservice <code>reference.conf</code> files, application.conf files and the App-config-base are extracted from the latest slug build. They <i>might</i> not correspond to what is actually deployed in the environment, and actually represent what the resulting configuration would be if the latest slug is deployed into that environment.</li>
                 <li>The App-config environment and common configuration are looked up in the corresponding github project.</li>
             </ul>
             <h2>How to use the config explorer</h2>
@@ -169,12 +189,13 @@
                 });
 
                 document.querySelector("#show-evictions").addEventListener("change", e => {
-                    document.querySelector("body").classList.toggle("hide-evictions");
+                    Array.from(document.querySelectorAll(".strikethrough")).forEach(item => {
+                        item.classList.toggle("hide-evictions")
+                    });
                 });
                 document.querySelector("#show-referenceConf").addEventListener("change", e => {
                     document.querySelector("body").classList.toggle("hide-refconf-only");
                 });
-
                 document.querySelector("#word-wrap").addEventListener("change", e => {
                     document.querySelector("body").classList.toggle("word-wrap");
                 });
@@ -186,3 +207,4 @@
         </script>
     </body>
 </html>
+w

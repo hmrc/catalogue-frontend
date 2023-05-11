@@ -891,6 +891,9 @@ aside {
 .hidden {
   display: none; }
 
+.small-text {
+  font-size: small;}
+
 .gutter-horizontal {
   width: 10px;
   cursor: ew-resize; }
@@ -963,10 +966,9 @@ aside {
   overflow-wrap: break-word; }
 
 .grid-header > .grid-item {
-  font-weight: bold;
-  text-transform: capitalize; }
+  font-weight: bold; }
 
-.hide-evictions li.config-value:not(:last-child) {
+.hide-evictions {
   display: none; }
 
 .hide-refconf-only .refconf-only {
@@ -976,7 +978,13 @@ aside {
 .suppressed {
   color: grey;
   font-style: italic; }
-}
+
+.strikethrough {
+  text-decoration: line-through;}
+
+.undeployed {
+  color: orange;
+  font-weight: bold;}
 
 .grid-row > .grid-item {
   font-family: monospace; }
@@ -985,19 +993,15 @@ aside {
     display: flex;
     flex-wrap: nowrap; }
     .grid-row > .grid-item > ul > li > span {
-      flex-grow: 1;
-      text-decoration: line-through; }
+      flex-grow: 1;}
       .grid-row > .grid-item > ul > li > span:empty::after {
         color: grey;
         content: "<empty>";
         font-style: italic; }
-    .grid-row > .grid-item > ul > li:last-child > span {
-      text-decoration: none; }
     .grid-row > .grid-item > ul > li:hover > a {
       visibility: visible; }
     .grid-row > .grid-item > ul > li > a {
       color: grey;
-      text-decoration: inherit;
       flex-shrink: 0;
       width: 1.2em;
       visibility: hidden; }
@@ -1006,7 +1010,6 @@ aside {
 
 .grid-row > .grid-item > a {
   color: grey;
-  text-decoration: inherit;
   flex-shrink: 0;
   width: 1.2em;
   visibility: hidden;

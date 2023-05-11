@@ -106,9 +106,27 @@ class CatalogueController @Inject() (
   def serviceConfig(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
-        configByKey <- configService.configByKey(serviceName)
-      } yield Ok(serviceConfigPage(serviceName, configByKey, deployments))
+        deployments         <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
+        latestConfigByKey   <- configService.configByKey(serviceName, latest = true ) //.map(xs => xs ++ Map(ConfigService.KeyName("some.new.key.1") -> xs(ConfigService.KeyName("auditing.consumer.baseUri.port"))))
+        deployedConfigByKey <- configService.configByKey(serviceName, latest = false) //.map(xs => xs ++ Map(ConfigService.KeyName("some.new.key.3") -> xs(ConfigService.KeyName("auditing.consumer.baseUri.port"))))
+        configByKey         =  deployedConfigByKey.map {
+                                 case (k, m) => k -> m.map {
+                                   case (e, vs) =>
+                                     val n = latestConfigByKey.getOrElse(k, m).getOrElse(e, vs).last
+                                     if (vs.last != n) e -> (vs :+ n.copy(source = "nextDeployment", sourceUrl = None))
+                                     else              e -> vs
+                                 }
+                               }
+        newKeys             =  latestConfigByKey.keySet.diff(deployedConfigByKey.keySet)
+        newConfig           =  latestConfigByKey
+                                .filter { case (k, _) => newKeys.contains(k) }
+                                .map {
+                                  case (k, m) => k -> m.map {
+                                    case (e@ConfigService.ConfigEnvironment.Local, vs) => e -> vs
+                                    case (e,                                       vs) => e -> List(vs.last.copy(source = "nextDeployment", sourceUrl = None))
+                                  }
+                                }
+      } yield Ok(serviceConfigPage(serviceName, configByKey ++ newConfig, deployments))
     }
 
   /** Renders the service page by either the repository name, or the artefact name (if configured).
