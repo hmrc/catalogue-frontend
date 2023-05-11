@@ -249,8 +249,8 @@
 
         function matchesInBold(query, match) {
             let bolded = match;
-            query.split(' ').forEach(function (term) {
-                bolded = bolded.replaceAll(term, '<strong>' + term + '</strong>');
+            query.toLowerCase().split(' ').forEach(function (term) {
+                bolded = bolded.toLowerCase().replaceAll(term, '<strong>' + term + '</strong>');
             });
 
             return bolded;
@@ -318,13 +318,13 @@
             let first = terms.shift();
 
             matches = allGroupArtefacts.filter(function (el) {
-                return el.includes(first);
+                return el.toLowerCase().includes(first.toLowerCase());
             });
 
             if(terms.length > 0) {
                 terms.forEach(function(term) {
                     matches = matches.filter(function (el) {
-                        return el.includes(term);
+                        return el.toLowerCase().includes(term.toLowerCase());
                     });
                 });
             }
