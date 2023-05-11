@@ -30,7 +30,7 @@
 )
 
 @findDeployment(env: ConfigEnvironment) = @{
-    deployments.find(e => ConfigEnvironment.ForEnvironment.apply(e.environment) == env)
+    deployments.find(e => ConfigEnvironment.ForEnvironment(e.environment) == env)
 }
 
 @show(env: ConfigEnvironment) = @{
