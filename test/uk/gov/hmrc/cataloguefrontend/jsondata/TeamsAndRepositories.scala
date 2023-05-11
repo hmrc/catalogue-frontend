@@ -94,9 +94,16 @@ object TeamsAndRepositories {
     s"""[
      {"name":"01-one-team-repo"   ,"description": "", "teamNames":["teamB"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
      {"name":"05-five-teams-repo","description": "", "teamNames":["teamB", "teamC", "teamD", "teamE", "teamF"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
-     {"name":"11-seven-teams-repo"  ,"description": "", "teamNames":["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG", "teamH", "teamI"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
+     {"name":"11-seven-teams-repo"  ,"description": "", "teamNames":["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG", "teamH", "teamI"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
      ]
    """"
+  }
+
+  val repositoriesSharedRepoSearchResult = {
+    s"""[
+     {"name":"11-seven-teams-repo"  ,"description": "", "teamNames":["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG", "teamH", "teamI"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
+     ]
+    """"
   }
 
   val repositoriesData = {

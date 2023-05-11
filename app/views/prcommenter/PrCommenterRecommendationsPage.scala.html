@@ -22,9 +22,11 @@
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import views.html.helper.select
+@import views.html.partials.TeamNames
 
 @this(
-  viewMessages       : ViewMessages
+  viewMessages       : ViewMessages,
+  teamNames          : TeamNames
 )
 
 @(form        : Form[_],
@@ -89,16 +91,20 @@
         <tbody class="list">
           @reports.map { report =>
             <tr>
-              <td @collapseAttr("accordion-toggle collapsed", report) />
+              <td @collapseAttr("accordion-toggle collapsed", report)></td>
               <td @collapseAttr("name", report)>@report.name</td>
-              <td @collapseAttr("teams", report)>@displayTeams(report)</td>
+              <td @collapseAttr("teams", report)>
+                @teamNames(uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository, report.name, report.teamNames)
+              </td>
               <td @collapseAttr("recommendations text-center", report)>@report.comments.size</td>
               <td @collapseAttr("lastrun hide text-nowrap", report)>@report.created</td>
               <td @collapseAttr("lastrun-display text-nowrap", report)>@report.created.displayFormat</td>
             </tr>
             <tr id="collapsible-area-@report.name" class="collapse multi-collapse @if(report.comments.isEmpty) { hide }">
-              <td class="hide name">@report.name</td>
-              <td class="hide teams">@displayTeams(report)</td>
+              <td class="hide name"><a href="@report.name">@report.name</a></td>
+              <td class="hide teams">
+                @teamNames(uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository, report.name, report.teamNames)
+              </td>
               <td class="hide recommendations">@report.comments.size<td>
               <td class="hide lastrun">@report.created</td>
               <td colspan="5" style="padding: 30px">
