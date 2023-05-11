@@ -106,26 +106,36 @@ class CatalogueController @Inject() (
   def serviceConfig(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        deployments         <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
-        latestConfigByKey   <- configService.configByKey(serviceName, latest = true ) //.map(xs => xs ++ Map(ConfigService.KeyName("some.new.key.1") -> xs(ConfigService.KeyName("auditing.consumer.baseUri.port"))))
-        deployedConfigByKey <- configService.configByKey(serviceName, latest = false) //.map(xs => xs ++ Map(ConfigService.KeyName("some.new.key.3") -> xs(ConfigService.KeyName("auditing.consumer.baseUri.port"))))
-        configByKey         =  deployedConfigByKey.map {
-                                 case (k, m) => k -> m.map {
-                                   case (e, vs) =>
-                                     val n = latestConfigByKey.getOrElse(k, m).getOrElse(e, vs).last
-                                     if (vs.last != n) e -> (vs :+ n.copy(source = "nextDeployment", sourceUrl = None))
-                                     else              e -> vs
-                                 }
-                               }
-        newKeys             =  latestConfigByKey.keySet.diff(deployedConfigByKey.keySet)
-        newConfig           =  latestConfigByKey
-                                .filter { case (k, _) => newKeys.contains(k) }
-                                .map {
-                                  case (k, m) => k -> m.map {
-                                    case (e@ConfigService.ConfigEnvironment.Local, vs) => e -> vs
-                                    case (e,                                       vs) => e -> List(vs.last.copy(source = "nextDeployment", sourceUrl = None))
+        deployments            <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
+        latestConfigByKey      <- configService.configByKey(serviceName, latest = true )
+        deployedConfigByKey    <- configService.configByKey(serviceName, latest = false)
+        envWithDeployedConfig  =  // only required until all services have been redeployed
+                                  deployedConfigByKey.foldLeft(Set.empty[ConfigService.ConfigEnvironment]) { case (acc, (_, m)) =>
+                                    m.foldLeft(acc) { case (acc2, (e, m)) =>
+                                      if (m.exists(_.source == "appConfigEnvironment"))
+                                        acc2 + e
+                                      else acc2
+                                    }
                                   }
-                                }
+        configByKey            =  deployedConfigByKey.map {
+                                    case (k, m) => k -> m.map {
+                                      case (e, vs) =>
+                                        val n = latestConfigByKey.getOrElse(k, m).getOrElse(e, vs).last
+                                        if (vs.last.value != n.value && envWithDeployedConfig.contains(e))
+                                          e -> (vs :+ n.copy(source = "nextDeployment", sourceUrl = None))
+                                        else
+                                          e -> vs
+                                    }
+                                  }
+        newKeys                =  latestConfigByKey.keySet.diff(deployedConfigByKey.keySet)
+        newConfig              =  latestConfigByKey
+                                   .filter { case (k, _) => newKeys.contains(k) }
+                                   .map {
+                                     case (k, m) => k -> m.map {
+                                       case (e, vs) if !envWithDeployedConfig.contains(e) => e -> vs
+                                       case (e, vs)                                       => e -> List(vs.last.copy(source = "nextDeployment", sourceUrl = None))
+                                     }
+                                   }
       } yield Ok(serviceConfigPage(serviceName, configByKey ++ newConfig, deployments))
     }
 
