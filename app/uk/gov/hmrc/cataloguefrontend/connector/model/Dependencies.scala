@@ -19,7 +19,6 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 import java.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.config.Constant
 
 sealed trait VersionState
 object VersionState {
@@ -339,11 +338,7 @@ case class ServiceWithDependency(
   depGroup          : String,
   depArtefact       : String,
   depVersion        : Version,
-  scopes            : Set[DependencyScope]) {
-
-  def isShared: Boolean =
-    teams.length >= Constant.sharedRepoTeamsCutOff
-}
+  scopes            : Set[DependencyScope])
 
 object ServiceWithDependency {
   import play.api.libs.functional.syntax._
