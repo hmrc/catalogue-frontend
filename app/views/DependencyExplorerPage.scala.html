@@ -57,35 +57,35 @@
         <form id="search-by-dependency-form" action="@appRoutes.DependencyExplorerController.search.url" method="get">
             <div class="form-group">
                 <div class="row" style="margin-bottom: 20px;">
-                    <div class="col-md-4">
+                    <div class="col-md-7">
                         <label for="group-artefact-search">Group:Artefact</label>
                         <input id="group-artefact-search" class="form-control" type="text" value="@DependencyExplorerController.groupArtefactFromForm(form)" autocomplete="off">
                         <div id="group-artefact-matches" class="dependency-search-dropdown hide" style="padding-right: 30px"></div>
                         <input id="group" name="group" value='@form("group").value' type="hidden">
                         <input id="artefact" name="artefact" value='@form("artefact").value' type="hidden">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label for="lbValue">Version Range</label>
-                        <div class="input-group input-group-multi">
-                            <div class="col-md-3">
+                        <div class="input-group-multi">
+                            <div class="col-xs-3 col-md-3">
                                 <input class="form-control input-group-start" id="lbValue" type="text" placeholder="0.0.0" value="@versionRange.lowerBound.map(_.version)">
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-xs-2 col-md-2">
                                 <select id="lbInclusive" class="form-control input-group-end">
                                     <option value="false" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
                                     <option value="true" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-xs-2 col-md-2">
                                 <input class="form-control undecorated-text" type="text" value="version" tabindex="-1" readonly>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-xs-2 col-md-2">
                                 <select id="ubInclusive" class="form-control input-group-start">
                                     <option value="false" @if(versionRange.upperBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
                                     <option value="true" @if(versionRange.upperBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-xs-3 col-md-3">
                                 <input class="form-control input-group-end" id="ubValue" type="text" value="@versionRange.upperBound.map(_.version)">
                             </div>
                         </div>
@@ -94,7 +94,7 @@
                     <input type="hidden" id="asCsv" name="asCsv" value="false">
                 </div>
                 <div class="row">
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         @helper.select(
                             field               = form("team"),
                             options             = teams.map(t => (t.asString, t.asString)),
@@ -103,7 +103,7 @@
                             Symbol("class")    -> "form-control"
                         )
                     </div>
-                    <div class="col-md-1">
+                    <div class="col-md-2">
                         @helper.select(
                             field             = form("flag"),
                             options           = flags.map(f => (f.asString, f.displayString)),
@@ -117,16 +117,13 @@
                             options             = scopes.map(s => (s.asString, s.displayString)),
                             Symbol("_label")   -> "Scope",
                             Symbol("class")    -> "form-control",
-                            Symbol("style")    -> "width: 60%;",
                             Symbol("multiple") -> None
                         )
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-2">
-                        <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-                        <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV"/>
-                    </div>
+                <div>
+                    <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                    <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV"/>
                 </div>
             </div>
         </form>
