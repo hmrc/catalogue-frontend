@@ -19,10 +19,10 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, GroupArtefacts, ServiceWithDependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
-@import views.html.partials.ServiceWithDependencyTeamNames
+@import views.html.partials.TeamNames
 
 @this(
-        serviceTeamNames: ServiceWithDependencyTeamNames,
+        teamNames: TeamNames,
         viewMessages: ViewMessages
 )
 
@@ -166,7 +166,7 @@
                                 <td class="service"><a id="link-to-info-page-for-@{result.slugName}"href="@appRoutes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
                                 <td>@result.slugVersion</td>
                                 <td class="teams">
-                                    @serviceTeamNames(result)
+                                    @teamNames(uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service, result.slugName, result.teams)
                                 </td>
                                 <td>@result.depGroup</td>
                                 <td>@result.depArtefact</td>

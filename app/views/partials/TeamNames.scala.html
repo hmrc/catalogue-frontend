@@ -14,19 +14,21 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.config.Constant
 
 @this()
 
 @(
-        repository: GitRepository
+        thingLinkFunction: (String) => Call,
+        thingName: String,
+        teamNames: Seq[Any]
 )
 
-@if(!repository.isShared) {
-    @repository.teamNames.map {tn => <div  class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(tn))">@tn</a></div> }
+@if(teamNames.length < Constant.sharedRepoTeamsCutOff ) {
+    @teamNames.map {tn => <div  class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(tn.toString()))">@tn.toString()</a></div> }
 } else {
-    <div title="@repository.teamNames.take(15).mkString("\n")" class="repo-team" >
-        <em><a href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repository.name)#teams">Shared by @repository.teamNames.length teams</a></em>
+    <div title="@teamNames.take(Constant.sharedRepoTeamsCutOff).mkString("\n")" class="repo-team" >
+        <em><a href="@thingLinkFunction(thingName)#teams">Shared by @teamNames.length teams</a></em>
     </div>
 }
