@@ -19,15 +19,17 @@
 @(repo: GitRepository)
 <div id="owning-team">
     <div class="board">
-    <h3 class="board__heading">Teams</h3>
-      <div class="board__body">
-          <ul class="list list--minimal">
-            @for(teamName <- repo.teamNames) {
-                <li class="list-item">
-                    <a id="link-to-team-page-for-@{teamName.toLowerCase.replaceAll(" ", "-")}" href="/teams/@teamName">@if(repo.owningTeams.contains(teamName)) {<strong>@teamName <span class="repo-owner">Owner</span></strong>} else {@teamName}</a>
-                </li>
-            }
-          </ul>
-      </div>
+        <section id="teams">
+            <h3 class="board__heading">Teams</h3>
+            <div class="board__body">
+                <ul class="list list--minimal">
+                    @for(teamName <- repo.teamNames) {
+                    <li class="list-item">
+                        <a id="link-to-team-page-for-@{teamName.toLowerCase.replaceAll(" ", "-")}" href="/teams/@teamName">@if(repo.owningTeams.contains(teamName)) {<strong>@teamName <span class="repo-owner">Owner</span></strong>} else {@teamName}</a>
+                    </li>
+                }
+                </ul>
+            </div>
+        </section>
     </div>
 </div>
