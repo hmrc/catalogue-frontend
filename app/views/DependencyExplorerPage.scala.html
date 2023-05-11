@@ -270,6 +270,9 @@
                     let selected = document.getElementById('dependency-match-' + gaSelectedIdx);
                     if(selected != null) {
                         selected.click();
+                    } else {
+                        updateVersionRange()
+                        document.getElementById('search-by-dependency-form').submit();
                     }
                 } else if (e.keyCode === 40) { //down arrow
                     if(gaSelectedIdx < gaMatchesLen - 1) {
