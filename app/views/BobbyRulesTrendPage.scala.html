@@ -53,7 +53,7 @@
         <div class="board">
             <div class="board__body">
                 @helper.form(
-                    action          =  appRoutes.BobbyRulesTrendController.display,
+                    action          =  appRoutes.BobbyRulesTrendController.display(),
                     Symbol("class") -> "form-inline",
                     Symbol("id")    -> "bobby-rules-trend-form"
                 ) {

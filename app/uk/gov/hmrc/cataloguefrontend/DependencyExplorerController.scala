@@ -20,7 +20,6 @@ import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import cats.data.EitherT
 import cats.implicits._
-import java.net.URLEncoder
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
@@ -31,7 +30,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, Depende
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, UrlUtils}
+import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependencyExplorerPage
@@ -80,8 +79,16 @@ class DependencyExplorerController @Inject() (
       )
     }
 
-  val search =
-    BasicAuthAction.async { implicit request =>
+  def search(
+    team        : String = "",
+    flag        : String,
+    `scope[]`   : Seq[String],
+    group       : String,
+    artefact    : String,
+    versionRange: String,
+    asCsv       : Boolean,
+  ) =
+    BasicAuthAction.async ( implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
@@ -99,9 +106,8 @@ class DependencyExplorerController @Inject() (
               searchResults = None,
               pieData       = None
             )
-          val decodedParams = UrlUtils.parseUrlEncodedParams(request.target.uriString)
           form()
-            .bindFromRequest(decodedParams)
+            .bindFromRequest()
             .fold(
               hasErrors = formWithErrors =>
                 Future.successful(
@@ -143,7 +149,7 @@ class DependencyExplorerController @Inject() (
                   } else
                     Ok(
                       page(
-                        form().bindFromRequest(decodedParams),
+                        form().bindFromRequest(),
                         teams,
                         flags,
                         scopes,
@@ -153,10 +159,10 @@ class DependencyExplorerController @Inject() (
                         pieData
                       )
                     )).merge
-                )
+            )
         }
       } yield res
-    }
+    )
 
   /** @param versionRange replaces versionOp and version, supporting Maven version range */
   case class SearchForm(
@@ -211,8 +217,21 @@ object DependencyExplorerController {
       a <- form("artefact").value.filter(_.nonEmpty)
     } yield s"$g:$a"
 
-  def search(team: String = "", flag: SlugInfoFlag, scopes: Seq[DependencyScope], group: String, artefact: String, versionRange: BobbyVersionRange): String =
-    s"${uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search.toString}?" +
-      URLEncoder.encode(s"team=$team&flag=${flag.asString}${scopes.map(s => s"&scope[]=${s.asString}").mkString}&group=$group&artefact=$artefact&versionRange=${versionRange.range}", "UTF-8")
-    
+  def search(
+    team        : String = "",
+    flag        : SlugInfoFlag,
+    scopes      : Seq[DependencyScope],
+    group       : String,
+    artefact    : String,
+    versionRange: BobbyVersionRange
+  ): String =
+    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search(
+      `scope[]`    = scopes.map(_.asString),
+      flag         = flag.asString,
+      group        = group,
+      team         = team,
+      artefact     = artefact,
+      versionRange = versionRange.range,
+      asCsv        = false,
+    ).toString
 }
