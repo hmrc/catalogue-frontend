@@ -24,6 +24,10 @@
  , team        : Boolean             = false
  )
 
+@reviewLink(environment: Option[Environment], pending: Boolean) = {
+  Please review the lists below, and refer to <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
+}
+
 @defining(
     dependencies
         .flatMap { dependency =>
@@ -34,7 +38,7 @@
         .toSet
   ) { violations =>
     @if(violations.nonEmpty) {
-        <div class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-@if(pending) {pending} else {broken}-banner">
+        <div class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-@{if(pending) "pending" else "broken"}-banner@{environment.fold("")(e => s"-${e.asString}")}">
             <strong>
                 @environment.fold{
                   @if(team) { One or more of your repositories } else { This "repository" }
@@ -45,7 +49,7 @@
                   @if(pending) { will break } else { has broken }
                   Bobby Rules in @env.displayString.
                 }
-                Please review the lists below, and refer to <a id="link-to-bobby-rules-list" href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
+                @reviewLink(environment, pending)
             </strong>
         </div>
     }

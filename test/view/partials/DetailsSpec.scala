@@ -58,13 +58,13 @@ class DetailsSpec extends AnyWordSpec with Matchers {
 
     "display Created At Date" in {
       val result = views.html.partials.details(repo).body
-      result should include ("id=\"created-at\"")
+      result should include ("id=\"repository-created-at\"")
       result should include ("31 Dec 2018 08:30")
     }
 
     "display Last Active Date" in {
       val result = views.html.partials.details(repo).body
-      result should include ("id=\"last-active\"")
+      result should include ("id=\"repository-last-active\"")
       result should include ("31 Dec 2018 18:30")
     }
   }

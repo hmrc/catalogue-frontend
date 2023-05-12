@@ -79,8 +79,16 @@ class DependencyExplorerController @Inject() (
       )
     }
 
-  val search =
-    BasicAuthAction.async { implicit request =>
+  def search(
+    team        : String = "",
+    flag        : String,
+    `scope[]`   : Seq[String],
+    group       : String,
+    artefact    : String,
+    versionRange: String,
+    asCsv       : Boolean,
+  ) =
+    BasicAuthAction.async ( implicit request =>
       for {
         teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
@@ -154,7 +162,7 @@ class DependencyExplorerController @Inject() (
             )
         }
       } yield res
-    }
+    )
 
   /** @param versionRange replaces versionOp and version, supporting Maven version range */
   case class SearchForm(
@@ -171,7 +179,7 @@ class DependencyExplorerController @Inject() (
     import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmpty, notEmptySeq}
     Form(
       Forms.mapping(
-        "team"         -> Forms.text,
+        "team"         -> Forms.default(Forms.text, ""),
         "flag"         -> Forms.text.verifying(notEmpty),
         "scope"        -> Forms.list(Forms.text).verifying(notEmptySeq),
         "group"        -> Forms.text.verifying(notEmpty),
@@ -209,7 +217,21 @@ object DependencyExplorerController {
       a <- form("artefact").value.filter(_.nonEmpty)
     } yield s"$g:$a"
 
-  def search(team: String = "", flag: SlugInfoFlag, scopes: Seq[DependencyScope], group: String, artefact: String, versionRange: BobbyVersionRange): String =
-    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search.toString +
-      s"?team=$team&flag=${flag.asString}${scopes.map(s => s"&scope[]=${s.asString}").mkString}&group=$group&artefact=$artefact&versionRange=${versionRange.range}"
+  def search(
+    team        : String = "",
+    flag        : SlugInfoFlag,
+    scopes      : Seq[DependencyScope],
+    group       : String,
+    artefact    : String,
+    versionRange: BobbyVersionRange
+  ): String =
+    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search(
+      `scope[]`    = scopes.map(_.asString),
+      flag         = flag.asString,
+      group        = group,
+      team         = team,
+      artefact     = artefact,
+      versionRange = versionRange.range,
+      asCsv        = false,
+    ).toString
 }

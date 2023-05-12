@@ -97,14 +97,14 @@
                                 </li>
                               }
                               case Left(UMPError.HTTPError(404)) => {
-                                <div>
+                                <li>
                                   @teamName.asString is unknown to the User Management Portal. To add the team, please raise a TSR
-                                </div>
+                                </li>
                               }
                               case Left(error) => {
-                                <div>
+                                <li>
                                     Sorry, the User Management Portal is not available
-                                </div>
+                                </li>
                               }
                             }
                         </ul>
@@ -125,7 +125,9 @@
                             <ul class="list list--minimal" id="team_members">
                               @errorOrTeamMembers match {
                                 case Right(teamMembers) if teamMembers.isEmpty => {
-                                  @teamName.asString has no members
+                                  <li class="col-xs-6">
+                                    @teamName.asString has no members
+                                  </li>
                                 }
                                 case Right(teamMembers) => {
                                   @for(teamMember <- teamMembers) {

@@ -91,8 +91,7 @@
             <ul>
                 @for(env <- ConfigEnvironment.values) {
                     <li>
-                        <!-- Without turning autocomplete off, some browsers (e.g. chrome) will set the checkbox state inconsistent with the viewed data when returning to the page -->
-                        <input class="column-filter" type="checkbox" id="show-@env.asString" @if(hasDeployment(env)){checked="checked"}  autocomplete="off" />
+                        <input class="column-filter" type="checkbox" id="show-@env.asString" @if(hasDeployment(env)){checked="checked"} />
                         <label for="show-@env.asString">@env.asString</label>
                     </li>
                 }
@@ -100,15 +99,15 @@
             <h2>Values</h2>
             <ul>
                 <li>
-                    <input type="checkbox" id="show-referenceConf" autocomplete="off" />
+                    <input type="checkbox" id="show-referenceConf" />
                     <label for="show-referenceConf">Show all reference.conf files</label>
                 </li>
                 <li>
-                    <input type="checkbox" id="show-evictions" checked="checked" autocomplete="off" />
+                    <input type="checkbox" id="show-evictions" checked="checked" />
                     <label for="show-evictions">Show evictions</label>
                 </li>
                 <li>
-                    <input type="checkbox" id="word-wrap" autocomplete="off" />
+                    <input type="checkbox" id="word-wrap" />
                     <label for="word-wrap">Word wrap</label>
                 </li>
             </ul>

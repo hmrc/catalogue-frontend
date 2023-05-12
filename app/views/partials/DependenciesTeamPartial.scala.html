@@ -45,7 +45,9 @@
                @defining(prodDependencies.getOrElse(dependency.dependencies.repositoryName, Seq.empty)){ prodDependencies =>
                  <ul class="list list--minimal list-group row" id="ood-@dependency.dependencies.repositoryName">
 
-                     <h4>@dependency.dependencies.repositoryName @if(dependency.repo.isArchived){ <span class="archived">archived</span>} @if(dependency.repo.isDeprecated && !dependency.repo.isArchived){<span class="badge">deprecated</span>} </h4>
+                    <li>
+                      <h4>@dependency.dependencies.repositoryName @if(dependency.repo.isArchived){ <span class="archived">archived</span>} @if(dependency.repo.isDeprecated && !dependency.repo.isArchived){<span class="badge">deprecated</span>} </h4>
+                    </li>
 
                      @bobby_alerts(prodDependencies, pending = false)
                      @bobby_alerts(prodDependencies, pending = true )
@@ -57,9 +59,9 @@
                          <span class="col-xs-2"><label>Violation</label></span>
 
                      </li>
-                     @partials.dependency_section(dependency.dependencies.libraryDependencies.filter(_.isOutOfDate).sortBy(_.scope))
-                     @partials.dependency_section(dependency.dependencies.sbtPluginsDependencies.filter(_.isOutOfDate))
-                     @partials.dependency_section(dependency.dependencies.otherDependencies.filter(_.isOutOfDate))
+                     @partials.dependency_section(dependency.dependencies.libraryDependencies.filter(_.isOutOfDate).sortBy(_.scope), s"${teamName.asString}-libraries")
+                     @partials.dependency_section(dependency.dependencies.sbtPluginsDependencies.filter(_.isOutOfDate), s"${teamName.asString}-sbt-plugins")
+                     @partials.dependency_section(dependency.dependencies.otherDependencies.filter(_.isOutOfDate), s"${teamName.asString}-other")
 
                  </ul>
                }
@@ -88,11 +90,11 @@
           .toSet
     ) { violations =>
       @if(violations.nonEmpty) {
-          <div class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-@if(pending) {pending} else {broken}-banner">
+          <li class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-production-@if(pending) {pending} else {broken}-banner">
               <strong>
                   This service has @if(pending) { upcoming } bobby violations in Production
               </strong>
-          </div>
+          </li>
       }
   }
 }

@@ -61,7 +61,11 @@ class BobbyRulesTrendController @Inject() (
       )
     }
 
-  def display: Action[AnyContent] =
+  def display(
+    rules: Seq[String],
+    from : LocalDate,
+    to   : LocalDate,
+  ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         allRules <- configConnector.bobbyRules()
@@ -134,8 +138,9 @@ class BobbyRulesTrendController @Inject() (
 
 object BobbyRulesTrendController {
   def display(group: String, artefact: String, versionRange: BobbyVersionRange): String =
-    uk.gov.hmrc.cataloguefrontend.routes.BobbyRulesTrendController.display.toString +
-      s"?rules[]=$group:$artefact:${versionRange.range}"
+    uk.gov.hmrc.cataloguefrontend.routes.BobbyRulesTrendController.display(
+      `rules[]` = Seq(s"$group:$artefact:${versionRange.range}")
+    ).toString
 
   case class GraphData(
     columns: List[(String, String)],

@@ -78,7 +78,7 @@
         </form>
 
         <div class="row container">
-            <ul id="environment" class="nav nav-tabs">
+            <ul id="environment" class="nav nav-tabs" role="tablist">
                 @Environment.values.map(envOption)
             </ul>
         </div>
@@ -159,7 +159,7 @@
   <tr>
       <td>
           @if(pagination.page <= 0) {
-              <a disabled="true" class="btn btn-default" href="#">Prev</a>
+              <a class="btn btn-default" href="#">Prev</a>
           }else {
               <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page - 1)}">Prev</a>
           }
@@ -173,7 +173,7 @@
       </td>
       <td style="text-align: right">
           @if( (pagination.page * pagination.pageSize) + deployments.length >= pagination.total) {
-              <a disabled="true" class="btn btn-default" href="#">Next</a>
+              <a class="btn btn-default" href="#">Next</a>
           } else {
               <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page + 1) }">Next</a>
           }
