@@ -46,6 +46,11 @@ class PrCommenterSpec extends UnitSpec with BeforeAndAfter with FakeApplicationB
       val document = Jsoup.parse(response.body)
       document.select("h1").attr("id") shouldBe "search-service-header"
       document.select("h1").text() shouldBe "PR-Commenter Recommendations"
+
+      document.select("tbody.list tr").get(0).select("td.teams div.repo-team").attr("title") shouldBe "teamA\nteamB\nteamC\nteamD\nteamE\nteamF\nteamG\nteamH"
+      document.select("tbody.list tr").get(0).select("td.teams div.repo-team a").attr("href") shouldBe "/repositories/11-seven-teams-repo#teams"
+      document.select("tbody.list tr").get(0).select("td.teams div.repo-team a").text() shouldBe "Shared by 9 teams"
+
     }
   }
 }
