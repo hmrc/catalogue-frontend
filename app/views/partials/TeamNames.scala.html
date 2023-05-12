@@ -20,8 +20,8 @@
 @this()
 
 @(
-        thingLinkFunction: (String) => Call,
-        thingName: String,
+        controllerLinkFunction: (String) => Call,
+        controllerName: String,
         teamNames: Seq[Any]
 )
 
@@ -29,6 +29,6 @@
     @teamNames.map {tn => <div  class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(tn.toString()))">@tn.toString()</a></div> }
 } else {
     <div title="@teamNames.take(Constant.sharedRepoTeamsCutOff).mkString("\n")" class="repo-team" >
-        <em><a href="@thingLinkFunction(thingName)#teams">Shared by @teamNames.length teams</a></em>
+        <em><a href="@controllerLinkFunction(controllerName)#teams">Shared by @teamNames.length teams</a></em>
     </div>
 }
