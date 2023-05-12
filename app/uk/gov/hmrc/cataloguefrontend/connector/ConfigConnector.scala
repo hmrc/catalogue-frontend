@@ -42,11 +42,6 @@ class ConfigConnector @Inject() (
   implicit val cser = ConfigSourceEntries.reads
   implicit val srr  = ServiceRelationships.reads
 
-  def configByEnv(service: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
-    httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/$service")
-      .execute[ConfigByEnvironment]
-
   def configByKey(service: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/config-by-key/$service?latest=$latest")

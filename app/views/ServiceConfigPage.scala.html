@@ -57,15 +57,17 @@
                     <div class="gutter gutter-horizontal"></div>
                     @for((env, index) <- ConfigEnvironment.values.zipWithIndex) {
                         <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @if(!show(env)){hidden}" style="width:500px;">
-                            @env.displayString @findDeployment(env).map(_.versionNumber.asString).getOrElse("")
-                            @(configByKey.filter(_._2.get(env).exists(_.exists(!_.isDeployed))).size match {
+                            <div>@env.displayString
+                            @(configByKey.filter(_._2.get(env).exists(_.exists(_.nextDeployment))).size match {
                                 case _ if env == ConfigEnvironment.Local => <span></span>
                                 case 0 => <span></span>
-                                case 1 => <span class="undeployed small-text">Has 1 undeployed change</span>
-                                case x => <span class="undeployed small-text">Has {x} undeployed changes</span>
+                                case 1 => <span class="undeployed small-text"><span class="glyphicon glyphicon-exclamation-sign"></span> 1 undeployed change</span>
+                                case x => <span class="undeployed small-text"><span class="glyphicon glyphicon-exclamation-sign"></span> {x} undeployed changes</span>
                             })
+                            </div>
+                            <div>@findDeployment(env).fold("")(_.versionNumber.asString)</div>
                         </div>
-                        <div class="gutter gutter-horizontal column-@env.asString @if(!show(env)){hidden} "></div>
+                        <div class="gutter gutter-horizontal column-@env.asString @if(!show(env)){hidden}"></div>
                     }
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1.asString)) {
@@ -79,15 +81,18 @@
                                     <ul>
                                       @for((sourceValue: ConfigSourceValue, idx) <- envSources.getOrElse(env, Seq.empty).zipWithIndex) {
                                         <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env, Some(key))">
-                                            <span class="truncate-content-overflow
-                                                         @if(sourceValue.isSuppressed) {suppressed}
-                                                         @if(env != ConfigEnvironment.Local && !sourceValue.isDeployed) {
-                                                            undeployed
-                                                         } else {
-                                                            @if(envSources.getOrElse(env, Seq.empty).filter(_.isDeployed).size != idx+1) {strikethrough}
-                                                         }">
+                                            @if(sourceValue.nextDeployment) {
+                                              <span class="truncate-content-overflow undeployed"><span class="glyphicon glyphicon-exclamation-sign small-text"></span> @sourceValue.value</span>
+                                            } else {
+                                              <span class="truncate-content-overflow
+                                                           @if(sourceValue.isSuppressed) {suppressed}
+                                                           @if(envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1) {
+                                                              strikethrough
+                                                           }
+                                                           ">
                                                 @sourceValue.value
-                                            </span>
+                                              </span>
+                                            }
                                             @sourceValue.sourceUrl.map { url =>
                                               <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="@url"></a>
                                             }
@@ -215,4 +220,3 @@
         </script>
     </body>
 </html>
-w

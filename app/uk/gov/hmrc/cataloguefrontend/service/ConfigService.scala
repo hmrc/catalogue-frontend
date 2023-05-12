@@ -35,9 +35,6 @@ class ConfigService @Inject()(
 ) {
   import ConfigService._
 
-  def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
-    configConnector.configByEnv(serviceName)
-
   def configByKey(serviceName: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     configConnector.configByKey(serviceName, latest)
 
@@ -86,7 +83,7 @@ class ConfigService @Inject()(
                                         }
                                       }
                                   } else Map.empty
-    } yield configByKey ++ newConfig
+    } yield (configByKey ++ newConfig)
 
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
     configByKey(serviceName, latest = true)
@@ -189,13 +186,13 @@ object ConfigService {
   case class ConfigSourceValue(
     source   : String,
     sourceUrl: Option[String],
-    value    : String,
+    value    : String
   ){
     def isSuppressed: Boolean =
       value == "<<SUPPRESSED>>"
 
-    def isDeployed: Boolean =
-      source != "nextDeployment"
+    def nextDeployment: Boolean =
+      source == "nextDeployment"
   }
 
   object ConfigSourceValue {
