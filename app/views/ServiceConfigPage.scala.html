@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{ConfigByKey, ConfigEnvironment, ConfigSourceValue}
 @import scala.collection.immutable.ListMap
@@ -135,19 +135,27 @@
         <aside id="help">
             <h2>What am I seeing?</h2>
             <ul class="bullets">
-                <li>The Microservice <code>reference.conf</code> files, application.conf files and the App-config-base are extracted from the latest slug build. They <i>might</i> not correspond to what is actually deployed in the environment, and actually represent what the resulting configuration would be if the latest slug is deployed into that environment.</li>
-                <li>The App-config environment and common configuration are looked up in the corresponding github project.</li>
+                <li>Configuration is composed from multiple sources in a heirarchy of precedence. This table shows the end result and heirarchical eviction for each configuration key and for each environment. See <a id="link-to-confluence" href="https://confluence.tools.tax.service.gov.uk/display/DTRG/Service+configuration+explained" target="_blank">Confluence</a> for more details on how configuration is composed.</li>
+                <li>Crossed out values indicate an eviction according to their precendence in the config hierarchy</li>
+                @if(CatalogueFrontendSwitches.showDeployedConfig.isEnabled) {
+                  <li>Amber values show what the value will change to when redeployed</li>
+                }
+                <li>The Microservice <code>reference.conf</code> files, <code>application.conf</code> and the <code>app-config-base</code> config are extracted from the build of the deployed slug. The version of the slug is shown under the environment.</li>
+                @if(CatalogueFrontendSwitches.showDeployedConfig.isEnabled) {
+                    <li>The App-config environment (<code>app-config-$env</code>) and common configuration (<code>app-config-common</code>) are applied at deployment time by looking up the latest config from github. The config shown is the config that was applied at the deployment. Any changes to config since then that will be applied at the next deployment is also shown in amber.</li>
+                } else {
+                    <li>The App-config environment (<code>app-config-$env</code>) and common configuration (<code>app-config-common</code>) are looked up in the corresponding github project. They <i>might</i> not correspond to what is actually deployed in the environment, and actually represent what the resulting configuration would be if the slug is redeployed into that environment.</li>
+                }
             </ul>
             <h2>How to use the config explorer</h2>
             <ul class="bullets">
                 <li>Drag the handles to the left of column headers to re-size columns</li>
-                <li>Hover over a key and click the icon to copy bookmark url to clipboard</li>
+                <li>Hover over a key and click the <span class="glyphicon glyphicon-link"></span> icon to copy bookmark url to clipboard</li>
                 <li>Hover over a config value to see it's source</li>
                 <li>Triple click a truncated value to select the whole thing</li>
-                <li>Crossed out values indicate an eviction according to their precendence in the config hierarchy</li>
-                <li>Click the arrow to the right of a value to see the config item in context</li>
+                <li>Click the <span class="glyphicon glyphicon-circle-arrow-right"></span> arrow to the right of a value to see the config item in context</li>
                 <li>Toggle environments on/off and adjust formatting using the hamburger menu</li>
-                <li>Toggle inclusion of values from reference.conf files using the hamburger menu. Note reference.conf values are always shown if they have been overridden</li>
+                <li>Toggle inclusion of values from reference.conf files using the <span class="glyphicon glyphicon-menu-hamburger"></span> menu icon. Note reference.conf values are always shown if they have been overridden</li>
                 <li>Ctrl-f to search for a key or value (uses browser find)</li>
             </ul>
         </aside>
