@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, VersionState}
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.model.ImportedBy
+@import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 
 @(dependencies: Seq[Dependency], rootId: String)
 
@@ -65,8 +66,8 @@
         </span>
         <span id="@{dependency.name}-@{rootId}-bobbyrule" class="col-xs-2">
         @dependency.versionState match {
-            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
-            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{violation.range}">See rule</a> }
+            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
+            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
             case _                                               => { }
         }
         </span>

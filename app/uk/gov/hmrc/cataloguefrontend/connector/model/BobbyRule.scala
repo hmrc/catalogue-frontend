@@ -21,6 +21,8 @@ import java.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
 
+import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
+
 case class BobbyRule(
   group   : String,
   artefact: String,
@@ -29,7 +31,7 @@ case class BobbyRule(
   from    : LocalDate
 ) {
   def id: String =
-    s"$group:$artefact:$range"
+    s"$group:$artefact:${UrlUtils.encodeQueryParam(range.range)}"
 }
 
 object BobbyRule {
