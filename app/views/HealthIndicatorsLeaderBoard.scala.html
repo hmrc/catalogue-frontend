@@ -70,7 +70,7 @@
             </thead>
             <tbody class="list">
                 @indicatorsWithTeams.zipWithIndex.map { case (indicator, i) =>
-                    <tr role="row" id="row_@{i}">
+                    <tr id="row_@{i}">
                         <td class="repo-name" id="row_@{i}_column_0">
                             <a href="/health-indicators/@{indicator.repoName}"><span class="repoName">@indicator.repoName</span></a>
                         </td>

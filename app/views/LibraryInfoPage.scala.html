@@ -85,7 +85,7 @@
         </div>
 
         @repositoryModules.zipWithIndex.map { case (modules, idx) =>
-            <details closed>
+            <details>
                 <summary>Version @modules.version.get
 
                 @if(
@@ -94,9 +94,9 @@
                             .flatMap { dependency => dependency.pendingBobbyRuleViolations }
                             .toSet.nonEmpty
                 ) {
-                    <div id="bobby-violation-pending-badge" class="environment-badge bobby-violation-pending-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule pending" style="
+                    <span id="bobby-violation-pending-badge" class="environment-badge bobby-violation-pending-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule pending" style="
                         float: right;
-                    "></div>
+                    "></span>
                 }
                 @if(
                     modules.modules.exists(_.activeBobbyRules.nonEmpty) ||
@@ -104,9 +104,9 @@
                             .flatMap { dependency => dependency.activeBobbyRuleViolations }
                             .toSet.nonEmpty
                 ) {
-                    <div id="bobby-violation-active-badge" class="environment-badge bobby-violation-active-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule violated" style="
+                    <span id="bobby-violation-active-badge" class="environment-badge bobby-violation-active-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule violated" style="
                         float: right;
-                    "></div>
+                    "></span>
                 }
                 </summary>
                 @modulesPartial(modules, displayBuildInfo = idx == 0, showLegend = false)

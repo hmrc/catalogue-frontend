@@ -19,6 +19,10 @@ package uk.gov.hmrc.cataloguefrontend.util
 import java.net.URLEncoder
 
 import play.utils.UriEncoding
+import play.api.routing.sird.QueryStringParameterExtractor
+import play.api.routing.sird.QueryString
+import java.net.URI
+import java.net.URLDecoder
 
 /** This should be only used for building relative URLs.
   * When building absolute URLs (e.g. for http-verbs), use uk.gov.hmrc.http.StringContextOps
@@ -32,4 +36,14 @@ object UrlUtils {
 
   def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
     queryParams.collect { case (k, Some(v)) => (k, v) }
+
+  private val parameterExtractor = new QueryStringParameterExtractor[Map[String, Seq[String]]] {
+    override def unapply(qs: QueryString): Option[Map[String,Seq[String]]] =
+      Some(qs)
+  }
+
+  def parseUrlEncodedParams(uri: String): Map[String, Seq[String]] = 
+    parameterExtractor.unapply(
+      URI.create(URLDecoder.decode(uri, "UTF-8"))
+    ).getOrElse(Map.empty)
 }

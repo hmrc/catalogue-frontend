@@ -43,7 +43,7 @@
             <span class="col-xs-3"><label>Latest Version</label></span>
             <span class="col-xs-2"><label>Violation</label></span>
           </li>
-          @partials.dependency_section(dependencies)
+          @partials.dependency_section(dependencies, rootId)
         } else {
           <li>No dependencies available</li>
         }

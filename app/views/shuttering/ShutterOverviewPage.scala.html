@@ -167,7 +167,7 @@
             }
           </td>
             <td id="row@{i}_update" class="shutter-update">
-              <a id="shutter-link" class="shutter-row-link" href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
+              <a id="shutter-link-@{state.serviceName}-@{state.environment.asString}" class="shutter-row-link" href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
                 @changeValueFor(state.status.value)
               </a>
             </td>

@@ -27,7 +27,7 @@
 
 <tbody class="list">
 @whatsRunning.zipWithIndex.map { case (wrw, i) =>
-  <tr role="row" id="row@i">
+  <tr id="row@i">
     <td class="application-name" id="row@{i}_application">
         <a id="link-to-info-page-for-@{wrw.applicationName.asString}" href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
     </td>

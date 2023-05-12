@@ -27,10 +27,12 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
 import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
+import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.BobbyRulesTrendPage
 
+import java.net.URLEncoder
 import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -67,15 +69,16 @@ class BobbyRulesTrendController @Inject() (
         allRules <- configConnector.bobbyRules()
                       .map(_.libraries)
                       .map(_.sortBy(-_.from.toEpochDay))
+        decodedParams = UrlUtils.parseUrlEncodedParams(request.target.uriString)
         pageWithError = (msg: String) =>
                           page(
-                            form().bindFromRequest().withGlobalError(msg),
+                            form().bindFromRequest(decodedParams).withGlobalError(msg),
                             allRules,
                             flags = SlugInfoFlag.values,
                             data = None
                           )
         res <- form()
-                 .bindFromRequest()
+                 .bindFromRequest(decodedParams)
                  .fold(
                    hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, allRules, flags = SlugInfoFlag.values, data = None))),
                    success = query =>
@@ -84,7 +87,7 @@ class BobbyRulesTrendController @Inject() (
                        countData = violations.summary
                      } yield Ok(
                        page(
-                         form().bindFromRequest(),
+                         form().bindFromRequest(decodedParams),
                          allRules,
                          flags = SlugInfoFlag.values,
                          Some(
@@ -134,8 +137,8 @@ class BobbyRulesTrendController @Inject() (
 
 object BobbyRulesTrendController {
   def display(group: String, artefact: String, versionRange: BobbyVersionRange): String =
-    uk.gov.hmrc.cataloguefrontend.routes.BobbyRulesTrendController.display.toString +
-      s"?rules[]=$group:$artefact:${versionRange.range}"
+    s"${uk.gov.hmrc.cataloguefrontend.routes.BobbyRulesTrendController.display.toString}?" +
+      URLEncoder.encode(s"rules[]=$group:$artefact:${versionRange.range}", "UTF-8")
 
   case class GraphData(
     columns: List[(String, String)],

@@ -54,7 +54,7 @@
         </thead>
         @indicator.weightedMetrics.zipWithIndex.map{ case (indicator, i ) =>
               <section id="section_@{i}_@{indicator.metricType}">
-                <tr role="row" id="section_@{i}_row_1">
+                <tr id="section_@{i}_row_1">
                     <td id="section_@{i}_row_0_col_0">@indicator.metricType</td>
                     <td id="section_@{i}_row_0_col_1">@indicator.score</td>
                     @if(indicator.breakdown.isEmpty){

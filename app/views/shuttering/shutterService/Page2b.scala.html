@@ -86,7 +86,7 @@
 
           <div class="row">
             <div class="col-sm-12">
-              <label for="useDefaultOutagePage">Select outage page</label><br/>
+              <label for="useDefaultOutagePageTrue">Select outage page</label><br/>
               @defining(form("useDefaultOutagePage").value.map(_.toBoolean).getOrElse(false)) { useDefaultOutagePage =>
                 <input type="radio" id="useDefaultOutagePageFalse" name="useDefaultOutagePage" value="false" @if(!useDefaultOutagePage){checked}>
                 <label for="useDefaultOutagePageFalse" style="font-weight: normal;">Service outage page</label><br/>
