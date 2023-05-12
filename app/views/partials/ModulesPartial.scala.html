@@ -156,7 +156,7 @@
     <div class="board">
       <div class="board__body">
         <ul class="list list--minimal list-group row">
-          <li id="board-description" class="col-xs-6">
+          <li id="board-description-@{module.name}" class="col-xs-6">
             <label>Scala Versions: </label>
             @module.crossScalaVersions.map(_.toString).mkString(", ")
           </li>

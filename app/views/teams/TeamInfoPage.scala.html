@@ -145,10 +145,12 @@
                                   }
                                 }
                                 case Left(UMPError.UnknownTeam) => {
-                                  @teamName.asString is unknown to the User Management Portal. To add the team, please raise a TSR
+                                  <li class="col-xs-6">
+                                    @teamName.asString is unknown to the User Management Portal. To add the team, please raise a TSR
+                                  </li>
                                 }
                                 case Left(error) => {
-                                  <li id="linkToRectify">
+                                  <li class="col-xs-6" id="linkToRectify">
                                     Sorry, the User Management Portal is not available
                                   </li>
                                 }
