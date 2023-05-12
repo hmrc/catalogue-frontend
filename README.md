@@ -14,8 +14,9 @@ For help setting up dependent services see [catalogue-acceptance-tests]("https:/
 
 ## Development
 
-In order to run unit tests against any changes to views or partials you need to execute
-`sbt compile` 
+In order to run unit tests in the IDE against any changes to views or partials you need to execute
+`sbt compile` so that the templates are converted and compiled.  The `sbt test` command (used below for 
+running the full suite of unit tests) already calls `compile`.
 
 ## Updating the front page
 
