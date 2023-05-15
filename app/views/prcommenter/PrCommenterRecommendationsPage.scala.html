@@ -16,10 +16,8 @@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Team}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
-@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import views.html.helper.select
 @import views.html.partials.TeamNames
@@ -94,7 +92,7 @@
               <td @collapseAttr("accordion-toggle collapsed", report)></td>
               <td @collapseAttr("name", report)>@report.name</td>
               <td @collapseAttr("teams", report)>
-                @teamNames(uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository, report.name, report.teamNames)
+                @teamNames(s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams", report.teamNames)
               </td>
               <td @collapseAttr("recommendations text-center", report)>@report.comments.size</td>
               <td @collapseAttr("lastrun hide text-nowrap", report)>@report.created</td>
@@ -103,7 +101,7 @@
             <tr id="collapsible-area-@report.name" class="collapse multi-collapse @if(report.comments.isEmpty) { hide }">
               <td class="hide name"><a href="@report.name">@report.name</a></td>
               <td class="hide teams">
-                @teamNames(uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository, report.name, report.teamNames)
+                @teamNames(s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams", report.teamNames)
               </td>
               <td class="hide recommendations">@report.comments.size<td>
               <td class="hide lastrun">@report.created</td>
@@ -179,12 +177,3 @@
   }
 }
 
-@displayTeams(report: PrCommenterReport) = {
-  @if(!report.isShared) {
-    @report.teamNameDisplay.split(",").map {tn => <div  class="team" >@tn</div> }
-  } else {
-    <div title="@report.teamNames.take(15).mkString("\n")" class="team" >
-        <em>@report.teamNameDisplay</em>
-    </div>
-  }
-}

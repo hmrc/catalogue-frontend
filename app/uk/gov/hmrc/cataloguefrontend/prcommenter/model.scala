@@ -17,8 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.prcommenter
 
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.config.Constant
-
 import java.time.Instant
 
 case class PrCommenterReport(
@@ -27,13 +25,7 @@ case class PrCommenterReport(
   version  : Version,
   comments : Seq[PrCommenterComment],
   created  : Instant
-) {
-  def isShared: Boolean =
-    teamNames.length >= Constant.sharedRepoTeamsCutOff
-
-  def teamNameDisplay: String =
-    if (isShared) s"Shared by ${teamNames.length} teams" else teamNames.sortBy(_.toLowerCase).mkString(",")
-}
+)
 
 case class PrCommenterComment(
   message    : String,
