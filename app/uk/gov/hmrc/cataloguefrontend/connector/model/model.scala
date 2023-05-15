@@ -23,9 +23,7 @@ import play.api.mvc.{PathBindable, QueryStringBindable}
 
 case class Username(value: String) extends AnyVal
 
-case class TeamName(asString: String) extends AnyVal {
-  override def toString: String = asString
-}
+case class TeamName(asString: String) extends AnyVal
 
 object TeamName {
   lazy val format: Format[TeamName] =

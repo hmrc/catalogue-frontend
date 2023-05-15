@@ -46,7 +46,7 @@
     </td>
 
     <td id="row@{i}_team">
-        @repoTeamNames(s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams", repo.teamNames)
+        @repoTeamNames(repo.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
     </td>
 
     <td class="repo-bp monospaced" id="row@{i}_branch-protection">

@@ -20,14 +20,30 @@
 @this()
 
 @(
-        controllerLinkString: String,
-        teamNames: Seq[Any]
+        teamNames: Seq[Any],
+        controllerLinkHref: String,
 )
 
 @if(teamNames.length < Constant.sharedRepoTeamsCutOff ) {
-    @teamNames.map {tn => <div  class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(tn.toString()))">@tn.toString()</a></div> }
+    @teamNames.map { tn =>
+        <div class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(teamNameFromMapValue(tn))">@displayNameFromMapValue(tn)</a></div>
+    }
 } else {
     <div title="@teamNames.take(Constant.sharedRepoTeamsCutOff).mkString("\n")" class="repo-team" >
-        <em><a href="@controllerLinkString">Shared by @teamNames.length teams</a></em>
+        <em><a href="@controllerLinkHref">Shared by @teamNames.length teams</a></em>
     </div>
+}
+
+@displayNameFromMapValue(value: Any) = @{
+    value match {
+        case value: TeamName => value.asString
+        case _ => value.toString()
+    }
+}
+
+@teamNameFromMapValue(value: Any) = @{
+    value match {
+        case value: TeamName => value
+        case _ => TeamName(value.toString())
+    }
 }
