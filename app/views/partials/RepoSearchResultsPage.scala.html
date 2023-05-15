@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import views.html.partials.TeamNames
 
@@ -46,7 +47,8 @@
     </td>
 
     <td id="row@{i}_team">
-        @repoTeamNames(repo.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
+        @* TODO: change the GitRepository model to use TeamName types instead of String, then this mapping can be removed *@
+        @repoTeamNames(repo.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
     </td>
 
     <td class="repo-bp monospaced" id="row@{i}_branch-protection">

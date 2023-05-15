@@ -19,6 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import views.html.helper.select
 @import views.html.partials.TeamNames
 
@@ -92,7 +93,8 @@
               <td @collapseAttr("accordion-toggle collapsed", report)></td>
               <td @collapseAttr("name", report)>@report.name</td>
               <td @collapseAttr("teams", report)>
-                @teamNames(report.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
+                @* TODO: change the report model to use TeamName types instead of String, then this mapping can be removed *@
+                @teamNames(report.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
               </td>
               <td @collapseAttr("recommendations text-center", report)>@report.comments.size</td>
               <td @collapseAttr("lastrun hide text-nowrap", report)>@report.created</td>
@@ -101,7 +103,8 @@
             <tr id="collapsible-area-@report.name" class="collapse multi-collapse @if(report.comments.isEmpty) { hide }">
               <td class="hide name"><a href="@report.name">@report.name</a></td>
               <td class="hide teams">
-                @teamNames(report.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
+                @* TODO: change the report model to use TeamName types instead of String, then this mapping can be removed *@
+                @teamNames(report.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
               </td>
               <td class="hide recommendations">@report.comments.size<td>
               <td class="hide lastrun">@report.created</td>
