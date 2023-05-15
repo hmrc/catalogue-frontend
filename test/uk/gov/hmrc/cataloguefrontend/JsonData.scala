@@ -22,77 +22,20 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType
 import java.time.Instant
 
 /**
-  * Created by armin.
-  */
+ * Created by armin.
+ *
+ * TODO: Refactor the data here into files under the
+ * TODO: uk.gov.hmrc.cataloguefrontend.jsondata package so that
+ * TODO: a) This files doesn't get too big
+ * TODO:  b) Data is split by service/source
+ * TODO: Eventually move this file (common code) to that package as well
+ */
 object JsonData {
+
+  val emptyList = "[]"
 
   val createdAt    = Instant.parse("2016-04-23T16:45:30.00Z")
   val lastActiveAt = Instant.parse("2016-10-12T10:30:12.00Z")
-
-  val teams =
-    s"""
-      |[
-      |  {
-      |    "name": "team1",
-      |    "createdDate": "$createdAt",
-      |    "lastActiveDate": "$lastActiveAt",
-      |    "repos": 7
-      |  },
-      |  {
-      |    "name": "team2",
-      |    "createdDate": "$createdAt",
-      |    "lastActiveDate": "$lastActiveAt",
-      |    "repos": 9
-      |  }
-      |]
-    """.stripMargin
-
-
-
-  val repositoriesData = {
-    s"""[
-       {"name":"teamA-serv"   ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
-       {"name":"teamB-library","description": "", "teamNames":["teamB"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
-       {"name":"teamB-other"  ,"description": "", "teamNames":["teamB"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
-       ]
-     """"
-  }
-
-  val repositoriesTeamAData = {
-    s"""[
-       {"name":"teamA-serv"   ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
-       {"name":"teamA-library","description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
-       {"name":"teamA-other"  ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"},
-       {"name":"teamA-proto"  ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Prototype", "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"},
-       {"name":"teamA-proto2"  ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Prototype", "language":"Scala", "isArchived":true, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
-       ]
-     """"
-  }
-
-  val repositoriesTeamADataLibrary = {
-    s"""[
-       {"name":"teamA-library","description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"}
-       ]
-     """"
-  }
-
-  def repositoryData(repoName: String = "service-1") =
-    s"""
-       {
-         "name": "$repoName",
-         "isPrivate": false,
-         "isArchived": false,
-         "isDeprecated": false,
-         "description": "some description",
-         "createdDate": "$createdAt",
-         "lastActiveDate": "$lastActiveAt",
-         "repoType": "Service",
-         "defaultBranch": "main",
-         "teamNames": ["teamA", "teamB"],
-         "language":"Scala",
-         "url": "https://github.com/hmrc/$repoName"
-       }
-    """
 
   val serviceJenkinsBuildData: String =
     """
@@ -534,21 +477,6 @@ object JsonData {
       }
     """
 
-  val jenkinsData: String =
-    """{
-          "name": "lib",
-          "jenkinsURL": "http://jenkins/lib/"
-        }
-        """
-
-  val jenkinsBuildData: String =
-    """{ "jobs": [{
-            "name": "lib",
-            "jenkinsURL": "http://jenkins/lib/"
-          }]
-        }
-        """
-
   val libraryData: String = {
     """{
         "name"           : "lib",
@@ -678,6 +606,4 @@ object JsonData {
       |  "outboundServices": ["service-c", "service-d"]
       |}
       |""".stripMargin
-
-
 }

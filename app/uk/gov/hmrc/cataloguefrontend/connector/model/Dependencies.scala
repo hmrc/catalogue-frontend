@@ -338,8 +338,7 @@ case class ServiceWithDependency(
   depGroup          : String,
   depArtefact       : String,
   depVersion        : Version,
-  scopes            : Set[DependencyScope]
-)
+  scopes            : Set[DependencyScope])
 
 object ServiceWithDependency {
   import play.api.libs.functional.syntax._

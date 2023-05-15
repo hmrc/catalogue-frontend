@@ -19,8 +19,12 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, GroupArtefacts, ServiceWithDependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
+@import views.html.partials.TeamNames
 
-@this(viewMessages: ViewMessages)
+@this(
+        teamNames: TeamNames,
+        viewMessages: ViewMessages
+)
 
 @(form            : Form[_],
   teams           : Seq[TeamName],
@@ -161,7 +165,9 @@
                             <tr>
                                 <td class="service"><a id="link-to-info-page-for-@{result.slugName}"href="@appRoutes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
                                 <td>@result.slugVersion</td>
-                                <td class="teams">@result.teams.map(_.asString).mkString(", ")</td>
+                                <td class="teams">
+                                    @teamNames(result.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(result.slugName)}#teams")
+                                </td>
                                 <td>@result.depGroup</td>
                                 <td>@result.depArtefact</td>
                                 <td class="dep-version">@result.depVersion</td>

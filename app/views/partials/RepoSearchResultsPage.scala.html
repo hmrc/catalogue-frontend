@@ -15,11 +15,13 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import views.html.partials.TeamNames
 
-@this()
-
+@this(
+    repoTeamNames: TeamNames
+)
 
 @(
     repositories: Seq[GitRepository]
@@ -45,13 +47,8 @@
     </td>
 
     <td id="row@{i}_team">
-        @if(!repo.isShared) {
-            @repo.teamNameDisplay.split(",").map {tn => <div  class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(tn))">@tn</a></div> }
-        } else {
-            <div title="@repo.teamNames.take(15).mkString("\n")" class="repo-team" >
-                <em><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(TeamName(repo.teamNameDisplay))">@repo.teamNameDisplay</a></em>
-            </div>
-    }
+        @* TODO: change the GitRepository model to use TeamName types instead of String, then this mapping can be removed *@
+        @repoTeamNames(repo.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
     </td>
 
     <td class="repo-bp monospaced" id="row@{i}_branch-protection">
