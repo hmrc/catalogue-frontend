@@ -71,7 +71,7 @@
                     }
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1.asString)) {
-                    @defining(envSources.forall(_._2.map(_.source) == List("referenceConf"))) { isRefconfOnly =>
+                    @defining(envSources.forall(_._2.filterNot(_.nextDeployment).map(_.source) == List("referenceConf"))) { isRefconfOnly =>
                         <div id="config-row-@key.asString" class="grid-row @if(isRefconfOnly) {refconf-only}">
                             <div id="config-key-@key.asString" class="grid-item sticky-column truncate-content" style="width:310px;">
                                 <a id="config-url-@key.asString" href="#@key.asString" class="glyphicon glyphicon-link"></a>@key.asString
