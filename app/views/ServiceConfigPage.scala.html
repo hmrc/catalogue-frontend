@@ -71,7 +71,7 @@
                     }
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1.asString)) {
-                    @defining(envSources.forall(_._2.filterNot(_.nextDeployment).map(_.source) == List("referenceConf"))) { isRefconfOnly =>
+                    @defining(envSources.forall(_._2.map(_.source).forall(_ == "referenceConf"))) { isRefconfOnly =>
                         <div id="config-row-@key.asString" class="grid-row @if(isRefconfOnly) {refconf-only}">
                             <div id="config-key-@key.asString" class="grid-item sticky-column truncate-content" style="width:310px;">
                                 <a id="config-url-@key.asString" href="#@key.asString" class="glyphicon glyphicon-link"></a>@key.asString
@@ -149,7 +149,7 @@
                 @if(CatalogueFrontendSwitches.showDeployedConfig.isEnabled) {
                     <li>The App-config environment (<code>app-config-$env</code>) and common configuration (<code>app-config-common</code>) are applied at deployment time by looking up the latest config from github. The config shown is the config that was applied at the deployment. Any changes to config since then that will be applied at the next deployment is also shown in amber.</li>
                 } else {
-                    <li>The App-config environment (<code>app-config-$env</code>) and common configuration (<code>app-config-common</code>) are looked up in the corresponding github project. They <i>might</i> not correspond to what is actually deployed in the environment, and actually represent what the resulting configuration would be if the slug is redeployed into that environment.</li>
+                    <li>The App-config environment (<code>app-config-$env</code>) and common configuration (<code>app-config-common</code>) are looked up in the corresponding github project. They <i>might</i> not correspond to what is actually deployed in the environment, and represent what the resulting configuration would be if the slug is redeployed into that environment.</li>
                 }
             </ul>
             <h2>How to use the config explorer</h2>
@@ -159,7 +159,7 @@
                 <li>Hover over a config value to see it's source</li>
                 <li>Triple click a truncated value to select the whole thing</li>
                 <li>Click the <span class="glyphicon glyphicon-circle-arrow-right"></span> arrow to the right of a value to see the config item in context</li>
-                <li>Toggle environments on/off and adjust formatting using the hamburger menu</li>
+                <li>Toggle environments on/off and adjust formatting using the <span class="glyphicon glyphicon-menu-hamburger"></span> menu</li>
                 <li>Toggle inclusion of values from reference.conf files using the <span class="glyphicon glyphicon-menu-hamburger"></span> menu icon. Note reference.conf values are always shown if they have been overridden</li>
                 <li>Ctrl-f to search for a key or value (uses browser find)</li>
             </ul>
