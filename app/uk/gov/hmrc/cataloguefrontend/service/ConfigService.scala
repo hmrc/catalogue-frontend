@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
@@ -27,21 +28,65 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 class ConfigService @Inject()(
-  configConnector: ConfigConnector,
+  configConnector       : ConfigConnector,
   teamsAndReposConnector: TeamsAndRepositoriesConnector
 )(implicit
   ec: ExecutionContext
 ) {
   import ConfigService._
 
-  def configByEnvironment(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByEnvironment] =
-    configConnector.configByEnv(serviceName)
+  def configByKey(serviceName: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
+    configConnector.configByKey(serviceName, latest)
 
   def configByKey(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
-    configConnector.configByKey(serviceName)
+    for {
+        latestConfigByKey      <- configByKey(serviceName, latest = true )
+        deployedConfigByKey1   <- configByKey(serviceName, latest = false)
+        envWithDeployedConfig  =  // only required until all services have been redeployed
+                                  deployedConfigByKey1.foldLeft(Set.empty[ConfigEnvironment]) { case (acc, (_, m)) =>
+                                    m.foldLeft(acc) { case (acc2, (e, m)) =>
+                                      // we expect to see this source if we have received config commit info
+                                      if (m.exists(_.source == "appConfigEnvironment"))
+                                        acc2 + e
+                                      else acc2
+                                    }
+                                  }
+        deployedConfigByKey    =  // this is simpler if we make the deployed config the same as latest when it is disabled/no-data
+                                  deployedConfigByKey1.map { case (k, m) =>
+                                    k ->
+                                      ConfigEnvironment.values.map { e =>
+                                        e ->
+                                          (if (CatalogueFrontendSwitches.showDeployedConfig.isEnabled && envWithDeployedConfig.contains(e))
+                                             m.getOrElse(e, Seq.empty)
+                                           else
+                                             latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty)
+                                          )
+                                      }.toMap
+                                  }
+        configByKey            =  deployedConfigByKey.map {
+                                    case (k, m) => k -> m.map {
+                                      case (e, vs) =>
+                                        latestConfigByKey.getOrElse(k, m).getOrElse(e, vs).lastOption match {
+                                          case Some(n) if (vs.last.value != n.value) => e -> (vs :+ n.copy(source = "nextDeployment", sourceUrl = None))
+                                          case _                                     => e -> vs
+                                        }
+                                    }
+                                  }
+        newConfig              =  if (CatalogueFrontendSwitches.showDeployedConfig.isEnabled) {
+                                    val newKeys = latestConfigByKey.keySet.diff(deployedConfigByKey.keySet)
+                                    latestConfigByKey
+                                      .filter { case (k, _) => newKeys.contains(k) }
+                                      .map {
+                                        case (k, m) => k -> m.map {
+                                          case (e, vs) if !envWithDeployedConfig.contains(e) => e -> vs
+                                          case (e, vs)                                       => e -> List(vs.last.copy(source = "nextDeployment", sourceUrl = None))
+                                        }
+                                      }
+                                  } else Map.empty
+    } yield (configByKey ++ newConfig)
 
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
-    configByKey(serviceName)
+    configByKey(serviceName, latest = true)
       .map(
         _.getOrElse(KeyName("artifact_name"), Map.empty)
           .view
@@ -73,10 +118,16 @@ object ConfigService {
 
   case class KeyName(asString: String) extends AnyVal
 
-  trait ConfigEnvironment { def asString: String }
+  trait ConfigEnvironment { def asString: String; def displayString: String }
   object ConfigEnvironment {
-    case object Local                           extends ConfigEnvironment { override def asString = "local"      }
-    case class ForEnvironment(env: Environment) extends ConfigEnvironment { override def asString = env.asString }
+    case object Local                           extends ConfigEnvironment {
+      override def asString      = "local"
+      override def displayString = "Local"
+    }
+    case class ForEnvironment(env: Environment) extends ConfigEnvironment {
+      override def asString      = env.asString
+      override def displayString = env.displayString
+    }
 
     val values: List[ConfigEnvironment] =
       Local :: Environment.values.map(ForEnvironment.apply)
@@ -139,6 +190,9 @@ object ConfigService {
   ){
     def isSuppressed: Boolean =
       value == "<<SUPPRESSED>>"
+
+    def nextDeployment: Boolean =
+      source == "nextDeployment"
   }
 
   object ConfigSourceValue {
@@ -184,6 +238,7 @@ object ConfigService {
       case "appConfigCommonFixed"       => "App-config-common fixed settings"
       case "appConfigCommonOverridable" => "App-config-common overridable settings"
       case "base64"                     => s"Base64 (decoded from config ${key.fold("'key'")(_.asString)}.base64)"
+      case "nextDeployment"             => "Used on next deployment"
       case _                            => source
     }
 

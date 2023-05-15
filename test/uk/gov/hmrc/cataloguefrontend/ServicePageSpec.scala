@@ -55,7 +55,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
     "return a 404 when no repo exist with that name and the service does not have config" in {
       serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (404, None))
-      serviceEndpoint(GET, "/service-configs/config-by-key/serv", willRespondWith = (200, Some("""{}""")))
+      serviceEndpoint(GET, "/service-configs/config-by-key/serv?latest=true", willRespondWith = (200, Some("""{}""")))
+      serviceEndpoint(GET, "/service-configs/config-by-key/serv?latest=false", willRespondWith = (200, Some("""{}""")))
 
       val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get().futureValue
       response.status shouldBe 404
@@ -63,55 +64,45 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
     "return a 404 when no repo exist with that name and the service does not have a artifact name" in {
       serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (404, None))
-      serviceEndpoint(
-        GET,
-        "/service-configs/config-by-key/serv",
-        willRespondWith = (200, Some(
-          """{
-            "key1": {
-              "production": [
-                {
-                  "source": "appConfig",
-                  "precedence": 10,
-                  "value": "value1"
-                }
-              ]
-            }
-          }"""
-        ))
-      )
-
+      val configRsp = """{
+                        "key1": {
+                          "production": [
+                            {
+                              "source": "appConfig",
+                              "precedence": 10,
+                              "value": "value1"
+                            }
+                          ]
+                        }
+                      }"""
+      serviceEndpoint(GET, "/service-configs/config-by-key/serv?latest=true",  willRespondWith = (200, Some(configRsp)))
+      serviceEndpoint(GET, "/service-configs/config-by-key/serv?latest=false", willRespondWith = (200, Some(configRsp)))
       val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get().futureValue
       response.status shouldBe 404
     }
 
     "return a 500 when no repo exist with that name and the service have multiple artifact names in different environments" in {
       serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (404, None))
-      serviceEndpoint(
-        GET,
-        "/service-configs/config-by-key/serv",
-        willRespondWith = (200, Some(
-          """{
-            "artifact_name": {
-              "production": [
-                {
-                  "source": "appConfig",
-                  "precedence": 10,
-                  "value": "repo1"
-                }
-              ],
-              "qa": [
-                {
-                  "source": "appConfig",
-                  "precedence": 10,
-                  "value": "repo2"
-                }
-              ]
-            }
-          }"""
-        ))
-      )
-
+      val configRsp = """{
+                        "artifact_name": {
+                          "production": [
+                            {
+                              "source": "appConfig",
+                              "precedence": 10,
+                              "value": "repo1"
+                            }
+                          ],
+                          "qa": [
+                            {
+                              "source": "appConfig",
+                              "precedence": 10,
+                              "value": "repo2"
+                            }
+                          ]
+                        }
+                      }"""
+      serviceEndpoint(GET, "/service-configs/config-by-key/serv?latest=true",  willRespondWith = (200, Some(configRsp)))
+      serviceEndpoint(GET, "/service-configs/config-by-key/serv?latest=false", willRespondWith = (200, Some(configRsp)))
       val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get().futureValue
       response.status shouldBe 500
     }
@@ -129,30 +120,26 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         serviceEndpoint(GET, s"/api/v2/repositories/$serviceName", willRespondWith = (200, Some(repositoryData(repoName))))
       else {
         serviceEndpoint(GET, s"/api/v2/repositories/$serviceName", willRespondWith = (404, None))
-        serviceEndpoint(
-          GET,
-          s"/service-configs/config-by-key/$serviceName",
-          willRespondWith = (200, Some(
-            s"""{
-              "artifact_name": {
-                "production": [
-                  {
-                    "source": "appConfig",
-                    "precedence": 10,
-                    "value": "$repoName"
-                  }
-                ],
-                "qa": [
-                  {
-                    "source": "appConfig",
-                    "precedence": 10,
-                    "value": "$repoName"
-                  }
-                ]
-              }
-            }"""
-          ))
-        )
+        val configRsp = s"""{
+                          "artifact_name": {
+                            "production": [
+                              {
+                                "source": "appConfig",
+                                "precedence": 10,
+                                "value": "$repoName"
+                              }
+                            ],
+                            "qa": [
+                              {
+                                "source": "appConfig",
+                                "precedence": 10,
+                                "value": "$repoName"
+                              }
+                            ]
+                          }
+                        }"""
+        serviceEndpoint(GET, s"/service-configs/config-by-key/$serviceName?latest=true", willRespondWith = (200, Some(configRsp)))
+        serviceEndpoint(GET, s"/service-configs/config-by-key/$serviceName?latest=false", willRespondWith = (200, Some(configRsp)))
 
         serviceEndpoint(GET, s"/api/v2/repositories/$repoName", willRespondWith = (200, Some(repositoryData(repoName))))
         serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=0.0.1", willRespondWith = (200, Some("[]")))
