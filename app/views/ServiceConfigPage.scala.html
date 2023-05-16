@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{ConfigByKey, ConfigEnvironment, ConfigSourceValue}
+@import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 @import scala.collection.immutable.ListMap
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 
@@ -72,9 +73,9 @@
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1.asString)) {
                     @defining(envSources.forall(_._2.map(_.source).forall(_ == "referenceConf"))) { isRefconfOnly =>
-                        <div id="config-row-@key.asString" class="grid-row @if(isRefconfOnly) {refconf-only}">
-                            <div id="config-key-@key.asString" class="grid-item sticky-column truncate-content" style="width:310px;">
-                                <a id="config-url-@key.asString" href="#@key.asString" class="glyphicon glyphicon-link"></a>@key.asString
+                        <div id="@{UrlUtils.encodeQueryParam(s"config-row-${key.asString}")}" class="grid-row @if(isRefconfOnly) {refconf-only}">
+                            <div id="@{UrlUtils.encodeQueryParam(s"config-key-${key.asString}")}" class="grid-item sticky-column truncate-content" style="width:310px;">
+                                <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link"></a>@key.asString
                             </div>
                             @for(env <- ConfigEnvironment.values) {
                                 <div class="grid-item column-@env.asString @if(!show(env)){hidden}" style="width:510px;">
@@ -86,9 +87,7 @@
                                             } else {
                                               <span class="truncate-content-overflow
                                                            @if(sourceValue.isSuppressed) {suppressed}
-                                                           @if(envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1) {
-                                                              strikethrough
-                                                           }
+                                                           @if(envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1) {strikethrough}
                                                            ">
                                                 @sourceValue.value
                                               </span>
@@ -103,8 +102,9 @@
                             }
                         </div>
                         <script @CSPNonce.attr>
-                          document.getElementById("config-url-@key.asString").addEventListener("click", function() {
-                            copyHref("config-url-@key.asString")
+                          var elmt = document.getElementById("@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}");
+                          elmt.addEventListener("click", function() {
+                            navigator.clipboard.writeText(elmt.href);
                           });
                         </script>
                     }
@@ -213,10 +213,6 @@
                     document.querySelector("body").classList.toggle("word-wrap");
                 });
             });
-            function copyHref(id) {
-                const copyText = document.getElementById(id);
-                navigator.clipboard.writeText(copyText.href);
-            }
         </script>
     </body>
 </html>
