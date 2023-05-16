@@ -64,9 +64,10 @@ class ConfigService @Inject()(
           configByKey            =  deployedConfigByKey.map {
                                       case (k, m) => k -> m.map {
                                         case (e, vs) =>
-                                          latestConfigByKey.getOrElse(k, m).getOrElse(e, vs).lastOption match {
-                                            case Some(n) if (vs.last.value != n.value) => e -> (vs :+ n.copy(source = "nextDeployment", sourceUrl = None))
-                                            case _                                     => e -> vs
+                                          latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match {
+                                            case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = n.value))
+                                            case None    if vs.lastOption.isDefined                  => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = ""     ))
+                                            case _                                                   => e -> vs
                                           }
                                       }
                                     }
@@ -76,13 +77,13 @@ class ConfigService @Inject()(
                                       .map {
                                         case (k, m) => k -> m.map {
                                           case (e, vs) if envWithDeployedConfig.contains(e)
-                                                           => e -> List(vs.last.copy(source = "nextDeployment", sourceUrl = None))
+                                                           => e -> vs.lastOption.map(_.copy(source = "nextDeployment", sourceUrl = None)).toList
                                           case (e, vs)     => e -> vs
                                         }
                                     }
       } yield (configByKey ++ newConfig)
   else
-    configByKey(serviceName, latest = true )
+    configByKey(serviceName, latest = true)
 
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
     configByKey(serviceName, latest = true)
