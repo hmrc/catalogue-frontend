@@ -986,6 +986,26 @@ aside {
   color: orange;
   font-weight: bold;}
 
+.info {
+  color: grey;
+  font-weight: bold;}
+
+.info-badge {
+  background: grey;
+  color: white;}
+
+.badge {
+  display: inline-block;
+  padding: .25em .4em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25rem;
+}
+
 .grid-row > .grid-item {
   font-family: monospace; }
   .grid-row > .grid-item > ul > li {
