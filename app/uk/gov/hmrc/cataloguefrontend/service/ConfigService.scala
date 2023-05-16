@@ -39,51 +39,50 @@ class ConfigService @Inject()(
     configConnector.configByKey(serviceName, latest)
 
   def configByKey(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
-    for {
-        latestConfigByKey      <- configByKey(serviceName, latest = true )
-        deployedConfigByKey1   <- configByKey(serviceName, latest = false)
-        envWithDeployedConfig  =  // only required until all services have been redeployed
-                                  deployedConfigByKey1.foldLeft(Set.empty[ConfigEnvironment]) { case (acc, (_, m)) =>
-                                    m.foldLeft(acc) { case (acc2, (e, m)) =>
-                                      // we expect to see this source if we have received config commit info
-                                      if (m.exists(_.source == "appConfigEnvironment"))
-                                        acc2 + e
-                                      else acc2
+    if (CatalogueFrontendSwitches.showDeployedConfig.isEnabled)
+      for {
+          latestConfigByKey      <- configByKey(serviceName, latest = true )
+          deployedConfigByKey1   <- configByKey(serviceName, latest = false)
+          envWithDeployedConfig  =  // only required until all services have been redeployed
+                                    deployedConfigByKey1.foldLeft(Set.empty[ConfigEnvironment]) { case (acc, (_, m)) =>
+                                      m.foldLeft(acc) { case (acc2, (e, m)) =>
+                                        // we expect to see this source if we have received config commit info
+                                        if (m.exists(_.source == "appConfigEnvironment"))
+                                          acc2 + e
+                                        else acc2
+                                      }
                                     }
-                                  }
-        deployedConfigByKey    =  // this is simpler if we make the deployed config the same as latest when it is disabled/no-data
-                                  deployedConfigByKey1.map { case (k, m) =>
-                                    k ->
-                                      ConfigEnvironment.values.map { e =>
-                                        e ->
-                                          (if (CatalogueFrontendSwitches.showDeployedConfig.isEnabled && envWithDeployedConfig.contains(e))
-                                             m.getOrElse(e, Seq.empty)
-                                           else
-                                             latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty)
-                                          )
-                                      }.toMap
-                                  }
-        configByKey            =  deployedConfigByKey.map {
-                                    case (k, m) => k -> m.map {
-                                      case (e, vs) =>
-                                        latestConfigByKey.getOrElse(k, m).getOrElse(e, vs).lastOption match {
-                                          case Some(n) if (vs.last.value != n.value) => e -> (vs :+ n.copy(source = "nextDeployment", sourceUrl = None))
-                                          case _                                     => e -> vs
-                                        }
+          deployedConfigByKey    =  // this is simpler if we make the deployed config the same as latest when there is no-data
+                                    deployedConfigByKey1.map { case (k, m) =>
+                                      k ->
+                                        ConfigEnvironment.values.map {
+                                          case e if envWithDeployedConfig.contains(e)
+                                                     => e -> m.getOrElse(e, Seq.empty)
+                                          case e     => e -> latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty)
+                                        }.toMap
                                     }
-                                  }
-        newConfig              =  if (CatalogueFrontendSwitches.showDeployedConfig.isEnabled) {
-                                    val newKeys = latestConfigByKey.keySet.diff(deployedConfigByKey.keySet)
-                                    latestConfigByKey
+          configByKey            =  deployedConfigByKey.map {
+                                      case (k, m) => k -> m.map {
+                                        case (e, vs) =>
+                                          latestConfigByKey.getOrElse(k, m).getOrElse(e, vs).lastOption match {
+                                            case Some(n) if (vs.last.value != n.value) => e -> (vs :+ n.copy(source = "nextDeployment", sourceUrl = None))
+                                            case _                                     => e -> vs
+                                          }
+                                      }
+                                    }
+          newKeys                =  latestConfigByKey.keySet.diff(deployedConfigByKey.keySet)
+          newConfig              =  latestConfigByKey
                                       .filter { case (k, _) => newKeys.contains(k) }
                                       .map {
                                         case (k, m) => k -> m.map {
-                                          case (e, vs) if !envWithDeployedConfig.contains(e) => e -> vs
-                                          case (e, vs)                                       => e -> List(vs.last.copy(source = "nextDeployment", sourceUrl = None))
+                                          case (e, vs) if envWithDeployedConfig.contains(e)
+                                                           => e -> List(vs.last.copy(source = "nextDeployment", sourceUrl = None))
+                                          case (e, vs)     => e -> vs
                                         }
-                                      }
-                                  } else Map.empty
-    } yield (configByKey ++ newConfig)
+                                    }
+      } yield (configByKey ++ newConfig)
+  else
+    configByKey(serviceName, latest = true )
 
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
     configByKey(serviceName, latest = true)

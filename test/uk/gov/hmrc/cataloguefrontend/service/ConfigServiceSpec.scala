@@ -66,6 +66,40 @@ class ConfigServiceSpec
       configService.configByKey(serviceName).futureValue shouldBe latest
     }
 
+    "show keys added to latest when feature switched off" in new Setup {
+      FeatureSwitch.disable(CatalogueFrontendSwitches.showDeployedConfig)
+
+      val serviceName = "service"
+
+      val deployed: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]] =
+        Map(
+          KeyName("k1") -> ConfigEnvironment.values.map(e => e -> Seq(
+            ConfigSourceValue(source = "appConfigCommon"     , sourceUrl = None, value = s"${e}-a1"),
+            ConfigSourceValue(source = "appConfigEnvironment", sourceUrl = None, value = s"${e}-b1")
+          )).toMap
+        )
+
+      val latest =
+        update(deployed)(
+          KeyName("k2"),
+          ConfigEnvironment.ForEnvironment(Environment.QA),
+          ConfigSourceValue("appConfigCommon", None, "val")
+        )
+
+      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+        .thenReturn(Future.successful(latest))
+
+      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+        .thenReturn(Future.successful(deployed))
+
+      configService.configByKey(serviceName).futureValue shouldBe update(
+        deployed
+      )(KeyName("k2"),
+        ConfigEnvironment.ForEnvironment(Environment.QA),
+        ConfigSourceValue("appConfigCommon", None, "val")
+      )
+    }
+
     "return no change when latest and deployed are the same" in new Setup {
       val serviceName = "service"
 

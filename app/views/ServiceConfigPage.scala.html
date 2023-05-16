@@ -87,9 +87,7 @@
                                             } else {
                                               <span class="truncate-content-overflow
                                                            @if(sourceValue.isSuppressed) {suppressed}
-                                                           @if(envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1) {
-                                                              strikethrough
-                                                           }
+                                                           @if(envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1) {strikethrough}
                                                            ">
                                                 @sourceValue.value
                                               </span>
