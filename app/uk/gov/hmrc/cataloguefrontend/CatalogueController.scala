@@ -103,12 +103,17 @@ class CatalogueController @Inject() (
         .map(blogs => Ok(indexPage(blogs)))
     }
 
+  private val appConfigBaseInSlug: Map[ConfigService.ConfigEnvironment, Boolean] =
+    Environment.values
+      .map(env => ConfigService.ConfigEnvironment.ForEnvironment(env) -> configuration.get[Boolean](s"app-config-base-in-slug.${env.asString}"))
+      .toMap
+
   def serviceConfig(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey <- configService.configByKey(serviceName)
-      } yield Ok(serviceConfigPage(serviceName, configByKey, deployments))
+      } yield Ok(serviceConfigPage(serviceName, configByKey, deployments, appConfigBaseInSlug))
     }
 
   /** Renders the service page by either the repository name, or the artefact name (if configured).
