@@ -501,14 +501,15 @@ object JsonData {
     "version"          : "v1",
     "dependenciesBuild": [],
     "modules"          : [{
-      "name"               : "m1",
-      "group"              : "g1",
-      "dependenciesCompile": $dependenciesCompile,
-      "dependenciesTest"   : [],
-      "dependenciesIt"     : [],
-      "crossScalaVersions" : [],
-      "activeBobbyRules"   : [],
-      "pendingBobbyRules"  : []
+      "name"                : "m1",
+      "group"               : "g1",
+      "dependenciesCompile" : $dependenciesCompile,
+      "dependenciesProvided": [],
+      "dependenciesTest"    : [],
+      "dependenciesIt"      : [],
+      "crossScalaVersions"  : [],
+      "activeBobbyRules"    : [],
+      "pendingBobbyRules"   : []
     }]
   }]"""
 
@@ -518,14 +519,15 @@ object JsonData {
       "version"          : "v1",
       "dependenciesBuild": [],
       "modules"          : [{
-        "name"               : "m1",
-        "group"              : "g1",
-        "dependenciesCompile": $dependenciesCompile,
-        "dependenciesTest"   : [],
-        "dependenciesIt"     : [],
-        "crossScalaVersions" : [],
-        "activeBobbyRules"   : [],
-        "pendingBobbyRules"  : []
+        "name"                : "m1",
+        "group"               : "g1",
+        "dependenciesCompile" : $dependenciesCompile,
+        "dependenciesProvided": [],
+        "dependenciesTest"    : [],
+        "dependenciesIt"      : [],
+        "crossScalaVersions"  : [],
+        "activeBobbyRules"    : [],
+        "pendingBobbyRules"   : []
       }]
     }]"""
 

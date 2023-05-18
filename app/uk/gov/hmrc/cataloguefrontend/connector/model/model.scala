@@ -70,7 +70,7 @@ case class RepositoryModules(
 ) {
   def allDependencies: Seq[Dependency] =
     modules.foldLeft(dependenciesBuild)((acc, module) =>
-      acc ++ module.dependenciesCompile ++ module.dependenciesTest ++ module.dependenciesIt
+      acc ++ module.dependenciesCompile ++ module.dependenciesProvided ++ module.dependenciesTest ++ module.dependenciesIt
     )
 }
 
@@ -87,14 +87,15 @@ object RepositoryModules {
 }
 
 case class RepositoryModule(
-  name               : String,
-  group              : String,
-  dependenciesCompile: Seq[Dependency],
-  dependenciesTest   : Seq[Dependency],
-  dependenciesIt     : Seq[Dependency],
-  crossScalaVersions : Seq[Version],
-  activeBobbyRules   : Seq[BobbyRuleViolation],
-  pendingBobbyRules  : Seq[BobbyRuleViolation]
+  name                : String,
+  group               : String,
+  dependenciesCompile : Seq[Dependency],
+  dependenciesProvided: Seq[Dependency],
+  dependenciesTest    : Seq[Dependency],
+  dependenciesIt      : Seq[Dependency],
+  crossScalaVersions  : Seq[Version],
+  activeBobbyRules    : Seq[BobbyRuleViolation],
+  pendingBobbyRules   : Seq[BobbyRuleViolation]
 )
 
 object RepositoryModule {
@@ -102,12 +103,13 @@ object RepositoryModule {
     implicit val bf = BobbyRuleViolation.format
     implicit val dr = Dependency.reads
     implicit val vf  = Version.format
-    ( (__ \ "name"               ).read[String]
-    ~ (__ \ "group"              ).read[String]
-    ~ (__ \ "dependenciesCompile").read[Seq[Dependency]]
-    ~ (__ \ "dependenciesTest"   ).read[Seq[Dependency]]
-    ~ (__ \ "dependenciesIt"     ).read[Seq[Dependency]]
-    ~ (__ \ "crossScalaVersions" ).read[Seq[Version]]
+    ( (__ \ "name"                ).read[String]
+    ~ (__ \ "group"               ).read[String]
+    ~ (__ \ "dependenciesCompile" ).read[Seq[Dependency]]
+    ~ (__ \ "dependenciesProvided").read[Seq[Dependency]]
+    ~ (__ \ "dependenciesTest"    ).read[Seq[Dependency]]
+    ~ (__ \ "dependenciesIt"      ).read[Seq[Dependency]]
+    ~ (__ \ "crossScalaVersions"  ).read[Seq[Version]]
     ~ (__ \ "activeBobbyRules"    ).read[Seq[BobbyRuleViolation]]
     ~ (__ \ "pendingBobbyRules"   ).read[Seq[BobbyRuleViolation]]
     )(RepositoryModule.apply _)
