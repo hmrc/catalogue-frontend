@@ -139,18 +139,19 @@ case class TransitiveServiceDependency(
 )
 
 case class ServiceDependencies(
-  uri                 : String,
-  name                : String,
-  version             : Version,
-  runnerVersion       : String,
-  java                : ServiceJDKVersion,
-  classpath           : String,
-  dependencies        : Seq[ServiceDependency],
-  environment         : Option[Environment] = None,
-  dependencyDotCompile: Option[String] = None,
-  dependencyDotTest   : Option[String] = None,
-  dependencyDotIt     : Option[String] = None,
-  dependencyDotBuild  : Option[String] = None
+  uri                  : String,
+  name                 : String,
+  version              : Version,
+  runnerVersion        : String,
+  java                 : ServiceJDKVersion,
+  classpath            : String,
+  dependencies         : Seq[ServiceDependency],
+  environment          : Option[Environment] = None,
+  dependencyDotCompile : Option[String] = None,
+  dependencyDotProvided: Option[String] = None,
+  dependencyDotTest    : Option[String] = None,
+  dependencyDotIt      : Option[String] = None,
+  dependencyDotBuild   : Option[String] = None
 ) {
   val isEmpty: Boolean = dependencies.isEmpty
 
@@ -158,10 +159,11 @@ case class ServiceDependencies(
 
   def dotFileForScope(scope: DependencyScope): Option[String] =
     scope match {
-      case DependencyScope.Compile => dependencyDotCompile
-      case DependencyScope.Test    => dependencyDotTest
-      case DependencyScope.It      => dependencyDotIt
-      case DependencyScope.Build   => dependencyDotBuild
+      case DependencyScope.Compile  => dependencyDotCompile
+      case DependencyScope.Provided => dependencyDotProvided
+      case DependencyScope.Test     => dependencyDotTest
+      case DependencyScope.It       => dependencyDotIt
+      case DependencyScope.Build    => dependencyDotBuild
     }
 }
 
@@ -183,18 +185,19 @@ object ServiceDependencies {
     implicit val jdkr = serviceJDKVersionReads
     implicit val sdr  = serviceDependencyReads
     implicit val envf = JsonCodecs.environmentFormat
-    ( (__ \ "uri"                      ).read[String]
-    ~ (__ \ "name"                     ).read[String]
-    ~ (__ \ "version"                  ).read[Version]
-    ~ (__ \ "runnerVersion"            ).read[String]
-    ~ (__ \ "java"                     ).read[ServiceJDKVersion]
-    ~ (__ \ "classpath"                ).read[String]
-    ~ (__ \ "dependencies"             ).read[Seq[ServiceDependency]]
-    ~ (__ \ "environment"              ).readNullable[Environment]
-    ~ (__ \ "dependencyDot" \ "compile").readNullable[String].map(_.filter(_.nonEmpty))
-    ~ (__ \ "dependencyDot" \ "test"   ).readNullable[String].map(_.filter(_.nonEmpty))
-    ~ (__ \ "dependencyDot" \ "it"     ).readNullable[String].map(_.filter(_.nonEmpty))
-    ~ (__ \ "dependencyDot" \ "build"  ).readNullable[String].map(_.filter(_.nonEmpty))
+    ( (__ \ "uri"                       ).read[String]
+    ~ (__ \ "name"                      ).read[String]
+    ~ (__ \ "version"                   ).read[Version]
+    ~ (__ \ "runnerVersion"             ).read[String]
+    ~ (__ \ "java"                      ).read[ServiceJDKVersion]
+    ~ (__ \ "classpath"                 ).read[String]
+    ~ (__ \ "dependencies"              ).read[Seq[ServiceDependency]]
+    ~ (__ \ "environment"               ).readNullable[Environment]
+    ~ (__ \ "dependencyDot" \ "compile" ).readNullable[String].map(_.filter(_.nonEmpty))
+    ~ (__ \ "dependencyDot" \ "provided").readNullable[String].map(_.filter(_.nonEmpty))
+    ~ (__ \ "dependencyDot" \ "test"    ).readNullable[String].map(_.filter(_.nonEmpty))
+    ~ (__ \ "dependencyDot" \ "it"      ).readNullable[String].map(_.filter(_.nonEmpty))
+    ~ (__ \ "dependencyDot" \ "build"   ).readNullable[String].map(_.filter(_.nonEmpty))
     )(ServiceDependencies.apply _)
   }
 }

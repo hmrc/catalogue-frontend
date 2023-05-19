@@ -379,13 +379,14 @@ sealed trait DependencyScope {
   }
 }
 object DependencyScope {
-  case object Compile extends DependencyScope { override val asString = "compile" }
-  case object Test    extends DependencyScope { override val asString = "test"    }
-  case object It      extends DependencyScope { override val asString = "it"      }
-  case object Build   extends DependencyScope { override val asString = "build"   }
+  case object Compile  extends DependencyScope { override val asString = "compile"  }
+  case object Provided extends DependencyScope { override val asString = "provided" }
+  case object Test     extends DependencyScope { override val asString = "test"     }
+  case object It       extends DependencyScope { override val asString = "it"       }
+  case object Build    extends DependencyScope { override val asString = "build"    }
 
   val values: List[DependencyScope] =
-    List(Compile, Test, It, Build)
+    List(Compile, Provided, Test, It, Build)
 
   def parse(s: String): Either[String, DependencyScope] =
     values
