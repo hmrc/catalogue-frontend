@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.data.{Form, Forms}
-import play.api.data.Forms.{mapping, optional, text}
+import play.api.data.Forms.{boolean, default, mapping, optional, text}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -172,6 +172,7 @@ case class VulnerabilitiesTimelineFilter(
   curationStatus: Option[String],
   from          : LocalDate,
   to            : LocalDate,
+  delta         : Boolean
 )
 
 object VulnerabilitiesTimelineFilter {
@@ -193,8 +194,9 @@ object VulnerabilitiesTimelineFilter {
                                 .transform[LocalDate](opt => opt.getOrElse(defaultFromTime()), date => Some(date)),
                                 //Default to 6 months ago if loading initial page/value not set
         "to"            -> optional(Forms.localDate(dateFormat))
-                                .transform[LocalDate](opt => opt.getOrElse(defaultToTime()), date => Some(date))
+                                .transform[LocalDate](opt => opt.getOrElse(defaultToTime()), date => Some(date)),
                                 //Default to now if loading initial page/value not set
+        "delta"         ->  boolean
       )(VulnerabilitiesTimelineFilter.apply)(VulnerabilitiesTimelineFilter.unapply)
         .verifying("To Date must be greater than From Date", form => form.to.isAfter(form.from))
     )
