@@ -230,19 +230,44 @@ class ConfigServiceSpec
         _ :+ ConfigSourceValue("nextDeployment", None, "")
       )
     }
+  }
 
-    trait Setup {
-      implicit val hc: HeaderCarrier = mock[HeaderCarrier]
+  "ConfigService.searchAppliedConfig" should {
+    "group by key, service and environment" in new Setup {
+      when(mockConfigConnector.configSearch(any[String], any[Seq[Environment]])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(
+          Seq(
+            AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("test.key"), "prodValue"),
+            AppliedConfig(Environment.QA, ServiceName("test-service"), KeyName("test.key"), "qaValue")
+          )
+        ))
 
-      val mockConfigConnector               = mock[ConfigConnector]
-      val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
+      val expected: Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]] = Map(
+        KeyName("test.key") -> Map(
+          ServiceName("test-service") -> Map(
+            Environment.Production -> Some("prodValue"),
+            Environment.QA -> Some("qaValue")
+          )
+        )
+      )
 
-      val configService = new ConfigService(mockConfigConnector, mockTeamsAndRepositoriesConnector)
-
-      FeatureSwitch.enable(CatalogueFrontendSwitches.showDeployedConfig)
-
-      def update(config: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]])(k: KeyName, ce: ConfigEnvironment)(update: Seq[ConfigSourceValue] => Seq[ConfigSourceValue]): Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]] =
-        config + (k -> (config.getOrElse(k, Map.empty) + (ce -> update(config.getOrElse(k, Map.empty).getOrElse(ce, Seq.empty)))))
+      configService
+        .searchAppliedConfig("test.key", Seq(Environment.Production, Environment.QA))
+        .futureValue shouldBe expected
     }
+  }
+
+  trait Setup {
+    implicit val hc: HeaderCarrier = mock[HeaderCarrier]
+
+    val mockConfigConnector = mock[ConfigConnector]
+    val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
+
+    val configService = new ConfigService(mockConfigConnector, mockTeamsAndRepositoriesConnector)
+
+    FeatureSwitch.enable(CatalogueFrontendSwitches.showDeployedConfig)
+
+    def update(config: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]])(k: KeyName, ce: ConfigEnvironment)(update: Seq[ConfigSourceValue] => Seq[ConfigSourceValue]): Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]] =
+      config + (k -> (config.getOrElse(k, Map.empty) + (ce -> update(config.getOrElse(k, Map.empty).getOrElse(ce, Seq.empty)))))
   }
 }
