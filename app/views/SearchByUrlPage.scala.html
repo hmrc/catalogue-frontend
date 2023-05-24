@@ -35,7 +35,15 @@
         <div class="board">
             <h3 id="info-box-header" class="board__heading"><img class="info-icon" src="assets/infoicon.svg" alt="How to find a service"/> How to find a service</h3>
             <div class="board__body">
-                <p id="info-box-copy">Use this page to search for a service on the tax platform.  Enter the URL into the box below and click on the service name to find out more about it.</p>
+                <p id="info-box-copy">Use this page to search for a Frontend service on the tax platform. Enter the URL into the box below and click on the service name to find out more about it.</p>
+                <p>
+                    <span class="glyphicon glyphicon-warning-sign alert-warning"></span>
+                    If you are looking for an API you can use the
+                    <a href="https://www.api.gov.uk" target="_blank" rel="noreferrer noopener" alt="Link to API Catalogue">
+                        API Catalogue
+                        <span class="glyphicon glyphicon-new-window"></span>
+                    </a>
+                </p>
                 <div class="row col-xs-12 ">
                     <p>Addresses beginning with the following are not tax platform services:</p>
                     <ul class="list list--minimal">
@@ -49,10 +57,10 @@
             <div class="board__body">
                 <form action="@uk.gov.hmrc.cataloguefrontend.routes.SearchByUrlController.searchUrl" method="post">
                     @csrfFormField
-                    <div class="form-group row col-xs-12">
-                        <div class="col-xs-3"><label for="search-box">https://www.tax.service.gov.uk/</label></div>
-                        <div class="col-xs-8"><input class="search form-control" id="search-box" type="text" name="name" value="@form("name").value" autofocus /></div>
-                        <div class="col-xs-1"><button id="search-button" class="btn btn-primary" type="submit">Search</button></div>
+                    <div class="form-group row container">
+                        <div class="col-md-3"><label for="search-box">https://www.tax.service.gov.uk/</label></div>
+                        <div class="col-md-8"><input class="search form-control" id="search-box" type="text" name="name" value="@form("name").value" autofocus /></div>
+                        <div class="col-md-1"><button id="search-button" class="btn btn-primary" type="submit">Search</button></div>
                     </div>
                 </form>
                 @if(searchResults.nonEmpty) {
