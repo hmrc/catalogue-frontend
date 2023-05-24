@@ -107,37 +107,39 @@
 }
 
 @vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
-    <tr>
-        <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"/>
-        <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
-        <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.vulnerableComponentName</td>
-        <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-        <td class="curation-status hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
-        <td class="score hand-pointer text-right" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
-        <td class="services text-right hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.occurrences.groupBy(_.service).size</div></td>
-    </tr>
-    <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
-        @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
-        <td colspan="7">
-            <table>
-                <tbody class="list">
-                    <tr>
-                        <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
-                        <td class="hide vulnerable-component-name">@summary.distinctVulnerability.vulnerableComponentName</td>
-                        <td class="hide assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-                        <td class="curation-status text-center hide"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
-                        <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
-                        <td class="services text-center hide"><div>@summary.occurrences.groupBy(_.service).size</div></td>
-                    </tr>
-                    <tr>
-                        <td colspan="6">
-                            @VulnerabilityDetails(summary)
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </td>
-    </tr>
+    @defining(summary.distinctVulnerability.vulnerableComponentName.split("://")) { splitVulnerableComponent =>
+        <tr>
+            <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"/>
+            <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
+            <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+            <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+            <td class="curation-status hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+            <td class="score hand-pointer text-right" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
+            <td class="services text-right hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.occurrences.groupBy(_.service).size</div></td>
+        </tr>
+        <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
+            @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
+            <td colspan="7">
+                <table>
+                    <tbody class="list">
+                        <tr>
+                            <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
+                            <td class="hide vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+                            <td class="hide assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+                            <td class="curation-status text-center hide"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+                            <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
+                            <td class="services text-center hide"><div>@summary.occurrences.groupBy(_.service).size</div></td>
+                        </tr>
+                        <tr>
+                            <td colspan="6">
+                                @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    }
 }
 
 <script @CSPNonce.attr>
