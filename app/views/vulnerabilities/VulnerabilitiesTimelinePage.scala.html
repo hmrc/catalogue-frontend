@@ -79,7 +79,7 @@ form   : Form[_]
             height: 400,
             legend: { position: 'bottom', maxLines: 3 },
             colors: ['#F7696b'],
-            vAxis: { title: 'Vulnerabilities Count', color: '#FF0000', baselineColor: 'black', viewWindow: {min: 0, max: dataTable.getColumnRange(1).max}, },
+            vAxis: { title: 'Vulnerabilities Count', color: '#FF0000', baselineColor: 'black', format: 0, viewWindow: {min: 0, max: dataTable.getColumnRange(1).max}, },
             hAxis: {
               gridlines: {
                 count: -1,
@@ -104,7 +104,6 @@ form   : Form[_]
 
           function chartDisplayOptions() {
             lineOptions.vAxis.viewWindow = showDeltaToggle.checked ? null : { min: 0, max: dataTable.getColumnRange(1).max };
-            lineOptions.vAxis.format = showDeltaToggle.checked ? 0 : undefined;
             lineChart.draw(dataTable, lineOptions);
           }
 
