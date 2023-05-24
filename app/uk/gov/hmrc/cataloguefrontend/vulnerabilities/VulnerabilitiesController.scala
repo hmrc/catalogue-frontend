@@ -172,7 +172,7 @@ case class VulnerabilitiesTimelineFilter(
   curationStatus: Option[String],
   from          : LocalDate,
   to            : LocalDate,
-  delta         : Boolean
+  showDelta     : Boolean
 )
 
 object VulnerabilitiesTimelineFilter {
@@ -196,7 +196,7 @@ object VulnerabilitiesTimelineFilter {
         "to"            -> optional(Forms.localDate(dateFormat))
                                 .transform[LocalDate](opt => opt.getOrElse(defaultToTime()), date => Some(date)),
                                 //Default to now if loading initial page/value not set
-        "delta"         ->  boolean
+        "showDelta"     ->  boolean
       )(VulnerabilitiesTimelineFilter.apply)(VulnerabilitiesTimelineFilter.unapply)
         .verifying("To Date must be greater than From Date", form => form.to.isAfter(form.from))
     )

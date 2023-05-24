@@ -99,17 +99,17 @@ form   : Form[_]
             }
           };
 
-          const deltaToggle = document.getElementById('delta-toggle')
+          const showDeltaToggle = document.getElementById('show-delta-toggle')
           var lineChart = new google.visualization.LineChart(container);
 
           function chartDisplayOptions() {
-            lineOptions.vAxis.viewWindow = deltaToggle.checked ? null : { min: 0, max: dataTable.getColumnRange(1).max };
-            lineOptions.vAxis.format = deltaToggle.checked ? 0 : undefined;
+            lineOptions.vAxis.viewWindow = showDeltaToggle.checked ? null : { min: 0, max: dataTable.getColumnRange(1).max };
+            lineOptions.vAxis.format = showDeltaToggle.checked ? 0 : undefined;
             lineChart.draw(dataTable, lineOptions);
           }
 
           chartDisplayOptions();
-          deltaToggle.addEventListener("change", chartDisplayOptions);
+          showDeltaToggle.addEventListener("change", chartDisplayOptions);
         }
     </script>
 
@@ -170,7 +170,7 @@ form   : Form[_]
         </div>
         <div class="col-md-offset-10">
               <label for="delta">Show Delta:</label>
-              <input type="checkbox" id="delta-toggle" name="delta" value="true" @if(form("delta").value.contains("true")){checked}>
+              <input type="checkbox" id="show-delta-toggle" name="showDelta" value="true" @if(form("showDelta").value.contains("true")){checked}>
         </div>
     </form>
 
