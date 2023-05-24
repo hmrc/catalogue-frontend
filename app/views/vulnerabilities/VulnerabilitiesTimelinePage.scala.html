@@ -38,8 +38,6 @@ form   : Form[_]
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawChart);
 
-
-
         function drawChart() {
             let data = [
                 @result.map { d =>
@@ -69,43 +67,51 @@ form   : Form[_]
                     }
                     case _ => {
                         dataTable.addColumn({ type: 'number', id: 'Total', label: 'Total' });
+
                     }
                   }
             dataTable.addRows(data);
 
-            var lineOptions = {
-                tooltip: {isHtml: true},
-                pointSize: 5,
-                lineWidth: 3,
-                height: 400,
-                legend: { position: 'bottom', maxLines: 3 },
-                colors: ['#F7696b'],
-                vAxis: { title: 'Vulnerabilities Count', color: '#FF0000', baselineColor: 'black', format: 0},
-                hAxis: {
-                    gridlines: {
-                        count: -1,
-                        units: {
-                            months: {format: ['MMM yyyy'] },
-                        }
-                    },
-                    maxTextLines: 1,
-                    baselineColor: 'black',
-                    minorGridlines: {
-                        minSpacing: 80,
-                        units: {
-                            months: {format: ['dd MMM'] },
-                            days: {format: ['dd MMM'] },
-                        }
-                    },
+          var lineOptions = {
+            tooltip: {isHtml: true},
+            pointSize: 5,
+            lineWidth: 3,
+            height: 400,
+            legend: { position: 'bottom', maxLines: 3 },
+            colors: ['#F7696b'],
+            vAxis: { title: 'Vulnerabilities Count', color: '#FF0000', baselineColor: 'black', viewWindow: {min: 0, max: dataTable.getColumnRange(1).max}, },
+            hAxis: {
+              gridlines: {
+                count: -1,
+                units: {
+                  months: {format: ['MMM yyyy'] },
                 }
-            };
+              },
+              maxTextLines: 1,
+              baselineColor: 'black',
+              minorGridlines: {
+                minSpacing: 80,
+                units: {
+                  months: {format: ['dd MMM'] },
+                  days: {format: ['dd MMM'] },
+                }
+              },
+            }
+          };
 
-            var lineChart = new google.visualization.LineChart(container);
+          const showDeltaToggle = document.getElementById('show-delta-toggle')
+          var lineChart = new google.visualization.LineChart(container);
+
+          function chartDisplayOptions() {
+            lineOptions.vAxis.viewWindow = showDeltaToggle.checked ? null : { min: 0, max: dataTable.getColumnRange(1).max };
+            lineOptions.vAxis.format = showDeltaToggle.checked ? 0 : undefined;
             lineChart.draw(dataTable, lineOptions);
+          }
 
+          chartDisplayOptions();
+          showDeltaToggle.addEventListener("change", chartDisplayOptions);
         }
     </script>
-
 
     <header>
         <h1>Vulnerabilities Timeline</h1>
@@ -161,6 +167,10 @@ form   : Form[_]
             <div class="col-md-3" style="padding-top: 40px;">
                 <input type="submit" value="Submit" class="form-control btn btn-primary">
             </div>
+        </div>
+        <div class="col-md-offset-10">
+              <label for="delta">Show Delta:</label>
+              <input type="checkbox" id="show-delta-toggle" name="showDelta" value="true" @if(form("showDelta").value.contains("true")){checked}>
         </div>
     </form>
 
