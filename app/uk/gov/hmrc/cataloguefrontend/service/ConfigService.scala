@@ -112,12 +112,9 @@ class ConfigService @Inject()(
       outbound =  srs.outboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
     } yield ServiceRelationshipsWithHasRepo(inbound, outbound)
 
-  def searchAppliedConfig(
-    key: String,
-    environments: Seq[Environment]
-  )(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] =
+  def searchAppliedConfig(key: String)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] =
     configConnector
-      .configSearch(key, environments)
+      .configSearch(key)
       .map(
         _.groupBy(_.key).view.mapValues(
           _.groupBy(_.serviceName).view.mapValues(

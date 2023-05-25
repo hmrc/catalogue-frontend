@@ -79,13 +79,12 @@ class ConfigConnector @Inject() (
   }
 
   def configSearch(
-    key          : String,
-    environments : Seq[Environment]
+    key          : String
   )(implicit hc: HeaderCarrier): Future[Seq[AppliedConfig]] = {
     implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
-    val queryParams = Seq(
-      "key" -> key
-    ) ++ environments.map("environment" -> _.asString)
+
+    val queryParams = Seq("key" -> key)
+
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/search?$queryParams")
       .execute[Seq[AppliedConfig]]

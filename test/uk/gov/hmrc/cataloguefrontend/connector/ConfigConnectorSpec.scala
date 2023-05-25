@@ -75,7 +75,7 @@ final class ConfigConnectorSpec
   "configSearch" should {
     "return AppliedConfig" in {
       stubFor(
-        get(urlEqualTo("/service-configs/search?key=testKey&environment=qa&environment=production"))
+        get(urlEqualTo("/service-configs/search?key=testKey"))
           .willReturn(aResponse().withBody(
             """[
               |  {
@@ -91,7 +91,7 @@ final class ConfigConnectorSpec
 
       val result =
         configConnector
-          .configSearch("testKey", Seq(Environment.QA, Environment.Production))
+          .configSearch("testKey")
           .futureValue
 
       result shouldBe expected

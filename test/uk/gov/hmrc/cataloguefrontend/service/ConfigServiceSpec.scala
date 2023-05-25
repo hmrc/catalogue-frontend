@@ -234,7 +234,7 @@ class ConfigServiceSpec
 
   "ConfigService.searchAppliedConfig" should {
     "group by key, service and environment" in new Setup {
-      when(mockConfigConnector.configSearch(any[String], any[Seq[Environment]])(any[HeaderCarrier]))
+      when(mockConfigConnector.configSearch(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(
           Seq(
             AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("test.key"), "prodValue"),
@@ -252,7 +252,7 @@ class ConfigServiceSpec
       )
 
       configService
-        .searchAppliedConfig("test.key", Seq(Environment.Production, Environment.QA))
+        .searchAppliedConfig("test.key")
         .futureValue shouldBe expected
     }
   }

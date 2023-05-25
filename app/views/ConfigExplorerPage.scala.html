@@ -39,20 +39,10 @@
 
     <form id="config-explorer-search-form" action="/configexplorer/results" method="GET">
         <div class="form-group row">
-            <div class="col-md-4">
+            <div class="col-md-5">
                 <label for="config-key">Config Key:</label>
                 <input class="form-control" id="config-key" type="text" name="key" value='@form("key").value' autofocus>
                 <span class="help-block">Use double quotes for exact match. e.g. "my.config.key"</span>
-            </div>
-            <div class="col-md-2">
-                @select(
-                    field              =  form("environments"),
-                    options            =  Environment.values.map(e => e.asString -> e.displayString),
-                    Symbol("_label")   -> "Environment(s):",
-                    Symbol("class")    -> "form-control",
-                    Symbol("style")    -> "height: 134px",
-                    Symbol("multiple") -> None
-                )
             </div>
             <div class="col-md-1">
                 <label for="config-search" style="visibility: hidden">Button:</label>

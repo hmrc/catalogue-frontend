@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import play.api.data.Forms.nonEmptyText
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -43,17 +43,14 @@ class ConfigExplorerController @Inject()(
       Future.successful(Ok(configExplorerPage(ConfigExplorerSearch.form)))
     }
 
-  def search(
-    key              : String,
-    `environment[]` : Seq[Environment]
-  ): Action[AnyContent] =
+  def search(key: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       ConfigExplorerSearch.form
         .bindFromRequest()
         .fold(
           formWithErrors => Future.successful(Ok(configExplorerPage(formWithErrors))),
           query => configService
-            .searchAppliedConfig(query.key, query.environments)
+            .searchAppliedConfig(query.key)
             .map { results =>
               Ok(configExplorerPage(
                 ConfigExplorerSearch.form.fill(query),
@@ -66,26 +63,15 @@ class ConfigExplorerController @Inject()(
 
 }
 
-case class ConfigExplorerSearch(
-  key          : String,
-  environments : Seq[Environment]
-)
+case class ConfigExplorerSearch(key: String)
 
 object ConfigExplorerSearch {
   import play.api.data.Form
-  import play.api.data.Forms.{mapping, text, seq}
-  import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmptySeq
+  import play.api.data.Forms.mapping
 
   lazy val form: Form[ConfigExplorerSearch] = Form(
     mapping(
-      "key"          -> text,
-      "environments" -> seq(text)
-        .verifying(notEmptySeq)
-        .transform[Seq[Environment]](
-        _.flatMap(Environment.parse),
-        _.map(_.asString)
-      )
+      "key"-> nonEmptyText(minLength = 3)
     )(ConfigExplorerSearch.apply)(ConfigExplorerSearch.unapply)
-      .verifying("Search term must be at least 3 characters", _.key.length >= 3)
   )
 }

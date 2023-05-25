@@ -51,7 +51,7 @@ GET        /sbtexplorer/:env                            uk.gov.hmrc.cataloguefro
 GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SBTVersionController.compareAllEnvironments(teamName: Option[String] ?= None)
 
 GET        /configexplorer                              uk.gov.hmrc.cataloguefrontend.ConfigExplorerController.landing
-GET        /configexplorer/results                      uk.gov.hmrc.cataloguefrontend.ConfigExplorerController.search(key: String, `environment[]`: Seq[Environment] ?= Seq.empty)
+GET        /configexplorer/results                      uk.gov.hmrc.cataloguefrontend.ConfigExplorerController.search(key: String)
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()
 
