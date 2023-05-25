@@ -38,6 +38,7 @@ case class VulnerableComponent(
     val vString = s"${v.major}.${v.minor}.${v.patch}"
     BobbyVersionRange(s"[$vString]")
   }
+  def componentWithoutPrefix: Option[String] = component.split("://").lift(1)
 }
 
 object VulnerableComponent {
