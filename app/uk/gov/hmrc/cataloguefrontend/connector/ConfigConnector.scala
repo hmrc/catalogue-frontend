@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
+import play.api.libs.json.Reads
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -74,5 +76,17 @@ class ConfigConnector @Inject() (
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config")
       .execute[Seq[ServiceDeploymentConfig]]
+  }
+
+  def configSearch(
+    key          : String
+  )(implicit hc: HeaderCarrier): Future[Seq[AppliedConfig]] = {
+    implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
+
+    val queryParams = Seq("key" -> s"\"$key\"")
+
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/service-configs/search?$queryParams")
+      .execute[Seq[AppliedConfig]]
   }
 }

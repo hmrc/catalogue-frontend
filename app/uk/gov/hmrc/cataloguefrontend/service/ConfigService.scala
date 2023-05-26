@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{A
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
+import scala.collection.immutable.TreeMap
 import scala.concurrent.{ExecutionContext, Future}
 
 class ConfigService @Inject()(
@@ -111,12 +112,32 @@ class ConfigService @Inject()(
       inbound  =  srs.inboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
       outbound =  srs.outboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
     } yield ServiceRelationshipsWithHasRepo(inbound, outbound)
+
+  def searchAppliedConfig(key: String)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] = {
+
+    def sorted[K, V](unsorted: Map[K, V])(implicit ordering: Ordering[K]): Map[K, V] = TreeMap[K, V]() ++ unsorted
+
+    implicit val srvOrd: Ordering[ServiceName] = Ordering.by(_.asString)
+
+    configConnector
+      .configSearch(key)
+      .map(
+        _.groupBy(_.key).view.mapValues(
+          configsByService => sorted(configsByService.groupBy(_.serviceName).view.mapValues(
+            _.groupBy(_.environment).view.mapValues(
+              _.headOption.map(_.value)
+            ).toMap
+          ).toMap)
+        ).toMap
+      )
+  }
 }
 
 @Singleton
 object ConfigService {
 
   case class KeyName(asString: String) extends AnyVal
+  case class ServiceName(asString: String) extends AnyVal
 
   trait ConfigEnvironment { def asString: String; def displayString: String }
   object ConfigEnvironment {
@@ -177,7 +198,7 @@ object ConfigService {
   )
 
   object ConfigSourceEntries {
-    val reads =
+    val reads: Reads[ConfigSourceEntries] =
       ( (__ \ "source" ).read[String]
       ~ (__ \ "entries").read[Map[String, String]].map(_.map { case (k, v) => KeyName(k) -> v }.toMap)
       )(ConfigSourceEntries.apply _)
@@ -196,7 +217,7 @@ object ConfigService {
   }
 
   object ConfigSourceValue {
-    val reads =
+    val reads: Reads[ConfigSourceValue] =
       ( (__ \ "source"   ).read[String]
       ~ (__ \ "sourceUrl").readNullable[String]
       ~ (__ \ "value"    ).read[String]
@@ -209,7 +230,7 @@ object ConfigService {
   )
 
   object ServiceRelationships {
-    val reads =
+    val reads: Reads[ServiceRelationships] =
       ( (__ \ "inboundServices" ).read[Seq[String]]
       ~ (__ \ "outboundServices").read[Seq[String]]
       )(ServiceRelationships.apply _)
@@ -248,5 +269,22 @@ object ConfigService {
     case class ArtifactNameFound(name: String)  extends ArtifactNameResult
     case object ArtifactNameNotFound            extends ArtifactNameResult
     case class ArtifactNameError(error: String) extends ArtifactNameResult
+  }
+
+  case class AppliedConfig(
+    environment: Environment,
+    serviceName: ServiceName,
+    key: KeyName,
+    value: String
+  )
+
+  object AppliedConfig {
+    implicit val envF: Format[Environment] = Environment.format
+    val reads: Reads[AppliedConfig] =
+      ( (__ \ "environment").read[Environment]
+      ~ (__ \ "serviceName").read[String].map(ServiceName.apply)
+      ~ (__ \ "key"        ).read[String].map(KeyName.apply)
+      ~ (__ \ "value"      ).read[String]
+      )(AppliedConfig.apply _)
   }
 }

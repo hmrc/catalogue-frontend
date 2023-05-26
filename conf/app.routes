@@ -50,6 +50,9 @@ GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefro
 GET        /sbtexplorer/:env                            uk.gov.hmrc.cataloguefrontend.SBTVersionController.findLatestVersions(env: String, teamName: Option[String] ?= None)
 GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SBTVersionController.compareAllEnvironments(teamName: Option[String] ?= None)
 
+GET        /config/search                               uk.gov.hmrc.cataloguefrontend.ConfigSearchController.landing
+GET        /config/search/results                       uk.gov.hmrc.cataloguefrontend.ConfigSearchController.search(key: String)
+
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()
 
 GET        /pr-commenter/recommendations                uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterController.recommendations(name: Option[String] ?= None, teamName: Option[String] ?= None, commentType: Option[String] ?= None)

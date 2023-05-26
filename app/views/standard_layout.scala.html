@@ -23,6 +23,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 @import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @(
   title      : String = "Home",
@@ -139,6 +140,9 @@
                     <li class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" href="#">Explore<span class="caret"></span></a>
                         <ul class="dropdown-menu">
+                            @if(CatalogueFrontendSwitches.showConfigSearch.isEnabled) {
+                                <li><a id="link-to-config-search" href="@appRoutes.ConfigSearchController.landing">Config Search</a></li>
+                            }
                             <li><a id="link-to-dependency-explorer" href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
                             <li><a id="link-to-jdk-explorer" href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
                             <li><a id="link-to-sbt-explorer" href="@appRoutes.SBTVersionController.compareAllEnvironments()">SBT Explorer</a></li>

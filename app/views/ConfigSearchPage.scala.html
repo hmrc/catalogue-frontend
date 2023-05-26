@@ -1,0 +1,94 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import views.html.helper.select
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import views.html.partials.form_warnings
+@import uk.gov.hmrc.cataloguefrontend.routes
+@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{KeyName, ServiceName}
+
+@this()
+
+@(form: Form[_],
+  results: Option[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] = None,
+  searchKey: String = ""
+)(implicit
+  messages: Messages,
+  request: RequestHeader
+)
+
+@standard_layout("Config Search") {
+    <header>
+        <h1>Config Search</h1>
+    </header>
+
+    @form_warnings(form)
+
+    <form id="config-explorer-search-form" action="/config/search/results" method="GET">
+        <div class="form-group row">
+            <div class="col-md-5">
+                <label for="config-key">Config Key:</label>
+                <input class="form-control" id="config-key" type="text" name="key" value='@form("key").value' autofocus>
+            </div>
+            <div class="col-md-1">
+                <label for="config-search" style="visibility: hidden">Button:</label>
+                <button id="config-search" class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </div>
+    </form>
+
+    @results.map { res =>
+        @if(res.isEmpty) {
+            <p>No results found.</p>
+        }
+
+        @for((configKey, configByService) <- res) {
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">@Html(configKey.asString.replace(searchKey, s"<b>${Txt(searchKey)}</b>"))</div>
+                        <table class="table table-condensed table-hover seven-cols always-wrap">
+                            <thead>
+                                <tr>
+                                    <th class="col-md-1">Service</th>
+                                    @for(env <- Environment.values) {
+                                        <th class="col-md-1">@env.displayString</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @for((serviceName, configByEnv) <- configByService) {
+                                <tr>
+                                    <td class="col-md-1"><a href="@routes.CatalogueController.repository(serviceName.asString).url">@serviceName.asString</a></td>
+                                    @for(env <- Environment.values) {
+                                        <td class="col-md-1">
+                                        @configByEnv.get(env).flatten.fold(Html("")) { configValue =>
+                                            <a href="@routes.CatalogueController.serviceConfig(serviceName.asString).url#@configKey.asString">
+                                            @configValue
+                                            </a>
+                                        }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}

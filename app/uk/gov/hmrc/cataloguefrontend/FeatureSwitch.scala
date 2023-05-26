@@ -42,4 +42,7 @@ object CatalogueFrontendSwitches {
 
   def showDeployedConfig: FeatureSwitch =
     FeatureSwitch.forName("show-deployed-config")
+
+  def showConfigSearch: FeatureSwitch =
+    FeatureSwitch.forName("show-config-search")
 }

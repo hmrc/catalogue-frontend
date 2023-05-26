@@ -19,11 +19,13 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.service.ConfigService.AppliedConfig
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{KeyName, ServiceName}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -67,6 +69,32 @@ final class ConfigConnectorSpec
           .futureValue
 
       deploymentConfig shouldBe None
+    }
+  }
+
+  "configSearch" should {
+    "return AppliedConfig" in {
+      stubFor(
+        get(urlEqualTo("/service-configs/search?key=%22testKey%22"))
+          .willReturn(aResponse().withBody(
+            """[
+              |  {
+              |    "environment": "production",
+              |    "serviceName": "test-service",
+              |    "key": "testKey",
+              |    "value": "testValue"
+              |  }
+              |]""".stripMargin))
+      )
+
+      val expected = Seq(AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("testKey"), "testValue"))
+
+      val result =
+        configConnector
+          .configSearch("testKey")
+          .futureValue
+
+      result shouldBe expected
     }
   }
 }
