@@ -30,19 +30,18 @@
   request: RequestHeader
 )
 
-@standard_layout("Config Explorer") {
+@standard_layout("Config Search") {
     <header>
-        <h1>Config Explorer</h1>
+        <h1>Config Search</h1>
     </header>
 
     @form_warnings(form)
 
-    <form id="config-explorer-search-form" action="/configexplorer/results" method="GET">
+    <form id="config-explorer-search-form" action="/config/search/results" method="GET">
         <div class="form-group row">
             <div class="col-md-5">
                 <label for="config-key">Config Key:</label>
                 <input class="form-control" id="config-key" type="text" name="key" value='@form("key").value' autofocus>
-                <span class="help-block">Use double quotes for exact match. e.g. "my.config.key"</span>
             </div>
             <div class="col-md-1">
                 <label for="config-search" style="visibility: hidden">Button:</label>
@@ -56,7 +55,7 @@
             <div class="col-md-12">
                 <div class="panel panel-default">
                     <div class="panel-heading">@Html(configKey.asString.replace(searchKey, s"<b>${Txt(searchKey)}</b>"))</div>
-                    <table class="table table-condensed table-hover seven-cols">
+                    <table class="table table-condensed table-hover seven-cols always-wrap">
                         <thead>
                             <tr>
                                 <th class="col-md-1">Service</th>
@@ -72,7 +71,7 @@
                                 @for(env <- Environment.values) {
                                     <td class="col-md-1">
                                     @configByEnv.get(env).flatten.fold(Html("")) { configValue =>
-                                        <a href="@routes.CatalogueController.serviceConfig(serviceName.asString)#@configKey.asString">
+                                        <a href="@routes.CatalogueController.serviceConfig(serviceName.asString).url#@configKey.asString">
                                         @configValue
                                         </a>
                                     }

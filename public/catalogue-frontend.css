@@ -12755,3 +12755,8 @@ a.scs-popover:focus {
     *width: 14.285714285714285714285714285714%;
   }
 }
+
+table.always-wrap {
+  word-break: break-all;
+  word-wrap: break-word;
+}

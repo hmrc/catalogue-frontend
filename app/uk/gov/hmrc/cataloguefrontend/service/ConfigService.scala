@@ -25,6 +25,8 @@ import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{A
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
+import scala.collection.MapView
+import scala.collection.immutable.TreeMap
 import scala.concurrent.{ExecutionContext, Future}
 
 class ConfigService @Inject()(
@@ -112,18 +114,24 @@ class ConfigService @Inject()(
       outbound =  srs.outboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
     } yield ServiceRelationshipsWithHasRepo(inbound, outbound)
 
-  def searchAppliedConfig(key: String)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] =
+  def searchAppliedConfig(key: String)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] = {
+
+    def sorted[K, V](unsorted: Map[K, V])(implicit ordering: Ordering[K]): Map[K, V] = TreeMap[K, V]() ++ unsorted
+
+    implicit val srvOrd: Ordering[ServiceName] = Ordering.by(_.asString)
+
     configConnector
       .configSearch(key)
       .map(
         _.groupBy(_.key).view.mapValues(
-          _.groupBy(_.serviceName).view.mapValues(
+          configsByService => sorted(configsByService.groupBy(_.serviceName).view.mapValues(
             _.groupBy(_.environment).view.mapValues(
               _.headOption.map(_.value)
             ).toMap
-          ).toMap
+          ).toMap)
         ).toMap
       )
+  }
 }
 
 @Singleton
