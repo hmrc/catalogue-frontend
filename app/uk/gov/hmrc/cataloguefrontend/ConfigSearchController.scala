@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import play.api.data.Forms.nonEmptyText
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService
@@ -48,7 +47,7 @@ class ConfigSearchController @Inject()(
       ConfigSearch.form
         .bindFromRequest()
         .fold(
-          formWithErrors => Future.successful(Ok(configSearchPage(formWithErrors))),
+          formWithErrors => Future.successful(BadRequest(configSearchPage(formWithErrors))),
           query => configService
             .searchAppliedConfig(query.key)
             .map { results =>
@@ -67,11 +66,12 @@ case class ConfigSearch(key: String)
 
 object ConfigSearch {
   import play.api.data.Form
-  import play.api.data.Forms.mapping
+  import play.api.data.Forms.{mapping, text}
 
   lazy val form: Form[ConfigSearch] = Form(
     mapping(
-      "key"-> nonEmptyText(minLength = 3)
+      "key"-> text
     )(ConfigSearch.apply)(ConfigSearch.unapply)
+      .verifying("Search term must be at least 3 characters", _.key.length >= 3)
   )
 }
