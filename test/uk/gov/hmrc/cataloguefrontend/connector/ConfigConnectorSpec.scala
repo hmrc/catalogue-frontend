@@ -17,7 +17,9 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import org.mockito.scalatest.MockitoSugar
 import play.api.Configuration
+import play.api.cache.AsyncCacheApi
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService.AppliedConfig
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
@@ -32,18 +34,20 @@ import scala.concurrent.ExecutionContext.Implicits.global
 final class ConfigConnectorSpec
   extends UnitSpec
      with HttpClientV2Support
-     with WireMockSupport {
+     with WireMockSupport
+     with MockitoSugar {
 
   val servicesConfig =
     new ServicesConfig(
       Configuration(
-        "microservice.services.service-configs.host" -> wireMockHost,
-        "microservice.services.service-configs.port" -> wireMockPort
+        "microservice.services.service-configs.host"                    -> wireMockHost,
+        "microservice.services.service-configs.port"                    -> wireMockPort,
+        "microservice.services.service-configs.configKeysCacheDuration" -> "1 hour"
       )
     )
 
   val configConnector =
-    new ConfigConnector(httpClientV2, servicesConfig)
+    new ConfigConnector(httpClientV2, servicesConfig, mock[AsyncCacheApi])
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 

@@ -14,15 +14,15 @@
  * limitations under the License.
  *@
 
-@import views.html.helper.select
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import views.html.partials.form_warnings
-@import uk.gov.hmrc.cataloguefrontend.routes
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{KeyName, ServiceName}
 
 @this()
 
 @(form: Form[_],
+  allKeys: Seq[String],
   results: Option[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] = None,
   searchKey: String = ""
 )(implicit
@@ -39,9 +39,10 @@
 
     <form id="config-explorer-search-form" action="/config/search/results" method="GET">
         <div class="form-group row">
-            <div class="col-md-5">
+            <div class="col-md-7">
                 <label for="config-key">Config Key:</label>
-                <input class="form-control" id="config-key" type="text" name="key" value='@form("key").value' autofocus>
+                <input class="form-control" id="config-key" type="text" name="key" value='@form("key").value' autocomplete="off">
+                <div id="config-search-matches" class="search-matches-dropdown hide"></div>
             </div>
             <div class="col-md-1">
                 <label for="config-search" style="visibility: hidden">Button:</label>
@@ -49,6 +50,16 @@
             </div>
         </div>
     </form>
+
+    <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+    <script @CSPNonce.attr>
+        let autoCompleteValues = [
+            @for(key <- allKeys) {
+                '@key',
+            }
+        ];
+        init("config-explorer-search-form", "config-key", "config-search-matches", autoCompleteValues)
+    </script>
 
     @results.map { res =>
         @if(res.isEmpty) {
@@ -72,11 +83,11 @@
                             <tbody>
                             @for((serviceName, configByEnv) <- configByService) {
                                 <tr>
-                                    <td class="col-md-1"><a href="@routes.CatalogueController.repository(serviceName.asString).url">@serviceName.asString</a></td>
+                                    <td class="col-md-1"><a href="@appRoutes.CatalogueController.repository(serviceName.asString).url">@serviceName.asString</a></td>
                                     @for(env <- Environment.values) {
                                         <td class="col-md-1">
                                         @configByEnv.get(env).flatten.fold(Html("")) { configValue =>
-                                            <a href="@routes.CatalogueController.serviceConfig(serviceName.asString).url#@configKey.asString">
+                                            <a href="@appRoutes.CatalogueController.serviceConfig(serviceName.asString).url#@configKey.asString">
                                             @configValue
                                             </a>
                                         }

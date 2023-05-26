@@ -39,25 +39,30 @@ class ConfigSearchController @Inject()(
 
   def landing: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      Future.successful(Ok(configSearchPage(ConfigSearch.form)))
+      configService.configKeys.map { configKeys =>
+        Ok(configSearchPage(ConfigSearch.form, configKeys))
+      }
     }
 
   def search(key: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      ConfigSearch.form
-        .bindFromRequest()
-        .fold(
-          formWithErrors => Future.successful(BadRequest(configSearchPage(formWithErrors))),
-          query => configService
-            .searchAppliedConfig(query.key)
-            .map { results =>
-              Ok(configSearchPage(
-                ConfigSearch.form.fill(query),
-                Some(results),
-                key
-              ))
-            }
-        )
+      configService.configKeys().flatMap { configKeys =>
+        ConfigSearch.form
+          .bindFromRequest()
+          .fold(
+            formWithErrors => Future.successful(BadRequest(configSearchPage(formWithErrors, configKeys))),
+            query => configService
+              .searchAppliedConfig(query.key)
+              .map { results =>
+                Ok(configSearchPage(
+                  ConfigSearch.form.fill(query),
+                  configKeys,
+                  Some(results),
+                  key
+                ))
+              }
+          )
+      }
     }
 
 }

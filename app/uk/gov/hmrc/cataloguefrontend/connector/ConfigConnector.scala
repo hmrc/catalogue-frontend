@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
+import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Reads
 
 import javax.inject.{Inject, Singleton}
@@ -28,12 +29,14 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ConfigConnector @Inject() (
-  httpClientV2  : HttpClientV2,
-  servicesConfig: ServicesConfig
+  httpClientV2  : HttpClientV2
+, servicesConfig: ServicesConfig
+, cache         : AsyncCacheApi
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
 
@@ -78,15 +81,20 @@ class ConfigConnector @Inject() (
       .execute[Seq[ServiceDeploymentConfig]]
   }
 
+  private val configKeysCacheExpiration: Duration = servicesConfig.getConfDuration("configKeysCacheDuration", 1.hour)
+  def getConfigKeys()(implicit hc: HeaderCarrier): Future[Seq[String]] =
+    cache.getOrElseUpdate("config-keys-cache", configKeysCacheExpiration) {
+      httpClientV2
+        .get(url"$serviceConfigsBaseUrl/service-configs/configkeys")
+        .execute[Seq[String]]
+    }
+
   def configSearch(
     key          : String
   )(implicit hc: HeaderCarrier): Future[Seq[AppliedConfig]] = {
     implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
-
-    val queryParams = Seq("key" -> s"\"$key\"")
-
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/search?$queryParams")
+      .get(url"$serviceConfigsBaseUrl/service-configs/search?${Seq("key" -> s"\"$key\"")}")
       .execute[Seq[AppliedConfig]]
   }
 }
