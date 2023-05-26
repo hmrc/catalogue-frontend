@@ -23,7 +23,7 @@
 @this()
 
 @(form: Form[_],
-  results: Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]] = Map.empty,
+  results: Option[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] = None,
   searchKey: String = ""
 )(implicit
   messages: Messages,
@@ -50,39 +50,45 @@
         </div>
     </form>
 
-    @for((configKey, configByService) <- results) {
-        <div class="row">
-            <div class="col-md-12">
-                <div class="panel panel-default">
-                    <div class="panel-heading">@Html(configKey.asString.replace(searchKey, s"<b>${Txt(searchKey)}</b>"))</div>
-                    <table class="table table-condensed table-hover seven-cols always-wrap">
-                        <thead>
-                            <tr>
-                                <th class="col-md-1">Service</th>
-                                @for(env <- Environment.values) {
-                                  <th class="col-md-1">@env.displayString</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @for((serviceName, configByEnv) <- configByService) {
-                            <tr>
-                                <td class="col-md-1"><a href="@routes.CatalogueController.repository(serviceName.asString).url">@serviceName.asString</a></td>
-                                @for(env <- Environment.values) {
-                                    <td class="col-md-1">
-                                    @configByEnv.get(env).flatten.fold(Html("")) { configValue =>
-                                        <a href="@routes.CatalogueController.serviceConfig(serviceName.asString).url#@configKey.asString">
-                                        @configValue
-                                        </a>
+    @results.map { res =>
+        @if(res.isEmpty) {
+            <p>No results found.</p>
+        }
+
+        @for((configKey, configByService) <- res) {
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">@Html(configKey.asString.replace(searchKey, s"<b>${Txt(searchKey)}</b>"))</div>
+                        <table class="table table-condensed table-hover seven-cols always-wrap">
+                            <thead>
+                                <tr>
+                                    <th class="col-md-1">Service</th>
+                                    @for(env <- Environment.values) {
+                                        <th class="col-md-1">@env.displayString</th>
                                     }
-                                    </td>
-                                }
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @for((serviceName, configByEnv) <- configByService) {
+                                <tr>
+                                    <td class="col-md-1"><a href="@routes.CatalogueController.repository(serviceName.asString).url">@serviceName.asString</a></td>
+                                    @for(env <- Environment.values) {
+                                        <td class="col-md-1">
+                                        @configByEnv.get(env).flatten.fold(Html("")) { configValue =>
+                                            <a href="@routes.CatalogueController.serviceConfig(serviceName.asString).url#@configKey.asString">
+                                            @configValue
+                                            </a>
+                                        }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
     }
 }

@@ -28,7 +28,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ConfigExplorerController @Inject()(
+class ConfigSearchController @Inject()(
   override val mcc   : MessagesControllerComponents
  ,override val auth  : FrontendAuthComponents
  ,configService      : ConfigService
@@ -40,12 +40,12 @@ class ConfigExplorerController @Inject()(
 
   def landing: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      Future.successful(Ok(configExplorerPage(ConfigExplorerSearch.form)))
+      Future.successful(Ok(configExplorerPage(ConfigSearch.form)))
     }
 
   def search(key: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      ConfigExplorerSearch.form
+      ConfigSearch.form
         .bindFromRequest()
         .fold(
           formWithErrors => Future.successful(Ok(configExplorerPage(formWithErrors))),
@@ -53,8 +53,8 @@ class ConfigExplorerController @Inject()(
             .searchAppliedConfig(query.key)
             .map { results =>
               Ok(configExplorerPage(
-                ConfigExplorerSearch.form.fill(query),
-                results,
+                ConfigSearch.form.fill(query),
+                Some(results),
                 key
               ))
             }
@@ -63,15 +63,15 @@ class ConfigExplorerController @Inject()(
 
 }
 
-case class ConfigExplorerSearch(key: String)
+case class ConfigSearch(key: String)
 
-object ConfigExplorerSearch {
+object ConfigSearch {
   import play.api.data.Form
   import play.api.data.Forms.mapping
 
-  lazy val form: Form[ConfigExplorerSearch] = Form(
+  lazy val form: Form[ConfigSearch] = Form(
     mapping(
       "key"-> nonEmptyText(minLength = 3)
-    )(ConfigExplorerSearch.apply)(ConfigExplorerSearch.unapply)
+    )(ConfigSearch.apply)(ConfigSearch.unapply)
   )
 }

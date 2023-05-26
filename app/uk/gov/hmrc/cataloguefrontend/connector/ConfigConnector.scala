@@ -83,7 +83,7 @@ class ConfigConnector @Inject() (
   )(implicit hc: HeaderCarrier): Future[Seq[AppliedConfig]] = {
     implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
 
-    val queryParams = Seq("key" -> key)
+    val queryParams = Seq("key" -> s"\"$key\"")
 
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/search?$queryParams")

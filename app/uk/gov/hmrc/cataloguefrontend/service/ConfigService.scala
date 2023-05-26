@@ -25,7 +25,6 @@ import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{A
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
-import scala.collection.MapView
 import scala.collection.immutable.TreeMap
 import scala.concurrent.{ExecutionContext, Future}
 
