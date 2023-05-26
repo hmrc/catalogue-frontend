@@ -22,7 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.ConfigExplorerPage
+import views.html.ConfigSearchPage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,7 +32,7 @@ class ConfigSearchController @Inject()(
   override val mcc   : MessagesControllerComponents
  ,override val auth  : FrontendAuthComponents
  ,configService      : ConfigService
- ,configExplorerPage : ConfigExplorerPage
+ ,configSearchPage : ConfigSearchPage
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -40,7 +40,7 @@ class ConfigSearchController @Inject()(
 
   def landing: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      Future.successful(Ok(configExplorerPage(ConfigSearch.form)))
+      Future.successful(Ok(configSearchPage(ConfigSearch.form)))
     }
 
   def search(key: String): Action[AnyContent] =
@@ -48,11 +48,11 @@ class ConfigSearchController @Inject()(
       ConfigSearch.form
         .bindFromRequest()
         .fold(
-          formWithErrors => Future.successful(Ok(configExplorerPage(formWithErrors))),
+          formWithErrors => Future.successful(Ok(configSearchPage(formWithErrors))),
           query => configService
             .searchAppliedConfig(query.key)
             .map { results =>
-              Ok(configExplorerPage(
+              Ok(configSearchPage(
                 ConfigSearch.form.fill(query),
                 Some(results),
                 key

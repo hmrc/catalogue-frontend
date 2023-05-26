@@ -75,7 +75,7 @@ final class ConfigConnectorSpec
   "configSearch" should {
     "return AppliedConfig" in {
       stubFor(
-        get(urlEqualTo("/service-configs/search?key=testKey"))
+        get(urlEqualTo("/service-configs/search?key=%22testKey%22"))
           .willReturn(aResponse().withBody(
             """[
               |  {
