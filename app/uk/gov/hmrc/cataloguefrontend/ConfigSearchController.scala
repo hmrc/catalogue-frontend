@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.ConfigService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -37,46 +38,42 @@ class ConfigSearchController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def landing: Action[AnyContent] =
+  def searchByKey(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      configService.configKeys.map { configKeys =>
-        Ok(configSearchPage(ConfigSearch.form, configKeys))
-      }
-    }
-
-  def search(key: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      configService.configKeys().flatMap { configKeys =>
-        ConfigSearch.form
-          .bindFromRequest()
-          .fold(
-            formWithErrors => Future.successful(BadRequest(configSearchPage(formWithErrors, configKeys))),
-            query => configService
-              .searchAppliedConfig(query.key)
-              .map { results =>
-                Ok(configSearchPage(
-                  ConfigSearch.form.fill(query),
-                  configKeys,
-                  Some(results),
-                  key
-                ))
-              }
-          )
-      }
+      configService
+        .configKeys()
+        .flatMap { configKeys =>
+          ConfigSearch.form
+            .bindFromRequest()
+            .fold(
+              formWithErrors => Future.successful(BadRequest(configSearchPage(formWithErrors.fill(ConfigSearch()), configKeys))),
+              formWithObject => configService
+                                  .searchAppliedConfig(formWithObject.key)
+                                  .map { results => Ok(configSearchPage(ConfigSearch.form.fill(formWithObject), configKeys, Some(results))) }
+            )
+        }
     }
 
 }
 
-case class ConfigSearch(key: String)
+case class ConfigSearch(
+  key            : String            = ""
+, showEnviroments: List[Environment] = Environment.values.filterNot(_ == Environment.Integration)
+)
 
 object ConfigSearch {
-  import play.api.data.Form
-  import play.api.data.Forms.{mapping, text}
+  import play.api.data.{Form, Forms}
 
   lazy val form: Form[ConfigSearch] = Form(
-    mapping(
-      "key"-> text
+    Forms.mapping(
+      "key"             -> Forms.text.verifying("Search term must be at least 3 characters", _.length >= 3)
+    , "showEnviroments" -> Forms.list(Forms.text)
+                                .transform[List[Environment]](
+                                  xs => { val ys = xs.map(Environment.parse).flatten
+                                          if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration) // populate environments for config explorer link
+                                        }
+                                , x  => identity(x).map(_.asString)
+                                )
     )(ConfigSearch.apply)(ConfigSearch.unapply)
-      .verifying("Search term must be at least 3 characters", _.key.length >= 3)
   )
 }

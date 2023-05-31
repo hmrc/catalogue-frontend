@@ -20,6 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 @import scala.collection.immutable.ListMap
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
+@import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
 
 @this(viewMessages: ViewMessages)
 
@@ -79,7 +80,11 @@
                     @defining(envSources.forall(_._2.map(_.source).forall(_ == "referenceConf"))) { isRefconfOnly =>
                         <div id="@{UrlUtils.encodeQueryParam(s"config-row-${key.asString}")}" class="grid-row @if(isRefconfOnly) {refconf-only}">
                             <div id="@{UrlUtils.encodeQueryParam(s"config-key-${key.asString}")}" class="grid-item sticky-column truncate-content" style="width:310px;">
-                                <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link"></a>@key.asString
+                                <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link"></a>
+                                @key.asString
+                                @if(CatalogueFrontendSwitches.showConfigSearch.isEnabled) {
+                                    <a href="@{catalogueRoutes.ConfigSearchController.searchByKey().url}?key=@key.asString" class="glyphicon glyphicon-search pull-right"></a>
+                                }
                             </div>
                             @for(env <- ConfigEnvironment.values) {
                                 <div class="grid-item column-@env.asString @if(!show(env)){hidden}" style="width:510px;">
