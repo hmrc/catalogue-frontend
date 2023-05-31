@@ -12760,3 +12760,23 @@ table.always-wrap {
   word-break: break-all;
   word-wrap: break-word;
 }
+
+.search-matches-dropdown {
+  position: absolute;
+  overflow-y: scroll;
+  height: 17em;
+  z-index: 1000000;
+  width: 100%;
+  border-radius: 4px;
+  padding-right: 30px;
+}
+
+.search-match-list {
+  margin-bottom: 0;
+}
+
+.search-match-selected {
+  text-decoration: none;
+  color: #555;
+  background-color: #f5f5f5;
+}

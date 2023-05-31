@@ -1018,26 +1018,36 @@ aside {
         color: grey;
         content: "<empty>";
         font-style: italic; }
-    .grid-row > .grid-item > ul > li:hover > a {
-      visibility: visible; }
-    .grid-row > .grid-item > ul > li > a {
-      color: grey;
-      flex-shrink: 0;
-      width: 1.2em;
-      visibility: hidden; }
+      .grid-row > .grid-item > ul > li:hover > a {
+        visibility: visible; }
+      .grid-row > .grid-item > ul > li > a {
+        color: #008770;
+        flex-shrink: 0;
+        width: 1.2em;
+        visibility: hidden;
+        text-decoration: none; }
       .grid-row > .grid-item > ul > li > a:hover {
-        color: inherit; }
+        text-decoration: underline; }
 
 .grid-row > .grid-item > a {
-  color: grey;
+  color: 008770;
   flex-shrink: 0;
   width: 1.2em;
-  visibility: hidden;
-}
+  text-decoration: none; }
+
+.grid-row > .grid-item > a.glyphicon {
+  color: #008770;
+  visibility: hidden; }
 
 .grid-row > .grid-item:hover > a {
-  visibility: visible;
-  color: #008770;
+  visibility: visible; }
+
+.grid-row > .grid-item > a:hover {
+  text-decoration: underline; }
+
+.grid-row > .grid-item > a.pull-right {
+  position: absolute;
+  right: 0px;
 }
 
 .highlight {

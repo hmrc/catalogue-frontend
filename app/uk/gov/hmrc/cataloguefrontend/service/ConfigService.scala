@@ -113,6 +113,9 @@ class ConfigService @Inject()(
       outbound =  srs.outboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
     } yield ServiceRelationshipsWithHasRepo(inbound, outbound)
 
+  def configKeys()(implicit hc: HeaderCarrier): Future[Seq[String]] =
+    configConnector.getConfigKeys()
+
   def searchAppliedConfig(key: String)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] = {
 
     def sorted[K, V](unsorted: Map[K, V])(implicit ordering: Ordering[K]): Map[K, V] = TreeMap[K, V]() ++ unsorted
