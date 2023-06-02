@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentConfig, ServiceDeploymentConfigSummary}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -46,16 +46,16 @@ class WhatsRunningWhereServiceSpec extends AnyWordSpec with Matchers {
   )
 
   private val releases: Seq[WhatsRunningWhere] = Seq(release1, release2)
-  private val configConnector: ConfigConnector = mock[ConfigConnector]
+  private val serviceConfigsConnector: ServiceConfigsConnector = mock[ServiceConfigsConnector]
   private val releasesConnector: ReleasesConnector = mock[ReleasesConnector]
 
-  val testService = new WhatsRunningWhereService(releasesConnector, configConnector)
+  val testService = new WhatsRunningWhereService(releasesConnector, serviceConfigsConnector)
 
   "whatsRunningWhereService.allReleases" should {
     "return the expected data structure and be filtered by releases" in {
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
-      when(configConnector.allDeploymentConfig) thenReturn(
+      when(serviceConfigsConnector.allDeploymentConfig) thenReturn(
         Future.successful(Seq(
           ServiceDeploymentConfig(serviceName= "address-lookup", environment = "development", slots = 2, instances = 2),
           ServiceDeploymentConfig(serviceName= "address-lookup", environment = "qa", slots = 2, instances = 2),

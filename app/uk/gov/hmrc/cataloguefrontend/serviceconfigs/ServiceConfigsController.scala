@@ -14,46 +14,62 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
+import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.ConfigService
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.ConfigSearchPage
+import views.html.serviceconfigs.{ConfigExplorerPage, SearchConfigByKeyPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ConfigSearchController @Inject()(
-  override val mcc   : MessagesControllerComponents
- ,override val auth  : FrontendAuthComponents
- ,configService      : ConfigService
- ,configSearchPage : ConfigSearchPage
+class ServiceConfigsController @Inject()(
+  override val mcc        : MessagesControllerComponents
+, override val auth       : FrontendAuthComponents
+, configuration           : Configuration
+, serviceconfigsService   : ServiceConfigsService
+, whatsRunningWhereService: WhatsRunningWhereService
+, serviceConfigPage       : ConfigExplorerPage
+, configSearchPage        : SearchConfigByKeyPage
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def searchByKey(): Action[AnyContent] =
+  private val appConfigBaseInSlug: Map[ServiceConfigsService.ConfigEnvironment, Boolean] =
+    Environment.values
+      .map(env => ServiceConfigsService.ConfigEnvironment.ForEnvironment(env) -> configuration.get[Boolean](s"app-config-base-in-slug.${env.asString}"))
+      .toMap
+
+  def configExplorer(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      configService
-        .configKeys()
-        .flatMap { configKeys =>
-          ConfigSearch.form
-            .bindFromRequest()
-            .fold(
-              formWithErrors => Future.successful(BadRequest(configSearchPage(formWithErrors.fill(ConfigSearch()), configKeys))),
-              formWithObject => configService
-                                  .searchAppliedConfig(formWithObject.key)
-                                  .map { results => Ok(configSearchPage(ConfigSearch.form.fill(formWithObject), configKeys, Some(results))) }
-            )
-        }
+      for {
+        deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
+        configByKey <- serviceconfigsService.configByKey(serviceName)
+      } yield Ok(serviceConfigPage(serviceName, configByKey, deployments, appConfigBaseInSlug))
     }
 
+  def searchByKey(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      for {
+        configKeys <- serviceconfigsService.configKeys()
+        result     <- ConfigSearch
+                        .form
+                        .bindFromRequest()
+                        .fold(
+                          formWithErrors => Future.successful(Ok(configSearchPage(formWithErrors.fill(ConfigSearch()), configKeys)))
+                        , formWithObject => serviceconfigsService
+                                              .searchAppliedConfig(formWithObject.key)
+                                              .map { results => Ok(configSearchPage(ConfigSearch.form.fill(formWithObject), configKeys, Some(results))) }
+                        )
+      } yield result
+    }
 }
 
 case class ConfigSearch(

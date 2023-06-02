@@ -19,8 +19,9 @@ package uk.gov.hmrc.cataloguefrontend.service
 import play.api.Configuration
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
-import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ResourceUsageConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{CostedResourceUsage, CostedResourceUsageTotal, DeploymentConfig, EstimatedCostCharts, ServiceCostEstimate}
 import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -31,8 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CostEstimationService @Inject() (
-  configConnector       : ConfigConnector,
-  resourceUsageConnector: ResourceUsageConnector
+  serviceConfigsConnector: ServiceConfigsConnector,
+  resourceUsageConnector : ResourceUsageConnector
 ) {
 
   def estimateServiceCost(
@@ -45,7 +46,7 @@ class CostEstimationService @Inject() (
   ): Future[ServiceCostEstimate] =
     Future
       .traverse(environments)(environment =>
-        configConnector
+        serviceConfigsConnector
           .deploymentConfig(service, environment)
           .map(deploymentConfig => (environment, deploymentConfig.getOrElse(DeploymentConfig.empty)))
       )

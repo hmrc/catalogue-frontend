@@ -248,10 +248,10 @@ object JsonData {
       ]"""
 
 
-  val configServiceEmpty =
+  val serviceConfigsServiceEmpty =
     "[]"
 
-  val configServiceService1 =
+  val serviceConfigsServiceService1 =
     """[
         {
           "environment": "qa",

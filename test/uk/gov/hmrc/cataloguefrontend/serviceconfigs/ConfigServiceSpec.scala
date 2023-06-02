@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.service
+package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, FeatureSwitch}
-import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ConfigServiceSpec
+class serviceConfigsServiceSpec
   extends AnyWordSpecLike
      with Matchers
      with MockitoSugar
      with ArgumentMatchersSugar
      with ScalaFutures {
-  import ConfigService._
+  import ServiceConfigsService._
 
-  "ConfigService.configByKey" should {
+  "serviceConfigsService.configByKey" should {
     "ignore deployed when switched off" in new Setup {
       FeatureSwitch.disable(CatalogueFrontendSwitches.showDeployedConfig)
 
@@ -50,10 +50,10 @@ class ConfigServiceSpec
           )).toMap
         )
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Map(
           KeyName("k1") -> Map(
             ConfigEnvironment.ForEnvironment(Environment.Production) -> Seq(
@@ -63,7 +63,7 @@ class ConfigServiceSpec
           )
         )))
 
-      configService.configByKey(serviceName).futureValue shouldBe latest
+      serviceConfigsService.configByKey(serviceName).futureValue shouldBe latest
     }
 
     "show keys added to latest when feature switched off" in new Setup {
@@ -84,13 +84,13 @@ class ConfigServiceSpec
           _ :+ ConfigSourceValue("appConfigCommon", None, "val")
         )
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
-      configService.configByKey(serviceName).futureValue shouldBe update(
+      serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(
         deployed
       )(KeyName("k2"), ConfigEnvironment.ForEnvironment(Environment.QA))(
         _ :+ ConfigSourceValue("appConfigCommon", None, "val")
@@ -108,13 +108,13 @@ class ConfigServiceSpec
           )).toMap
         )
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(config))
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(config))
 
-      configService.configByKey(serviceName).futureValue shouldBe config
+      serviceConfigsService.configByKey(serviceName).futureValue shouldBe config
     }
 
     "ignore envs without data (appConfigEnvironment)" in new Setup {
@@ -135,14 +135,14 @@ class ConfigServiceSpec
           }
         }
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
 
-      configService.configByKey(serviceName).futureValue shouldBe latest
+      serviceConfigsService.configByKey(serviceName).futureValue shouldBe latest
     }
 
     "show undeployed changes" in new Setup {
@@ -162,13 +162,13 @@ class ConfigServiceSpec
           case (e                                                 , vs) => e -> vs
         }}
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
-      configService.configByKey(serviceName).futureValue shouldBe update(
+      serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(
         deployed
       )(KeyName("k1"), ConfigEnvironment.ForEnvironment(Environment.QA))(
         _ :+ ConfigSourceValue("nextDeployment", None, "new-val")
@@ -191,13 +191,13 @@ class ConfigServiceSpec
           ConfigSourceValue("nextDeployment", None, "new-val")
         )
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
-      configService.configByKey(serviceName).futureValue shouldBe update(
+      serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(
         deployed
       )(KeyName("k2"), ConfigEnvironment.ForEnvironment(Environment.QA))(
         _ :+ ConfigSourceValue("nextDeployment", None, "new-val")
@@ -218,13 +218,13 @@ class ConfigServiceSpec
       val latest =
         update(deployed)(KeyName("k1"), ConfigEnvironment.ForEnvironment(Environment.QA))(_ => Seq.empty)
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockConfigConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
-      configService.configByKey(serviceName).futureValue shouldBe update(
+      serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(
         deployed
       )(KeyName("k1"), ConfigEnvironment.ForEnvironment(Environment.QA))(
         _ :+ ConfigSourceValue("nextDeployment", None, "")
@@ -232,9 +232,9 @@ class ConfigServiceSpec
     }
   }
 
-  "ConfigService.searchAppliedConfig" should {
+  "serviceConfigsService.searchAppliedConfig" should {
     "group by key, service and environment" in new Setup {
-      when(mockConfigConnector.configSearch(any[String])(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configSearch(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(
           Seq(
             AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("test.key"), "prodValue"),
@@ -251,7 +251,7 @@ class ConfigServiceSpec
         )
       )
 
-      configService
+      serviceConfigsService
         .searchAppliedConfig("test.key")
         .futureValue shouldBe expected
     }
@@ -260,10 +260,10 @@ class ConfigServiceSpec
   trait Setup {
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
-    val mockConfigConnector = mock[ConfigConnector]
+    val mockServiceConfigsConnector = mock[ServiceConfigsConnector]
     val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
 
-    val configService = new ConfigService(mockConfigConnector, mockTeamsAndRepositoriesConnector)
+    val serviceConfigsService = new ServiceConfigsService(mockServiceConfigsConnector, mockTeamsAndRepositoriesConnector)
 
     FeatureSwitch.enable(CatalogueFrontendSwitches.showDeployedConfig)
 

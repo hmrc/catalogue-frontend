@@ -32,8 +32,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
-import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
-import uk.gov.hmrc.cataloguefrontend.service.{ConfigService, CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
@@ -57,7 +57,7 @@ case class EnvData(
 @Singleton
 class CatalogueController @Inject() (
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  configService                : ConfigService,
+  serviceConfigsService        : ServiceConfigsService,
   costEstimationService        : CostEstimationService,
   serviceCostEstimateConfig    : CostEstimateConfig,
   routeRulesService            : RouteRulesService,
@@ -75,7 +75,6 @@ class CatalogueController @Inject() (
   buildDeployApiConnector      : BuildDeployApiConnector,
   indexPage                    : IndexPage,
   serviceInfoPage              : ServiceInfoPage,
-  serviceConfigPage            : ServiceConfigPage,
   libraryInfoPage              : LibraryInfoPage,
   prototypeInfoPage            : PrototypeInfoPage,
   repositoryInfoPage           : RepositoryInfoPage,
@@ -103,19 +102,6 @@ class CatalogueController @Inject() (
         .map(blogs => Ok(indexPage(blogs)))
     }
 
-  private val appConfigBaseInSlug: Map[ConfigService.ConfigEnvironment, Boolean] =
-    Environment.values
-      .map(env => ConfigService.ConfigEnvironment.ForEnvironment(env) -> configuration.get[Boolean](s"app-config-base-in-slug.${env.asString}"))
-      .toMap
-
-  def serviceConfig(serviceName: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      for {
-        deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
-        configByKey <- configService.configByKey(serviceName)
-      } yield Ok(serviceConfigPage(serviceName, configByKey, deployments, appConfigBaseInSlug))
-    }
-
   /** Renders the service page by either the repository name, or the artefact name (if configured).
     * This is where it differs from accessing through the generic `/repositories/name` endpoint, which only
     * considers the name of the repository.
@@ -123,11 +109,11 @@ class CatalogueController @Inject() (
   def service(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       def buildServicePageFromItsArtifactName(serviceName: String, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): Future[Result] =
-        configService.findArtifactName(serviceName).flatMap {
-          case ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName, hasBranchProtectionAuth).getOrElse(notFound)
-          case ArtifactNameNotFound            => Future.successful(notFound)
-          case ArtifactNameError(error)        => logger.error(error)
-                                                  Future.successful(InternalServerError)
+        serviceConfigsService.findArtifactName(serviceName).flatMap {
+          case ServiceConfigsService.ArtifactNameResult.ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName, hasBranchProtectionAuth).getOrElse(notFound)
+          case ServiceConfigsService.ArtifactNameResult.ArtifactNameNotFound            => Future.successful(notFound)
+          case ServiceConfigsService.ArtifactNameResult.ArtifactNameError(error)        => logger.error(error)
+                                                                                   Future.successful(InternalServerError)
         }
 
       def buildServicePageFromRepoName(repoName: String, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): OptionT[Future, Result] =
@@ -139,8 +125,8 @@ class CatalogueController @Inject() (
 
       for {
         hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(serviceName)
-        result <- buildServicePageFromRepoName(serviceName, hasBranchProtectionAuth)
-                    .getOrElseF(buildServicePageFromItsArtifactName(serviceName, hasBranchProtectionAuth))
+        result                  <- buildServicePageFromRepoName(serviceName, hasBranchProtectionAuth)
+                                    .getOrElseF(buildServicePageFromItsArtifactName(serviceName, hasBranchProtectionAuth))
       } yield result
 
     }
@@ -186,7 +172,7 @@ class CatalogueController @Inject() (
       costEstimate         <- costEstimationService.estimateServiceCost(repositoryName, Environment.values, serviceCostEstimateConfig)
       commenterReport      <- prCommenterConnector.report(repositoryName)
       vulnerabilitiesCount <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
-      serviceRelationships <- configService.serviceRelationships(serviceName)
+      serviceRelationships <- serviceConfigsService.serviceRelationships(serviceName)
       optLatestData        =  optLatestServiceInfo.map { latestServiceInfo =>
                                 SlugInfoFlag.Latest ->
                                   EnvData(

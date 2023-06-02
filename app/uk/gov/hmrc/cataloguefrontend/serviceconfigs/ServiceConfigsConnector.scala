@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector
+package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Reads
@@ -22,7 +22,6 @@ import play.api.libs.json.Reads
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.ConfigService._
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfig
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
@@ -33,12 +32,13 @@ import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ConfigConnector @Inject() (
+class ServiceConfigsConnector @Inject() (
   httpClientV2  : HttpClientV2
 , servicesConfig: ServicesConfig
 , cache         : AsyncCacheApi
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
+  import ServiceConfigsService._
 
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
 

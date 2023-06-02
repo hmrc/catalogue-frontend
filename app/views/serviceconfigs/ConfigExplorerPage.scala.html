@@ -15,29 +15,27 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.service.ConfigService
-@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{ConfigByKey, ConfigEnvironment, ConfigSourceValue}
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsService, routes => serviceConfigsRoutes }
 @import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 @import scala.collection.immutable.ListMap
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
-@import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
 
 @this(viewMessages: ViewMessages)
 
 @(serviceName        : String,
-  configByKey        : ConfigByKey,
+  configByKey        : ServiceConfigsService.ConfigByKey,
   deployments        : List[WhatsRunningWhereVersion],
-  appConfigBaseInSlug: Map[ConfigEnvironment, Boolean]
+  appConfigBaseInSlug: Map[ServiceConfigsService.ConfigEnvironment, Boolean]
 )(implicit
   request: RequestHeader
 )
 
-@findDeployment(env: ConfigEnvironment) = @{
-    deployments.find(e => ConfigEnvironment.ForEnvironment(e.environment) == env)
+@findDeployment(env: ServiceConfigsService.ConfigEnvironment) = @{
+    deployments.find(e => ServiceConfigsService.ConfigEnvironment.ForEnvironment(e.environment) == env)
 }
 
-@show(env: ConfigEnvironment) = @{
-    env == ConfigEnvironment.Local || findDeployment(env).isDefined
+@show(env: ServiceConfigsService.ConfigEnvironment) = @{
+    env == ServiceConfigsService.ConfigEnvironment.Local || findDeployment(env).isDefined
 }
 
 <html>
@@ -58,11 +56,11 @@
                 <div class="grid-header">
                     <div id="header-0" class="grid-item sticky-column truncate-content" style="width:300px; text-indent: 1.2em">Key</div>
                     <div class="gutter gutter-horizontal"></div>
-                    @for((env, index) <- ConfigEnvironment.values.zipWithIndex) {
+                    @for((env, index) <- ServiceConfigsService.ConfigEnvironment.values.zipWithIndex) {
                         <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @if(!show(env)){hidden}" style="width:500px;">
                             <div>@env.displayString
                             @(configByKey.filter(_._2.get(env).exists(_.exists(_.nextDeployment))).size match {
-                                case _ if env == ConfigEnvironment.Local => <span></span>
+                                case _ if env == ServiceConfigsService.ConfigEnvironment.Local => <span></span>
                                 case 0 => <span></span>
                                 case 1 => <span class="undeployed small-text"><span class="glyphicon glyphicon-exclamation-sign"></span> 1 undeployed change</span>
                                 case x => <span class="undeployed small-text"><span class="glyphicon glyphicon-exclamation-sign"></span> {x} undeployed changes</span>
@@ -82,15 +80,15 @@
                             <div id="@{UrlUtils.encodeQueryParam(s"config-key-${key.asString}")}" class="grid-item sticky-column truncate-content" style="width:310px;">
                                 <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link"></a>
                                 @key.asString
-                                @if(CatalogueFrontendSwitches.showConfigSearch.isEnabled) {
-                                    <a href="@{catalogueRoutes.ConfigSearchController.searchByKey().url}?key=@key.asString" class="glyphicon glyphicon-search pull-right"></a>
+                                @if(uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showConfigSearch.isEnabled) {
+                                    <a href="@{serviceConfigsRoutes.ServiceConfigsController.searchByKey().url}?key=@key.asString" class="glyphicon glyphicon-search pull-right"></a>
                                 }
                             </div>
-                            @for(env <- ConfigEnvironment.values) {
+                            @for(env <- ServiceConfigsService.ConfigEnvironment.values) {
                                 <div class="grid-item column-@env.asString @if(!show(env)){hidden}" style="width:510px;">
                                     <ul>
-                                      @for((sourceValue: ConfigSourceValue, idx) <- envSources.getOrElse(env, Seq.empty).zipWithIndex) {
-                                        <li class="config-value" title="@ConfigService.friendlySourceName(sourceValue.source, env, Some(key))">
+                                      @for((sourceValue: ServiceConfigsService.ConfigSourceValue, idx) <- envSources.getOrElse(env, Seq.empty).zipWithIndex) {
+                                        <li class="config-value" title="@ServiceConfigsService.friendlySourceName(sourceValue.source, env, Some(key))">
                                             @if(sourceValue.nextDeployment) {
                                               <span class="truncate-content-overflow undeployed"><span class="glyphicon glyphicon-exclamation-sign small-text"></span> @sourceValue.value</span>
                                             } else {
@@ -123,7 +121,7 @@
         <aside id="menu">
             <h2>Columns</h2>
             <ul>
-                @for(env <- ConfigEnvironment.values) {
+                @for(env <- ServiceConfigsService.ConfigEnvironment.values) {
                     <li>
                         <input class="column-filter" type="checkbox" id="show-@env.asString" @if(show(env)){checked="checked"} />
                         <label for="show-@env.asString">@env.asString</label>

@@ -21,7 +21,6 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import org.scalatest.BeforeAndAfter
 import play.api.libs.json.Json
-import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositories
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec

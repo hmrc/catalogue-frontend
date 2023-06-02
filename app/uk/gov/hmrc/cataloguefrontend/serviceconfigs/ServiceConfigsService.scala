@@ -14,30 +14,30 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.service
+package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
-import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ArtifactNameResult.{ArtifactNameError, ArtifactNameFound, ArtifactNameNotFound}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.collection.immutable.TreeMap
 import scala.concurrent.{ExecutionContext, Future}
 
-class ConfigService @Inject()(
-  configConnector       : ConfigConnector,
-  teamsAndReposConnector: TeamsAndRepositoriesConnector
+@Singleton
+class ServiceConfigsService @Inject()(
+  serviceConfigsConnector: ServiceConfigsConnector,
+  teamsAndReposConnector : TeamsAndRepositoriesConnector
 )(implicit
   ec: ExecutionContext
 ) {
-  import ConfigService._
+  import ServiceConfigsService._
 
   def configByKey(serviceName: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
-    configConnector.configByKey(serviceName, latest)
+    serviceConfigsConnector.configByKey(serviceName, latest)
 
   def configByKey(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     if (CatalogueFrontendSwitches.showDeployedConfig.isEnabled)
@@ -99,22 +99,21 @@ class ConfigService @Inject()(
           .toList
       )
       .map {
-        case Nil                 => ArtifactNameNotFound
-        case artifactName :: Nil => ArtifactNameFound(artifactName)
-        case list                =>
-          ArtifactNameError(s"Different artifact names found for service in different environments - [${list.mkString(",")}]")
+        case Nil                 => ArtifactNameResult.ArtifactNameNotFound
+        case artifactName :: Nil => ArtifactNameResult.ArtifactNameFound(artifactName)
+        case list                => ArtifactNameResult.ArtifactNameError(s"Different artifact names found for service in different environments - [${list.mkString(",")}]")
       }
 
   def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsWithHasRepo] =
     for {
       repos    <- teamsAndReposConnector.allRepositories()
-      srs      <- configConnector.serviceRelationships(serviceName)
+      srs      <- serviceConfigsConnector.serviceRelationships(serviceName)
       inbound  =  srs.inboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
       outbound =  srs.outboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
     } yield ServiceRelationshipsWithHasRepo(inbound, outbound)
 
   def configKeys()(implicit hc: HeaderCarrier): Future[Seq[String]] =
-    configConnector.getConfigKeys()
+    serviceConfigsConnector.getConfigKeys()
 
   def searchAppliedConfig(key: String)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] = {
 
@@ -122,7 +121,7 @@ class ConfigService @Inject()(
 
     implicit val srvOrd: Ordering[ServiceName] = Ordering.by(_.asString)
 
-    configConnector
+    serviceConfigsConnector
       .configSearch(key)
       .map(
         _.groupBy(_.key).view.mapValues(
@@ -136,8 +135,7 @@ class ConfigService @Inject()(
   }
 }
 
-@Singleton
-object ConfigService {
+object ServiceConfigsService {
 
   case class KeyName(asString: String) extends AnyVal
   case class ServiceName(asString: String) extends AnyVal

@@ -19,14 +19,17 @@ package uk.gov.hmrc.cataloguefrontend.service
 import java.time.{Clock, LocalDate}
 
 import javax.inject.Inject
-import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class BobbyService @Inject() (configConnector: ConfigConnector, clock: Clock)(implicit val ec: ExecutionContext) {
+class BobbyService @Inject() (
+  serviceConfigsConnector: ServiceConfigsConnector
+, clock                  : Clock
+)(implicit val ec: ExecutionContext) {
 
   def getRules()(implicit hc: HeaderCarrier): Future[BobbyRulesView] = {
     val today = LocalDate.now(clock)
@@ -44,7 +47,8 @@ class BobbyService @Inject() (configConnector: ConfigConnector, clock: Clock)(im
       )
     }
 
-    configConnector.bobbyRules()
+    serviceConfigsConnector
+      .bobbyRules()
       .map { ruleset =>
         val (upcomingLibraries, activeLibraries) = ruleset.libraries.partition(_.from isAfter today)
         val (upcomingPlugins, activePlugins)     = ruleset.plugins.partition(_.from isAfter today)

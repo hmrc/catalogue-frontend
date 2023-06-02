@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector
+package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.mockito.scalatest.MockitoSugar
 import play.api.Configuration
 import play.api.cache.AsyncCacheApi
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.ConfigService.AppliedConfig
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, KeyName, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{KeyName, ServiceName}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-final class ConfigConnectorSpec
+final class ServiceConfigsConnectorSpec
   extends UnitSpec
      with HttpClientV2Support
      with WireMockSupport
@@ -46,8 +45,8 @@ final class ConfigConnectorSpec
       )
     )
 
-  val configConnector =
-    new ConfigConnector(httpClientV2, servicesConfig, mock[AsyncCacheApi])
+  val serviceConfigsConnector =
+    new ServiceConfigsConnector(httpClientV2, servicesConfig, mock[AsyncCacheApi])
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -59,7 +58,7 @@ final class ConfigConnectorSpec
       )
 
       val deploymentConfig =
-        configConnector
+        serviceConfigsConnector
           .deploymentConfig("some-service", Environment.Production)
           .futureValue
 
@@ -68,7 +67,7 @@ final class ConfigConnectorSpec
 
     "return None when the deployment configuration cannot be found" in {
       val deploymentConfig =
-        configConnector
+        serviceConfigsConnector
           .deploymentConfig("some-service", Environment.Production)
           .futureValue
 
@@ -94,7 +93,7 @@ final class ConfigConnectorSpec
       val expected = Seq(AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("testKey"), "testValue"))
 
       val result =
-        configConnector
+        serviceConfigsConnector
           .configSearch("testKey")
           .futureValue
 
