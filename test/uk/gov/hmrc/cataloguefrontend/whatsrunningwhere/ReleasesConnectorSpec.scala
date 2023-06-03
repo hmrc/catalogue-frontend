@@ -183,7 +183,7 @@ class ReleasesConnectorSpec
       )
 
       val response =
-        releasesConnector.profiles.futureValue
+        releasesConnector.profiles().futureValue
 
       response should contain theSameElementsAs Seq(
         Profile(ProfileType.ServiceManager, ProfileName("tcs_all")),

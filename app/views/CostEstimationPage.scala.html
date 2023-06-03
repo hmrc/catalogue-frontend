@@ -95,8 +95,9 @@
             vAxis: { title: 'Yearly Cost', format: 'currency' }
           };
 
+          @* SteppedChart displays the date on the right, rather than the left, which was confusing *@
           var totalsChart =
-            new google.visualization.SteppedAreaChart(document.getElementById('estimated-cost-over-time-chart'));
+            new google.visualization.LineChart(document.getElementById('estimated-cost-over-time-chart'));
 
           var byEnvChartData =
             google.visualization.arrayToDataTable(@Html(estimatedCostCharts.historicByEnvChart.render));

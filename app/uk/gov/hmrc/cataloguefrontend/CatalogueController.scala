@@ -169,7 +169,7 @@ class CatalogueController @Inject() (
       urlIfLeaksFound      <- leakDetectionService.urlIfLeaksFound(repositoryName)
       serviceRoutes        <- routeRulesService.serviceRoutes(serviceName)
       optLatestServiceInfo <- serviceDependenciesConnector.getSlugInfo(repositoryName)
-      costEstimate         <- costEstimationService.estimateServiceCost(repositoryName, Environment.values, serviceCostEstimateConfig)
+      costEstimate         <- costEstimationService.estimateServiceCost(repositoryName, serviceCostEstimateConfig)
       commenterReport      <- prCommenterConnector.report(repositoryName)
       vulnerabilitiesCount <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
       serviceRelationships <- serviceConfigsService.serviceRelationships(serviceName)
@@ -385,8 +385,7 @@ class CatalogueController @Inject() (
       (for {
         repositoryDetails <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
         if repositoryDetails.repoType == RepoType.Service
-        costEstimationEnvironments = Environment.values
-        costEstimation <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName, costEstimationEnvironments, serviceCostEstimateConfig))
+        costEstimation <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName, serviceCostEstimateConfig))
         estimatedCostCharts <- OptionT.liftF(costEstimationService.historicResourceUsageChartsForService(serviceName, serviceCostEstimateConfig))
       } yield
         Ok(costEstimationPage(

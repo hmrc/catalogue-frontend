@@ -59,7 +59,7 @@ class ReleasesConnector @Inject() (
       }
   }
 
-  def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] = {
+  def profiles()(implicit hc: HeaderCarrier): Future[Seq[Profile]] = {
     val url = url"$serviceUrl/releases-api/profiles"
     httpClientV2
       .get(url)

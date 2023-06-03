@@ -79,7 +79,7 @@ class WhatsRunningWhereController @Inject() (
     request: MessagesRequest[AnyContent
   ]) =
     for {
-      profiles     <- service.profiles
+      profiles     <- service.profiles()
       releases     <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
       environments =  distinctEnvironments(releases)
       profileNames =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
@@ -87,15 +87,15 @@ class WhatsRunningWhereController @Inject() (
 
 
   private def instancesPage(
-    form: Form[WhatsRunningWhereFilter],
-    profile: Option[Profile],
+    form               : Form[WhatsRunningWhereFilter],
+    profile            : Option[Profile],
     selectedProfileType: ProfileType,
-    selectedViewMode: ViewMode
+    selectedViewMode   : ViewMode
   )(implicit
     request: MessagesRequest[AnyContent]
   ) =
     for {
-      profiles           <- service.profiles
+      profiles           <- service.profiles()
       releases           <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
       environments       =  distinctEnvironments(releases)
       serviceDeployments <- service.allDeploymentConfigs(releases)
@@ -106,11 +106,9 @@ class WhatsRunningWhereController @Inject() (
 object WhatsRunningWhereController {
   def matchesProduction(wrw: WhatsRunningWhere, prodVersion: WhatsRunningWhereVersion, comparedEnv: Environment): Boolean =
     wrw.versions
-      .find(_.environment == comparedEnv)
-      .map(_.versionNumber)
-      .contains(prodVersion.versionNumber)
-
+      .exists(wrw => wrw.environment == comparedEnv && wrw.versionNumber == prodVersion.versionNumber)
 }
+
 case class WhatsRunningWhereFilter(
   profileName: Option[ProfileName] = None,
   profileType: Option[ProfileType] = None,
@@ -119,7 +117,8 @@ case class WhatsRunningWhereFilter(
 )
 
 object WhatsRunningWhereFilter {
-  private def filterEmptyString(x: Option[String]) = x.filter(_.trim.nonEmpty)
+  private def filterEmptyString(x: Option[String]) =
+    x.filter(_.trim.nonEmpty)
 
   lazy val form = Form(
     mapping(

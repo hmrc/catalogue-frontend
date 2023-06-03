@@ -43,26 +43,25 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
     "produce a cost estimate for a service in all requested environments in which it's deployed" in {
       val stubs: DeploymentConfigByEnvironment =
         Map(
-          (Environment.Development, DeploymentConfig(3, 1)),
-          (Environment.Integration, DeploymentConfig(3, 1)),
-          (Environment.QA, DeploymentConfig(3, 1)),
-          (Environment.Staging, DeploymentConfig(3, 1)),
+          (Environment.Development , DeploymentConfig(3, 1)),
+          (Environment.Integration , DeploymentConfig(3, 1)),
+          (Environment.QA          , DeploymentConfig(3, 1)),
+          (Environment.Staging     , DeploymentConfig(3, 1)),
           (Environment.ExternalTest, DeploymentConfig(3, 1)),
-          (Environment.Production, DeploymentConfig(11, 3))
+          (Environment.Production  , DeploymentConfig(11, 3))
         )
 
       val serviceConfigsConnector =
-        stubServiceConfigsConnector(
-          service = "some-service",
-          stubs = stubs,
-          missingEnvironments = Set.empty
+        stubConfigConnector(
+          service             = "some-service",
+          stubs               = stubs
         )
 
       val costEstimationService =
         new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector)
 
       val costEstimate =
-        costEstimationService.estimateServiceCost("some-service", stubs.keySet.toSeq, costEstimateConfig)
+        costEstimationService.estimateServiceCost("some-service", costEstimateConfig)
 
       val expectedCostEstimation =
         ServiceCostEstimate.fromDeploymentConfigByEnvironment(stubs, costEstimateConfig)
@@ -70,42 +69,11 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
       costEstimate.futureValue shouldBe expectedCostEstimation
     }
 
-    "disregard services which are not deployed in requested environments" in {
-      val stubs: DeploymentConfigByEnvironment =
-        Map((Environment.Production, DeploymentConfig(11, 3)))
-
-      val missingEnvironments: Set[Environment] =
-        Set(Environment.QA, Environment.Staging)
-
-      val serviceConfigsConnector =
-        stubServiceConfigsConnector(
-          service = "some-service",
-          stubs = stubs,
-          missingEnvironments = missingEnvironments
-        )
-
-      val costEstimationService =
-        new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector)
-
-      val costEstimate =
-        costEstimationService
-          .estimateServiceCost("some-service", (stubs.keySet ++ missingEnvironments).toSeq, costEstimateConfig)
-
-      val expectedCostEstimate =
-        ServiceCostEstimate.fromDeploymentConfigByEnvironment(stubs, costEstimateConfig)
-
-      costEstimate.futureValue shouldBe expectedCostEstimate
-    }
-
     "produce a cost estimate of zero for a service which is not deployed in a requested environment" in {
-      val missingEnvironments: Set[Environment] =
-        Set(Environment.QA, Environment.Staging, Environment.Production)
-
       val serviceConfigsConnector =
-        stubServiceConfigsConnector(
-          service = "some-service",
-          stubs = Map.empty,
-          missingEnvironments = missingEnvironments
+        stubConfigConnector(
+          service             = "some-service",
+          stubs               = Map.empty
         )
 
       val costEstimationService =
@@ -113,7 +81,7 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
 
       val costEstimateSummary =
         costEstimationService
-          .estimateServiceCost("some-service", missingEnvironments.toSeq, costEstimateConfig)
+          .estimateServiceCost("some-service", costEstimateConfig)
           .map(_.summary)
 
       val expectedCostEstimateSummary =
@@ -126,8 +94,8 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
       val deploymentConfigByEnvironment: DeploymentConfigByEnvironment =
         Map(
           (Environment.Development, DeploymentConfig(5, 2)),
-          (Environment.QA, DeploymentConfig(3, 1)),
-          (Environment.Production, DeploymentConfig(10, 3))
+          (Environment.QA         , DeploymentConfig(3, 1)),
+          (Environment.Production , DeploymentConfig(10, 3))
         )
 
       val actualSummary =
@@ -148,23 +116,15 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
     }
   }
 
-  private def stubServiceConfigsConnector(
-    service: String,
-    stubs: DeploymentConfigByEnvironment,
-    missingEnvironments: Set[Environment]
+  private def stubConfigConnector(
+    service            : String,
+    stubs              : DeploymentConfigByEnvironment
   ): ServiceConfigsConnector = {
-    val serviceConfigsConnector =
-      mock[ServiceConfigsConnector]
+    val serviceConfigsConnector = mock[ServiceConfigsConnector]
 
-    stubs.foreach {
-      case (environment, deploymentConfig) =>
-        when(serviceConfigsConnector.deploymentConfig(service, environment))
-          .thenReturn(Future.successful(Some(deploymentConfig)))
-    }
-
-    missingEnvironments.foreach { environment =>
+    Environment.values.foreach { environment =>
       when(serviceConfigsConnector.deploymentConfig(service, environment))
-        .thenReturn(Future.successful(None))
+        .thenReturn(Future.successful(stubs.get(environment)))
     }
 
     serviceConfigsConnector
