@@ -12747,15 +12747,6 @@ a.scs-popover:focus {
   white-space: nowrap;
 }
 
-@media (min-width: 992px) {
-  .seven-cols .col-md-1,
-  .seven-cols .col-sm-1,
-  .seven-cols .col-lg-1 {
-    width: 14.285714285714285714285714285714%;
-    *width: 14.285714285714285714285714285714%;
-  }
-}
-
 table.always-wrap {
   word-break: break-all;
   word-wrap: break-word;
@@ -12779,4 +12770,10 @@ table.always-wrap {
   text-decoration: none;
   color: #555;
   background-color: #f5f5f5;
+}
+
+table.sticky-header thead {
+  position: sticky;
+  top: 0px;
+  background: white;
 }

@@ -74,7 +74,8 @@
         }
 
         @for((configKey, configByService) <- res) {
-            <table class="table table-striped always-wrap">
+            <div>Results for <code>@configKey.asString</code></div>
+            <table class="table table-striped always-wrap sticky-header">
                 <thead>
                     <tr>
                         <th style="min-width: 300px;">Service</th>
