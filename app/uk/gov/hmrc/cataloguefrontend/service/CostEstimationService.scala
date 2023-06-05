@@ -26,52 +26,87 @@ import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CostEstimationService @Inject() (
   serviceConfigsConnector: ServiceConfigsConnector,
-  resourceUsageConnector : ResourceUsageConnector
+  resourceUsageConnector: ResourceUsageConnector,
+  costEstimateConfig    : CostEstimateConfig
 ) {
   import CostEstimationService._
 
   def estimateServiceCost(
-    service                  : String,
-    serviceCostEstimateConfig: CostEstimateConfig
+    serviceName: String
   )(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier
   ): Future[ServiceCostEstimate] =
-    Environment.values.traverse(environment =>
+    Environment.values
+      .traverse(environment =>
         serviceConfigsConnector
-          .deploymentConfig(service, environment)
+          .deploymentConfig(serviceName, environment)
           .map(deploymentConfig => (environment, deploymentConfig.getOrElse(DeploymentConfig.empty)))
       )
       .map(deploymentConfigByEnvironment =>
         ServiceCostEstimate
-          .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment.toMap, serviceCostEstimateConfig)
+          .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment.toMap, costEstimateConfig)
       )
 
   def historicResourceUsageChartsForService(
-    serviceName              : String,
-    serviceCostEstimateConfig: CostEstimateConfig
+    serviceName       : String
   )(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier
   ): Future[EstimatedCostCharts] =
     resourceUsageConnector
       .historicResourceUsageForService(serviceName)
-      .map(_.map(CostedResourceUsage.fromResourceUsage(_, serviceCostEstimateConfig.slotCostPerYear)))
-      .map(crus =>
+      .map(rus =>
         EstimatedCostCharts(
-          historicTotalsChart = CostedResourceUsageTotal.toChartDataTable(
-                                  CostedResourceUsageTotal.fromCostedResourceUsages(crus)
-                                ),
-          historicByEnvChart  = CostedResourceUsage.toChartDataTable(crus)
+          historicTotalsChart = toChartDataTableTotal(rus),
+          historicByEnvChart  = toChartDataTableByEnv(rus)
         )
       )
+
+  private def formatForChart(totalSlots: Int): String = {
+    val yearlyCostGbp = totalSlots * costEstimateConfig.slotCostPerYear
+    s"""{ v: $yearlyCostGbp, f: "${CurrencyFormatter.formatGbp(yearlyCostGbp)} (slots = ${totalSlots})" }"""
+  }
+
+  private def toChartDataTableByEnv(resourceUsages: List[ResourceUsage]): ChartDataTable = {
+    val applicableEnvironments =
+      resourceUsages
+        .foldLeft(Set.empty[Environment])((acc, ru) => acc ++ ru.values.collect { case (env, deploymentConfig) if deploymentConfig != DeploymentConfig.empty => env })
+        .toList
+        .sorted
+
+    val headerRow =
+      "'Date'" +: applicableEnvironments.map(e => s"'${e.displayString}'")
+
+    val dataRows =
+      resourceUsages
+        .map { ru =>
+          s"new Date(${ru.date.toEpochMilli})" +:
+            applicableEnvironments.map(e => s"${ru.values.get(e).map(dc => formatForChart(dc.instances * dc.slots)).getOrElse("null")}")
+        }
+
+    ChartDataTable(headerRow +: dataRows)
+  }
+
+  private def toChartDataTableTotal(resourceUsages: List[ResourceUsage]): ChartDataTable = {
+    val headerRow =
+      List("'Date'", "'Yearly Cost'")
+
+    val dataRows =
+      resourceUsages.map { resourceUsage =>
+        val totalSlots = resourceUsage.values.values.map(dc => dc.instances * dc.slots).fold(0)(_ + _)
+        List(s"new Date(${resourceUsage.date.toEpochMilli})", s"${formatForChart(totalSlots)}")
+      }
+      .toList
+
+    ChartDataTable(headerRow +: dataRows)
+  }
 }
 
 object CostEstimationService {
@@ -89,100 +124,14 @@ object CostEstimationService {
       Json.reads[DeploymentConfig]
   }
 
-  final case class CostedResourceUsage(
-    date       : Instant,
-    serviceName: String,
-    values     : Map[Environment, CostedResourceUsage.Summary]
-  )
-
-  object CostedResourceUsage {
-    def fromResourceUsage(resourceUsage: ResourceUsage, slotCostPerYear: Double): CostedResourceUsage =
-      CostedResourceUsage(
-        date        = resourceUsage.date,
-        serviceName = resourceUsage.serviceName,
-        values      = resourceUsage.values.view.mapValues(ru =>
-                        CostedResourceUsage.Summary(
-                          totalSlots    = ru.slots * ru.instances,
-                          yearlyCostGbp = ru.slots * ru.instances * slotCostPerYear
-                        )
-                      ).toMap
-      )
-
-    final case class Summary(totalSlots: Int, yearlyCostGbp: Double) {
-      def +(other: Summary): Summary =
-        copy(
-          totalSlots    = totalSlots    + other.totalSlots,
-          yearlyCostGbp = yearlyCostGbp + other.yearlyCostGbp
-        )
-
-      def formatForChart: String =
-        s"""{ v: $yearlyCostGbp, f: "${CurrencyFormatter.formatGbp(yearlyCostGbp)} (slots = $totalSlots)" }"""
-    }
-
-    object Summary {
-
-      val empty: Summary =
-        Summary(0, 0)
-
-    }
-
-    def toChartDataTable(costedResourceUsages: List[CostedResourceUsage]): ChartDataTable = {
-      // TODO do this efficiently
-        val environments =
-          costedResourceUsages
-            .foldLeft(Set.empty[Environment])((acc, ru) => acc ++ ru.values.collect { case (env, summary) if summary != Summary.empty => env })
-            .toList
-            .sorted
-
-        val headerRow =
-          "'Date'" +: environments.map(e => s"'${e.displayString}'")
-
-        val dataRows =
-          costedResourceUsages
-            .map { ru =>
-              s"new Date(${ru.date.toEpochMilli})" +:
-                environments.map(e => s"${ru.values.get(e).map(_.formatForChart).getOrElse("null")}")
-            }
-
-        ChartDataTable(headerRow +: dataRows)
-    }
-  }
-
-  final case class CostedResourceUsageTotal(
-    date   : Instant,
-    summary: CostedResourceUsage.Summary
-  )
-
-  object CostedResourceUsageTotal {
-
-    def fromCostedResourceUsages(costedResourceUsages: List[CostedResourceUsage]): List[CostedResourceUsageTotal] =
-      costedResourceUsages
-        .map(resourceUsage =>
-          CostedResourceUsageTotal(
-            date    = resourceUsage.date,
-            summary = resourceUsage.values.values.fold(CostedResourceUsage.Summary.empty)(_ + _)
-          )
-        )
-        .toList
-
-    def toChartDataTable(costedResourceUsageTotals: List[CostedResourceUsageTotal]): ChartDataTable = {
-      val headerRow =
-        List("'Date'", "'Yearly Cost'")
-
-      val dataRows =
-        costedResourceUsageTotals.map(crut => List(s"new Date(${crut.date.toEpochMilli})", s"${crut.summary.formatForChart}"))
-
-      ChartDataTable(headerRow +: dataRows)
-    }
-  }
-
   final case class EstimatedCostCharts(
     historicTotalsChart: ChartDataTable,
     historicByEnvChart : ChartDataTable
   )
 
-  final case class ServiceCostEstimate(forEnvironments: List[ServiceCostEstimate.ForEnvironment]) {
-
+  final case class ServiceCostEstimate(
+    forEnvironments: List[ServiceCostEstimate.ForEnvironment]
+  ) {
     lazy val summary: ServiceCostEstimate.Summary =
       forEnvironments.map(_.summary).fold(ServiceCostEstimate.Summary.zero)(_ + _)
   }

@@ -169,7 +169,7 @@ class CatalogueController @Inject() (
       urlIfLeaksFound      <- leakDetectionService.urlIfLeaksFound(repositoryName)
       serviceRoutes        <- routeRulesService.serviceRoutes(serviceName)
       optLatestServiceInfo <- serviceDependenciesConnector.getSlugInfo(repositoryName)
-      costEstimate         <- costEstimationService.estimateServiceCost(repositoryName, serviceCostEstimateConfig)
+      costEstimate         <- costEstimationService.estimateServiceCost(repositoryName)
       commenterReport      <- prCommenterConnector.report(repositoryName)
       vulnerabilitiesCount <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
       serviceRelationships <- serviceConfigsService.serviceRelationships(serviceName)
@@ -383,10 +383,10 @@ class CatalogueController @Inject() (
   def costEstimation(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (for {
-        repositoryDetails <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
+        repositoryDetails   <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
         if repositoryDetails.repoType == RepoType.Service
-        costEstimation <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName, serviceCostEstimateConfig))
-        estimatedCostCharts <- OptionT.liftF(costEstimationService.historicResourceUsageChartsForService(serviceName, serviceCostEstimateConfig))
+        costEstimation      <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
+        estimatedCostCharts <- OptionT.liftF(costEstimationService.historicResourceUsageChartsForService(serviceName))
       } yield
         Ok(costEstimationPage(
           serviceName,

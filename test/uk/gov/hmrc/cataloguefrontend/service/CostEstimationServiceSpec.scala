@@ -58,10 +58,10 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
         )
 
       val costEstimationService =
-        new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector)
+        new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector, costEstimateConfig)
 
       val costEstimate =
-        costEstimationService.estimateServiceCost("some-service", costEstimateConfig)
+        costEstimationService.estimateServiceCost("some-service")
 
       val expectedCostEstimation =
         ServiceCostEstimate.fromDeploymentConfigByEnvironment(stubs, costEstimateConfig)
@@ -77,11 +77,11 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
         )
 
       val costEstimationService =
-        new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector)
+        new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector, costEstimateConfig)
 
       val costEstimateSummary =
         costEstimationService
-          .estimateServiceCost("some-service", costEstimateConfig)
+          .estimateServiceCost("some-service")
           .map(_.summary)
 
       val expectedCostEstimateSummary =
