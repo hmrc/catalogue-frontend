@@ -19,9 +19,9 @@ package uk.gov.hmrc.cataloguefrontend.service
 import java.time._
 
 import org.mockito.MockitoSugar
-import uk.gov.hmrc.cataloguefrontend.connector.ConfigConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleFactory.aBobbyRule
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -31,7 +31,7 @@ import scala.concurrent.Future
 class BobbyServiceSpec extends UnitSpec with MockitoSugar {
 
   private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
-  private val connector = mock[ConfigConnector]
+  private val connector = mock[ServiceConfigsConnector]
   private val today = LocalDate.of(2000, Month.JANUARY, 1)
   private val now = LocalDateTime.of(today, LocalTime.of(1,1,1))
   private val fixedClock = Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneId.systemDefault())

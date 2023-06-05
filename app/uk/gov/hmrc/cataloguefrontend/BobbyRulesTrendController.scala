@@ -24,7 +24,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
-import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -38,7 +39,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class BobbyRulesTrendController @Inject() (
   override val mcc : MessagesControllerComponents,
   service          : DependenciesService,
-  configConnector  : ConfigConnector,
+  configConnector  : ServiceConfigsConnector,
   serviceDeps      : ServiceDependenciesConnector,
   page             : BobbyRulesTrendPage,
   override val auth: FrontendAuthComponents

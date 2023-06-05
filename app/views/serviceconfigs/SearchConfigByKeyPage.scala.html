@@ -16,14 +16,15 @@
 
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import views.html.partials.form_warnings
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.{KeyName, ServiceName}
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ routes => serviceConfigsRoutes }
 
 @this()
 
-@(form: Form[uk.gov.hmrc.cataloguefrontend.ConfigSearch],
+@(form: Form[uk.gov.hmrc.cataloguefrontend.serviceconfigs.ConfigSearch],
   allKeys: Seq[String],
-  results: Option[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] = None,
+  results: Option[Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, Option[String]]]]] = None,
 )(implicit
   messages: Messages,
   request: RequestHeader
@@ -89,7 +90,7 @@
                         @for(env <- form.get.showEnviroments) {
                             <td name="@{env.asString}-td">
                                 @configByEnv.get(env).flatten.fold(Html("")) { configValue =>
-                                    <a href="@appRoutes.CatalogueController.serviceConfig(serviceName.asString).url#@configKey.asString" title="Link to Config Explorer">
+                                    <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString" title="Link to Config Explorer">
                                         @configValue
                                     </a>
                                 }

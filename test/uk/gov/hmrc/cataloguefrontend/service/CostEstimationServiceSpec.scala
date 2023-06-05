@@ -22,10 +22,11 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.connector.{ConfigConnector, ResourceUsageConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate.Summary
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentConfigByEnvironment, ServiceCostEstimate}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -50,15 +51,15 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
           (Environment.Production, DeploymentConfig(11, 3))
         )
 
-      val configConnector =
-        stubConfigConnector(
+      val serviceConfigsConnector =
+        stubServiceConfigsConnector(
           service = "some-service",
           stubs = stubs,
           missingEnvironments = Set.empty
         )
 
       val costEstimationService =
-        new CostEstimationService(configConnector, mockResourceUsageConnector)
+        new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector)
 
       val costEstimate =
         costEstimationService.estimateServiceCost("some-service", stubs.keySet.toSeq, costEstimateConfig)
@@ -76,15 +77,15 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
       val missingEnvironments: Set[Environment] =
         Set(Environment.QA, Environment.Staging)
 
-      val configConnector =
-        stubConfigConnector(
+      val serviceConfigsConnector =
+        stubServiceConfigsConnector(
           service = "some-service",
           stubs = stubs,
           missingEnvironments = missingEnvironments
         )
 
       val costEstimationService =
-        new CostEstimationService(configConnector, mockResourceUsageConnector)
+        new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector)
 
       val costEstimate =
         costEstimationService
@@ -100,15 +101,15 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
       val missingEnvironments: Set[Environment] =
         Set(Environment.QA, Environment.Staging, Environment.Production)
 
-      val configConnector =
-        stubConfigConnector(
+      val serviceConfigsConnector =
+        stubServiceConfigsConnector(
           service = "some-service",
           stubs = Map.empty,
           missingEnvironments = missingEnvironments
         )
 
       val costEstimationService =
-        new CostEstimationService(configConnector, mockResourceUsageConnector)
+        new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector)
 
       val costEstimateSummary =
         costEstimationService
@@ -147,26 +148,26 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
     }
   }
 
-  private def stubConfigConnector(
+  private def stubServiceConfigsConnector(
     service: String,
     stubs: DeploymentConfigByEnvironment,
     missingEnvironments: Set[Environment]
-  ): ConfigConnector = {
-    val configConnector =
-      mock[ConfigConnector]
+  ): ServiceConfigsConnector = {
+    val serviceConfigsConnector =
+      mock[ServiceConfigsConnector]
 
     stubs.foreach {
       case (environment, deploymentConfig) =>
-        when(configConnector.deploymentConfig(service, environment))
+        when(serviceConfigsConnector.deploymentConfig(service, environment))
           .thenReturn(Future.successful(Some(deploymentConfig)))
     }
 
     missingEnvironments.foreach { environment =>
-      when(configConnector.deploymentConfig(service, environment))
+      when(serviceConfigsConnector.deploymentConfig(service, environment))
         .thenReturn(Future.successful(None))
     }
 
-    configConnector
+    serviceConfigsConnector
   }
 
   private lazy val costEstimateConfig =

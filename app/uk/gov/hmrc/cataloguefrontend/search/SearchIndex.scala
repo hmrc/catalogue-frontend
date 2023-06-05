@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes =
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.{normalizeTerm, optimizeIndex}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ routes => serviceConfigsRoutes }
 import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
 import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
@@ -67,7 +68,11 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
     SearchTerm("page",     "repositories",                 reposRoutes.RepositoriesController.allRepositories().url,                    1.0f),
     SearchTerm("page",     "defaultbranch",                catalogueRoutes.CatalogueController.allDefaultBranches().url,                1.0f),
     SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,               1.0f),
-  )
+    )  ++ {
+      if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showConfigSearch.isEnabled) {
+        List(SearchTerm("page",     "search-config-by key",         serviceConfigsRoutes.ServiceConfigsController.searchByKey().url,                     1.0f))
+      } else Nil
+    }
 
   def updateIndexes(): Future[Unit] = {
     implicit val hc = HeaderCarrier()
@@ -80,7 +85,7 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
-                            .flatMap(r => List(SearchTerm("config",              r.name, catalogueRoutes.CatalogueController.serviceConfig(r.name).url ),
+                            .flatMap(r => List(SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(r.name).url ),
                                                SearchTerm("timeline",            r.name, wrwRoutes.DeploymentHistoryController.graph(r.name).url),
                                                SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(r.name).url),
                             ))

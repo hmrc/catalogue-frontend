@@ -19,6 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController
 @import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
@@ -43,7 +44,7 @@
                 <li class="list-item"><a id="link-to-github" href="@{repo.githubUrl}" target="_blank" rel="noreferrer noopener"><img class="list-item" src="@routes.Assets.versioned("githubicon.svg")" alt="Link to Github" /> GitHub<span class="glyphicon glyphicon-new-window"/></a></li>
                 @if(repo.repoType == RepoType.Service) {
                     <li class="list-item"><a id="link-to-timeline" href="@DeploymentHistoryController.graph(repo.name)">Deployment Timeline</a></li>
-                    <li class="list-item"><a id="link-to-@{repo.name}-config" href="@appRoutes.CatalogueController.serviceConfig(repo.name)" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
+                    <li class="list-item"><a id="link-to-@{repo.name}-config" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(repo.name)" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
                     <li class="list-item"><a id="link-to-dependency-list" href="@appRoutes.DependenciesController.services(repo.name)">Service Dependencies</a></li>
                     <li class="list-item"><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, repo.name)}">Frontend Route Warnings</a></li>
                 }

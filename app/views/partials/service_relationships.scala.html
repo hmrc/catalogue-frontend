@@ -14,9 +14,9 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.service.ConfigService.ServiceRelationshipsWithHasRepo
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 
-@(serviceRelationships: ServiceRelationshipsWithHasRepo)
+@(serviceRelationships: ServiceConfigsService.ServiceRelationshipsWithHasRepo)
 @hasTooManyRelationships = @{
     serviceRelationships.size > 3
 }
