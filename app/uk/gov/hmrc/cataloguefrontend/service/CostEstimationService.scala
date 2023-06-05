@@ -54,17 +54,6 @@ class CostEstimationService @Inject() (
           .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment.toMap, serviceCostEstimateConfig)
       )
 
-  def historicResourceUsageForService2(
-    serviceName              : String,
-    serviceCostEstimateConfig: CostEstimateConfig
-  )(implicit
-    ec: ExecutionContext,
-    hc: HeaderCarrier
-  ): Future[List[CostedResourceUsage]] =
-    resourceUsageConnector
-      .historicResourceUsageForService(serviceName)
-      .map(_.map(CostedResourceUsage.fromResourceUsage(_, serviceCostEstimateConfig.slotCostPerYear)))
-
   def historicResourceUsageChartsForService(
     serviceName              : String,
     serviceCostEstimateConfig: CostEstimateConfig
@@ -72,7 +61,9 @@ class CostEstimationService @Inject() (
     ec: ExecutionContext,
     hc: HeaderCarrier
   ): Future[EstimatedCostCharts] =
-    historicResourceUsageForService2(serviceName, serviceCostEstimateConfig)
+    resourceUsageConnector
+      .historicResourceUsageForService(serviceName)
+      .map(_.map(CostedResourceUsage.fromResourceUsage(_, serviceCostEstimateConfig.slotCostPerYear)))
       .map(crus =>
         EstimatedCostCharts(
           historicTotalsChart = CostedResourceUsageTotal.toChartDataTable(
@@ -85,9 +76,10 @@ class CostEstimationService @Inject() (
 
 object CostEstimationService {
 
-  type DeploymentConfigByEnvironment = Map[Environment, DeploymentConfig]
-
-  final case class DeploymentConfig(slots: Int, instances: Int)
+  final case class DeploymentConfig(
+    slots    : Int,
+    instances: Int
+  )
 
   object DeploymentConfig {
     val empty: DeploymentConfig =
@@ -198,7 +190,7 @@ object CostEstimationService {
   object ServiceCostEstimate {
 
     def fromDeploymentConfigByEnvironment(
-      deploymentConfigByEnvironment: DeploymentConfigByEnvironment,
+      deploymentConfigByEnvironment: Map[Environment, DeploymentConfig],
       serviceCostEstimateConfig    : CostEstimateConfig
     ): ServiceCostEstimate =
       ServiceCostEstimate {

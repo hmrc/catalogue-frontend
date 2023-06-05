@@ -20,6 +20,7 @@ import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, __}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -54,19 +55,19 @@ class ResourceUsageConnector @Inject() (
         (scala.collection.immutable.TreeMap.empty[Instant, List[RawResourceUsage]] ++ res.groupBy(_.date))
           .toList
           .foldLeft(List.empty[ResourceUsage]) { case (acc, (date, resourceUsages)) =>
-            val values: Map[Environment, ResourceUsageValue] = acc.lastOption match {
+            val values: Map[Environment, DeploymentConfig] = acc.lastOption match {
               case Some(previous) =>
                 Environment.values.map(env =>
                   env -> resourceUsages
-                           .find(_.environment == env).map(ru => ResourceUsageValue(slots = ru.slots, instances = ru.instances))
+                           .find(_.environment == env).map(ru => DeploymentConfig(slots = ru.slots, instances = ru.instances))
                            .orElse(previous.values.get(env))
-                           .getOrElse(ResourceUsageValue(0,0))
+                           .getOrElse(DeploymentConfig.empty)
                 ).toMap
               case None =>
                 Environment.values.map(env =>
                   env -> resourceUsages
-                           .find(_.environment == env).map(ru => ResourceUsageValue(slots = ru.slots, instances = ru.instances))
-                           .getOrElse(ResourceUsageValue(0,0))
+                           .find(_.environment == env).map(ru => DeploymentConfig(slots = ru.slots, instances = ru.instances))
+                           .getOrElse(DeploymentConfig.empty)
                 ).toMap
             }
             acc :+ ResourceUsage(date, serviceName, values)
@@ -85,15 +86,10 @@ class ResourceUsageConnector @Inject() (
 
 object ResourceUsageConnector {
 
-  final case class ResourceUsageValue(
-    slots      : Int,
-    instances  : Int
-  )
-
   final case class ResourceUsage(
     date       : Instant,
     serviceName: String,
-    values     : Map[Environment, ResourceUsageValue]
+    values     : Map[Environment, DeploymentConfig]
   )
 
   final case class RawResourceUsage(

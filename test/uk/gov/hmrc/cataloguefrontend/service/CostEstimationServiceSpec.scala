@@ -25,7 +25,7 @@ import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate.Summary
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentConfigByEnvironment, ServiceCostEstimate}
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, ServiceCostEstimate}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -41,8 +41,8 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
 
   "Service" should {
     "produce a cost estimate for a service in all requested environments in which it's deployed" in {
-      val stubs: DeploymentConfigByEnvironment =
-        Map(
+      val stubs =
+        Map[Environment, DeploymentConfig](
           (Environment.Development , DeploymentConfig(3, 1)),
           (Environment.Integration , DeploymentConfig(3, 1)),
           (Environment.QA          , DeploymentConfig(3, 1)),
@@ -53,8 +53,8 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
 
       val serviceConfigsConnector =
         stubConfigConnector(
-          service             = "some-service",
-          stubs               = stubs
+          service = "some-service",
+          stubs   = stubs
         )
 
       val costEstimationService =
@@ -72,8 +72,8 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
     "produce a cost estimate of zero for a service which is not deployed in a requested environment" in {
       val serviceConfigsConnector =
         stubConfigConnector(
-          service             = "some-service",
-          stubs               = Map.empty
+          service = "some-service",
+          stubs   = Map.empty
         )
 
       val costEstimationService =
@@ -91,8 +91,8 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
     }
 
     "estimate cost as a function of a service's total slots across all environments" in {
-      val deploymentConfigByEnvironment: DeploymentConfigByEnvironment =
-        Map(
+      val deploymentConfigByEnvironment =
+        Map[Environment, DeploymentConfig](
           (Environment.Development, DeploymentConfig(5, 2)),
           (Environment.QA         , DeploymentConfig(3, 1)),
           (Environment.Production , DeploymentConfig(10, 3))
@@ -118,7 +118,7 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
 
   private def stubConfigConnector(
     service            : String,
-    stubs              : DeploymentConfigByEnvironment
+    stubs              : Map[Environment, DeploymentConfig]
   ): ServiceConfigsConnector = {
     val serviceConfigsConnector = mock[ServiceConfigsConnector]
 
