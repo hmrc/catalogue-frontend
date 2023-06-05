@@ -49,29 +49,38 @@ class CostEstimationService @Inject() (
           .deploymentConfig(serviceName, environment)
           .map(deploymentConfig => (environment, deploymentConfig.getOrElse(DeploymentConfig.empty)))
       )
-      .map(deploymentConfigByEnvironment =>
-        ServiceCostEstimate
-          .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment.toMap, costEstimateConfig)
-      )
+      .map { deploymentConfigByEnvironment =>
+        val slotsByEnv =
+          deploymentConfigByEnvironment
+            .collect { case (env, config) if config.totalSlots.asInt > 0 =>
+              env -> config.totalSlots
+            }
+            .sortBy(_._1)
 
-  def historicResourceUsageChartsForService(
-    serviceName       : String
+        ServiceCostEstimate(
+          slotsByEnv = slotsByEnv,
+          chart      = toChartDataTableTotalByEnv(slotsByEnv)
+        )
+      }
+
+  def historicEstimatedCostChartsForService(
+    serviceName: String
   )(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier
-  ): Future[EstimatedCostCharts] =
+  ): Future[HistoricEstimatedCostCharts] =
     resourceUsageConnector
       .historicResourceUsageForService(serviceName)
       .map(rus =>
-        EstimatedCostCharts(
-          historicTotalsChart = toChartDataTableTotal(rus),
-          historicByEnvChart  = toChartDataTableByEnv(rus)
+        HistoricEstimatedCostCharts(
+          totalsChart = toChartDataTableTotal(rus),
+          byEnvChart  = toChartDataTableByEnv(rus)
         )
       )
 
-  private def formatForChart(totalSlots: Int): String = {
-    val yearlyCostGbp = totalSlots * costEstimateConfig.slotCostPerYear
-    s"""{ v: $yearlyCostGbp, f: "${CurrencyFormatter.formatGbp(yearlyCostGbp)} (slots = ${totalSlots})" }"""
+  private def formatForChart(totalSlots: TotalSlots): String = {
+    val yearlyCostGbp = totalSlots.costGbp(costEstimateConfig)
+    s"""{ v: $yearlyCostGbp, f: "${CurrencyFormatter.formatGbp(yearlyCostGbp)} (slots = ${totalSlots.asInt})" }"""
   }
 
   private def toChartDataTableByEnv(resourceUsages: List[ResourceUsage]): ChartDataTable = {
@@ -88,7 +97,7 @@ class CostEstimationService @Inject() (
       resourceUsages
         .map { ru =>
           s"new Date(${ru.date.toEpochMilli})" +:
-            applicableEnvironments.map(e => s"${ru.values.get(e).map(dc => formatForChart(dc.instances * dc.slots)).getOrElse("null")}")
+            applicableEnvironments.map(e => s"${ru.values.get(e).map(dc => formatForChart(dc.totalSlots)).getOrElse("null")}")
         }
 
     ChartDataTable(headerRow +: dataRows)
@@ -100,11 +109,24 @@ class CostEstimationService @Inject() (
 
     val dataRows =
       resourceUsages.map { resourceUsage =>
-        val totalSlots = resourceUsage.values.values.map(dc => dc.instances * dc.slots).fold(0)(_ + _)
-        List(s"new Date(${resourceUsage.date.toEpochMilli})", s"${formatForChart(totalSlots)}")
+        val totalSlots = TotalSlots(resourceUsage.values.values.map(_.totalSlots.asInt).fold(0)(_ + _))
+        List(s"new Date(${resourceUsage.date.toEpochMilli})", formatForChart(totalSlots))
       }
       .toList
 
+    ChartDataTable(headerRow +: dataRows)
+  }
+
+  private def toChartDataTableTotalByEnv(slotsByEnv: Seq[(Environment, TotalSlots)]): ChartDataTable = {
+    val headerRow =
+      List("'Environment'", "'Estimated Cost'")
+
+    val dataRows =
+      slotsByEnv
+        .map { case (environment, totalSlots) =>
+          List(s"'${environment.displayString}'", formatForChart(totalSlots))
+        }
+        .toList
     ChartDataTable(headerRow +: dataRows)
   }
 }
@@ -114,7 +136,15 @@ object CostEstimationService {
   final case class DeploymentConfig(
     slots    : Int,
     instances: Int
-  )
+  ) {
+    def totalSlots: TotalSlots =
+      TotalSlots(slots * instances)
+  }
+
+  case class TotalSlots(asInt: Int) extends AnyVal {
+    def costGbp(costEstimateConfig: CostEstimateConfig) =
+      asInt * costEstimateConfig.slotCostPerYear
+  }
 
   object DeploymentConfig {
     val empty: DeploymentConfig =
@@ -124,56 +154,20 @@ object CostEstimationService {
       Json.reads[DeploymentConfig]
   }
 
-  final case class EstimatedCostCharts(
-    historicTotalsChart: ChartDataTable,
-    historicByEnvChart : ChartDataTable
+  final case class HistoricEstimatedCostCharts(
+    totalsChart: ChartDataTable,
+    byEnvChart : ChartDataTable
   )
 
   final case class ServiceCostEstimate(
-    forEnvironments: List[ServiceCostEstimate.ForEnvironment]
+    slotsByEnv: Seq[(Environment, TotalSlots)],
+    chart     : ChartDataTable
   ) {
-    lazy val summary: ServiceCostEstimate.Summary =
-      forEnvironments.map(_.summary).fold(ServiceCostEstimate.Summary.zero)(_ + _)
-  }
+    lazy val totalSlots: TotalSlots =
+      TotalSlots(slotsByEnv.map(_._2.asInt).fold(0)(_ + _))
 
-  object ServiceCostEstimate {
-
-    def fromDeploymentConfigByEnvironment(
-      deploymentConfigByEnvironment: Map[Environment, DeploymentConfig],
-      serviceCostEstimateConfig    : CostEstimateConfig
-    ): ServiceCostEstimate =
-      ServiceCostEstimate {
-        deploymentConfigByEnvironment
-          .collect { case (env, config) if config.slots > 0 && config.instances > 0 =>
-            ForEnvironment(
-              env,
-              slots         = config.slots * config.instances,
-              yearlyCostGbp = config.slots * config.instances * serviceCostEstimateConfig.slotCostPerYear
-            )
-          }
-          .toList
-          .sortBy(_.environment)
-      }
-
-    final case class ForEnvironment(
-      environment  : Environment,
-      slots        : Int,
-      yearlyCostGbp: Double
-    ) {
-
-      def summary: Summary =
-        Summary(slots, yearlyCostGbp)
-    }
-
-    final case class Summary(totalSlots: Int, totalYearlyCostGbp: Double) {
-      def +(other: Summary): Summary =
-        Summary(totalSlots + other.totalSlots, totalYearlyCostGbp + other.totalYearlyCostGbp)
-    }
-
-    object Summary {
-      val zero: Summary =
-        Summary(totalSlots = 0, totalYearlyCostGbp = 0)
-    }
+    def totalYearlyCostGbp(costEstimateConfig: CostEstimateConfig) =
+      totalSlots.costGbp(costEstimateConfig)
   }
 }
 

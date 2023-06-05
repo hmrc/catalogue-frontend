@@ -35,13 +35,8 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
   private val today      = LocalDate.of(2000, Month.JANUARY, 1)
   private val now        = LocalDateTime.of(today, LocalTime.of(1,1,1))
   private val fixedClock = Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneId.systemDefault())
-  private val clock      = mock[Clock]
-  when(clock.instant())
-    .thenReturn(fixedClock.instant())
-  when(clock.getZone)
-    .thenReturn(fixedClock.getZone)
 
-  private val service = new BobbyService(connector, clock)
+  private val service = new BobbyService(connector, fixedClock)
 
   "getRules" should {
     "split rules into upcoming dependencies if from date is later than today" in {

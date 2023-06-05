@@ -383,17 +383,17 @@ class CatalogueController @Inject() (
   def costEstimation(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (for {
-        repositoryDetails   <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
+        repositoryDetails           <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
         if repositoryDetails.repoType == RepoType.Service
-        costEstimation      <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
-        estimatedCostCharts <- OptionT.liftF(costEstimationService.historicResourceUsageChartsForService(serviceName))
+        costEstimation              <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
+        historicEstimatedCostCharts <- OptionT.liftF(costEstimationService.historicEstimatedCostChartsForService(serviceName))
       } yield
         Ok(costEstimationPage(
           serviceName,
           repositoryDetails,
           costEstimation,
           serviceCostEstimateConfig,
-          estimatedCostCharts
+          historicEstimatedCostCharts
         ))
       ).getOrElse(notFound)
     }

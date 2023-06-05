@@ -19,10 +19,10 @@
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
 @import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter.formatGbp
 
-@(serviceCostEstimate      : ServiceCostEstimate,
-  serviceCostEstimateConfig: CostEstimateConfig,
-  serviceName              : String,
-  linkToCostsPage          : Boolean
+@(serviceCostEstimate: ServiceCostEstimate,
+  costEstimateConfig : CostEstimateConfig,
+  serviceName        : String,
+  linkToCostsPage    : Boolean
 )(implicit
   request: RequestHeader
 )
@@ -34,20 +34,20 @@
             <p>
                 @if(linkToCostsPage) {
                     <a id="link-to-service-costs" href="@appRoutes.CatalogueController.costEstimation(serviceName)">
-                        <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year.
+                        <b>@formatGbp(serviceCostEstimate.totalYearlyCostGbp(costEstimateConfig))</b> per year.
                     </a>
                 } else {
-                    <b>@formatGbp(serviceCostEstimate.summary.totalYearlyCostGbp)</b> per year.
+                    <b>@formatGbp(serviceCostEstimate.totalYearlyCostGbp(costEstimateConfig))</b> per year.
                 }
             </p>
 
-            <p>This is based on a usage of @serviceCostEstimate.summary.totalSlots slots across all environments, where
+            <p>This is based on a usage of @serviceCostEstimate.totalSlots.asInt slots across all environments, where
                each slot is estimated to cost
                <em data-toggle="tooltip"
                      title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
-                            @serviceCostEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
+                            @costEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
                             services across all environments" style="border-bottom: dotted 1px">
-                   @formatGbp(serviceCostEstimateConfig.slotCostPerYear) per year
+                   @formatGbp(costEstimateConfig.slotCostPerYear) per year
                </em>.</p>
             <div id="chart"></div>
         </div>
@@ -60,18 +60,8 @@
     google.charts.setOnLoadCallback(drawChart);
 
     function drawChart() {
-        var data = google.visualization.arrayToDataTable([
-            ['Environment', 'Estimated Cost'],
-            @for(e <- serviceCostEstimate.forEnvironments) {
-              ['@e.environment.displayString', {
-                v: @e.yearlyCostGbp,
-                f: "@formatGbp(e.yearlyCostGbp) (slots = @e.slots)"
-              }],
-            }
-        ]);
-
+        var data = google.visualization.arrayToDataTable(@Html(serviceCostEstimate.chart.render));
         var options = {};
-
         var chart = new google.visualization.PieChart(document.getElementById('chart'));
         chart.draw(data, options);
       }

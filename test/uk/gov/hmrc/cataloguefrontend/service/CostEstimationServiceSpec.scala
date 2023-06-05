@@ -24,15 +24,18 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate.Summary
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, ServiceCostEstimate}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with ScalaFutures with MockitoSugar {
+final class CostEstimationServiceSpec
+  extends AnyWordSpec
+     with Matchers
+     with ScalaFutures
+     with MockitoSugar {
+  import CostEstimationService._
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -40,7 +43,7 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
     mock[ResourceUsageConnector]
 
   "Service" should {
-    "produce a cost estimate for a service in all requested environments in which it's deployed" in {
+    "produce a cost estimate for a service in all environments in which it's deployed" in {
       val stubs =
         Map[Environment, DeploymentConfig](
           (Environment.Development , DeploymentConfig(3, 1)),
@@ -60,13 +63,25 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
       val costEstimationService =
         new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector, costEstimateConfig)
 
-      val costEstimate =
-        costEstimationService.estimateServiceCost("some-service")
+      val costEstimate = costEstimationService.estimateServiceCost("some-service").futureValue
 
-      val expectedCostEstimation =
-        ServiceCostEstimate.fromDeploymentConfigByEnvironment(stubs, costEstimateConfig)
-
-      costEstimate.futureValue shouldBe expectedCostEstimation
+      costEstimate.slotsByEnv shouldBe List(
+        Environment.Integration  -> TotalSlots(3),
+        Environment.Development  -> TotalSlots(3),
+        Environment.QA           -> TotalSlots(3),
+        Environment.Staging      -> TotalSlots(3),
+        Environment.ExternalTest -> TotalSlots(3),
+        Environment.Production   -> TotalSlots(33)
+      )
+      costEstimate.totalSlots                             shouldBe TotalSlots(48)
+      costEstimate.totalYearlyCostGbp(costEstimateConfig) shouldBe 48
+      costEstimate.chart.render shouldBe """[['Environment', 'Estimated Cost']""" +
+        """,['Integration', { v: 3.0, f: "£3.00 (slots = 3)" }]""" +
+        """,['Development', { v: 3.0, f: "£3.00 (slots = 3)" }]""" +
+        """,['QA', { v: 3.0, f: "£3.00 (slots = 3)" }]""" +
+        """,['Staging', { v: 3.0, f: "£3.00 (slots = 3)" }]""" +
+        """,['External Test', { v: 3.0, f: "£3.00 (slots = 3)" }]""" +
+        """,['Production', { v: 33.0, f: "£33.00 (slots = 33)" }]]"""
     }
 
     "produce a cost estimate of zero for a service which is not deployed in a requested environment" in {
@@ -79,40 +94,11 @@ final class CostEstimationServiceSpec extends AnyWordSpec with Matchers with Sca
       val costEstimationService =
         new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector, costEstimateConfig)
 
-      val costEstimateSummary =
-        costEstimationService
-          .estimateServiceCost("some-service")
-          .map(_.summary)
+      val costEstimate = costEstimationService.estimateServiceCost("some-service").futureValue
 
-      val expectedCostEstimateSummary =
-        ServiceCostEstimate.Summary(totalSlots = 0, totalYearlyCostGbp = 0)
-
-      costEstimateSummary.futureValue shouldBe expectedCostEstimateSummary
-    }
-
-    "estimate cost as a function of a service's total slots across all environments" in {
-      val deploymentConfigByEnvironment =
-        Map[Environment, DeploymentConfig](
-          (Environment.Development, DeploymentConfig(5, 2)),
-          (Environment.QA         , DeploymentConfig(3, 1)),
-          (Environment.Production , DeploymentConfig(10, 3))
-        )
-
-      val actualSummary =
-        ServiceCostEstimate
-          .fromDeploymentConfigByEnvironment(deploymentConfigByEnvironment, costEstimateConfig)
-          .summary
-
-      // Total slot usage is given as the sum of the per environment multiplication of slots by instances
-      val expectedTotalSlots =
-        5 * 2 + 3 * 1 + 10 * 3
-
-      // Yearly cost is estimated as a service's total slots across all environments multiplied by the cost of a slot
-      // per year
-      val expectedEstimatedCost =
-        expectedTotalSlots * costEstimateConfig.slotCostPerYear
-
-      actualSummary shouldBe Summary(expectedTotalSlots, expectedEstimatedCost)
+      costEstimate.slotsByEnv                             shouldBe List.empty
+      costEstimate.totalSlots                             shouldBe TotalSlots(0)
+      costEstimate.totalYearlyCostGbp(costEstimateConfig) shouldBe 0
     }
   }
 
