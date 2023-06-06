@@ -20,7 +20,7 @@ import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Reads
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfig
@@ -82,19 +82,25 @@ class ServiceConfigsConnector @Inject() (
   }
 
   private val configKeysCacheExpiration: Duration = servicesConfig.getConfDuration("configKeysCacheDuration", 1.hour)
-  def getConfigKeys()(implicit hc: HeaderCarrier): Future[Seq[String]] =
-    cache.getOrElseUpdate("config-keys-cache", configKeysCacheExpiration) {
+  def getConfigKeys(teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[Seq[String]] =
+    cache.getOrElseUpdate(s"config-keys-cache-${teamName.getOrElse("all")}", configKeysCacheExpiration) {
       httpClientV2
-        .get(url"$serviceConfigsBaseUrl/service-configs/configkeys")
+        .get(url"$serviceConfigsBaseUrl/service-configs/configkeys?team=${teamName.map(_.asString)}")
         .execute[Seq[String]]
     }
 
+  def getConfigKeys(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Seq[String]] =
+      httpClientV2
+        .get(url"$serviceConfigsBaseUrl/service-configs/configkeys?teamName=$teamName")
+        .execute[Seq[String]]
+
   def configSearch(
-    key          : String
+    key          : String,
+    teamName     : Option[TeamName]
   )(implicit hc: HeaderCarrier): Future[Seq[AppliedConfig]] = {
     implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/search?${Seq("key" -> s"\"$key\"")}")
+      .get(url"$serviceConfigsBaseUrl/service-configs/search?${Seq("key" -> s"\"$key\"")}&team=${teamName.map(_.asString)}")
       .execute[Seq[AppliedConfig]]
   }
 }

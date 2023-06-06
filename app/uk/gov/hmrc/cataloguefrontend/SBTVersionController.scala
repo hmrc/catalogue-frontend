@@ -45,7 +45,7 @@ class SBTVersionController @Inject()(
   def findLatestVersions(flag: String, teamName: Option[String]) =
     BasicAuthAction.async { implicit request =>
       for {
-        teams        <- teamsReposConnector.allTeams
+        teams        <- teamsReposConnector.allTeams()
         selectedFlag =  SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         selectedTeam =  teamName.flatMap(n => teams.find(_.name.asString == n))
         sbtVersions  <- dependenciesService.getSBTVersions(selectedFlag, selectedTeam.map(_.name))
@@ -55,7 +55,7 @@ class SBTVersionController @Inject()(
   def compareAllEnvironments(teamName: Option[String]) =
     BasicAuthAction.async { implicit request =>
       for {
-        teams        <- teamsReposConnector.allTeams
+        teams        <- teamsReposConnector.allTeams()
         selectedTeam =  teamName.flatMap(n => teams.find(_.name.asString == n))
         envs         <- SlugInfoFlag.values.traverse(env => dependenciesService.getSBTCountsForEnv(env, selectedTeam.map(_.name)))
         sbts         =  envs.flatMap(_.usage.keys).distinct.sortBy(_.version)

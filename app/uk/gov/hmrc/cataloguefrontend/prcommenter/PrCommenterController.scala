@@ -55,7 +55,7 @@ class PrCommenterController @Inject() (
   def recommendations(name: Option[String], teamName: Option[String], commentType: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        teams        <- teamsAndRepositoriesConnector.allTeams
+        teams        <- teamsAndRepositoriesConnector.allTeams()
         repos        <- teamsAndRepositoriesConnector.allRepositories(team = teamName.map(TeamName.apply), name = name)
         reports      <- prCommenterConnector.search(
                           name        = None, // Use listjs filtering

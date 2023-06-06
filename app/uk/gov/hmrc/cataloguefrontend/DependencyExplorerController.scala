@@ -54,7 +54,7 @@ class DependencyExplorerController @Inject() (
   def landing: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
+        teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         groupArtefacts <- dependenciesService.getGroupArtefacts
       } yield Ok(
         page(
