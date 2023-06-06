@@ -19,16 +19,19 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentConfig, ServiceDeploymentConfigSummary}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
-class WhatsRunningWhereServiceSpec extends AnyWordSpec with Matchers {
+class WhatsRunningWhereServiceSpec
+  extends AnyWordSpec
+     with Matchers
+     with ScalaFutures {
 
   private val release1 = WhatsRunningWhere(ServiceName("address-lookup"),
     List(
@@ -55,7 +58,7 @@ class WhatsRunningWhereServiceSpec extends AnyWordSpec with Matchers {
     "return the expected data structure and be filtered by releases" in {
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
-      when(serviceConfigsConnector.allDeploymentConfig) thenReturn(
+      when(serviceConfigsConnector.allDeploymentConfig()).thenReturn(
         Future.successful(Seq(
           ServiceDeploymentConfig(serviceName= "address-lookup", environment = "development", slots = 2, instances = 2),
           ServiceDeploymentConfig(serviceName= "address-lookup", environment = "qa", slots = 2, instances = 2),
@@ -80,8 +83,7 @@ class WhatsRunningWhereServiceSpec extends AnyWordSpec with Matchers {
         ))
       )
 
-      Await.result(testService.allDeploymentConfigs(releases), 5.seconds) shouldBe expectedResult
-
+      testService.allDeploymentConfigs(releases).futureValue shouldBe expectedResult
     }
   }
 }

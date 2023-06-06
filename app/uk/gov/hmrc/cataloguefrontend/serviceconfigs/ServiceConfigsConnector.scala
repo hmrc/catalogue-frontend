@@ -65,7 +65,7 @@ class ServiceConfigsConnector @Inject() (
   }
 
   def deploymentConfig(
-    service: String,
+    service    : String,
     environment: Environment
   )(implicit hc: HeaderCarrier): Future[Option[DeploymentConfig]] = {
     implicit val dcr = DeploymentConfig.reads
@@ -74,7 +74,7 @@ class ServiceConfigsConnector @Inject() (
       .execute[Option[DeploymentConfig]]
   }
 
-  def allDeploymentConfig(implicit hc: HeaderCarrier): Future[Seq[ServiceDeploymentConfig]] = {
+  def allDeploymentConfig()(implicit hc: HeaderCarrier): Future[Seq[ServiceDeploymentConfig]] = {
     implicit val adsr = ServiceDeploymentConfig.reads
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config")

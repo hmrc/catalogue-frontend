@@ -16,39 +16,83 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
+import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, __}
-import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.Instant
+import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ResourceUsageConnector @Inject() (
   httpClientV2  : HttpClientV2,
-  servicesConfig: ServicesConfig
+  servicesConfig: ServicesConfig,
+  clock         : Clock
 )(implicit ec: ExecutionContext) {
+  import ResourceUsageConnector._
 
   private val baseUrl = servicesConfig.baseUrl("service-configs")
 
-  implicit val resourceUsageFormat: Format[ResourceUsage] =
-    ResourceUsage.format
-
-  def historicResourceUsageForService(serviceName: String)(implicit hc: HeaderCarrier): Future[List[ResourceUsage]] =
+  private def rawResourceUsageForService(serviceName: String)(implicit hc: HeaderCarrier): Future[List[RawResourceUsage]] = {
+    implicit val rruf: Format[RawResourceUsage] = RawResourceUsage.format
     httpClientV2
       .get(url"$baseUrl/service-configs/resource-usage/services/$serviceName/snapshots")
-      .execute[List[ResourceUsage]]
-}
+      .execute[List[RawResourceUsage]]
+  }
+
+  def historicResourceUsageForService(serviceName: String)(implicit hc: HeaderCarrier): Future[List[ResourceUsage]] =
+    rawResourceUsageForService(serviceName)
+      .map { res =>
+        // for every date with a value, ensure we have a value for all environments
+        // if not present, the value will be the same as the previous (or zero)
+        (scala.collection.immutable.TreeMap.empty[Instant, List[RawResourceUsage]] ++ res.groupBy(_.date))
+          .toList
+          .foldLeft(List.empty[ResourceUsage]) { case (acc, (date, resourceUsages)) =>
+            val values: Map[Environment, DeploymentConfig] = acc.lastOption match {
+              case Some(previous) =>
+                Environment.values.map(env =>
+                  env -> resourceUsages
+                           .find(_.environment == env).map(ru => DeploymentConfig(slots = ru.slots, instances = ru.instances))
+                           .orElse(previous.values.get(env))
+                           .getOrElse(DeploymentConfig.empty)
+                ).toMap
+              case None =>
+                Environment.values.map(env =>
+                  env -> resourceUsages
+                           .find(_.environment == env).map(ru => DeploymentConfig(slots = ru.slots, instances = ru.instances))
+                           .getOrElse(DeploymentConfig.empty)
+                ).toMap
+            }
+            acc :+ ResourceUsage(date, serviceName, values)
+          }
+      }
+      .map(dataForAllEnvs =>
+        // double every point, starting at the date we have, but finishing at the next date
+        // except the last one, which ends today
+        dataForAllEnvs
+          .foldRight[(List[ResourceUsage], Instant)]((List.empty[ResourceUsage], Instant.now(clock))){ case (cru, (acc, timestamp)) =>
+            val date = cru.date
+            (cru +: cru.copy(date = timestamp) +: acc, date)
+          }._1
+      )
+  }
 
 object ResourceUsageConnector {
 
   final case class ResourceUsage(
+    date       : Instant,
+    serviceName: String,
+    values     : Map[Environment, DeploymentConfig]
+  )
+
+  final case class RawResourceUsage(
     date       : Instant,
     serviceName: String,
     environment: Environment,
@@ -56,13 +100,13 @@ object ResourceUsageConnector {
     instances  : Int
   )
 
-  object ResourceUsage {
-    val format: Format[ResourceUsage] =
+  object RawResourceUsage {
+    val format: Format[RawResourceUsage] =
       ( (__ \ "date"        ).format[Instant]
       ~ (__ \ "serviceName" ).format[String]
       ~ (__ \ "environment" ).format[Environment](Environment.format)
       ~ (__ \ "slots"       ).format[Int]
       ~ (__ \ "instances"   ).format[Int]
-      ) (ResourceUsage.apply, unlift(ResourceUsage.unapply))
+      )(RawResourceUsage.apply, unlift(RawResourceUsage.unapply))
   }
 }

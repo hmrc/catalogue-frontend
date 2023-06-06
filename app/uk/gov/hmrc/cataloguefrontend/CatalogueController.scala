@@ -169,7 +169,7 @@ class CatalogueController @Inject() (
       urlIfLeaksFound      <- leakDetectionService.urlIfLeaksFound(repositoryName)
       serviceRoutes        <- routeRulesService.serviceRoutes(serviceName)
       optLatestServiceInfo <- serviceDependenciesConnector.getSlugInfo(repositoryName)
-      costEstimate         <- costEstimationService.estimateServiceCost(repositoryName, Environment.values, serviceCostEstimateConfig)
+      costEstimate         <- costEstimationService.estimateServiceCost(repositoryName)
       commenterReport      <- prCommenterConnector.report(repositoryName)
       vulnerabilitiesCount <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
       serviceRelationships <- serviceConfigsService.serviceRelationships(serviceName)
@@ -383,18 +383,17 @@ class CatalogueController @Inject() (
   def costEstimation(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (for {
-        repositoryDetails <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
+        repositoryDetails           <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
         if repositoryDetails.repoType == RepoType.Service
-        costEstimationEnvironments = Environment.values
-        costEstimation <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName, costEstimationEnvironments, serviceCostEstimateConfig))
-        estimatedCostCharts <- OptionT.liftF(costEstimationService.historicResourceUsageChartsForService(serviceName, serviceCostEstimateConfig))
+        costEstimation              <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
+        historicEstimatedCostCharts <- OptionT.liftF(costEstimationService.historicEstimatedCostChartsForService(serviceName))
       } yield
         Ok(costEstimationPage(
           serviceName,
           repositoryDetails,
           costEstimation,
           serviceCostEstimateConfig,
-          estimatedCostCharts
+          historicEstimatedCostCharts
         ))
       ).getOrElse(notFound)
     }

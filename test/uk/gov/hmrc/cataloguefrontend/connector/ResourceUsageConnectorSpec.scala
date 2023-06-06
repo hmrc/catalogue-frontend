@@ -18,20 +18,21 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 final class ResourceUsageConnectorSpec
   extends UnitSpec
      with HttpClientV2Support
      with WireMockSupport {
+  import ResourceUsageConnector._
 
   val servicesConfig =
     new ServicesConfig(
@@ -41,63 +42,97 @@ final class ResourceUsageConnectorSpec
       )
     )
 
+  val today = Instant.parse("2023-01-01T00:00:00.0Z")
+  val clock = Clock.fixed(today, ZoneId.of("UTC"))
+
   val resourceUsageConnector =
-    new ResourceUsageConnector(httpClientV2, servicesConfig)
+    new ResourceUsageConnector(httpClientV2, servicesConfig, clock)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "The connector" should {
-
     "fetch and deserialise historic `ResourceUsage` for a service" in {
-
       stubFor(
         get(urlEqualTo("/service-configs/resource-usage/services/some-service/snapshots"))
           .willReturn(
             aResponse()
               .withBody(
                 """
-                  |[ {
-                  |  "date" : "2022-01-01T00:00:00.0Z",
-                  |  "serviceName" : "some-service",
-                  |  "environment" : "production",
-                  |  "slots" : 10,
-                  |  "instances" : 10
-                  |}, {
-                  |  "date" : "2022-01-02T00:00:00.0Z",
-                  |  "serviceName" : "some-service",
-                  |  "environment" : "production",
-                  |  "slots" : 10,
-                  |  "instances" : 10
-                  |} ]
-                  |""".stripMargin
+                  [ {
+                    "date"        : "2022-01-01T00:00:00.0Z",
+                    "serviceName" : "some-service",
+                    "environment" : "production",
+                    "slots"       : 1,
+                    "instances"   : 2
+                  }, {
+                    "date"        : "2022-01-02T00:00:00.0Z",
+                    "serviceName" : "some-service",
+                    "environment" : "qa",
+                    "slots"       : 3,
+                    "instances"   : 4
+                  }, {
+                    "date"        : "2022-01-02T00:00:00.0Z",
+                    "serviceName" : "some-service",
+                    "environment" : "production",
+                    "slots"       : 5,
+                    "instances"   : 6
+                  } ]
+                  """
               )
           )
       )
 
-      val expectedResourceUsages =
-        List(
+      resourceUsageConnector.historicResourceUsageForService("some-service").futureValue shouldBe List(
           ResourceUsage(
-            LocalDateTime.of(2022, 1, 1, 0, 0).toInstant(ZoneOffset.UTC),
-            "some-service",
-            Environment.Production,
-            10,
-            10
+            date        = Instant.parse("2022-01-01T00:00:00.0Z"),
+            serviceName = "some-service",
+            values      = Map(
+                            Environment.Integration  -> DeploymentConfig.empty,
+                            Environment.Development  -> DeploymentConfig.empty,
+                            Environment.ExternalTest -> DeploymentConfig.empty,
+                            Environment.Staging      -> DeploymentConfig.empty,
+                            Environment.Production   -> DeploymentConfig(1, 2),
+                            Environment.QA           -> DeploymentConfig.empty
+                          )
           ),
           ResourceUsage(
-            LocalDateTime.of(2022, 1, 2, 0, 0).toInstant(ZoneOffset.UTC),
-            "some-service",
-            Environment.Production,
-            10,
-            10
+            date        = Instant.parse("2022-01-02T00:00:00.0Z"),
+            serviceName = "some-service",
+            values      = Map(
+                            Environment.Integration  -> DeploymentConfig.empty,
+                            Environment.Development  -> DeploymentConfig.empty,
+                            Environment.ExternalTest -> DeploymentConfig.empty,
+                            Environment.Staging      -> DeploymentConfig.empty,
+                            Environment.Production   -> DeploymentConfig(1, 2),
+                            Environment.QA           -> DeploymentConfig.empty
+                          )
+          ),
+          ResourceUsage(
+            date        = Instant.parse("2022-01-02T00:00:00.0Z"),
+            serviceName = "some-service",
+            values      = Map(
+                            Environment.Integration  -> DeploymentConfig.empty,
+                            Environment.Development  -> DeploymentConfig.empty,
+                            Environment.ExternalTest -> DeploymentConfig.empty,
+                            Environment.Staging      -> DeploymentConfig.empty,
+                            Environment.Production   -> DeploymentConfig(5, 6),
+                            Environment.QA           -> DeploymentConfig(3, 4)
+                          )
+          )
+          ,
+          ResourceUsage(
+            date        = today,
+            serviceName = "some-service",
+            values      = Map(
+                            Environment.Integration  -> DeploymentConfig.empty,
+                            Environment.Development  -> DeploymentConfig.empty,
+                            Environment.ExternalTest -> DeploymentConfig.empty,
+                            Environment.Staging      -> DeploymentConfig.empty,
+                            Environment.Production   -> DeploymentConfig(5, 6),
+                            Environment.QA           -> DeploymentConfig(3, 4)
+                          )
           )
         )
-
-      val actualResourceUsages =
-        resourceUsageConnector
-          .historicResourceUsageForService("some-service")
-          .futureValue
-
-      actualResourceUsages shouldBe expectedResourceUsages
 
       wireMockServer.verify(
         getRequestedFor(urlPathEqualTo("/service-configs/resource-usage/services/some-service/snapshots"))

@@ -25,27 +25,31 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class WhatsRunningWhereService @Inject()(releasesConnector: ReleasesConnector, serviceConfigsConnector: ServiceConfigsConnector) {
+class WhatsRunningWhereService @Inject()(
+  releasesConnector      : ReleasesConnector,
+  serviceConfigsConnector: ServiceConfigsConnector
+) {
 
   def releasesForProfile(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     releasesConnector.releases(profile)
 
-  def profiles(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
-    releasesConnector.profiles
+  def profiles()(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
+    releasesConnector.profiles()
 
   def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
     releasesConnector.releasesForService(service)
 
   def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
-    val releasesPerEnv = releases.map(r => (r.applicationName.asString, r.versions.map(v => v.environment.asString))).toMap
-    serviceConfigsConnector
-      .allDeploymentConfig
-      .map(_.filter(config => {
-        releasesPerEnv.getOrElse(config.serviceName, List.empty).contains(config.environment)
-      }
-      ).groupBy(_.serviceName)
-        .map(service => ServiceDeploymentConfigSummary(service._1, service._2))
-        .toSeq
+    val releasesPerEnv = releases.map(r => (r.applicationName.asString, r.versions.map(_.environment.asString))).toMap
+    serviceConfigsConnector.allDeploymentConfig()
+      .map(
+        _
+          .filter(config =>
+            releasesPerEnv.getOrElse(config.serviceName, List.empty).contains(config.environment)
+          )
+          .groupBy(_.serviceName)
+          .map { case (serviceName, deploymentConfigs) => ServiceDeploymentConfigSummary(serviceName, deploymentConfigs) }
+          .toSeq
       )
   }
 }
