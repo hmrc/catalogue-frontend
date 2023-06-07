@@ -19,6 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -27,12 +29,14 @@ import views.html.serviceconfigs.{ConfigExplorerPage, SearchConfigByKeyPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 
 @Singleton
 class ServiceConfigsController @Inject()(
   override val mcc        : MessagesControllerComponents
 , override val auth       : FrontendAuthComponents
 , configuration           : Configuration
+, teamsAndReposConnector  : TeamsAndRepositoriesConnector
 , serviceconfigsService   : ServiceConfigsService
 , whatsRunningWhereService: WhatsRunningWhereService
 , serviceConfigPage       : ConfigExplorerPage
@@ -57,23 +61,27 @@ class ServiceConfigsController @Inject()(
 
   def searchByKey(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
-        configKeys <- serviceconfigsService.configKeys()
-        result     <- ConfigSearch
-                        .form
-                        .bindFromRequest()
-                        .fold(
-                          formWithErrors => Future.successful(Ok(configSearchPage(formWithErrors.fill(ConfigSearch()), configKeys)))
-                        , formWithObject => serviceconfigsService
-                                              .searchAppliedConfig(formWithObject.key)
-                                              .map { results => Ok(configSearchPage(ConfigSearch.form.fill(formWithObject), configKeys, Some(results))) }
-                        )
-      } yield result
+      ConfigSearch
+        .form
+        .bindFromRequest()
+        .fold(
+          formWithErrors => for {
+                              allTeams   <- teamsAndReposConnector.allTeams()
+                              teamName   =  formWithErrors("teamName").value.map(TeamName.apply _)
+                              configKeys <- serviceconfigsService.configKeys(teamName)
+                            } yield Ok(configSearchPage(formWithErrors.fill(ConfigSearch(teamName)), configKeys, allTeams))
+        , formWithObject => for {
+                              allTeams   <- teamsAndReposConnector.allTeams()
+                              configKeys <- serviceconfigsService.configKeys(formWithObject.teamName)
+                              results    <- serviceconfigsService.searchAppliedConfig(formWithObject.key, formWithObject.teamName)
+                            } yield Ok(configSearchPage(ConfigSearch.form.fill(formWithObject), configKeys, allTeams, Some(results)))
+        )
     }
 }
 
 case class ConfigSearch(
-  key            : String            = ""
+  teamName       : Option[TeamName]  = None
+, key            : String            = ""
 , showEnviroments: List[Environment] = Environment.values.filterNot(_ == Environment.Integration)
 )
 
@@ -82,7 +90,8 @@ object ConfigSearch {
 
   lazy val form: Form[ConfigSearch] = Form(
     Forms.mapping(
-      "key"             -> Forms.text.verifying("Search term must be at least 3 characters", _.length >= 3)
+      "teamName"        -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+    , "key"             -> Forms.text.verifying("Search term must be at least 3 characters", _.length >= 3)
     , "showEnviroments" -> Forms.list(Forms.text)
                                 .transform[List[Environment]](
                                   xs => { val ys = xs.map(Environment.parse).flatten

@@ -15,6 +15,8 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import views.html.helper.select
 @import views.html.partials.form_warnings
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
@@ -22,12 +24,13 @@
 
 @this()
 
-@(form: Form[uk.gov.hmrc.cataloguefrontend.serviceconfigs.ConfigSearch],
-  allKeys: Seq[String],
-  results: Option[Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, Option[String]]]]] = None,
+@(form    : Form[uk.gov.hmrc.cataloguefrontend.serviceconfigs.ConfigSearch],
+  allKeys : Seq[String],
+  allTeams: Seq[Team],
+  results : Option[Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, Option[String]]]]] = None
 )(implicit
   messages: Messages,
-  request: RequestHeader
+  request : RequestHeader
 )
 
 @standard_layout("Search Config by Key") {
@@ -38,32 +41,54 @@
     @form_warnings(form)
 
     <form id="form" method="GET">
-        <div class="form-group row">
-            <div class="col-md-7">
-                <label for="config-key">Config Key:</label>
-                <input class="form-control" id="config-key" type="text" name="key" value='@form("key").value' autocomplete="off">
-                <div id="config-search-matches" class="search-matches-dropdown hide"></div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-3">
+                    @select(
+                        field              = form("teamName"),
+                        options            = allTeams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default") -> "All",
+                        Symbol("_label")   -> "Team",
+                        Symbol("id")       -> "team-filter",
+                        Symbol("class")    -> "form-control"
+                    )
+                </div>
+                <div class="col-md-7">
+                    <dl>
+                        <dt><label for="config-key">Config Key</label></dt>
+                        <dd>
+                            <input class="form-control" id="config-key" type="text" name="key" value='@form("key").value' autocomplete="off">
+                            <div id="config-search-matches" class="search-matches-dropdown hide"></div>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-2">
+                    <dl>
+                        <dt><label>Environments</label></dt>
+                        <dd>
+                            @for(env <-  Environment.values) {
+                                <div>
+                                    <input name="showEnviroments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString"
+                                        @if(form.get.showEnviroments.contains(env)) {checked}> @env.displayString</input>
+                                </div>
+                            }
+                        </dd>
+                    </dl>
+                </div>
             </div>
-            <div class="col-md-2">
-                <label>Environments:</label>
-                @for(env <-  Environment.values) {
-                    <div>
-                        <input name="showEnviroments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString"
-                            @if(form.get.showEnviroments.contains(env)) {checked}> @env.displayString</input>
-                    </div>
-                }
-            </div>
-            <div class="col-md-1">
-                <label for="config-search" style="visibility: hidden">Button:</label>
-                <div><button id="config-search" class="btn btn-primary" type="submit">Search</button></div>
-            </div>
+            <div><button id="config-search" class="btn btn-primary" type="submit">Search</button></div>
         </div>
     </form>
 
     <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
     <script @CSPNonce.attr>
+        document
+            .getElementById('team-filter')
+            .addEventListener("change", () => document.getElementById("form").submit());
+
         let autoCompleteValues = [@for(key <- allKeys) { '@key', }];
         init("form", "config-key", "config-search-matches", autoCompleteValues);
+
         [@for(env <- Environment.values) { '@env.asString', }]
             .forEach(id => document.getElementById(`${id}-checkbox`).addEventListener("change", () => document.getElementById("form").submit()));
     </script>
@@ -75,10 +100,10 @@
 
         @for((configKey, configByService) <- res) {
             <div>Results for <code>@configKey.asString</code></div>
-            <table class="table table-striped always-wrap sticky-header">
+            <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
                 <thead>
                     <tr>
-                        <th style="min-width: 300px;">Service</th>
+                        <th>Service</th>
                         @for(env <- form.get.showEnviroments) {
                             <th id="@{env.asString}-tr">@env.displayString</th>
                         }

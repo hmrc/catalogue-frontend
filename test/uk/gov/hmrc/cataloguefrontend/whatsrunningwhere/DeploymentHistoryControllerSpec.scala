@@ -80,7 +80,7 @@ class DeploymentHistoryControllerSpec
         .thenReturn(Future.unit)
       when(mockedReleasesConnector.deploymentHistory(environment = any, from = any, to = any, team = any, service = any, skip = any, limit = any)(any))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(history = Seq.empty, 0)))
-      when(mockedTeamsAndRepositoriesConnector.allTeams(any))
+      when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
       val response = controller.history()(FakeRequest(GET, "/deployments/production").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
@@ -106,7 +106,7 @@ class DeploymentHistoryControllerSpec
         .thenReturn(Future.unit)
       when(mockedReleasesConnector.deploymentHistory(environment = any, from = any, to = any, team = any, service = any, skip = any, limit = any)(any))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(deps, deps.length)))
-      when(mockedTeamsAndRepositoriesConnector.allTeams(any))
+      when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
 
       val response = controller.history()(FakeRequest(GET, "/deployments/production?from=2020-01-01&to=2020-02-01").withSession(SessionKeys.authToken -> "Token token"))
@@ -140,7 +140,7 @@ class DeploymentHistoryControllerSpec
             any))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(deps, deps.length)))
 
-      when(mockedTeamsAndRepositoriesConnector.allTeams(any))
+      when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
 
       val response = controller.history()(FakeRequest(GET, "/deployments/production?service=s1").withSession(SessionKeys.authToken -> "Token token"))
@@ -166,7 +166,7 @@ class DeploymentHistoryControllerSpec
 
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
-      when(mockedTeamsAndRepositoriesConnector.allTeams(any))
+      when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
 
       val response = controller.history()(FakeRequest(GET, "/deployments/production?page=2").withSession(SessionKeys.authToken -> "Token token"))

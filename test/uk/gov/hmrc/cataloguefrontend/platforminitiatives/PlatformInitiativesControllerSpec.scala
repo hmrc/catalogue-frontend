@@ -81,7 +81,7 @@ class PlatformInitiativesControllerSpec
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
 
-      when(mockTRConnector.allTeams(any[HeaderCarrier]))
+      when(mockTRConnector.allTeams()(any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq()))
 
       when(mockPIConnector.getInitiatives(any[Option[String]])(any[HeaderCarrier]))

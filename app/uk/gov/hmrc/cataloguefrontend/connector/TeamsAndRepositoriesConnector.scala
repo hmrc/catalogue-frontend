@@ -289,7 +289,7 @@ class TeamsAndRepositoriesConnector @Inject()(
       }
   }
 
-  def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
+  def allTeams()(implicit hc: HeaderCarrier): Future[Seq[Team]] =
     httpClientV2
       .get(url"$teamsAndServicesBaseUrl/api/v2/teams")
       .execute[Seq[Team]]

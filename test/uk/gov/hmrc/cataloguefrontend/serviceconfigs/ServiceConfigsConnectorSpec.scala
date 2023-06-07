@@ -94,7 +94,7 @@ final class ServiceConfigsConnectorSpec
 
       val result =
         serviceConfigsConnector
-          .configSearch("testKey")
+          .configSearch("testKey", None)
           .futureValue
 
       result shouldBe expected
