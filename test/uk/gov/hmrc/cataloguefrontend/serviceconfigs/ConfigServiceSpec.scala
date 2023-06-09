@@ -252,9 +252,11 @@ class serviceConfigsServiceSpec
         )
       )
 
-      serviceConfigsService
-        .searchAppliedConfig("test.key", None)
-        .futureValue shouldBe expected
+      serviceConfigsService.toKeyServiceEnviromentMap(
+        serviceConfigsService
+          .searchAppliedConfig("test.key", None)
+          .futureValue
+      ) shouldBe expected
     }
   }
 
