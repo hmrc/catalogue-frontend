@@ -60,7 +60,7 @@
                 <dl>
                     <dt><label for="config-key">Config Key*</label></dt>
                     <dd>
-                        <input class="form-control" id="config-key" type="text" name="configKey" value='@form("configKey").value' autocomplete="off" minlength="3" required="required">
+                        <input class="form-control" id="config-key" type="text" name="configKey" value='@form("configKey").value' autocomplete="off" minlength="3" required="required" />
                         <div id="config-search-matches" class="search-matches-dropdown hide"></div>
                     </dd>
                 </dl>
@@ -104,6 +104,9 @@
         <button id="config-search" class="btn btn-primary" type="submit">Search</button>
         <input type="hidden" id="asCsv" name="asCsv" value="false" />
         <input type="button" id="export-as-csv-btn" class="btn btn-default" value="Export as CSV"/>
+
+        @* Use a textarea to handle HTML encoding of values such as quotes *@
+        <textarea class="hidden" id="autocomplete-values-textarea">@allKeys.mkString("\n")</textarea>
     }
 
     <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
@@ -112,8 +115,8 @@
             .getElementById('team-filter')
             .addEventListener("change", () => document.getElementById("form").submit());
 
-        let autoCompleteValues = [@for(key <- allKeys) { '@key', }];
-        init("form", "config-key", "config-search-matches", autoCompleteValues);
+        let autocompleteValues = document.getElementById('autocomplete-values-textarea').value.split('\n');
+        init("form", "config-key", "config-search-matches", autocompleteValues);
 
         document
             .getElementById("export-as-csv-btn")
