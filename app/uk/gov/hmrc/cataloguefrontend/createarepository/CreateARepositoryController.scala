@@ -46,13 +46,9 @@ class CreateARepositoryController @Inject()(
   def createARepository(): Action[AnyContent] = Action { implicit request =>
     CreateRepoForm.form.bindFromRequest.fold(
       formWithErrors => {
-        println("ERRORS")
-        println(formWithErrors)
         BadRequest(createARepositoryPage(formWithErrors, Seq.empty,  CreateRepositoryType.values))
       },
       validForm      => {
-        println("VALID")
-        println(validForm)
         Ok(createARepositoryPage(CreateRepoForm.form.fill(validForm), Seq.empty,  CreateRepositoryType.values))} //For now!
     )
   }
@@ -67,43 +63,39 @@ case class CreateRepoForm(
 )
 
 object CreateRepoForm {
-  val repoNameWhiteSpaceConstraint: Constraint[String] =
-    Constraint("constraints.repoNameCheck")(str => {
-      if (str.matches(".*\\s.*")) Invalid("Repository name cannot include whitespace, use hyphens instead") else Valid
-    }
-    )
 
-  val repoNameUnderscoreConstraint: Constraint[String] =
-    Constraint("constraints.repoNameCheck")({ str =>
-      if(str.contains("_")) Invalid("Repository name cannot include underscores, use hyphens instead") else Valid
-    })
+  def constraintFactory[T](constraintName: String, constraint: T => Boolean, error: String): Constraint[T] = {
+    Constraint(constraintName)({ toBeValidated => if(constraint(toBeValidated)) Valid else Invalid(error) })
+  }
 
-  val repoNameLengthConstraint: Constraint[String] =
-    Constraint("constraints.repoNameCheck")({ str =>
-      if(str.length > 47) Invalid("Repository name can have a maximum of 47 characters") else Valid
-    })
+  val repoNameWhiteSpaceValidation: (String => Boolean) = str => !str.matches(".*\\s.*")
+  val repoNameUnderscoreValidation: (String => Boolean) = str => !str.contains("_")
+  val repoNameLengthValidation:     (String => Boolean) = str => str.length < 48
+  val repoNameLowercaseValidation:  (String => Boolean) = str => str.toLowerCase.equals(str)
 
-  val repoNameLowercaseConstraint: Constraint[String] =
-    Constraint("constraints.repoNameCheck")({ str =>
-      if(str.toLowerCase.equals(str)) Valid else Invalid("Repository name should only contain lowercase characters")
-    })
+  val repoTypeValidation:           (String => Boolean) = str => CreateRepositoryType.parse(str).nonEmpty
 
-  val repoNameConstraints = Seq(repoNameWhiteSpaceConstraint, repoNameUnderscoreConstraint, repoNameLengthConstraint, repoNameLowercaseConstraint)
+  val conflictingFieldsValidation1: (CreateRepoForm => Boolean) = crf => !(crf.repoType.toLowerCase.contains("backend")  && crf.repositoryName.toLowerCase.contains("frontend"))
+  val conflictingFieldsValidation2: (CreateRepoForm => Boolean) = crf => !(crf.repoType.toLowerCase.contains("frontend")  && crf.repositoryName.toLowerCase.contains("backend"))
+  val frontendValidation1:           (CreateRepoForm => Boolean) = crf => !(crf.repoType.toLowerCase.contains("frontend")  && !crf.repositoryName.toLowerCase.contains("frontend"))
+  val frontendValidation2:           (CreateRepoForm => Boolean) = crf => !(crf.repositoryName.toLowerCase.contains("frontend") && !crf.repoType.toLowerCase.contains("frontend"))
 
-  val repoTypeConstraint: Constraint[String] = Constraint("constraints.repoTypeCheck")({ str =>
-    CreateRepositoryType.parse(str).map(_ => Valid)
-      .getOrElse(Invalid(CreateRepositoryType.parsingError))
-  })
 
-  val repoTypeAndRepoNameConstraint: Constraint[CreateRepoForm] = Constraint[CreateRepoForm]("constraints.repoTypeAndRepoName")({ submittedForm =>
-    val repoName = submittedForm.repositoryName
-    val repoType = submittedForm.repoType
+  val repoNameConstraints = Seq(
+    constraintFactory(constraintName = "constraints.repoNameWhitespaceCheck", constraint = repoNameWhiteSpaceValidation, error = "Repository name cannot include whitespace, use hyphens instead"),
+    constraintFactory(constraintName = "constraints.repoNameUnderscoreCheck", constraint = repoNameUnderscoreValidation, error = "Repository name cannot include underscores, use hyphens instead"),
+    constraintFactory(constraintName = "constraints.repoNameLengthCheck",     constraint = repoNameLengthValidation,     error = s"Repository name can have a maximum of 47 characters"),
+    constraintFactory(constraintName = "constraints.repoNameCaseCheck",       constraint = repoNameLowercaseValidation,  error = "Repository name should only contain lowercase characters")
+  )
 
-    if      (repoType.contains("Backend")  && repoName.toLowerCase.contains("frontend"))  Invalid("You have chosen a backend repo type, but have included 'frontend' in your repo name. Change either the repo name or repo type")
-    else if (repoType.contains("Frontend") && repoName.toLowerCase.contains("backend"))   Invalid("You have chosen a frontend repo type, but have included 'backend' in your repo name. Change either the repo name or repo type")
-    else if (repoType.contains("Frontend") && !repoName.toLowerCase.contains("frontend")) Invalid("You have chosen a frontend repo type, but have not 'frontend' in your repo name. Ensure this is added as a suffix to your repo name")
-    else Valid
-  })
+  val repoTypeConstraint: Constraint[String] = constraintFactory(constraintName = "constraints.repoTypeCheck", constraint = repoTypeValidation, error = CreateRepositoryType.parsingError)
+
+  val repoTypeAndNameConstraints = Seq(
+    constraintFactory(constraintName = "constraints.conflictingFields1", constraint = conflictingFieldsValidation1, error = "You have chosen a backend repo type, but have included 'frontend' in your repo name. Change either the repo name or repo type"),
+    constraintFactory(constraintName = "constraints.conflictingFields2", constraint = conflictingFieldsValidation2, error = "You have chosen a frontend repo type, but have included 'backend' in your repo name. Change either the repo name or repo type"),
+    constraintFactory(constraintName = "constraints.frontendCheck",      constraint = frontendValidation1,          error = "Repositories with a frontend repo type require 'frontend' to be present in their repo name."),
+    constraintFactory(constraintName = "constraints.frontendCheck",      constraint = frontendValidation2,          error = "Repositories with 'frontend' in their repo name require a frontend repo type")
+  )
 
   val form: Form[CreateRepoForm] = Form(
     mapping(
@@ -113,7 +105,7 @@ object CreateRepoForm {
       "repoType"            -> nonEmptyText.verifying(repoTypeConstraint),
       "bootstrapTag"        -> optional(text)
     )(CreateRepoForm.apply)(CreateRepoForm.unapply)
-      .verifying(repoTypeAndRepoNameConstraint)
+      .verifying(repoTypeAndNameConstraints :_*)
   )
 }
 
