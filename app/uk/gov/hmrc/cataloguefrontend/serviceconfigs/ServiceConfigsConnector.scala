@@ -89,18 +89,13 @@ class ServiceConfigsConnector @Inject() (
         .execute[Seq[String]]
     }
 
-  def getConfigKeys(teamName: TeamName)(implicit hc: HeaderCarrier): Future[Seq[String]] =
-      httpClientV2
-        .get(url"$serviceConfigsBaseUrl/service-configs/configkeys?teamName=$teamName")
-        .execute[Seq[String]]
-
   def configSearch(
     key          : String,
     teamName     : Option[TeamName]
   )(implicit hc: HeaderCarrier): Future[Seq[AppliedConfig]] = {
     implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/search?${Seq("key" -> s"\"$key\"")}&team=${teamName.map(_.asString)}")
+      .get(url"$serviceConfigsBaseUrl/service-configs/search?key=${s"\"$key\""}&team=${teamName.map(_.asString)}")
       .execute[Seq[AppliedConfig]]
   }
 }

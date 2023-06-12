@@ -197,9 +197,9 @@ object DependencyExplorerController {
     results: Map[String, Int]
   )
 
-  def toRows(seq: Seq[ServiceWithDependency]): Seq[Map[String, String]] =
+  def toRows(seq: Seq[ServiceWithDependency]): Seq[Seq[(String, String)]] =
     seq.flatMap { serviceWithDependency =>
-      val m = Map(
+      val xs = Seq(
         "slugName"    -> serviceWithDependency.slugName,
         "slugVersion" -> serviceWithDependency.slugVersion.toString,
         "team"        -> "",
@@ -207,8 +207,8 @@ object DependencyExplorerController {
         "depArtefact" -> serviceWithDependency.depArtefact,
         "depVersion"  -> serviceWithDependency.depVersion.toString
       )
-      if (serviceWithDependency.teams.isEmpty) Seq(m)
-      else serviceWithDependency.teams.map(team => m + ("team" -> team.asString))
+      if (serviceWithDependency.teams.isEmpty) Seq(xs)
+      else serviceWithDependency.teams.map(team => xs ++ Seq("team" -> team.asString))
     }
 
   def groupArtefactFromForm(form: Form[_]): Option[String] =
