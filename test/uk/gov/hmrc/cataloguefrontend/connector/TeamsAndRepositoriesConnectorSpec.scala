@@ -68,7 +68,7 @@ class TeamsAndRepositoriesConnectorSpec
               """
                 { "jobs": [
                     {
-                      "name": "serviceA",
+                      "jobName": "serviceA",
                       "jenkinsURL": "http.jenkins/serviceA"
                     }
                   ]
