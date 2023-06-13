@@ -46,7 +46,7 @@ function findMatches(rawInput) {
     if(matches.length === 0) {
         let node = document.createElement('button');
         node.classList.add('list-group-item', 'disabled');
-        node.innerHTML = 'No matches found'
+        node.innerHTML = 'No matches found';
         matchesList.appendChild(node);
     } else {
         let idx = 0
