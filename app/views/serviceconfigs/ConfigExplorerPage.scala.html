@@ -67,7 +67,7 @@
                             })
                             </div>
                             <div>@findDeployment(env).fold("")(_.versionNumber.asString)</div>
-                            @if(CatalogueFrontendSwitches.showDeployedConfig.isEnabled && appConfigBaseInSlug.contains(env)) {
+                            @if(CatalogueFrontendSwitches.showDeployedConfig.isEnabled && appConfigBaseInSlug.get(env).getOrElse(false)) {
                                 <div class="small-text info"><span class="info-badge badge"> LEGACY MODE </span> - See <span class="glyphicon glyphicon-question-sign help-icon"></span> help</div>
                             }
                         </div>
