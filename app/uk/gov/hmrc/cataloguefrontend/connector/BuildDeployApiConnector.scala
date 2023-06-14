@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
+import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpReadsInstances, HttpResponse, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -68,6 +69,33 @@ class BuildDeployApiConnector @Inject() (
       .setHeader(headers.toSeq: _*)
       .execute[ChangePrototypePasswordResponse]
   }
+
+  def createARepository(payload: CreateRepoForm): Future[CreateRepositoryResponse] = {
+    implicit val crfw: Writes[CreateRepoForm] = CreateRepoForm.writes
+    implicit val crr: HttpReads[CreateRepositoryResponse] = CreateRepositoryResponse.httpReads
+
+    val queryParams = Map.empty[String, String]
+
+    val url = url"${config.baseUrl}/v1/CreateRepository?$queryParams"
+
+    val body = Json.toJson(payload)
+
+    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
+      .getSignedHeaders(
+        uri = url.getPath,
+        method = "POST",
+        queryParams = queryParams,
+        headers = Map[String, String]("host" -> config.host),
+        payload = Some(Json.toBytes(body))
+      )
+
+    httpClientV2
+      .post(url)
+      .withBody(body)
+      .setHeader(headers.toSeq: _*)
+      .execute[CreateRepositoryResponse]
+
+  }
 }
 
 object BuildDeployApiConnector {
@@ -101,6 +129,28 @@ object BuildDeployApiConnector {
             case _ =>
               implicit val r: Reads[ChangePrototypePasswordResponse] = reads
               HttpReadsInstances.readFromJson[ChangePrototypePasswordResponse]
+          }
+        }
+  }
+
+  final case class CreateRepositoryResponse(success: Boolean, message: String)
+
+  object CreateRepositoryResponse {
+    private val reads: Reads[CreateRepositoryResponse] =
+      ( (__ \ "success").read[Boolean]
+        ~ (__ \ "message").read[String]
+        ) (CreateRepositoryResponse.apply _)
+
+    val httpReads: HttpReads[CreateRepositoryResponse] =
+      implicitly[HttpReads[HttpResponse]]
+        .flatMap { response =>
+          response.status match {
+            case 400 =>
+              val msg: String = (response.json \ "message").as[String]
+              HttpReads.pure(CreateRepositoryResponse(success = false, msg))
+            case _ =>
+              implicit val r: Reads[CreateRepositoryResponse] = reads
+              HttpReadsInstances.readFromJson[CreateRepositoryResponse]
           }
         }
   }

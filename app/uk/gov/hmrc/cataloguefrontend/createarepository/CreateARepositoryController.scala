@@ -16,57 +16,68 @@
 
 package uk.gov.hmrc.cataloguefrontend.createarepository
 
+import cats.data.EitherT
+import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms.{boolean, mapping, nonEmptyText, optional, text}
 import play.api.data.validation.{Constraint, Invalid, Valid}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{OFormat, Writes, __}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
+import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
+import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, UserManagementConnector}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.CreateARepositoryPage
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CreateARepositoryController @Inject()(
    override val auth            : FrontendAuthComponents,
    override val mcc             : MessagesControllerComponents,
-   createARepositoryPage        : CreateARepositoryPage
+   createARepositoryPage        : CreateARepositoryPage,
+   userManagementConnector      : UserManagementConnector,
+   buildDeployApiConnector      : BuildDeployApiConnector
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {
 
-  def createARepositoryLanding(): Action[AnyContent] = Action { implicit request =>
-    //Need to reach out and get all the users ldap teams!
-    Ok(createARepositoryPage(CreateRepoForm.form, Seq("team1"), CreateRepositoryType.values))
+  private val logger = Logger(getClass)
+
+  def createARepositoryLanding(): Action[AnyContent] = Action.async { implicit request =>
+    val username = request.session.data.getOrElse("username", "")
+    (for {
+      teamDetailsForUser <- EitherT(userManagementConnector.getTeamsForUser(username))
+      userTeams           = teamDetailsForUser.map(_.team)
+    } yield Ok(
+      createARepositoryPage(form, userTeams, CreateRepositoryType.values)
+    )).getOrElse(NotFound)
+    //To do: confirm whether this is appropriate fallback Result (as it masks the status code returned from teamDetailsForUser)
   }
 
-  def createARepository(): Action[AnyContent] = Action { implicit request =>
-    CreateRepoForm.form.bindFromRequest.fold(
+  def createARepository(): Action[AnyContent] = Action.async { implicit request =>
+    val username = request.session.data.getOrElse("username", "")
+    form.bindFromRequest.fold(
       formWithErrors => {
-        BadRequest(createARepositoryPage(formWithErrors, Seq.empty,  CreateRepositoryType.values))
+        Future.successful(BadRequest(createARepositoryPage(formWithErrors, Seq.empty,  CreateRepositoryType.values)))
       },
       validForm      => {
-        Ok(createARepositoryPage(CreateRepoForm.form.fill(validForm), Seq.empty,  CreateRepositoryType.values))} //For now!
+        for {
+          response <- buildDeployApiConnector.createARepository(validForm)
+          _         = logger.info(s"Status: ${response.success}, Message: ${response.message}")
+        } yield Ok(
+          createARepositoryPage(form.fill(validForm), Seq.empty,  CreateRepositoryType.values))} //For now!
     )
   }
-}
-
-case class CreateRepoForm(
-   repositoryName     : String,
-   makePrivate        : Boolean,
-   teamName           : String,
-   repoType           : String,
-   bootstrapTag       : Option[String]
-)
-
-object CreateRepoForm {
 
   def constraintFactory[T](constraintName: String, constraint: T => Boolean, error: String): Constraint[T] = {
     Constraint(constraintName)({ toBeValidated => if(constraint(toBeValidated)) Valid else Invalid(error) })
   }
+
+  def teamNameValidation(team: String)(implicit : Boolean
 
   val repoNameWhiteSpaceValidation: (String => Boolean) = str => !str.matches(".*\\s.*")
   val repoNameUnderscoreValidation: (String => Boolean) = str => !str.contains("_")
@@ -79,7 +90,6 @@ object CreateRepoForm {
   val conflictingFieldsValidation2: (CreateRepoForm => Boolean) = crf => !(crf.repoType.toLowerCase.contains("frontend")  && crf.repositoryName.toLowerCase.contains("backend"))
   val frontendValidation1:           (CreateRepoForm => Boolean) = crf => !(crf.repoType.toLowerCase.contains("frontend")  && !crf.repositoryName.toLowerCase.contains("frontend"))
   val frontendValidation2:           (CreateRepoForm => Boolean) = crf => !(crf.repositoryName.toLowerCase.contains("frontend") && !crf.repoType.toLowerCase.contains("frontend"))
-
 
   val repoNameConstraints = Seq(
     constraintFactory(constraintName = "constraints.repoNameWhitespaceCheck", constraint = repoNameWhiteSpaceValidation, error = "Repository name cannot include whitespace, use hyphens instead"),
@@ -107,6 +117,26 @@ object CreateRepoForm {
     )(CreateRepoForm.apply)(CreateRepoForm.unapply)
       .verifying(repoTypeAndNameConstraints :_*)
   )
+}
+
+case class CreateRepoForm(
+   repositoryName     : String,
+   makePrivate        : Boolean,
+   teamName           : String,
+   repoType           : String,
+   bootstrapTag       : Option[String]
+)
+
+object CreateRepoForm {
+
+  implicit val writes: Writes[CreateRepoForm] =
+    ( (__ \ "repositoryName").write[String]
+      ~ (__ \ "makePrivate").write[Boolean]
+      ~ (__ \ "teamName").write[String]
+      ~ (__ \ "repoType").write[String]
+      ~ (__ \ "bootstrapTag").writeNullable[String]
+      )(unlift(CreateRepoForm.unapply))
+
 }
 
 
