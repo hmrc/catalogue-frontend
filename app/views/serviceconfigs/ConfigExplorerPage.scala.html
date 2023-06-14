@@ -89,8 +89,10 @@
                                     <ul>
                                       @for((sourceValue: ServiceConfigsService.ConfigSourceValue, idx) <- envSources.getOrElse(env, Seq.empty).zipWithIndex) {
                                         <li class="config-value" title="@ServiceConfigsService.friendlySourceName(sourceValue.source, env, Some(key))">
-                                            @if(sourceValue.nextDeployment) {
-                                              <span class="truncate-content-overflow undeployed"><span class="glyphicon glyphicon-exclamation-sign small-text"></span> @sourceValue.value</span>
+                                            @if(sourceValue.nextDeployment && sourceValue.value.trim.isEmpty) {
+                                              <span class="truncate-content-overflow undeployed"><span class="glyphicon glyphicon-exclamation-sign small-text"></span> << Deleted >>  </span>
+                                            } else if (sourceValue.nextDeployment) {
+                                              <span class="truncate-content-overflow undeployed"><span class="glyphicon glyphicon-exclamation-sign small-text"></span> @sourceValue.value </span>
                                             } else {
                                               <span class="truncate-content-overflow
                                                            @if(sourceValue.isSuppressed) {suppressed}
