@@ -115,21 +115,20 @@ object Link {
     Json.format[Link]
 }
 
-
 case class BuildData(
-                      number: Int,
-                      url: String,
-                      timestamp: Instant,
-                      result: Option[String],
-                      description: Option[String]
-                    )
+  number     : Int,
+  url        : String,
+  timestamp  : Instant,
+  result     : Option[String],
+  description: Option[String]
+)
 
 object BuildData {
-  val apiFormat: OFormat[BuildData] = (
-    (__ \ "number").format[Int]
-    ~ (__ \ "url").format[String]
-    ~ (__ \ "timestamp").format[Instant]
-    ~ (__ \ "result").formatNullable[String]
+  val apiFormat: OFormat[BuildData] =
+    ( (__ \ "number"     ).format[Int]
+    ~ (__ \ "url"        ).format[String]
+    ~ (__ \ "timestamp"  ).format[Instant]
+    ~ (__ \ "result"     ).formatNullable[String]
     ~ (__ \ "description").formatNullable[String]
   )(apply, unlift(unapply))
 }
@@ -137,9 +136,9 @@ case class JenkinsJob(name: String, jenkinsURL: String, latestBuild: Option[Buil
 
 object JenkinsJob {
   implicit val bdf: OFormat[BuildData] = BuildData.apiFormat
-  val apiFormat: OFormat[JenkinsJob] = (
-    (__ \ "name").format[String]
-    ~ (__ \ "jenkinsURL").format[String]
+  val apiFormat: OFormat[JenkinsJob] =
+    ( (__ \ "jobName"    ).format[String]
+    ~ (__ \ "jenkinsURL" ).format[String]
     ~ (__ \ "latestBuild").formatNullable[BuildData]
   )(apply, unlift(unapply))
 }
