@@ -39,10 +39,24 @@ object JsonData {
 
   val serviceJenkinsBuildData: String =
     """
-        { "jobs": [{
-           "jobName": "service-1",
+        { "jobs": [
+        {
+           "jobName": "service-1-pipeline",
+           "jobType": "pipeline",
            "jenkinsURL": "http://jenkins/service-1/"
-        }]}
+        },
+        {
+           "jobName": "service-1-performance",
+           "jobType": "performance",
+           "jenkinsURL": "http://jenkins/service-1/"
+        },
+        {
+           "jobName": "service-1",
+           "jobType": "job",
+           "jenkinsURL": "http://jenkins/service-1/"
+        }
+
+        ]}
         """
 
   val teamDetailsData =
