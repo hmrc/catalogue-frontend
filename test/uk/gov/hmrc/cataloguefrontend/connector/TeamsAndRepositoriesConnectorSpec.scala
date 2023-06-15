@@ -68,8 +68,19 @@ class TeamsAndRepositoriesConnectorSpec
               """
                 { "jobs": [
                     {
+                      "jobName": "serviceA-pipeline",
+                      "jenkinsURL": "http.jenkins/serviceA-pipeline",
+                      "jobType": "pipeline"
+                    },
+                    {
+                      "jobName": "serviceA-performance",
+                      "jenkinsURL": "http.jenkins/serviceA-performance",
+                      "jobType": "performance"
+                    },
+                    {
                       "jobName": "serviceA",
-                      "jenkinsURL": "http.jenkins/serviceA"
+                      "jenkinsURL": "http.jenkins/serviceA",
+                      "jobType": "job"
                     }
                   ]
                 }
@@ -81,8 +92,13 @@ class TeamsAndRepositoriesConnectorSpec
       val response = teamsAndRepositoriesConnector
         .lookupLatestBuildJobs("serviceA")(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
+        .sortBy(_.jobType)
 
-      response shouldBe JenkinsJobs(List(JenkinsJob("serviceA","http.jenkins/serviceA",None)))
+      response shouldBe Seq(
+        JenkinsJob(name = "serviceA",             jenkinsURL = "http.jenkins/serviceA",             jobType = BuildJobType.Job,         latestBuild = None),
+        JenkinsJob(name = "serviceA-pipeline",    jenkinsURL = "http.jenkins/serviceA-pipeline",    jobType = BuildJobType.Pipeline,    latestBuild = None),
+        JenkinsJob(name = "serviceA-performance", jenkinsURL = "http.jenkins/serviceA-performance", jobType = BuildJobType.Performance, latestBuild = None)
+      )
     }
   }
 
