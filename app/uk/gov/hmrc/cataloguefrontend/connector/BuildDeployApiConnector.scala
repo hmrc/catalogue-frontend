@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Json, Reads, Writes, __}
+import play.api.libs.json._
 import com.google.inject.{Inject, Singleton}
 import play.api.Logging
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
@@ -68,6 +68,33 @@ class BuildDeployApiConnector @Inject() (
       .setHeader(headers.toSeq: _*)
       .execute[ChangePrototypePasswordResponse]
   }
+
+  def getPrototypeStatus(prototype: String): Future[GetPrototypeStatusResponse] = {
+    implicit val gpsR: HttpReads[GetPrototypeStatusResponse] = GetPrototypeStatusResponse.httpReads
+
+    val queryParams = Map.empty[String, String]
+
+    val url = url"${config.baseUrl}/v1/GetPrototypeStatus?$queryParams"
+
+    val body = Json.obj(
+      "prototype" -> JsString(prototype)
+    )
+
+    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
+      .getSignedHeaders(
+        uri = url.getPath,
+        method = "POST",
+        queryParams = queryParams,
+        headers = Map[String, String]("host" -> config.host),
+        payload = Some(Json.toBytes(body))
+      )
+
+    httpClientV2
+      .post(url)
+      .withBody(body)
+      .setHeader(headers.toSeq: _*)
+      .execute[GetPrototypeStatusResponse]
+  }
 }
 
 object BuildDeployApiConnector {
@@ -101,6 +128,50 @@ object BuildDeployApiConnector {
             case _ =>
               implicit val r: Reads[ChangePrototypePasswordResponse] = reads
               HttpReadsInstances.readFromJson[ChangePrototypePasswordResponse]
+          }
+        }
+  }
+
+  sealed trait PrototypeStatus { def asString: String; def displayString: String }
+
+  object PrototypeStatus {
+    case object Running      extends PrototypeStatus { val asString = "running"      ; override def displayString = "Running"      }
+    case object Stopped      extends PrototypeStatus { val asString = "stopped"      ; override def displayString = "Stopped"      }
+    case object Undetermined extends PrototypeStatus { val asString = "undetermined" ; override def displayString = "Undetermined" }
+
+    val values: List[PrototypeStatus] =
+      List(Running, Stopped, Undetermined)
+
+    def parse(s: String): Option[PrototypeStatus] =
+      values.find(_.asString == s)
+
+    val format: Format[PrototypeStatus] = new Format[PrototypeStatus] {
+      override def writes(o: PrototypeStatus): JsValue = JsString(o.asString)
+      override def reads(json: JsValue): JsResult[PrototypeStatus] =
+        json.validate[String].flatMap(s => PrototypeStatus.parse(s).map(p => JsSuccess(p)).getOrElse(JsError("invalid prototype status")))
+    }
+  }
+
+  final case class GetPrototypeStatusResponse(success: Boolean, message: String, status: PrototypeStatus)
+
+  object GetPrototypeStatusResponse {
+    implicit val psF: Format[PrototypeStatus] = PrototypeStatus.format
+    private val reads: Reads[GetPrototypeStatusResponse] =
+      ( (__ \ "success").read[Boolean]
+      ~ (__ \ "message").read[String]
+      ~ (__ \ "details" \ "status").read[PrototypeStatus]
+      ) (GetPrototypeStatusResponse.apply _)
+
+    val httpReads: HttpReads[GetPrototypeStatusResponse] =
+      implicitly[HttpReads[HttpResponse]]
+        .flatMap { response =>
+          response.status match {
+            case 200 =>
+              implicit val r: Reads[GetPrototypeStatusResponse] = reads
+              HttpReadsInstances.readFromJson[GetPrototypeStatusResponse]
+            case _ =>
+              val msg = (response.json \ "message").as[String]
+              HttpReads.pure(GetPrototypeStatusResponse(success = false, message = msg, status = PrototypeStatus.Undetermined))
           }
         }
   }
