@@ -4,7 +4,7 @@ let matchesDiv;
 let allValues = [];
 
 const minSearch = 3;
-let selectedIdx = 0;
+let selectedIdx = -1; // Allow partial search
 let matchesLen = 0;
 
 const matchesListClass = "search-match-list";
@@ -66,7 +66,7 @@ function findMatches(rawInput) {
     }
 
     matchesDiv.appendChild(matchesList);
-    selectedIdx = 0;
+    selectedIdx = -1;
     updateScroll();
     highlightMatch(selectedIdx, true);
     matchesDiv.classList.remove('hide');
@@ -85,8 +85,8 @@ function highlightMatch(idx, toggle) {
 
 function matchesInBold(query, match) {
     let bolded = match;
-    query.toLowerCase().split(' ').forEach(function (term) {
-        bolded = bolded.toLowerCase().replaceAll(term, '<strong>' + term + '</strong>');
+    query.split(' ').forEach(function (term) {
+        bolded = bolded.replaceAll(term, '<strong>' + term + '</strong>');
     });
 
     return bolded;
@@ -132,7 +132,7 @@ function autoCompleteSearchInputListener(e) {
                 updateScroll();
             }
         } else if (e.keyCode === 38) { //up arrow
-            if(selectedIdx > 0) {
+            if(selectedIdx > -1) {
                 highlightMatch(selectedIdx, false);
                 selectedIdx--;
                 highlightMatch(selectedIdx, true);

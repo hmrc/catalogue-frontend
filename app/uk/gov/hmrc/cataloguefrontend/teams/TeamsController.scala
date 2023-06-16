@@ -100,7 +100,7 @@ class TeamsController @Inject()(
 
   def allTeams(name: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      teamsAndRepositoriesConnector.allTeams.map(response =>
+      teamsAndRepositoriesConnector.allTeams().map(response =>
         Ok(teams_list(response, name))
       )
     }

@@ -52,7 +52,7 @@ class RepositoriesController @Inject() (
     BasicAuthAction.async { implicit request =>
       val allTeams =
         teamsAndRepositoriesConnector
-          .allTeams
+          .allTeams()
           .map(_.sortBy(_.name.asString))
 
       val (repoType, serviceType) = repoTypeString match {

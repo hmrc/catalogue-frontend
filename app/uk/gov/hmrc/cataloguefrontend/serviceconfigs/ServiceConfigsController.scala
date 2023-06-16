@@ -27,10 +27,10 @@ import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.serviceconfigs.{ConfigExplorerPage, SearchConfigByKeyPage}
+import views.html.serviceconfigs.{ConfigExplorerPage, SearchConfigPage}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Future, ExecutionContext}
 
 @Singleton
 class ServiceConfigsController @Inject()(
@@ -41,7 +41,7 @@ class ServiceConfigsController @Inject()(
 , serviceConfigsService   : ServiceConfigsService
 , whatsRunningWhereService: WhatsRunningWhereService
 , serviceConfigPage       : ConfigExplorerPage
-, configSearchPage        : SearchConfigByKeyPage
+, searchConfigPage        : SearchConfigPage
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -60,50 +60,55 @@ class ServiceConfigsController @Inject()(
       } yield Ok(serviceConfigPage(serviceName, configByKey, deployments, appConfigBaseInSlug))
     }
 
-  def searchByKeyLanding(): Action[AnyContent] =
+  def searchLanding(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         allTeams   <- teamsAndReposConnector.allTeams()
         configKeys <- serviceConfigsService.configKeys()
-      } yield Ok(configSearchPage(ConfigSearch.form.fill(ConfigSearch()), configKeys, allTeams))
+      } yield Ok(searchConfigPage(SearchConfig.form.fill(SearchConfig.SearchConfigForm()), allTeams, configKeys))
     }
 
-  def searchByKeyResults(): Action[AnyContent] =
+  import cats.data.EitherT
+  import cats.instances.future._
+  def searchResults(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      ConfigSearch
+      SearchConfig
         .form
         .bindFromRequest()
         .fold(
           formWithErrors => for {
                               allTeams   <- teamsAndReposConnector.allTeams()
                               configKeys <- serviceConfigsService.configKeys()
-                            } yield BadRequest(configSearchPage(formWithErrors.fill(ConfigSearch()), configKeys, allTeams))
-        , formObject     => for {
-                              allTeams   <- teamsAndReposConnector.allTeams()
-                              configKeys <- serviceConfigsService.configKeys(formObject.teamName)
-                              results    <- formObject.configKey match {
-                                              case Some(k) => serviceConfigsService.searchAppliedConfig(k, formObject.teamName)
-                                              case None    => Future.successful(Nil)
+                            } yield BadRequest(searchConfigPage(formWithErrors.fill(SearchConfig.SearchConfigForm()), allTeams, configKeys))
+        , formObject     => (for {
+                              allTeams   <- EitherT.right[Result](teamsAndReposConnector.allTeams())
+                              configKeys <- EitherT.right[Result](serviceConfigsService.configKeys(formObject.teamName))
+                              results    <- (formObject.configKey, formObject.configValue) match {
+                                              case (None, None) if formObject.valueFilterType != ValueFilterType.IsEmpty
+                                                     => EitherT.rightT[Future, Result](Nil)
+                                              case _ => EitherT(serviceConfigsService.searchAppliedConfig(formObject.teamName, formObject.configKey, formObject.configValue, Some(formObject.valueFilterType)))
+                                                          .leftMap(msg => Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys)))
                                             }
-                              filtered   =  formObject.configValue.fold(results) { v =>
-                                              formObject.valueFiterType match {
-                                                case ValueFilterType.Contains       => results.filter(_.value.contains(v))
-                                                case ValueFilterType.DoesNotContain => results.filterNot(_.value.contains(v))
-                                                case ValueFilterType.EqualTo        => results.filter(_.value == v)
-                                              }
+                              (groupedByKey, groupedByService)
+                                         =  formObject.groupBy match {
+                                              case GroupBy.Key     => (Some(serviceConfigsService.toKeyServiceEnviromentMap(results)), None)
+                                              case GroupBy.Service => (None, Some(serviceConfigsService.toServiceKeyEnviromentMap(results)))
                                             }
-                              configMap  =  serviceConfigsService.toKeyServiceEnviromentMap(filtered)
                             } yield
                               if (formObject.asCsv) {
-                                val csv    = CsvUtils.toCsv(toRows(configMap, formObject.showEnviroments))
+                                val rows   = formObject.groupBy match {
+                                               case GroupBy.Key     => toRows(groupedByKey.getOrElse(Map.empty), formObject.showEnviroments)
+                                               case GroupBy.Service => toRows2(groupedByService.getOrElse(Map.empty), formObject.showEnviroments)
+                                             }
+                                val csv    = CsvUtils.toCsv(rows)
                                 val source = akka.stream.scaladsl.Source.single(akka.util.ByteString(csv, "UTF-8"))
                                 Result(
                                   header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"config-search.csv\"")),
                                   body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                                 )
                             } else {
-                              Ok(configSearchPage(ConfigSearch.form.fill(formObject), configKeys, allTeams, formObject.configKey.map(_ => configMap)))
-                            }
+                              Ok(searchConfigPage(SearchConfig.form.fill(formObject), allTeams, configKeys, groupedByKey, groupedByService))
+                            }).merge
         )
     }
 
@@ -117,47 +122,38 @@ class ServiceConfigsController @Inject()(
     } yield
       Seq("key" -> key.asString, "service" -> service.asString) ++
       showEnviroments.map(e => e.asString -> envs.get(e).flatten.getOrElse(""))
+
+  private def toRows2(
+    results        : Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, Option[String]]]]
+  , showEnviroments: Seq[Environment]
+  ): Seq[Seq[(String, String)]] =
+    for {
+      (service, keys) <- results.toSeq
+      (key, envs)     <- keys
+    } yield
+      Seq("service" -> service.asString, "key" -> key.asString) ++
+      showEnviroments.map(e => e.asString -> envs.get(e).flatten.getOrElse(""))
+
 }
+object SearchConfig {
+  import play.api.data.{Form, Forms}
 
-case class ConfigSearch(
-  teamName       : Option[TeamName]  = None
-, configKey      : Option[String]    = None
-, configValue    : Option[String]    = None
-, valueFiterType : ValueFilterType   = ValueFilterType.Contains
-, showEnviroments: List[Environment] = Environment.values.filterNot(_ == Environment.Integration)
-, asCsv          : Boolean           = false
-)
+  case class SearchConfigForm(
+    teamName       : Option[TeamName]  = None
+  , configKey      : Option[String]    = None
+  , configValue    : Option[String]    = None
+  , valueFilterType: ValueFilterType   = ValueFilterType.Contains
+  , showEnviroments: List[Environment] = Environment.values.filterNot(_ == Environment.Integration)
+  , asCsv          : Boolean           = false
+  , groupBy        : GroupBy           = GroupBy.Key
+  )
 
-sealed trait ValueFilterType {val asString: String; val displayString: String; }
-object ValueFilterType {
-  case object Contains       extends ValueFilterType { val asString = "contains";       val displayString = "Contains"         }
-  case object DoesNotContain extends ValueFilterType { val asString = "doesNotContain"; val displayString = "Does not contain" }
-  case object EqualTo        extends ValueFilterType { val asString = "equalTo";        val displayString = "Equal to" }
-
-  val values: List[ValueFilterType]             = List(Contains, DoesNotContain, EqualTo)
-  def parse(s: String): Option[ValueFilterType] = values.find(_.asString == s)
-}
-
-object ConfigSearch {
-  import play.api.data.{Form, Forms, FormError}
-  import play.api.data.format.Formatter
-  private def valueFilterTypeFormat: Formatter[ValueFilterType] = new Formatter[ValueFilterType] {
-    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], ValueFilterType] =
-      data
-        .get(key)
-        .flatMap(ValueFilterType.parse)
-        .fold[Either[Seq[FormError], ValueFilterType]](Left(Seq(FormError(key, "Invalid filter type"))))(Right.apply)
-
-    override def unbind(key: String, value: ValueFilterType): Map[String, String] =
-      Map(key -> value.asString)
-  }
-
-  lazy val form: Form[ConfigSearch] = Form(
+  lazy val form: Form[SearchConfigForm] = Form(
     Forms.mapping(
       "teamName"        -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
     , "configKey"       -> Forms.optional(Forms.nonEmptyText(minLength = 3))
     , "configValue"     -> Forms.optional(Forms.text)
-    , "valueFilterType" -> Forms.of[ValueFilterType](valueFilterTypeFormat)
+    , "valueFilterType" -> Forms.of[ValueFilterType](ValueFilterType.formFormat)
     , "showEnviroments" -> Forms.list(Forms.text)
                                 .transform[List[Environment]](
                                   xs => { val ys = xs.map(Environment.parse).flatten
@@ -166,6 +162,7 @@ object ConfigSearch {
                                 , x  => identity(x).map(_.asString)
                                 )
     , "asCsv"           -> Forms.boolean
-    )(ConfigSearch.apply)(ConfigSearch.unapply)
+    , "groupBy"         -> Forms.of[GroupBy](GroupBy.formFormat)
+    )(SearchConfigForm.apply)(SearchConfigForm.unapply)
   )
 }

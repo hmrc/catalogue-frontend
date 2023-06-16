@@ -59,7 +59,7 @@ class VulnerabilitiesController @Inject() (
           formWithErrors => Future.successful(BadRequest(vulnerabilitiesListPage(Seq.empty, Seq.empty, formWithErrors))),
           validForm =>
             for {
-              teams     <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
+              teams     <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
               summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.curationStatus, validForm.service, validForm.team, validForm.component)
             } yield Ok(vulnerabilitiesListPage(summaries, teams, VulnerabilitiesExplorerFilter.form.fill(validForm)))
           )
@@ -73,7 +73,7 @@ class VulnerabilitiesController @Inject() (
         formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
         validForm =>
          for {
-           teams      <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
+           teams      <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
            counts     <- vulnerabilitiesConnector.vulnerabilityCounts(
                             service     = None // Use listjs filtering
                           , team        = validForm.team
@@ -105,7 +105,7 @@ class VulnerabilitiesController @Inject() (
         formWithErrors => Future.successful(BadRequest(vulnerabilitiesTimelinePage(teams = Seq.empty, result = Seq.empty, formWithErrors))),
         validForm      =>
           for {
-            sortedTeams  <- teamsAndRepositoriesConnector.allTeams.map(_.sortBy(_.name.asString.toLowerCase))
+            sortedTeams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
             teamNames     = sortedTeams.map(_.name.asString)
             counts       <- vulnerabilitiesConnector.timelineCounts(
               service        = validForm.service,

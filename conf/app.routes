@@ -50,8 +50,8 @@ GET        /sbtexplorer/:env                            uk.gov.hmrc.cataloguefro
 GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SBTVersionController.compareAllEnvironments(teamName: Option[String] ?= None)
 
 GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configExplorer(name)
-GET        /config/key-search                           uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchByKeyLanding()
-GET        /config/key-search/results                   uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchByKeyResults()
+GET        /config/search                               uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchLanding()
+GET        /config/search/results                       uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchResults()
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()
 

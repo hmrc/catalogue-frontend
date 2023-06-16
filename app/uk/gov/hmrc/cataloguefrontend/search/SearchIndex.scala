@@ -70,7 +70,9 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
     SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,               1.0f),
     )  ++ {
       if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showConfigSearch.isEnabled) {
-        List(SearchTerm("page",     "search-config-by key",         serviceConfigsRoutes.ServiceConfigsController.searchByKeyLanding().url,                     1.0f))
+        List(
+          SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,           1.0f),
+        )
       } else Nil
     }
 

@@ -116,23 +116,30 @@ class ServiceConfigsService @Inject()(
   def configKeys(teamName: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[String]] =
     serviceConfigsConnector.getConfigKeys(teamName)
 
-  def searchAppliedConfig(key: String, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[Seq[AppliedConfig]] =
-    serviceConfigsConnector.configSearch(key, teamName)
+  def searchAppliedConfig(teamName: Option[TeamName], key: Option[String], value: Option[String], valueFilterType: Option[ValueFilterType])(implicit hc: HeaderCarrier): Future[Either[String, Seq[AppliedConfig]]] =
+    serviceConfigsConnector.configSearch(teamName, key = key, value = value, valueFilterType)
 
-  def toKeyServiceEnviromentMap(appliedConfig: Seq[AppliedConfig]): Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]] = {
-    def sorted[K, V](unsorted: Map[K, V])(implicit ordering: Ordering[K]): Map[K, V] = TreeMap[K, V]() ++ unsorted
+  private def sorted[K, V](unsorted: Map[K, V])(implicit ordering: Ordering[K]): Map[K, V] = TreeMap[K, V]() ++ unsorted
 
-    implicit val srvOrd: Ordering[ServiceName] = Ordering.by(_.asString)
-
+  def toKeyServiceEnviromentMap(appliedConfig: Seq[AppliedConfig]): Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]] =
     appliedConfig
       .groupBy(_.key).view.mapValues(
         configsByService => sorted(configsByService.groupBy(_.serviceName).view.mapValues(
           _.groupBy(_.environment).view.mapValues(
             _.headOption.map(_.value)
           ).toMap
-        ).toMap)
+        ).toMap)(Ordering.by(_.asString))
       ).toMap
-  }
+
+  def toServiceKeyEnviromentMap(appliedConfig: Seq[AppliedConfig]): Map[ServiceName, Map[KeyName, Map[Environment, Option[String]]]] =
+    appliedConfig
+      .groupBy(_.serviceName).view.mapValues(
+        configsByService => sorted(configsByService.groupBy(_.key).view.mapValues(
+          _.groupBy(_.environment).view.mapValues(
+            _.headOption.map(_.value)
+          ).toMap
+        ).toMap)(Ordering.by(_.asString))
+      ).toMap
 }
 
 object ServiceConfigsService {
