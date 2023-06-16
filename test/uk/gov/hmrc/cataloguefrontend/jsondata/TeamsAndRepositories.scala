@@ -135,14 +135,16 @@ object TeamsAndRepositories {
 
   val jenkinsData: String =
     """{
-          "name": "lib",
+          "jobName": "lib",
+          "jobType": "job",
           "jenkinsURL": "http://jenkins/lib/"
         }
         """
 
   val jenkinsBuildData: String =
     """{ "jobs": [{
-            "name": "lib",
+            "jobName": "lib",
+            "jobType": "job",
             "jenkinsURL": "http://jenkins/lib/"
           }]
         }
