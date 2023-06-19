@@ -302,9 +302,10 @@ class CatalogueController @Inject() (
     successMessage         : Option[String] = None
   )(implicit request: Request[_]): Future[Html] =
     for {
-      urlIfLeaksFound <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
-      commenterReport <- prCommenterConnector.report(repoDetails.name)
+      urlIfLeaksFound       <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
+      commenterReport       <- prCommenterConnector.report(repoDetails.name)
       hasPasswordChangeAuth <- hasChangePrototypePasswordAuthorisation(repoDetails.name)
+      prototypeStatus       <- buildDeployApiConnector.getPrototypeStatus(repoDetails.name)
     } yield
       prototypeInfoPage(
         repoDetails,
@@ -313,7 +314,8 @@ class CatalogueController @Inject() (
         hasPasswordChangeAuth,
         form,
         successMessage,
-        commenterReport
+        commenterReport,
+        prototypeStatus.status
       )
 
   private def renderOther(

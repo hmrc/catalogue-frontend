@@ -16,11 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 
 
 @this()
 
-@(repo: GitRepository)
+@(repo: GitRepository, status: PrototypeStatus)
 
 <div id="details" >
     <div class="board" class="col-md-12">
@@ -43,6 +44,10 @@
                 <li id="last-active" class="col-xs-6">
                     <label>Last Active: </label>
                     @repo.lastActiveDate.displayFormat
+                </li>
+                <li id="prototype-status" class="col-xs-6">
+                    <label>Status: </label>
+                    @status.displayString
                 </li>
             </ul>
         </div>

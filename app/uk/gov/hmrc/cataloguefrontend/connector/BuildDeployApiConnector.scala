@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import com.google.inject.{Inject, Singleton}
-import play.api.Logging
+import play.api.{Logger, Logging}
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
@@ -171,6 +171,8 @@ object BuildDeployApiConnector {
               HttpReadsInstances.readFromJson[GetPrototypeStatusResponse]
             case _ =>
               val msg = (response.json \ "message").as[String]
+              val prototype = (response.json \ "details" \ "prototype").as[String]
+              Logger(getClass).warn(s"Unable to determine prototype status for $prototype - $msg")
               HttpReads.pure(GetPrototypeStatusResponse(success = false, message = msg, status = PrototypeStatus.Undetermined))
           }
         }
