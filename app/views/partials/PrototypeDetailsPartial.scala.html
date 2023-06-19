@@ -21,7 +21,7 @@
 
 @this()
 
-@(repo: GitRepository, status: PrototypeStatus)
+@(repo: GitRepository, prototypeStatus: PrototypeStatus)
 
 <div id="details" >
     <div class="board" class="col-md-12">
@@ -47,7 +47,7 @@
                 </li>
                 <li id="prototype-status" class="col-xs-6">
                     <label>Status: </label>
-                    @status.displayString
+                    @prototypeStatus.displayString
                 </li>
             </ul>
         </div>

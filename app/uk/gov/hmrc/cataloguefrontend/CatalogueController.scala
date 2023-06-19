@@ -315,7 +315,7 @@ class CatalogueController @Inject() (
         form,
         successMessage,
         commenterReport,
-        prototypeStatus.status
+        prototypeStatus
       )
 
   private def renderOther(

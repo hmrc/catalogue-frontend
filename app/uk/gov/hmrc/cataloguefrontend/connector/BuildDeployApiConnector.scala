@@ -69,7 +69,7 @@ class BuildDeployApiConnector @Inject() (
       .execute[ChangePrototypePasswordResponse]
   }
 
-  def getPrototypeStatus(prototype: String): Future[GetPrototypeStatusResponse] = {
+  def getPrototypeStatus(prototype: String): Future[PrototypeStatus] = {
     implicit val gpsR: HttpReads[GetPrototypeStatusResponse] = GetPrototypeStatusResponse.httpReads
 
     val queryParams = Map.empty[String, String]
@@ -94,6 +94,7 @@ class BuildDeployApiConnector @Inject() (
       .withBody(body)
       .setHeader(headers.toSeq: _*)
       .execute[GetPrototypeStatusResponse]
+      .map(_.status)
   }
 }
 

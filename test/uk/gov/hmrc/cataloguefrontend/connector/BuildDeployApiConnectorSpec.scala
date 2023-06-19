@@ -104,8 +104,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
       val result = connector.getPrototypeStatus("test-prototype").futureValue
 
-      result.success shouldBe true
-      result.status shouldBe PrototypeStatus.Running
+      result shouldBe PrototypeStatus.Running
     }
 
     "return a status of Undetermined when non 200" in {
@@ -130,8 +129,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
       val result = connector.getPrototypeStatus("test-prototype").futureValue
 
-      result.success shouldBe false
-      result.status shouldBe PrototypeStatus.Undetermined
+      result shouldBe PrototypeStatus.Undetermined
     }
   }
 }
