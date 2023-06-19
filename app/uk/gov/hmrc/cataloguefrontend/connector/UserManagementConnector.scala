@@ -45,15 +45,15 @@ case class UserManagementConnector @Inject() (
 
   def login(): Future[UmpToken] = {
     implicit val lrf: OFormat[UmpLoginRequest] = UmpLoginRequest.format
-    implicit val atf: OFormat[UmpAuthToken] = UmpAuthToken.format
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+    implicit val atf: OFormat[UmpAuthToken]    = UmpAuthToken.format
+    implicit val hc: HeaderCarrier             = HeaderCarrier()
 
-    val url = url"$userManagementLoginUrl"
+    val url   = url"$userManagementLoginUrl"
     val login = UmpLoginRequest(username, password)
 
     for {
       token <- httpClientV2.post(url).withBody(Json.toJson(login)).execute[UmpAuthToken]
-      _ = logger.info("logged into UMP")
+      _      = logger.info("logged into UMP")
     } yield token
   }
 

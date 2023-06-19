@@ -83,7 +83,6 @@ case class CreateRepoForm(
    makePrivate        : Boolean,
    teamName           : String,
    repoType           : String,
-   bootstrapTag       : Option[String]
 )
 
 object CreateRepoForm {
@@ -93,7 +92,6 @@ object CreateRepoForm {
       ~ (__ \ "makePrivate").write[Boolean]
       ~ (__ \ "teamName").write[String]
       ~ (__ \ "repoType").write[String]
-      ~ (__ \ "bootstrapTag").writeNullable[String]
       )(unlift(CreateRepoForm.unapply))
 
   def constraintFactory[T](constraintName: String, constraint: T => Boolean, error: String): Constraint[T] = {
@@ -134,7 +132,6 @@ object CreateRepoForm {
       "makePrivate"         -> boolean,
       "teamName"            -> nonEmptyText,
       "repoType"            -> nonEmptyText.verifying(repoTypeConstraint),
-      "bootstrapTag"        -> optional(text)
     )(CreateRepoForm.apply)(CreateRepoForm.unapply)
       .verifying(repoTypeAndNameConstraints :_*)
   )

@@ -121,16 +121,6 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                     @form_fields_warnings(form,"repoType")
                 </div>
             </div>
-            <div class="form-group row">
-                <div class="col-md-6">
-                    <label for="bootstrapTagInput">Bootstrap Tag:</label>
-                    <p>
-                        (OPTIONAL) Leave empty for new repositories. Put the most recent tag version when migrating your repository to the open. For example: 1.5.0
-                    </p>
-                    <input class="form-control" type="text" id="bootstrapTagInput" name="bootstrapTag">
-                    @form_fields_warnings(form,"bootstrapTag")
-                </div>
-            </div>
             <div>
                 <button id="build-button" class="btn btn-primary" type="submit">Build</button>
             </div>

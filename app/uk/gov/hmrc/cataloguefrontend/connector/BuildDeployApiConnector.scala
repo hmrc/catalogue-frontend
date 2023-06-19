@@ -86,7 +86,7 @@ class BuildDeployApiConnector @Inject() (
          |   "delete_branch_on_merge": "true",
          |   "team_name": "${payload.teamName}",
          |   "type": "${payload.repoType}",
-         |   "bootstrap_tag": ${payload.bootstrapTag.getOrElse("")},
+         |   "bootstrap_tag": "",
          |   "init_webhook_version": "2.2.0",
          |   "default_branch_name": "main"
          |}
