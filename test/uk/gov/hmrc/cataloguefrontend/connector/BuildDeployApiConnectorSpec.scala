@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import com.github.tomakehurst.wiremock.client.WireMock._
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{ChangePrototypePasswordRequest, ChangePrototypePasswordResponse}
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{ChangePrototypePasswordRequest, ChangePrototypePasswordResponse, PrototypeStatus}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -79,6 +79,57 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       val result = connector.changePrototypePassword(payload).futureValue
 
       result.success shouldBe false
+    }
+  }
+
+  "getPrototypeStatus" should {
+    "return the status of the prototype when 200" in {
+      val requestJson = """{ "prototype": "test-prototype" }"""
+
+      stubFor(
+        post("/v1/GetPrototypeStatus")
+          .withRequestBody(equalToJson(requestJson))
+          .willReturn(aResponse().withStatus(200).withBody(
+            """
+              |{
+              |  "success": true,
+              |  "message": "Successfully retrieved status",
+              |  "details": {
+              |    "prototype": "test-prototype",
+              |    "status": "running"
+              |  }
+              |}""".stripMargin
+          ))
+      )
+
+      val result = connector.getPrototypeStatus("test-prototype").futureValue
+
+      result shouldBe PrototypeStatus.Running
+    }
+
+    "return a status of Undetermined when non 200" in {
+      val requestJson = """{ "prototype": "test-prototype" }"""
+
+      stubFor(
+        post("/v1/GetPrototypeStatus")
+          .withRequestBody(equalToJson(requestJson))
+          .willReturn(aResponse().withStatus(400).withBody(
+            """
+              |{
+              |  "code": 403,
+              |  "success": false,
+              |  "message": "Some downstream error",
+              |  "details": {
+              |    "prototype": "test-prototype",
+              |    "status": "undetermined"
+              |  }
+              |}""".stripMargin
+          ))
+      )
+
+      val result = connector.getPrototypeStatus("test-prototype").futureValue
+
+      result shouldBe PrototypeStatus.Undetermined
     }
   }
 }
