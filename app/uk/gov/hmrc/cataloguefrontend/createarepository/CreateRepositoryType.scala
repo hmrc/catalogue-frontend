@@ -43,14 +43,4 @@ object CreateRepositoryType {
 
   def parse(str: String): Option[CreateRepositoryType] = values.find(_.asString == str)
 
-//  val format: Format[CreateRepositoryType] = new Format[CreateRepositoryType] {
-//    override def reads(json: JsValue): JsResult[CreateRepositoryType] = json.validate[String]
-//      .flatMap(s => parse(s)
-//        .map(crt => JsSuccess(crt))
-//        .getOrElse(JsError(parsingError))
-//      )
-//
-//    override def writes(o: CreateRepositoryType): JsValue = JsString(o.asString)
-//  }
-
 }

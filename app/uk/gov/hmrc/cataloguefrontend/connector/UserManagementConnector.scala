@@ -36,7 +36,6 @@ case class UserManagementConnector @Inject() (
   userManagementAuthConfig  : UserManagementAuthConfig,
   tokenCache                : AsyncCacheApi
 )(implicit val ec: ExecutionContext) {
-
   import UserManagementConnector._
   import userManagementAuthConfig._
   import userManagementPortalConfig._
@@ -157,40 +156,7 @@ case class UserManagementConnector @Inject() (
       logger.error(s"Failed to login to UMP", ex)
       Left(UMPError.ConnectionError(s"Failed to login to UMP: ${ex.getMessage}"))
   }
-
-  def getTeamsForUser(ldapUsername: String)(implicit hc: HeaderCarrier): Future[Either[UMPError, List[TeamDetails]]] = {
-    val url = url"$userManagementBaseUrl/v2/organisations/users/$ldapUsername/teams"
-    for {
-      token <- retrieveToken()
-      resp <- httpClientV2.get(url)
-        .setHeader(token.asHeaders(): _*)
-        .execute[HttpResponse]
-        .map { response =>
-          response.status match {
-            case 200 => response.json
-              .validate[UmpTeams]
-              .fold(
-                errors => Left(UMPError.ConnectionError(s"Could not parse response from $url: $errors")),
-                umpTeams => Right(umpTeams.teams)
-              )
-            case 404 => Right(List.empty[TeamDetails])
-            case httpCode => Left(UMPError.HTTPError(httpCode))
-          }
-        }
-        .recover {
-          case ex =>
-            logger.error(s"An error occurred when connecting to $url", ex)
-            Left(UMPError.ConnectionError(s"Could not connect to $url: ${ex.getMessage}"))
-        }
-    } yield resp
-  }.recover {
-    case ex =>
-      logger.error(s"Failed to login to UMP", ex)
-      Left(UMPError.ConnectionError(s"Failed to login to UMP: ${ex.getMessage}"))
-  }
 }
-
-
 object UserManagementConnector {
   sealed trait UMPError
 
@@ -235,14 +201,6 @@ object UserManagementConnector {
   implicit val teamMemberFormat: OFormat[TeamMember] = Json.format[TeamMember]
   implicit val slackInfoReads: Reads[SlackInfo]      = implicitly[Reads[String]].map(SlackInfo(_))
   implicit val teamDetailsReads: Reads[TeamDetails]  = Json.reads[TeamDetails]
-
-  case class UmpTeams(
-     teams: List[TeamDetails]
-   )
-
-  object UmpTeams {
-    implicit val reads: Reads[UmpTeams] = Json.reads[UmpTeams]
-  }
 
   final case class DisplayName(value: String) {
     require(value.nonEmpty)
