@@ -17,19 +17,30 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 
 @(repo: GitRepository)
+@hasTooManyOwningTeams=@{
+    repo.teamNames.length > 3
+}
 <div id="owning-team">
     <div class="board">
         <section id="teams">
             <h3 class="board__heading">Teams</h3>
-            <div class="board__body">
-                <ul class="list list--minimal">
-                    @for(teamName <- repo.teamNames) {
-                    <li class="list-item">
-                        <a id="link-to-team-page-for-@{teamName.toLowerCase.replaceAll(" ", "-")}" href="/teams/@teamName">@if(repo.owningTeams.contains(teamName)) {<strong>@teamName <span class="repo-owner">Owner</span></strong>} else {@teamName}</a>
-                    </li>
-                }
-                </ul>
+            <div class="board-grow @if(hasTooManyOwningTeams){ board-gradient }">
+                <div class="board__body board-collapse">
+                    <ul class="list list--minimal">
+                        @for(teamName <- repo.teamNames) {
+                        <li class="list-item">
+                            <a id="link-to-team-page-for-@{teamName.toLowerCase.replaceAll(" ", "-")}" href="/teams/@teamName">@if(repo.owningTeams.contains(teamName)) {<strong>@teamName <span class="repo-owner">Owner</span></strong>} else {@teamName}</a>
+                        </li>
+                    }
+                    </ul>
+                </div>
             </div>
+            @if(hasTooManyOwningTeams) {
+                <footer class="text-center">
+                    <a id="see-all-expand-link" href="#" title="See all" class="board-expand-link glyphicon glyphicon-chevron-down">
+                    </a>
+                </footer>
+            }
         </section>
     </div>
 </div>
