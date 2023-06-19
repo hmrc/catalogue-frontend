@@ -25,8 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.UMPError.HTTPError
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{SlackInfo, TeamDetails, TeamMember, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{SlackInfo, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
@@ -198,56 +197,6 @@ class UserManagementConnectorSpec
           "anand.manand@gov.uk")
       }
     }
-
-    "getTeamsForUser" when {
-      "ump responds with a list of teams for a user" should {
-        "return a list of TeamDetails" in {
-          stubFor(
-            get(urlEqualTo("/v2/organisations/users/joe.bloggs/teams"))
-              .willReturn(aResponse().withStatus(200).withBodyFile("all-teams-for-user.json"))
-          )
-
-          val teamsForUser = userManagementConnector.getTeamsForUser(ldapUsername = "joe.bloggs").futureValue
-          val result = teamsForUser.right.value
-          
-          result.size shouldBe 3
-          result should contain theSameElementsAs Seq(
-            TeamDetails(description = Some("Does stuff"), location = None, organisation = None, documentation = Some("docs.com"), slack = Some(SlackInfo("slack.com")), slackNotification = Some(SlackInfo("slack.com/channel")), team = "Team1"),
-            TeamDetails(description = Some("Does other stuff"), location = None, organisation = None, documentation = Some("docs.com"), slack = Some(SlackInfo("slack.com")), slackNotification = Some(SlackInfo("slack.com/channel")), team = "Team2"),
-            TeamDetails(description = Some("Does additional stuff"), location = None, organisation = None, documentation = Some("docs.com"), slack = Some(SlackInfo("slack.com")), slackNotification = Some(SlackInfo("slack.com/channel")), team = "Team3")
-          )
-        }
-      }
-
-      "ump responds with a 404" should {
-        "return an empty list of TeamDetails" in {
-          stubFor(
-            get(urlEqualTo("/v2/organisations/users/joe.bloggs/teams"))
-              .willReturn(aResponse().withStatus(404))
-          )
-
-          val teamsForUser = userManagementConnector.getTeamsForUser(ldapUsername = "joe.bloggs").futureValue
-          val result = teamsForUser.right.value
-
-          result.size shouldBe 0
-          result shouldBe List.empty[TeamDetails]
-        }
-      }
-
-      "ump responds with any other status code" should {
-        "return the expected status code exception" in {
-          stubFor(
-            get(urlEqualTo("/v2/organisations/users/joe.bloggs/teams"))
-              .willReturn(aResponse().withStatus(500))
-          )
-
-          val result = userManagementConnector.getTeamsForUser(ldapUsername = "joe.bloggs").futureValue
-          result shouldBe Left(HTTPError(500))
-        }
-      }
-    }
-
-
   }
 
   def callExternalMockedService(

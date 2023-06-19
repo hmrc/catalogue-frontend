@@ -37,7 +37,18 @@ repoTypes: Seq[CreateRepositoryType])(implicit
         <h1>Create A Repository</h1>
         <p>Use the below form to create a new repository. Make sure to follow the guidance for each field!</p>
 
-        @form_warnings(form)
+        @if(form.hasGlobalErrors) {
+        <div class="alert alert-danger">
+            <a class="close" data-dismiss="alert">×</a>
+            <ul>
+                @form.globalErrors.map { error =>
+                <li>@error.format</li>
+                }
+            </ul>
+        </div>
+        }
+
+
         @helper.form(
             action           =  uk.gov.hmrc.cataloguefrontend.createarepository.routes.CreateARepositoryController.createARepository(),
             Symbol("id")     -> "createRepoForm",
@@ -81,9 +92,13 @@ repoTypes: Seq[CreateRepositoryType])(implicit
             <div class="form-group row">
                 <div class="col-md-6">
                     <label for="teamInput">Team name:</label>
-                    <p>Enter the name of the team that will own this repository on GitHub.
-                        (This will require some text explaining what a user should do where no Team is appearing for them.)
-                    </p>
+                    @if(teamNames.nonEmpty){
+                        <p>Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+                    } else {
+                        <p class="alert alert-danger">There are currently no teams that you have permissions to create a repository for. Ensure you are signed in to the Catalogue using your LDAP credentials (as opposed to using the guest sign-in process).
+                           If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
+                        </p>
+                    }
                     <select class="form-control" id="teamInput" name="teamName">
                         @teamNames.map { tn =>
                             <option value="@{tn}">@tn</option>
@@ -108,7 +123,7 @@ repoTypes: Seq[CreateRepositoryType])(implicit
             </div>
             <div class="form-group row">
                 <div class="col-md-6">
-                    <label for="bootstrapTagInput">Repository name:</label>
+                    <label for="bootstrapTagInput">Bootstrap Tag:</label>
                     <p>
                         (OPTIONAL) Leave empty for new repositories. Put the most recent tag version when migrating your repository to the open. For example: 1.5.0
                     </p>
@@ -120,7 +135,5 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                 <button id="build-button" class="btn btn-primary" type="submit">Build</button>
             </div>
        }
-
-
     </section>
 }
