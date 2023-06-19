@@ -22,10 +22,11 @@
 @import views.partials.githubBadgeType
 @import partials.PrototypeDetailsPartial
 @import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword
+@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 
 @this(
-  prototypeDetailsPartial: PrototypeDetailsPartial,
-  viewMessages           : ViewMessages
+prototypeDetailsPartial: PrototypeDetailsPartial,
+viewMessages           : ViewMessages
 )
 
 @(prototype              : GitRepository,
@@ -34,7 +35,8 @@
   hasPasswordChangeAuth  : ChangePrototypePassword.HasAuthorisation,
   form                   : Form[_],
   successMessage         : Option[String],
-  commenterReport        : Option[PrCommenterReport]
+  commenterReport        : Option[PrCommenterReport],
+  prototypeStatus        : PrototypeStatus
 )(implicit
   request                : RequestHeader,
   messages               : Messages
@@ -58,7 +60,7 @@
     <section class="section-wrapper">
         <div class="row">
             <div class="col-md-12">
-                @prototypeDetailsPartial(prototype)
+                @prototypeDetailsPartial(prototype, prototypeStatus)
             </div>
         </div>
 
@@ -75,14 +77,14 @@
         <div class="row">
             <div class="col-md-6">
                 <div style="margin-bottom: 1em">
-                    @if(hasPasswordChangeAuth.value) {
+                    @if(hasPasswordChangeAuth.value && prototypeStatus == PrototypeStatus.Running) {
                         <button id="reset-password-enabled" type="button" class="btn btn-primary">Reset Password</button>
                     } else {
                         <button id="reset-password-disabled" type="button" class="btn btn-primary" disabled>Reset Password</button>
-                        <span class="text-muted" style="margin-left: 0.8em">
+                        <div class="text-muted" style="margin-top: 0.8em">
                             <i class="glyphicon glyphicon-info-sign"></i>
                             @messages("prototype.password.forbidden")
-                        </span>
+                        </div>
                     }
                 </div>
 

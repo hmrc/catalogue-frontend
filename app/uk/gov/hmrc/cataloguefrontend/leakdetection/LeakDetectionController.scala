@@ -66,7 +66,7 @@ class LeakDetectionController @Inject() (
             for {
               summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, includeWarnings, includeExemptions, includeViolations, includeNonIssues)
               rules     <- leakDetectionService.rules().map(_.filterNot(_.draft).map(_.id))
-              teams     <- teamsAndRepositoriesConnector.allTeams
+              teams     <- teamsAndRepositoriesConnector.allTeams()
             } yield Ok(repositoriesPage(rules, summaries, teams.sortBy(_.name), form.fill(validForm), includeWarnings, includeExemptions, includeViolations, includeNonIssues))
         )
     }

@@ -115,40 +115,67 @@ object Link {
     Json.format[Link]
 }
 
-
 case class BuildData(
-                      number: Int,
-                      url: String,
-                      timestamp: Instant,
-                      result: Option[String],
-                      description: Option[String]
-                    )
+  number     : Int,
+  url        : String,
+  timestamp  : Instant,
+  result     : Option[String],
+  description: Option[String]
+)
 
 object BuildData {
-  val apiFormat: OFormat[BuildData] = (
-    (__ \ "number").format[Int]
-    ~ (__ \ "url").format[String]
-    ~ (__ \ "timestamp").format[Instant]
-    ~ (__ \ "result").formatNullable[String]
+  val apiFormat: OFormat[BuildData] =
+    ( (__ \ "number"     ).format[Int]
+    ~ (__ \ "url"        ).format[String]
+    ~ (__ \ "timestamp"  ).format[Instant]
+    ~ (__ \ "result"     ).formatNullable[String]
     ~ (__ \ "description").formatNullable[String]
   )(apply, unlift(unapply))
 }
-case class JenkinsJob(name: String, jenkinsURL: String, latestBuild: Option[BuildData])
+
+sealed trait BuildJobType { def asString: String }
+
+object BuildJobType {
+  case object Job         extends BuildJobType { override val asString = "job"         }
+  case object Pipeline    extends BuildJobType { override val asString = "pipeline"    }
+  case object Performance extends BuildJobType { override val asString = "performance" }
+
+  private val logger = Logger(this.getClass)
+
+  val values: List[BuildJobType] =
+    List(Job, Pipeline, Performance)
+
+  implicit val ordering = new Ordering[BuildJobType] {
+    def compare(x: BuildJobType, y: BuildJobType): Int =
+      values.indexOf(x).compare(values.indexOf(y))
+  }
+
+  def parse(s: String): BuildJobType =
+    values
+      .find(_.asString.equalsIgnoreCase(s)).getOrElse {
+      logger.info(s"Unable to find job type: $s, defaulted to: job")
+      Job
+    }
+
+  implicit val format: Format[BuildJobType] =
+    Format.of[String].inmap(parse, _.asString)
+}
+
+case class JenkinsJob(
+  name       : String,
+  jenkinsURL : String,
+  jobType    : BuildJobType,
+  latestBuild: Option[BuildData]
+)
 
 object JenkinsJob {
   implicit val bdf: OFormat[BuildData] = BuildData.apiFormat
-  val apiFormat: OFormat[JenkinsJob] = (
-    (__ \ "name").format[String]
-    ~ (__ \ "jenkinsURL").format[String]
+  val apiFormat: OFormat[JenkinsJob] =
+    ( (__ \ "jobName"    ).format[String]
+    ~ (__ \ "jenkinsURL" ).format[String]
+    ~ (__ \ "jobType"    ).format[BuildJobType]
     ~ (__ \ "latestBuild").formatNullable[BuildData]
   )(apply, unlift(unapply))
-}
-
-case class JenkinsJobs(jobs: Seq[JenkinsJob])
-
-object JenkinsJobs {
-  implicit val jjf: OFormat[JenkinsJob] = JenkinsJob.apiFormat
-  implicit val apiFormat: OFormat[JenkinsJobs] = Json.format[JenkinsJobs]
 }
 
 case class GitRepository(
@@ -168,7 +195,7 @@ case class GitRepository(
   branchProtection    : Option[BranchProtection] = None,
   isDeprecated        : Boolean                  = false,
   teamNames           : Seq[String]              = Nil,
-  jenkinsJobs         : JenkinsJobs              = JenkinsJobs(Seq()),
+  jenkinsJobs         : Seq[JenkinsJob]          = Seq.empty[JenkinsJob],
   prototypeUrl        : Option[String]           = None
 ) {
   def isShared: Boolean =
@@ -179,6 +206,7 @@ object GitRepository {
   val apiFormat: OFormat[GitRepository] = {
     implicit val rtf = RepoType.format
     implicit val stf = ServiceType.stFormat
+    implicit val jjf = JenkinsJob.apiFormat
 
     ( (__ \ "name"              ).format[String]
     ~ (__ \ "description"       ).format[String]
@@ -196,7 +224,7 @@ object GitRepository {
     ~ (__ \ "branchProtection"  ).formatNullable(BranchProtection.format)
     ~ (__ \ "isDeprecated"      ).formatWithDefault[Boolean](false)
     ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Nil)
-    ~ (__ \ "jenkinsJobs"       ).formatWithDefault[JenkinsJobs](JenkinsJobs(Seq()))
+    ~ (__ \ "jenkinsJobs"       ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
     ~ (__ \ "prototypeUrl"      ).formatNullable[String]
     ) (apply, unlift(unapply))
   }
@@ -276,20 +304,23 @@ class TeamsAndRepositoriesConnector @Inject()(
   private implicit val tf   = Team.format
   private implicit val ghrf = GitRepository.apiFormat // v2 model
 
+  def lookupLatestBuildJobs(service: String)(implicit hc: HeaderCarrier): Future[Seq[JenkinsJob]] = {
 
-  def lookupLatestBuildJobs(service: String)(implicit hc: HeaderCarrier): Future[JenkinsJobs] = {
+    implicit val dr: Reads[Seq[JenkinsJob]] =
+      Reads.at(__ \ "jobs")(Reads.seq(JenkinsJob.apiFormat))
+
     val url = url"$teamsAndServicesBaseUrl/api/jenkins-jobs/$service"
     httpClientV2
       .get(url)
-      .execute[JenkinsJobs]
+      .execute[Seq[JenkinsJob]]
       .recover {
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          JenkinsJobs(Seq())
+          Seq.empty[JenkinsJob]
       }
   }
 
-  def allTeams(implicit hc: HeaderCarrier): Future[Seq[Team]] =
+  def allTeams()(implicit hc: HeaderCarrier): Future[Seq[Team]] =
     httpClientV2
       .get(url"$teamsAndServicesBaseUrl/api/v2/teams")
       .execute[Seq[Team]]

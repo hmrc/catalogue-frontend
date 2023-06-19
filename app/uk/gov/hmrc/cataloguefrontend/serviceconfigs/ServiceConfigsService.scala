@@ -20,6 +20,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -112,26 +113,25 @@ class ServiceConfigsService @Inject()(
       outbound =  srs.outboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
     } yield ServiceRelationshipsWithHasRepo(inbound, outbound)
 
-  def configKeys()(implicit hc: HeaderCarrier): Future[Seq[String]] =
-    serviceConfigsConnector.getConfigKeys()
+  def configKeys(teamName: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[String]] =
+    serviceConfigsConnector.getConfigKeys(teamName)
 
-  def searchAppliedConfig(key: String)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]]] = {
+  def searchAppliedConfig(key: String, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[Seq[AppliedConfig]] =
+    serviceConfigsConnector.configSearch(key, teamName)
 
+  def toKeyServiceEnviromentMap(appliedConfig: Seq[AppliedConfig]): Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]] = {
     def sorted[K, V](unsorted: Map[K, V])(implicit ordering: Ordering[K]): Map[K, V] = TreeMap[K, V]() ++ unsorted
 
     implicit val srvOrd: Ordering[ServiceName] = Ordering.by(_.asString)
 
-    serviceConfigsConnector
-      .configSearch(key)
-      .map(
-        _.groupBy(_.key).view.mapValues(
-          configsByService => sorted(configsByService.groupBy(_.serviceName).view.mapValues(
-            _.groupBy(_.environment).view.mapValues(
-              _.headOption.map(_.value)
-            ).toMap
-          ).toMap)
-        ).toMap
-      )
+    appliedConfig
+      .groupBy(_.key).view.mapValues(
+        configsByService => sorted(configsByService.groupBy(_.serviceName).view.mapValues(
+          _.groupBy(_.environment).view.mapValues(
+            _.headOption.map(_.value)
+          ).toMap
+        ).toMap)
+      ).toMap
   }
 }
 

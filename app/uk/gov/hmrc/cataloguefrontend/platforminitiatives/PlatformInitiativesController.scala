@@ -51,7 +51,7 @@ class PlatformInitiativesController @Inject()
       boundForm.fold(
         formWithErrors =>
           for {
-            allTeams <- teamsAndRepositoriesConnector.allTeams
+            allTeams <- teamsAndRepositoriesConnector.allTeams()
           } yield BadRequest(platformInitiativesListPage(
             initiatives = Seq.empty,
             display     = display,
@@ -61,7 +61,7 @@ class PlatformInitiativesController @Inject()
           )),
         query =>
           for {
-            allTeams <- teamsAndRepositoriesConnector.allTeams
+            allTeams <- teamsAndRepositoriesConnector.allTeams()
             initiatives <- platformInitiativesConnector.getInitiatives(query.team)
           } yield Ok(platformInitiativesListPage(
             initiatives = initiatives,

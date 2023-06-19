@@ -67,7 +67,7 @@ class HealthIndicatorsController @Inject() (
                                        repoType       = validForm.repoType.getOrElse(RepoType.Service)
                                      , repoNameFilter = None // Use listjs filtering
                                      )
-              teams               <- teamsAndRepositoriesConnector.allTeams
+              teams               <- teamsAndRepositoriesConnector.allTeams()
               indicators          =  indicatorsFilteredByTeam(indicatorsWithTeams, validForm.team)
             } yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.values, teams.sortBy(_.name), form.fill(validForm)))
         )

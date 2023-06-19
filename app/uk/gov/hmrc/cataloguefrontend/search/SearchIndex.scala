@@ -70,7 +70,7 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
     SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,               1.0f),
     )  ++ {
       if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showConfigSearch.isEnabled) {
-        List(SearchTerm("page",     "search-config-by key",         serviceConfigsRoutes.ServiceConfigsController.searchByKey().url,                     1.0f))
+        List(SearchTerm("page",     "search-config-by key",         serviceConfigsRoutes.ServiceConfigsController.searchByKeyLanding().url,                     1.0f))
       } else Nil
     }
 
@@ -78,7 +78,7 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
     implicit val hc = HeaderCarrier()
     for {
       repos         <- teamsAndRepositoriesConnector.allRepositories(None, None, None, None, None)
-      teams         <- teamsAndRepositoriesConnector.allTeams
+      teams         <- teamsAndRepositoriesConnector.allTeams()
       teamPageLinks =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
                                                SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(false).url}?profile_type=team&profile_name=${URLEncoder.encode(t.name.asString, "UTF-8")}")))
       repoLinks     =  repos.flatMap(r => List(SearchTerm(r.repoType.asString,    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),

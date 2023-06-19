@@ -22,6 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, FeatureSwitch}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -234,7 +235,7 @@ class serviceConfigsServiceSpec
 
   "serviceConfigsService.searchAppliedConfig" should {
     "group by key, service and environment" in new Setup {
-      when(mockServiceConfigsConnector.configSearch(any[String])(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configSearch(any[String], any[Option[TeamName]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(
           Seq(
             AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("test.key"), "prodValue"),
@@ -251,9 +252,11 @@ class serviceConfigsServiceSpec
         )
       )
 
-      serviceConfigsService
-        .searchAppliedConfig("test.key")
-        .futureValue shouldBe expected
+      serviceConfigsService.toKeyServiceEnviromentMap(
+        serviceConfigsService
+          .searchAppliedConfig("test.key", None)
+          .futureValue
+      ) shouldBe expected
     }
   }
 
