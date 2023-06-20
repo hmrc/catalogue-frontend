@@ -52,7 +52,7 @@ class CreateARepositoryController @Inject()(
       continueUrl = routes.CreateARepositoryController.createARepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
-        val userTeams = request.retrieval.map(_.resourceLocation.value.stripPrefix("teams/")).toSeq.sorted
+        val userTeams = cleanseUserTeams(request.retrieval)
         Ok(createARepositoryPage(CreateRepoForm.form, userTeams, CreateRepositoryType.values))
       }
   }
@@ -64,7 +64,7 @@ class CreateARepositoryController @Inject()(
     ) .async { implicit request =>
     CreateRepoForm.form.bindFromRequest.fold(
       formWithErrors => {
-        val userTeams = request.retrieval.map(_.resourceLocation.value.stripPrefix("teams/")).toSeq.sorted
+        val userTeams = cleanseUserTeams(request.retrieval)
         Future.successful(BadRequest(createARepositoryPage(formWithErrors, userTeams, CreateRepositoryType.values)))
       },
       validForm      => {
@@ -76,6 +76,12 @@ class CreateARepositoryController @Inject()(
       }
     )
   }
+
+  private def cleanseUserTeams(resources: Set[Resource]): Seq[String] =
+    resources.map(_.resourceLocation.value.stripPrefix("teams/"))
+      .filterNot(_.contains("app_group_"))
+      .toSeq
+      .sorted
 }
 
 case class CreateRepoForm(
