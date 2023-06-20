@@ -80,8 +80,8 @@ repoTypes: Seq[CreateRepositoryType])(implicit
             <div class="form-group row">
                 <div class="col-md-6">
                     <div style = "white-space: nowrap;">
-                        <input style="display:inline-block;"  type="checkbox" id="makePrivateInput" name="makePrivate">
                         <label style="display:inline-block"for="makePrivateInput">Make Private: </label>
+                        <input style="display:inline-block;"  type="checkbox" id="makePrivateInput" name="makePrivate">
                         @form_fields_warnings(form,"makePrivate")
                     </div>
                     <p>You must decide now if you will code in the open, or privately. If you select ‘MAKE_PRIVATE’ the GitHub repository you create will only be visible within HMRC.
@@ -122,7 +122,7 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                 </div>
             </div>
             <div>
-                <button id="build-button" class="btn btn-primary" type="submit">Build</button>
+                <button id="create-repository-submission-button" class="btn btn-primary" type="submit">Build</button>
             </div>
        }
     </section>
