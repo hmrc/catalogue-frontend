@@ -85,12 +85,13 @@ class ServiceConfigsConnector @Inject() (
   def getConfigKeys(teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[Seq[String]] =
     cache.getOrElseUpdate(s"config-keys-cache-${teamName.getOrElse("all")}", configKeysCacheExpiration) {
       httpClientV2
-        .get(url"$serviceConfigsBaseUrl/service-configs/configkeys?team=${teamName.map(_.asString)}")
+        .get(url"$serviceConfigsBaseUrl/service-configs/configkeys?teamName=${teamName.map(_.asString)}")
         .execute[Seq[String]]
     }
 
   def configSearch(
     teamName       : Option[TeamName]
+  , serviceType    : Option[ServiceType]
   , key            : Option[String]
   , value          : Option[String]
   , valueFilterType: Option[ValueFilterType]
@@ -98,7 +99,7 @@ class ServiceConfigsConnector @Inject() (
     implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
 
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/search?team=${teamName.map(_.asString)}&key=$key&value=${value}&valueFilterType=${valueFilterType.map(_.asString)}")
+      .get(url"$serviceConfigsBaseUrl/service-configs/search?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&key=$key&value=${value}&valueFilterType=${valueFilterType.map(_.asString)}")
       .execute[Either[UpstreamErrorResponse, Seq[AppliedConfig]]]
       .flatMap {
         case Left(err) if err.statusCode == 403 => Future.successful(Left("This search has too many results - please refine parameters."))

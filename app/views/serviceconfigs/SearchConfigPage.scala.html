@@ -67,7 +67,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-2">
                 <dl>
                     <dt><label>Environments</label></dt>
                     <dd>
@@ -79,6 +79,15 @@
                         }
                     </dd>
                 </dl>
+            </div>
+            <div class="col-md-2">
+                @helper.select(
+                    field              = form("serviceType"),
+                    options            = List("FrontendService" -> "Frontend", "BackendService" -> "Backend"),
+                    Symbol("_default") -> "All",
+                    Symbol("_label")   -> "Service Type",
+                    Symbol("class")    -> "form-control"
+                )
             </div>
             <div class="col-md-8">
                 <dl class="clearfix">

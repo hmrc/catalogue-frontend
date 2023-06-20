@@ -16,51 +16,40 @@
 
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
-import play.api.data.format.Formatter
-import play.api.data.FormError
+import uk.gov.hmrc.cataloguefrontend.util.{Enum, WithAsString}
 
-sealed trait ValueFilterType {val asString: String; val displayString: String; }
+sealed trait ValueFilterType extends WithAsString {val displayString: String;}
 
-object ValueFilterType {
+object ValueFilterType extends Enum[ValueFilterType] {
+
   case object Contains       extends ValueFilterType { val asString = "contains";       val displayString = "Contains"         }
   case object DoesNotContain extends ValueFilterType { val asString = "doesNotContain"; val displayString = "Does not contain" }
   case object EqualTo        extends ValueFilterType { val asString = "equalTo";        val displayString = "Equal to"         }
   case object NotEqualTo     extends ValueFilterType { val asString = "notEqualTo";     val displayString = "Not Equal to"     }
   case object IsEmpty        extends ValueFilterType { val asString = "isEmpty";        val displayString = "Is Empty"         }
 
-
-  val values: List[ValueFilterType]             = List(Contains, DoesNotContain, EqualTo, NotEqualTo, IsEmpty)
-  def parse(s: String): Option[ValueFilterType] = values.find(_.asString == s)
-
-  def formFormat: Formatter[ValueFilterType] = new Formatter[ValueFilterType] {
-  override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], ValueFilterType] =
-    data
-      .get(key)
-      .flatMap(ValueFilterType.parse)
-      .fold[Either[Seq[FormError], ValueFilterType]](Left(Seq(FormError(key, "Invalid filter type"))))(Right.apply)
-
-  override def unbind(key: String, value: ValueFilterType): Map[String, String] =
-    Map(key -> value.asString)
-  }
+  override val values: List[ValueFilterType] =
+    List(Contains, DoesNotContain, EqualTo, NotEqualTo, IsEmpty)
 }
 
-sealed trait GroupBy {val asString: String; val displayString: String; }
+sealed trait GroupBy extends WithAsString {val displayString: String;}
 
-object GroupBy {
+object GroupBy extends Enum[GroupBy] {
+
   case object Key     extends GroupBy { val asString = "key";     val displayString = "Key"     }
   case object Service extends GroupBy { val asString = "service"; val displayString = "Service" }
 
-  val values: List[GroupBy]             = List(Key, Service)
-  def parse(s: String): Option[GroupBy] = values.find(_.asString == s)
+  override val values: List[GroupBy] =
+    List(Key, Service)
+}
 
-  def formFormat: Formatter[GroupBy] = new Formatter[GroupBy] {
-  override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], GroupBy] =
-    data
-      .get(key)
-      .flatMap(GroupBy.parse)
-      .fold[Either[Seq[FormError], GroupBy]](Left(Seq(FormError(key, "Invalid filter type"))))(Right.apply)
+sealed trait ServiceType extends WithAsString {val displayString: String;}
 
-  override def unbind(key: String, value: GroupBy): Map[String, String] =
-    Map(key -> value.asString)
-  }
+object ServiceType extends Enum[ServiceType] {
+
+  case object Frontend extends ServiceType { val asString = "FrontendService"; val displayString = "Frontend"     }
+  case object Backend  extends ServiceType { val asString = "BackendService";  val displayString = "Backend" }
+
+  override val values: List[ServiceType] =
+    List(Frontend, Backend)
 }

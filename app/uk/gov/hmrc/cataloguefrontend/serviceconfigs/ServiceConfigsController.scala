@@ -86,7 +86,7 @@ class ServiceConfigsController @Inject()(
                               results    <- (formObject.configKey, formObject.configValue) match {
                                               case (None, None) if formObject.valueFilterType != ValueFilterType.IsEmpty
                                                      => EitherT.rightT[Future, Result](Nil)
-                                              case _ => EitherT(serviceConfigsService.searchAppliedConfig(formObject.teamName, formObject.configKey, formObject.configValue, Some(formObject.valueFilterType)))
+                                              case _ => EitherT(serviceConfigsService.searchAppliedConfig(formObject.teamName, formObject.serviceType, formObject.configKey, formObject.configValue, Some(formObject.valueFilterType)))
                                                           .leftMap(msg => Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys)))
                                             }
                               (groupedByKey, groupedByService)
@@ -139,13 +139,14 @@ object SearchConfig {
   import play.api.data.{Form, Forms}
 
   case class SearchConfigForm(
-    teamName       : Option[TeamName]  = None
-  , configKey      : Option[String]    = None
-  , configValue    : Option[String]    = None
-  , valueFilterType: ValueFilterType   = ValueFilterType.Contains
-  , showEnviroments: List[Environment] = Environment.values.filterNot(_ == Environment.Integration)
-  , asCsv          : Boolean           = false
-  , groupBy        : GroupBy           = GroupBy.Key
+    teamName       : Option[TeamName]    = None
+  , configKey      : Option[String]      = None
+  , configValue    : Option[String]      = None
+  , valueFilterType: ValueFilterType     = ValueFilterType.Contains
+  , showEnviroments: List[Environment]   = Environment.values.filterNot(_ == Environment.Integration)
+  , serviceType    : Option[ServiceType] = None
+  , asCsv          : Boolean             = false
+  , groupBy        : GroupBy             = GroupBy.Key
   )
 
   lazy val form: Form[SearchConfigForm] = Form(
@@ -161,6 +162,7 @@ object SearchConfig {
                                         }
                                 , x  => identity(x).map(_.asString)
                                 )
+    , "serviceType"     -> Forms.optional(Forms.of[ServiceType](ServiceType.formFormat))
     , "asCsv"           -> Forms.boolean
     , "groupBy"         -> Forms.of[GroupBy](GroupBy.formFormat)
     )(SearchConfigForm.apply)(SearchConfigForm.unapply)

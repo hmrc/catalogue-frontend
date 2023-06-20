@@ -91,7 +91,7 @@ final class ServiceConfigsConnectorSpec
       )
 
       serviceConfigsConnector
-        .configSearch(teamName = None, key = Some("testKey"), value = Some("testValue"), Some(ValueFilterType.EqualTo))
+        .configSearch(teamName = None, serviceType = None, key = Some("testKey"), value = Some("testValue"), valueFilterType = Some(ValueFilterType.EqualTo))
         .futureValue shouldBe (
           Right(Seq(AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("testKey"), "testValue")))
         )
