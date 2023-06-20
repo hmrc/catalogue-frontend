@@ -1,0 +1,129 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepositoryType
+@import views.html.partials.{form_warnings, form_fields_warnings}
+
+@import views.html.helper.select
+
+
+@this(viewMessages: ViewMessages)
+
+@(form: Form[_],
+teamNames: Seq[String],
+repoTypes: Seq[CreateRepositoryType])(implicit
+ messages: Messages,
+ request: RequestHeader
+)
+
+@standard_layout("Create a Repository", "create a repository") {
+
+    <section class="section-wrapper">
+        <h1>Create A Repository</h1>
+        <p>Use the below form to create a new repository. Make sure to follow the guidance for each field!</p>
+
+        @if(form.hasGlobalErrors) {
+        <div class="alert alert-danger">
+            <a class="close" data-dismiss="alert">×</a>
+            <ul>
+                @form.globalErrors.map { error =>
+                <li>@error.format</li>
+                }
+            </ul>
+        </div>
+        }
+
+
+        @helper.form(
+            action           =  uk.gov.hmrc.cataloguefrontend.createarepository.routes.CreateARepositoryController.createARepository(),
+            Symbol("id")     -> "createRepoForm",
+            Symbol("method") -> "post",
+        ) {
+            @csrfFormField
+
+            <div class="form-group row">
+                <div class="col-md-6">
+                <label for="repoNameInput">Repository name:</label>
+                    <p>
+                        You must comply with established naming conventions when naming your microservice:
+                        <ul style="list-style-type: disc";>
+                            <li>separate words with hyphens; don't use spaces</li>
+                            <li>maximum 47 characters</li>
+                            <li>lowercase only</li>
+                            <li>do not automatically name backend services after frontend services</li>
+                            <li>suffix frontend services with '-frontend'</li>
+                            <li>suffix stubs with '-stubs'</li>
+                            <li>describe the domain</li>
+                            <li>avoid time-limited words, such as 'new'</li>
+                            <li>avoid unnecessary words, such as 'service'</li>
+                        </ul>
+                    </p>
+                    <input class="form-control" type="text" id="repoNameInput" name="repositoryName">
+                    @form_fields_warnings(form,"repositoryName")
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-6">
+                    <div style = "white-space: nowrap;">
+                        <input style="display:inline-block;"  type="checkbox" id="makePrivateInput" name="makePrivate">
+                        <label style="display:inline-block"for="makePrivateInput">Make Private: </label>
+                        @form_fields_warnings(form,"makePrivate")
+                    </div>
+                    <p>You must decide now if you will code in the open, or privately. If you select ‘MAKE_PRIVATE’ the GitHub repository you create will only be visible within HMRC.
+                        Private coding usually relates to data security. Open repositories are visible to the public.
+                        As a general rule, most services are open by default. If you’re unsure, talk to your architect or digital service manager (DSM).</p>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-6">
+                    <label for="teamInput">Team name:</label>
+                    @if(teamNames.nonEmpty){
+                        <p>Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+                    } else {
+                        <p class="alert alert-danger">There are currently no teams that you have permissions to create a repository for. Ensure you are signed in to the Catalogue using your LDAP credentials (as opposed to using the guest sign-in process).
+                           If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
+                        </p>
+                    }
+                    <select class="form-control" id="teamInput" name="teamName">
+                        @teamNames.map { tn =>
+                            <option value="@{tn}">@tn</option>
+                        }
+                    </select>
+                    @form_fields_warnings(form,"teamName")
+
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-6">
+                    <label for="typeInput">Type:</label>
+                    <p>Repositories automatically include HMRC templating, depending on the type of microservice they support. Choose how you would like this repository to be set up.
+                    </p>
+                    <select class="form-control" id="typeInput" name="repoType">
+                        @repoTypes.map { rt =>
+                         <option value="@{rt.asString}">@rt.asString</option>
+                        }
+                    </select>
+                    @form_fields_warnings(form,"repoType")
+                </div>
+            </div>
+            <div>
+                <button id="build-button" class="btn btn-primary" type="submit">Build</button>
+            </div>
+       }
+    </section>
+}

@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{TeamMember, SlackInfo, UMPError}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{SlackInfo, TeamMember, UMPError}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport

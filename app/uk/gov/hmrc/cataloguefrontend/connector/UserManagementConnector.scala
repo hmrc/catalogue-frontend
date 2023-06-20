@@ -57,7 +57,7 @@ case class UserManagementConnector @Inject() (
     } yield token
   }
 
-  def retrieveToken() : Future[UmpToken] =
+  def retrieveToken(): Future[UmpToken] =
     if (authEnabled)
       tokenCache.getOrElseUpdate[UmpToken]("token", tokenTTL)(login())
     else
@@ -157,7 +157,6 @@ case class UserManagementConnector @Inject() (
       Left(UMPError.ConnectionError(s"Failed to login to UMP: ${ex.getMessage}"))
   }
 }
-
 object UserManagementConnector {
   sealed trait UMPError
 

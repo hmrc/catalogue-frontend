@@ -39,7 +39,7 @@ val compile = Seq(
   ehcache,
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-28"   % bootstrapPlayVersion,
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-28"           % hmrcMongoVersion,
-  "uk.gov.hmrc"               %% "internal-auth-client-play-28" % "1.2.0",
+  "uk.gov.hmrc"               %% "internal-auth-client-play-28" % "1.5.0",
   "org.typelevel"             %% "cats-core"                    % "2.6.1",
   "org.yaml"                  %  "snakeyaml"                    % "1.27",
   "org.apache.httpcomponents" %  "httpclient"                   % "4.5.13",
