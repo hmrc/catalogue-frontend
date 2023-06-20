@@ -29,4 +29,5 @@ whatsrunningwhere.select.team=Any Team
 shutter-event.history=Event History
 format.boolean=
 
-prototype.password.forbidden=You must be logged in, and you must be a member of one of the teams listed above. Also, the prototype must have a status of Running.
+prototype.password.forbidden=To reset the password, you must be logged in and be a member of one of the teams listed above.
+prototype.password.not-running=To reset the password, the prototype must have a status of Running.

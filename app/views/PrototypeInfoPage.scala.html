@@ -81,10 +81,18 @@ viewMessages           : ViewMessages
                         <button id="reset-password-enabled" type="button" class="btn btn-primary">Reset Password</button>
                     } else {
                         <button id="reset-password-disabled" type="button" class="btn btn-primary" disabled>Reset Password</button>
-                        <div class="text-muted" style="margin-top: 0.8em">
-                            <i class="glyphicon glyphicon-info-sign"></i>
-                            @messages("prototype.password.forbidden")
-                        </div>
+                        @if(hasPasswordChangeAuth.value == false) {
+                            <div class="text-muted" style="margin-top: 0.8em">
+                                <i class="glyphicon glyphicon-info-sign"></i>
+                                @messages("prototype.password.forbidden")
+                            </div>
+                        }
+                        @if(hasPasswordChangeAuth.value && prototypeStatus != PrototypeStatus.Running) {
+                            <div class="text-muted" style="margin-top: 0.8em">
+                                <i class="glyphicon glyphicon-info-sign"></i>
+                                @messages("prototype.password.not-running")
+                            </div>
+                        }
                     }
                 </div>
 
