@@ -90,7 +90,7 @@ class DependencyExplorerController @Inject() (
   ) =
     BasicAuthAction.async ( implicit request =>
       for {
-        teams          <- trConnector.allTeams.map(_.map(_.name).sorted)
+        teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
         scopes         =  DependencyScope.values
         groupArtefacts <- dependenciesService.getGroupArtefacts

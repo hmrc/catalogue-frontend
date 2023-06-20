@@ -81,7 +81,7 @@
                                 <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link"></a>
                                 @key.asString
                                 @if(uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showConfigSearch.isEnabled) {
-                                    <a href="@{serviceConfigsRoutes.ServiceConfigsController.searchByKeyLanding().url}?key=@key.asString" class="glyphicon glyphicon-search pull-right"></a>
+                                    <a href="@{serviceConfigsRoutes.ServiceConfigsController.searchLanding().url}?key=@key.asString" class="glyphicon glyphicon-search pull-right"></a>
                                 }
                             </div>
                             @for(env <- ServiceConfigsService.ConfigEnvironment.values) {

@@ -22,14 +22,13 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, FeatureSwitch}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class serviceConfigsServiceSpec
+class ServiceConfigsServiceSpec
   extends AnyWordSpecLike
      with Matchers
      with MockitoSugar
@@ -233,30 +232,37 @@ class serviceConfigsServiceSpec
     }
   }
 
-  "serviceConfigsService.searchAppliedConfig" should {
+  "serviceConfigsService.toKeyServiceEnviromentMap" should {
     "group by key, service and environment" in new Setup {
-      when(mockServiceConfigsConnector.configSearch(any[String], any[Option[TeamName]])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(
-          Seq(
-            AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("test.key"), "prodValue"),
-            AppliedConfig(Environment.QA, ServiceName("test-service"), KeyName("test.key"), "qaValue")
-          )
-        ))
-
-      val expected: Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]] = Map(
-        KeyName("test.key") -> Map(
+      serviceConfigsService.toKeyServiceEnviromentMap(
+        AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("test.key"), "prodValue") ::
+        AppliedConfig(Environment.QA, ServiceName("test-service"), KeyName("test.key"), "qaValue")           ::
+        Nil
+      ) shouldBe (
+        Map(KeyName("test.key") -> Map(
           ServiceName("test-service") -> Map(
             Environment.Production -> Some("prodValue"),
             Environment.QA -> Some("qaValue")
           )
-        )
+        ))
       )
+    }
+  }
 
-      serviceConfigsService.toKeyServiceEnviromentMap(
-        serviceConfigsService
-          .searchAppliedConfig("test.key", None)
-          .futureValue
-      ) shouldBe expected
+  "serviceConfigsService.toServiceKeyEnviromentMap" should {
+    "group by key, service and environment" in new Setup {
+      serviceConfigsService.toServiceKeyEnviromentMap(
+        AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("test.key"), "prodValue") ::
+        AppliedConfig(Environment.QA, ServiceName("test-service"), KeyName("test.key"), "qaValue")           ::
+        Nil
+      ) shouldBe (
+        Map(ServiceName("test-service") -> Map(
+          KeyName("test.key") -> Map(
+            Environment.Production -> Some("prodValue"),
+            Environment.QA -> Some("qaValue")
+          )
+        ))
+      )
     }
   }
 

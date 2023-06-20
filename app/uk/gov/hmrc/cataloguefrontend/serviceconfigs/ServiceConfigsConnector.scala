@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfig
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -85,17 +85,26 @@ class ServiceConfigsConnector @Inject() (
   def getConfigKeys(teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[Seq[String]] =
     cache.getOrElseUpdate(s"config-keys-cache-${teamName.getOrElse("all")}", configKeysCacheExpiration) {
       httpClientV2
-        .get(url"$serviceConfigsBaseUrl/service-configs/configkeys?team=${teamName.map(_.asString)}")
+        .get(url"$serviceConfigsBaseUrl/service-configs/configkeys?teamName=${teamName.map(_.asString)}")
         .execute[Seq[String]]
     }
 
   def configSearch(
-    key          : String,
-    teamName     : Option[TeamName]
-  )(implicit hc: HeaderCarrier): Future[Seq[AppliedConfig]] = {
+    teamName       : Option[TeamName]
+  , serviceType    : Option[ServiceType]
+  , key            : Option[String]
+  , value          : Option[String]
+  , valueFilterType: Option[ValueFilterType]
+  )(implicit hc: HeaderCarrier): Future[Either[String, Seq[AppliedConfig]]] = {
     implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
+
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/search?key=${s"\"$key\""}&team=${teamName.map(_.asString)}")
-      .execute[Seq[AppliedConfig]]
+      .get(url"$serviceConfigsBaseUrl/service-configs/search?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&key=$key&value=${value}&valueFilterType=${valueFilterType.map(_.asString)}")
+      .execute[Either[UpstreamErrorResponse, Seq[AppliedConfig]]]
+      .flatMap {
+        case Left(err) if err.statusCode == 403 => Future.successful(Left("This search has too many results - please refine parameters."))
+        case Left(other)                        => Future.failed(other)
+        case Right(xs)                          => Future.successful(Right(xs))
+      }
   }
 }

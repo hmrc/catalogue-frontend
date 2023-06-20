@@ -78,7 +78,7 @@ final class ServiceConfigsConnectorSpec
   "configSearch" should {
     "return AppliedConfig" in {
       stubFor(
-        get(urlEqualTo("/service-configs/search?key=%22testKey%22"))
+        get(urlEqualTo("/service-configs/search?key=testKey&value=testValue&valueFilterType=equalTo"))
           .willReturn(aResponse().withBody(
             """[
               |  {
@@ -90,14 +90,11 @@ final class ServiceConfigsConnectorSpec
               |]""".stripMargin))
       )
 
-      val expected = Seq(AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("testKey"), "testValue"))
-
-      val result =
-        serviceConfigsConnector
-          .configSearch("testKey", None)
-          .futureValue
-
-      result shouldBe expected
+      serviceConfigsConnector
+        .configSearch(teamName = None, serviceType = None, key = Some("testKey"), value = Some("testValue"), valueFilterType = Some(ValueFilterType.EqualTo))
+        .futureValue shouldBe (
+          Right(Seq(AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("testKey"), "testValue")))
+        )
     }
   }
 }

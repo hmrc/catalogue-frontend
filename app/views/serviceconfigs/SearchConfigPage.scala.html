@@ -1,0 +1,227 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import views.html.helper
+@import views.html.partials.form_warnings
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{GroupBy, SearchConfig, ServiceConfigsService, routes => serviceConfigsRoutes, ValueFilterType }
+
+@this()
+
+@(form            : Form[SearchConfig.SearchConfigForm],
+  allTeams        : Seq[Team],
+  allKeys         : Seq[String],
+  groupedByKey    : Option[Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, Option[String]]]]] = None,
+  groupedByService: Option[Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, Option[String]]]]] = None
+)(implicit
+  messages: Messages,
+  request : RequestHeader
+)
+
+@standard_layout("Search Config") {
+    <header>
+        <h1>Search Config</h1>
+    </header>
+
+    @form_warnings(form)
+
+    @helper.form(
+        action          =  serviceConfigsRoutes.ServiceConfigsController.searchResults(),
+        Symbol("id")    -> "form",
+        Symbol("class") -> "form-group"
+    ) {
+        <div class="row">
+            <div class="col-md-4">
+                @helper.select(
+                    field              = form("teamName"),
+                    options            = allTeams.map(t => t.name.asString -> t.name.asString),
+                    Symbol("_default") -> "All",
+                    Symbol("_label")   -> "Team",
+                    Symbol("id")       -> "team-filter",
+                    Symbol("class")    -> "form-control"
+                )
+            </div>
+            <div class="col-md-8">
+                <dl>
+                    <dt><label for="config-key">Config Key</label></dt>
+                    <dd>
+                        <input class="form-control" id="config-key" type="text" name="configKey" value='@form("configKey").value' autocomplete="off" />
+                        <div id="config-search-matches" class="search-matches-dropdown hide"></div>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-2">
+                <dl>
+                    <dt><label>Environments</label></dt>
+                    <dd>
+                        @for(env <-  Environment.values) {
+                            <div class="checkbox-group">
+                                <input name="showEnviroments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.showEnviroments.contains(env)) {checked} />
+                                <label for="@{env.asString}-checkbox">@env.displayString</label>
+                            </div>
+                        }
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-2">
+                @helper.select(
+                    field              = form("serviceType"),
+                    options            = List("FrontendService" -> "Frontend", "BackendService" -> "Backend"),
+                    Symbol("_default") -> "All",
+                    Symbol("_label")   -> "Service Type",
+                    Symbol("class")    -> "form-control"
+                )
+            </div>
+            <div class="col-md-8">
+                <dl class="clearfix">
+                    <dt><label>Config Value</label></dt>
+                    <dd>
+                        <div class="input-group-multi">
+                            <div class="col-xs-9 col-md-9">
+                                <input class="form-control input-group-start" name="configValue" type="text" value='@form("configValue").value'>
+                            </div>
+                            <div class="col-xs-3 col-md-3">
+                                <select class="form-control input-group-end" name="valueFilterType">
+                                    @for(x <- ValueFilterType.values) {
+                                        <option value="@x.asString" @if(form("valueFilterType").value.contains(x.asString)) {selected}>@x.displayString</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <button id="config-search" class="btn btn-primary" type="submit">Search</button>
+        <input type="hidden" id="asCsv" name="asCsv" value="false" />
+        <input type="button" id="export-as-csv-btn" class="btn btn-default" value="Export as CSV"/>
+
+        <div class="dl-horizontal pull-right">
+            @helper.inputRadioGroup(
+                field              =  form("groupBy"),
+                options            =  GroupBy.values.map(t => t.asString -> t.displayString),
+                Symbol("_label")   -> "Group By",
+                Symbol("id")       -> "group-by",
+                Symbol("class")    -> ""
+            )
+        </div>
+
+        @* Use a textarea to handle HTML encoding of values such as quotes *@
+        <textarea class="hidden" id="autocomplete-values-textarea">@allKeys.mkString("\n")</textarea>
+    }
+
+    @groupedByKey.map { res =>
+        @if(res.isEmpty) {
+            <p>No results found.</p>
+        }
+
+        @for((configKey, configByService) <- res) {
+            <div>Results for <code>@configKey.asString</code></div>
+            <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        @for(env <- form.get.showEnviroments) {
+                            <th id="@{env.asString}-tr">@env.displayString</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for((serviceName, configByEnv) <- configByService) {
+                        <tr>
+                            <td><a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></td>
+                            @for(env <- form.get.showEnviroments) {
+                                <td id="@{env.asString}-td">@displayResult(serviceName, configKey, configByEnv.get(env))</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    @groupedByService.map { res =>
+        @if(res.isEmpty) {
+            <p>No results found.</p>
+        }
+
+        @for((serviceName, configByKey) <- res) {
+            <div>Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></div>
+            <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        @for(env <- form.get.showEnviroments) {
+                            <th id="@{env.asString}-tr">@env.displayString</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for((configKey, configByEnv) <- configByKey) {
+                        <tr>
+                            <td><code>@configKey.asString</code></td>
+                            @for(env <- form.get.showEnviroments) {
+                                <td id="@{env.asString}-td">@displayResult(serviceName, configKey, configByEnv.get(env))</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+    <script @CSPNonce.attr>
+        document
+            .getElementById('team-filter')
+            .addEventListener("change", () => document.getElementById("form").submit());
+
+        let autocompleteValues = document.getElementById('autocomplete-values-textarea').value.split('\n');
+        init("form", "config-key", "config-search-matches", autocompleteValues);
+
+        document
+            .getElementById("export-as-csv-btn")
+            .addEventListener("click", () => {
+                document.getElementById('asCsv').value = true;
+                document.getElementById('form').submit();
+                document.getElementById('asCsv').value = false;
+            });
+
+        document
+            .getElementById('group-by')
+            .addEventListener("change", () => document.getElementById("form").submit());
+    </script>
+}
+
+@displayResult(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, result: Option[Option[String]]) = {
+    @result match {
+        case None => {
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString" title="Not deployed in environment - Link to Config Explorer">
+                <span class="glyphicon glyphicon-minus archived"></span>
+            </a
+        }
+        case Some(configValue) => {
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString" title="Link to Config Explorer">
+                @configValue.getOrElse("")
+            </a>
+        }
+    }
+}
