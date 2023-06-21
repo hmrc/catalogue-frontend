@@ -116,8 +116,8 @@ class ServiceConfigsService @Inject()(
   def configKeys(teamName: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[String]] =
     serviceConfigsConnector.getConfigKeys(teamName)
 
-  def searchAppliedConfig(teamName: Option[TeamName], serviceType: Option[ServiceType], key: Option[String], value: Option[String], valueFilterType: Option[ValueFilterType])(implicit hc: HeaderCarrier): Future[Either[String, Seq[AppliedConfig]]] =
-    serviceConfigsConnector.configSearch(teamName, serviceType, key = key, value = value, valueFilterType)
+  def configSearch(teamName: Option[TeamName], environments: Seq[Environment], serviceType: Option[ServiceType], key: Option[String], value: Option[String], valueFilterType: Option[ValueFilterType])(implicit hc: HeaderCarrier): Future[Either[String, Seq[AppliedConfig]]] =
+    serviceConfigsConnector.configSearch(teamName, environments, serviceType, key = key, value = value, valueFilterType)
 
   private def sorted[K, V](unsorted: Map[K, V])(implicit ordering: Ordering[K]): Map[K, V] = TreeMap[K, V]() ++ unsorted
 

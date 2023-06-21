@@ -91,6 +91,7 @@ class ServiceConfigsConnector @Inject() (
 
   def configSearch(
     teamName       : Option[TeamName]
+  , environments   : Seq[Environment]
   , serviceType    : Option[ServiceType]
   , key            : Option[String]
   , value          : Option[String]
@@ -99,7 +100,7 @@ class ServiceConfigsConnector @Inject() (
     implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
 
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/search?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&key=$key&value=${value}&valueFilterType=${valueFilterType.map(_.asString)}")
+      .get(url"$serviceConfigsBaseUrl/service-configs/search?teamName=${teamName.map(_.asString)}&environments=${environments.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&key=$key&value=${value}&valueFilterType=${valueFilterType.map(_.asString)}")
       .execute[Either[UpstreamErrorResponse, Seq[AppliedConfig]]]
       .flatMap {
         case Left(err) if err.statusCode == 403 => Future.successful(Left("This search has too many results - please refine parameters."))

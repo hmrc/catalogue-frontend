@@ -86,8 +86,14 @@ class ServiceConfigsController @Inject()(
                               results    <- (formObject.configKey, formObject.configValue) match {
                                               case (None, None) if formObject.valueFilterType != ValueFilterType.IsEmpty
                                                      => EitherT.rightT[Future, Result](Nil)
-                                              case _ => EitherT(serviceConfigsService.searchAppliedConfig(formObject.teamName, formObject.serviceType, formObject.configKey, formObject.configValue, Some(formObject.valueFilterType)))
-                                                          .leftMap(msg => Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys)))
+                                              case _ => EitherT(serviceConfigsService.configSearch(
+                                                          formObject.teamName
+                                                        , formObject.showEnviroments
+                                                        , formObject.serviceType
+                                                        , formObject.configKey
+                                                        , formObject.configValue
+                                                        , Some(formObject.valueFilterType)
+                                                        )).leftMap(msg => Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys)))
                                             }
                               (groupedByKey, groupedByService)
                                          =  formObject.groupBy match {

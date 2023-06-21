@@ -70,7 +70,7 @@ class DeploymentHistoryController @Inject() (
                                skip    = validForm.page.map(i => i * pageSize),
                                limit   = Some(pageSize)
                              )
-              teams       <- teamsAndRepositoriesConnector.allTeams
+              teams       <- teamsAndRepositoriesConnector.allTeams()
               pagination  =  Pagination(page = validForm.page.getOrElse(0), pageSize = pageSize, total = deployments.total)
             } yield Ok(
               page(
