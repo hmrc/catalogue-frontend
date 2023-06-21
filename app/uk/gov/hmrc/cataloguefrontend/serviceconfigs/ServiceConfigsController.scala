@@ -83,9 +83,16 @@ class ServiceConfigsController @Inject()(
         , formObject     => (for {
                               allTeams   <- EitherT.right[Result](teamsAndReposConnector.allTeams())
                               configKeys <- EitherT.right[Result](serviceConfigsService.configKeys(formObject.teamName))
-                              results    <- (formObject.configKey, formObject.configValue) match {
-                                              case (None, None) if formObject.valueFilterType != ValueFilterType.IsEmpty
-                                                     => EitherT.rightT[Future, Result](Nil)
+                              optResults <- (formObject.teamChange, formObject.configKey, formObject.configValue) match {
+                                              // Do not search when only the team name has been changed
+                                              case (true,  None, None) if formObject.valueFilterType != ValueFilterType.IsEmpty
+                                                     => EitherT.rightT[Future, Result](Option.empty[Seq[ServiceConfigsService.AppliedConfig]])
+                                              // Error when, config key or value or ValueFilterType.IsEmpty has not been specifed
+                                              case (false,  None, None) if formObject.valueFilterType != ValueFilterType.IsEmpty
+                                                     => EitherT.leftT[Future, Option[Seq[ServiceConfigsService.AppliedConfig]]] {
+                                                          val msg = "Please search by either a config key or value."
+                                                          Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys))
+                                                        }
                                               case _ => EitherT(serviceConfigsService.configSearch(
                                                           formObject.teamName
                                                         , formObject.showEnviroments
@@ -94,11 +101,13 @@ class ServiceConfigsController @Inject()(
                                                         , formObject.configValue
                                                         , Some(formObject.valueFilterType)
                                                         )).leftMap(msg => Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys)))
+                                                          .map(Option.apply)
                                             }
                               (groupedByKey, groupedByService)
-                                         =  formObject.groupBy match {
-                                              case GroupBy.Key     => (Some(serviceConfigsService.toKeyServiceEnviromentMap(results)), None)
-                                              case GroupBy.Service => (None, Some(serviceConfigsService.toServiceKeyEnviromentMap(results)))
+                                         =  (optResults, formObject.groupBy) match {
+                                              case (None,          _              ) => (None, None)
+                                              case (Some(results), GroupBy.Key    ) => (Some(serviceConfigsService.toKeyServiceEnviromentMap(results)), None)
+                                              case (Some(results), GroupBy.Service) => (None, Some(serviceConfigsService.toServiceKeyEnviromentMap(results)))
                                             }
                             } yield
                               if (formObject.asCsv) {
@@ -151,6 +160,7 @@ object SearchConfig {
   , valueFilterType: ValueFilterType     = ValueFilterType.Contains
   , showEnviroments: List[Environment]   = Environment.values.filterNot(_ == Environment.Integration)
   , serviceType    : Option[ServiceType] = None
+  , teamChange     : Boolean             = false
   , asCsv          : Boolean             = false
   , groupBy        : GroupBy             = GroupBy.Key
   )
@@ -169,6 +179,7 @@ object SearchConfig {
                                 , x  => identity(x).map(_.asString)
                                 )
     , "serviceType"     -> Forms.optional(Forms.of[ServiceType](ServiceType.formFormat))
+    , "teamChange"      -> Forms.boolean
     , "asCsv"           -> Forms.boolean
     , "groupBy"         -> Forms.of[GroupBy](GroupBy.formFormat)
     )(SearchConfigForm.apply)(SearchConfigForm.unapply)
