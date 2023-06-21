@@ -22,10 +22,9 @@
 
 @this(viewMessages: ViewMessages)
 
-@(serviceName        : String,
-  configByKey        : ServiceConfigsService.ConfigByKey,
-  deployments        : List[WhatsRunningWhereVersion],
-  appConfigBaseInSlug: Map[ServiceConfigsService.ConfigEnvironment, Boolean]
+@(serviceName: String,
+  configByKey: ServiceConfigsService.ConfigByKey,
+  deployments: List[WhatsRunningWhereVersion]
 )(implicit
   request: RequestHeader
 )
@@ -67,9 +66,6 @@
                             })
                             </div>
                             <div>@findDeployment(env).fold("")(_.versionNumber.asString)</div>
-                            @if(CatalogueFrontendSwitches.showDeployedConfig.isEnabled && appConfigBaseInSlug.get(env).getOrElse(false)) {
-                                <div class="small-text info"><span class="info-badge badge"> LEGACY MODE </span> - See <span class="glyphicon glyphicon-question-sign help-icon"></span> help</div>
-                            }
                         </div>
                         <div class="gutter gutter-horizontal column-@env.asString @if(!show(env)){hidden}"></div>
                     }
@@ -157,7 +153,6 @@
                 <li>The Microservice <code>reference.conf</code> files and <code>application.conf</code> config are extracted from the build of the deployed slug. The version of the slug is shown under the environment.</li>
                 @if(CatalogueFrontendSwitches.showDeployedConfig.isEnabled) {
                     <li>The App-config environment (<code>app-config-$env</code>), common configuration (<code>app-config-common</code>) and <code>app-config-base</code> are applied at deployment time by looking up the latest config from github. The config shown is the config that was applied at the deployment. Any changes to config since then that will be applied at the next deployment is also shown in amber. Note, we don't detect changes to encoded (ENC[...]) secrets.</li>
-                    <li><span class="info-badge badge"> LEGACY MODE </span> <code>app-config-base</code> config is still being extracted from the build of the deployed slug for the indicated environments. The badge will be removed for environments where this is looked up from Github at deployment time.</li>
                 } else {
                     <li>The App-config environment (<code>app-config-$env</code>) and common configuration (<code>app-config-common</code>) are looked up in the corresponding github project. They <i>might</i> not correspond to what is actually deployed in the environment, and represent what the resulting configuration would be if the slug is redeployed into that environment.</li>
                 }
