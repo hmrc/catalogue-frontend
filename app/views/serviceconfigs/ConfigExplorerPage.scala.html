@@ -147,15 +147,9 @@
             <ul class="bullets">
                 <li>Configuration is composed from multiple sources in a heirarchy of precedence. This table shows the end result and heirarchical eviction for each configuration key and for each environment. See <a id="link-to-confluence" href="https://confluence.tools.tax.service.gov.uk/display/DTRG/Service+configuration+explained" target="_blank">Confluence</a> for more details on how configuration is composed.</li>
                 <li>Crossed out values indicate an eviction according to their precendence in the config hierarchy</li>
-                @if(CatalogueFrontendSwitches.showDeployedConfig.isEnabled) {
-                  <li>Amber values show what the value will change to when redeployed</li>
-                }
+                <li>Amber values show what the value will change to when redeployed</li>
                 <li>The Microservice <code>reference.conf</code> files and <code>application.conf</code> config are extracted from the build of the deployed slug. The version of the slug is shown under the environment.</li>
-                @if(CatalogueFrontendSwitches.showDeployedConfig.isEnabled) {
-                    <li>The App-config environment (<code>app-config-$env</code>), common configuration (<code>app-config-common</code>) and <code>app-config-base</code> are applied at deployment time by looking up the latest config from github. The config shown is the config that was applied at the deployment. Any changes to config since then that will be applied at the next deployment is also shown in amber. Note, we don't detect changes to encoded (ENC[...]) secrets.</li>
-                } else {
-                    <li>The App-config environment (<code>app-config-$env</code>) and common configuration (<code>app-config-common</code>) are looked up in the corresponding github project. They <i>might</i> not correspond to what is actually deployed in the environment, and represent what the resulting configuration would be if the slug is redeployed into that environment.</li>
-                }
+                <li>The App-config environment (<code>app-config-$env</code>), common configuration (<code>app-config-common</code>) and <code>app-config-base</code> are applied at deployment time by looking up the latest config from github. The config shown is the config that was applied at the deployment. Any changes to config since then that will be applied at the next deployment is also shown in amber. Note, we don't detect changes to encoded (ENC[...]) secrets.</li>
             </ul>
             <h2>How to use the config explorer</h2>
             <ul class="bullets">
