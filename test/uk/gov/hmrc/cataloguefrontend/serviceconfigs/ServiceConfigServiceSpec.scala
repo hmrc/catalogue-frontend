@@ -56,34 +56,6 @@ class ServiceConfigsServiceSpec
       serviceConfigsService.configByKey(serviceName).futureValue shouldBe config
     }
 
-    "ignore envs without data (appConfigEnvironment)" in new Setup {
-      val serviceName = "service"
-
-      val latest: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]] =
-        Map(
-          KeyName("k1") -> ConfigEnvironment.values.map(e => e -> Seq(
-            ConfigSourceValue(source = "appConfigCommon"     , sourceUrl = None, value = s"${e}-a1"),
-            ConfigSourceValue(source = "appConfigEnvironment", sourceUrl = None, value = s"${e}-b1")
-          )).toMap
-        )
-
-      val deployed =
-        latest.map { case (k, m) => k -> m.map {
-          case (e@ConfigEnvironment.ForEnvironment(Environment.QA), _ ) => e -> Seq.empty
-          case (e                                                 , vs) => e -> vs
-          }
-        }
-
-      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(latest))
-
-      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(deployed))
-
-
-      serviceConfigsService.configByKey(serviceName).futureValue shouldBe latest
-    }
-
     "show undeployed changes" in new Setup {
       val serviceName = "service"
 
