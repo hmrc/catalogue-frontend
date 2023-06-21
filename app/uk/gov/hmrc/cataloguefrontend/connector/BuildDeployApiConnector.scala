@@ -98,6 +98,33 @@ class BuildDeployApiConnector @Inject() (
       .map(_.status)
   }
 
+  def setPrototypeStatus(prototype: String, status: PrototypeStatus): Future[SetPrototypeStatusResponse] = {
+    implicit val spsR: HttpReads[SetPrototypeStatusResponse] = SetPrototypeStatusResponse.httpReads
+    val queryParams = Map.empty[String, String]
+
+    val url = url"${config.baseUrl}/v1/SetPrototypeStatus?$queryParams"
+
+    val body = Json.obj(
+      "prototype" -> JsString(prototype),
+      "status"   -> JsString(status.asString)
+    )
+
+    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
+      .getSignedHeaders(
+        uri = url.getPath,
+        method = "POST",
+        queryParams = queryParams,
+        headers = Map[String, String]("host" -> config.host),
+        payload = Some(Json.toBytes(body))
+      )
+
+    httpClientV2
+      .post(url)
+      .withBody(body)
+      .setHeader(headers.toSeq: _*)
+      .execute[SetPrototypeStatusResponse]
+  }
+
   def createARepository(payload: CreateRepoForm): Future[Unit] = {
     implicit val crfw: Writes[CreateRepoForm] = CreateRepoForm.writes
 
@@ -196,7 +223,7 @@ object BuildDeployApiConnector {
 
   final case class GetPrototypeStatusResponse(success: Boolean, message: String, status: PrototypeStatus)
 
-  object GetPrototypeStatusResponse {
+  private object GetPrototypeStatusResponse {
     implicit val psF: Format[PrototypeStatus] = PrototypeStatus.format
     private val reads: Reads[GetPrototypeStatusResponse] =
       ( (__ \ "success").read[Boolean]
@@ -211,11 +238,37 @@ object BuildDeployApiConnector {
             case 200 =>
               implicit val r: Reads[GetPrototypeStatusResponse] = reads
               HttpReadsInstances.readFromJson[GetPrototypeStatusResponse]
-            case _ =>
-              val msg = (response.json \ "message").as[String]
+            case _   =>
+              val msg       = (response.json \ "message"              ).as[String]
               val prototype = (response.json \ "details" \ "prototype").as[String]
               Logger(getClass).warn(s"Unable to determine prototype status for $prototype - $msg")
               HttpReads.pure(GetPrototypeStatusResponse(success = false, message = msg, status = PrototypeStatus.Undetermined))
+          }
+        }
+  }
+
+  final case class SetPrototypeStatusResponse(success: Boolean, message: String, status: PrototypeStatus)
+
+  private object SetPrototypeStatusResponse {
+    implicit val psF: Format[PrototypeStatus] = PrototypeStatus.format
+    private val reads: Reads[SetPrototypeStatusResponse] =
+      ((__ \ "success").read[Boolean]
+        ~ (__ \ "message").read[String]
+        ~ (__ \ "details" \ "status").read[PrototypeStatus]
+        )(SetPrototypeStatusResponse.apply _)
+
+    val httpReads: HttpReads[SetPrototypeStatusResponse] =
+      implicitly[HttpReads[HttpResponse]]
+        .flatMap { response =>
+          response.status match {
+            case 200 =>
+              implicit val r: Reads[SetPrototypeStatusResponse] = reads
+              HttpReadsInstances.readFromJson[SetPrototypeStatusResponse]
+            case _ =>
+              val msg = (response.json \ "message").as[String]
+              val prototype = (response.json \ "details" \ "prototype").as[String]
+              Logger(getClass).warn(s"Unable to set prototype status for $prototype - $msg")
+              HttpReads.pure(SetPrototypeStatusResponse(success = false, message = msg, status = PrototypeStatus.Undetermined))
           }
         }
   }

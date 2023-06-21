@@ -132,4 +132,57 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       result shouldBe PrototypeStatus.Undetermined
     }
   }
+
+  "setPrototypeStatus" should {
+    "return the new status of the prototype when 200" in {
+      val requestJson = """{ "prototype": "test-prototype", "status": "running" }"""
+
+      stubFor(
+        post("/v1/SetPrototypeStatus")
+          .withRequestBody(equalToJson(requestJson))
+          .willReturn(aResponse().withStatus(200).withBody(
+            """
+              |{
+              |  "success": true,
+              |  "message": "Successfully running test-prototype",
+              |  "details": {
+              |    "prototype": "test-prototype",
+              |    "status": "running"
+              |  }
+              |}""".stripMargin
+          ))
+      )
+
+      val result = connector.setPrototypeStatus("test-prototype", PrototypeStatus.Running).futureValue
+
+      result.success shouldBe true
+      result.status  shouldBe PrototypeStatus.Running
+    }
+
+    "return a new status of Undetermined when non 200" in {
+      val requestJson = """{ "prototype": "test-prototype", "status": "running" }"""
+
+      stubFor(
+        post("/v1/SetPrototypeStatus")
+          .withRequestBody(equalToJson(requestJson))
+          .willReturn(aResponse().withStatus(400).withBody(
+            """
+              |{
+              |  "code": 500,
+              |  "success": false,
+              |  "message": "Some downstream error",
+              |  "details": {
+              |    "prototype": "test-prototype",
+              |    "status": "undetermined"
+              |  }
+              |}""".stripMargin
+          ))
+      )
+
+      val result = connector.setPrototypeStatus("test-prototype", PrototypeStatus.Running).futureValue
+
+      result.success shouldBe false
+      result.status  shouldBe PrototypeStatus.Undetermined
+    }
+  }
 }
