@@ -30,6 +30,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpReadsInstances, HttpRespo
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
 
+import java.net.URL
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,90 +45,81 @@ class BuildDeployApiConnector @Inject() (
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def changePrototypePassword(payload: ChangePrototypePasswordRequest): Future[ChangePrototypePasswordResponse] = {
-    implicit val rwr: Writes[ChangePrototypePasswordRequest] = ChangePrototypePasswordRequest.writes
-    implicit val rhr: HttpReads[ChangePrototypePasswordResponse] = ChangePrototypePasswordResponse.httpReads
+  private def buildUrl(
+    endpoint: String,
+    queryParams: Map[String, String]
+  ): URL = url"${config.baseUrl}/v1/$endpoint?$queryParams"
 
-    val queryParams = Map.empty[String, String]
-
-    val url = url"${config.baseUrl}/v1/SetHerokuPrototypePassword?$queryParams"
-
-    val body = Json.toJson(payload)
-
-    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
+  private def signedHeaders(
+    uri: String,
+    queryParams: Map[String, String],
+    body: JsValue
+  ): Map[String, String] =
+    AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
       .getSignedHeaders(
-        uri = url.getPath,
+        uri = uri,
         method = "POST",
         queryParams = queryParams,
         headers = Map[String, String]("host" -> config.host),
         payload = Some(Json.toBytes(body))
       )
 
+  private def signAndExecuteRequest[T](
+    endpoint: String,
+    body: JsValue,
+    queryParams: Map[String, String] = Map.empty[String, String]
+  )(implicit r: HttpReads[T]): Future[T] = {
+    val url = buildUrl(endpoint, queryParams)
+
+    val headers = signedHeaders(url.getPath, queryParams, body)
+
     httpClientV2
       .post(url)
       .withBody(body)
       .setHeader(headers.toSeq: _*)
-      .execute[ChangePrototypePasswordResponse]
+      .execute[T]
+  }
+
+  def changePrototypePassword(payload: ChangePrototypePasswordRequest): Future[ChangePrototypePasswordResponse] = {
+    implicit val rwr: Writes[ChangePrototypePasswordRequest] = ChangePrototypePasswordRequest.writes
+    implicit val rhr: HttpReads[ChangePrototypePasswordResponse] = ChangePrototypePasswordResponse.httpReads
+
+    val body = Json.toJson(payload)
+
+    signAndExecuteRequest[ChangePrototypePasswordResponse](
+      endpoint = "SetHerokuPrototypePassword",
+      body     = body
+    )
   }
   
   def getPrototypeStatus(prototype: String): Future[PrototypeStatus] = {
     implicit val gpsR: HttpReads[GetPrototypeStatusResponse] = GetPrototypeStatusResponse.httpReads
 
-    val queryParams = Map.empty[String, String]
-
-    val url = url"${config.baseUrl}/v1/GetPrototypeStatus?$queryParams"
-
     val body = Json.obj(
       "prototype" -> JsString(prototype)
     )
 
-    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
-      .getSignedHeaders(
-        uri = url.getPath,
-        method = "POST",
-        queryParams = queryParams,
-        headers = Map[String, String]("host" -> config.host),
-        payload = Some(Json.toBytes(body))
-      )
-
-    httpClientV2
-      .post(url)
-      .withBody(body)
-      .setHeader(headers.toSeq: _*)
-      .execute[GetPrototypeStatusResponse]
-      .map(_.status)
+    signAndExecuteRequest[GetPrototypeStatusResponse](
+      endpoint = "GetPrototypeStatus",
+      body     = body
+    ).map(_.status)
   }
 
   def setPrototypeStatus(prototype: String, status: PrototypeStatus): Future[SetPrototypeStatusResponse] = {
     implicit val spsR: HttpReads[SetPrototypeStatusResponse] = SetPrototypeStatusResponse.httpReads
-    val queryParams = Map.empty[String, String]
-
-    val url = url"${config.baseUrl}/v1/SetPrototypeStatus?$queryParams"
 
     val body = Json.obj(
       "prototype" -> JsString(prototype),
-      "status"   -> JsString(status.asString)
+      "status" -> JsString(status.asString)
     )
 
-    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
-      .getSignedHeaders(
-        uri = url.getPath,
-        method = "POST",
-        queryParams = queryParams,
-        headers = Map[String, String]("host" -> config.host),
-        payload = Some(Json.toBytes(body))
-      )
-
-    httpClientV2
-      .post(url)
-      .withBody(body)
-      .setHeader(headers.toSeq: _*)
-      .execute[SetPrototypeStatusResponse]
+    signAndExecuteRequest[SetPrototypeStatusResponse](
+      endpoint = "SetPrototypeStatus",
+      body     = body
+    )
   }
 
   def createARepository(payload: CreateRepoForm): Future[Unit] = {
-    implicit val crfw: Writes[CreateRepoForm] = CreateRepoForm.writes
-
     val queryParams = Map.empty[String, String]
 
     val url = url"${config.baseUrl}/v1/CreateRepository?$queryParams"
@@ -149,14 +141,7 @@ class BuildDeployApiConnector @Inject() (
 
     val body = Json.toJson(finalPayload)
 
-    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
-      .getSignedHeaders(
-        uri = url.getPath,
-        method = "POST",
-        queryParams = queryParams,
-        headers = Map[String, String]("host" -> config.host),
-        payload = Some(Json.toBytes(body))
-      )
+    val headers = signedHeaders(url.getPath, queryParams, body)
 
     httpClientV2
       .post(url)
@@ -226,8 +211,8 @@ object BuildDeployApiConnector {
   private object GetPrototypeStatusResponse {
     implicit val psF: Format[PrototypeStatus] = PrototypeStatus.format
     private val reads: Reads[GetPrototypeStatusResponse] =
-      ( (__ \ "success").read[Boolean]
-      ~ (__ \ "message").read[String]
+      ( (__ \ "success"           ).read[Boolean]
+      ~ (__ \ "message"           ).read[String]
       ~ (__ \ "details" \ "status").read[PrototypeStatus]
       ) (GetPrototypeStatusResponse.apply _)
 
@@ -252,10 +237,10 @@ object BuildDeployApiConnector {
   private object SetPrototypeStatusResponse {
     implicit val psF: Format[PrototypeStatus] = PrototypeStatus.format
     private val reads: Reads[SetPrototypeStatusResponse] =
-      ((__ \ "success").read[Boolean]
-        ~ (__ \ "message").read[String]
-        ~ (__ \ "details" \ "status").read[PrototypeStatus]
-        )(SetPrototypeStatusResponse.apply _)
+      ( (__ \ "success"           ).read[Boolean]
+      ~ (__ \ "message"           ).read[String]
+      ~ (__ \ "details" \ "status").read[PrototypeStatus]
+      )(SetPrototypeStatusResponse.apply _)
 
     val httpReads: HttpReads[SetPrototypeStatusResponse] =
       implicitly[HttpReads[HttpResponse]]
