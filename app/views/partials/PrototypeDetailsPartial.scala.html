@@ -14,6 +14,7 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
@@ -21,10 +22,10 @@
 
 @this()
 
-@(repo: GitRepository, prototypeStatus: PrototypeStatus)
+@(repo: GitRepository, prototypeStatus: PrototypeStatus, hasPasswordChangeAuth: Boolean)
 
 <div id="details" >
-    <div class="board" class="col-md-12">
+    <div class="board col-md-12">
         <h3 class="board__heading">Details</h3>
         <div class="board__body">
 
@@ -48,6 +49,14 @@
                 <li id="prototype-status" class="col-xs-6">
                     <label>Status: </label>
                     @prototypeStatus.displayString
+                    @if(hasPasswordChangeAuth) {
+                        @if(prototypeStatus == PrototypeStatus.Stopped) {
+                            <a href="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Running)" class="btn btn-sm btn-primary">Start</a>
+                        }
+                        @if(prototypeStatus == PrototypeStatus.Running) {
+                            <a href="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Stopped)" class="btn btn-sm btn-danger">Stop</a>
+                        }
+                    }
                 </li>
             </ul>
         </div>

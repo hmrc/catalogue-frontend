@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import com.google.inject.{Inject, Singleton}
+import play.api.mvc.PathBindable
 import play.api.{Logger, Logging}
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
@@ -204,6 +205,15 @@ object BuildDeployApiConnector {
       override def reads(json: JsValue): JsResult[PrototypeStatus] =
         json.validate[String].flatMap(s => PrototypeStatus.parse(s).map(p => JsSuccess(p)).getOrElse(JsError("invalid prototype status")))
     }
+
+    implicit val pathBindable: PathBindable[PrototypeStatus] =
+      new PathBindable[PrototypeStatus] {
+        override def bind(key: String, value: String): Either[String, PrototypeStatus] =
+          parse(value).toRight(s"Invalid prototype status '$value'")
+
+        override def unbind(key: String, value: PrototypeStatus): String =
+          value.asString
+      }
   }
 
   final case class GetPrototypeStatusResponse(success: Boolean, message: String, status: PrototypeStatus)
