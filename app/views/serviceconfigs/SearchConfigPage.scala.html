@@ -53,7 +53,8 @@
                     Symbol("_default") -> "All",
                     Symbol("_label")   -> "Team",
                     Symbol("id")       -> "team-filter",
-                    Symbol("class")    -> "form-control"
+                    Symbol("class")    -> "form-control",
+                    Symbol("title")    -> "On change updates 'Config Key' autocomplete"
                 )
             </div>
             <div class="col-md-8">
@@ -111,6 +112,7 @@
         </div>
 
         <button id="config-search" class="btn btn-primary" type="submit">Search</button>
+        <input type="hidden" id="teamChange" name="teamChange" value="false" />
         <input type="hidden" id="asCsv" name="asCsv" value="false" />
         <input type="button" id="export-as-csv-btn" class="btn btn-default" value="Export as CSV"/>
 
@@ -192,7 +194,11 @@
     <script @CSPNonce.attr>
         document
             .getElementById('team-filter')
-            .addEventListener("change", () => document.getElementById("form").submit());
+            .addEventListener("change", () => {
+                document.getElementById('teamChange').value = true;
+                document.getElementById("form").submit();
+                document.getElementById('teamChange').value = false;
+            });
 
         let autocompleteValues = document.getElementById('autocomplete-values-textarea').value.split('\n');
         init("form", "config-key", "config-search-matches", autocompleteValues);
