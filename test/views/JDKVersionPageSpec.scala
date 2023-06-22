@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package view
+package views
 import org.jsoup.Jsoup
 import org.mockito.MockitoSugar
 import org.scalatest.matchers.should.Matchers
@@ -22,9 +22,9 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.FakeRequest
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
-import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.connector.Team
+import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import views.html.JdkVersionPage
 
 

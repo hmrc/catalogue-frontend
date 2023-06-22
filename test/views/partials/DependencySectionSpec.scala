@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package view.partials
+package views.partials
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

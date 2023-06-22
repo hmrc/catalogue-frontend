@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package view.partials
+package views.partials
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Link, RepoType}
-import views.partials.githubBadgeType
+
 import java.time.Instant
 
 class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
