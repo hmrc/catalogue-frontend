@@ -25,7 +25,7 @@
  , showLink              : Boolean
  )
 
-@* value to show thoses were later versions are available? *@
+@* value to show those where later versions are available? *@
 @defining(masterTeamDependencies.filter(_.dependencies.hasOutOfDateDependencies)) { outOfDateDependencies =>
 
 <div id="team-dependencies" class="board">
