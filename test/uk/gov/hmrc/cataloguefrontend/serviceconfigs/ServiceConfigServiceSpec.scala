@@ -20,7 +20,6 @@ import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, FeatureSwitch}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
@@ -37,66 +36,6 @@ class ServiceConfigsServiceSpec
   import ServiceConfigsService._
 
   "serviceConfigsService.configByKey" should {
-    "ignore deployed when switched off" in new Setup {
-      FeatureSwitch.disable(CatalogueFrontendSwitches.showDeployedConfig)
-
-      val serviceName = "service"
-
-      val latest: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]] =
-        Map(
-          KeyName("k1") -> ConfigEnvironment.values.map(e => e -> Seq(
-            ConfigSourceValue(source = "appConfigCommon"     , sourceUrl = None, value = s"${e}-a1"),
-            ConfigSourceValue(source = "appConfigEnvironment", sourceUrl = None, value = s"${e}-b1")
-          )).toMap
-        )
-
-      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(latest))
-
-      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Map(
-          KeyName("k1") -> Map(
-            ConfigEnvironment.ForEnvironment(Environment.Production) -> Seq(
-              ConfigSourceValue(source = "appConfigCommon"     , sourceUrl = None, value = "a1"),
-              ConfigSourceValue(source = "appConfigEnvironment", sourceUrl = None, value = "b1")
-            )
-          )
-        )))
-
-      serviceConfigsService.configByKey(serviceName).futureValue shouldBe latest
-    }
-
-    "show keys added to latest when feature switched off" in new Setup {
-      FeatureSwitch.disable(CatalogueFrontendSwitches.showDeployedConfig)
-
-      val serviceName = "service"
-
-      val deployed: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]] =
-        Map(
-          KeyName("k1") -> ConfigEnvironment.values.map(e => e -> Seq(
-            ConfigSourceValue(source = "appConfigCommon"     , sourceUrl = None, value = s"${e}-a1"),
-            ConfigSourceValue(source = "appConfigEnvironment", sourceUrl = None, value = s"${e}-b1")
-          )).toMap
-        )
-
-      val latest =
-        update(deployed)(KeyName("k2"), ConfigEnvironment.ForEnvironment(Environment.QA))(
-          _ :+ ConfigSourceValue("appConfigCommon", None, "val")
-        )
-
-      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(latest))
-
-      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(deployed))
-
-      serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(
-        deployed
-      )(KeyName("k2"), ConfigEnvironment.ForEnvironment(Environment.QA))(
-        _ :+ ConfigSourceValue("appConfigCommon", None, "val")
-      )
-    }
-
     "return no change when latest and deployed are the same" in new Setup {
       val serviceName = "service"
 
@@ -115,34 +54,6 @@ class ServiceConfigsServiceSpec
         .thenReturn(Future.successful(config))
 
       serviceConfigsService.configByKey(serviceName).futureValue shouldBe config
-    }
-
-    "ignore envs without data (appConfigEnvironment)" in new Setup {
-      val serviceName = "service"
-
-      val latest: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]] =
-        Map(
-          KeyName("k1") -> ConfigEnvironment.values.map(e => e -> Seq(
-            ConfigSourceValue(source = "appConfigCommon"     , sourceUrl = None, value = s"${e}-a1"),
-            ConfigSourceValue(source = "appConfigEnvironment", sourceUrl = None, value = s"${e}-b1")
-          )).toMap
-        )
-
-      val deployed =
-        latest.map { case (k, m) => k -> m.map {
-          case (e@ConfigEnvironment.ForEnvironment(Environment.QA), _ ) => e -> Seq.empty
-          case (e                                                 , vs) => e -> vs
-          }
-        }
-
-      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(latest))
-
-      when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(deployed))
-
-
-      serviceConfigsService.configByKey(serviceName).futureValue shouldBe latest
     }
 
     "show undeployed changes" in new Setup {
@@ -273,8 +184,6 @@ class ServiceConfigsServiceSpec
     val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
 
     val serviceConfigsService = new ServiceConfigsService(mockServiceConfigsConnector, mockTeamsAndRepositoriesConnector)
-
-    FeatureSwitch.enable(CatalogueFrontendSwitches.showDeployedConfig)
 
     def update(config: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]])(k: KeyName, ce: ConfigEnvironment)(update: Seq[ConfigSourceValue] => Seq[ConfigSourceValue]): Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]] =
       config + (k -> (config.getOrElse(k, Map.empty) + (ce -> update(config.getOrElse(k, Map.empty).getOrElse(ce, Seq.empty)))))

@@ -40,24 +40,19 @@ class ServiceConfigsController @Inject()(
 , teamsAndReposConnector  : TeamsAndRepositoriesConnector
 , serviceConfigsService   : ServiceConfigsService
 , whatsRunningWhereService: WhatsRunningWhereService
-, serviceConfigPage       : ConfigExplorerPage
+, configExplorerPage      : ConfigExplorerPage
 , searchConfigPage        : SearchConfigPage
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  private val appConfigBaseInSlug: Map[ServiceConfigsService.ConfigEnvironment, Boolean] =
-    Environment.values
-      .map(env => ServiceConfigsService.ConfigEnvironment.ForEnvironment(env) -> configuration.get[Boolean](s"app-config-base-in-slug.${env.asString}"))
-      .toMap
-
   def configExplorer(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey <- serviceConfigsService.configByKey(serviceName)
-      } yield Ok(serviceConfigPage(serviceName, configByKey, deployments, appConfigBaseInSlug))
+      } yield Ok(configExplorerPage(serviceName, configByKey, deployments))
     }
 
   def searchLanding(): Action[AnyContent] =

@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -41,51 +40,30 @@ class ServiceConfigsService @Inject()(
     serviceConfigsConnector.configByKey(serviceName, latest)
 
   def configByKey(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
-    if (CatalogueFrontendSwitches.showDeployedConfig.isEnabled)
-      for {
-          latestConfigByKey      <- configByKey(serviceName, latest = true )
-          deployedConfigByKey1   <- configByKey(serviceName, latest = false)
-          envWithDeployedConfig  =  // only required until all services have been redeployed
-                                    deployedConfigByKey1.foldLeft(Set.empty[ConfigEnvironment]) { case (acc, (_, m)) =>
-                                      m.foldLeft(acc) { case (acc2, (e, m)) =>
-                                        // we expect to see this source if we have received config commit info
-                                        if (m.exists(_.source == "appConfigEnvironment"))
-                                          acc2 + e
-                                        else acc2
-                                      }
-                                    }
-          deployedConfigByKey    =  // this is simpler if we make the deployed config the same as latest when there is no-data
-                                    deployedConfigByKey1.map { case (k, m) =>
-                                      k ->
-                                        ConfigEnvironment.values.map {
-                                          case e if envWithDeployedConfig.contains(e)
-                                                     => e -> m.getOrElse(e, Seq.empty)
-                                          case e     => e -> latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty)
-                                        }.toMap
-                                    }
-          configByKey            =  deployedConfigByKey.map {
-                                      case (k, m) => k -> m.map {
-                                        case (e, vs) =>
-                                          latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match {
-                                            case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = n.value))
-                                            case None    if vs.lastOption.isDefined                  => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = ""     ))
-                                            case _                                                   => e -> vs
-                                          }
-                                      }
-                                    }
-          newKeys                =  latestConfigByKey.keySet.diff(deployedConfigByKey.keySet)
-          newConfig              =  latestConfigByKey
-                                      .filter { case (k, _) => newKeys.contains(k) }
-                                      .map {
-                                        case (k, m) => k -> m.map {
-                                          case (e, vs) if envWithDeployedConfig.contains(e)
-                                                           => e -> vs.lastOption.map(_.copy(source = "nextDeployment", sourceUrl = None)).toList
-                                          case (e, vs)     => e -> vs
-                                        }
-                                    }
-      } yield (configByKey ++ newConfig)
-  else
-    configByKey(serviceName, latest = true)
+    for {
+        latestConfigByKey   <- configByKey(serviceName, latest = true )
+        deployedConfigByKey <- configByKey(serviceName, latest = false)
+        configByKey         =  deployedConfigByKey.map {
+                                 case (k, m) => k -> m.map {
+                                   case (e, vs) =>
+                                     latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match {
+                                       case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = n.value))
+                                       case None    if vs.lastOption.isDefined                  => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = ""     ))
+                                       case _                                                   => e -> vs
+                                     }
+                                 }
+                               }
+        newKeys             =  latestConfigByKey.keySet.diff(deployedConfigByKey.keySet)
+        newConfig           =  latestConfigByKey
+                                 .filter { case (k, _) => newKeys.contains(k) }
+                                 .map {
+                                   case (k, m) => k -> m.map {
+                                     case (e, vs) if deployedConfigByKey.get(k).flatMap(_.get(e)).exists(_.lastOption != vs.lastOption)
+                                                      => e -> vs.lastOption.map(_.copy(source = "nextDeployment", sourceUrl = None)).toList
+                                     case (e, vs)     => e -> vs
+                                   }
+                               }
+    } yield (configByKey ++ newConfig)
 
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
     configByKey(serviceName, latest = true)
