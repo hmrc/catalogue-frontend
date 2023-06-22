@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package view
+package views
 
 import org.jsoup.Jsoup
 import org.scalatest.matchers.should.Matchers

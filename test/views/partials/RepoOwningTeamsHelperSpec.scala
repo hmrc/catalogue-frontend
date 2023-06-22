@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package view.partials
+package views.partials
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
-import views.partials.RepoOwningTeamsHelper
 
 import java.time.Instant
 
