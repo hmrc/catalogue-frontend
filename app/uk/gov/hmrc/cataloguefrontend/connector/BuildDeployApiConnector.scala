@@ -81,7 +81,7 @@ class BuildDeployApiConnector @Inject() (
       s"""
          |{
          |   "repository_name": "${payload.repositoryName}",
-         |   "make_private": "${payload.makePrivate}",
+         |   "make_private": ${payload.makePrivate},
          |   "allow_auto_merge": "true",
          |   "delete_branch_on_merge": "true",
          |   "team_name": "${payload.teamName}",
@@ -102,6 +102,8 @@ class BuildDeployApiConnector @Inject() (
         headers = Map[String, String]("host" -> config.host),
         payload = Some(Json.toBytes(body))
       )
+
+    logger.info(s"Calling the B&D Create Repository API with the following payload: ${payload}")
 
     httpClientV2
       .post(url)

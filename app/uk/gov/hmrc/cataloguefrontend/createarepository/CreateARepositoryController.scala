@@ -71,7 +71,7 @@ class CreateARepositoryController @Inject()(
         import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
         for{
           _             <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
-          _              = buildDeployApiConnector.createARepository(validForm)
+          _             <- buildDeployApiConnector.createARepository(validForm)
           } yield Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
       }
     )
