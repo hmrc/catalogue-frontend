@@ -24,9 +24,9 @@ import play.api.i18n.I18nSupport
 import play.api.mvc._
 import play.api.{Configuration, Logger}
 import play.twirl.api.Html
-import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{ChangePrototypePasswordRequest, ChangePrototypePasswordResponse}
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
@@ -256,12 +256,26 @@ class CatalogueController @Inject() (
                            formWithErrors => EitherT.left(renderPrototype(repoDetails, hasBranchProtectionAuth, formWithErrors).map(BadRequest(_))),
                            password => EitherT.rightT(password)
                          )
-        response    <- EitherT.liftF[Future, Result, ChangePrototypePasswordResponse](buildDeployApiConnector.changePrototypePassword(ChangePrototypePasswordRequest(repoName, newPassword)))
-        form         = if(response.success) ChangePrototypePassword.form() else ChangePrototypePassword.form().withGlobalError(response.message)
-        successMsg   = if(response.success) Some(response.message) else None
-        result      <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, form , successMsg))
-       } yield if(response.success) Ok(result) else BadRequest(result)
+        user         = request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
+        _            = logger.info(s"User $user has triggered a password reset for prototype: $repoName")
+        response    <- EitherT(buildDeployApiConnector.changePrototypePassword(repoName, newPassword))
+                         .leftSemiflatMap(errorMsg => renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form().withGlobalError(errorMsg) , None).map(BadRequest(_)))
+        result      <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form() , Some(response)))
+       } yield Ok(result)
       ).merge
+    }
+
+  def setPrototypeStatus(repoName: String, status: PrototypeStatus): Action[AnyContent] =
+    auth
+      .authorizedAction(
+        continueUrl = routes.CatalogueController.repository(repoName),
+        predicate = ChangePrototypePassword.permission(repoName)
+      ).async { implicit request =>
+      val user: String = request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
+      logger.info(s"Setting prototype $repoName to status ${status.displayString}, triggered by User: $user")
+      buildDeployApiConnector
+        .setPrototypeStatus(repoName, status)
+        .map(_ => Redirect(routes.CatalogueController.repository(repoName)))
     }
 
   private def hasChangePrototypePasswordAuthorisation(repoName: String)(

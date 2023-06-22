@@ -19,7 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import com.google.inject.{Inject, Singleton}
-import play.api.{Logger, Logging}
+import play.api.mvc.PathBindable
+import play.api.Logging
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
@@ -30,6 +31,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpReadsInstances, HttpRespo
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
 
+import java.net.URL
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,63 +46,99 @@ class BuildDeployApiConnector @Inject() (
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def changePrototypePassword(payload: ChangePrototypePasswordRequest): Future[ChangePrototypePasswordResponse] = {
-    implicit val rwr: Writes[ChangePrototypePasswordRequest] = ChangePrototypePasswordRequest.writes
-    implicit val rhr: HttpReads[ChangePrototypePasswordResponse] = ChangePrototypePasswordResponse.httpReads
+  private def buildUrl(
+    endpoint: String,
+    queryParams: Map[String, String]
+  ): URL = url"${config.baseUrl}/v1/$endpoint?$queryParams"
 
-    val queryParams = Map.empty[String, String]
-
-    val url = url"${config.baseUrl}/v1/SetHerokuPrototypePassword?$queryParams"
-
-    val body = Json.toJson(payload)
-
-    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
+  private def signedHeaders(
+    uri: String,
+    queryParams: Map[String, String],
+    body: JsValue
+  ): Map[String, String] =
+    AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
       .getSignedHeaders(
-        uri = url.getPath,
-        method = "POST",
+        uri         = uri,
+        method      = "POST",
         queryParams = queryParams,
-        headers = Map[String, String]("host" -> config.host),
-        payload = Some(Json.toBytes(body))
+        headers     = Map[String, String]("host" -> config.host),
+        payload     = Some(Json.toBytes(body))
       )
+
+  private def signAndExecuteRequest(
+    endpoint: String,
+    body: JsValue,
+    queryParams: Map[String, String] = Map.empty[String, String]
+  ): Future[BuildDeployResponse] = {
+    val url = buildUrl(endpoint, queryParams)
+
+    val headers = signedHeaders(url.getPath, queryParams, body)
+
+    implicit val hr: HttpReads[BuildDeployResponse] =
+      implicitly[HttpReads[HttpResponse]]
+        .flatMap { response =>
+          response.status match {
+            case 200  =>
+              implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
+              HttpReadsInstances.readFromJson[BuildDeployResponse]
+            case code =>
+              val msg = (response.json \ "message").as[String]
+              logger.warn(s"Received $code response from Build and Deploy API endpoint $endpoint - $msg")
+              HttpReads.pure(BuildDeployResponse(success = false, message = msg, details = None))
+          }
+        }
 
     httpClientV2
       .post(url)
       .withBody(body)
       .setHeader(headers.toSeq: _*)
-      .execute[ChangePrototypePasswordResponse]
+      .execute[BuildDeployResponse]
+  }
+
+  def changePrototypePassword(prototype: String, password: PrototypePassword): Future[Either[String, String]] = {
+
+    val body = Json.obj(
+      "repository_name" -> JsString(prototype),
+      "password"        -> JsString(password.value)
+    )
+
+    signAndExecuteRequest(
+      endpoint = "SetHerokuPrototypePassword",
+      body     = body
+    ).map { response =>
+      if(response.success) Right(response.message)
+      else Left(response.message)
+    }
   }
   
   def getPrototypeStatus(prototype: String): Future[PrototypeStatus] = {
-    implicit val gpsR: HttpReads[GetPrototypeStatusResponse] = GetPrototypeStatusResponse.httpReads
-
-    val queryParams = Map.empty[String, String]
-
-    val url = url"${config.baseUrl}/v1/GetPrototypeStatus?$queryParams"
+    implicit val psR: Reads[PrototypeStatus] = PrototypeStatus.reads
 
     val body = Json.obj(
       "prototype" -> JsString(prototype)
     )
 
-    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
-      .getSignedHeaders(
-        uri = url.getPath,
-        method = "POST",
-        queryParams = queryParams,
-        headers = Map[String, String]("host" -> config.host),
-        payload = Some(Json.toBytes(body))
-      )
+    signAndExecuteRequest(
+      endpoint = "GetPrototypeStatus",
+      body     = body
+    ).map(_.details.fold[PrototypeStatus](PrototypeStatus.Undetermined)(_.as[PrototypeStatus]))
+  }
 
-    httpClientV2
-      .post(url)
-      .withBody(body)
-      .setHeader(headers.toSeq: _*)
-      .execute[GetPrototypeStatusResponse]
-      .map(_.status)
+  def setPrototypeStatus(prototype: String, status: PrototypeStatus): Future[PrototypeStatus] = {
+    implicit val psR: Reads[PrototypeStatus] = PrototypeStatus.reads
+
+    val body = Json.obj(
+      "prototype" -> JsString(prototype),
+      "status" -> JsString(status.asString)
+    )
+
+    signAndExecuteRequest(
+      endpoint = "SetPrototypeStatus",
+      body     = body
+    ).map(_.details.fold[PrototypeStatus](PrototypeStatus.Undetermined)(_.as[PrototypeStatus]))
   }
 
   def createARepository(payload: CreateRepoForm): Future[Unit] = {
-    implicit val crfw: Writes[CreateRepoForm] = CreateRepoForm.writes
-
     val queryParams = Map.empty[String, String]
 
     val url = url"${config.baseUrl}/v1/CreateRepository?$queryParams"
@@ -122,14 +160,7 @@ class BuildDeployApiConnector @Inject() (
 
     val body = Json.toJson(finalPayload)
 
-    val headers = AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
-      .getSignedHeaders(
-        uri = url.getPath,
-        method = "POST",
-        queryParams = queryParams,
-        headers = Map[String, String]("host" -> config.host),
-        payload = Some(Json.toBytes(body))
-      )
+    val headers = signedHeaders(url.getPath, queryParams, body)
 
     httpClientV2
       .post(url)
@@ -140,38 +171,14 @@ class BuildDeployApiConnector @Inject() (
 }
 
 object BuildDeployApiConnector {
-  final case class ChangePrototypePasswordRequest(
-    repoName: String,
-    password: PrototypePassword
-  )
+  final case class BuildDeployResponse(success: Boolean, message: String, details: Option[JsValue])
 
-  object ChangePrototypePasswordRequest {
-    val writes: Writes[ChangePrototypePasswordRequest] =
-      ( (__ \ "repository_name").write[String]
-      ~ (__ \ "password"       ).write[String].contramap[PrototypePassword](_.value)
-      ) (unlift(ChangePrototypePasswordRequest.unapply))
-  }
-
-  final case class ChangePrototypePasswordResponse(success: Boolean, message: String)
-
-  object ChangePrototypePasswordResponse {
-    private val reads: Reads[ChangePrototypePasswordResponse] =
+  private object BuildDeployResponse {
+    val reads: Reads[BuildDeployResponse] =
       ( (__ \ "success").read[Boolean]
       ~ (__ \ "message").read[String]
-      ) (ChangePrototypePasswordResponse.apply _)
-
-    val httpReads: HttpReads[ChangePrototypePasswordResponse] =
-      implicitly[HttpReads[HttpResponse]]
-        .flatMap { response =>
-          response.status match {
-            case 400 =>
-              val msg: String = (response.json \ "message").as[String]
-              HttpReads.pure(ChangePrototypePasswordResponse(success = false, msg))
-            case _ =>
-              implicit val r: Reads[ChangePrototypePasswordResponse] = reads
-              HttpReadsInstances.readFromJson[ChangePrototypePasswordResponse]
-          }
-        }
+      ~ (__ \ "details").readNullable[JsValue]
+      )(BuildDeployResponse.apply _)
   }
 
   sealed trait PrototypeStatus { def asString: String; def displayString: String }
@@ -187,36 +194,24 @@ object BuildDeployApiConnector {
     def parse(s: String): Option[PrototypeStatus] =
       values.find(_.asString == s)
 
-    val format: Format[PrototypeStatus] = new Format[PrototypeStatus] {
-      override def writes(o: PrototypeStatus): JsValue = JsString(o.asString)
-      override def reads(json: JsValue): JsResult[PrototypeStatus] =
-        json.validate[String].flatMap(s => PrototypeStatus.parse(s).map(p => JsSuccess(p)).getOrElse(JsError("invalid prototype status")))
-    }
-  }
+    val reads: Reads[PrototypeStatus] =
+      Reads.at[PrototypeStatus](__ \ "status")(
+        _.validate[String]
+          .flatMap(s =>
+            PrototypeStatus
+              .parse(s)
+              .map(JsSuccess(_))
+              .getOrElse(JsError("invalid prototype status"))
+          )
+      )
 
-  final case class GetPrototypeStatusResponse(success: Boolean, message: String, status: PrototypeStatus)
+    implicit val pathBindable: PathBindable[PrototypeStatus] =
+      new PathBindable[PrototypeStatus] {
+        override def bind(key: String, value: String): Either[String, PrototypeStatus] =
+          parse(value).toRight(s"Invalid prototype status '$value'")
 
-  object GetPrototypeStatusResponse {
-    implicit val psF: Format[PrototypeStatus] = PrototypeStatus.format
-    private val reads: Reads[GetPrototypeStatusResponse] =
-      ( (__ \ "success").read[Boolean]
-      ~ (__ \ "message").read[String]
-      ~ (__ \ "details" \ "status").read[PrototypeStatus]
-      ) (GetPrototypeStatusResponse.apply _)
-
-    val httpReads: HttpReads[GetPrototypeStatusResponse] =
-      implicitly[HttpReads[HttpResponse]]
-        .flatMap { response =>
-          response.status match {
-            case 200 =>
-              implicit val r: Reads[GetPrototypeStatusResponse] = reads
-              HttpReadsInstances.readFromJson[GetPrototypeStatusResponse]
-            case _ =>
-              val msg = (response.json \ "message").as[String]
-              val prototype = (response.json \ "details" \ "prototype").as[String]
-              Logger(getClass).warn(s"Unable to determine prototype status for $prototype - $msg")
-              HttpReads.pure(GetPrototypeStatusResponse(success = false, message = msg, status = PrototypeStatus.Undetermined))
-          }
-        }
+        override def unbind(key: String, value: PrototypeStatus): String =
+          value.asString
+      }
   }
 }

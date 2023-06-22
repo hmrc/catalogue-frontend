@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import com.github.tomakehurst.wiremock.client.WireMock._
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{ChangePrototypePasswordRequest, ChangePrototypePasswordResponse, PrototypeStatus}
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -45,7 +45,6 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
   "changePrototypePassword" should {
     "return success=true when Build & Deploy respond with 200" in {
-      val payload = ChangePrototypePasswordRequest("test", PrototypePassword("newpassword"))
 
       val requestJson = """{ "repository_name": "test", "password": "newpassword" }"""
 
@@ -57,15 +56,12 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
           ))
       )
 
-      val expected = ChangePrototypePasswordResponse(success = true, "password changed")
-      val result = connector.changePrototypePassword(payload).futureValue
+      val result = connector.changePrototypePassword("test", PrototypePassword("newpassword")).futureValue
 
-      result shouldBe expected
+      result shouldBe Right("password changed")
     }
 
     "return success=false when Build & Deploy respond with 400" in {
-      val payload = ChangePrototypePasswordRequest("test", PrototypePassword("p4$$w02d"))
-
       val requestJson = """{ "repository_name": "test", "password": "p4$$w02d" }"""
 
       stubFor(
@@ -76,9 +72,9 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
           ))
       )
 
-      val result = connector.changePrototypePassword(payload).futureValue
+      val result = connector.changePrototypePassword("test", PrototypePassword("p4$$w02d")).futureValue
 
-      result.success shouldBe false
+      result shouldBe Left("Password was empty OR contained invalid characters. Valid characters: Alphanumeric and underscores.")
     }
   }
 
@@ -130,6 +126,57 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       val result = connector.getPrototypeStatus("test-prototype").futureValue
 
       result shouldBe PrototypeStatus.Undetermined
+    }
+  }
+
+  "setPrototypeStatus" should {
+    "return the new status of the prototype when 200" in {
+      val requestJson = """{ "prototype": "test-prototype", "status": "running" }"""
+
+      stubFor(
+        post("/v1/SetPrototypeStatus")
+          .withRequestBody(equalToJson(requestJson))
+          .willReturn(aResponse().withStatus(200).withBody(
+            """
+              |{
+              |  "success": true,
+              |  "message": "Successfully running test-prototype",
+              |  "details": {
+              |    "prototype": "test-prototype",
+              |    "status": "running"
+              |  }
+              |}""".stripMargin
+          ))
+      )
+
+      val result = connector.setPrototypeStatus("test-prototype", PrototypeStatus.Running).futureValue
+
+      result  shouldBe PrototypeStatus.Running
+    }
+
+    "return a new status of Undetermined when non 200" in {
+      val requestJson = """{ "prototype": "test-prototype", "status": "running" }"""
+
+      stubFor(
+        post("/v1/SetPrototypeStatus")
+          .withRequestBody(equalToJson(requestJson))
+          .willReturn(aResponse().withStatus(400).withBody(
+            """
+              |{
+              |  "code": 500,
+              |  "success": false,
+              |  "message": "Some downstream error",
+              |  "details": {
+              |    "prototype": "test-prototype",
+              |    "status": "undetermined"
+              |  }
+              |}""".stripMargin
+          ))
+      )
+
+      val result = connector.setPrototypeStatus("test-prototype", PrototypeStatus.Running).futureValue
+
+      result  shouldBe PrototypeStatus.Undetermined
     }
   }
 }
