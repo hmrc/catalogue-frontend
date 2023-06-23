@@ -22,7 +22,12 @@
 
 @this()
 
-@(repo: GitRepository, prototypeStatus: PrototypeStatus, hasPasswordChangeAuth: Boolean)
+@(repo                  : GitRepository,
+  prototypeStatus       : PrototypeStatus,
+  hasPasswordChangeAuth : Boolean
+)(implicit
+  request               : RequestHeader
+)
 
 <div id="details" >
     <div class="board">
@@ -51,10 +56,16 @@
                     @prototypeStatus.displayString
                     @if(hasPasswordChangeAuth) {
                         @if(prototypeStatus == PrototypeStatus.Stopped) {
-                            <a href="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Running)" class="btn btn-sm btn-primary">Start</a>
+                            <form id="start-prototype-form" action="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Running)" method="post">
+                                @csrfFormField
+                            </form>
+                            <button id="start-prototype-button" type="submit" form="start-prototype-form" class="btn btn-sm btn-primary">Start</button>
                         }
                         @if(prototypeStatus == PrototypeStatus.Running) {
-                            <a href="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Stopped)" class="btn btn-sm btn-danger">Stop</a>
+                            <form id="stop-prototype-form" action="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Stopped)" method="post">
+                                @csrfFormField
+                            </form>
+                            <button id="stop-prototype-button" type="submit" form="stop-prototype-form" class="btn btn-sm btn-danger">Stop</button>
                         }
                     }
                 </li>
