@@ -121,25 +121,17 @@ class ServiceConfigsService @Inject()(
 
   private def sorted[K, V](unsorted: Map[K, V])(implicit ordering: Ordering[K]): Map[K, V] = TreeMap[K, V]() ++ unsorted
 
-  def toKeyServiceEnviromentMap(appliedConfig: Seq[AppliedConfig]): Map[KeyName, Map[ServiceName, Map[Environment, Option[String]]]] =
+  def toKeyServiceEnviromentMap(appliedConfig: Seq[AppliedConfig]): Map[KeyName, Map[ServiceName, Map[Environment, EnvironmentData]]] =
     appliedConfig
-      .groupBy(_.key).view.mapValues(
-        configsByService => sorted(configsByService.groupBy(_.serviceName).view.mapValues(
-          _.groupBy(_.environment).view.mapValues(
-            _.headOption.map(_.value)
-          ).toMap
-        ).toMap)(Ordering.by(_.asString))
-      ).toMap
+      .groupBy(_.key)
+      .view
+      .mapValues(xs => sorted(xs.groupBy(_.serviceName).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(Ordering.by(_.asString))).toMap
 
-  def toServiceKeyEnviromentMap(appliedConfig: Seq[AppliedConfig]): Map[ServiceName, Map[KeyName, Map[Environment, Option[String]]]] =
+  def toServiceKeyEnviromentMap(appliedConfig: Seq[AppliedConfig]): Map[ServiceName, Map[KeyName, Map[Environment, EnvironmentData]]] =
     appliedConfig
-      .groupBy(_.serviceName).view.mapValues(
-        configsByService => sorted(configsByService.groupBy(_.key).view.mapValues(
-          _.groupBy(_.environment).view.mapValues(
-            _.headOption.map(_.value)
-          ).toMap
-        ).toMap)(Ordering.by(_.asString))
-      ).toMap
+      .groupBy(_.serviceName)
+      .view
+      .mapValues(xs => sorted(xs.groupBy(_.key).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(Ordering.by(_.asString))).toMap
 }
 
 object ServiceConfigsService {
@@ -279,20 +271,35 @@ object ServiceConfigsService {
     case class ArtifactNameError(error: String) extends ArtifactNameResult
   }
 
+  case class EnvironmentData(
+    value : String
+  , source: String
+  )
+
   case class AppliedConfig(
-    environment: Environment,
-    serviceName: ServiceName,
-    key: KeyName,
-    value: String
+    serviceName  : ServiceName
+  , key          : KeyName
+  , environments : Map[Environment, EnvironmentData]
+  , onlyReference: Boolean
   )
 
   object AppliedConfig {
-    implicit val envF: Format[Environment] = Environment.format
-    val reads: Reads[AppliedConfig] =
-      ( (__ \ "environment").read[Environment]
-      ~ (__ \ "serviceName").read[String].map(ServiceName.apply)
-      ~ (__ \ "key"        ).read[String].map(KeyName.apply)
-      ~ (__ \ "value"      ).read[String]
+    val reads: Reads[AppliedConfig] = {
+      implicit val readsEnvData: Format[EnvironmentData] =
+        ( (__ \ "value" ).format[String]
+        ~ (__ \ "source").format[String]
+        )(EnvironmentData.apply, unlift(EnvironmentData.unapply))
+
+     implicit val readsEnvMap: Reads[Map[Environment, EnvironmentData]] =
+        Reads
+          .of[Map[String, EnvironmentData]]
+          .map(_.map { case (k, v) => (Environment.parse(k).getOrElse(sys.error(s"Invalid Environment: $k")), v) })
+
+      ( (__ \ "serviceName"  ).read[String].map(ServiceName.apply)
+      ~ (__ \ "key"          ).read[String].map(KeyName.apply)
+      ~ (__ \ "environments" ).read[Map[Environment, EnvironmentData]]
+      ~ (__ \ "onlyReference").format[Boolean]
       )(AppliedConfig.apply _)
+    }
   }
 }

@@ -125,10 +125,10 @@ class ServiceConfigsController @Inject()(
                               Ok(searchConfigPage(SearchConfig.form.fill(formObject), allTeams, configKeys, groupedByKey, groupedByService))
                             }).merge
         )
-    }
+  }
 
   private def toRows(
-    results        : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, Option[String]]]]
+    results        : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.EnvironmentData]]]
   , showEnviroments: Seq[Environment]
   ): Seq[Seq[(String, String)]] =
     for {
@@ -136,10 +136,10 @@ class ServiceConfigsController @Inject()(
       (service, envs) <- services
     } yield
       Seq("key" -> key.asString, "service" -> service.asString) ++
-      showEnviroments.map(e => e.asString -> envs.get(e).flatten.getOrElse(""))
+      showEnviroments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
 
   private def toRows2(
-    results        : Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, Option[String]]]]
+    results        : Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.EnvironmentData]]]
   , showEnviroments: Seq[Environment]
   ): Seq[Seq[(String, String)]] =
     for {
@@ -147,7 +147,7 @@ class ServiceConfigsController @Inject()(
       (key, envs)     <- keys
     } yield
       Seq("service" -> service.asString, "key" -> key.asString) ++
-      showEnviroments.map(e => e.asString -> envs.get(e).flatten.getOrElse(""))
+      showEnviroments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
 
 }
 object SearchConfig {

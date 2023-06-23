@@ -21,7 +21,7 @@ import org.mockito.scalatest.MockitoSugar
 import play.api.Configuration
 import play.api.cache.AsyncCacheApi
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, KeyName, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, EnvironmentData, KeyName, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
@@ -78,22 +78,31 @@ final class ServiceConfigsConnectorSpec
   "configSearch" should {
     "return AppliedConfig" in {
       stubFor(
-        get(urlEqualTo("/service-configs/search?environments=production&key=testKey&value=testValue&valueFilterType=equalTo"))
+        get(urlEqualTo("/service-configs/search?environments=production&key=test.key&value=testValue&valueFilterType=equalTo"))
           .willReturn(aResponse().withBody(
             """[
               |  {
-              |    "environment": "production",
               |    "serviceName": "test-service",
-              |    "key": "testKey",
-              |    "value": "testValue"
+              |    "key": "test.key",
+              |    "environments": {
+              |      "production": { "value": "testValue", "source": "some-source" }
+              |     },
+              |     "onlyReference": false
               |  }
               |]""".stripMargin))
       )
 
       serviceConfigsConnector
-        .configSearch(teamName = None, environments = Seq(Environment.Production), serviceType = None, key = Some("testKey"), value = Some("testValue"), valueFilterType = Some(ValueFilterType.EqualTo))
+        .configSearch(teamName = None, environments = Seq(Environment.Production), serviceType = None, key = Some("test.key"), value = Some("testValue"), valueFilterType = Some(ValueFilterType.EqualTo))
         .futureValue shouldBe (
-          Right(Seq(AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("testKey"), "testValue")))
+          Right(Seq(
+            AppliedConfig(
+              ServiceName("test-service"),
+              KeyName("test.key"),
+              Map(Environment.Production -> EnvironmentData("testValue", "some-source")),
+              onlyReference = false
+            )
+          ))
         )
     }
   }
