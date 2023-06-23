@@ -63,7 +63,7 @@ class PrototypePageSpec
       response.body should include(lastActiveAt.displayFormat)
     }
 
-    "show the reset password form when logged in user has permission" in {
+    "show the reset password form and stop prototype button when logged in user has permission" in {
       setupChangePrototypePasswordAuthEndpoint(hasAuth = true)
       setupPrototypeStatusEndpoint("2fa-prototype", 200, PrototypeStatus.Running)
       serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoryData("2fa-prototype"))))
@@ -79,6 +79,7 @@ class PrototypePageSpec
 
       response.status shouldBe 200
       response.body   should include("reset-password-enabled")
+      response.body   should include("stop-prototype-button")
     }
 
     "not show the reset password form when user does not have permission" in {

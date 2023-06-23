@@ -23,7 +23,7 @@ GET        /library/:name                               uk.gov.hmrc.cataloguefro
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
 GET        /prototype/:name/change-password             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
 POST       /prototype/:name/change-password             uk.gov.hmrc.cataloguefrontend.CatalogueController.changePrototypePassword(name)
-GET        /prototype/:name/set-status/:status          uk.gov.hmrc.cataloguefrontend.CatalogueController.setPrototypeStatus(name: String, status: PrototypeStatus)
+POST       /prototype/:name/set-status/:status          uk.gov.hmrc.cataloguefrontend.CatalogueController.setPrototypeStatus(name: String, status: PrototypeStatus)
 GET        /dependency-repository                       uk.gov.hmrc.cataloguefrontend.CatalogueController.dependencyRepository(group, artefact, version)
 
 GET        /defaultbranch                               uk.gov.hmrc.cataloguefrontend.CatalogueController.allDefaultBranches(singleOwnership: Boolean ?= false, includeArchived: Boolean ?= false)
