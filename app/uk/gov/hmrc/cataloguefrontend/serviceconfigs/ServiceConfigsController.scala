@@ -128,7 +128,7 @@ class ServiceConfigsController @Inject()(
   }
 
   private def toRows(
-    results        : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.EnvironmentData]]]
+    results        : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
   , showEnviroments: Seq[Environment]
   ): Seq[Seq[(String, String)]] =
     for {
@@ -139,7 +139,7 @@ class ServiceConfigsController @Inject()(
       showEnviroments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
 
   private def toRows2(
-    results        : Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.EnvironmentData]]]
+    results        : Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
   , showEnviroments: Seq[Environment]
   ): Seq[Seq[(String, String)]] =
     for {

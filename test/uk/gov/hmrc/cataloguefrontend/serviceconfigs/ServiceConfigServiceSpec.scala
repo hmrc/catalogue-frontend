@@ -240,17 +240,16 @@ class ServiceConfigsServiceSpec
             ServiceName("test-service"),
             KeyName("test.key"),
             Map(
-              Environment.Production -> EnvironmentData("prodValue", "some-source"),
-              Environment.QA         -> EnvironmentData("qaValue",   "some-source")
-            ),
-            onlyReference = false
+              Environment.Production -> ConfigSourceValue("some-source", Some("some-url"), "prodValue"),
+              Environment.QA         -> ConfigSourceValue("some-source", Some("some-url"), "qaValue")
+            )
           )
         )
       ) shouldBe (
         Map(KeyName("test.key") -> Map(
           ServiceName("test-service") -> Map(
-            Environment.Production -> EnvironmentData("prodValue", "some-source"),
-            Environment.QA         -> EnvironmentData("qaValue"  , "some-source")
+            Environment.Production -> ConfigSourceValue("some-source", Some("some-url"), "prodValue"),
+            Environment.QA         -> ConfigSourceValue("some-source", Some("some-url"), "qaValue")
           )
         ))
       )
@@ -265,17 +264,16 @@ class ServiceConfigsServiceSpec
             ServiceName("test-service"),
             KeyName("test.key"),
             Map(
-              Environment.Production -> EnvironmentData("prodValue", "some-source"),
-              Environment.QA         -> EnvironmentData("qaValue"  , "some-source")
-            ),
-            onlyReference = false
+              Environment.Production -> ConfigSourceValue("some-source", Some("some-url"), "prodValue"),
+              Environment.QA         -> ConfigSourceValue("some-source", Some("some-url"), "qaValue")
+            )
           )
         )
       ) shouldBe (
         Map(ServiceName("test-service") -> Map(
           KeyName("test.key") -> Map(
-            Environment.Production -> EnvironmentData("prodValue", "some-source"),
-            Environment.QA         -> EnvironmentData("qaValue"  , "some-source")
+            Environment.Production -> ConfigSourceValue("some-source", Some("some-url"), "prodValue"),
+            Environment.QA         -> ConfigSourceValue("some-source", Some("some-url"), "qaValue")
           )
         ))
       )

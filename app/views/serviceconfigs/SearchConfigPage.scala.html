@@ -26,8 +26,8 @@
 @(form            : Form[SearchConfig.SearchConfigForm],
   allTeams        : Seq[Team],
   allKeys         : Seq[String],
-  groupedByKey    : Option[Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.EnvironmentData]]]] = None,
-  groupedByService: Option[Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.EnvironmentData]]]] = None
+  groupedByKey    : Option[Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]] = None,
+  groupedByService: Option[Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]] = None
 )(implicit
   messages: Messages,
   request : RequestHeader
@@ -151,7 +151,7 @@
                         <tr>
                             <td><a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></td>
                             @for(env <- form.get.showEnviroments) {
-                                <td id="@{env.asString}-td">@displayResult(serviceName, configKey, configByEnv.get(env))</td>
+                                <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
                             }
                         </tr>
                     }
@@ -159,8 +159,7 @@
             </table>
         }
     }
-
-    @groupedByService.map { res =>
+     @groupedByService.map { res =>
         @if(res.isEmpty) {
             <p>No results found.</p>
         }
@@ -181,7 +180,7 @@
                         <tr>
                             <td><code>@configKey.asString</code></td>
                             @for(env <- form.get.showEnviroments) {
-                                <td id="@{env.asString}-td">@displayResult(serviceName, configKey, configByEnv.get(env))</td>
+                                <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
                             }
                         </tr>
                     }
@@ -217,16 +216,18 @@
     </script>
 }
 
-@displayResult(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, result: Option[ServiceConfigsService.EnvironmentData]) = {
+@displayResult(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[ServiceConfigsService.ConfigSourceValue]) = {
     @result match {
         case None => {
-            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString" title="Not deployed in environment - Link to Config Explorer">
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"
+               title="Not deployed in environment - Link to Config Explorer">
                 <span class="glyphicon glyphicon-minus archived"></span>
             </a
         }
-        case Some(evnData) => {
-            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString" title="Link to Config Explorer">
-                @evnData.value
+        case Some(envData) => {
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"
+               title="@ServiceConfigsService.friendlySourceName(envData.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(configKey)) - Link to Config Explorer">
+                @envData.value
             </a>
         }
     }
