@@ -100,7 +100,7 @@ object CreateRepoForm {
       ~ (__ \ "repoType").write[String]
       )(unlift(CreateRepoForm.unapply))
 
-  def constraintFactory[T](constraintName: String, constraint: T => Boolean, error: String): Constraint[T] = {
+  def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] = {
     Constraint(constraintName)({ toBeValidated => if(constraint(toBeValidated)) Valid else Invalid(error) })
   }
 
@@ -117,19 +117,19 @@ object CreateRepoForm {
   val frontendValidation2:           (CreateRepoForm => Boolean) = crf => !(crf.repositoryName.toLowerCase.contains("frontend") && !crf.repoType.toLowerCase.contains("frontend"))
 
   val repoNameConstraints = Seq(
-    constraintFactory(constraintName = "constraints.repoNameWhitespaceCheck", constraint = repoNameWhiteSpaceValidation, error = "Repository name cannot include whitespace, use hyphens instead"),
-    constraintFactory(constraintName = "constraints.repoNameUnderscoreCheck", constraint = repoNameUnderscoreValidation, error = "Repository name cannot include underscores, use hyphens instead"),
-    constraintFactory(constraintName = "constraints.repoNameLengthCheck",     constraint = repoNameLengthValidation,     error = s"Repository name can have a maximum of 47 characters"),
-    constraintFactory(constraintName = "constraints.repoNameCaseCheck",       constraint = repoNameLowercaseValidation,  error = "Repository name should only contain lowercase characters")
+    mkConstraint("constraints.repoNameWhitespaceCheck")(constraint = repoNameWhiteSpaceValidation, error = "Repository name cannot include whitespace, use hyphens instead"),
+    mkConstraint("constraints.repoNameUnderscoreCheck")(constraint = repoNameUnderscoreValidation, error = "Repository name cannot include underscores, use hyphens instead"),
+    mkConstraint("constraints.repoNameLengthCheck")(constraint = repoNameLengthValidation, error = s"Repository name can have a maximum of 47 characters"),
+    mkConstraint("constraints.repoNameCaseCheck")(constraint = repoNameLowercaseValidation, error = "Repository name should only contain lowercase characters")
   )
 
-  val repoTypeConstraint: Constraint[String] = constraintFactory(constraintName = "constraints.repoTypeCheck", constraint = repoTypeValidation, error = CreateRepositoryType.parsingError)
+  val repoTypeConstraint: Constraint[String] = mkConstraint("constraints.repoTypeCheck")(constraint = repoTypeValidation, error = CreateRepositoryType.parsingError)
 
   val repoTypeAndNameConstraints = Seq(
-    constraintFactory(constraintName = "constraints.conflictingFields1", constraint = conflictingFieldsValidation1, error = "You have chosen a backend repo type, but have included 'frontend' in your repo name. Change either the repo name or repo type"),
-    constraintFactory(constraintName = "constraints.conflictingFields2", constraint = conflictingFieldsValidation2, error = "You have chosen a frontend repo type, but have included 'backend' in your repo name. Change either the repo name or repo type"),
-    constraintFactory(constraintName = "constraints.frontendCheck",      constraint = frontendValidation1,          error = "Repositories with a frontend repo type require 'frontend' to be present in their repo name."),
-    constraintFactory(constraintName = "constraints.frontendCheck",      constraint = frontendValidation2,          error = "Repositories with 'frontend' in their repo name require a frontend repo type")
+    mkConstraint("constraints.conflictingFields1")(constraint = conflictingFieldsValidation1, error = "You have chosen a backend repo type, but have included 'frontend' in your repo name. Change either the repo name or repo type"),
+    mkConstraint("constraints.conflictingFields2")(constraint = conflictingFieldsValidation2, error = "You have chosen a frontend repo type, but have included 'backend' in your repo name. Change either the repo name or repo type"),
+    mkConstraint("constraints.frontendCheck")(constraint = frontendValidation1, error = "Repositories with a frontend repo type require 'frontend' to be present in their repo name."),
+    mkConstraint("constraints.frontendCheck")(constraint = frontendValidation2, error = "Repositories with 'frontend' in their repo name require a frontend repo type")
   )
 
   val form: Form[CreateRepoForm] = Form(
