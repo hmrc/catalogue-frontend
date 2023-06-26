@@ -146,14 +146,21 @@ class ServiceConfigsServiceSpec
   "serviceConfigsService.toKeyServiceEnviromentMap" should {
     "group by key, service and environment" in new Setup {
       serviceConfigsService.toKeyServiceEnviromentMap(
-        AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("test.key"), "prodValue") ::
-        AppliedConfig(Environment.QA, ServiceName("test-service"), KeyName("test.key"), "qaValue")           ::
-        Nil
+        List(
+          AppliedConfig(
+            ServiceName("test-service"),
+            KeyName("test.key"),
+            Map(
+              Environment.Production -> ConfigSourceValue("some-source", Some("some-url"), "prodValue"),
+              Environment.QA         -> ConfigSourceValue("some-source", Some("some-url"), "qaValue")
+            )
+          )
+        )
       ) shouldBe (
         Map(KeyName("test.key") -> Map(
           ServiceName("test-service") -> Map(
-            Environment.Production -> Some("prodValue"),
-            Environment.QA -> Some("qaValue")
+            Environment.Production -> ConfigSourceValue("some-source", Some("some-url"), "prodValue"),
+            Environment.QA         -> ConfigSourceValue("some-source", Some("some-url"), "qaValue")
           )
         ))
       )
@@ -161,16 +168,23 @@ class ServiceConfigsServiceSpec
   }
 
   "serviceConfigsService.toServiceKeyEnviromentMap" should {
-    "group by key, service and environment" in new Setup {
+    "group by service, key and environment" in new Setup {
       serviceConfigsService.toServiceKeyEnviromentMap(
-        AppliedConfig(Environment.Production, ServiceName("test-service"), KeyName("test.key"), "prodValue") ::
-        AppliedConfig(Environment.QA, ServiceName("test-service"), KeyName("test.key"), "qaValue")           ::
-        Nil
+        List(
+          AppliedConfig(
+            ServiceName("test-service"),
+            KeyName("test.key"),
+            Map(
+              Environment.Production -> ConfigSourceValue("some-source", Some("some-url"), "prodValue"),
+              Environment.QA         -> ConfigSourceValue("some-source", Some("some-url"), "qaValue")
+            )
+          )
+        )
       ) shouldBe (
         Map(ServiceName("test-service") -> Map(
           KeyName("test.key") -> Map(
-            Environment.Production -> Some("prodValue"),
-            Environment.QA -> Some("qaValue")
+            Environment.Production -> ConfigSourceValue("some-source", Some("some-url"), "prodValue"),
+            Environment.QA         -> ConfigSourceValue("some-source", Some("some-url"), "qaValue")
           )
         ))
       )
