@@ -82,8 +82,8 @@ class BuildDeployApiConnector @Inject() (
               implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
               HttpReadsInstances.readFromJson[BuildDeployResponse]
             case code =>
+              logger.warn(s"Received $code response from Build and Deploy API endpoint $endpoint: $response")
               val msg = (response.json \ "message").as[String]
-              logger.warn(s"Received $code response from Build and Deploy API endpoint $endpoint - $msg")
               HttpReads.pure(BuildDeployResponse(success = false, message = msg, details = None))
           }
         }
@@ -141,8 +141,6 @@ class BuildDeployApiConnector @Inject() (
   def createARepository(payload: CreateRepoForm): Future[Unit] = {
     val queryParams = Map.empty[String, String]
 
-    val url = url"${config.baseUrl}/v1/CreateRepository?$queryParams"
-
     val finalPayload =
       s"""
          |{
@@ -160,16 +158,17 @@ class BuildDeployApiConnector @Inject() (
 
     val body = Json.toJson(finalPayload)
 
-    val headers = signedHeaders(url.getPath, queryParams, body)
-
     logger.info(s"Calling the B&D Create Repository API with the following payload: ${finalPayload}")
 
-    httpClientV2
-      .post(url)
-      .withBody(body)
-      .setHeader(headers.toSeq: _*)
-      .execute[Unit](HttpReads.Implicits.throwOnFailure(implicitly[HttpReads[Either[UpstreamErrorResponse, Unit]]]), implicitly[ExecutionContext])
+    signAndExecuteRequest(
+      endpoint = "CreateRepository",
+      body = body
+    ).map{ response =>
+      if (response.success)
+        logger.info(s"Received response from Build and Deploy API endpoint: ${response.message}. Details: ${response.details}")
+    }
   }
+
 }
 
 object BuildDeployApiConnector {
