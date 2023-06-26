@@ -27,13 +27,14 @@ import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import java.net.URL
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class BuildDeployApiConnector @Inject() (
@@ -47,14 +48,14 @@ class BuildDeployApiConnector @Inject() (
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   private def buildUrl(
-    endpoint: String,
+    endpoint   : String,
     queryParams: Map[String, String]
   ): URL = url"${config.baseUrl}/v1/$endpoint?$queryParams"
 
   private def signedHeaders(
-    uri: String,
+    uri        : String,
     queryParams: Map[String, String],
-    body: JsValue
+    body       : JsValue
   ): Map[String, String] =
     AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
       .getSignedHeaders(
@@ -66,37 +67,38 @@ class BuildDeployApiConnector @Inject() (
       )
 
   private def signAndExecuteRequest(
-    endpoint: String,
-    body: JsValue,
+    endpoint   : String,
+    body       : JsValue,
     queryParams: Map[String, String] = Map.empty[String, String]
-  ): Future[BuildDeployResponse] = {
+  ): Future[Either[String, BuildDeployResponse]] = {
     val url = buildUrl(endpoint, queryParams)
 
     val headers = signedHeaders(url.getPath, queryParams, body)
 
-    implicit val hr: HttpReads[BuildDeployResponse] =
-      implicitly[HttpReads[HttpResponse]]
-        .flatMap { response =>
-          response.status match {
-            case 200  =>
-              implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
-              HttpReadsInstances.readFromJson[BuildDeployResponse]
-            case code =>
-              logger.warn(s"Received $code response from Build and Deploy API endpoint $endpoint: $response")
-              val msg = (response.json \ "message").as[String]
-              HttpReads.pure(BuildDeployResponse(success = false, message = msg, details = None))
-          }
+    implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
+
+    implicit val hr: HttpReads[Either[String, BuildDeployResponse]] =
+      implicitly[HttpReads[Either[UpstreamErrorResponse, BuildDeployResponse]]]
+        .flatMap {
+          case Right(r) =>
+            HttpReads.pure(Right(r))
+          case Left(UpstreamErrorResponse.Upstream4xxResponse(e)) =>
+            HttpReads.ask
+              .flatMap { case (method, url, response) =>
+                logger.error(s"Failed to call Build and Deploy API endpoint $endpoint. response: $response: ${e.getMessage}", e)
+                Try(HttpReads.pure(Left((response.json \ "message").as[String]): Either[String, BuildDeployResponse])).getOrElse(throw e)
+              }
+          case Left(other) => throw other
         }
 
     httpClientV2
       .post(url)
       .withBody(body)
       .setHeader(headers.toSeq: _*)
-      .execute[BuildDeployResponse]
+      .execute[Either[String, BuildDeployResponse]]
   }
 
   def changePrototypePassword(prototype: String, password: PrototypePassword): Future[Either[String, String]] = {
-
     val body = Json.obj(
       "repository_name" -> JsString(prototype),
       "password"        -> JsString(password.value)
@@ -105,12 +107,12 @@ class BuildDeployApiConnector @Inject() (
     signAndExecuteRequest(
       endpoint = "SetHerokuPrototypePassword",
       body     = body
-    ).map { response =>
-      if(response.success) Right(response.message)
-      else Left(response.message)
+    ).map {
+      case Right(response) => Right(response.message)
+      case Left(errorMsg)  => Left(errorMsg)
     }
   }
-  
+
   def getPrototypeStatus(prototype: String): Future[PrototypeStatus] = {
     implicit val psR: Reads[PrototypeStatus] = PrototypeStatus.reads
 
@@ -121,26 +123,29 @@ class BuildDeployApiConnector @Inject() (
     signAndExecuteRequest(
       endpoint = "GetPrototypeStatus",
       body     = body
-    ).map(_.details.fold[PrototypeStatus](PrototypeStatus.Undetermined)(_.as[PrototypeStatus]))
+    ).map {
+      case Left(errMsg) => logger.error(s"Call to GetPrototypeStatus failed with: $errMsg")
+                           PrototypeStatus.Undetermined
+      case Right(res)   => res.details.as[PrototypeStatus]
+    }.recover {
+      case e => logger.error(s"Call GetPrototypeStatus failed with: ${e.getMessage}", e)
+                PrototypeStatus.Undetermined
+    }
   }
 
-  def setPrototypeStatus(prototype: String, status: PrototypeStatus): Future[PrototypeStatus] = {
-    implicit val psR: Reads[PrototypeStatus] = PrototypeStatus.reads
-
+  def setPrototypeStatus(prototype: String, status: PrototypeStatus): Future[Either[String, Unit]] = {
     val body = Json.obj(
       "prototype" -> JsString(prototype),
-      "status" -> JsString(status.asString)
+      "status"    -> JsString(status.asString)
     )
 
     signAndExecuteRequest(
       endpoint = "SetPrototypeStatus",
       body     = body
-    ).map(_.details.fold[PrototypeStatus](PrototypeStatus.Undetermined)(_.as[PrototypeStatus]))
+    ).map(_.map(_ => ()))
   }
 
-  def createARepository(payload: CreateRepoForm): Future[Unit] = {
-    val queryParams = Map.empty[String, String]
-
+  def createARepository(payload: CreateRepoForm): Future[Either[String, Unit]] = {
     val finalPayload =
       s"""
          |{
@@ -153,8 +158,7 @@ class BuildDeployApiConnector @Inject() (
          |   "bootstrap_tag": "",
          |   "init_webhook_version": "2.2.0",
          |   "default_branch_name": "main"
-         |}
-         |   """.stripMargin
+         |}""".stripMargin
 
     val body = Json.toJson(finalPayload)
 
@@ -162,23 +166,18 @@ class BuildDeployApiConnector @Inject() (
 
     signAndExecuteRequest(
       endpoint = "CreateRepository",
-      body = body
-    ).map{ response =>
-      if (response.success)
-        logger.info(s"Received response from Build and Deploy API endpoint: ${response.message}. Details: ${response.details}")
-    }
+      body     = body
+    ).map(_.map(_ => ()))
   }
-
 }
 
 object BuildDeployApiConnector {
-  final case class BuildDeployResponse(success: Boolean, message: String, details: Option[JsValue])
+  final case class BuildDeployResponse(message: String, details: JsValue)
 
   private object BuildDeployResponse {
     val reads: Reads[BuildDeployResponse] =
-      ( (__ \ "success").read[Boolean]
-      ~ (__ \ "message").read[String]
-      ~ (__ \ "details").readNullable[JsValue]
+      ( (__ \ "message").read[String]
+      ~ (__ \ "details").readWithDefault[JsValue](JsNull)
       )(BuildDeployResponse.apply _)
   }
 

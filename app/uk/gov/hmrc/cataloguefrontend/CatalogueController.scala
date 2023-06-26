@@ -275,7 +275,7 @@ class CatalogueController @Inject() (
       logger.info(s"Setting prototype $repoName to status ${status.displayString}, triggered by User: $user")
       buildDeployApiConnector
         .setPrototypeStatus(repoName, status)
-        .map(_ => Redirect(routes.CatalogueController.repository(repoName)))
+        .map(_ => /* We redirect even if this returns a Left*/ Redirect(routes.CatalogueController.repository(repoName)))
     }
 
   private def hasChangePrototypePasswordAuthorisation(repoName: String)(

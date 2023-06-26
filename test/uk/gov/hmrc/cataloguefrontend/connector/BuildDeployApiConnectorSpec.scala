@@ -18,12 +18,13 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Configuration
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import com.github.tomakehurst.wiremock.client.WireMock._
-import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -75,6 +76,34 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       val result = connector.changePrototypePassword("test", PrototypePassword("p4$$w02d")).futureValue
 
       result shouldBe Left("Password was empty OR contained invalid characters. Valid characters: Alphanumeric and underscores.")
+    }
+
+    "return UpstreamErrorResponse when Build & Deploy respond with 400 without json/message" in {
+      val requestJson = """{ "repository_name": "test", "password": "p4$$w02d" }"""
+
+      stubFor(
+        post("/v1/SetHerokuPrototypePassword")
+          .withRequestBody(equalToJson(requestJson))
+          .willReturn(aResponse().withStatus(400).withBody(""))
+      )
+
+      val result = connector.changePrototypePassword("test", PrototypePassword("p4$$w02d")).failed.futureValue
+
+      result shouldBe a [UpstreamErrorResponse]
+    }
+
+    "return UpstreamErrorResponse when Build & Deploy respond with 500" in {
+      val requestJson = """{ "repository_name": "test", "password": "p4$$w02d" }"""
+
+      stubFor(
+        post("/v1/SetHerokuPrototypePassword")
+          .withRequestBody(equalToJson(requestJson))
+          .willReturn(aResponse().withStatus(500))
+      )
+
+      val result = connector.changePrototypePassword("test", PrototypePassword("p4$$w02d")).failed.futureValue
+
+      result shouldBe a [UpstreamErrorResponse]
     }
   }
 
@@ -151,7 +180,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
       val result = connector.setPrototypeStatus("test-prototype", PrototypeStatus.Running).futureValue
 
-      result  shouldBe PrototypeStatus.Running
+      result shouldBe Right(())
     }
 
     "return a new status of Undetermined when non 200" in {
@@ -176,7 +205,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
       val result = connector.setPrototypeStatus("test-prototype", PrototypeStatus.Running).futureValue
 
-      result  shouldBe PrototypeStatus.Undetermined
+      result shouldBe Left("Some downstream error")
     }
   }
 }
