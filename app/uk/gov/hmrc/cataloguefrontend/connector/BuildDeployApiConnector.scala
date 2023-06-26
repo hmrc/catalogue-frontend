@@ -148,8 +148,8 @@ class BuildDeployApiConnector @Inject() (
          |{
          |   "repository_name": "${payload.repositoryName}",
          |   "make_private": ${payload.makePrivate},
-         |   "allow_auto_merge": "true",
-         |   "delete_branch_on_merge": "true",
+         |   "allow_auto_merge": true,
+         |   "delete_branch_on_merge": true,
          |   "team_name": "${payload.teamName}",
          |   "repository_type": "${payload.repoType}",
          |   "bootstrap_tag": "",
@@ -162,7 +162,7 @@ class BuildDeployApiConnector @Inject() (
 
     val headers = signedHeaders(url.getPath, queryParams, body)
 
-    logger.info(s"Calling the B&D Create Repository API with the following payload: ${payload}")
+    logger.info(s"Calling the B&D Create Repository API with the following payload: ${finalPayload}")
 
     httpClientV2
       .post(url)
