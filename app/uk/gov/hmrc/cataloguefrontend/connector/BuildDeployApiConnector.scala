@@ -24,9 +24,9 @@ import play.api.Logging
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{CreateRepositoryPayload, _}
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
-import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
+import uk.gov.hmrc.cataloguefrontend.createarepository.{CreateRepoForm, CreateRepositoryType}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -143,26 +143,14 @@ class BuildDeployApiConnector @Inject() (
 
     val url = url"${config.baseUrl}/v1/CreateRepository?$queryParams"
 
-    val finalPayload =
-      s"""
-         |{
-         |   "repository_name": "${payload.repositoryName}",
-         |   "make_private": ${payload.makePrivate},
-         |   "allow_auto_merge": true,
-         |   "delete_branch_on_merge": true,
-         |   "team_name": "${payload.teamName}",
-         |   "repository_type": "${payload.repoType}",
-         |   "bootstrap_tag": "",
-         |   "init_webhook_version": "2.2.0",
-         |   "default_branch_name": "main"
-         |}
-         |   """.stripMargin
+    val finalPayload = constructCreateRepositoryPayload(payload)
 
-    val body = Json.toJson(finalPayload)
+    implicit val crpw = CreateRepositoryPayload.writes
+    val body          = Json.toJson(finalPayload)
 
     val headers = signedHeaders(url.getPath, queryParams, body)
 
-    logger.info(s"Calling the B&D Create Repository API with the following payload: ${finalPayload}")
+    logger.info(s"Now Calling the B&D Create Repository API with the following payload: ${body}")
 
     httpClientV2
       .post(url)
@@ -170,6 +158,14 @@ class BuildDeployApiConnector @Inject() (
       .setHeader(headers.toSeq: _*)
       .execute[Unit](HttpReads.Implicits.throwOnFailure(implicitly[HttpReads[Either[UpstreamErrorResponse, Unit]]]), implicitly[ExecutionContext])
   }
+
+  private def constructCreateRepositoryPayload(form: CreateRepoForm): CreateRepositoryPayload =
+    CreateRepositoryPayload(
+      repositoryName = form.repositoryName,
+      makePrivate = form.makePrivate,
+      teamName = form.teamName,
+      repositoryType = form.repoType,
+    )
 }
 
 object BuildDeployApiConnector {
@@ -215,5 +211,32 @@ object BuildDeployApiConnector {
         override def unbind(key: String, value: PrototypeStatus): String =
           value.asString
       }
+  }
+
+  case class CreateRepositoryPayload(
+      repositoryName:      String,
+      makePrivate:         Boolean,
+      allowAutoMerge:      Boolean = true,
+      deleteBranchOnMerge: Boolean = true,
+      teamName:            String,
+      repositoryType:      String,
+      bootstrapTag:        String = "",
+      initWebHookVersion:  String = "2.2.0",
+      defaultBranchName:   String = "main"
+  )
+
+  object CreateRepositoryPayload {
+    implicit val writes: Writes[CreateRepositoryPayload] =
+      ( (__ \ "repository_name"         ).write[String]
+        ~ (__ \ "make_private"          ).write[Boolean]
+        ~ (__ \ "allow_auto_merge"      ).write[Boolean]
+        ~ (__ \ "delete_branch_on_merge").write[Boolean]
+        ~ (__ \ "team_name"             ).write[String]
+        ~ (__ \ "repository_type"       ).write[String]
+        ~ (__ \ "bootstrap_tag"         ).write[String]
+        ~ (__ \ "init_webhook_version"  ).write[String]
+        ~ (__ \ "default_branch_name"   ).write[String]
+        )(unlift(CreateRepositoryPayload.unapply))
+
   }
 }
