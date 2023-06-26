@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.createarepository
 
+import play.api.Logger
 import play.api.data.Form
-import play.api.data.Forms.{boolean, mapping, nonEmptyText, optional, text}
+import play.api.data.Forms.{boolean, mapping, nonEmptyText}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{Writes, __}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.CreateARepositoryPage
@@ -44,6 +45,8 @@ class CreateARepositoryController @Inject()(
     with CatalogueAuthBuilders
     with I18nSupport {
 
+  private val logger = Logger(getClass)
+
   def createRepositoryPermission(teamName: String): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/$teamName"), IAAction("CREATE_REPOSITORY"))
 
@@ -62,17 +65,23 @@ class CreateARepositoryController @Inject()(
       continueUrl = routes.CreateARepositoryController.createARepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) .async { implicit request =>
-    CreateRepoForm.form.bindFromRequest.fold(
+    CreateRepoForm.form.bindFromRequest().fold(
       formWithErrors => {
         val userTeams = cleanseUserTeams(request.retrieval)
         Future.successful(BadRequest(createARepositoryPage(formWithErrors, userTeams, CreateRepositoryType.values)))
       },
       validForm      => {
         import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
-        for{
-          _             <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
-          _             <- buildDeployApiConnector.createARepository(validForm)
-          } yield Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+        for {
+          _   <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
+          res <- buildDeployApiConnector.createARepository(validForm)
+        } yield {
+          res match {
+            case Left(errMsg) => logger.info(s"createARepository failed with: $errMsg")
+            case Right(_)     => ()
+          }
+          Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+        }
       }
     )
   }
@@ -88,17 +97,17 @@ case class CreateRepoForm(
    repositoryName     : String,
    makePrivate        : Boolean,
    teamName           : String,
-   repoType           : String,
+   repoType           : String
 )
 
 object CreateRepoForm {
 
   implicit val writes: Writes[CreateRepoForm] =
     ( (__ \ "repositoryName").write[String]
-      ~ (__ \ "makePrivate").write[Boolean]
-      ~ (__ \ "teamName").write[String]
-      ~ (__ \ "repoType").write[String]
-      )(unlift(CreateRepoForm.unapply))
+    ~ (__ \ "makePrivate"   ).write[Boolean]
+    ~ (__ \ "teamName"      ).write[String]
+    ~ (__ \ "repoType"      ).write[String]
+    )(unlift(CreateRepoForm.unapply))
 
   def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] = {
     Constraint(constraintName)({ toBeValidated => if(constraint(toBeValidated)) Valid else Invalid(error) })
@@ -142,5 +151,3 @@ object CreateRepoForm {
       .verifying(repoTypeAndNameConstraints :_*)
   )
 }
-
-
