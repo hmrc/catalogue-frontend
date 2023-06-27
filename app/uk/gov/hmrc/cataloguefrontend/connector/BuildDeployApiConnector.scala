@@ -167,7 +167,7 @@ class BuildDeployApiConnector @Inject() (
     signAndExecuteRequest(
       endpoint = "CreateRepository",
       body     = body
-    ).map(_.map(_ => ()))
+    ).map(_.map(resp => logger.info(s"Received response from Build and Deploy API endpoint: ${resp.message}. Details: ${resp.details}")))
   }
 }
 
