@@ -145,7 +145,7 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(_ => ()))
   }
 
-  def createARepository(payload: CreateRepoForm): Future[Either[String, Unit]] = {
+  def createARepository(payload: CreateRepoForm): Future[Either[String, String]] = {
     val finalPayload =
       s"""
          |{
@@ -160,14 +160,15 @@ class BuildDeployApiConnector @Inject() (
          |   "default_branch_name": "main"
          |}""".stripMargin
 
-    val body = Json.toJson(finalPayload)
+    val body = Json.parse(finalPayload)
+    println(body)
 
-    logger.info(s"Calling the B&D Create Repository API with the following payload: ${finalPayload}")
+    logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
 
     signAndExecuteRequest(
       endpoint = "CreateRepository",
       body     = body
-    ).map(_.map(resp => logger.info(s"Received response from Build and Deploy API endpoint: ${resp.message}. Details: ${resp.details}")))
+    ).map(_.map(resp => s"Received response from Build and Deploy async API endpoint: ${resp.message}. Details: ${resp.details}"))
   }
 }
 
