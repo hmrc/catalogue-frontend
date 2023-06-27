@@ -77,8 +77,8 @@ class CreateARepositoryController @Inject()(
           res <- buildDeployApiConnector.createARepository(validForm)
         } yield {
           res match {
-            case Left(errMsg) => logger.info(s"createARepository failed with: $errMsg")
-            case Right(_)     => ()
+            case Left(errMsg)    => logger.info(s"createARepository failed with: $errMsg")
+            case Right(asyncMsg) => logger.info(asyncMsg)
           }
           Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
         }

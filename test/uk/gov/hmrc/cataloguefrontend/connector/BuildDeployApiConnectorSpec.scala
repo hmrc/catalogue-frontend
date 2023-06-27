@@ -25,6 +25,8 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import com.github.tomakehurst.wiremock.client.WireMock._
+import play.api.libs.json.Json
+import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -208,4 +210,114 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       result shouldBe Left("Some downstream error")
     }
   }
+
+  "createARepository" should {
+      "return the message when the request is accepted by the B&D async api" in {
+        val payload = CreateRepoForm(
+          repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
+        )
+
+        val expectedBody = s"""
+                              |{
+                              |   "repository_name": "${payload.repositoryName}",
+                              |   "make_private": ${payload.makePrivate},
+                              |   "allow_auto_merge": true,
+                              |   "delete_branch_on_merge": true,
+                              |   "team_name": "${payload.teamName}",
+                              |   "repository_type": "${payload.repoType}",
+                              |   "bootstrap_tag": "",
+                              |   "init_webhook_version": "2.2.0",
+                              |   "default_branch_name": "main"
+                              |}""".stripMargin
+
+        stubFor(
+          post("/v1/CreateRepository")
+            .withRequestBody(equalToJson(expectedBody))
+            .willReturn(aResponse().withStatus(202).withBody(
+              """
+                |{
+                |  "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
+                |  "details": {
+                |    "get_request_state_payload": {
+                |       "bnd_api_request_id": "1234",
+                |       "start_timestamp_milliseconds": "1687852118708"
+                |    }
+                |  }
+                |}""".stripMargin
+            ))
+        )
+
+        val result = connector.createARepository(payload = payload).futureValue
+
+        val expectedResult = """Received response from Build and Deploy async API endpoint: Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request... Details: {"get_request_state_payload":{"bnd_api_request_id":"1234","start_timestamp_milliseconds":"1687852118708"}}""".stripMargin
+
+        result shouldBe Right(expectedResult)
+      }
+
+    "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
+      val payload = CreateRepoForm(
+        repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
+      )
+
+      val expectedBody = s"""
+                            |{
+                            |   "repository_name": "${payload.repositoryName}",
+                            |   "make_private": ${payload.makePrivate},
+                            |   "allow_auto_merge": true,
+                            |   "delete_branch_on_merge": true,
+                            |   "team_name": "${payload.teamName}",
+                            |   "repository_type": "${payload.repoType}",
+                            |   "bootstrap_tag": "",
+                            |   "init_webhook_version": "2.2.0",
+                            |   "default_branch_name": "main"
+                            |}""".stripMargin
+
+      stubFor(
+        post("/v1/CreateRepository")
+          .withRequestBody(equalToJson(expectedBody))
+          .willReturn(aResponse().withStatus(500)
+            .withBody(
+              """{ "code": "INTERNAL_SERVER_ERROR", "message": "Some server error" }"""
+            ))
+      )
+
+      val result = connector.createARepository(payload = payload).failed.futureValue
+
+      result shouldBe a [UpstreamErrorResponse]
+    }
+
+    //NOTE: Currently the B&D async API will return a BuildDeployResponse when the client inputs are invalid, as it does not do any JSON validation/input validation up front prior to calling the lambda.
+    //This may however change in the future, so we are testing the desired future behaviour below.
+    "return an error message when the B&D async api returns a 4XX code" in {
+        val payload = CreateRepoForm(
+          repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
+        )
+
+        val expectedBody = s"""
+                              |{
+                              |   "repository_name": "${payload.repositoryName}",
+                              |   "make_private": ${payload.makePrivate},
+                              |   "allow_auto_merge": true,
+                              |   "delete_branch_on_merge": true,
+                              |   "team_name": "${payload.teamName}",
+                              |   "repository_type": "${payload.repoType}",
+                              |   "bootstrap_tag": "",
+                              |   "init_webhook_version": "2.2.0",
+                              |   "default_branch_name": "main"
+                              |}""".stripMargin
+
+        stubFor(
+          post("/v1/CreateRepository")
+            .withRequestBody(equalToJson(expectedBody))
+            .willReturn(aResponse().withStatus(400)
+            .withBody(
+              """{ "code": "CLIENT_ERROR", "message": "Some client error" }"""
+            ))
+        )
+
+        val result = connector.createARepository(payload = payload).futureValue
+
+        result shouldBe Left("Some client error")
+      }
+    }
 }
