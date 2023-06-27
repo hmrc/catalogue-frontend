@@ -20,7 +20,7 @@ import play.api.Configuration
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -212,7 +212,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
   }
 
   "createARepository" should {
-      "return the message when the request is accepted by the B&D async api" in {
+      "return the Async request id when the request is accepted by the B&D async api" in {
         val payload = CreateRepoForm(
           repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
         )
@@ -249,9 +249,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
         val result = connector.createARepository(payload = payload).futureValue
 
-        val expectedResult = """Received response from Build and Deploy async API endpoint: Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request... Details: {"get_request_state_payload":{"bnd_api_request_id":"1234","start_timestamp_milliseconds":"1687852118708"}}""".stripMargin
-
-        result shouldBe Right(expectedResult)
+        result shouldBe Right(AsyncRequestId(id = "1234"))
       }
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {

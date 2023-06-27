@@ -78,7 +78,7 @@ class CreateARepositoryController @Inject()(
         } yield {
           res match {
             case Left(errMsg)    => logger.info(s"createARepository failed with: $errMsg")
-            case Right(asyncMsg) => logger.info(asyncMsg)
+            case Right(id)       => logger.info(s"Bnd api request id: ${id}:")
           }
           Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
         }

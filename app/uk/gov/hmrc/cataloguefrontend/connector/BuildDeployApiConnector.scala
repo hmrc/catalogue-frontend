@@ -145,7 +145,9 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(_ => ()))
   }
 
-  def createARepository(payload: CreateRepoForm): Future[Either[String, String]] = {
+  def createARepository(payload: CreateRepoForm): Future[Either[String, AsyncRequestId]] = {
+    implicit val arr = AsyncRequestId.reads
+
     val finalPayload =
       s"""
          |{
@@ -167,7 +169,7 @@ class BuildDeployApiConnector @Inject() (
     signAndExecuteRequest(
       endpoint = "CreateRepository",
       body     = body
-    ).map(_.map(resp => s"Received response from Build and Deploy async API endpoint: ${resp.message}. Details: ${resp.details}"))
+    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 }
 
@@ -179,6 +181,14 @@ object BuildDeployApiConnector {
       ( (__ \ "message").read[String]
       ~ (__ \ "details").readWithDefault[JsValue](JsNull)
       )(BuildDeployResponse.apply _)
+  }
+
+  final case class AsyncRequestId(id: String) extends AnyVal
+
+  object AsyncRequestId {
+    val reads: Reads[AsyncRequestId] =
+      ( (__ \ "get_request_state_payload" \ "bnd_api_request_id").read[String]
+        ).map(AsyncRequestId.apply)
   }
 
   sealed trait PrototypeStatus { def asString: String; def displayString: String }
