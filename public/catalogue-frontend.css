@@ -12191,6 +12191,16 @@ section span.other-teams-message {
   font-weight: bold;
 }
 
+.highlight-outline {
+  outline: 2px dotted red;
+  padding: 0.1em 0em 0.1em 0em;
+}
+
+.ignore {
+  opacity: 0.5;
+}
+
+
 .bobbyrules select {
   width: 100%;
 }

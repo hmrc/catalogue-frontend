@@ -142,7 +142,7 @@
                     <tr>
                         <th>Service</th>
                         @for(env <- form.get.showEnviroments) {
-                            <th id="@{env.asString}-tr">@env.displayString</th>
+                            <th id="@{env.asString}-th">@env.displayString</th>
                         }
                     </tr>
                 </thead>
@@ -171,7 +171,7 @@
                     <tr>
                         <th>Key</th>
                         @for(env <- form.get.showEnviroments) {
-                            <th id="@{env.asString}-tr">@env.displayString</th>
+                            <th id="@{env.asString}-th">@env.displayString</th>
                         }
                     </tr>
                 </thead>
@@ -216,18 +216,37 @@
     </script>
 }
 
+@highlight(v: String) = {
+    @((form("configValue").value, form("valueFilterType").value)) match {
+        case (Some(searchValue), Some(ValueFilterType.Contains.asString))       => {
+            @defining(v.indexOf(searchValue)) { i =>
+                @if(i >= 0) {
+                    @v.substring(0, i)<span class='highlight-outline'>@v.substring(i, i + searchValue.length)</span>@v.substring(i + searchValue.length)
+                } else {
+                    <span class="ignore">@v</span>
+                }
+            }
+        }
+        case (Some(searchValue), Some(ValueFilterType.DoesNotContain.asString)) => {<span class="@if(!v.contains(searchValue)) {highlight-outline} else {ignore}">@v</span>}
+        case (Some(searchValue), Some(ValueFilterType.EqualTo.asString))        => {<span class="@if(v == searchValue)         {highlight-outline} else {ignore}">@v</span>}
+        case (Some(searchValue), Some(ValueFilterType.NotEqualTo.asString))     => {<span class="@if(v != searchValue)         {highlight-outline} else {ignore}">@v</span>}
+        case (_                , Some(ValueFilterType.IsEmpty.asString))        => {<span class="@if(v.isEmpty)                {highlight-outline} else {ignore}">@v</span>}
+        case _                                                                  => {<span>@v</span>}
+    }
+}
+
 @displayResult(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[ServiceConfigsService.ConfigSourceValue]) = {
     @result match {
         case None => {
             <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"
-               title="Not deployed in environment - Link to Config Explorer">
+                title="Not deployed in environment">
                 <span class="glyphicon glyphicon-minus archived"></span>
             </a
         }
         case Some(envData) => {
             <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"
-               title="@ServiceConfigsService.friendlySourceName(envData.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(configKey)) - Link to Config Explorer">
-                @envData.value
+                title="@ServiceConfigsService.friendlySourceName(envData.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(configKey))">
+                @highlight(envData.value)
             </a>
         }
     }
