@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType}
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -205,7 +205,7 @@ class ShutterWizardController @Inject() (
                                 ).map(BadRequest(_))
                               )
                             )
-         resources     <- EitherT.liftF(auth.listResources(Some(ResourceType("shutter-api"))))
+         resources     <- EitherT.liftF(auth.authorised(predicate = None, retrieval = Retrieval.locations(Some(ResourceType("shutter-api")))))
          permsFor      =  if (resources.exists(_.resourceLocation.value == s"${step0Out.shutterType.asString}/*"))
                             serviceNames.toList
                           else {
