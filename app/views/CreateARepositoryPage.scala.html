@@ -73,7 +73,7 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                             <li>avoid unnecessary words, such as 'service'</li>
                         </ul>
                     </p>
-                    <input class="form-control" type="text" id="repoNameInput" name="repositoryName">
+                    <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
                     @form_fields_warnings(form,"repositoryName")
                 </div>
             </div>
@@ -81,7 +81,9 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                 <div class="col-md-6">
                     <div style = "white-space: nowrap;">
                         <label style="display:inline-block"for="makePrivateInput">Make Private: </label>
-                        <input style="display:inline-block;"  type="checkbox" id="makePrivateInput" name="makePrivate" value=true>
+                        <input style="display:inline-block;"  type="checkbox" id="makePrivateInput" name="makePrivate" value=true
+                            @form.data.get("makePrivate").map{ _ => checked }
+                        >
                         @form_fields_warnings(form,"makePrivate")
                     </div>
                     <p>You must decide now if you will code in the open, or privately. If you select ‘MAKE_PRIVATE’ the GitHub repository you create will only be visible within HMRC.
@@ -101,7 +103,9 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                     }
                     <select class="form-control" id="teamInput" name="teamName">
                         @teamNames.map { tn =>
-                            <option value="@{tn}">@tn</option>
+                            <option value="@{tn}"
+                                    @if(form.data.getOrElse("teamName", "").equals(tn)) { selected="selected" }
+                            >@tn</option>
                         }
                     </select>
                     @form_fields_warnings(form,"teamName")
@@ -115,7 +119,9 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                     </p>
                     <select class="form-control" id="typeInput" name="repoType">
                         @repoTypes.map { rt =>
-                         <option value="@{rt.asString}">@rt.asString</option>
+                         <option value="@{rt.asString}"
+                                 @if(form.data.getOrElse("repoType", "").equals(rt.asString)) { selected="selected" }
+                         >@rt.asString</option>
                         }
                     </select>
                     @form_fields_warnings(form,"repoType")
