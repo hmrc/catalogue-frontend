@@ -56,7 +56,7 @@ GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefro
 
 GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configExplorer(name)
 GET        /config/search                               uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchLanding()
-GET        /config/search/results                       uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchResults()
+GET        /config/search/results                       uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchResults(configKey: Option[String] ?= None)
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()
 

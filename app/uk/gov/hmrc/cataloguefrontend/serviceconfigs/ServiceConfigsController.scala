@@ -65,7 +65,9 @@ class ServiceConfigsController @Inject()(
 
   import cats.data.EitherT
   import cats.instances.future._
-  def searchResults(): Action[AnyContent] =
+  def searchResults(
+    configKey: Option[String] // For dependencyExplorer reverse route
+  ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchConfig
         .form
@@ -165,7 +167,7 @@ object SearchConfig {
       "teamName"        -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
     , "configKey"       -> Forms.optional(Forms.nonEmptyText(minLength = 3))
     , "configValue"     -> Forms.optional(Forms.text)
-    , "valueFilterType" -> Forms.of[ValueFilterType](ValueFilterType.formFormat)
+    , "valueFilterType" -> Forms.default(Forms.of[ValueFilterType](ValueFilterType.formFormat), ValueFilterType.Contains)
     , "showEnviroments" -> Forms.list(Forms.text)
                                 .transform[List[Environment]](
                                   xs => { val ys = xs.map(Environment.parse).flatten
@@ -174,9 +176,9 @@ object SearchConfig {
                                 , x  => identity(x).map(_.asString)
                                 )
     , "serviceType"     -> Forms.optional(Forms.of[ServiceType](ServiceType.formFormat))
-    , "teamChange"      -> Forms.boolean
-    , "asCsv"           -> Forms.boolean
-    , "groupBy"         -> Forms.of[GroupBy](GroupBy.formFormat)
+    , "teamChange"      -> Forms.default(Forms.boolean, false)
+    , "asCsv"           -> Forms.default(Forms.boolean, false)
+    , "groupBy"         -> Forms.default(Forms.of[GroupBy](GroupBy.formFormat), GroupBy.Key)
     )(SearchConfigForm.apply)(SearchConfigForm.unapply)
   )
 }
